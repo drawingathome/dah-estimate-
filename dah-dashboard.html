@@ -53,7 +53,7 @@ input:focus{border-color:#D4622A}
     </div>
     <button class="user-btn master" id="btn-master-login">
       <span style="font-size:18px">👑</span>
-      <div><div style="font-weight:700;font-size:14px">선혜 (마스터)</div><div style="font-size:11px;color:#A8A8A8">전체 현황 + 관리 기능</div></div>
+      <div><div style="font-weight:700;font-size:14px">마스터</div><div style="font-size:11px;color:#A8A8A8">전체 현황 + 관리 기능</div></div>
     </button>
     <div id="master-pw-wrap" style="display:none;margin-bottom:8px">
       <input id="master-pw-input" type="password" placeholder="비밀번호 입력" style="width:100%;padding:11px 12px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit;outline:none;-webkit-appearance:none;margin-bottom:6px">
@@ -131,9 +131,7 @@ input:focus{border-color:#D4622A}
     <div style="padding:16px">
       <div class="form-row"><div class="form-label">고객명 *</div><input class="form-input" id="add-name" placeholder="홍길동"></div>
       <div class="form-row"><div class="form-label">연락처 *</div><input class="form-input" id="add-phone" placeholder="010-0000-0000"></div>
-      <div class="form-row"><div class="form-label">주소</div><input class="form-input" id="add-addr" placeholder="서울 서초구 반포동"></div>
-      <div class="form-row"><div class="form-label">공간·품목</div><input class="form-input" id="add-space" placeholder="거실+안방, 블라인드"></div>
-      <div class="form-row"><div class="form-label">견적 금액 (원)</div><input class="form-input" type="number" id="add-price" placeholder="0"></div>
+      <div class="form-row"><div class="form-label">상담일</div><input class="form-input" type="date" id="add-date"></div>
       <div class="form-row">
         <div class="form-label">단계</div>
         <select class="form-input" id="add-stage">
@@ -145,12 +143,13 @@ input:focus{border-color:#D4622A}
           <option value="완료">시공 완료</option>
         </select>
       </div>
-      <div class="form-row"><div class="form-label">상담일</div><input class="form-input" type="date" id="add-date"></div>
-      <div class="form-row"><div class="form-label">메모</div><input class="form-input" id="add-memo" placeholder="특이사항"></div>
+      <div class="form-row"><div class="form-label">주소</div><input class="form-input" id="add-addr" placeholder="서울 서초구 반포동"></div>
+      <div class="form-row"><div class="form-label">공간·품목</div><input class="form-input" id="add-space" placeholder="예) 거실+안방, 블라인드"></div>
+      <div class="form-row"><div class="form-label">메모</div><input class="form-input" id="add-memo" placeholder="특이사항 (레일 재활용, 샤시 간섭 등)"></div>
       <div class="form-row">
         <div class="form-label">담당자</div>
         <div style="display:flex;gap:8px">
-          <button data-staff="선혜" class="staff-btn" style="flex:1;padding:9px 0;border:1px solid #E5E0D8;font-size:13px;font-family:inherit;cursor:pointer;background:#fff;color:#6B6B6B">선혜</button>
+          <button data-staff="마스터" class="staff-btn" style="flex:1;padding:9px 0;border:1px solid #E5E0D8;font-size:13px;font-family:inherit;cursor:pointer;background:#fff;color:#6B6B6B">선혜</button>
           <button data-staff="실장" class="staff-btn" style="flex:1;padding:9px 0;border:1px solid #E5E0D8;font-size:13px;font-family:inherit;cursor:pointer;background:#fff;color:#6B6B6B">실장</button>
         </div>
       </div>
@@ -180,7 +179,7 @@ function getStaffList() {
 
 function loginAs(who) {
   if (who === 'master') {
-    currentUser = {name:'선혜', role:'master'};
+    currentUser = {name:'마스터', role:'master'};
   } else {
     currentUser = {name:who, role:'staff'};
   }
@@ -302,7 +301,7 @@ function dbRowToCustomer(row) {
     space: row.space || '',
     price: Number(row.price) || 0,
     performanceRevenue: Number(row.performance_revenue) || 0,
-    staffName: row.staff_name || '선혜',
+    staffName: row.staff_name || '마스터',
     stage: row.stage || '상담',
     date: row.date || '',
     memo: row.memo || '',
@@ -319,7 +318,7 @@ function customerToDbRow(c) {
     space: c.space || '',
     price: Number(c.price) || 0,
     performance_revenue: Number(c.performanceRevenue) || 0,
-    staff_name: c.staffName || '선혜',
+    staff_name: c.staffName || '마스터',
     stage: c.stage || '상담',
     date: c.date || '',
     memo: c.memo || '',
@@ -428,7 +427,7 @@ function renderHome() {
   });
 
   var isMaster = currentUser && currentUser.role === 'master';
-  var myName = currentUser ? currentUser.name : '선혜';
+  var myName = currentUser ? currentUser.name : '마스터';
 
   // 인사
   wrap.appendChild(div('margin-bottom:14px', [
@@ -440,7 +439,7 @@ function renderHome() {
   wrap.appendChild(btn('display:block;width:100%;padding:13px;background:#1A1A1A;color:#fff;text-align:center;font-size:13px;font-weight:700;font-family:inherit;border:none;cursor:pointer;margin-bottom:10px', '+ 새 견적서 작성', function() { openEstimate(null); }));
 
   // ── 매출 카드 ──
-  var allStaffs = ['선혜'].concat(getStaffList());
+  var allStaffs = ['마스터'].concat(getStaffList());
   var mon2 = month;
   var motiveMsgs = [
     ['0~30%', '화이팅! 이제 시작이에요 💪'],
@@ -947,7 +946,7 @@ function openAdd(editName) {
     document.getElementById('add-phone').value = '';
     document.getElementById('add-addr').value = '';
     document.getElementById('add-space').value = '';
-    document.getElementById('add-price').value = '';
+    // 견적 금액은 견적서 앱에서 자동 저장
     document.getElementById('add-stage').value = '상담';
     document.getElementById('add-date').value = todayStr();
     document.getElementById('add-memo').value = '';
@@ -956,8 +955,8 @@ function openAdd(editName) {
   var defaultStaff = editName ? (function() {
     var arr = loadCustomers();
     var c = arr.find(function(x) { return x.clientName === editName; });
-    return c ? (c.staffName || '선혜') : '선혜';
-  })() : (currentUser ? currentUser.name : '선혜');
+    return c ? (c.staffName || '마스터') : '선혜';
+  })() : (currentUser ? currentUser.name : '마스터');
   // 직원이면 담당자 고정 (변경 불가)
   var isStaffUser = currentUser && currentUser.role === 'staff';
   document.querySelectorAll('.staff-btn').forEach(function(b) {
@@ -994,9 +993,9 @@ function saveCustomer() {
           staffName2 = currentUser.name;
         } else {
           var activeStaffBtn2 = document.querySelector('.staff-btn.active');
-          staffName2 = activeStaffBtn2 ? activeStaffBtn2.getAttribute('data-staff') : (c.staffName||'선혜');
+          staffName2 = activeStaffBtn2 ? activeStaffBtn2.getAttribute('data-staff') : (c.staffName||'마스터');
         }
-        return { clientName:name, phone:phone, addr:document.getElementById('add-addr').value.trim(), space:document.getElementById('add-space').value.trim(), price:Number(document.getElementById('add-price').value)||0, performanceRevenue:c.performanceRevenue||0, staffName:staffName2, stage:document.getElementById('add-stage').value, date:document.getElementById('add-date').value, memo:document.getElementById('add-memo').value.trim(), visitCount:c.visitCount||1, createdAt:c.createdAt||new Date().toISOString() };
+        return { clientName:name, phone:phone, addr:document.getElementById('add-addr').value.trim(), space:document.getElementById('add-space').value.trim(), price:c.price||0, performanceRevenue:c.performanceRevenue||0, staffName:staffName2, stage:document.getElementById('add-stage').value, date:document.getElementById('add-date').value, memo:document.getElementById('add-memo').value.trim(), visitCount:c.visitCount||1, createdAt:c.createdAt||new Date().toISOString() };
       }
       return c;
     });
@@ -1207,7 +1206,7 @@ function checkOnboarding() {
     var saved = JSON.parse(localStorage.getItem('dah_session') || 'null');
     if (saved && saved.name && saved.role) {
       // 직원 목록 확인 (탈퇴한 직원 세션 방지)
-      var validStaffs = ['선혜'].concat(getStaffList());
+      var validStaffs = ['마스터'].concat(getStaffList());
       if (validStaffs.indexOf(saved.name) >= 0) {
         currentUser = saved;
         var loginScreen = document.getElementById('login-screen');
