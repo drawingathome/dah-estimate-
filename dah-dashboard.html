@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>드로잉엣홈 대시보드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR','Apple SD Gothic Neo',sans-serif;background:#F7F4F0;color:#1A1A1A;padding-bottom:80px}
+.hd{background:#fff;border-bottom:1px solid #E5E0D8;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:99;max-width:640px;margin:0 auto}
+.tabs{display:flex;max-width:640px;margin:0 auto;background:#fff;border-bottom:1px solid #E5E0D8;position:sticky;top:47px;z-index:98}
+.tab{flex:1;padding:11px 0;font-size:10px;font-weight:700;text-align:center;cursor:pointer;color:#A8A8A8;border:none;background:transparent;letter-spacing:0.3px}
+.tab.on{color:#D4622A;border-bottom:2px solid #D4622A;margin-bottom:-1px}
+.wrap{max-width:640px;margin:0 auto;padding:14px;padding-bottom:40px}
+.card{background:#fff;margin-bottom:10px;padding:14px 16px}
+.sec{font-size:11px;font-weight:700;color:#A8A8A8;letter-spacing:1.2px;margin-bottom:10px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #E5E0D8;font-size:13px;cursor:pointer}
+.row:last-child{border:none}
+.badge{padding:2px 8px;font-size:11px;font-weight:700;white-space:nowrap}
+.alert-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #E5E0D8;cursor:pointer}
+.alert-row:last-child{border:none}
+.form-row{margin-bottom:12px}
+.form-label{font-size:11px;color:#6B6B6B;font-weight:700;margin-bottom:4px}
+.form-input{width:100%;padding:10px 12px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit;outline:none;-webkit-appearance:none}
+.form-input:focus{border-color:#D4622A}
+select.form-input{background:#fff}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200}
+.overlay.open{display:flex;align-items:flex-end;justify-content:center}
+.modal-box{background:#fff;width:100%;max-width:640px;max-height:85vh;overflow-y:auto}
+input[type=search],input[type=text]{width:100%;padding:11px 14px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit;outline:none;background:#fff;-webkit-appearance:none}
+input:focus{border-color:#D4622A}
+#toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#1A1A1A;color:#fff;padding:10px 20px;font-size:12px;font-family:inherit;z-index:999;white-space:nowrap;opacity:0;transition:opacity 0.2s;pointer-events:none}
+.login-screen{position:fixed;inset:0;background:#F7F4F0;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.login-card{width:100%;max-width:400px;background:#fff;padding:28px 24px}
+.login-title{font-size:18px;font-weight:700;margin-bottom:6px;text-align:center}
+.login-sub{font-size:12px;color:#A8A8A8;text-align:center;margin-bottom:24px}
+.user-btn{width:100%;padding:14px;border:1px solid #E5E0D8;background:#fff;font-size:14px;font-family:inherit;cursor:pointer;margin-bottom:8px;text-align:left;display:flex;align-items:center;gap:10px}
+.user-btn:hover{border-color:#1A1A1A;background:#F7F4F0}
+.user-btn.master{border-color:#D4622A}
+</style>
+<!-- Supabase -->
+</head>
+<body>
+
+<!-- 로그인 화면 -->
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:11px;color:#D4622A;letter-spacing:2px;margin-bottom:6px">DRAWING at HOME</div>
+      <div class="login-title">안녕하세요 🙂</div>
+      <div class="login-sub">담당자를 선택해주세요</div>
+    </div>
+    <button class="user-btn master" id="btn-master-login">
+      <span style="font-size:18px">👑</span>
+      <div><div style="font-weight:700;font-size:14px">선혜 (마스터)</div><div style="font-size:11px;color:#A8A8A8">전체 현황 + 관리 기능</div></div>
+    </button>
+    <div id="master-pw-wrap" style="display:none;margin-bottom:8px">
+      <input id="master-pw-input" type="password" placeholder="비밀번호 입력" style="width:100%;padding:11px 12px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit;outline:none;-webkit-appearance:none;margin-bottom:6px">
+      <button id="btn-master-confirm" style="width:100%;padding:11px;background:#D4622A;color:#fff;border:none;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">확인</button>
+      <div id="master-pw-error" style="font-size:11px;color:#d94f4f;text-align:center;margin-top:6px;display:none">비밀번호가 틀렸습니다</div>
+    </div>
+    <div id="staff-login-list"></div>
+  </div>
+</div>
+
+<div style="max-width:640px;margin:0 auto">
+  <div class="hd">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:13px;font-weight:700;letter-spacing:1px;color:#1A1A1A">DRAWING at HOME</span>
+      <span id="current-user-badge" style="font-size:10px;padding:2px 7px;background:#F5F1EC;color:#D4622A;font-weight:700"></span>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button id="btn-backup" style="padding:6px 10px;background:#fff;color:#6B6B6B;border:1px solid #E5E0D8;font-size:11px;font-family:inherit;cursor:pointer">💾 백업</button>
+      <button id="btn-add-customer" style="padding:6px 12px;background:#1A1A1A;color:#fff;border:none;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer">+ 고객 추가</button>
+      <button id="btn-logout" style="padding:6px 8px;background:#fff;color:#A8A8A8;border:1px solid #E5E0D8;font-size:11px;font-family:inherit;cursor:pointer">전환</button>
+    </div>
+  </div>
+</div>
+<div class="tabs">
+  <button class="tab on" data-tab="home">홈</button>
+  <button class="tab" data-tab="pipe">진행현황</button>
+  <button class="tab" data-tab="search">고객목록</button>
+  <button class="tab" data-tab="cal">일정</button>
+  <button class="tab" data-tab="chart">매출</button>
+</div>
+
+<div id="home" class="wrap"></div>
+<div id="pipe" style="display:none" class="wrap">
+  <div style="margin-bottom:10px"><input type="search" id="pipe-search" placeholder="🔍 고객명 검색"></div>
+  <div id="pipe-list"></div>
+</div>
+<div id="search" style="display:none" class="wrap">
+  <div style="margin-bottom:10px"><input type="search" id="cust-search" placeholder="🔍 고객명 / 연락처 / 주소 검색"></div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="sec" style="margin-bottom:0">전체 고객</div>
+      <span id="search-count" style="font-size:11px;color:#A8A8A8"></span>
+    </div>
+    <div id="search-list"></div>
+  </div>
+</div>
+<div id="cal" style="display:none" class="wrap">
+  <div class="card"><div class="sec" id="cal-label">일정</div><div id="cal-list"></div></div>
+</div>
+<div id="chart" style="display:none" class="wrap">
+  <div class="card"><div class="sec">월별 매출</div><div id="chart-bars" style="display:flex;align-items:flex-end;gap:6px;height:120px;margin-bottom:8px"></div></div>
+  <div class="card"><div class="sec">이번 달 요약</div><div id="chart-summary"></div></div>
+</div>
+
+<!-- 고객 상세 모달 -->
+<div class="overlay" id="detail-overlay">
+  <div class="modal-box">
+    <div style="height:4px;background:#D4622A"></div>
+    <div style="padding:14px 16px;border-bottom:1px solid #E5E0D8;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:15px;font-weight:700" id="detail-name"></div>
+      <button id="detail-close-btn" style="background:none;border:none;font-size:20px;cursor:pointer;color:#A8A8A8">✕</button>
+    </div>
+    <div style="padding:14px 16px" id="detail-body"></div>
+  </div>
+</div>
+
+<!-- 고객 추가 모달 -->
+<div class="overlay" id="add-overlay">
+  <div class="modal-box">
+    <div style="height:4px;background:#D4622A"></div>
+    <div style="padding:14px 16px;border-bottom:1px solid #E5E0D8;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:15px;font-weight:700" id="add-modal-title">고객 추가</div>
+      <button id="add-close-btn" style="background:none;border:none;font-size:20px;cursor:pointer;color:#A8A8A8">✕</button>
+    </div>
+    <div style="padding:16px">
+      <div class="form-row"><div class="form-label">고객명 *</div><input class="form-input" id="add-name" placeholder="홍길동"></div>
+      <div class="form-row"><div class="form-label">연락처 *</div><input class="form-input" id="add-phone" placeholder="010-0000-0000"></div>
+      <div class="form-row"><div class="form-label">주소</div><input class="form-input" id="add-addr" placeholder="서울 서초구 반포동"></div>
+      <div class="form-row"><div class="form-label">공간·품목</div><input class="form-input" id="add-space" placeholder="거실+안방, 블라인드"></div>
+      <div class="form-row"><div class="form-label">견적 금액 (원)</div><input class="form-input" type="number" id="add-price" placeholder="0"></div>
+      <div class="form-row">
+        <div class="form-label">단계</div>
+        <select class="form-input" id="add-stage">
+          <option value="상담">상담</option>
+          <option value="계약금">계약금 납부</option>
+          <option value="실측">실측 예정</option>
+          <option value="잔금">잔금 대기</option>
+          <option value="시공">시공 예정</option>
+          <option value="완료">시공 완료</option>
+        </select>
+      </div>
+      <div class="form-row"><div class="form-label">상담일</div><input class="form-input" type="date" id="add-date"></div>
+      <div class="form-row"><div class="form-label">메모</div><input class="form-input" id="add-memo" placeholder="특이사항"></div>
+      <div class="form-row">
+        <div class="form-label">담당자</div>
+        <div style="display:flex;gap:8px">
+          <button data-staff="선혜" class="staff-btn" style="flex:1;padding:9px 0;border:1px solid #E5E0D8;font-size:13px;font-family:inherit;cursor:pointer;background:#fff;color:#6B6B6B">선혜</button>
+          <button data-staff="실장" class="staff-btn" style="flex:1;padding:9px 0;border:1px solid #E5E0D8;font-size:13px;font-family:inherit;cursor:pointer;background:#fff;color:#6B6B6B">실장</button>
+        </div>
+      </div>
+      <button id="add-save-btn" style="width:100%;padding:13px;background:#D4622A;color:#fff;border:none;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">저장</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var STAGES = ['상담','계약금','실측','잔금','시공','완료'];
+var STAGE_COLORS = {상담:'#D4622A',계약금:'#16a34a',실측:'#0ea5e9',잔금:'#b45309',시공:'#1A1A1A',완료:'#A8A8A8'};
+var STAGE_BG = {상담:'#fff7f4',계약금:'#f0fdf4',실측:'#f0f9ff',잔금:'#fffbeb',시공:'#f5f5f5',완료:'#f9f9f9'};
+var currentDetailName = null;
+
+// ── 권한 관리 ──────────────────────────────
+var MASTER_PW = (function(){ try{ return localStorage.getItem('dah_master_pw')||'dah2012'; }catch(e){ return 'dah2012'; } })();
+var currentUser = null; // {name, role: 'master'|'staff'}
+
+function getStaffList() {
+  try {
+    var list = JSON.parse(localStorage.getItem('dah_staff_list') || '[]');
+    return list.length > 0 ? list : [];
+  } catch(e) { return []; }
+}
+
+function loginAs(who) {
+  if (who === 'master') {
+    currentUser = {name:'선혜', role:'master'};
+  } else {
+    currentUser = {name:who, role:'staff'};
+  }
+  // 세션 저장
+  try { localStorage.setItem('dah_session', JSON.stringify(currentUser)); } catch(e){}
+  var loginScreen = document.getElementById('login-screen');
+  if (loginScreen) loginScreen.style.display = 'none';
+  var badge = document.getElementById('current-user-badge');
+  if (badge) badge.textContent = currentUser.name;
+  applyPermissions();
+  loadCustomersAsync(renderHome);
+}
+
+function applyPermissions() {
+  var isMaster = currentUser && currentUser.role === 'master';
+  // 마스터만 보이는 버튼들
+  var backupBtn = document.getElementById('btn-backup');
+  if (backupBtn) backupBtn.style.display = isMaster ? '' : 'none';
+}
+
+function logout() {
+  currentUser = null;
+  try { localStorage.removeItem('dah_session'); } catch(e){}
+  var ls = document.getElementById('login-screen');
+  if(ls) ls.style.display = 'flex';
+  var pw = document.getElementById('master-pw-wrap');
+  if(pw) pw.style.display = 'none';
+  renderStaffLoginList();
+}
+
+function changeMasterPassword() {
+  var cur = document.getElementById('change-pw-current');
+  var nw  = document.getElementById('change-pw-new');
+  var con = document.getElementById('change-pw-confirm');
+  if(!cur||!nw||!con) return;
+  if(cur.value !== MASTER_PW) { alert('현재 비밀번호가 틀렸습니다.'); cur.value=''; return; }
+  if(nw.value.length < 4) { alert('새 비밀번호는 4자 이상이어야 합니다.'); return; }
+  if(nw.value !== con.value) { alert('새 비밀번호가 일치하지 않습니다.'); con.value=''; return; }
+  MASTER_PW = nw.value;
+  try { localStorage.setItem('dah_master_pw', MASTER_PW); } catch(e){}
+  cur.value=''; nw.value=''; con.value='';
+  showToast('비밀번호가 변경됐습니다');
+  var wrap = document.getElementById('pw-change-wrap');
+  if(wrap) wrap.style.display = 'none';
+}
+
+function renderStaffLoginList() {
+  var list = getStaffList();
+  var el2 = document.getElementById('staff-login-list');
+  if (!el2) return;
+  el2.innerHTML = '';
+  list.forEach(function(name) {
+    var b = document.createElement('button');
+    b.className = 'user-btn';
+    b.innerHTML = '<span style="font-size:18px">👤</span><div><div style="font-weight:700;font-size:14px">'+name+'</div><div style="font-size:11px;color:#A8A8A8">본인 실적만 보기</div></div>';
+    b.addEventListener('click', function() { loginAs(name); });
+    el2.appendChild(b);
+  });
+}
+
+// ── 유틸 ──────────────────────────────────
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+var currentStaff = '전체';
+function fmt(n) { return (Number(n) || 0).toLocaleString() + '원'; }
+function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
+function thisMonthStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1); }
+function daysDiff(dateStr) { return Math.floor((new Date() - new Date(dateStr)) / 86400000); }
+function fmtPhone(v) {
+  var d = v.replace(/[^0-9]/g, '');
+  if (d.slice(0,2) === '02') {
+    if (d.length <= 6) return d.slice(0,2) + '-' + d.slice(2);
+    if (d.length <= 9) return d.slice(0,2) + '-' + d.slice(2,5) + '-' + d.slice(5);
+    return d.slice(0,2) + '-' + d.slice(2,6) + '-' + d.slice(6,10);
+  }
+  if (d.length <= 7) return d.slice(0,3) + '-' + d.slice(3);
+  return d.slice(0,3) + '-' + d.slice(3,7) + '-' + d.slice(7,11);
+}
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.opacity = '1';
+  setTimeout(function() { t.style.opacity = '0'; }, 2000);
+}
+
+// ── 데이터 ──────────────────────────────────
+// ── Supabase REST API (XHR 방식) ──────────
+var SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_9nYjQBzwiyausr7-Cd-elw_S9inJlge';
+
+function sbXHR(method, path, data, callback) {
+  var xhr = new XMLHttpRequest();
+  var url = SUPABASE_URL + '/rest/v1/' + path;
+  xhr.open(method, url, true);
+  xhr.setRequestHeader('apikey', SUPABASE_KEY);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_KEY);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.setRequestHeader('Prefer', method === 'POST' ? 'return=representation' : 'return=minimal');
+  xhr.onload = function() {
+    if (xhr.status >= 200 && xhr.status < 300) {
+      var result = null;
+      try { result = xhr.responseText ? JSON.parse(xhr.responseText) : []; } catch(e) { result = []; }
+      callback(null, result);
+    } else {
+      callback({status: xhr.status, text: xhr.responseText}, null);
+    }
+  };
+  xhr.onerror = function() { callback({status: 0, text: 'network error'}, null); };
+  xhr.send(data ? JSON.stringify(data) : null);
+}
+
+var _customerCache = [];
+
+function dbRowToCustomer(row) {
+  return {
+    id: row.id,
+    clientName: row.client_name || '',
+    phone: row.phone || '',
+    addr: row.addr || '',
+    space: row.space || '',
+    price: Number(row.price) || 0,
+    performanceRevenue: Number(row.performance_revenue) || 0,
+    staffName: row.staff_name || '선혜',
+    stage: row.stage || '상담',
+    date: row.date || '',
+    memo: row.memo || '',
+    visitCount: Number(row.visit_count) || 1,
+    createdAt: row.created_at || new Date().toISOString()
+  };
+}
+
+function customerToDbRow(c) {
+  return {
+    client_name: c.clientName || '',
+    phone: c.phone || '',
+    addr: c.addr || '',
+    space: c.space || '',
+    price: Number(c.price) || 0,
+    performance_revenue: Number(c.performanceRevenue) || 0,
+    staff_name: c.staffName || '선혜',
+    stage: c.stage || '상담',
+    date: c.date || '',
+    memo: c.memo || '',
+    visit_count: Number(c.visitCount) || 1
+  };
+}
+
+function loadCustomers() {
+  // 캐시 반환 (비동기 로드 별도)
+  if (_customerCache.length > 0) return _customerCache;
+  try {
+    var local = JSON.parse(localStorage.getItem('dah_customers') || '[]');
+    return local;
+  } catch(e) { return []; }
+}
+
+function loadCustomersAsync(callback) {
+  sbXHR('GET', 'customers?select=*&order=created_at.desc', null, function(err, data) {
+    if (err) {
+      console.error('Supabase 로드 오류:', err.status, err.text);
+      try { _customerCache = JSON.parse(localStorage.getItem('dah_customers') || '[]'); } catch(e) {}
+    } else {
+      _customerCache = (data || []).map(dbRowToCustomer);
+      try { localStorage.setItem('dah_customers', JSON.stringify(_customerCache)); } catch(e) {}
+    }
+    if (callback) callback();
+  });
+}
+
+function saveCustomers(arr) {
+  _customerCache = arr;
+  try { localStorage.setItem('dah_customers', JSON.stringify(arr)); } catch(e) {}
+}
+
+function saveCustomerToDb(customer, callback) {
+  var row = customerToDbRow(customer);
+  if (customer.id) {
+    sbXHR('PATCH', 'customers?id=eq.' + customer.id, row, function(err, data) {
+      if (err) console.error('수정 오류:', err.text);
+      if (callback) callback(err, data);
+    });
+  } else {
+    sbXHR('POST', 'customers', row, function(err, data) {
+      if (err) console.error('추가 오류:', err.text);
+      if (callback) callback(err, data);
+    });
+  }
+}
+
+function deleteCustomerFromDb(clientName, callback) {
+  sbXHR('DELETE', 'customers?client_name=eq.' + encodeURIComponent(clientName), null, function(err, data) {
+    if (err) console.error('삭제 오류:', err.text);
+    if (callback) callback(err, data);
+  });
+}
+
+// ── DOM 헬퍼 ──────────────────────────────────
+function el(tag, attrs, children) {
+  var e = document.createElement(tag);
+  if (attrs) Object.keys(attrs).forEach(function(k) {
+    if (k === 'style') e.style.cssText = attrs[k];
+    else if (k === 'class') e.className = attrs[k];
+    else if (k === 'text') e.textContent = attrs[k];
+    else e.setAttribute(k, attrs[k]);
+  });
+  if (children) children.forEach(function(c) { if (c) e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+  return e;
+}
+function div(style, children) { return el('div', {style: style}, children); }
+function span(style, text) { return el('span', {style: style, text: text}); }
+function btn(style, text, onClick) { var b = el('button', {style: style, text: text}); b.addEventListener('click', onClick); return b; }
+
+// ── 탭 전환 ──────────────────────────────────
+function goTab(t) {
+  ['home','pipe','search','cal','chart'].forEach(function(id) {
+    document.getElementById(id).style.display = id === t ? 'block' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach(function(b) {
+    b.className = b.getAttribute('data-tab') === t ? 'tab on' : 'tab';
+  });
+  if (t === 'home') loadCustomersAsync(renderHome);
+  if (t === 'pipe') loadCustomersAsync(renderPipe);
+  if (t === 'search') loadCustomersAsync(renderSearch);
+  if (t === 'cal') loadCustomersAsync(renderCal);
+  if (t === 'chart') loadCustomersAsync(renderChart);
+}
+
+// ── 홈 렌더 ──────────────────────────────────
+function renderHome() {
+  var wrap = document.getElementById('home');
+  wrap.innerHTML = '';
+  var allCustomers = loadCustomers();
+  // 직원은 본인 담당 고객만
+  var customers = (currentUser && currentUser.role === 'staff')
+    ? allCustomers.filter(function(c) { return (c.staffName||'선혜') === currentUser.name; })
+    : allCustomers;
+  var now = new Date();
+  var mon = now.getFullYear() + '년 ' + (now.getMonth()+1) + '월';
+  var month = thisMonthStr();
+  var revenue = 0, contracts = 0, consults = 0;
+  customers.forEach(function(c) {
+    if ((c.date || '').slice(0,7) === month) {
+      consults++;
+      if (c.stage !== '상담') { contracts++; revenue += Number(c.price) || 0; }
+    }
+  });
+
+  var isMaster = currentUser && currentUser.role === 'master';
+  var myName = currentUser ? currentUser.name : '선혜';
+
+  // 인사
+  wrap.appendChild(div('margin-bottom:14px', [
+    span('font-size:11px;color:#A8A8A8;display:block;margin-bottom:2px', mon),
+    span('font-size:15px;font-weight:700;display:block', '안녕하세요, ' + myName + '님 🙂')
+  ]));
+
+  // 새 견적서
+  wrap.appendChild(btn('display:block;width:100%;padding:13px;background:#1A1A1A;color:#fff;text-align:center;font-size:13px;font-weight:700;font-family:inherit;border:none;cursor:pointer;margin-bottom:10px', '+ 새 견적서 작성', function() { openEstimate(null); }));
+
+  // ── 매출 카드 ──
+  var allStaffs = ['선혜'].concat(getStaffList());
+  var mon2 = month;
+  var motiveMsgs = [
+    ['0~30%', '화이팅! 이제 시작이에요 💪'],
+    ['31~60%', '잘 하고 있어요! 절반 왔어요 🔥'],
+    ['61~90%', '거의 다 왔어요! 조금만 더! ⭐'],
+    ['91~99%', '목표 달성 직전! 한 건만 더! 🚀'],
+    ['100%+', '🎉 목표 달성! 최고예요!']
+  ];
+  function getMotiveMsg(pct) {
+    if (pct <= 30) return motiveMsgs[0][1];
+    if (pct <= 60) return motiveMsgs[1][1];
+    if (pct <= 90) return motiveMsgs[2][1];
+    if (pct < 100) return motiveMsgs[3][1];
+    return motiveMsgs[4][1];
+  }
+
+  if (isMaster) {
+    // ── 마스터: 전체 합계 + 담당자별 성과 ──
+    var totalActive = allCustomers.filter(function(c){ return (c.date||'').slice(0,7)===mon2 && c.stage!=='상담'; });
+    var totalRev  = totalActive.reduce(function(s,c){ return s+(Number(c.price)||0); },0);
+    var totalPerf = totalActive.reduce(function(s,c){ return s+(Number(c.performanceRevenue)||0); },0);
+    var totalCon  = totalActive.length;
+    var totalCons = allCustomers.filter(function(c){ return (c.date||'').slice(0,7)===mon2; }).length;
+
+    // 전체 합계 카드
+    var summaryCard = div('background:#fff;margin-bottom:10px;padding:14px 16px', [
+      span('font-size:11px;font-weight:700;color:#A8A8A8;letter-spacing:1.2px;display:block;margin-bottom:12px', '이번 달 전체 현황'),
+      div('display:flex;margin-bottom:10px', [
+        div('flex:1;text-align:center;border-right:1px solid #E5E0D8', [
+          span('font-size:16px;font-weight:700;color:#D4622A;display:block', fmt(totalRev)),
+          span('font-size:10px;color:#A8A8A8;display:block;margin-top:2px', '전체 매출')
+        ]),
+        div('flex:1;text-align:center;border-right:1px solid #E5E0D8', [
+          span('font-size:16px;font-weight:700;color:#1A1A1A;display:block', fmt(totalPerf)),
+          span('font-size:10px;color:#A8A8A8;display:block;margin-top:2px', '전체 성과매출')
+        ]),
+        div('flex:1;text-align:center', [
+          span('font-size:16px;font-weight:700;color:#6B6B6B;display:block', totalCon+'건/'+totalCons+'건'),
+          span('font-size:10px;color:#A8A8A8;display:block;margin-top:2px', '계약/상담')
+        ])
+      ])
+    ]);
+
+    // 담당자별 성과 행
+    summaryCard.appendChild(span('font-size:11px;font-weight:700;color:#A8A8A8;letter-spacing:1.2px;display:block;margin-bottom:8px', '담당자별 성과매출'));
+    allStaffs.forEach(function(staff) {
+      var sc = allCustomers.filter(function(c){ return (c.staffName||'선혜')===staff && (c.date||'').slice(0,7)===mon2 && c.stage!=='상담'; });
+      var sv = sc.reduce(function(s,c){ return s+(Number(c.price)||0); },0);
+      var sp = sc.reduce(function(s,c){ return s+(Number(c.performanceRevenue)||0); },0);
+      var goalKey = 'dah_goal_'+staff;
+      var sGoal = Number(localStorage.getItem(goalKey)||0);
+      var sPct = sGoal>0 ? Math.min(Math.round(sp/sGoal*100),100) : 0;
+      var row = div('padding:8px 0;border-bottom:1px solid #E5E0D8', [
+        div('display:flex;justify-content:space-between;align-items:center;margin-bottom:4px', [
+          span('font-size:13px;font-weight:700', staff),
+          div('text-align:right', [
+            span('font-size:13px;font-weight:700;color:#D4622A;display:block', fmt(sv)),
+            span('font-size:11px;color:#6B6B6B;display:block', '성과 '+fmt(sp))
+          ])
+        ]),
+        sGoal>0 ? div('height:4px;background:#E5E0D8;overflow:hidden', [div('height:4px;background:#D4622A;width:'+sPct+'%', [])]) : null,
+        sGoal>0 ? span('font-size:10px;color:#A8A8A8;display:block;margin-top:3px', '목표 '+sPct+'% ('+fmt(sGoal)+')') : null
+      ]);
+      summaryCard.appendChild(row);
+    });
+    wrap.appendChild(summaryCard);
+
+    // 담당자별 목표 설정 카드
+    var goalCard = div('background:#fff;margin-bottom:10px;padding:14px 16px', [
+      span('font-size:11px;font-weight:700;color:#A8A8A8;letter-spacing:1.2px;display:block;margin-bottom:10px', '담당자별 월 목표 성과매출')
+    ]);
+    allStaffs.forEach(function(staff) {
+      var goalKey2 = 'dah_goal_'+staff;
+      var sGoal2 = Number(localStorage.getItem(goalKey2)||0);
+      var sp2 = allCustomers.filter(function(c){ return (c.staffName||'선혜')===staff&&(c.date||'').slice(0,7)===mon2&&c.stage!=='상담'; }).reduce(function(s,c){return s+(Number(c.performanceRevenue)||0);},0);
+      var sPct2 = sGoal2>0?Math.min(Math.round(sp2/sGoal2*100),100):0;
+      var wrap2 = div('margin-bottom:12px', [
+        div('display:flex;justify-content:space-between;align-items:center;margin-bottom:4px', [
+          span('font-size:12px;font-weight:700', staff),
+          span('font-size:11px;color:#D4622A', sPct2+'%'+(sGoal2>0?' / '+fmt(sGoal2):' 미설정'))
+        ])
+      ]);
+      var gi = el('input', {type:'number', placeholder:'목표 금액 (원)', value:sGoal2>0?String(sGoal2):'', style:'width:100%;padding:7px 10px;border:1px solid #E5E0D8;font-size:12px;font-family:inherit;outline:none;margin-bottom:4px'});
+      (function(k,s){ gi.addEventListener('change', function(){ var v=Number(this.value.replace(/[^0-9]/g,'')); if(v>0){localStorage.setItem(k,String(v));renderHome();showToast(s+' 목표 설정됐습니다');} }); })(goalKey2,staff);
+      wrap2.appendChild(gi);
+      if(sGoal2>0) wrap2.appendChild(div('height:4px;background:#E5E0D8;overflow:hidden',[div('height:4px;background:#D4622A;width:'+sPct2+'%',[])]));
+      goalCard.appendChild(wrap2);
+    });
+    wrap.appendChild(goalCard);
+
+  } else {
+    // ── 직원: 본인 전체매출 + 성과매출 ──
+    var myActive = customers.filter(function(c){ return (c.date||'').slice(0,7)===mon2 && c.stage!=='상담'; });
+    var myRev  = myActive.reduce(function(s,c){ return s+(Number(c.price)||0); },0);
+    var myPerf = myActive.reduce(function(s,c){ return s+(Number(c.performanceRevenue)||0); },0);
+    var myGoalKey = 'dah_goal_'+myName;
+    var myGoal = Number(localStorage.getItem(myGoalKey)||0);
+    var myPct  = myGoal>0 ? Math.min(Math.round(myPerf/myGoal*100),100) : 0;
+
+    var myCard = div('background:#fff;margin-bottom:10px;padding:14px 16px', [
+      span('font-size:11px;font-weight:700;color:#A8A8A8;letter-spacing:1.2px;display:block;margin-bottom:12px', mon+' 내 실적'),
+      div('display:flex;margin-bottom:12px', [
+        div('flex:1;text-align:center;border-right:1px solid #E5E0D8', [
+          span('font-size:16px;font-weight:700;color:#D4622A;display:block', fmt(myRev)),
+          span('font-size:10px;color:#A8A8A8;display:block;margin-top:2px', '전체 매출')
+        ]),
+        div('flex:1;text-align:center', [
+          span('font-size:16px;font-weight:700;color:#1A1A1A;display:block', fmt(myPerf)),
+          span('font-size:10px;color:#A8A8A8;display:block;margin-top:2px', '성과 매출')
+        ])
+      ])
+    ]);
+    if(myGoal>0) {
+      myCard.appendChild(div('margin-bottom:6px',[
+        div('display:flex;justify-content:space-between;font-size:11px;color:#A8A8A8;margin-bottom:4px',[span('','목표 달성률'),span('',myPct+'% / '+fmt(myGoal))]),
+        div('height:5px;background:#E5E0D8;overflow:hidden',[div('height:5px;background:#D4622A;width:'+myPct+'%',[])]),
+        span('font-size:11px;color:#6B6B6B;display:block;text-align:center;padding:4px 0',getMotiveMsg(myPct))
+      ]));
+    }
+    wrap.appendChild(myCard);
+  }
+
+  // 비밀번호 변경 (마스터만)
+  if(isMaster) {
+    var pwWrap = div('background:#fff;margin-bottom:10px;padding:14px 16px', []);
+    var pwHdr = div('display:flex;justify-content:space-between;align-items:center;margin-bottom:0', [
+      span('font-size:11px;font-weight:700;color:#A8A8A8;letter-spacing:1.2px', '비밀번호 변경'),
+      btn('font-size:10px;color:#6B6B6B;background:none;border:1px solid #E5E0D8;padding:3px 8px;cursor:pointer;font-family:inherit', '변경', function() {
+        var inner = document.getElementById('pw-change-wrap');
+        if(inner) inner.style.display = inner.style.display==='none'?'block':'none';
+      })
+    ]);
+    pwWrap.appendChild(pwHdr);
+    var pwInner = el('div', {id:'pw-change-wrap', style:'display:none;margin-top:10px'});
+    [['change-pw-current','현재 비밀번호'],['change-pw-new','새 비밀번호 (4자 이상)'],['change-pw-confirm','새 비밀번호 확인']].forEach(function(row) {
+      var inp = el('input', {type:'password', id:row[0], placeholder:row[1], style:'width:100%;padding:9px 10px;border:1px solid #E5E0D8;font-size:13px;font-family:inherit;outline:none;margin-bottom:6px'});
+      pwInner.appendChild(inp);
+    });
+    var pwSaveBtn = btn('width:100%;padding:10px;background:#1A1A1A;color:#fff;border:none;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '비밀번호 변경 저장', changeMasterPassword);
+    pwInner.appendChild(pwSaveBtn);
+    pwWrap.appendChild(pwInner);
+    wrap.appendChild(pwWrap);
+  }
+
+  // 파이프라인 요약
+  var counts = {};
+  STAGES.forEach(function(s) { counts[s] = 0; });
+  customers.forEach(function(c) { if (counts[c.stage] !== undefined) counts[c.stage]++; });
+  var pipeCard = div('background:#fff;margin-bottom:10px;padding:14px 16px', [
+    span('font-size:11px;font-weight:700;color:#A8A8A8;letter-spacing:1.2px;display:block;margin-bottom:10px', '진행 현황')
+  ]);
+  var pipeSummary = div('display:flex;border:1px solid #E5E0D8;overflow:hidden', []);
+  STAGES.forEach(function(s, i) {
+    var cell = div('flex:1;text-align:center;padding:10px 4px;cursor:pointer' + (i < 5 ? ';border-right:1px solid #E5E0D8' : ''), [
+      span('font-size:18px;font-weight:700;color:' + (s === '완료' ? '#A8A8A8' : '#1A1A1A') + ';display:block', '' + counts[s]),
+      span('font-size:10px;color:#A8A8A8;display:block;margin-top:2px', s)
+    ]);
+    cell.addEventListener('click', function() { goTab('pipe'); });
+    pipeSummary.appendChild(cell);
+  });
+  pipeCard.appendChild(pipeSummary);
+  wrap.appendChild(pipeCard);
+
+  // 처리 필요
+  var alerts = [];
+  customers.forEach(function(c) {
+    if (c.stage === '잔금') alerts.push({name: c.clientName, msg: '잔금 대기 중', color: '#d94f4f', tag: '잔금 연락'});
+    if (c.stage === '상담' && c.date && daysDiff(c.date) >= 2) alerts.push({name: c.clientName, msg: '상담 후 ' + daysDiff(c.date) + '일 — 팔로업 필요', color: '#D4622A', tag: '팔로업'});
+    if (c.stage === '상담' && c.date && daysDiff(c.date) >= 7) alerts.push({name: c.clientName, msg: '견적서 유효기간 만료 (' + daysDiff(c.date) + '일 경과)', color: '#b45309', tag: '유효기간'});
+    if (c.stage === '시공' && c.date && daysDiff(c.date) === -1) alerts.push({name: c.clientName, msg: '내일 시공 예정 — 준비 안내 발송 필요', color: '#0ea5e9', tag: 'D-1'});
+  });
+  var alertCard = div('background:#fff;margin-bottom:10px;padding:14px 16px', [
+    span('font-size:11px;font-weight:700;color:#A8A8A8;letter-spacing:1.2px;display:block;margin-bottom:10px', '⚠ 처리 필요')
+  ]);
+  if (alerts.length === 0) {
+    alertCard.appendChild(span('font-size:13px;color:#A8A8A8;display:block;text-align:center;padding:16px 0', '처리 필요 항목이 없습니다'));
+  } else {
+    alerts.slice(0,5).forEach(function(a) {
+      var row = div('display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #E5E0D8;cursor:pointer', [
+        div('width:3px;height:36px;background:' + a.color + ';flex-shrink:0;margin-top:2px', []),
+        div('flex:1', [span('font-size:13px;font-weight:700;display:block;margin-bottom:2px', a.name), span('font-size:11px;color:#6B6B6B;display:block', a.msg)]),
+        span('font-size:11px;font-weight:700;color:' + a.color, a.tag)
+      ]);
+      (function(name) { row.addEventListener('click', function() { openDetail(name); }); })(a.name);
+      alertCard.appendChild(row);
+    });
+  }
+  wrap.appendChild(alertCard);
+
+  // 오늘 일정
+  var todayCustomers = customers.filter(function(c) { return c.date === todayStr(); });
+  var todayCard = div('background:#fff;margin-bottom:10px;padding:14px 16px', [
+    span('font-size:11px;font-weight:700;color:#A8A8A8;letter-spacing:1.2px;display:block;margin-bottom:10px', '오늘 일정')
+  ]);
+  if (todayCustomers.length === 0) {
+    todayCard.appendChild(span('font-size:13px;color:#A8A8A8;display:block;text-align:center;padding:16px 0', '오늘 일정이 없습니다'));
+  } else {
+    todayCustomers.forEach(function(c) {
+      var row = div('display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #E5E0D8;cursor:pointer', [
+        div('', [span('font-size:13px;font-weight:700;display:block', c.clientName), span('font-size:11px;color:#6B6B6B;display:block', c.space || '')]),
+        el('span', {'class':'badge', style: 'background:' + (STAGE_BG[c.stage]||'#f5f5f5') + ';color:' + (STAGE_COLORS[c.stage]||'#1A1A1A'), text: c.stage})
+      ]);
+      (function(name) { row.addEventListener('click', function() { openDetail(name); }); })(c.clientName);
+      todayCard.appendChild(row);
+    });
+  }
+  wrap.appendChild(todayCard);
+}
+
+// ── 파이프라인 렌더 ──────────────────────────
+function renderPipe() {
+  var allC = loadCustomers();
+  var customers = (currentUser && currentUser.role === 'staff')
+    ? allC.filter(function(c) { return (c.staffName||'선혜') === currentUser.name; })
+    : allC;
+  var q = (document.getElementById('pipe-search').value || '').trim();
+  if (q) customers = customers.filter(function(c) { return c.clientName.indexOf(q) >= 0 || (c.phone||'').indexOf(q) >= 0; });
+  var listEl = document.getElementById('pipe-list');
+  listEl.innerHTML = '';
+  STAGES.forEach(function(stage) {
+    var list = customers.filter(function(c) { return c.stage === stage; });
+    var total = list.reduce(function(s,c) { return s + (Number(c.price)||0); }, 0);
+    var color = STAGE_COLORS[stage] || '#1A1A1A';
+    var card = div('background:#fff;margin-bottom:8px;padding:14px 16px', []);
+    var hdr = div('display:flex;justify-content:space-between;align-items:center;margin-bottom:8px', [
+      span('font-size:11px;font-weight:700;letter-spacing:1.2px;color:' + color, stage),
+      div('', [span('font-size:11px;color:#A8A8A8', list.length + '건'), total > 0 ? span('font-size:11px;color:#1A1A1A;font-weight:700;margin-left:8px', '합계 ' + fmt(total)) : null])
+    ]);
+    card.appendChild(hdr);
+    if (list.length === 0) {
+      card.appendChild(span('font-size:12px;color:#A8A8A8;display:block;padding:8px 0', '없음'));
+    } else {
+      list.forEach(function(c) {
+        var row = div('display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #E5E0D8;cursor:pointer', [
+          div('', [
+            div('font-size:13px;font-weight:700', [span('', c.clientName), c.visitCount > 1 ? el('span', {style:'font-size:10px;color:#D4622A;border:1px solid #D4622A;padding:1px 5px;margin-left:6px', text:'재구매'}, []) : null]),
+            span('font-size:11px;color:#6B6B6B;display:block', c.space || '—')
+          ]),
+          div('text-align:right', [span('font-size:13px;font-weight:700;color:#D4622A;display:block', fmt(c.price)), span('font-size:11px;color:#A8A8A8;display:block', c.date || '')])
+        ]);
+        (function(name) { row.addEventListener('click', function() { openDetail(name); }); })(c.clientName);
+        card.appendChild(row);
+      });
+    }
+    listEl.appendChild(card);
+  });
+}
+
+// ── 고객 검색 렌더 ──────────────────────────
+function renderSearch() {
+  var allLoaded = loadCustomers();
+  var all = (currentUser && currentUser.role === 'staff')
+    ? allLoaded.filter(function(c) { return (c.staffName||'선혜') === currentUser.name; })
+    : allLoaded;
+  var q = (document.getElementById('cust-search').value || '').trim();
+  var customers = q ? all.filter(function(c) { return c.clientName.indexOf(q) >= 0 || (c.phone||'').indexOf(q) >= 0 || (c.addr||'').indexOf(q) >= 0; }) : all.slice().reverse();
+  // 검색 건수 표시
+  var countEl = document.getElementById('search-count');
+  if (countEl) countEl.textContent = q ? ('검색 결과 ' + customers.length + '건') : ('전체 ' + all.length + '건');
+  var listEl = document.getElementById('search-list');
+  listEl.innerHTML = '';
+  if (customers.length === 0) {
+    listEl.appendChild(span('font-size:13px;color:#A8A8A8;display:block;text-align:center;padding:20px 0', q ? '검색 결과가 없습니다' : '등록된 고객이 없습니다'));
+    return;
+  }
+  customers.forEach(function(c) {
+    var color = STAGE_COLORS[c.stage] || '#1A1A1A';
+    var bg = STAGE_BG[c.stage] || '#f5f5f5';
+    var row = div('display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #E5E0D8;cursor:pointer', [
+      div('', [
+        div('font-size:13px;font-weight:700', [span('', c.clientName), c.visitCount > 1 ? el('span', {style:'font-size:10px;color:#D4622A;border:1px solid #D4622A;padding:1px 5px;margin-left:6px', text:'재구매'}) : null]),
+        span('font-size:11px;color:#6B6B6B;display:block', (c.phone||'') + (c.addr ? ' · ' + c.addr : ''))
+      ]),
+      div('text-align:right', [span('font-size:13px;font-weight:700;color:#D4622A;display:block', fmt(c.price)), el('span', {'class':'badge',style:'background:'+bg+';color:'+color, text:c.stage})])
+    ]);
+    (function(name) { row.addEventListener('click', function() { openDetail(name); }); })(c.clientName);
+    listEl.appendChild(row);
+  });
+}
+
+// ── 일정 렌더 ──────────────────────────────
+function renderCal() {
+  var allCal = loadCustomers();
+  var customers = (currentUser && currentUser.role === 'staff')
+    ? allCal.filter(function(c) { return (c.staffName||'선혜') === currentUser.name; })
+    : allCal;
+  var now = new Date();
+  var mon = thisMonthStr();
+  document.getElementById('cal-label').textContent = (now.getMonth()+1) + '월 일정';
+  var list = customers.filter(function(c) { return (c.date||'').slice(0,7) === mon; });
+  list.sort(function(a,b) { return (a.date||'') < (b.date||'') ? -1 : 1; });
+  var listEl = document.getElementById('cal-list');
+  listEl.innerHTML = '';
+  if (list.length === 0) { listEl.appendChild(span('font-size:13px;color:#A8A8A8;display:block;text-align:center;padding:16px 0', '이번 달 일정이 없습니다')); return; }
+  var days = ['일','월','화','수','목','금','토'];
+  list.forEach(function(c) {
+    var d = new Date(c.date);
+    var isToday = c.date === todayStr();
+    var color = STAGE_COLORS[c.stage] || '#1A1A1A';
+    var bg = STAGE_BG[c.stage] || '#f5f5f5';
+    var row = div('display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #E5E0D8;cursor:pointer', [
+      div('display:flex;gap:12px;align-items:center', [
+        div('text-align:center;width:36px;flex-shrink:0', [span('font-size:16px;font-weight:700;color:'+(isToday?'#D4622A':'#1A1A1A')+';display:block', ''+d.getDate()), span('font-size:10px;color:#A8A8A8;display:block', days[d.getDay()])]),
+        div('', [span('font-size:13px;font-weight:700;display:block', c.clientName), span('font-size:11px;color:#6B6B6B;display:block', c.space||'—')])
+      ]),
+      el('span', {'class':'badge',style:'background:'+bg+';color:'+color, text:c.stage})
+    ]);
+    (function(name) { row.addEventListener('click', function() { openDetail(name); }); })(c.clientName);
+    listEl.appendChild(row);
+  });
+}
+
+// ── 매출 렌더 ──────────────────────────────
+function renderChart() {
+  var allChart = loadCustomers();
+  var customers = (currentUser && currentUser.role === 'staff')
+    ? allChart.filter(function(c) { return (c.staffName||'선혜') === currentUser.name; })
+    : allChart;
+  var now = new Date();
+  var months = [];
+  for (var i = 5; i >= 0; i--) {
+    var d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.push({key: d.getFullYear()+'-'+pad2(d.getMonth()+1), label:(d.getMonth()+1)+'월'});
+  }
+  var revenues = months.map(function(m) {
+    return customers.filter(function(c) { return (c.date||'').slice(0,7) === m.key && c.stage !== '상담'; }).reduce(function(s,c) { return s+(Number(c.price)||0); }, 0);
+  });
+  var maxRev = Math.max.apply(null, revenues) || 1;
+  var barsEl = document.getElementById('chart-bars');
+  barsEl.innerHTML = '';
+  var curMon = thisMonthStr();
+  months.forEach(function(m, i) {
+    var isThis = m.key === curMon;
+    var h = Math.round(revenues[i]/maxRev*100);
+    var col = div('flex:1;display:flex;flex-direction:column;align-items:center;gap:4px', [
+      span('font-size:9px;color:'+(isThis?'#D4622A':'#A8A8A8')+';font-weight:'+(isThis?'700':'400'), revenues[i]>0?(revenues[i]/10000).toFixed(0)+'만':'0'),
+      div('width:100%;background:'+(isThis?'#D4622A':'#E5E0D8')+';height:'+(h||2)+'px', []),
+      span('font-size:10px;color:'+(isThis?'#D4622A':'#A8A8A8'), m.label)
+    ]);
+    barsEl.appendChild(col);
+  });
+  var thisRev = revenues[revenues.length-1];
+  var thisCusts = customers.filter(function(c) { return (c.date||'').slice(0,7) === curMon; });
+  var thisCon = thisCusts.filter(function(c) { return c.stage !== '상담'; });
+  var conv = thisCusts.length > 0 ? Math.round(thisCon.length/thisCusts.length*100) : 0;
+  // 전달 매출 계산
+  var now2 = new Date();
+  var prevMonKey = new Date(now2.getFullYear(), now2.getMonth()-1, 1).getFullYear() + '-' + pad2(new Date(now2.getFullYear(), now2.getMonth()-1, 1).getMonth()+1);
+  var prevRev = getMonthRevenue(customers, prevMonKey);
+  var revChange = prevRev > 0 ? Math.round((thisRev - prevRev) / prevRev * 100) : null;
+  var revChangeStr = revChange === null ? '—' : (revChange >= 0 ? '+' + revChange : '' + revChange) + '%';
+  var revChangeColor = revChange === null ? '#A8A8A8' : revChange >= 0 ? '#16a34a' : '#d94f4f';
+  var sumEl = document.getElementById('chart-summary');
+  sumEl.innerHTML = '';
+  // 전체 합산
+  var allPerfRev = customers.filter(function(c){return (c.date||'').slice(0,7)===curMon&&c.stage!=='상담';}).reduce(function(s,c){return s+(Number(c.performanceRevenue)||0);},0);
+  var rows = [
+    ['전체 매출',fmt(thisRev),'#D4622A'],
+    ['전체 성과매출',fmt(allPerfRev),'#1A1A1A'],
+    ['전달 대비',revChangeStr,revChangeColor],
+    ['상담 건수',thisCusts.length+'건','#1A1A1A'],
+    ['계약 건수',thisCon.length+'건','#1A1A1A'],
+    ['계약 전환율',conv+'%','#1A1A1A']
+  ];
+  rows.forEach(function(row) {
+    sumEl.appendChild(div('display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #E5E0D8', [span('font-size:13px;color:#6B6B6B', row[0]), span('font-size:13px;font-weight:700;color:'+row[2], row[1])]));
+  });
+  // 담당자별 분리
+  sumEl.appendChild(div('padding:10px 0 4px', [span('font-size:11px;font-weight:700;color:#A8A8A8;letter-spacing:1.2px', '담당자별')]));
+  ['선혜','실장'].forEach(function(staff) {
+    var sCusts = customers.filter(function(c){return (c.staffName||'선혜')===staff&&(c.date||'').slice(0,7)===curMon&&c.stage!=='상담';});
+    var sTotal = sCusts.reduce(function(s,c){return s+(Number(c.price)||0);},0);
+    var sPerf = sCusts.reduce(function(s,c){return s+(Number(c.performanceRevenue)||0);},0);
+    sumEl.appendChild(div('padding:8px 0;border-bottom:1px solid #E5E0D8', [
+      div('display:flex;justify-content:space-between;margin-bottom:4px', [span('font-size:13px;font-weight:700', staff), span('font-size:13px;font-weight:700;color:#D4622A', fmt(sTotal))]),
+      div('display:flex;justify-content:space-between', [span('font-size:11px;color:#A8A8A8', '성과매출'), span('font-size:11px;color:#6B6B6B;font-weight:700', fmt(sPerf))])
+    ]));
+  });
+}
+
+// ── 고객 상세 모달 ──────────────────────────
+function openDetail(name) {
+  var customers = loadCustomers();
+  var c = customers.find(function(x) { return x.clientName === name; });
+  if (!c) return;
+  currentDetailName = name;
+  document.getElementById('detail-name').textContent = c.clientName + (c.visitCount > 1 ? ' (재구매 '+c.visitCount+'회)' : '');
+  var body = document.getElementById('detail-body');
+  body.innerHTML = '';
+  var color = STAGE_COLORS[c.stage] || '#1A1A1A';
+  var bg = STAGE_BG[c.stage] || '#f5f5f5';
+
+  // 고객 정보 헤더 + 수정 버튼
+  var isMasterView = currentUser && currentUser.role === 'master';
+  var infoHdr = div('display:flex;justify-content:space-between;align-items:center;margin-bottom:8px', [
+    span('font-size:11px;color:#A8A8A8;letter-spacing:1.2px', '고객 정보'),
+    isMasterView ? btn('font-size:10px;color:#6B6B6B;background:none;border:1px solid #E5E0D8;padding:3px 8px;cursor:pointer;font-family:inherit', '✏️ 수정', function() { closeDetail(); openAdd(c.clientName); }) : null
+  ]);
+  body.appendChild(infoHdr);
+  // 연락처 — tel 링크
+  var phoneRow = div('display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #E5E0D8;font-size:13px', [span('color:#6B6B6B', '연락처')]);
+  if (c.phone) {
+    var telLink = el('a', {href:'tel:'+c.phone.replace(/[^0-9]/g,''), style:'font-weight:700;color:#1A1A1A;text-decoration:none'});
+    telLink.textContent = c.phone;
+    phoneRow.appendChild(telLink);
+  } else { phoneRow.appendChild(span('font-weight:700', '—')); }
+  body.appendChild(phoneRow);
+  [['주소',c.addr||'—'],['공간·품목',c.space||'—'],['견적 금액',fmt(c.price)],['상담일',c.date||'—'],['메모',c.memo||'—']].forEach(function(row) {
+    body.appendChild(div('display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #E5E0D8;font-size:13px', [span('color:#6B6B6B', row[0]), span('font-weight:700', row[1])]));
+  });
+
+  // 단계 변경
+  body.appendChild(span('font-size:11px;color:#A8A8A8;letter-spacing:1.2px;display:block;margin:14px 0 8px', '단계 변경'));
+  var stageWrap = div('display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px', []);
+  STAGES.forEach(function(s) {
+    var on = s === c.stage;
+    var b = btn('padding:7px 12px;border:1px solid '+(on?color:'#E5E0D8')+';background:'+(on?bg:'#fff')+';color:'+(on?color:'#6B6B6B')+';font-size:11px;font-weight:'+(on?'700':'400')+';font-family:inherit;cursor:pointer', s, function() {
+      changeStage(s);
+    });
+    stageWrap.appendChild(b);
+  });
+  body.appendChild(stageWrap);
+
+  // 카카오톡
+  var kakaoHdr = div('display:flex;justify-content:space-between;align-items:center;margin-bottom:8px', [
+    span('font-size:11px;color:#A8A8A8;letter-spacing:1.2px', '카카오톡 발송'),
+    el('div', {id:'kakao-log', style:'font-size:10px;color:#A8A8A8'})
+  ]);
+  body.appendChild(kakaoHdr);
+  renderKakaoLog();
+  var kakaoWrap = div('display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px', []);
+  [['followup','📋 팔로업'],['contract','📋 계약금'],['measure','📋 실측'],['balance','📋 잔금']].forEach(function(item) {
+    var b = btn('flex:1;padding:8px 4px;border:1px solid #E5E0D8;background:#fff;font-size:11px;font-family:inherit;cursor:pointer;color:#1A1A1A', item[1], function() {
+      copyKakao(item[0]);
+    });
+    kakaoWrap.appendChild(b);
+  });
+  body.appendChild(kakaoWrap);
+
+  // 견적서 + 삭제/닫기
+  body.appendChild(btn('width:100%;padding:12px;background:#1A1A1A;color:#fff;border:none;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:8px', '📝 견적서 앱에서 열기', function() { openEstimate(currentDetailName); }));
+  var bottomBtns = [btn('flex:2;padding:10px;background:#1A1A1A;color:#fff;border:none;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer', '닫기', closeDetail)];
+  if (isMasterView) bottomBtns.unshift(btn('flex:1;padding:10px;background:#fff;border:1px solid #E5E0D8;font-size:12px;font-family:inherit;cursor:pointer;color:#6B6B6B', '삭제', deleteCustomer));
+  body.appendChild(div('display:flex;gap:8px', bottomBtns));
+
+  document.getElementById('detail-overlay').className = 'overlay open';
+}
+
+function closeDetail() { document.getElementById('detail-overlay').className = 'overlay'; currentDetailName = null; }
+
+function changeStage(stage) {
+  // 직원은 본인 담당 고객만 단계 변경 가능
+  if (currentUser && currentUser.role === 'staff') {
+    var arr0 = loadCustomers();
+    var c0 = arr0.find(function(x) { return x.clientName === currentDetailName; });
+    if (c0 && (c0.staffName||'선혜') !== currentUser.name) {
+      alert('본인 담당 고객만 단계를 변경할 수 있습니다.');
+      return;
+    }
+  }
+  if (stage === '완료') {
+    if (!confirm(currentDetailName + ' 고객을 "시공 완료"로 변경할까요?\n완료 처리 후 다시 되돌릴 수 있습니다.')) return;
+  }
+  var arr = loadCustomers();
+  arr = arr.map(function(c) { if (c.clientName === currentDetailName) c.stage = stage; return c; });
+  saveCustomers(arr);
+  var changed = arr.find(function(c){ return c.clientName===currentDetailName; });
+  if(changed) saveCustomerToDb(changed, null);
+  renderHome();
+  openDetail(currentDetailName);
+  showToast('"' + stage + '"으로 변경됐습니다');
+}
+
+function deleteCustomer() {
+  if (!confirm((currentDetailName||'고객') + '을(를) 삭제할까요?')) return;
+  deleteCustomerFromDb(currentDetailName, function() {
+    loadCustomersAsync(renderHome);
+  });
+  saveCustomers(loadCustomers().filter(function(c) { return c.clientName !== currentDetailName; }));
+  closeDetail();
+  renderHome();
+}
+
+// ── 고객 추가 ──────────────────────────────
+var editingCustomerName = null;
+function openAdd(editName) {
+  editingCustomerName = editName || null;
+  document.getElementById('add-modal-title').textContent = editName ? '고객 정보 수정' : '고객 추가';
+  if (editName) {
+    var arr = loadCustomers();
+    var c = arr.find(function(x) { return x.clientName === editName; });
+    if (c) {
+      document.getElementById('add-name').value = c.clientName;
+      document.getElementById('add-phone').value = c.phone || '';
+      document.getElementById('add-addr').value = c.addr || '';
+      document.getElementById('add-space').value = c.space || '';
+      document.getElementById('add-price').value = c.price || '';
+      document.getElementById('add-stage').value = c.stage || '상담';
+      document.getElementById('add-date').value = c.date || todayStr();
+      document.getElementById('add-memo').value = c.memo || '';
+    }
+  } else {
+    document.getElementById('add-name').value = '';
+    document.getElementById('add-phone').value = '';
+    document.getElementById('add-addr').value = '';
+    document.getElementById('add-space').value = '';
+    document.getElementById('add-price').value = '';
+    document.getElementById('add-stage').value = '상담';
+    document.getElementById('add-date').value = todayStr();
+    document.getElementById('add-memo').value = '';
+  }
+  // 담당자 버튼 초기화
+  var defaultStaff = editName ? (function() {
+    var arr = loadCustomers();
+    var c = arr.find(function(x) { return x.clientName === editName; });
+    return c ? (c.staffName || '선혜') : '선혜';
+  })() : (currentUser ? currentUser.name : '선혜');
+  // 직원이면 담당자 고정 (변경 불가)
+  var isStaffUser = currentUser && currentUser.role === 'staff';
+  document.querySelectorAll('.staff-btn').forEach(function(b) {
+    var isActive = b.getAttribute('data-staff') === defaultStaff;
+    b.classList.toggle('active', isActive);
+    b.style.background = isActive ? '#D4622A' : '#fff';
+    b.style.color = isActive ? '#fff' : '#6B6B6B';
+    b.style.border = '1px solid ' + (isActive ? '#D4622A' : '#E5E0D8');
+    b.style.fontWeight = isActive ? '700' : '400';
+    // 직원이면 담당자 버튼 비활성화 (본인 고정)
+    if (isStaffUser) {
+      b.style.pointerEvents = 'none';
+      b.style.opacity = isActive ? '1' : '0.3';
+    } else {
+      b.style.pointerEvents = '';
+      b.style.opacity = '';
+    }
+  });
+  document.getElementById('add-overlay').className = 'overlay open';
+}
+function closeAdd() { document.getElementById('add-overlay').className = 'overlay'; }
+
+function saveCustomer() {
+  var name = document.getElementById('add-name').value.trim();
+  var phone = document.getElementById('add-phone').value.trim();
+  if (!name || !phone) { alert('이름과 연락처는 필수입니다.'); return; }
+  var arr = loadCustomers();
+  if (editingCustomerName) {
+    // 수정 모드
+    arr = arr.map(function(c) {
+      if (c.clientName === editingCustomerName) {
+        var staffName2;
+        if (currentUser && currentUser.role === 'staff') {
+          staffName2 = currentUser.name;
+        } else {
+          var activeStaffBtn2 = document.querySelector('.staff-btn.active');
+          staffName2 = activeStaffBtn2 ? activeStaffBtn2.getAttribute('data-staff') : (c.staffName||'선혜');
+        }
+        return { clientName:name, phone:phone, addr:document.getElementById('add-addr').value.trim(), space:document.getElementById('add-space').value.trim(), price:Number(document.getElementById('add-price').value)||0, performanceRevenue:c.performanceRevenue||0, staffName:staffName2, stage:document.getElementById('add-stage').value, date:document.getElementById('add-date').value, memo:document.getElementById('add-memo').value.trim(), visitCount:c.visitCount||1, createdAt:c.createdAt||new Date().toISOString() };
+      }
+      return c;
+    });
+    saveCustomers(arr);
+    closeAdd();
+    renderHome();
+    openDetail(name);
+    showToast('고객 정보가 수정됐습니다');
+  } else {
+    // 추가 모드
+    var existing = arr.find(function(c) { return c.clientName === name; });
+    if (existing) {
+      if (!confirm('"' + name + '" 고객이 이미 있습니다.\n재구매 고객으로 업데이트할까요?')) return;
+    }
+    var visitCount = existing ? (existing.visitCount||1)+1 : 1;
+    if (existing) arr = arr.filter(function(c) { return c.clientName !== name; });
+    // 직원이면 본인 담당자로 강제 설정
+  var staffName;
+  if (currentUser && currentUser.role === 'staff') {
+    staffName = currentUser.name;
+  } else {
+    var activeStaffBtn = document.querySelector('.staff-btn.active');
+    staffName = activeStaffBtn ? activeStaffBtn.getAttribute('data-staff') : '선혜';
+  }
+  arr.unshift({ clientName:name, phone:phone, addr:document.getElementById('add-addr').value.trim(), space:document.getElementById('add-space').value.trim(), price:Number(document.getElementById('add-price').value)||0, performanceRevenue:0, staffName:staffName, stage:document.getElementById('add-stage').value, date:document.getElementById('add-date').value, memo:document.getElementById('add-memo').value.trim(), visitCount:visitCount, createdAt:new Date().toISOString() });
+    saveCustomers(arr);
+    closeAdd();
+    renderHome();
+    openDetail(name);
+  }
+}
+
+// ── 견적서 연동 ──────────────────────────────
+function openEstimate(name) {
+  if (name) {
+    try {
+      var arr = loadCustomers();
+      var c = arr.find(function(x) { return x.clientName === name; });
+      if (c) localStorage.setItem('dah_open_customer', JSON.stringify({name:c.clientName, phone:c.phone, addr:c.addr}));
+    } catch(e) {}
+  }
+  window.location.href = 'dah-estimate.html';
+}
+
+// ── 목표 매출 ──────────────────────────────
+function setGoal() {
+  // 개인별 목표는 홈 카드의 입력칸에서 직접 설정
+  showToast('각 담당자 카드의 목표 금액 입력란에 입력해주세요');
+}
+
+// ── 카카오톡 복사 ──────────────────────────
+var KAKAO_LABELS = {followup:'팔로업', contract:'계약금 안내', measure:'실측 안내', balance:'잔금 안내'};
+function copyKakao(type) {
+  var arr = loadCustomers();
+  var c = arr.find(function(x) { return x.clientName === currentDetailName; });
+  if (!c) return;
+  var n = c.clientName;
+  var msgs = {
+    followup: '안녕하세요, ' + n + '님 🙂\n드로잉엣홈입니다.\n상담 후 궁금하신 점은 없으셨나요?\n편하게 말씀해 주세요!',
+    contract: '안녕하세요, ' + n + '님 🙂\n드로잉엣홈입니다.\n계약금(50%)이 확인되면 실측 일정을 잡아드리겠습니다.',
+    measure: '안녕하세요, ' + n + '님 🙂\n드로잉엣홈입니다.\n실측 방문 일정을 조율하고 싶습니다.\n편하신 날짜와 시간을 알려주세요!',
+    balance: '안녕하세요, ' + n + '님 🙂\n드로잉엣홈입니다.\n잔금 납부가 완료되면 시공 일정이 확정됩니다. 감사합니다!'
+  };
+  var msg = msgs[type] || '';
+  // 미리보기 확인
+  if (!confirm('발송할 메시지:\n\n' + msg + '\n\n복사하시겠습니까?')) return;
+  // 발송 기록 저장
+  var logKey = 'dah_kakao_log';
+  try {
+    var logs = JSON.parse(localStorage.getItem(logKey) || '[]');
+    logs.unshift({ name: n, type: KAKAO_LABELS[type]||type, date: todayStr(), time: new Date().toLocaleTimeString() });
+    localStorage.setItem(logKey, JSON.stringify(logs.slice(0,100)));
+  } catch(e) {}
+  // 복사
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(msg).then(function() { showToast('복사됐습니다 — 카카오톡에 붙여넣기 하세요'); renderKakaoLog(); });
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = msg; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('복사됐습니다 — 카카오톡에 붙여넣기 하세요');
+      renderKakaoLog();
+    }
+  } catch(e) { showToast('메시지: ' + msg.slice(0,30) + '...'); }
+}
+function renderKakaoLog() {
+  var logEl = document.getElementById('kakao-log');
+  if (!logEl) return;
+  try {
+    var logs = JSON.parse(localStorage.getItem('dah_kakao_log') || '[]').filter(function(l) { return l.name === currentDetailName; });
+    if (logs.length === 0) { logEl.textContent = '발송 이력 없음'; return; }
+    logEl.innerHTML = '';
+    logs.slice(0,3).forEach(function(l) {
+      var row = div('font-size:11px;color:#6B6B6B;padding:3px 0;border-bottom:1px solid #E5E0D8', [span('', l.date + ' ' + l.time + ' — ' + l.type)]);
+      logEl.appendChild(row);
+    });
+  } catch(e) {}
+}
+
+// ── 이벤트 바인딩 ──────────────────────────
+document.querySelectorAll('.tab').forEach(function(b) {
+  b.addEventListener('click', function() { goTab(b.getAttribute('data-tab')); });
+});
+document.getElementById('btn-add-customer').addEventListener('click', function() { openAdd(null); });
+document.getElementById('btn-backup').addEventListener('click', backupData);
+document.getElementById('btn-logout').addEventListener('click', logout);
+// 마스터 로그인 버튼
+document.getElementById('btn-master-login').addEventListener('click', function() {
+  var wrap = document.getElementById('master-pw-wrap');
+  wrap.style.display = wrap.style.display === 'none' ? 'block' : 'none';
+  if (wrap.style.display === 'block') {
+    document.getElementById('master-pw-input').value = '';
+    document.getElementById('master-pw-error').style.display = 'none';
+    document.getElementById('master-pw-input').focus();
+  }
+});
+document.getElementById('btn-master-confirm').addEventListener('click', function() {
+  var pw = document.getElementById('master-pw-input').value;
+  if (pw === MASTER_PW) {
+    document.getElementById('master-pw-wrap').style.display = 'none';
+    loginAs('master');
+  } else {
+    document.getElementById('master-pw-error').style.display = 'block';
+    document.getElementById('master-pw-input').value = '';
+    document.getElementById('master-pw-input').focus();
+  }
+});
+document.getElementById('master-pw-input').addEventListener('keydown', function(e) {
+  if (e.keyCode === 13) document.getElementById('btn-master-confirm').click();
+});
+document.getElementById('add-close-btn').addEventListener('click', closeAdd);
+document.getElementById('detail-close-btn').addEventListener('click', closeDetail);
+document.getElementById('add-save-btn').addEventListener('click', saveCustomer);
+document.getElementById('add-phone').addEventListener('input', function() { this.value = fmtPhone(this.value); });
+// 담당자 버튼 토글
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('staff-btn')) {
+    document.querySelectorAll('.staff-btn').forEach(function(b) {
+      b.classList.remove('active');
+      b.style.background = '#fff';
+      b.style.color = '#6B6B6B';
+      b.style.border = '1px solid #E5E0D8';
+      b.style.fontWeight = '400';
+    });
+    e.target.classList.add('active');
+    e.target.style.background = '#D4622A';
+    e.target.style.color = '#fff';
+    e.target.style.border = '1px solid #D4622A';
+    e.target.style.fontWeight = '700';
+  }
+});
+document.getElementById('pipe-search').addEventListener('input', renderPipe);
+document.getElementById('cust-search').addEventListener('input', renderSearch);
+document.getElementById('detail-overlay').addEventListener('click', function(e) { if (e.target === this) closeDetail(); });
+document.getElementById('add-overlay').addEventListener('click', function(e) { if (e.target === this) closeAdd(); });
+
+// ── 백업/내보내기 ──────────────────────────
+function backupData() {
+  try {
+    var data = {
+      customers: loadCustomers(),
+      exported: new Date().toISOString(),
+      version: '1.0'
+    };
+    var json = JSON.stringify(data, null, 2);
+    var blob = new Blob([json], {type: 'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    var d = new Date();
+    a.href = url;
+    a.download = 'dah_backup_' + d.getFullYear() + pad2(d.getMonth()+1) + pad2(d.getDate()) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('백업 파일이 저장됐습니다');
+  } catch(e) {
+    alert('백업 실패: ' + e.message);
+  }
+}
+
+// ── 매출 증감률 ──────────────────────────────
+function getMonthRevenue(customers, monthKey) {
+  return customers.filter(function(c) { return (c.date||'').slice(0,7) === monthKey && c.stage !== '상담'; })
+    .reduce(function(s,c) { return s + (Number(c.price)||0); }, 0);
+}
+
+// ── 온보딩 ──────────────────────────────────
+function checkOnboarding() {
+  if (!localStorage.getItem('dah_onboarded')) {
+    var msg = '드로잉엣홈 대시보드 사용법\n\n' +
+      '1️⃣ 상담 후 "+ 고객 추가" 버튼으로 고객 등록\n' +
+      '2️⃣ 고객 클릭 → 단계 변경 (상담→계약금→실측→잔금→시공→완료)\n' +
+      '3️⃣ 카카오톡 버튼으로 메시지 복사 → 카톡에 붙여넣기\n' +
+      '4️⃣ "새 견적서 작성"으로 견적서 앱 연결\n' +
+      '5️⃣ 💾 백업 버튼으로 데이터 정기 백업 필수!';
+    alert(msg);
+    localStorage.setItem('dah_onboarded', '1');
+  }
+}
+
+// ── 초기화 — 세션 복원 ──────────────────────
+(function() {
+  try {
+    var saved = JSON.parse(localStorage.getItem('dah_session') || 'null');
+    if (saved && saved.name && saved.role) {
+      // 직원 목록 확인 (탈퇴한 직원 세션 방지)
+      var validStaffs = ['선혜'].concat(getStaffList());
+      if (validStaffs.indexOf(saved.name) >= 0) {
+        currentUser = saved;
+        var loginScreen = document.getElementById('login-screen');
+        if (loginScreen) loginScreen.style.display = 'none';
+        var badge = document.getElementById('current-user-badge');
+        if (badge) badge.textContent = currentUser.name;
+        applyPermissions();
+        loadCustomersAsync(renderHome);
+        return;
+      }
+    }
+  } catch(e) {}
+  // 세션 없으면 로그인 화면
+  renderStaffLoginList();
+})();
+</script>
+</body>
+</html>
