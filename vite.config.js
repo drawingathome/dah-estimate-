@@ -8,7 +8,8 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        dashboard: resolve(__dirname, 'dah-dashboard.html')
+        dashboard: resolve(__dirname, 'dah-dashboard.html'),
+        estimate: resolve(__dirname, 'dah-estimate.html')
       }
     }
   }
