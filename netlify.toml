@@ -1,11 +1,6 @@
 [build]
-  command = "npm run build && cp dah-dashboard.html dist/"
+  command = "npm run build && cp dah-estimate.html dist/"
   publish = "dist"
-
-[[redirects]]
-  from = "/dah-dashboard.html"
-  to = "/dah-dashboard.html"
-  status = 200
 
 [[redirects]]
   from = "/*"
