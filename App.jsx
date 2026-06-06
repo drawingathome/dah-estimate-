@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const LOGO = "https://dahcurtain.co.kr/web/upload/NNEditor/20230424/logo.png";
+const LOGO = "/logo.png";
 
 // 브랜드 컬러
 const C = {
