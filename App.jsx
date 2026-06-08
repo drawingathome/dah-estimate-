@@ -173,7 +173,7 @@ export default function App() {
      <div style={{ background: C.ivory, border: `1px solid #F0D4B8`, borderRadius: 6, padding: "16px 20px", fontSize: 12, color: C.dark, lineHeight: 1.9, marginBottom: 14, textAlign: "left" }}>
       <div style={{ fontWeight: 700, color: C.dark, marginBottom: 8 }}>도면이나 참고 이미지가 있으시면</div>
       카카오톡으로 미리 보내주시면 더 정확하게 준비할 수 있어요<br/>
-      <a href="https://pf.kakao.com/_drawingathome" target="_blank" rel="noreferrer" style={{
+      <a href="https://pf.kakao.com/_FGhxkn" target="_blank" rel="noreferrer" style={{
        display: "inline-block", marginTop: 8, padding: "8px 16px",
        background: "#FAE100", color: "#282828", borderRadius: 4,
        fontSize: 12, fontWeight: 700, textDecoration: "none",
