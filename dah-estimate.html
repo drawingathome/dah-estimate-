@@ -20,8 +20,8 @@ html,body{font-family:"Noto Sans KR","Apple SD Gothic Neo",sans-serif;background
 .container{max-width:900px;margin:0 auto;padding:20px 20px 80px}
 
 /* ── 헤더 ── */
-.doc-header{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:24px 28px;border-bottom:1px solid #E4E0DB;margin-bottom:1px}
-.doc-header-left .doc-title{font-size:20px;font-weight:300;letter-spacing:5px;color:#1E1E1E;line-height:1}
+.doc-header{display:flex;justify-content:space-between;align-items:center;background:#1e1e1e;padding:24px 28px;border-bottom:1px solid #E4E0DB;margin-bottom:1px}
+.doc-header-left .doc-title{font-size:20px;font-weight:300;letter-spacing:0;color:#FAF7F5;line-height:1}
 .doc-header-left .doc-date{font-size:10px;color:#ADADAD;letter-spacing:0.5px;margin-top:6px}
 .doc-header-right img{height:22px;display:block}
 
@@ -36,7 +36,7 @@ html,body{font-family:"Noto Sans KR","Apple SD Gothic Neo",sans-serif;background
 .info-grid{display:grid;grid-template-columns:1fr 1fr 2fr 1fr;gap:0 20px}
 .info-item{padding-bottom:16px}
 .info-item label{font-size:10px;color:#999;font-weight:700;display:block;margin-bottom:5px;letter-spacing:0.5px;text-transform:uppercase}
-.info-item input,.info-item select{width:100%;padding:0;border:none;border-bottom:1.5px solid transparent;font-size:15px;font-weight:500;font-family:inherit;outline:none;background:transparent;color:#1E1E1E;transition:border-color 0.15s;line-height:1.5}
+.info-item input,.info-item select{width:100%;padding:0;border:none;border-bottom:1.5px solid transparent;font-size:14px;font-weight:500;font-family:inherit;outline:none;background:transparent;color:#1E1E1E;transition:border-color 0.15s;line-height:1.5}
 .info-item input:focus,.info-item select:focus{border-bottom-color:#F06E2D}
 .info-item input::placeholder{color:#D8D4CE;font-weight:400;font-size:13px}
 .info-item input[readonly]{color:#ADADAD}
@@ -109,10 +109,10 @@ td.amt{text-align:right;white-space:nowrap;font-size:14px;font-weight:800;color:
 .sum-row .lbl{font-size:13px;color:#666;font-weight:500}
 .sum-row .val{font-size:14px;font-weight:700;color:#222}
 .sum-row.total{border-top:2px solid #F06E2D;border-bottom:none;padding:16px 0 8px;margin-top:4px}
-.sum-row.total .lbl{font-size:16px;font-weight:700;color:#282828}
-.sum-row.total .val{font-size:26px;font-weight:900;color:#F06E2D;letter-spacing:-1px}
-.sum-row.deposit .lbl{color:#F06E2D;font-weight:700}
-.sum-row.deposit .val{color:#F06E2D}
+.sum-row.total .lbl{font-size:14px;font-weight:700;color:#282828}
+.sum-row.total .val{font-size:20px;font-weight:900;color:#F06E2D;letter-spacing:-1px}
+.sum-row.deposit .lbl{color:#282828;font-weight:700}
+.sum-row.deposit .val{color:#282828}
 .sum-row.perf{border-top:1px dashed #E0D8D0}
 .sum-row.perf .lbl{color:#ADADAD;font-size:11px;font-weight:600}
 .sum-row.perf .val{color:#ADADAD;font-size:12px;font-weight:600}
@@ -146,7 +146,7 @@ td.amt{text-align:right;white-space:nowrap;font-size:14px;font-weight:800;color:
 .space-btn{padding:9px 6px;background:#FAF8F5;border:1px solid #E4E0DB;font-size:12px;font-family:inherit;cursor:pointer;color:#6B6B6B;text-align:center;transition:all 0.15s}
 .space-btn:hover{border-color:#F06E2D;color:#F06E2D}
 .space-btn.on,.space-btn:active{background:#F06E2D;color:#fff;border-color:#F06E2D}
-.space-inp{text-align:center;cursor:pointer;caret-color:transparent;font-size:11px;font-weight:700;color:#444;background:#F5F0EB;border:1.5px solid #DDD;border-radius:20px;padding:4px 10px;transition:all 0.15s;white-space:nowrap;width:100%}
+.space-inp{text-align:center;cursor:pointer;caret-color:transparent;font-size:11px;font-weight:600;color:#282828;background:#F5F0EB;border:1px solid #DDD;border-radius:4px;padding:4px 6px;width:100%;white-space:nowrap;outline:none}
 .space-inp:not(:placeholder-shown){background:#282828;color:#FAF7F5;border-color:#282828}
 
 /* ── 진행 안내 (내부 숨김) ── */
@@ -180,7 +180,7 @@ td.amt{text-align:right;white-space:nowrap;font-size:14px;font-weight:800;color:
   background:#fff}
 .pv-customer-left{}
 .pv-customer-name{
-  font-size:22px;font-weight:300;color:#1A1A1A;
+  font-size:20px;font-weight:300;color:#1A1A1A;
   letter-spacing:1px;margin-bottom:6px;line-height:1.2}
 .pv-customer-info{font-size:11px;color:#999;line-height:1.6;letter-spacing:0.3px}
 .pv-schedule{
@@ -303,7 +303,7 @@ td.amt{text-align:right;white-space:nowrap;font-size:14px;font-weight:800;color:
 @media(max-width:768px){
   .container{padding:12px 12px 60px}
   .doc-header{padding:16px}
-  .doc-header-left .doc-title{font-size:20px;letter-spacing:3px}
+  .doc-header-left .doc-title{font-size:20px;letter-spacing:0}
   .section{background:#fff;border-radius:12px;padding:22px 26px;margin-bottom:14px;box-shadow:0 1px 6px rgba(0,0,0,.07),0 0 0 1px rgba(0,0,0,.04)}
   .info-grid{grid-template-columns:1fr 1fr;gap:10px}
   .info-internal{grid-template-columns:1fr 1fr}
@@ -311,7 +311,7 @@ td.amt{text-align:right;white-space:nowrap;font-size:14px;font-weight:800;color:
   table{min-width:600px}
   .sum-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #EEE6DC}
   .sum-row.total{border-top:2px solid #F06E2D;border-bottom:none;padding:16px 0 8px;margin-top:4px}
-  .sum-row.total .val{font-size:26px;font-weight:900;color:#F06E2D;letter-spacing:-1px}
+  .sum-row.total .val{font-size:20px;font-weight:900;color:#F06E2D;letter-spacing:-1px}
   .action-bar{gap:5px}
   .action-bar button{padding:10px 12px;font-size:11px}
   .btn-save{padding:10px 22px;background:#F06E2D;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.3px;transition:all 0.15s}
@@ -326,7 +326,7 @@ td.amt{text-align:right;white-space:nowrap;font-size:14px;font-weight:800;color:
   .pv-sum-total-label{font-size:10px}
   .pv-total-val{font-size:20px}
   .pv-split-item{padding:12px 16px}
-  .pv-split-val{font-size:16px}
+  .pv-split-val{font-size:14px}
   .pv-proc{padding:18px 20px}
   .pv-payment{padding:12px 20px}
   /* 모바일 진행안내 — 세로 리스트 */
@@ -345,7 +345,7 @@ td.amt{text-align:right;white-space:nowrap;font-size:14px;font-weight:800;color:
 @media(max-width:480px){
   .info-grid{grid-template-columns:1fr}
   .info-internal{grid-template-columns:1fr 1fr}
-  .doc-header-left .doc-title{font-size:18px;letter-spacing:2px}
+  .doc-header-left .doc-title{font-size:18px;letter-spacing:0}
   .action-bar{display:grid;grid-template-columns:1fr 1fr;gap:5px}
   .action-main{grid-column:1/-1;display:flex;gap:5px}
   .btn-save{padding:10px 22px;background:#F06E2D;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.3px;transition:all 0.15s}
@@ -363,7 +363,7 @@ td.amt{text-align:right;white-space:nowrap;font-size:14px;font-weight:800;color:
   .info-internal{max-height:none!important;display:none!important}
   .print-only{display:block!important}
   .doc-header{padding:12px 20px;border-bottom:2px solid #000;background:#fff!important}
-  .doc-header-left .doc-title{font-size:18px;letter-spacing:4px;font-weight:300}
+  .doc-header-left .doc-title{font-size:18px;letter-spacing:0;font-weight:300}
   .section{background:#fff;border-radius:12px;padding:22px 26px;margin-bottom:14px;box-shadow:0 1px 6px rgba(0,0,0,.07),0 0 0 1px rgba(0,0,0,.04)}
   .info-grid{gap:8px}
   .info-item label{font-size:10px;color:#999;font-weight:700;display:block;margin-bottom:5px;letter-spacing:0.5px;text-transform:uppercase}
@@ -384,8 +384,8 @@ td.amt{text-align:right;white-space:nowrap;font-size:14px;font-weight:800;color:
   .summary-section{break-inside:avoid}
   .sum-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #EEE6DC}
   .sum-row.total{border-top:2px solid #F06E2D;border-bottom:none;padding:16px 0 8px;margin-top:4px}
-  .sum-row.total .lbl{font-size:16px;font-weight:700;color:#282828}
-  .sum-row.total .val{font-size:26px;font-weight:900;color:#F06E2D;letter-spacing:-1px}
+  .sum-row.total .lbl{font-size:14px;font-weight:700;color:#282828}
+  .sum-row.total .val{font-size:20px;font-weight:900;color:#F06E2D;letter-spacing:-1px}
   .sum-row.perf{border-top:1px dashed #E0D8D0}
   .discount-wrap input{border:none!important;background:transparent!important;padding:0!important;-webkit-appearance:none}
   /* 진행 안내 프린트 */
@@ -410,17 +410,25 @@ td.amt{text-align:right;white-space:nowrap;font-size:14px;font-weight:800;color:
 @page{size:A4;margin:10mm 14mm}
 
 .section{background:#fff;border-radius:12px;padding:22px 26px;margin-bottom:14px;box-shadow:0 1px 6px rgba(0,0,0,.07),0 0 0 1px rgba(0,0,0,.04)}
-.pv-sub-label{display:inline-block;font-size:9px;font-weight:800;color:#888;letter-spacing:2px;padding:3px 8px;border:1px solid #DDD;border-radius:20px;margin-bottom:7px}
+.pv-sub-label{display:inline-block;font-size:10px;font-weight:800;color:#888;letter-spacing:2px;padding:3px 8px;border:1px solid #DDD;border-radius:20px;margin-bottom:7px}
 #discount{width:60px!important}
 .discount-wrap{display:inline-flex;align-items:center;gap:4px;background:#F5F1ED;border:1px solid #E0D8D0;border-radius:6px;padding:3px 8px;margin-left:8px}
 #svc-table td:first-child select{color:#555;font-size:11px}
+
+.inner-fields .inner-inp::placeholder{color:#C0B8B0}
+.inner-fields label,.inner-fields span{font-size:10px;color:#BABABA}
+
+.cprice{text-align:right}
+
+.deposit-inp-wrap{display:flex;align-items:center;gap:2px}
+.sum-row.deposit .val{flex:1;justify-content:flex-end}
 </style>
 </head>
 <body>
 
 <!-- 가견적/최종 상태 -->
 <div class="est-status-bar">
-  <button class="est-status-btn on" id="status-ga" onclick="setStatus('ga')">가 견 적 서</button>
+  <button class="est-status-btn on" id="status-ga" onclick="setStatus('ga')">가견적서</button>
   <button class="est-status-btn" id="status-final" onclick="setStatus('final')">최 종 견 적 서</button>
 </div>
 
@@ -429,7 +437,7 @@ td.amt{text-align:right;white-space:nowrap;font-size:14px;font-weight:800;color:
   <!-- 헤더 -->
   <div class="doc-header">
     <div class="doc-header-left">
-      <div class="doc-title" id="hd-title">가 견 적 서</div>
+      <div class="doc-title" id="hd-title">가견적서</div>
       <div class="doc-date" id="hd-date"></div>
     </div>
     <div class="doc-header-right">
@@ -529,10 +537,10 @@ td.amt{text-align:right;white-space:nowrap;font-size:14px;font-weight:800;color:
     <div class="tbl-wrap">
       <table id="curtain-table">
         <colgroup>
-          <col style="width:7%"><col style="width:18%"><col style="width:8%">
-          <col style="width:7%"><col style="width:7%"><col style="width:10%">
+          <col style="width:7%"><col style="width:18%"><col style="width:9%">
+          <col style="width:8%"><col style="width:8%"><col style="width:10%">
           <col style="width:10%"><col style="width:6%"><col style="width:11%">
-          <col style="width:11%"><col style="width:5%">
+          <col style="width:11%"><col style="width:2%">
         </colgroup>
         <thead>
           <tr><th colspan="11">CURTAIN</th></tr>
@@ -633,11 +641,18 @@ td.amt{text-align:right;white-space:nowrap;font-size:14px;font-weight:800;color:
       <span class="val" id="sum-total">0원</span>
     </div>
     <div class="sum-row deposit">
-      <span class="lbl">계약금 50% <span class="sum-sub">계약 시 납부</span></span>
-      <span class="val" id="sum-deposit">0원</span>
+      <span class="lbl">계약금 <span class="sum-sub">계약 시 납부</span></span>
+      <span class="val deposit-inp-wrap">
+        <input type="text" inputmode="numeric" id="deposit-input"
+          placeholder="금액 입력"
+          oninput="fmtPrice(this);calcDeposit()"
+          style="width:110px;padding:4px 8px;border:1.5px solid #E0D8D0;border-radius:6px;font-size:13px;font-family:inherit;text-align:right;outline:none;background:#FAF7F5">
+        <button onclick="setDepositAuto(50)" style="padding:4px 10px;font-size:10px;background:#F5F1ED;border:1px solid #DDD;border-radius:4px;cursor:pointer;font-family:inherit;margin-left:4px">50%</button>
+
+      </span>
     </div>
     <div class="sum-row">
-      <span class="lbl">잔금 50% <span class="sum-sub">실측 후 납부</span></span>
+      <span class="lbl">잔금 <span class="sum-sub">실측 후 납부</span></span>
       <span class="val" id="sum-balance">0원</span>
     </div>
     <div class="sum-row perf print-hide">
@@ -742,7 +757,6 @@ var currentTab = 'ga';
     'DAH-'+d.getFullYear()+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1)+
     (d.getDate()<10?'0':'')+d.getDate()+'-'+Math.floor(Math.random()*100);
   addCurtainRow();
-  addSvcRow();
   // 대시보드 연동
   try {
     var oc = localStorage.getItem('dah_open_customer');
@@ -839,9 +853,9 @@ function addCurtainRow() {
       '</div>'+
     '</td>'+
     '<td><select class="pleat-type" onchange="calcCurtainRow(this)" style="'+SEL+'">'+
-      '<option>나비주름형</option><option>민자형</option></select></td>'+
+      '<option value="나비주름형">나비주름</option><option value="민자형">민자</option></select></td>'+
     '<td><select class="open-type" style="'+SEL+'">'+
-      '<option>양개형</option><option>편개형</option></select></td>'+
+      '<option value="양개형">양개</option><option value="편개형">편개</option></select></td>'+
     '<td><select class="hem-type" style="'+SEL+'">'+
       '<option>리드밴드</option><option>5cm</option><option>8cm</option></select></td>'+
     '<td>'+
@@ -893,7 +907,7 @@ function calcCurtainRow(el) {
   // 금액
   var price = isOver ? (getPriceVal(tr.querySelector('.cprice-over'))||getPriceVal(tr.querySelector('.cprice')))
                      : getPriceVal(tr.querySelector('.cprice'));
-  var amt = price*pnum;
+  var amt = Math.round(price*pnum);
   var camtEl = tr.querySelector('.camt');
   if(camtEl) camtEl.textContent = amt>0 ? amt.toLocaleString()+'원' : '—';
   autoUpdateRail(tr);
@@ -998,6 +1012,7 @@ function autoAddBlindSvc() {
   var tds = row.querySelectorAll('td');
   if(tds[0]) { var sel=tds[0].querySelector('select'); if(sel) sel.value='시공비'; }
   if(tds[1]) { var inp=tds[1].querySelector('input'); if(inp) inp.value='블라인드 시공비'; }
+  if(tds[2]) { var inp=tds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw','10000'); inp.value=(10000).toLocaleString(); } }
   if(tds[3]) { var inp=tds[3].querySelector('input'); if(inp) inp.value=1; }
 }
 
@@ -1098,14 +1113,17 @@ function calcTotal() {
   var discount=discType==='pct'?Math.round(curtainTotal*discInput/100):discInput;
   var grand=curtainTotal-discount+svcTotal;
   if(grand<0) grand=0;
-  var deposit=Math.round(grand/2);
+  var depInp=document.getElementById('deposit-input');
+  var depRaw=getPriceVal(depInp)||0;
+  var deposit=depRaw>0 ? depRaw : Math.round(grand/2);
+  if(depRaw===0 && depInp){ depInp.setAttribute('data-raw',String(deposit)); depInp.value=deposit.toLocaleString(); }
   var balance=grand-deposit;
   var perf=Math.round(curtainTotal*0.95);
   document.getElementById('sum-curtain').textContent=curtainTotal.toLocaleString()+'원';
   document.getElementById('sum-discount').textContent='-'+discount.toLocaleString()+'원';
   document.getElementById('sum-svc').textContent=svcTotal.toLocaleString()+'원';
   document.getElementById('sum-total').textContent=grand.toLocaleString()+'원';
-  document.getElementById('sum-deposit').textContent=deposit.toLocaleString()+'원';
+  // sum-deposit은 input으로 대체됨
   document.getElementById('sum-balance').textContent=balance.toLocaleString()+'원';
   document.getElementById('sum-perf').textContent=perf.toLocaleString()+'원';
 }
@@ -1192,7 +1210,7 @@ function displaySurvey(s) {
   dataEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">'+
     fields.map(function(f){
       return '<div style="padding:10px 14px;background:#FAF8F5;border:1px solid #E4E0DB">'+
-        '<div style="font-size:9px;font-weight:700;color:#ADADAD;letter-spacing:0.8px;margin-bottom:4px">'+f.label+'</div>'+
+        '<div style="font-size:10px;font-weight:700;color:#ADADAD;letter-spacing:0.8px;margin-bottom:4px">'+f.label+'</div>'+
         '<div style="font-size:13px;font-weight:500">'+f.val+'</div></div>';
     }).join('')+'</div>';
   if(card) card.style.display='block';
@@ -1225,7 +1243,6 @@ function newEstimate() {
   document.getElementById('c-no').value='DAH-'+d.getFullYear()+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1)+(d.getDate()<10?'0':'')+d.getDate()+'-'+Math.floor(Math.random()*100);
   setStatus('ga');
   addCurtainRow();
-  addSvcRow();
   calcTotal();
   showToast('✅ 새 견적서 시작');
 }
@@ -1384,7 +1401,7 @@ function buildCustomerHTML() {
       sec+='<thead><tr><th>제품명</th><th>종류·손잡이</th><th>실측(cm)</th><th>면적</th><th style="text-align:right">금액</th></tr></thead><tbody>';
       blinds.forEach(function(r){
         var handle=(r.handle&&r.handle!=='—')?' · '+r.handle:'';
-        var addon=r.addon?'<br><span style="font-size:9px;color:#bbb">'+r.addon+'</span>':'';
+        var addon=r.addon?'<br><span style="font-size:10px;color:#bbb">'+r.addon+'</span>':'';
         sec+='<tr><td class="b">'+r.name+'</td>';
         sec+='<td style="font-size:10px;color:#999;vertical-align:middle">'+r.kind+handle+addon+'</td>';
         sec+='<td class="g">'+(r.bw?r.bw+'×'+r.bh:'—')+'</td>';
@@ -1486,7 +1503,7 @@ function searchCustomer() {
   el.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9998;display:flex;align-items:center;justify-content:center';
   var inner=document.createElement('div');
   inner.style.cssText='background:#fff;border-radius:12px;padding:24px;width:480px;max-width:90vw';
-  inner.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span style="font-size:13px;font-weight:700">고객 검색</span><span id="cs-close" style="cursor:pointer;font-size:16px">&#x2715;</span></div><div style="display:flex;gap:8px;margin-bottom:12px"><input type="text" id="cs-query" placeholder="이름 또는 전화번호" style="flex:1;padding:9px 12px;border:1.5px solid #E4E0DB;border-radius:6px;font-size:12px;font-family:inherit;outline:none"><button id="cs-btn" style="padding:8px 16px;background:#282828;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">검색</button></div><div id="cs-results" style="color:#777;font-size:12px;text-align:center;padding:20px">Supabase 연동 후 사용 가능합니다.</div>';
+  inner.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span style="font-size:13px;font-weight:700">고객 검색</span><span id="cs-close" style="cursor:pointer;font-size:14px">&#x2715;</span></div><div style="display:flex;gap:8px;margin-bottom:12px"><input type="text" id="cs-query" placeholder="이름 또는 전화번호" style="flex:1;padding:9px 12px;border:1.5px solid #E4E0DB;border-radius:6px;font-size:12px;font-family:inherit;outline:none"><button id="cs-btn" style="padding:8px 16px;background:#282828;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">검색</button></div><div id="cs-results" style="color:#777;font-size:12px;text-align:center;padding:20px">Supabase 연동 후 사용 가능합니다.</div>';
   el.appendChild(inner);
   document.body.appendChild(el);
   document.getElementById('cs-close').onclick=function(){el.style.display='none';};
@@ -1505,6 +1522,24 @@ function selectCustomer(name,phone,addr){
 function closeCustomerSearch(){
   var ov=document.getElementById('customer-search-overlay');
   if(ov) ov.style.display='none';
+}
+
+function calcDeposit() {
+  var grand = getPriceVal(document.getElementById('sum-total'))||0;
+  if(!grand) { calcTotal(); return; }
+  var depInp = document.getElementById('deposit-input');
+  var dep = getPriceVal(depInp)||0;
+  var bal = grand - dep;
+  var balEl = document.getElementById('sum-balance');
+  if(balEl) balEl.textContent = bal.toLocaleString()+'원';
+  // sum-deposit은 input으로 표시
+}
+function setDepositAuto(pct) {
+  var grand = getPriceVal(document.getElementById('sum-total'))||0;
+  var dep = Math.round(grand * pct / 100);
+  var depInp = document.getElementById('deposit-input');
+  if(depInp){ depInp.setAttribute('data-raw',String(dep)); depInp.value=dep.toLocaleString(); }
+  calcDeposit();
 }
 </script>
 </body>
