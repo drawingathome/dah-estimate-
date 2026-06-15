@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>드로잉엣홈 대시보드</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -48,10 +47,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:#F5F1EC;color:#1A1A1A;font
 .tab.active,.tab.on{color:#1A1A1A;border-bottom-color:#D4622A}
 /* 콘텐츠 공통 */
 .content,.wrap{padding:12px 14px;max-width:640px;margin:0 auto}
-.card{background:#fff;border:1px solid #E8E4DE;margin-bottom:10px;padding:14px 16px}
-.card-label{font-size:10px;font-weight:700;color:#A8A8A8;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
+.card{background:#fff;border:1px solid #E8E4DE;margin-bottom:10px;padding:16px}
+.card-label{font-size:10px;font-weight:700;color:#A8A8A8;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px}
 /* 홈 */
-.home-greeting{padding:16px 14px 4px}
+.home-greeting{padding:16px 16px 4px}
 .home-date{font-size:10px;color:#A8A8A8;letter-spacing:0.5px;margin-bottom:3px}
 .home-name{font-size:18px;font-weight:700;color:#1A1A1A}
 .new-est-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#1A1A1A;color:#FAF7F5;border:none;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:0.5px;margin-bottom:10px}
@@ -102,10 +101,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:#F5F1EC;color:#1A1A1A;font
 .bottom-sheet{width:100%;max-height:88vh;background:#fff;border-radius:12px 12px 0 0;overflow-y:auto;transform:translateY(16px);transition:transform 0.2s;padding-bottom:32px}
 .overlay.open .bottom-sheet{transform:translateY(0)}
 .bs-handle{width:30px;height:3px;background:#E4E0DA;margin:11px auto 0}
-.bs-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 11px;border-bottom:1px solid #F0EDE8}
+.bs-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 11px;border-bottom:1px solid #F0EDE8}
 .bs-title{font-size:15px;font-weight:700}
 #detail-close-btn,.bs-close-btn{width:26px;height:26px;border:none;background:#F5F1EC;cursor:pointer;font-size:12px;color:#6B6B6B;display:flex;align-items:center;justify-content:center}
-.bs-body{padding:14px 16px}
+.bs-body{padding:16px}
 .bs-sec{margin-bottom:16px}
 .bs-sec-lbl{font-size:10px;font-weight:700;color:#A8A8A8;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
 .bs-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #F5F1EC}
@@ -282,11 +281,11 @@ body.role-staff .master-only{display:none!important}
 <div class="overlay" id="detail-overlay">
   <div class="modal-box">
     <div class="modal-top-bar"></div>
-    <div style="padding:14px 16px;border-bottom:1px solid #E5E0D8;display:flex;justify-content:space-between;align-items:center">
+    <div style="padding:16px;border-bottom:1px solid #E5E0D8;display:flex;justify-content:space-between;align-items:center">
       <div style="font-size:15px;font-weight:700" id="detail-name"></div>
       <button id="detail-close-btn" style="background:none;border:none;font-size:20px;cursor:pointer;color:#A8A8A8">✕</button>
     </div>
-    <div style="padding:14px 16px" id="detail-body"></div>
+    <div style="padding:16px" id="detail-body"></div>
   </div>
 </div>
 
@@ -294,7 +293,7 @@ body.role-staff .master-only{display:none!important}
 <div class="overlay" id="add-overlay">
   <div class="modal-box">
     <div style="height:4px;background:#D4622A"></div>
-    <div style="padding:14px 16px;border-bottom:1px solid #E5E0D8;display:flex;justify-content:space-between;align-items:center">
+    <div style="padding:16px;border-bottom:1px solid #E5E0D8;display:flex;justify-content:space-between;align-items:center">
       <div style="font-size:15px;font-weight:700" id="add-modal-title">고객 추가</div>
       <button id="add-close-btn" style="background:none;border:none;font-size:20px;cursor:pointer;color:#A8A8A8">✕</button>
     </div>
@@ -723,7 +722,7 @@ function renderPipe() {
     var list = customers.filter(function(c) { return c.stage === stage; });
     var total = list.reduce(function(s,c) { return s + (Number(c.price)||0); }, 0);
     var color = STAGE_COLORS[stage] || '#1A1A1A';
-    var card = div('background:#fff;margin-bottom:8px;padding:14px 16px', []);
+    var card = div('background:#fff;margin-bottom:8px;padding:16px', []);
     card.appendChild(div('display:flex;justify-content:space-between;align-items:center;margin-bottom:8px', [span('font-size:11px;font-weight:700;letter-spacing:1.2px;color:' + color, stage), div('', [span('font-size:11px;color:#A8A8A8', list.length + '건'), total > 0 ? span('font-size:11px;color:#1A1A1A;font-weight:700;margin-left:8px', '합계 ' + fmt(total)) : null])]));
     if (list.length === 0) { card.appendChild(span('font-size:12px;color:#A8A8A8;display:block;padding:8px 0', '—')); }
     else { list.forEach(function(c) { var row = div('display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #E5E0D8;cursor:pointer', [div('', [div('font-size:13px;font-weight:700', [span('', c.clientName), c.visitCount > 1 ? el('span', {style:'font-size:10px;color:#D4622A;border:1px solid #D4622A;padding:1px 5px;margin-left:6px', text:'재구매'}, []) : null]), span('font-size:11px;color:#6B6B6B;display:block', c.space || '—')]), div('text-align:right', [span('font-size:13px;font-weight:700;color:#D4622A;display:block', fmt(c.price)), span('font-size:11px;color:#A8A8A8;display:block', c.date || '')])]); (function(name) { row.addEventListener('click', function() { openDetail(name); }); })(c.clientName); card.appendChild(row); }); }
@@ -1126,7 +1125,7 @@ function renderSettings() {
   }
 
   // 비밀번호 변경
-  var pwCard = div('background:#fff;margin-bottom:10px;padding:14px 16px', [
+  var pwCard = div('background:#fff;margin-bottom:10px;padding:16px', [
     span('font-size:11px;font-weight:700;color:#A8A8A8;letter-spacing:1.2px;display:block;margin-bottom:12px', '🔐 비밀번호 변경')
   ]);
   [['change-pw-current2','현재 비밀번호'],['change-pw-new2','새 비밀번호 (4자 이상)'],['change-pw-confirm2','새 비밀번호 확인']].forEach(function(row) {
@@ -1148,7 +1147,7 @@ function renderSettings() {
   wrap.appendChild(pwCard);
 
   // 담당자 관리
-  var staffCard = div('background:#fff;margin-bottom:10px;padding:14px 16px', [
+  var staffCard = div('background:#fff;margin-bottom:10px;padding:16px', [
     span('font-size:11px;font-weight:700;color:#A8A8A8;letter-spacing:1.2px;display:block;margin-bottom:12px', '👤 담당자 관리')
   ]);
   var staffList = getStaffList();
@@ -1181,7 +1180,7 @@ function renderSettings() {
   wrap.appendChild(staffCard);
 
   // 목표 매출
-  var goalCard = div('background:#fff;margin-bottom:10px;padding:14px 16px', [
+  var goalCard = div('background:#fff;margin-bottom:10px;padding:16px', [
     span('font-size:11px;font-weight:700;color:#A8A8A8;letter-spacing:1.2px;display:block;margin-bottom:12px', '🎯 담당자별 월 목표 매출')
   ]);
   var allStaffs = ['마스터'].concat(getStaffList());
@@ -1204,7 +1203,7 @@ function renderSettings() {
   wrap.appendChild(goalCard);
 
   // Make.com 웹훅 URL
-  var webhookCard = div('background:#fff;margin-bottom:10px;padding:14px 16px', [
+  var webhookCard = div('background:#fff;margin-bottom:10px;padding:16px', [
     span('font-size:11px;font-weight:700;color:#A8A8A8;letter-spacing:1.2px;display:block;margin-bottom:4px', '⚙️ Make.com 웹훅 URL'),
     span('font-size:11px;color:#A8A8A8;display:block;margin-bottom:10px', '알림톡 자동 발송 연동 (검수 완료 후 입력)')
   ]);
@@ -1219,7 +1218,7 @@ function renderSettings() {
   wrap.appendChild(webhookCard);
 
   // 데이터 백업/복원
-  var dataCard = div('background:#fff;margin-bottom:10px;padding:14px 16px', [
+  var dataCard = div('background:#fff;margin-bottom:10px;padding:16px', [
     span('font-size:11px;font-weight:700;color:#A8A8A8;letter-spacing:1.2px;display:block;margin-bottom:12px', '💾 데이터 관리')
   ]);
   dataCard.appendChild(btn('width:100%;padding:11px;background:#fff;border:1px solid #E5E0D8;font-size:13px;font-family:inherit;cursor:pointer;margin-bottom:8px', '💾 백업 (JSON 다운로드)', backupData));
