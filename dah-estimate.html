@@ -116,7 +116,7 @@ html,body{
 .cust-type-btn{
   padding:7px 16px;border:none;
   border-radius:6px 6px 0 0;
-  font-size:11px;font-weight:600;font-family:inherit;
+  font-size:12px;font-weight:600;font-family:inherit;
   cursor:pointer;
   background:rgba(255,255,255,0.08);
   color:rgba(255,255,255,0.38);
@@ -246,9 +246,10 @@ td input::placeholder{color:#ADADAD;font-size:12px}
 td input:focus,td select:focus{outline:none}
 td.amt{
   text-align:right;white-space:nowrap;
-  font-size:14px;font-weight:700;
+  font-size:13px;font-weight:700;
   color:#1A1A1A;letter-spacing:-0.3px
 }
+.c-display-name{font-weight:600!important}
 .sub-size{display:none;font-size:11px;color:#ADADAD;margin-top:2px}
 
 /* 커튼 테이블 hover */
@@ -274,10 +275,10 @@ td.amt{
 /* 행 추가 버튼 */
 .add-row-btns{display:flex;gap:10px;margin-top:12px}
 .add-btn{
-  padding:8px 16px;border:1.5px dashed #CCC;
+  padding:8px 16px;border:1.5px dashed #C4B8AE;
   background:transparent;border-radius:6px;
-  font-size:12px;font-family:inherit;
-  color:#ADADAD;cursor:pointer;transition:all 0.15s
+  font-size:12px;font-weight:600;font-family:inherit;
+  color:#888;cursor:pointer;transition:all 0.15s
 }
 .add-btn:hover{
   border-color:#555;color:#555;
@@ -296,15 +297,16 @@ td.amt{
 
 .sum-row{
   display:flex;justify-content:space-between;align-items:center;
-  padding:13px 0;border-bottom:1px solid #F5F0EB
+  padding:10px 0;border-bottom:1px solid #F5F0EB
 }
 .sum-row:last-child{border-bottom:none}
-.sum-row .lbl{font-size:14px;color:#555;font-weight:600}
-.sum-row .val{font-size:14px;font-weight:700;color:#1A1A1A}
+.sum-row .lbl{font-size:12px;color:#888;font-weight:400}
+.sum-row .val{font-size:13px;font-weight:600;color:#888}
 
-.sum-row.total .lbl{font-size:14px;font-weight:700;color:#1A1A1A}
+.sum-row.total{margin-top:6px}
+.sum-row.total .lbl{font-size:14px;font-weight:800;color:#1A1A1A;letter-spacing:-0.3px}
 .sum-row.total .val{font-size:22px;font-weight:800;color:#1A1A1A;letter-spacing:-1px}
-.sum-row.deposit .lbl{color:#1A1A1A;font-weight:600;font-size:14px}
+.sum-row.deposit .lbl{color:#1A1A1A;font-weight:600;font-size:12px}
 .sum-row.deposit .val{flex:1;justify-content:flex-end}
 .sum-row.perf{border-top:1px dashed #EEE6DC}
 .sum-row.perf .lbl{color:#ADADAD;font-size:12px}
