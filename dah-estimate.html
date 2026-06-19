@@ -603,7 +603,7 @@ td.amt{
 .pv-payment-item{padding:18px 28px}
 .pv-payment-item:first-child{border-right:1.5px solid #E4DCCE}
 .pv-payment-label{
-  font-size:11px;font-weight:700;color:#1A1A1A;
+  font-size:11px;font-weight:700;color:#888;
   letter-spacing:0.5px;margin-bottom:4px
 }
 .pv-payment-sub{font-size:11px;color:#ADADAD;margin-bottom:10px}
@@ -710,8 +710,8 @@ td.amt{
 .pdf-modal-cancel{padding:9px 18px;background:#F5F1ED;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;color:#888}
 .pdf-modal-confirm{padding:9px 22px;background:#1A1A1A;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
 .pdf-modal-confirm:hover{background:#1A1A1A}
-.load-cust-btn{padding:6px 14px;background:#1A1A1A;color:#FAF7F5;border:none;border-radius:6px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:0.3px}
-.load-cust-btn:hover{background:#1A1A1A}
+.load-cust-btn{padding:6px 14px;background:#fff;color:#555;border:1px solid #E0D8D0;border-radius:6px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;letter-spacing:0.3px}
+.load-cust-btn:hover{background:#F5F0EB;border-color:#BDBDBD}
 /* 고객 불러오기 팝업 */
 #cust-load-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;display:none;align-items:center;justify-content:center}
 #cust-load-overlay.open{display:flex}
@@ -900,10 +900,10 @@ td.amt{
     <div class="tbl-wrap">
       <table id="curtain-table">
         <colgroup>
-          <col style="width:12%"><col style="width:15%"><col style="width:9%">
+          <col style="width:10%"><col style="width:14%"><col style="width:9%">
           <col style="width:8%"><col style="width:7%"><col style="width:10%">
-          <col style="width:10%"><col style="width:4%"><col style="width:14%">
-          <col style="width:11%"><col style="width:2%">
+          <col style="width:10%"><col style="width:4%"><col style="width:16%">
+          <col style="width:10%"><col style="width:2%">
         </colgroup>
         <thead>
           <tr><th colspan="11">CURTAIN</th></tr>
@@ -1711,6 +1711,40 @@ function saveEstimate() {
       performance_revenue:perf, staff_name:staffName,
       estimate_status:currentTab||'ga'
     }));
+    // localStorage에도 동시 저장
+    saveToLocalStorage();
+  }
+  function saveToLocalStorage() {
+    try {
+      var saved = JSON.parse(localStorage.getItem('dah_saved')||'[]');
+      var noStr = document.getElementById('c-no').value.trim();
+      var isFinal = (currentTab === 'final' || document.getElementById('status-final')?.classList.contains('on'));
+      // 같은 번호 있으면 업데이트, 없으면 추가
+      var idx = saved.findIndex(function(e){ return e.no === noStr; });
+      var entry = {
+        id: noStr || ('local-'+Date.now()),
+        no: noStr,
+        clientName: name,
+        phone: phone,
+        addr: addr,
+        space: spaceStr,
+        fabric: fabricStr,
+        price: grand,
+        performanceRevenue: perf,
+        staffName: staffName,
+        status: isFinal ? 'final' : 'ga',   // 가견적 or 최종
+        contractStatus: 'pending',            // pending/contracted/rejected
+        savedAt: new Date().toISOString(),
+        date: document.getElementById('c-measure')?.value || '',
+        installDate: document.getElementById('c-install')?.value || '',
+        memo: custMemo
+      };
+      if (idx >= 0) saved[idx] = entry;
+      else saved.unshift(entry);
+      // 최근 300건만 보관
+      if (saved.length > 300) saved = saved.slice(0, 300);
+      localStorage.setItem('dah_saved', JSON.stringify(saved));
+    } catch(e) { console.warn('localStorage 저장 실패', e); }
   }
   saveToCustomers();
   showToast('저장 중...');
