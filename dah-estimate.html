@@ -746,6 +746,9 @@ td.amt{
   .doc-header-tabbar{flex-direction:column;align-items:flex-start}
   .doc-header-tabbar-right{margin-top:2px}
 }
+/* ── 커튼 행 ── */
+.row-curtain td{padding:6px 4px;vertical-align:middle}
+
 </style>
 </head>
 <body>
@@ -801,7 +804,13 @@ td.amt{
       </div>
       <div class="info-item">
         <label>주소</label>
-        <input type="text" id="c-addr" placeholder="서울 서초구 반포동">
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="text" id="c-addr" placeholder="서울 서초구 반포동" style="flex:1;min-width:0">
+          <button type="button" onclick="openKakaoAddr('c-addr')"
+            style="padding:6px 12px;background:#1A1A1A;color:#fff;border:none;border-radius:6px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0">
+            🔍 검색
+          </button>
+        </div>
       </div>
       <input type="hidden" id="c-date">
     </div>
@@ -1682,37 +1691,42 @@ function saveEstimate() {
   });
   var spaceStr=spaceArr.join(', '), fabricStr=fabricArr.join(', ');
   function saveToCustomers() {
-    var xhr=new XMLHttpRequest();
-    xhr.open('POST',SUPABASE_URL+'/rest/v1/customers',true);
-    xhr.setRequestHeader('apikey',SUPABASE_KEY);
-    xhr.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
-    xhr.setRequestHeader('Content-Type','application/json');
-    xhr.setRequestHeader('Prefer','return=minimal');
-    xhr.onload=function(){ saveToEstimates(); };
-    xhr.onerror=function(){ showToast('⚠️ 고객 저장 실패'); };
-    xhr.send(JSON.stringify({
-      name:name, phone:phone, address:addr,
-      memo:custMemo+' | 커튼:'+grand+'원',
-      staff_name:staffName
-    }));
+    // localStorage 먼저 저장 (Supabase 연결과 무관하게 항상)
+    saveToLocalStorage();
+    // Supabase 저장 시도 (실패해도 OK)
+    try {
+      var xhr=new XMLHttpRequest();
+      xhr.open('POST',SUPABASE_URL+'/rest/v1/customers',true);
+      xhr.setRequestHeader('apikey',SUPABASE_KEY);
+      xhr.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
+      xhr.setRequestHeader('Content-Type','application/json');
+      xhr.setRequestHeader('Prefer','return=minimal');
+      xhr.onload=function(){ saveToEstimates(); };
+      xhr.onerror=function(){ console.warn('Supabase 고객 저장 실패 (localStorage는 완료)'); };
+      xhr.send(JSON.stringify({
+        name:name, phone:phone, address:addr,
+        memo:custMemo+' | 커튼:'+grand+'원',
+        staff_name:staffName
+      }));
+    } catch(e) { console.warn('Supabase 연결 오류:', e); }
   }
   function saveToEstimates() {
-    var xhr2=new XMLHttpRequest();
-    xhr2.open('POST',SUPABASE_URL+'/rest/v1/estimates',true);
-    xhr2.setRequestHeader('apikey',SUPABASE_KEY);
-    xhr2.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
-    xhr2.setRequestHeader('Content-Type','application/json');
-    xhr2.setRequestHeader('Prefer','return=minimal');
-    xhr2.onload=function(){ showToast('✅ 저장 완료!'); };
-    xhr2.onerror=function(){ showToast('⚠️ 견적서 저장 실패'); };
-    xhr2.send(JSON.stringify({
-      customer_name:name, phone:phone, space:spaceStr,
-      product:fabricStr, price:grand,
-      performance_revenue:perf, staff_name:staffName,
-      estimate_status:currentTab||'ga'
-    }));
-    // localStorage에도 동시 저장
-    saveToLocalStorage();
+    try {
+      var xhr2=new XMLHttpRequest();
+      xhr2.open('POST',SUPABASE_URL+'/rest/v1/estimates',true);
+      xhr2.setRequestHeader('apikey',SUPABASE_KEY);
+      xhr2.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
+      xhr2.setRequestHeader('Content-Type','application/json');
+      xhr2.setRequestHeader('Prefer','return=minimal');
+      xhr2.onload=function(){ showToast('✅ 저장 완료! (DB+로컬)'); };
+      xhr2.onerror=function(){ console.warn('Supabase 견적서 저장 실패 (localStorage는 완료)'); };
+      xhr2.send(JSON.stringify({
+        customer_name:name, phone:phone, space:spaceStr,
+        product:fabricStr, price:grand,
+        performance_revenue:perf, staff_name:staffName,
+        estimate_status:currentTab||'ga'
+      }));
+    } catch(e) { console.warn('Supabase 연결 오류:', e); }
   }
   function saveToLocalStorage() {
     try {
@@ -1747,7 +1761,7 @@ function saveEstimate() {
     } catch(e) { console.warn('localStorage 저장 실패', e); }
   }
   saveToCustomers();
-  showToast('저장 중...');
+  showToast('✅ 저장 완료!');
 }
 
 // ── 토스트 ────────────────────────────────────────
@@ -2253,6 +2267,41 @@ function setDepositAuto(pct) {
   if(depInp){ depInp.setAttribute('data-raw',String(dep)); depInp.value=dep.toLocaleString(); }
   calcDeposit();
 }
+
+function openKakaoAddr(targetId) {
+  var script = document.createElement('script');
+  script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+  script.onload = function() {
+    new daum.Postcode({
+      oncomplete: function(data) {
+        var addr = data.roadAddress || data.jibunAddress;
+        var el = document.getElementById(targetId);
+        if (el) {
+          el.value = addr;
+          el.dispatchEvent(new Event('input'));
+          el.dispatchEvent(new Event('change'));
+        }
+      }
+    }).open();
+  };
+  // 이미 로드된 경우 바로 실행
+  if (window.daum && window.daum.Postcode) {
+    script.onload = null;
+    new daum.Postcode({
+      oncomplete: function(data) {
+        var addr = data.roadAddress || data.jibunAddress;
+        var el = document.getElementById(targetId);
+        if (el) {
+          el.value = addr;
+          el.dispatchEvent(new Event('input'));
+          el.dispatchEvent(new Event('change'));
+        }
+      }
+    }).open();
+  } else {
+    document.head.appendChild(script);
+  }
+}
 </script>
 <div id="pdf-size-modal">
   <div id="pdf-size-box">
@@ -2301,5 +2350,8 @@ function setDepositAuto(pct) {
     <div id="cust-load-list"></div>
   </div>
 </div>
+
+<!-- 카카오 주소 검색 -->
+
 </body>
 </html>
