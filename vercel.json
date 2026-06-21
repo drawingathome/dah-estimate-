@@ -1,5 +1,8 @@
 {
+  "framework": null,
   "buildCommand": null,
+  "devCommand": null,
+  "installCommand": null,
   "outputDirectory": ".",
   "rewrites": [
     { "source": "/", "destination": "/dah-estimate.html" },
