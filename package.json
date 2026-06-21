@@ -1,8 +1,0 @@
-{
-  "name": "dah-estimate",
-  "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "build": "echo 'no build'"
-  }
-}
