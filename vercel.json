@@ -1,11 +1,8 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "*.html", "use": "@vercel/static" }
-  ],
-  "routes": [
-    { "src": "/", "dest": "/dah-estimate.html" },
-    { "src": "/estimate", "dest": "/dah-estimate.html" },
-    { "src": "/dashboard", "dest": "/dah-dashboard.html" }
+  "buildCommand": null,
+  "outputDirectory": ".",
+  "rewrites": [
+    { "source": "/", "destination": "/dah-estimate.html" },
+    { "source": "/dashboard", "destination": "/dah-dashboard.html" }
   ]
 }
