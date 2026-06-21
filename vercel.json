@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "*.html", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/", "dest": "/dah-estimate.html" },
+    { "src": "/estimate", "dest": "/dah-estimate.html" },
+    { "src": "/dashboard", "dest": "/dah-dashboard.html" }
+  ]
+}
