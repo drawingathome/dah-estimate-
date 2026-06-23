@@ -226,7 +226,7 @@ body{
   width:3px;min-height:38px;border-radius:2px;
   background:#F06E2D;flex-shrink:0;margin-top:2px
 }
-.ai-bar.warn{background:#F06E2D}
+.ai-bar.warn{background:#B0A99F}
 .ai-name{
   font-size:15px;font-weight:700;color:#282828;
   margin-bottom:4px;
@@ -447,9 +447,10 @@ body{
 /* ── 고객 상세 모달 ── */
 .overlay{
   position:fixed;inset:0;
-  background:rgba(0,0,0,0.5);
+  background:rgba(0,0,0,0.65);
   z-index:200;display:none;
-  align-items:flex-end;justify-content:center
+  align-items:flex-end;justify-content:center;
+  backdrop-filter:blur(2px)
 }
 .overlay.open{display:flex}
 .modal-box{
@@ -559,7 +560,7 @@ body{
 <div class="kpi-bar" id="kpi-bar">
   <div class="kpi-grid">
     <div class="kpi-card">
-      <span class="kpi-num" id="hd-kpi-rev">—<em>원</em></span>
+      <span class="kpi-num" id="hd-kpi-rev">—<em class="kpi-num-unit">만원</em></span>
       <span class="kpi-label">이번 달 매출</span>
     </div>
     <div class="kpi-card">
@@ -902,6 +903,7 @@ function renderStaffLoginList() {
 
 function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 function fmt(n) { return (Number(n) || 0).toLocaleString() + '원'; }
+function fmtMan(n) { return Math.round((Number(n)||0)/10000).toLocaleString() + '만원'; }
 function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
 function thisMonthStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1); }
 function daysDiff(dateStr) { return Math.floor((new Date() - new Date(dateStr)) / 86400000); }
@@ -1017,7 +1019,7 @@ function updateHdKpi(allCustomers) {
 
   var revEl = document.getElementById('hd-kpi-rev');
   var conEl = document.getElementById('hd-kpi-con');
-  if (revEl) revEl.innerHTML = totalRev.toLocaleString() + '<span>원</span>';
+  if (revEl) revEl.innerHTML = Math.round(totalRev/10000).toLocaleString() + '<span class="kpi-num-unit">만원</span>';
   if (conEl) conEl.innerHTML = contracted.length + '<span>/'+monthC.length+'건</span>';
 
   // 단계 현황 바
@@ -1285,8 +1287,8 @@ function renderHome() {
     var statWrap = el('div', {class:'card', style:'overflow:hidden'});
     var statGrid = el('div', {style:'display:grid;grid-template-columns:repeat(3,1fr)'});
     statGrid.innerHTML =
-      '<div class="stat-item"><span class="stat-val">'+fmt(totalRev)+'</span><span class="stat-lbl">이달 매출</span></div>'+
-      '<div class="stat-item"><span class="stat-val">'+fmt(totalPerf)+'</span><span class="stat-lbl">성과매출</span></div>'+
+      '<div class="stat-item"><span class="stat-val">'+fmtMan(totalRev)+'</span><span class="stat-lbl">이달 매출</span></div>'+
+      '<div class="stat-item"><span class="stat-val">'+fmtMan(totalPerf)+'</span><span class="stat-lbl">성과매출</span></div>'+
       '<div class="stat-item"><span class="stat-val">'+totalCon+'/'+totalCons+'건</span><span class="stat-lbl">계약/상담</span></div>';
     statWrap.appendChild(statGrid);
     wrap.appendChild(statWrap);
