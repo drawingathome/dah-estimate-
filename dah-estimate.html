@@ -906,20 +906,19 @@ td.amt{
     <div class="tbl-wrap">
       <table id="curtain-table">
         <colgroup>
-          <col style="width:10%"><col style="width:14%"><col style="width:9%">
-          <col style="width:8%"><col style="width:7%"><col style="width:10%">
-          <col style="width:10%"><col style="width:4%"><col style="width:16%">
-          <col style="width:10%"><col style="width:2%">
+          <col style="width:12%"><col style="width:22%">
+          <col style="width:9%"><col style="width:8%">
+          <col style="width:8%"><col style="width:8%">
+          <col style="width:7%"><col style="width:13%"><col style="width:9%"><col style="width:4%">
         </colgroup>
         <thead>
-          <tr><th colspan="11">CURTAIN</th></tr>
+          <tr><th colspan="10">CURTAIN</th></tr>
           <tr>
             <th>공간</th>
-            <th>제품명<br><small style="color:#B0A99F;font-size:11px">원단명·거래처·컬러</small></th>
-            <th>주름형태</th><th>개폐방식</th><th>하단시접</th>
-            <th>가로(cm)<br>실측→제작</th>
-            <th>높이(cm)<br>실측→제작</th>
-            <th>폭수</th><th>단가(원)</th><th>금액(원)</th><th></th>
+            <th>제품명</th>
+            <th>주름</th><th>개폐</th>
+            <th>가로</th><th>높이</th>
+            <th>폭수</th><th>단가</th><th>금액</th><th></th>
           </tr>
         </thead>
         <tbody id="curtain-body"></tbody>
@@ -930,26 +929,24 @@ td.amt{
     <div class="tbl-wrap">
       <table id="blind-table">
         <colgroup>
-          <col style="width:12%"><col style="width:16%"><col style="width:8%">
-          <col style="width:7%"><col style="width:7%"><col style="width:9%">
-          <col style="width:9%"><col style="width:8%"><col style="width:11%">
-          <col style="width:8%"><col style="width:5%">
+          <col style="width:12%"><col style="width:22%">
+          <col style="width:10%"><col style="width:8%">
+          <col style="width:8%"><col style="width:8%">
+          <col style="width:14%"><col style="width:14%"><col style="width:4%">
         </colgroup>
         <thead>
-          <tr><th colspan="11">BLIND</th></tr>
+          <tr><th colspan="9">BLIND</th></tr>
           <tr>
             <th>공간</th>
-            <th>제품명<br><small style="color:#B0A99F;font-size:11px">원단명·거래처·컬러</small></th>
-            <th>종류</th><th>손잡이</th><th>끈길이(cm)</th>
-            <th>가로(cm)</th><th>높이(cm)</th><th>추가옵션</th>
-            <th>단가(원/㎡)<br><small style="color:#B0A99F;font-size:11px">면적·추가금</small></th>
-            <th>금액(원)</th><th></th>
+            <th>제품명</th>
+            <th>종류</th><th>손잡이</th>
+            <th>가로</th><th>높이</th>
+            <th>단가</th><th>금액</th><th></th>
           </tr>
         </thead>
         <tbody id="blind-body"></tbody>
       </table>
     </div>
-
     <div class="add-row-btns print-hide">
       <button class="add-btn" onclick="addCurtainRow()">+ 커튼 행 추가</button>
       <button class="add-btn add-btn-blind" onclick="addBlindRow()">+ 블라인드 행 추가</button>
@@ -1274,8 +1271,7 @@ function addCurtainRow() {
       '<option value="나비주름형">나비주름</option><option value="민자형">민자</option></select></td>'+
     '<td><select class="open-type" style="'+SEL+'">'+
       '<option value="양개형">양개</option><option value="편개형">편개</option></select></td>'+
-    '<td><select class="hem-type" style="'+SEL+'">'+
-      '<option>리드밴드</option><option>5cm</option><option>8cm</option></select></td>'+
+
     '<td>'+
       '<input type="number" placeholder="cm" class="mw" oninput="calcCurtainRow(this)" style="'+INP+'">'+
       '<span class="sub-size fw-display"></span>'+
@@ -1383,10 +1379,10 @@ function addBlindRow() {
       '<option>허니콤</option><option>로만쉐이드</option><option>기타</option>'+
     '</select></td>'+
     '<td><select class="handle-dir" style="'+SEL+'"><option>좌손</option><option>우손</option><option>기타</option></select></td>'+
-    '<td><input type="text" inputmode="numeric" placeholder="cm" class="cord-len" style="'+INP+'"></td>'+
+
     '<td><input type="text" inputmode="numeric" placeholder="cm" class="bmw" oninput="fmtPrice(this);calcBlindRow(this)" style="'+INP+'"></td>'+
     '<td><input type="text" inputmode="numeric" placeholder="cm" class="bmh" oninput="fmtPrice(this);calcBlindRow(this)" style="'+INP+'"></td>'+
-    '<td><input type="text" placeholder="추가 옵션" class="blind-opt" style="'+INP+'"></td>'+
+
     '<td>'+
       '<input type="text" inputmode="numeric" placeholder="단가(원/㎡)" class="blind-price" oninput="fmtPrice(this);calcBlindRow(this)" onfocus="fmtPriceFocus(this)" onblur="fmtPriceBlur(this);calcBlindRow(this)" style="'+INP+'">'+
       '<span class="bsqm">—</span>'+
