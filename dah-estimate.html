@@ -826,7 +826,7 @@ td.amt{
     <div class="region-row print-hide">
       <label>시공 지역</label>
       <select id="c-region" onchange="autoAddSvcFee()">
-        <option value="">시공 안함 (레일만)</option>
+        <option value="">시공 안함 (배송)</option>
         <option value="서울">서울 — 실측 40,000 + 시공 50,000원</option>
         <option value="경기">경기 — 실측 70,000 + 시공 100,000원</option>
         <option value="기타">기타지역 (직접입력)</option>
@@ -1484,13 +1484,13 @@ function autoAddSvcFee() {
   if(!svcBody) return;
   var rows = svcBody.querySelectorAll('[data-svc-type="실측비"],[data-svc-type="시공비"]');
   rows.forEach(function(r){ r.remove(); });
-  if(basePrice===0) {
-    // 실측비/시공비만 제거 (레일은 유지)
+    if(basePrice===0) {
+    // 시공 안함(배송) — 레일·실측비·시공비 모두 제거
     Array.from(svcBody.querySelectorAll('tr')).forEach(function(r){
       var type=r.querySelector('select')?.value||'';
-      if(type==='실측비'||type==='시공비') r.remove();
+      if(type==='실측비'||type==='시공비'||type==='레일') r.remove();
     });
-    if(hint) hint.textContent='시공 없음 (레일만 / 택배 발송)';
+    if(hint) hint.textContent='시공 없음 (배송)';
     calcTotal(); return;
   }
   ['실측비','시공비'].forEach(function(type) {
