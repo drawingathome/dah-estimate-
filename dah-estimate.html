@@ -298,17 +298,17 @@ td.amt{
   padding:10px 0;border-bottom:1px solid #F5F0EB
 }
 .sum-row:last-child{border-bottom:none}
-.sum-row .lbl{font-size:13px;color:#6B6B6B;font-weight:400}
-.sum-row .val{font-size:14px;font-weight:600;color:#6B6B6B}
+.sum-row .lbl{font-size:14px;color:#6B6B6B;font-weight:500}
+.sum-row .val{font-size:14px;font-weight:600;color:#282828}
 
 .sum-row.total{margin-top:6px}
 .sum-row.total .lbl{font-size:15px;font-weight:800;color:#282828;letter-spacing:-0.3px}
-.sum-row.total .val{font-size:22px;font-weight:800;color:#282828;letter-spacing:-1px}
-.sum-row.deposit .lbl{color:#282828;font-weight:600;font-size:13px}
+.sum-row.total .val{font-size:22px;font-weight:900;color:#282828;letter-spacing:-1px}
+.sum-row.deposit .lbl{color:#282828;font-weight:600;font-size:14px}
 .sum-row.deposit .val{flex:1;justify-content:flex-end}
 .sum-row.perf{border-top:1px dashed #EEE6DC}
-.sum-row.perf .lbl{color:#B0A99F;font-size:13px}
-.sum-row.perf .val{color:#B0A99F;font-size:13px}
+.sum-row.perf .lbl{color:#B0A99F;font-size:14px}
+.sum-row.perf .val{color:#B0A99F;font-size:14px}
 .sum-sub{font-size:13px;font-weight:400;color:#B0A99F;margin-left:6px}
 .discount-wrap{
   display:inline-flex;align-items:center;gap:6px;
@@ -802,13 +802,14 @@ td.amt{
       </div>
       <div class="info-item">
         <label>주소</label>
-        <div style="display:flex;gap:6px;align-items:center">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
           <input type="text" id="c-addr" placeholder="서울 서초구 반포동" style="flex:1;min-width:0">
           <button type="button" onclick="openKakaoAddr('c-addr')"
             style="padding:6px 12px;background:#282828;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0">
             🔍 검색
           </button>
         </div>
+        <input type="text" id="c-addr2" placeholder="상세주소 (동·호수 등)" style="width:100%">
       </div>
       <input type="hidden" id="c-date">
     </div>
@@ -1041,7 +1042,13 @@ td.amt{
 
   <!-- 액션 버튼 -->
   <div class="action-bar print-hide">
-    <button class="btn-new" onclick="newEstimate()">새 견적서</button>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button onclick="location.href='dah-dashboard.html'"
+        style="flex:1;height:40px;background:#FAF7F5;color:#282828;border:1.5px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">
+        ← 대시보드
+      </button>
+      <button class="btn-new" onclick="newEstimate()" style="flex:2">새 견적서</button>
+    </div>
     <div style="font-size:13px;color:#B0A99F;align-self:center">
       🖨 출력하면 내부 정보 자동 제거 · 고객용 견적서로 변환됩니다
     </div>
@@ -1292,13 +1299,9 @@ function addCurtainRow() {
     '<td>'+
       '<input type="number" placeholder="cm" class="mh" oninput="calcCurtainRow(this)" style="'+INP+'">'+
       '<span class="sub-size fh-display"></span>'+
-      '<div class="over243-wrap print-hide" style="display:none;color:#F06E2D;font-size:11px;font-weight:700;margin-top:3px;white-space:nowrap">⚠️ 243↑ 아래 초과단가 입력</div>'+
-
     '</td>'+
     '<td><input type="number" class="pnum" value="2" oninput="calcCurtainRow(this)" style="'+INP+'"></td>'+
-    '<td><input type="text" inputmode="numeric" placeholder="단가" class="cprice" oninput="fmtPrice(this);calcCurtainRow(this)" onfocus="fmtPriceFocus(this)" onblur="fmtPriceBlur(this);calcCurtainRow(this)" style="'+INP+'">'+
-      '<input type="text" inputmode="numeric" placeholder="초과분 단가 (243cm↑)" class="cprice-over" onfocus="fmtPriceFocus(this)" onblur="fmtPriceBlur(this);calcCurtainRow(this)" style="'+INP+';display:none;margin-top:3px;font-size:11px">'+
-    '</td>'+
+    '<td><input type="text" inputmode="numeric" placeholder="단가" class="cprice" oninput="fmtPrice(this);calcCurtainRow(this)" onfocus="fmtPriceFocus(this)" onblur="fmtPriceBlur(this);calcCurtainRow(this)" style="'+INP+'"></td>'+
     '<td class="amt camt">—</td>'+
     '<td style="white-space:nowrap">'+
       '<button class="copy-btn print-hide" onclick="copyCurtainRow(this)" title="복사">⧉</button>'+
@@ -1324,15 +1327,11 @@ function calcCurtainRow(el) {
   var pnumEl = tr.querySelector('.pnum');
   if(pnumEl && !pnumEl.dataset.manual) pnumEl.value = sugP||1;
   var pnum = parseFloat(tr.querySelector('.pnum')?.value)||1;
-  // 243 초과
-  var isOver = fh>243;
-  var over = tr.querySelector('.over243-wrap');
-  if(over) over.style.display = isOver?'block':'none';
-  var cpriceOver = tr.querySelector('.cprice-over');
-  if(cpriceOver) cpriceOver.style.display = isOver?'block':'none';
-  // 금액
-  var price = isOver ? (getPriceVal(tr.querySelector('.cprice-over'))||getPriceVal(tr.querySelector('.cprice')))
-                     : getPriceVal(tr.querySelector('.cprice'));
+  // 243 초과 시 높이 input에 오렌지 border 표시
+  var mhEl = tr.querySelector('.mh');
+  if(mhEl) mhEl.style.borderBottom = fh>243 ? '2px solid #F06E2D' : '';
+  // 금액 (단순 단가×폭수)
+  var price = getPriceVal(tr.querySelector('.cprice'));
   var amt = Math.round(price*pnum);
   var camtEl = tr.querySelector('.camt');
   if(camtEl) camtEl.textContent = amt>0 ? amt.toLocaleString()+'원' : '—';
@@ -1418,11 +1417,13 @@ function calcBlindRow(el) {
   var kind = tr.querySelector('.blind-kind')?.value||'';
   var price = getPriceVal(tr.querySelector('.blind-price'))||0;
   var extra = parseFloat(tr.querySelector('.blind-extra')?.value)||0;
-  var sqm = (bw*bh)/10000;
+  var sqmRaw = (bw*bh)/10000;
   var minSqm = kind==='우드'?1.5:(kind==='로만쉐이드'?2.0:0);
-  if(sqm<minSqm && sqm>0) sqm=minSqm;
+  if(sqmRaw<minSqm && sqmRaw>0) sqmRaw=minSqm;
+  // 소수점 1자리 올림 (예: 2.25 → 2.3)
+  var sqm = Math.ceil(sqmRaw*10)/10;
   var sqmEl = tr.querySelector('.bsqm');
-  if(sqmEl) sqmEl.textContent = sqm>0 ? sqm.toFixed(2)+'㎡'+(sqm===minSqm&&minSqm>0?' (최소)':'') : '—';
+  if(sqmEl) sqmEl.textContent = sqm>0 ? sqm.toFixed(1)+'㎡'+(sqmRaw===minSqm&&minSqm>0?' (최소)':'') : '—';
   var amt = Math.round(price*sqm)+extra;
   tr.querySelector('.bamt').textContent = amt>0 ? amt.toLocaleString()+'원' : '—';
   calcTotal();
@@ -1735,6 +1736,7 @@ function saveEstimate() {
   if(!name) { showToast('⚠️ 고객명을 입력하세요'); return; }
   var phone=document.getElementById('c-phone').value.trim();
   var addr=document.getElementById('c-addr').value.trim();
+  var addr2=document.getElementById('c-addr2')?.value.trim()||'';
   var staffName=document.getElementById('c-staff').value.trim();
   var custMemo=document.getElementById('c-memo').value.trim();
   var grand=parseInt(document.getElementById('sum-total').textContent.replace(/[^0-9]/g,''))||0;
@@ -1795,7 +1797,7 @@ function saveEstimate() {
         no: noStr,
         clientName: name,
         phone: phone,
-        addr: addr,
+        addr: addr+(addr2?' '+addr2:''),
         space: spaceStr,
         fabric: fabricStr,
         price: grand,
