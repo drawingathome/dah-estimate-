@@ -149,7 +149,7 @@ body{
   border-bottom:2px solid transparent;
   cursor:pointer;white-space:nowrap
 }
-.tab.on,.tab.active{color:#282828;border-bottom-color:#F06E2D;font-weight:700}
+.tab.on,.tab
 
 /* ── 오늘 날짜 배너 ── */
 .today-banner{
@@ -397,9 +397,9 @@ body{
   align-items:center;justify-content:center;
   border-radius:50%;line-height:1;flex-shrink:0
 }
-.cal-day-cell.today .cal-day-num{background:#282828;color:#fff}
-.cal-day-cell.other-month .cal-day-num{color:#B0A99F}
-.cal-day-cell.selected .cal-day-num{background:#FAF7F5;color:#F06E2D}
+.cal-day-cell.today 
+.cal-day-cell.other-month 
+.cal-day-cell.selected 
 .cal-dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;margin-top:2px}
 .cal-dot{width:5px;height:5px;border-radius:50%}
 
@@ -440,7 +440,7 @@ body{
   color:#B0A99F;border:none;background:transparent;
   border-bottom:2px solid transparent
 }
-.chart-tab.on{color:#282828;border-bottom-color:#F06E2D}
+.chart-tab.on{color:#F06E2D;border-bottom-color:#F06E2D;font-weight:700}
 .chart-bar{background:#F06E2D;border-radius:4px 4px 0 0;transition:height 0.3s}
 #chart-bars{padding:0 16px;margin:0}
 
@@ -502,10 +502,10 @@ body{
 .settings-row:last-child{border-bottom:none}
 
 /* ── 공통 유틸 ── */
-.empty{text-align:center;padding:36px 0;font-size:14px;color:#B0A99F}
+
 .master-only{display:none}
-.role-master .master-only{display:block}
-.role-master .stat-grid.master-only{display:grid}
+.role-master 
+.role-master .stat-grid
 
 /* ── 토스트 ── */
 #toast{
@@ -1656,9 +1656,10 @@ function renderChart(period) {
   // 차트 탭 활성화
   document.querySelectorAll('.chart-tab').forEach(function(b) {
     var isOn = b.getAttribute('data-period') === currentChartPeriod;
-    b.style.color = isOn ? '#F06E2D' : '#B0A99F';
-    b.style.borderBottom = isOn ? '2px solid #F06E2D' : 'none';
-    b.style.fontWeight = isOn ? '700' : '400';
+    b.classList.toggle('on', isOn);
+    b.style.color = '';
+    b.style.borderBottom = '';
+    b.style.fontWeight = '';
   });
 
   var periods = [], currentKey = '', labels = [];
