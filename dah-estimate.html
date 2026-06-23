@@ -1331,9 +1331,18 @@ function calcCurtainRow(el) {
   var pnumEl = tr.querySelector('.pnum');
   if(pnumEl && !pnumEl.dataset.manual) pnumEl.value = sugP||1;
   var pnum = parseFloat(tr.querySelector('.pnum')?.value)||1;
-  // 243 초과 시 높이 input에 오렌지 border 표시
+  // 243 초과 경고
   var mhEl = tr.querySelector('.mh');
+  var overWarnEl = tr.querySelector('.over-warn');
+  if(!overWarnEl) {
+    overWarnEl = document.createElement('div');
+    overWarnEl.className = 'over-warn';
+    overWarnEl.style.cssText = 'display:none;font-size:11px;color:#F06E2D;font-weight:700;margin-top:3px;white-space:nowrap';
+    overWarnEl.textContent = '⚠️ 243cm 초과 — 2단 제작 필요';
+    mhEl?.parentNode?.appendChild(overWarnEl);
+  }
   if(mhEl) mhEl.style.borderBottom = fh>243 ? '2px solid #F06E2D' : '';
+  if(overWarnEl) overWarnEl.style.display = fh>243 ? 'block' : 'none';
   // 금액 (단순 단가×폭수)
   var price = getPriceVal(tr.querySelector('.cprice'));
   var amt = Math.round(price*pnum);
@@ -1428,6 +1437,18 @@ function calcBlindRow(el) {
   var sqm = Math.ceil(sqmRaw*10)/10;
   var sqmEl = tr.querySelector('.bsqm');
   if(sqmEl) sqmEl.textContent = sqm>0 ? sqm.toFixed(1)+'㎡'+(sqmRaw===minSqm&&minSqm>0?' (최소)':'') : '—';
+  // 가로 200cm 초과 경고
+  var bmwEl = tr.querySelector('.bmw');
+  var bwWarnEl = tr.querySelector('.blind-wide-warn');
+  if(!bwWarnEl) {
+    bwWarnEl = document.createElement('div');
+    bwWarnEl.className = 'blind-wide-warn';
+    bwWarnEl.style.cssText = 'display:none;font-size:11px;color:#F06E2D;font-weight:700;margin-top:3px;white-space:nowrap';
+    bwWarnEl.textContent = '⚠️ 200cm 초과 — 분할 시공 검토';
+    bmwEl?.parentNode?.appendChild(bwWarnEl);
+  }
+  if(bmwEl) bmwEl.style.borderBottom = bw>200 ? '2px solid #F06E2D' : '';
+  if(bwWarnEl) bwWarnEl.style.display = bw>200 ? 'block' : 'none';
   var amt = Math.round(price*sqm)+extra;
   tr.querySelector('.bamt').textContent = amt>0 ? amt.toLocaleString()+'원' : '—';
   calcTotal();
