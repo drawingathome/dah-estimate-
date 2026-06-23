@@ -1468,6 +1468,7 @@ function autoAddBlindSvc() {
   if(tds[1]) { var inp=tds[1].querySelector('input'); if(inp) inp.value='블라인드 시공비'; }
   if(tds[2]) { var inp=tds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw','10000'); inp.value=(10000).toLocaleString(); } }
   if(tds[3]) { var inp=tds[3].querySelector('input'); if(inp) inp.value=1; }
+  calcSvcRow(tds[2]?.querySelector('input'));
 }
 
 // 레일/시공비 행 추가
@@ -1553,9 +1554,10 @@ function calcTotal() {
     var kind=tr.querySelector('.blind-kind')?.value||'';
     var price=getPriceVal(tr.querySelector('.blind-price'))||0;
     var extra=parseFloat(tr.querySelector('.blind-extra')?.value)||0;
-    var sqm=(bw*bh)/10000;
+    var sqmRaw=(bw*bh)/10000;
     var minSqm=kind==='우드'?1.5:(kind==='로만쉐이드'?2.0:0);
-    if(sqm<minSqm&&sqm>0) sqm=minSqm;
+    if(sqmRaw<minSqm&&sqmRaw>0) sqmRaw=minSqm;
+    var sqm=Math.ceil(sqmRaw*10)/10;
     curtainTotal+=Math.round(price*sqm)+extra;
   });
   var svcTotal=0;
