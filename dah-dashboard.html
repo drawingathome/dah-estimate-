@@ -1189,17 +1189,33 @@ function renderHome() {
   var todayEvs = [];
   var TYPE_COLOR = {상담:'#282828', 실측:'#282828', 시공:'#B0A99F'};
   var TYPE_BG2   = {상담:'#FAF7F5', 실측:'#EEE6DC', 시공:'#EEE6DC'};
+  // 중복 방지: 같은 고객+날짜 조합은 우선순위 높은 타입만 (시공>실측>상담)
+  var evKeys = {};
+  var TYPE_PRIORITY = {시공:3, 실측:2, 상담:1};
+  function pushEv(ev) {
+    var dayKey = ev.name + '|' + ev.date + '|' + (ev.isNext?'next':'today');
+    var existing = evKeys[dayKey];
+    if (!existing) {
+      evKeys[dayKey] = ev;
+      todayEvs.push(ev);
+    } else if ((TYPE_PRIORITY[ev.type]||0) > (TYPE_PRIORITY[existing.type]||0)) {
+      // 더 중요한 타입으로 교체
+      var idx = todayEvs.indexOf(existing);
+      if (idx >= 0) todayEvs[idx] = ev;
+      evKeys[dayKey] = ev;
+    }
+  }
   customers.forEach(function(c) {
-    if (c.date        === todayS) todayEvs.push({name:c.clientName, space:c.space||'—', type:'상담', date:c.date,        cust:c});
-    if (c.measureDate === todayS) todayEvs.push({name:c.clientName, space:c.space||'—', type:'실측', date:c.measureDate,  cust:c});
-    if (c.installDate === todayS) todayEvs.push({name:c.clientName, space:c.space||'—', type:'시공', date:c.installDate,  cust:c});
+    if (c.date        === todayS) pushEv({name:c.clientName, space:c.space||'—', type:'상담', date:c.date,        cust:c});
+    if (c.measureDate === todayS) pushEv({name:c.clientName, space:c.space||'—', type:'실측', date:c.measureDate, cust:c});
+    if (c.installDate === todayS) pushEv({name:c.clientName, space:c.space||'—', type:'시공', date:c.installDate, cust:c});
   });
   // 내일 일정도 미리 표시
   customers.forEach(function(c) {
     var tomorrow = new Date(todayS); tomorrow.setDate(tomorrow.getDate()+1);
     var tmrStr = tomorrow.toISOString().slice(0,10);
-    if (c.measureDate === tmrStr) todayEvs.push({name:c.clientName, space:c.space||'—', type:'실측', date:c.measureDate, cust:c, isNext:true});
-    if (c.installDate === tmrStr) todayEvs.push({name:c.clientName, space:c.space||'—', type:'시공', date:c.installDate,  cust:c, isNext:true});
+    if (c.measureDate === tmrStr) pushEv({name:c.clientName, space:c.space||'—', type:'실측', date:c.measureDate, cust:c, isNext:true});
+    if (c.installDate === tmrStr) pushEv({name:c.clientName, space:c.space||'—', type:'시공', date:c.installDate, cust:c, isNext:true});
   });
 
   var todayWrap = el('div', {});
