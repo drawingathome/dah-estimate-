@@ -332,12 +332,12 @@ body{
   font-size:12px;font-weight:700;color:#fff;
   flex-shrink:0;white-space:nowrap
 }
-.stage-pill.상담  {background:#282828;color:#fff}
-.stage-pill.계약금{background:#F06E2D;color:#282828}
-.stage-pill.실측  {background:#6B6B6B;color:#fff}
-.stage-pill.잔금  {background:#282828;color:#fff}
-.stage-pill.시공  {background:#F06E2D;color:#282828}
-.stage-pill.완료  {background:#B0A99F;color:#fff}
+.stage-pill.상담{background:#282828;color:#fff}
+.stage-pill.계약금{background:#F06E2D;color:#fff}
+.stage-pill.실측{background:#6B6B6B;color:#fff}
+.stage-pill.잔금{background:#282828;color:#fff}
+.stage-pill.시공{background:#F06E2D;color:#fff}
+.stage-pill.완료{background:#B0A99F;color:#fff}
 
 /* ── 고객목록 ── */
 .search-top{padding:10px 14px 8px;background:#fff;border-bottom:1px solid #EEE6DC;margin-bottom:8px}
@@ -442,7 +442,7 @@ body{
 }
 .chart-tab.on{color:#282828;border-bottom-color:#F06E2D}
 .chart-bar{background:#F06E2D;border-radius:4px 4px 0 0;transition:height 0.3s}
-#chart-bars{padding:0 16px}
+#chart-bars{padding:0 16px;margin:0}
 
 /* ── 고객 상세 모달 ── */
 .overlay{
@@ -559,7 +559,7 @@ body{
 <div class="kpi-bar" id="kpi-bar">
   <div class="kpi-grid">
     <div class="kpi-card">
-      <span class="kpi-num" id="hd-kpi-rev">—<em>만원</em></span>
+      <span class="kpi-num" id="hd-kpi-rev">—<em>원</em></span>
       <span class="kpi-label">이번 달 매출</span>
     </div>
     <div class="kpi-card">
@@ -794,7 +794,7 @@ function isArchived(c) {
   if (!refDate) return false;
   return Math.floor((new Date() - new Date(refDate)) / 86400000) >= 14;
 }
-var STAGE_COLORS = {상담:'#282828',계약금:'#282828',실측:'#282828',잔금:'#282828',시공:'#282828',완료:'#B0A99F'};
+var STAGE_COLORS = {상담:'#282828',계약금:'#F06E2D',실측:'#6B6B6B',잔금:'#282828',시공:'#F06E2D',완료:'#B0A99F'};
 var STAGE_BG = {상담:'#F5F0EB',계약금:'#FAF7F5',실측:'#F5F0EB',잔금:'#F5F0EB',시공:'#FAF7F5',완료:'#F5F0EB'};
 var STAGE_NUM = {상담:1,계약금:2,실측:3,잔금:4,시공:5,완료:6};
 var STAGE_ACTIVE = {상담:true,계약금:true,실측:true,잔금:true,시공:true,완료:false};
@@ -1017,7 +1017,7 @@ function updateHdKpi(allCustomers) {
 
   var revEl = document.getElementById('hd-kpi-rev');
   var conEl = document.getElementById('hd-kpi-con');
-  if (revEl) revEl.innerHTML = Math.round(totalRev/10000).toLocaleString() + '<span>만원</span>';
+  if (revEl) revEl.innerHTML = totalRev.toLocaleString() + '<span>원</span>';
   if (conEl) conEl.innerHTML = contracted.length + '<span>/'+monthC.length+'건</span>';
 
   // 단계 현황 바
@@ -1297,8 +1297,8 @@ function renderHome() {
           '</div>'+
         '</div>'+
         (sGoal>0
-          ? '<div style="height:4px;background:#FAF7F5;overflow:hidden"><div style="height:4px;background:#282828;width:'+sPct+'%"></div></div>'+
-            '<span style="font-size:11px;color:#B0A99F;display:block;margin-top:3px">목표 '+sPct+'% ('+fmt(sGoal)+')</span>'
+          ? '<div style="height:4px;background:#F5F0EB;border-radius:4px;overflow:hidden;margin-top:4px"><div style="height:4px;border-radius:4px;background:#F06E2D;width:'+sPct+'%"></div></div>'+
+            '<span style="font-size:11px;color:#B0A99F;display:block;margin-top:3px">목표 달성 '+sPct+'% · 목표 '+fmt(sGoal)+'원</span>'
           : '');
       staffCardInner.appendChild(row);
     });
