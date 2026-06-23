@@ -26,12 +26,12 @@ body{
 
 /* ── 단계 뱃지 컬러 시스템 ── */
 :root{
-  --stage-상담:     #4A90D9;
-  --stage-계약금:   #E8A020;
-  --stage-실측:     #9B6FC4;
-  --stage-잔금:     #E05C5C;
-  --stage-시공:     #3AAA6E;
-  --stage-완료:     #888888;
+  --stage-상담:     #1A1A1A;
+  --stage-계약금:   #C8A882;
+  --stage-실측:     #888888;
+  --stage-잔금:     #1A1A1A;
+  --stage-시공:     #C8A882;
+  --stage-완료:     #BDBDBD;
   --gold:          #C8A882;
   --gold-light:    #F5EFE6;
 }
@@ -334,12 +334,12 @@ body{
   font-size:12px;font-weight:700;color:#fff;
   flex-shrink:0;white-space:nowrap
 }
-.stage-pill.상담  {background:var(--stage-상담)}
-.stage-pill.계약금{background:var(--stage-계약금)}
-.stage-pill.실측  {background:var(--stage-실측)}
-.stage-pill.잔금  {background:var(--stage-잔금)}
-.stage-pill.시공  {background:var(--stage-시공)}
-.stage-pill.완료  {background:var(--stage-완료)}
+.stage-pill.상담  {background:#1A1A1A;color:#fff}
+.stage-pill.계약금{background:#C8A882;color:#1A1A1A}
+.stage-pill.실측  {background:#888888;color:#fff}
+.stage-pill.잔금  {background:#1A1A1A;color:#fff}
+.stage-pill.시공  {background:#C8A882;color:#1A1A1A}
+.stage-pill.완료  {background:#BDBDBD;color:#fff}
 
 /* ── 고객목록 ── */
 .search-top{padding:10px 14px 8px;background:#fff;border-bottom:1px solid #EAE4DC;margin-bottom:8px}
@@ -417,9 +417,9 @@ body{
 .cal-ev-day{font-size:15px;font-weight:800;color:#1A1A1A;display:block;line-height:1.2}
 .cal-ev-dow{font-size:11px;color:#BDBDBD;display:block}
 .cal-ev-type{width:3px;min-height:38px;border-radius:2px;flex-shrink:0}
-.type-상담{background:var(--stage-상담)}
-.type-실측{background:var(--stage-실측)}
-.type-시공{background:var(--stage-시공)}
+.type-상담{background:#1A1A1A}
+.type-실측{background:#888888}
+.type-시공{background:#C8A882}
 .cal-ev-info{flex:1;min-width:0}
 .cal-ev-name{
   font-size:15px;font-weight:700;color:#1A1A1A;
@@ -796,7 +796,7 @@ function isArchived(c) {
   return Math.floor((new Date() - new Date(refDate)) / 86400000) >= 14;
 }
 var STAGE_COLORS = {상담:'#1A1A1A',계약금:'#1A1A1A',실측:'#1A1A1A',잔금:'#1A1A1A',시공:'#1A1A1A',완료:'#BDBDBD'};
-var STAGE_BG = {상담:'#EBF3FB',계약금:'#FDF3E3',실측:'#F3EDF9',잔금:'#FDEAEA',시공:'#E8F7EF',완료:'#F0F0F0'};
+var STAGE_BG = {상담:'#F5F2EE',계약금:'#F5EFE6',실측:'#F5F2EE',잔금:'#F5F2EE',시공:'#F5EFE6',완료:'#F5F2EE'};
 var STAGE_NUM = {상담:1,계약금:2,실측:3,잔금:4,시공:5,완료:6};
 var STAGE_ACTIVE = {상담:true,계약금:true,실측:true,잔금:true,시공:true,완료:false};
 var currentDetailName = null;
