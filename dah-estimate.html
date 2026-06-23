@@ -551,10 +551,10 @@ td.amt{
   letter-spacing:3px;text-transform:uppercase
 }
 .pv-doc-title{
-  font-size:18px;font-weight:800;color:#282828;
-  letter-spacing:4px;line-height:1
+  font-size:20px;font-weight:800;color:#282828;
+  letter-spacing:0;line-height:1
 }
-.pv-brand{font-size:13px;color:#6B6B6B;letter-spacing:3px;text-transform:uppercase}
+.pv-brand{font-size:10px;color:#B0A99F;letter-spacing:4px;text-transform:uppercase;font-weight:600}
 
 /* 고객 정보 블록 */
 .pv-customer{padding:24px 28px;border-bottom:1px solid #EEE6DC}
@@ -595,7 +595,7 @@ td.amt{
   border-bottom:2px solid #EEE6DC;white-space:nowrap
 }
 .pv-table tbody td{
-  padding:11px 8px;font-size:14px;color:#282828;
+  padding:14px 8px;font-size:14px;color:#282828;
   vertical-align:middle;border-bottom:1px solid #F5F0EB;
   line-height:1.4
 }
@@ -1982,8 +1982,10 @@ function buildCustomerHTML() {
 
   function fmtDate2(d){
     if(!d) return '—';
-    var p=d.split('-');
-    return p[0]+'년 '+parseInt(p[1])+'월 '+parseInt(p[2])+'일';
+    if(d.includes('년')) return d.replace(/\s+/g,' ').trim();
+    if(d.includes('-')){ var p=d.split('-'); return p[0]+'년 '+parseInt(p[1])+'월 '+parseInt(p[2])+'일'; }
+    if(d.length>=8) return d.slice(0,4)+'년 '+parseInt(d.slice(4,6))+'월 '+parseInt(d.slice(6,8))+'일';
+    return d||'—';
   }
   function today(){
     var d=new Date();
@@ -2080,7 +2082,7 @@ function buildCustomerHTML() {
         prodHTML += '<td class="space">'+r.space+'</td>';
         prodHTML += '<td class="sz">'+(r.bw?r.bw+'×'+r.bh:'—')+'</td>';
         prodHTML += '<td class="name">'+r.name+'</td>';
-        prodHTML += '<td class="spec-col">'+spec+(r.sqm?'<br><span style="font-size:13px;color:#B0A99F">'+r.sqm+'㎡</span>':'')+'</td>';
+        prodHTML += '<td class="spec-col">'+spec+(r.sqm?'<br><span style="font-size:13px;color:#B0A99F">'+r.sqm+'</span>':'')+'</td>';
         prodHTML += '<td class="r">—</td>';
         prodHTML += '<td class="r" style="color:#B0A99F;font-size:12px">'+(r.price?r.price.toLocaleString():'—')+'</td>';
         prodHTML += '<td class="amt">'+r.amt+'</td>';
