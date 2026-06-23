@@ -309,7 +309,7 @@ td.amt{
 .sum-row.total 
 .sum-row.deposit 
 .sum-row.deposit 
-.sum-row.perf{border-top:1px dashed #EEE6DC}
+.sum-row.perf{border-top:1px dashed #EEE6DC;display:none}
 .sum-row.perf 
 .sum-row.perf 
 .sum-sub{font-size:13px;font-weight:400;color:#B0A99F;margin-left:6px}
@@ -334,14 +334,47 @@ td.amt{
 /* ── 액션 버튼 바 ── */
 .summary-section{
   background:#fff;border:1px solid #EEE6DC;
-  border-radius:6px;padding:22px 28px;
+  border-radius:6px;overflow:hidden;
   margin-bottom:16px
 }
+.summary-inner{
+  padding:18px 20px 0
+}
+.summary-total-block{
+  background:#282828;
+  padding:20px 20px 18px;
+  margin-top:16px;
+  border-left:4px solid #F06E2D
+}
+.summary-total-label{
+  font-size:10px;font-weight:700;color:#F06E2D;
+  letter-spacing:3px;text-transform:uppercase;margin-bottom:4px
+}
+.summary-total-amount{
+  font-size:36px;font-weight:900;color:#fff;
+  letter-spacing:-2px;line-height:1;
+  margin-top:2px
+}
+.summary-total-sub{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:14px;padding-top:14px;
+  border-top:1px solid rgba(255,255,255,0.1)
+}
+.summary-deposit-row, .summary-balance-row{
+  display:flex;flex-direction:column;gap:2px
+}
+.summary-sub-label{
+  font-size:10px;color:rgba(255,255,255,0.4);
+  letter-spacing:1px;text-transform:uppercase
+}
+.summary-sub-amount{
+  font-size:15px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:-0.3px
+}
+.summary-sub-amount.orange{color:#F06E2D;font-size:17px}
 .action-bar{
-  background:#FAF7F5;border:1px solid #EEE6DC;
-  border-radius:10px;padding:18px 24px;
-  display:flex;align-items:center;gap:10px;
-  justify-content:space-between;flex-wrap:wrap
+  background:#FAF7F5;border-top:1px solid #EEE6DC;
+  padding:16px;
+  display:flex;flex-direction:column;gap:10px
 }
 .action-bar button{
   padding:11px 20px;font-size:14px;font-family:inherit;
@@ -750,20 +783,7 @@ td.amt{
 /* ── 커튼 행 ── */
 .row-curtain td{padding:6px 4px;vertical-align:middle}
 
-
-/* 날짜 input */
-input[type="date"]{
-  color:#282828;font-family:inherit;
-  font-size:15px;font-weight:600;
-  border:none;background:transparent;
-  border-bottom:1.5px solid #EEE6DC;
-  padding:6px 0;width:100%;outline:none
-}
-input[type="date"]::-webkit-calendar-picker-indicator{
-  opacity:0.35;cursor:pointer;
-  color:#6B6B6B
-}
-input[type="date"]::-webkit-datetime-edit{color:#282828}</style>
+</style>
 </head>
 <body>
 
@@ -833,11 +853,11 @@ input[type="date"]::-webkit-datetime-edit{color:#282828}</style>
     <div class="info-grid" style="margin-top:16px;padding-top:14px;border-top:1px dashed #EEE6DC">
       <div class="info-item">
         <label>실측 예정일</label>
-        <input type="date" id="c-measure">
+        <input type="text" id="c-measure" placeholder="2026년 6월 23일" inputmode="numeric" oninput="fmtDateKo(this)" maxlength="14" style="letter-spacing:0.3px">
       </div>
       <div class="info-item">
         <label>시공 예정일</label>
-        <input type="date" id="c-install">
+        <input type="text" id="c-install" placeholder="2026년 6월 23일" inputmode="numeric" oninput="fmtDateKo(this)" maxlength="14" style="letter-spacing:0.3px">
       </div>
     </div>
     <div class="region-row print-hide">
@@ -977,6 +997,11 @@ input[type="date"]::-webkit-datetime-edit{color:#282828}</style>
         <tbody id="blind-body"></tbody>
       </table>
     </div>
+    <!-- 빈 상태 안내 -->
+    <div id="empty-hint" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 16px;gap:10px">
+      <div style="font-size:28px;opacity:0.25">🪟</div>
+      <div style="font-size:13px;font-weight:700;color:#B0A99F;letter-spacing:0.3px">아래 버튼으로 제품을 추가해주세요</div>
+    </div>
     <div class="add-row-btns print-hide">
       <button class="add-btn" onclick="addCurtainRow()">+ 커튼 행 추가</button>
       <button class="add-btn add-btn-blind" onclick="addBlindRow()">+ 블라인드 행 추가</button>
@@ -1011,31 +1036,46 @@ input[type="date"]::-webkit-datetime-edit{color:#282828}</style>
 
   <!-- 합계 -->
   <div class="summary-section">
-    <div class="sum-row">
-      <span class="lbl">제품 소계</span>
-      <span class="val" id="sum-curtain">0원</span>
-    </div>
-    <div class="sum-row print-hide">
-      <span class="lbl">
-        할인
-        <span class="discount-wrap">
-          <select id="discount-type" onchange="calcTotal()">
-            <option value="won">원</option>
-            <option value="pct">%</option>
-          </select>
-          <input type="number" id="discount" value="0" min="0" oninput="calcTotal()" placeholder="0">
+    <div class="summary-inner">
+      <div class="sum-row">
+        <span class="lbl">제품 소계</span>
+        <span class="val" id="sum-curtain">0원</span>
+      </div>
+      <div class="sum-row print-hide">
+        <span class="lbl">할인
+          <span class="discount-wrap">
+            <select id="discount-type" onchange="calcTotal()">
+              <option value="won">원</option>
+              <option value="pct">%</option>
+            </select>
+            <input type="number" id="discount" value="0" min="0" oninput="calcTotal()" placeholder="0">
+          </span>
         </span>
-      </span>
-      <span class="val" id="sum-discount">-0원</span>
+        <span class="val" id="sum-discount">-0원</span>
+      </div>
+      <div class="sum-row">
+        <span class="lbl">레일 · 시공비</span>
+        <span class="val" id="sum-svc">0원</span>
+      </div>
     </div>
-    <div class="sum-row">
-      <span class="lbl">레일 · 시공비</span>
-      <span class="val" id="sum-svc">0원</span>
+    <!-- 최종합계 다크 블록 -->
+    <div class="summary-total-block">
+      <div class="summary-total-label">TOTAL ESTIMATE</div>
+      <div class="summary-total-amount" id="sum-total">0원</div>
+      <div class="summary-total-sub">
+        <div class="summary-deposit-row">
+          <span class="summary-sub-label">계약금</span>
+          <span class="summary-sub-amount orange" id="sum-deposit-disp">—</span>
+        </div>
+        <div style="width:1px;background:rgba(255,255,255,0.1);align-self:stretch"></div>
+        <div class="summary-balance-row" style="text-align:right">
+          <span class="summary-sub-label">잔금</span>
+          <span class="summary-sub-amount" id="sum-balance-disp">—</span>
+        </div>
+      </div>
     </div>
-    <div class="sum-row total">
-      <span class="lbl">최종 견적 합계</span>
-      <span class="val" id="sum-total">0원</span>
-    </div>
+    <!-- 숨김 행 (JS calcTotal에서 사용) -->
+    <div class="sum-row total" style="display:none"><span class="lbl"></span><span class="val" id="sum-total-hidden"></span></div>
     <div class="sum-row deposit">
       <span class="lbl">계약금 <span class="sum-sub">계약 시 납부</span></span>
       <span class="val deposit-inp-wrap">
@@ -1067,7 +1107,7 @@ input[type="date"]::-webkit-datetime-edit{color:#282828}</style>
       <button class="btn-new" onclick="newEstimate()" style="flex:2;height:44px">새 견적서</button>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
-      <span style="font-size:11px;color:#B0A99F;letter-spacing:-0.2px">🖨 출력 시 내부 정보 자동 제거</span>
+      <span style="font-size:11px;color:#B0A99F;letter-spacing:-0.2px">✔ 출력 시 내부 정보 자동 제거</span>
       <button id="load-draft-btn" onclick="loadDraft()" style="display:none;padding:4px 10px;background:#F5F0EB;color:#282828;border:1px solid #EEE6DC;border-radius:6px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0">
         💾 임시저장 불러오기
       </button>
@@ -1330,6 +1370,7 @@ function addCurtainRow() {
       '<button class="del-btn print-hide" onclick="delRow(this)">✕</button>'+
     '</td>';
   tbody.appendChild(tr);
+  renderEmptyState();
 }
 
 // 커튼 계산
@@ -1438,6 +1479,7 @@ function addBlindRow() {
     '</td>';
   tbody.appendChild(tr);
   autoAddBlindSvc();
+  renderEmptyState();
 }
 
 // 블라인드 계산
@@ -1592,6 +1634,13 @@ function calcTotal() {
   var balance=grand-deposit;
   var perf=Math.round(curtainTotal*0.95);
   document.getElementById('sum-curtain').textContent=curtainTotal.toLocaleString()+'원';
+  // 새 합계 블록 업데이트
+  var totalEl = document.getElementById('sum-total');
+  if(totalEl) totalEl.textContent = grand.toLocaleString()+'원';
+  var depDispEl = document.getElementById('sum-deposit-disp');
+  if(depDispEl) depDispEl.textContent = deposit>0 ? deposit.toLocaleString()+'원' : '—';
+  var balDispEl = document.getElementById('sum-balance-disp');
+  if(balDispEl) balDispEl.textContent = deposit>0 ? balance.toLocaleString()+'원' : '—';
   var discEl=document.getElementById('sum-discount');
   var discRow=discEl?.closest('.sum-row');
   if(discEl) discEl.textContent=discount>0?'-'+discount.toLocaleString()+'원':'';
@@ -2500,7 +2549,37 @@ window.addEventListener('load', function() {
   var _logoEl = document.getElementById('hd-logo');
   if(_logoEl) _logoEl.src = DAH_LOGO_B64;
   checkDraftExists();
+  renderEmptyState();
 });
+
+// 날짜 한국식 자동 포맷 (20260623 → 2026년 6월 23일)
+function fmtDateKo(el) {
+  var v = el.value.replace(/[^0-9]/g,'');
+  var out = '';
+  if(v.length>0) out = v.slice(0,4);
+  if(v.length>4) out += '년 '+v.slice(4,6);
+  if(v.length>6) out += '월 '+v.slice(6,8);
+  if(v.length>=8) out += '일';
+  // 커서 위치 유지
+  var pos = el.selectionStart;
+  el.value = out;
+  // 저장용 data-raw
+  el.setAttribute('data-date-raw', v.slice(0,8));
+}
+
+// 빈 상태 안내 렌더
+function renderEmptyState() {
+  var cBody = document.getElementById('curtain-body');
+  var bBody = document.getElementById('blind-body');
+  var cTable = document.getElementById('curtain-table');
+  var bTable = document.getElementById('blind-table');
+  var hasC = cBody && cBody.children.length > 0;
+  var hasB = bBody && bBody.children.length > 0;
+  var emWrap = document.getElementById('empty-hint');
+  if(emWrap) emWrap.style.display = (!hasC && !hasB) ? 'flex' : 'none';
+  if(cTable) cTable.style.display = hasC ? 'table' : 'none';
+  if(bTable) bTable.style.display = hasB ? 'table' : 'none';
+}
 </script>
 <div id="pdf-size-modal">
   <div id="pdf-size-box">
