@@ -248,7 +248,7 @@ td.amt{
   color:#282828;letter-spacing:-0.3px
 }
 .c-display-name{font-weight:600!important}
-.sub-size{display:none;font-size:13px;color:#B0A99F;margin-top:2px}
+.sub-size{display:block;font-size:11px;color:#F06E2D;font-weight:600;margin-top:2px;white-space:nowrap}
 
 /* 커튼 테이블 hover */
 #curtain-body tr:hover td,#blind-body tr:hover td{background:#F5F0EB}
@@ -772,6 +772,7 @@ td.amt{
       <div class="doc-header-meta">
         <span>No. <strong id="hd-no-display">—</strong></span>
         <span>담당자 <strong id="hd-staff-display">장선혜</strong></span>
+        <span id="draft-status" style="display:none;font-size:11px;color:#F06E2D;font-weight:600">💾 <span id="draft-time"></span></span>
       </div>
     </div>
     <!-- 탭바 -->
@@ -794,7 +795,7 @@ td.amt{
     <div class="info-grid">
       <div class="info-item">
         <label>고객명</label>
-        <input type="text" id="c-name" placeholder="홍길동" oninput="fmtName(this)">
+        <input type="text" id="c-name" placeholder="홍길동" oninput="debounceDraft()" oninput="fmtName(this)">
       </div>
       <div class="info-item">
         <label>연락처</label>
@@ -1044,13 +1045,16 @@ td.amt{
   <div class="action-bar print-hide">
     <div style="display:flex;gap:8px;margin-bottom:8px">
       <button onclick="location.href='dah-dashboard.html'"
-        style="flex:1;height:40px;background:#FAF7F5;color:#282828;border:1.5px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">
+        style="flex:1;height:44px;background:#FAF7F5;color:#282828;border:1.5px solid #EEE6DC;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;letter-spacing:-0.3px">
         ← 대시보드
       </button>
-      <button class="btn-new" onclick="newEstimate()" style="flex:2">새 견적서</button>
+      <button class="btn-new" onclick="newEstimate()" style="flex:2;height:44px">새 견적서</button>
     </div>
-    <div style="font-size:13px;color:#B0A99F;align-self:center">
-      🖨 출력하면 내부 정보 자동 제거 · 고객용 견적서로 변환됩니다
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+      <span style="font-size:12px;color:#B0A99F">🖨 출력하면 내부 정보 자동 제거 · 고객용 견적서로 변환됩니다</span>
+      <button id="load-draft-btn" onclick="loadDraft()" style="display:none;padding:4px 10px;background:#F5F0EB;color:#282828;border:1px solid #EEE6DC;border-radius:6px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0">
+        💾 임시저장 불러오기
+      </button>
     </div>
     <div class="action-main">
       <button class="btn-print" onclick="printForCustomer()">🖨 고객용 출력</button>
@@ -2394,6 +2398,63 @@ function openKakaoAddr(targetId) {
     document.head.appendChild(script);
   }
 }
+
+// ── 임시저장 ─────────────────────────────────────
+function saveDraft() {
+  try {
+    var data = {};
+    ['c-name','c-phone','c-addr','c-addr2','c-measure','c-install','c-region','c-memo'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) data[id] = el.value;
+    });
+    data._curtain = document.getElementById('curtain-body')?.innerHTML || '';
+    data._blind   = document.getElementById('blind-body')?.innerHTML || '';
+    data._svc     = document.getElementById('svc-body')?.innerHTML || '';
+    data._discount = document.getElementById('discount')?.value || '0';
+    data._savedAt = new Date().toISOString();
+    localStorage.setItem('dah_draft', JSON.stringify(data));
+    var t = new Date();
+    var el = document.getElementById('draft-status');
+    var tel = document.getElementById('draft-time');
+    if(el) el.style.display='inline';
+    if(tel) tel.textContent = pad2(t.getHours())+':'+pad2(t.getMinutes())+' 임시저장';
+  } catch(e) { console.warn('임시저장 실패', e); }
+}
+
+function loadDraft() {
+  try {
+    var raw = localStorage.getItem('dah_draft');
+    if(!raw) { showToast('임시저장 내용이 없습니다'); return; }
+    var data = JSON.parse(raw);
+    var savedAt = data._savedAt ? new Date(data._savedAt).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'}) : '';
+    if(!confirm(savedAt+' 임시저장 내용을 불러올까요?')) return;
+    ['c-name','c-phone','c-addr','c-addr2','c-measure','c-install','c-region','c-memo'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el && data[id] !== undefined) el.value = data[id];
+    });
+    if(data._curtain) document.getElementById('curtain-body').innerHTML = data._curtain;
+    if(data._blind) {
+      document.getElementById('blind-body').innerHTML = data._blind;
+      if(data._blind.trim()) document.getElementById('blind-table').style.display='table';
+    }
+    if(data._svc) document.getElementById('svc-body').innerHTML = data._svc;
+    if(data._discount) document.getElementById('discount').value = data._discount;
+    calcTotal();
+    showToast('✅ 임시저장 내용을 불러왔습니다');
+  } catch(e) { showToast('❌ 불러오기 실패'); }
+}
+
+function checkDraftExists() {
+  var raw = localStorage.getItem('dah_draft');
+  var btn = document.getElementById('load-draft-btn');
+  if(raw && btn) btn.style.display = 'inline-block';
+}
+
+// 5분 주기 자동 임시저장
+setInterval(function() {
+  if(document.getElementById('c-name')?.value) saveDraft();
+}, 300000);
+
 </script>
 <div id="pdf-size-modal">
   <div id="pdf-size-box">
