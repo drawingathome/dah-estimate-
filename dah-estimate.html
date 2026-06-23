@@ -16,7 +16,7 @@ html,body{
   font-family:"Noto Sans KR","Apple SD Gothic Neo",sans-serif;
   width:210mm;margin:0 auto;padding:0;
   background:#FAF7F5;
-  font-size:15px;line-height:1.6;color:#1A1A1A
+  font-size:15px;line-height:1.6;color:#282828
 }
 
 /* ── 상태 탭 바 — 헤더 탭바에서 정의 ── */
@@ -26,7 +26,7 @@ html,body{
 
 /* ── 헤더 ── */
 .doc-header{
-  background:#1A1A1A;
+  background:#282828;
   padding:22px 32px 0;
   overflow:visible;
   display:grid;
@@ -75,7 +75,7 @@ html,body{
   padding:10px 0
 }
 .doc-date{
-  font-size:12px;color:rgba(255,255,255,0.38);
+  font-size:12px;color:rgba(255,255,255,0.4);
   letter-spacing:0.5px
 }
 .doc-header-meta{
@@ -105,11 +105,11 @@ html,body{
   font-size:13px;font-weight:600;font-family:inherit;
   cursor:pointer;
   background:rgba(255,255,255,0.08);
-  color:rgba(255,255,255,0.38);
+  color:rgba(255,255,255,0.4);
   letter-spacing:0.5px;transition:all 0.15s;white-space:nowrap
 }
 .est-status-btn.on{
-  background:#FAF7F5;color:#1A1A1A;font-weight:700;letter-spacing:0.3px
+  background:#FAF7F5;color:#282828;font-weight:700;letter-spacing:0.3px
 }
 .est-status-btn:hover:not(.on){
   background:rgba(255,255,255,0.13);color:rgba(255,255,255,0.65)
@@ -120,11 +120,11 @@ html,body{
   font-size:13px;font-weight:600;font-family:inherit;
   cursor:pointer;
   background:rgba(255,255,255,0.08);
-  color:rgba(255,255,255,0.38);
+  color:rgba(255,255,255,0.4);
   transition:all 0.15s;letter-spacing:0.5px;white-space:nowrap
 }
 .cust-type-btn.on{
-  background:#FAF7F5;color:#1A1A1A;font-weight:700
+  background:#FAF7F5;color:#282828;font-weight:700
 }
 .cust-type-btn:hover:not(.on){
   background:rgba(255,255,255,0.13);color:rgba(255,255,255,0.65)
@@ -140,18 +140,18 @@ html,body{
 }
 .sec-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:6px}
 .sec-title{
-  font-size:12px;font-weight:800;color:#1A1A1A;
+  font-size:12px;font-weight:800;color:#282828;
   letter-spacing:2px;text-transform:uppercase;
-  padding-left:10px;border-left:3px solid #C4B8AE
+  padding-left:10px;border-left:3px solid #B0A99F
 }
 .sec-badge{
-  font-size:12px;font-weight:700;color:#1A1A1A;
+  font-size:12px;font-weight:700;color:#282828;
   background:#F5F0EB;padding:3px 10px;border-radius:4px
 }
 .sec-tip{
   width:18px;height:18px;border-radius:50%;
-  border:1.5px solid #E4DCCE;font-size:12px;
-  font-weight:700;color:#C4B8AE;cursor:help;
+  border:1.5px solid #EEE6DC;font-size:12px;
+  font-weight:700;color:#B0A99F;cursor:help;
   display:inline-flex;align-items:center;justify-content:center
 }
 
@@ -164,18 +164,18 @@ html,body{
 }
 .info-item:last-child{border-bottom:none}
 .info-item label{
-  font-size:12px;color:#ADADAD;font-weight:700;
+  font-size:12px;color:#B0A99F;font-weight:700;
   display:block;margin-bottom:5px;
   letter-spacing:1.2px;text-transform:uppercase
 }
 .info-item input,.info-item select{
   width:100%;border:none;background:transparent;
   padding:0;font-size:15px;font-weight:600;
-  color:#1A1A1A;font-family:inherit;outline:none;
+  color:#282828;font-family:inherit;outline:none;
   -webkit-appearance:none;appearance:none
 }
-.info-item input::placeholder{color:#ADADAD;font-weight:400;font-size:15px}
-.info-item input[readonly]{color:#ADADAD}
+.info-item input::placeholder{color:#B0A99F;font-weight:400;font-size:15px}
+.info-item input[readonly]{color:#B0A99F}
 
 /* 지역선택 */
 .region-row{
@@ -183,7 +183,7 @@ html,body{
   margin-top:18px;padding-top:16px;border-top:1px dashed #EEE6DC
 }
 .region-row label{
-  font-size:12px;font-weight:700;color:#ADADAD;
+  font-size:12px;font-weight:700;color:#B0A99F;
   letter-spacing:0.8px;text-transform:uppercase;white-space:nowrap
 }
 .region-row select,.region-row input{
@@ -192,8 +192,8 @@ html,body{
   font-size:14px;font-weight:600;font-family:inherit;
   outline:none;background:transparent
 }
-.region-row select:focus,.region-row input:focus{border-bottom-color:#1A1A1A}
-.region-row .region-hint{font-size:12px;color:#C4B8AE}
+.region-row select:focus,.region-row input:focus{border-bottom-color:#282828}
+.region-row .region-hint{font-size:12px;color:#B0A99F}
 
 /* 내부정보 토글 */
 .info-toggle{
@@ -202,10 +202,10 @@ html,body{
   cursor:pointer;user-select:none;border-top:1px dashed #EEE6DC
 }
 .info-toggle .toggle-label{
-  font-size:12px;font-weight:700;color:#ADADAD;
+  font-size:12px;font-weight:700;color:#B0A99F;
   letter-spacing:0.8px;text-transform:uppercase
 }
-.info-toggle .toggle-arrow{font-size:13px;color:#ADADAD;transition:transform 0.2s;margin-left:auto}
+.info-toggle .toggle-arrow{font-size:13px;color:#B0A99F;transition:transform 0.2s;margin-left:auto}
 .info-toggle.open .toggle-arrow{transform:rotate(180deg)}
 .info-internal{max-height:none!important;display:none!important}
 .info-internal.open{max-height:200px;display:block!important}
@@ -216,13 +216,13 @@ html,body{
 table{width:100%;border-collapse:collapse;font-size:14px;min-width:0!important}
 
 thead th{
-  font-size:11px;font-weight:700;color:#888;
+  font-size:11px;font-weight:700;color:#6B6B6B;
   letter-spacing:0.3px;padding:10px 8px;
   text-align:center;white-space:nowrap;
   background:#FAF7F5;border-bottom:1.5px solid #EEE6DC
 }
 td{
-  padding:11px 10px;font-size:14px;color:#1A1A1A;
+  padding:11px 10px;font-size:14px;color:#282828;
   vertical-align:middle;border-bottom:1px solid #F5F0EB;
   line-height:1.5
 }
@@ -230,23 +230,23 @@ td input{
   border:none!important;background:transparent!important;
   padding:0!important;font-size:14px!important;
   font-family:inherit;width:100%;outline:none;
-  color:#1A1A1A
+  color:#282828
 }
 td select{
   border:none;background:transparent;
   font-size:13px;font-family:inherit;
-  outline:none;color:#1A1A1A;
+  outline:none;color:#282828;
   max-width:100%;cursor:pointer
 }
-td input::placeholder{color:#ADADAD;font-size:13px}
+td input::placeholder{color:#B0A99F;font-size:13px}
 td input:focus,td select:focus{outline:none}
 td.amt{
   text-align:right;white-space:nowrap;
   font-size:14px;font-weight:700;
-  color:#1A1A1A;letter-spacing:-0.3px
+  color:#282828;letter-spacing:-0.3px
 }
 .c-display-name{font-weight:600!important}
-.sub-size{display:none;font-size:12px;color:#ADADAD;margin-top:2px}
+.sub-size{display:none;font-size:12px;color:#B0A99F;margin-top:2px}
 
 /* 커튼 테이블 hover */
 #curtain-body tr:hover td,#blind-body tr:hover td{background:#F5F0EB}
@@ -263,31 +263,31 @@ td.amt{
   border:none!important;
   border-bottom:1px solid #EEE6DC!important;
   font-size:13px!important;background:transparent!important;
-  color:#888!important;font-family:inherit
+  color:#6B6B6B!important;font-family:inherit
 }
-.inner-inp:focus{border-bottom-color:#1A1A1A!important}
+.inner-inp:focus{border-bottom-color:#282828!important}
 .c-yardage{display:none!important}
 
 /* 행 추가 버튼 */
 .add-row-btns{display:flex;gap:10px;margin-top:12px}
 .add-btn{
-  padding:8px 16px;border:1.5px dashed #C4B8AE;
+  padding:8px 16px;border:1.5px dashed #B0A99F;
   background:transparent;border-radius:6px;
   font-size:13px;font-weight:600;font-family:inherit;
-  color:#888;cursor:pointer;transition:all 0.15s
+  color:#6B6B6B;cursor:pointer;transition:all 0.15s
 }
 .add-btn:hover{
-  border-color:#555;color:#555;
+  border-color:#282828;color:#282828;
   background:#FAF7F5
 }
 .del-btn,.copy-btn{
   display:inline-flex;align-items:center;justify-content:center;
   width:28px;height:28px;background:#FAF7F5;
   border:1px solid #EEE6DC;border-radius:6px;
-  color:#888;cursor:pointer;transition:all 0.15s;font-size:14px
+  color:#6B6B6B;cursor:pointer;transition:all 0.15s;font-size:14px
 }
-.del-btn:hover{background:#D32F2F;color:#fff;border-color:#D32F2F}
-.copy-btn:hover{background:#1A1A1A;color:#fff;border-color:#1A1A1A}
+.del-btn:hover{background:#F06E2D;color:#fff;border-color:#F06E2D}
+.copy-btn:hover{background:#282828;color:#fff;border-color:#282828}
 
 /* ── 합계 섹션 ── */
 
@@ -296,18 +296,18 @@ td.amt{
   padding:10px 0;border-bottom:1px solid #F5F0EB
 }
 .sum-row:last-child{border-bottom:none}
-.sum-row .lbl{font-size:13px;color:#888;font-weight:400}
-.sum-row .val{font-size:14px;font-weight:600;color:#888}
+.sum-row .lbl{font-size:13px;color:#6B6B6B;font-weight:400}
+.sum-row .val{font-size:14px;font-weight:600;color:#6B6B6B}
 
 .sum-row.total{margin-top:6px}
-.sum-row.total .lbl{font-size:15px;font-weight:800;color:#1A1A1A;letter-spacing:-0.3px}
-.sum-row.total .val{font-size:22px;font-weight:800;color:#1A1A1A;letter-spacing:-1px}
-.sum-row.deposit .lbl{color:#1A1A1A;font-weight:600;font-size:13px}
+.sum-row.total .lbl{font-size:15px;font-weight:800;color:#282828;letter-spacing:-0.3px}
+.sum-row.total .val{font-size:22px;font-weight:800;color:#282828;letter-spacing:-1px}
+.sum-row.deposit .lbl{color:#282828;font-weight:600;font-size:13px}
 .sum-row.deposit .val{flex:1;justify-content:flex-end}
 .sum-row.perf{border-top:1px dashed #EEE6DC}
-.sum-row.perf .lbl{color:#ADADAD;font-size:13px}
-.sum-row.perf .val{color:#ADADAD;font-size:13px}
-.sum-sub{font-size:12px;font-weight:400;color:#ADADAD;margin-left:6px}
+.sum-row.perf .lbl{color:#B0A99F;font-size:13px}
+.sum-row.perf .val{color:#B0A99F;font-size:13px}
+.sum-sub{font-size:12px;font-weight:400;color:#B0A99F;margin-left:6px}
 .discount-wrap{
   display:inline-flex;align-items:center;gap:6px;
   background:#FAF7F5;border:1px solid #EEE6DC;
@@ -324,7 +324,7 @@ td.amt{
 }
 
 /* ── 설문 카드 ── */
-#survey-card{display:none;border-left:3px solid #ADADAD}
+#survey-card{display:none;border-left:3px solid #B0A99F}
 
 /* ── 액션 버튼 바 ── */
 .summary-section{
@@ -344,28 +344,28 @@ td.amt{
   transition:all 0.15s;letter-spacing:0.2px
 }
 .action-main{display:flex;gap:10px}
-.btn-new{background:transparent;color:#ADADAD;border:1.5px solid #EEE6DC}
-.btn-new:hover{color:#1A1A1A;border-color:#1A1A1A}
-.btn-preview{background:#fff;color:#555;border:1.5px solid #EEE6DC}
-.btn-preview:hover{border-color:#1A1A1A;color:#1A1A1A}
+.btn-new{background:transparent;color:#B0A99F;border:1.5px solid #EEE6DC}
+.btn-new:hover{color:#282828;border-color:#282828}
+.btn-preview{background:#fff;color:#282828;border:1.5px solid #EEE6DC}
+.btn-preview:hover{border-color:#282828;color:#282828}
 .btn-pdf{
-  padding:11px 24px;background:#1A1A1A;color:#FAF7F5;
+  padding:11px 24px;background:#282828;color:#FAF7F5;
   border:none;border-radius:8px;font-size:14px;font-weight:700;
   cursor:pointer;font-family:inherit;transition:all 0.15s
 }
-.btn-pdf:hover{background:#333}
+.btn-pdf:hover{background:#282828}
 .btn-print{
-  background:#fff;color:#1A1A1A;border:1.5px solid #1A1A1A;
+  background:#fff;color:#282828;border:1.5px solid #282828;
   padding:11px 24px;font-size:14px;font-weight:700;
   border-radius:8px;font-family:inherit;cursor:pointer
 }
 .btn-print:hover{background:#FAF7F5}
 .btn-save{
-  padding:11px 24px;background:#1A1A1A;color:#fff;
+  padding:11px 24px;background:#282828;color:#fff;
   border:none;border-radius:8px;font-size:14px;font-weight:700;
   cursor:pointer;font-family:inherit;transition:all 0.15s
 }
-.btn-save:hover{background:#333}
+.btn-save:hover{background:#282828}
 
 /* ── 공간 선택 팝업 ── */
 #space-picker{
@@ -382,25 +382,25 @@ td.amt{
 .space-btn{
   padding:10px 8px;background:#FAF7F5;
   border:1.5px solid #EEE6DC;font-size:14px;
-  font-family:inherit;cursor:pointer;color:#555;
+  font-family:inherit;cursor:pointer;color:#282828;
   text-align:center;transition:all 0.15s;border-radius:6px
 }
-.space-btn:hover{border-color:#1A1A1A;color:#1A1A1A}
-.space-btn.cust-type-btn.on{background:#1A1A1A;color:#fff;border-color:#1A1A1A}
+.space-btn:hover{border-color:#282828;color:#282828}
+.space-btn.cust-type-btn.on{background:#282828;color:#fff;border-color:#282828}
 .space-inp{
   text-align:center;cursor:pointer;caret-color:transparent;
-  font-size:12px;font-weight:600;color:#1A1A1A;
+  font-size:12px;font-weight:600;color:#282828;
   background:#F5F0EB;border:1.5px solid #EEE6DC;
   border-radius:6px;padding:5px 3px;width:100%;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   outline:none;min-width:54px
 }
-.space-inp:not(:placeholder-shown){background:#1A1A1A;color:#FAF7F5;border-color:#1A1A1A}
+.space-inp:not(:placeholder-shown){background:#282828;color:#FAF7F5;border-color:#282828}
 
 /* ── 토스트 ── */
 .toast{
   position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
-  background:#1A1A1A;color:#FAF7F5;
+  background:#282828;color:#FAF7F5;
   padding:12px 24px;border-radius:8px;
   font-size:14px;font-family:inherit;z-index:999;
   opacity:0;transition:opacity 0.25s;pointer-events:none;
@@ -412,7 +412,7 @@ td.amt{
 ═══════════════════════════════════════ */
 .pv-wrap{
   font-family:"Noto Sans KR","Apple SD Gothic Neo",sans-serif;
-  background:#fff;color:#1A1A1A;
+  background:#fff;color:#282828;
   max-width:680px;margin:0 auto;
   border-radius:10px;overflow:hidden;
   border:1px solid #EEE6DC
@@ -420,10 +420,10 @@ td.amt{
 /* 견적 메타 (번호/날짜/담당자) */
 .pv-meta{
   display:flex;gap:28px;padding:10px 28px;
-  background:#fff;border-bottom:1px solid #DDD;
-  font-size:12px;color:#555
+  background:#fff;border-bottom:1px solid #EEE6DC;
+  font-size:12px;color:#282828
 }
-.pv-meta span strong{color:#1A1A1A;font-weight:700}
+.pv-meta span strong{color:#282828;font-weight:700}
 /* 공급자/수신자 2단 */
 .pv-parties{
   display:grid;grid-template-columns:1fr 1fr;
@@ -432,11 +432,11 @@ td.amt{
 .pv-party{padding:18px 28px}
 .pv-party:first-child{border-right:1px solid #EEE6DC}
 .pv-party-label{
-  font-size:12px;font-weight:700;color:#ADADAD;
+  font-size:12px;font-weight:700;color:#B0A99F;
   letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px
 }
-.pv-party-name{font-size:15px;font-weight:700;color:#1A1A1A;margin-bottom:6px}
-.pv-party-info{font-size:12px;color:#888;line-height:1.8}
+.pv-party-name{font-size:15px;font-weight:700;color:#282828;margin-bottom:6px}
+.pv-party-info{font-size:12px;color:#6B6B6B;line-height:1.8}
 .pv-party-info span{display:block}
 /* 일정 배너 */
 .pv-schedule-bar{
@@ -450,7 +450,7 @@ td.amt{
 /* 제품 테이블 — 공간+사이즈 분리 */
 .pv-prod-table{width:100%;border-collapse:collapse;font-size:13px}
 .pv-prod-table thead th{
-  font-size:12px;font-weight:700;color:#888;
+  font-size:12px;font-weight:700;color:#6B6B6B;
   padding:8px 10px;background:#FAF7F5;
   border-bottom:1.5px solid #EEE6DC;
   white-space:nowrap;letter-spacing:0.3px
@@ -461,17 +461,17 @@ td.amt{
   vertical-align:middle;line-height:1.5
 }
 .pv-prod-table tbody td.space{
-  font-size:12px;color:#888;white-space:nowrap
+  font-size:12px;color:#6B6B6B;white-space:nowrap
 }
 .pv-prod-table tbody td.sz{
-  font-size:12px;color:#ADADAD;white-space:nowrap
+  font-size:12px;color:#B0A99F;white-space:nowrap
 }
-.pv-prod-table tbody td.name{font-weight:600;color:#1A1A1A}
-.pv-prod-table tbody td.spec-col{font-size:12px;color:#888}
+.pv-prod-table tbody td.name{font-weight:600;color:#282828}
+.pv-prod-table tbody td.spec-col{font-size:12px;color:#6B6B6B}
 .pv-prod-table tbody td.r{text-align:right}
 .pv-prod-table .sub-head td{
   background:#F5F0EB;font-size:12px;font-weight:800;
-  color:#ADADAD;letter-spacing:1.5px;padding:6px 10px;
+  color:#B0A99F;letter-spacing:1.5px;padding:6px 10px;
   border-bottom:1px solid #F5F0EB
 }
 /* 소계/합계 */
@@ -479,29 +479,29 @@ td.amt{
 .pv-sum-table td{padding:8px 28px}
 .pv-sum-table .total-row td{
   padding:14px 28px;font-size:15px;font-weight:800;
-  border-top:2px solid #1A1A1A
+  border-top:2px solid #282828
 }
-.pv-sum-table .total-row .sum-lbl{color:#1A1A1A}
-.pv-sum-table .total-row .sum-val{color:#1A1A1A;font-size:18px;font-weight:800}
+.pv-sum-table .total-row .sum-lbl{color:#282828}
+.pv-sum-table .total-row .sum-val{color:#282828;font-size:18px;font-weight:800}
 /* 참고사항 */
 .pv-notes{
   padding:16px 28px;background:#F5F0EB;
   border-top:1px solid #EEE6DC;
   border-bottom:1px solid #EEE6DC;
-  font-size:13px;color:#555;line-height:1.9
+  font-size:13px;color:#282828;line-height:1.9
 }
 .pv-notes-title{
-  font-size:12px;font-weight:800;color:#ADADAD;
+  font-size:12px;font-weight:800;color:#B0A99F;
   letter-spacing:1.5px;text-transform:uppercase;
   margin-bottom:8px
 }
 .pv-notes-item{display:flex;gap:8px}
-.pv-notes-item::before{content:"·";color:#888;font-weight:700;flex-shrink:0}
+.pv-notes-item::before{content:"·";color:#6B6B6B;font-weight:700;flex-shrink:0}
 .pv-header{
   background:#fff;
   padding:20px 28px 18px;
   display:flex;justify-content:space-between;align-items:flex-end;
-  border-bottom:2px solid #1A1A1A
+  border-bottom:2px solid #282828
 }
 .pv-logo{
   height:20px;display:block;opacity:1;
@@ -509,41 +509,41 @@ td.amt{
 }
 .pv-header-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .pv-doc-label{
-  font-size:12px;font-weight:700;color:#ADADAD;
+  font-size:12px;font-weight:700;color:#B0A99F;
   letter-spacing:3px;text-transform:uppercase
 }
 .pv-doc-title{
-  font-size:18px;font-weight:800;color:#1A1A1A;
+  font-size:18px;font-weight:800;color:#282828;
   letter-spacing:4px;line-height:1
 }
-.pv-brand{font-size:12px;color:#888;letter-spacing:3px;text-transform:uppercase}
+.pv-brand{font-size:12px;color:#6B6B6B;letter-spacing:3px;text-transform:uppercase}
 
 /* 고객 정보 블록 */
 .pv-customer{padding:24px 28px;border-bottom:1px solid #EEE6DC}
-.pv-cust-name{font-size:18px;font-weight:700;color:#1A1A1A;margin-bottom:3px}
-.pv-cust-info{font-size:14px;color:#888;line-height:1.7}
+.pv-cust-name{font-size:18px;font-weight:700;color:#282828;margin-bottom:3px}
+.pv-cust-info{font-size:14px;color:#6B6B6B;line-height:1.7}
 .pv-cust-schedule{
   display:flex;gap:32px;margin-top:18px;
   padding-top:16px;border-top:1px solid #F5F0EB
 }
 .pv-sch-label{
-  font-size:12px;font-weight:700;color:#ADADAD;
+  font-size:12px;font-weight:700;color:#B0A99F;
   letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px
 }
-.pv-sch-val{font-size:15px;font-weight:600;color:#1A1A1A}
+.pv-sch-val{font-size:15px;font-weight:600;color:#282828}
 
 /* 섹션 */
 .pv-section{padding:20px 28px;border-bottom:1px solid #EEE6DC}
 .pv-section-label{
-  font-size:13px;font-weight:800;color:#1A1A1A;
+  font-size:13px;font-weight:800;color:#282828;
   margin-bottom:14px;padding:6px 12px;
-  background:#F5F0EB;border-left:3px solid #1A1A1A;
+  background:#F5F0EB;border-left:3px solid #282828;
   border-radius:0 4px 4px 0;letter-spacing:0.3px
 }
 .pv-sub-label{
   display:inline-block;font-size:12px;font-weight:800;
-  color:#888;letter-spacing:2px;
-  padding:3px 10px;border:1px solid #DDD;
+  color:#6B6B6B;letter-spacing:2px;
+  padding:3px 10px;border:1px solid #EEE6DC;
   border-radius:20px;margin-bottom:8px
 }
 .pv-svc-section{padding:20px 28px;border-bottom:1px solid #EEE6DC}
@@ -551,18 +551,18 @@ td.amt{
 /* 테이블 */
 .pv-table{width:100%;border-collapse:collapse;font-size:14px}
 .pv-table thead th{
-  font-size:12px;font-weight:700;color:#888;
+  font-size:12px;font-weight:700;color:#6B6B6B;
   letter-spacing:0.3px;padding:9px 8px;
   text-align:center;background:#FAF7F5;
   border-bottom:2px solid #EEE6DC;white-space:nowrap
 }
 .pv-table tbody td{
-  padding:11px 8px;font-size:14px;color:#1A1A1A;
+  padding:11px 8px;font-size:14px;color:#282828;
   vertical-align:middle;border-bottom:1px solid #F5F0EB;
   line-height:1.4
 }
-.pv-table tbody td.b{font-weight:600;color:#1A1A1A}
-.pv-table tbody td.g{color:#888;font-size:13px}
+.pv-table tbody td.b{font-weight:600;color:#282828}
+.pv-table tbody td.g{color:#6B6B6B;font-size:13px}
 
 /* 서비스 행 */
 .pv-svc-row{
@@ -571,25 +571,25 @@ td.amt{
   border-bottom:1px solid #F5F0EB;font-size:14px
 }
 .pv-svc-row:last-child{border-bottom:none}
-.pv-svc-desc{color:#555}
-.pv-svc-amt{font-weight:700;color:#1A1A1A}
+.pv-svc-desc{color:#282828}
+.pv-svc-amt{font-weight:700;color:#282828}
 
 /* 소계 */
 .pv-subtotals{padding:14px 28px;background:#F5F0EB;border-top:1px solid #EEE6DC;border-bottom:1px solid #EEE6DC}
 .pv-sub-row{
   display:flex;justify-content:space-between;
-  padding:5px 0;font-size:14px;color:#888
+  padding:5px 0;font-size:14px;color:#6B6B6B
 }
-.pv-sub-row span:last-child{color:#555;font-weight:600}
+.pv-sub-row span:last-child{color:#282828;font-weight:600}
 
 /* 합계 */
 .pv-total-wrap{
   display:flex;justify-content:space-between;align-items:baseline;
-  padding:18px 28px;border-bottom:2px solid #1A1A1A;
+  padding:18px 28px;border-bottom:2px solid #282828;
   background:#fff
 }
-.pv-total-label{font-size:15px;font-weight:700;color:#1A1A1A}
-.pv-total-amount{font-size:22px;font-weight:800;color:#1A1A1A;letter-spacing:-1px}
+.pv-total-label{font-size:15px;font-weight:700;color:#282828}
+.pv-total-amount{font-size:22px;font-weight:800;color:#282828;letter-spacing:-1px}
 
 /* 계약금/잔금 */
 .pv-payment-split{
@@ -597,18 +597,18 @@ td.amt{
   border-bottom:1px solid #EEE6DC
 }
 .pv-payment-item{padding:18px 28px}
-.pv-payment-item:first-child{border-right:1.5px solid #E4DCCE}
+.pv-payment-item:first-child{border-right:1.5px solid #EEE6DC}
 .pv-payment-label{
-  font-size:12px;font-weight:700;color:#888;
+  font-size:12px;font-weight:700;color:#6B6B6B;
   letter-spacing:0.5px;margin-bottom:4px
 }
-.pv-payment-sub{font-size:12px;color:#ADADAD;margin-bottom:10px}
-.pv-payment-amount{font-size:18px;font-weight:700;color:#1A1A1A}
+.pv-payment-sub{font-size:12px;color:#B0A99F;margin-bottom:10px}
+.pv-payment-amount{font-size:18px;font-weight:700;color:#282828}
 
 /* 진행안내 */
 .pv-process{padding:20px 28px;border-bottom:1px solid #EEE6DC}
 .pv-process-title{
-  font-size:12px;font-weight:700;color:#ADADAD;
+  font-size:12px;font-weight:700;color:#B0A99F;
   letter-spacing:0.5px;margin-bottom:16px
 }
 .pv-process-step{
@@ -618,21 +618,21 @@ td.amt{
 .pv-process-step:last-child{border-bottom:none}
 .pv-step-num{
   width:22px;height:22px;background:#fff;
-  color:#1A1A1A;border-radius:50%;font-size:12px;
+  color:#282828;border-radius:50%;font-size:12px;
   font-weight:800;display:flex;align-items:center;
   justify-content:center;flex-shrink:0;margin-top:1px;
-  border:2px solid #1A1A1A
+  border:2px solid #282828
 }
-.pv-step-title{font-size:14px;font-weight:700;color:#1A1A1A;display:block;margin-bottom:3px}
-.pv-step-desc{font-size:13px;color:#888;line-height:1.6;display:block}
+.pv-step-title{font-size:14px;font-weight:700;color:#282828;display:block;margin-bottom:3px}
+.pv-step-desc{font-size:13px;color:#6B6B6B;line-height:1.6;display:block}
 
 /* 푸터 */
 .pv-footer{
   padding:14px 28px;background:#fff;
-  font-size:13px;color:#555;line-height:1.7;
-  border-top:2px solid #1A1A1A
+  font-size:13px;color:#282828;line-height:1.7;
+  border-top:2px solid #282828
 }
-.pv-footer strong{color:#1A1A1A}
+.pv-footer strong{color:#282828}
 
 /* ── 프린트 ── */
 @media print{
@@ -645,7 +645,7 @@ td.amt{
   .info-toggle,.region-row,.print-hide,
   #survey-card,#space-picker{display:none!important}
   .section,.summary-section{
-    box-shadow:none!important;border:1px solid #DDD!important
+    box-shadow:none!important;border:1px solid #EEE6DC!important
   }
   thead{display:table-header-group}
   tr{break-inside:avoid}
@@ -656,74 +656,74 @@ td.amt{
     overflow:visible!important
   }
   /* 흑백 프린트 최적화 */
-  .pv-header{background:#fff!important;border-bottom:2.5px solid #000!important}
-  .pv-doc-label{color:#000!important}
+  .pv-header{background:#fff!important;border-bottom:2.5px solid #282828!important}
+  .pv-doc-label{color:#282828!important}
   .pv-logo{filter:brightness(0)!important}
-  .pv-total-amount{color:#000!important;font-weight:900!important}
-  .pv-payment-amount{color:#000!important;font-weight:800!important}
-  .pv-payment-label{color:#000!important}
-  .pv-step-num{background:#fff!important;color:#000!important;border:2px solid #000!important}
-  .sum-row.total .val{color:#000!important;font-weight:900!important}
-  .pv-prod-table .sub-head td{background:#eee!important}
-  .pv-prod-table thead th{background:#eee!important}
-  .pv-subtotals{background:#f5f5f5!important}
-  .pv-notes{background:#f5f5f5!important;border-top:1px solid #ccc!important}
-  .pv-footer{background:#fff!important;border-top:2px solid #000!important;color:#000!important}
-  .pv-footer strong{color:#000!important}
-  .sec-title{border-left-color:#000!important}
-  .pv-section-label{border-left-color:#000!important;background:#eee!important}
-  .pv-wrap{border:1.5px solid #000!important}
-  .pv-parties{border-bottom:1px solid #ccc!important}
-  .pv-party:first-child{border-right:1px solid #ccc!important}
+  .pv-total-amount{color:#282828!important;font-weight:900!important}
+  .pv-payment-amount{color:#282828!important;font-weight:800!important}
+  .pv-payment-label{color:#282828!important}
+  .pv-step-num{background:#fff!important;color:#282828!important;border:2px solid #282828!important}
+  .sum-row.total .val{color:#282828!important;font-weight:900!important}
+  .pv-prod-table .sub-head td{background:#EEE6DC!important}
+  .pv-prod-table thead th{background:#EEE6DC!important}
+  .pv-subtotals{background:#FAF7F5!important}
+  .pv-notes{background:#FAF7F5!important;border-top:1px solid #EEE6DC!important}
+  .pv-footer{background:#fff!important;border-top:2px solid #282828!important;color:#282828!important}
+  .pv-footer strong{color:#282828!important}
+  .sec-title{border-left-color:#282828!important}
+  .pv-section-label{border-left-color:#282828!important;background:#EEE6DC!important}
+  .pv-wrap{border:1.5px solid #282828!important}
+  .pv-parties{border-bottom:1px solid #EEE6DC!important}
+  .pv-party:first-child{border-right:1px solid #EEE6DC!important}
 }
 
 /* ── 기타 ── */
 #discount{width:60px!important}
-#svc-table td:first-child select{color:#555}
-.inner-fields .inner-inp::placeholder{color:#C0B8B0}
+#svc-table td:first-child select{color:#282828}
+.inner-fields .inner-inp::placeholder{color:#B0A99F}
 .deposit-inp-wrap{display:flex;align-items:center;gap:6px}
 .cprice{text-align:right}
-.over243-wrap{display:none;color:#D32F2F;font-size:12px;margin-top:3px}
+.over243-wrap{display:none;color:#F06E2D;font-size:12px;margin-top:3px}
 .print-hide{}
 
 /* PDF 사이즈 선택 팝업 */
 #pdf-size-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:none;align-items:center;justify-content:center}
 #pdf-size-modal.open{display:flex}
 #pdf-size-box{background:#fff;border-radius:16px;padding:28px 24px 24px;width:400px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.25)}
-.pdf-modal-title{font-size:16px;font-weight:800;color:#1A1A1A;margin-bottom:6px;letter-spacing:-0.3px}
-.pdf-modal-sub{font-size:13px;color:#ADADAD;margin-bottom:20px}
+.pdf-modal-title{font-size:16px;font-weight:800;color:#282828;margin-bottom:6px;letter-spacing:-0.3px}
+.pdf-modal-sub{font-size:13px;color:#B0A99F;margin-bottom:20px}
 .pdf-modal-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
-.pdf-opt{border:2px solid #E4E0DB;border-radius:12px;padding:18px 14px;cursor:pointer;text-align:center;transition:all 0.15s;background:#fff}
-.pdf-opt:hover{border-color:#1A1A1A;background:#FFF8F5}
-.pdf-opt.selected{border-color:#1A1A1A;background:#F9F6F2}
-.pdf-opt-icon{width:60px;height:76px;margin:0 auto 12px;border-radius:4px;background:#EAE6FF;display:flex;flex-direction:column;gap:4px;padding:8px 6px;border:1.5px solid rgba(100,80,200,0.2)}
+.pdf-opt{border:2px solid #EEE6DC;border-radius:12px;padding:18px 14px;cursor:pointer;text-align:center;transition:all 0.15s;background:#fff}
+.pdf-opt:hover{border-color:#282828;background:#FAF7F5}
+.pdf-opt.selected{border-color:#282828;background:#FAF7F5}
+.pdf-opt-icon{width:60px;height:76px;margin:0 auto 12px;border-radius:4px;background:#FAF7F5;display:flex;flex-direction:column;gap:4px;padding:8px 6px;border:1.5px solid rgba(100,80,200,0.2)}
 .pdf-opt-icon div{background:rgba(100,80,200,0.25);border-radius:2px}
-.pdf-opt-icon.a4{background:#E6F0FF;border-color:rgba(50,100,200,0.2)}
+.pdf-opt-icon.a4{background:#FAF7F5;border-color:rgba(50,100,200,0.2)}
 .pdf-opt-icon.a4 div{background:rgba(50,100,200,0.25)}
-.pdf-opt-label{font-size:14px;font-weight:700;color:#1A1A1A;margin-bottom:4px}
-.pdf-opt-desc{font-size:12px;color:#888;line-height:1.5}
+.pdf-opt-label{font-size:14px;font-weight:700;color:#282828;margin-bottom:4px}
+.pdf-opt-desc{font-size:12px;color:#6B6B6B;line-height:1.5}
 .pdf-modal-btns{display:flex;gap:8px;justify-content:flex-end}
-.pdf-modal-cancel{padding:9px 18px;background:#F5F1ED;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;color:#888}
-.pdf-modal-confirm{padding:9px 22px;background:#1A1A1A;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer}
-.pdf-modal-confirm:hover{background:#1A1A1A}
-.load-cust-btn{padding:5px 10px;background:#fff;color:#555;border:1px solid #E0D8D0;border-radius:6px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;letter-spacing:0.3px;white-space:nowrap}
-.load-cust-btn:hover{background:#F5F0EB;border-color:#BDBDBD}
+.pdf-modal-cancel{padding:9px 18px;background:#FAF7F5;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;color:#6B6B6B}
+.pdf-modal-confirm{padding:9px 22px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer}
+.pdf-modal-confirm:hover{background:#282828}
+.load-cust-btn{padding:5px 10px;background:#fff;color:#282828;border:1px solid #EEE6DC;border-radius:6px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;letter-spacing:0.3px;white-space:nowrap}
+.load-cust-btn:hover{background:#F5F0EB;border-color:#B0A99F}
 /* 고객 불러오기 팝업 */
 #cust-load-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;display:none;align-items:center;justify-content:center}
 #cust-load-overlay.open{display:flex}
 #cust-load-box{background:#fff;border-radius:12px;padding:0;width:440px;max-width:90vw;max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
 .cust-load-hd{padding:18px 20px 14px;border-bottom:1px solid #EEE6DC;display:flex;justify-content:space-between;align-items:center}
-.cust-load-hd span{font-size:14px;font-weight:700;color:#1A1A1A}
-.cust-load-hd button{background:none;border:none;font-size:16px;color:#888;cursor:pointer;line-height:1}
-.cust-load-search{padding:12px 20px;border-bottom:1px solid #F0EBE4;display:flex;gap:8px}
-.cust-load-search input{flex:1;padding:9px 12px;border:1.5px solid #E4E0DB;border-radius:6px;font-size:14px;font-family:inherit;outline:none}
-.cust-load-search input:focus{border-color:#1A1A1A}
+.cust-load-hd span{font-size:14px;font-weight:700;color:#282828}
+.cust-load-hd button{background:none;border:none;font-size:16px;color:#6B6B6B;cursor:pointer;line-height:1}
+.cust-load-search{padding:12px 20px;border-bottom:1px solid #F5F0EB;display:flex;gap:8px}
+.cust-load-search input{flex:1;padding:9px 12px;border:1.5px solid #EEE6DC;border-radius:6px;font-size:14px;font-family:inherit;outline:none}
+.cust-load-search input:focus{border-color:#282828}
 #cust-load-list{overflow-y:auto;max-height:360px}
-.cust-load-item{padding:13px 20px;border-bottom:1px solid #F5F1EC;cursor:pointer;transition:background 0.1s}
-.cust-load-item:hover{background:#F9F5F1}
-.cust-load-name{font-size:14px;font-weight:700;color:#1A1A1A;margin-bottom:2px}
-.cust-load-info{font-size:12px;color:#ADADAD}
-.cust-load-empty{padding:32px 20px;text-align:center;font-size:14px;color:#ADADAD}
+.cust-load-item{padding:13px 20px;border-bottom:1px solid #FAF7F5;cursor:pointer;transition:background 0.1s}
+.cust-load-item:hover{background:#FAF7F5}
+.cust-load-name{font-size:14px;font-weight:700;color:#282828;margin-bottom:2px}
+.cust-load-info{font-size:12px;color:#B0A99F}
+.cust-load-empty{padding:32px 20px;text-align:center;font-size:14px;color:#B0A99F}
 /* 탭 → 헤더 탭바로 통합 */
 /* 반응형 */
 @media(max-width:768px){
@@ -803,14 +803,14 @@ td.amt{
         <div style="display:flex;gap:6px;align-items:center">
           <input type="text" id="c-addr" placeholder="서울 서초구 반포동" style="flex:1;min-width:0">
           <button type="button" onclick="openKakaoAddr('c-addr')"
-            style="padding:6px 12px;background:#1A1A1A;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0">
+            style="padding:6px 12px;background:#282828;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0">
             🔍 검색
           </button>
         </div>
       </div>
       <input type="hidden" id="c-date">
     </div>
-    <div class="info-grid" style="margin-top:16px;padding-top:14px;border-top:1px dashed #E4E0DB">
+    <div class="info-grid" style="margin-top:16px;padding-top:14px;border-top:1px dashed #EEE6DC">
       <div class="info-item">
         <label>실측 예정일</label>
         <input type="date" id="c-measure">
@@ -873,25 +873,25 @@ td.amt{
       </div>
       <div class="info-item">
         <label>AS 유형</label>
-        <select id="as-type-sel" style="width:100%;border:none;background:transparent;font-size:15px;font-weight:600;font-family:inherit;outline:none;color:#1A1A1A">
+        <select id="as-type-sel" style="width:100%;border:none;background:transparent;font-size:15px;font-weight:600;font-family:inherit;outline:none;color:#282828">
           <option>커튼 수선</option><option>블라인드 수선</option>
           <option>레일 교체</option><option>재시공</option><option>기타</option>
         </select>
       </div>
     </div>
-    <div class="info-item" style="margin-top:14px;padding-top:14px;border-top:1px dashed #E4E0DB">
+    <div class="info-item" style="margin-top:14px;padding-top:14px;border-top:1px dashed #EEE6DC">
       <label>증상 · 요청 내용</label>
-      <textarea id="as-symptom" placeholder="예) 커튼 한쪽이 레일에서 빠짐..." style="width:100%;margin-top:6px;padding:10px 12px;border:1.5px solid #E4E0DB;border-radius:8px;font-size:14px;font-family:inherit;outline:none;resize:vertical;min-height:80px;color:#1A1A1A;background:#FAFAF8"></textarea>
+      <textarea id="as-symptom" placeholder="예) 커튼 한쪽이 레일에서 빠짐..." style="width:100%;margin-top:6px;padding:10px 12px;border:1.5px solid #EEE6DC;border-radius:8px;font-size:14px;font-family:inherit;outline:none;resize:vertical;min-height:80px;color:#282828;background:#FAF7F5"></textarea>
     </div>
     <div class="info-item" style="margin-top:12px">
       <label>사진 메모</label>
-      <input type="text" id="as-photo-memo" placeholder="사진 수량, 특이사항 등" style="width:100%;border:none;border-bottom:1.5px solid #E4E0DB;font-size:14px;font-family:inherit;outline:none;padding:4px 0;background:transparent">
+      <input type="text" id="as-photo-memo" placeholder="사진 수량, 특이사항 등" style="width:100%;border:none;border-bottom:1.5px solid #EEE6DC;font-size:14px;font-family:inherit;outline:none;padding:4px 0;background:transparent">
     </div>
-    <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #E4E0DB;display:flex;align-items:center;gap:16px">
-      <span style="font-size:12px;font-weight:700;color:#ADADAD;letter-spacing:0.8px;text-transform:uppercase">AS 비용</span>
-      <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#555;cursor:pointer"><input type="radio" name="as-fee" value="free" checked onchange="setAsFee(this)"> 무상 (하자)</label>
-      <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#555;cursor:pointer"><input type="radio" name="as-fee" value="paid" onchange="setAsFee(this)"> 유상 (고객 변심)</label>
-      <span id="as-fee-note" style="font-size:12px;color:#ADADAD">무상 처리</span>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #EEE6DC;display:flex;align-items:center;gap:16px">
+      <span style="font-size:12px;font-weight:700;color:#B0A99F;letter-spacing:0.8px;text-transform:uppercase">AS 비용</span>
+      <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#282828;cursor:pointer"><input type="radio" name="as-fee" value="free" checked onchange="setAsFee(this)"> 무상 (하자)</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:14px;color:#282828;cursor:pointer"><input type="radio" name="as-fee" value="paid" onchange="setAsFee(this)"> 유상 (고객 변심)</label>
+      <span id="as-fee-note" style="font-size:12px;color:#B0A99F">무상 처리</span>
     </div>
   </div>
 
@@ -914,7 +914,7 @@ td.amt{
           <tr><th colspan="11">CURTAIN</th></tr>
           <tr>
             <th>공간</th>
-            <th>제품명<br><small style="color:#C4C0BA;font-size:11px">원단명·거래처·컬러</small></th>
+            <th>제품명<br><small style="color:#B0A99F;font-size:11px">원단명·거래처·컬러</small></th>
             <th>주름형태</th><th>개폐방식</th><th>하단시접</th>
             <th>가로(cm)<br>실측→제작</th>
             <th>높이(cm)<br>실측→제작</th>
@@ -938,10 +938,10 @@ td.amt{
           <tr><th colspan="11">BLIND</th></tr>
           <tr>
             <th>공간</th>
-            <th>제품명<br><small style="color:#ADADAD;font-size:11px">원단명·거래처·컬러</small></th>
+            <th>제품명<br><small style="color:#B0A99F;font-size:11px">원단명·거래처·컬러</small></th>
             <th>종류</th><th>손잡이</th><th>끈길이(cm)</th>
             <th>가로(cm)</th><th>높이(cm)</th><th>추가옵션</th>
-            <th>단가(원/㎡)<br><small style="color:#ADADAD;font-size:11px">면적·추가금</small></th>
+            <th>단가(원/㎡)<br><small style="color:#B0A99F;font-size:11px">면적·추가금</small></th>
             <th>금액(원)</th><th></th>
           </tr>
         </thead>
@@ -1014,8 +1014,8 @@ td.amt{
         <input type="text" inputmode="numeric" id="deposit-input"
           placeholder="금액 입력"
           oninput="fmtPrice(this);calcDeposit()"
-          style="width:110px;padding:4px 8px;border:1.5px solid #E0D8D0;border-radius:6px;font-size:14px;font-family:inherit;text-align:right;outline:none;background:#FAF7F5">
-        <button onclick="setDepositAuto(50)" style="padding:4px 10px;font-size:11px;background:#F5F1ED;border:1px solid #DDD;border-radius:4px;cursor:pointer;font-family:inherit;margin-left:4px">50%</button>
+          style="width:110px;padding:4px 8px;border:1.5px solid #EEE6DC;border-radius:6px;font-size:14px;font-family:inherit;text-align:right;outline:none;background:#FAF7F5">
+        <button onclick="setDepositAuto(50)" style="padding:4px 10px;font-size:11px;background:#FAF7F5;border:1px solid #EEE6DC;border-radius:4px;cursor:pointer;font-family:inherit;margin-left:4px">50%</button>
 
       </span>
     </div>
@@ -1032,7 +1032,7 @@ td.amt{
   <!-- 액션 버튼 -->
   <div class="action-bar print-hide">
     <button class="btn-new" onclick="newEstimate()">새 견적서</button>
-    <div style="font-size:11px;color:#ADADAD;align-self:center">
+    <div style="font-size:11px;color:#B0A99F;align-self:center">
       🖨 출력하면 내부 정보 자동 제거 · 고객용 견적서로 변환됩니다
     </div>
     <div class="action-main">
@@ -1046,7 +1046,7 @@ td.amt{
 <!-- 공간 선택 팝업 -->
 <div id="space-picker" onclick="closeSpacePicker(event)">
   <div id="space-picker-box" onclick="event.stopPropagation()">
-    <div style="font-size:11px;font-weight:700;color:#ADADAD;letter-spacing:0.5px;margin-bottom:12px">공간 선택</div>
+    <div style="font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:0.5px;margin-bottom:12px">공간 선택</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="space-btns"></div>
   </div>
 </div>
@@ -1094,8 +1094,8 @@ function fmtPriceFocus(inp) {
   var raw = inp.getAttribute('data-raw') || '';
   if(raw) inp.value = raw;
 }
-var INP = 'width:100%;padding:2px 0;border:none;font-size:14px;font-family:inherit;outline:none;background:transparent;color:#1A1A1A';
-var SEL = 'width:100%;padding:2px 0;border:none;font-size:13px;font-family:inherit;outline:none;background:transparent;color:#1A1A1A;cursor:pointer';
+var INP = 'width:100%;padding:2px 0;border:none;font-size:14px;font-family:inherit;outline:none;background:transparent;color:#282828';
+var SEL = 'width:100%;padding:2px 0;border:none;font-size:13px;font-family:inherit;outline:none;background:transparent;color:#282828;cursor:pointer';
 
 function getPriceVal(el) {
   if(!el) return 0;
@@ -1199,7 +1199,7 @@ function setAsFee(radio) {
   var note = document.getElementById('as-fee-note');
   if(!note) return;
   note.textContent = radio.value === 'free' ? '무상 처리' : '유상 — 비용 별도 안내';
-  note.style.color = radio.value === 'paid' ? '#1A1A1A' : '#ADADAD';
+  note.style.color = radio.value === 'paid' ? '#282828' : '#B0A99F';
 }
 
 // ── 내부정보 토글 ─────────────────────────────────
@@ -1282,7 +1282,7 @@ function addCurtainRow() {
     '<td>'+
       '<input type="number" placeholder="cm" class="mh" oninput="calcCurtainRow(this)" style="'+INP+'">'+
       '<span class="sub-size fh-display"></span>'+
-      '<div class="over243-wrap print-hide" style="display:none;color:#C62828;font-size:11px;font-weight:700;margin-top:3px;white-space:nowrap">⚠️ 243↑ 아래 초과단가 입력</div>'+
+      '<div class="over243-wrap print-hide" style="display:none;color:#F06E2D;font-size:11px;font-weight:700;margin-top:3px;white-space:nowrap">⚠️ 243↑ 아래 초과단가 입력</div>'+
 
     '</td>'+
     '<td><input type="number" class="pnum" value="2" oninput="calcCurtainRow(this)" style="'+INP+'"></td>'+
@@ -1677,8 +1677,8 @@ function displaySurvey(s) {
   if(!fields.length) return;
   dataEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">'+
     fields.map(function(f){
-      return '<div style="padding:10px 14px;background:#FAF8F5;border:1px solid #E4E0DB">'+
-        '<div style="font-size:11px;font-weight:700;color:#ADADAD;letter-spacing:0.8px;margin-bottom:4px">'+f.label+'</div>'+
+      return '<div style="padding:10px 14px;background:#FAF7F5;border:1px solid #EEE6DC">'+
+        '<div style="font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:0.8px;margin-bottom:4px">'+f.label+'</div>'+
         '<div style="font-size:14px;font-weight:500">'+f.val+'</div></div>';
     }).join('')+'</div>';
   if(card) card.style.display='block';
@@ -1953,14 +1953,14 @@ function buildCustomerHTML() {
       prodHTML += '<tr class="sub-head"><td colspan="7">CURTAIN</td></tr>';
       curtainRows.forEach(function(r) {
         var specParts = r.spec.split(' · ');
-        var specCell = specParts[0]+(specParts.length>1?'<br><span style="font-size:11px;color:#CCC">'+specParts.slice(1).join(' · ')+'</span>':'');
+        var specCell = specParts[0]+(specParts.length>1?'<br><span style="font-size:11px;color:#B0A99F">'+specParts.slice(1).join(' · ')+'</span>':'');
         prodHTML += '<tr>';
         prodHTML += '<td class="space">'+r.space+'</td>';
         prodHTML += '<td class="sz">'+(r.mw?r.mw+'×'+r.mh:'—')+'</td>';
         prodHTML += '<td class="name">'+r.name+'</td>';
         prodHTML += '<td class="spec-col">'+specCell+'</td>';
-        prodHTML += '<td class="r" style="color:#ADADAD;font-size:12px">'+(r.pnum?r.pnum:'—')+'</td>';
-        prodHTML += '<td class="r" style="color:#ADADAD;font-size:12px">'+(r.price?r.price.toLocaleString():'—')+'</td>';
+        prodHTML += '<td class="r" style="color:#B0A99F;font-size:12px">'+(r.pnum?r.pnum:'—')+'</td>';
+        prodHTML += '<td class="r" style="color:#B0A99F;font-size:12px">'+(r.price?r.price.toLocaleString():'—')+'</td>';
         prodHTML += '<td class="amt">'+r.amt+'</td>';
         prodHTML += '</tr>';
       });
@@ -1974,9 +1974,9 @@ function buildCustomerHTML() {
         prodHTML += '<td class="space">'+r.space+'</td>';
         prodHTML += '<td class="sz">'+(r.bw?r.bw+'×'+r.bh:'—')+'</td>';
         prodHTML += '<td class="name">'+r.name+'</td>';
-        prodHTML += '<td class="spec-col">'+spec+(r.sqm?'<br><span style="font-size:11px;color:#CCC">'+r.sqm+'㎡</span>':'')+'</td>';
+        prodHTML += '<td class="spec-col">'+spec+(r.sqm?'<br><span style="font-size:11px;color:#B0A99F">'+r.sqm+'㎡</span>':'')+'</td>';
         prodHTML += '<td class="r">—</td>';
-        prodHTML += '<td class="r" style="color:#ADADAD;font-size:12px">'+(r.price?r.price.toLocaleString():'—')+'</td>';
+        prodHTML += '<td class="r" style="color:#B0A99F;font-size:12px">'+(r.price?r.price.toLocaleString():'—')+'</td>';
         prodHTML += '<td class="amt">'+r.amt+'</td>';
         prodHTML += '</tr>';
       });
@@ -1992,10 +1992,10 @@ function buildCustomerHTML() {
     svcHTML += '<thead><tr><th>구분</th><th style="text-align:left">내용</th><th class="r">단가</th><th class="r">수량</th><th class="r">금액</th></tr></thead><tbody>';
     svcRows.forEach(function(r){
       svcHTML += '<tr>';
-      svcHTML += '<td style="font-size:12px;color:#888">'+r.svcType+'</td>';
+      svcHTML += '<td style="font-size:12px;color:#6B6B6B">'+r.svcType+'</td>';
       svcHTML += '<td>'+r.desc+'</td>';
-      svcHTML += '<td class="r" style="color:#ADADAD;font-size:12px">'+r.price.toLocaleString()+'</td>';
-      svcHTML += '<td class="r" style="color:#ADADAD;font-size:12px">'+r.qty+'</td>';
+      svcHTML += '<td class="r" style="color:#B0A99F;font-size:12px">'+r.price.toLocaleString()+'</td>';
+      svcHTML += '<td class="r" style="color:#B0A99F;font-size:12px">'+r.qty+'</td>';
       svcHTML += '<td class="amt">'+r.amt+'</td>';
       svcHTML += '</tr>';
     });
@@ -2097,7 +2097,7 @@ function buildCustomerHTML() {
   // 5. 제품 테이블
   if(prodHTML){
     out += '<div class="pv-section" style="padding:0;border-radius:0;border:none;border-top:1px solid #EEE6DC;margin-bottom:0">';
-    out += '<div style="padding:12px 20px 8px;font-size:11px;font-weight:800;color:#ADADAD;letter-spacing:1.5px">커튼 · 블라인드</div>';
+    out += '<div style="padding:12px 20px 8px;font-size:11px;font-weight:800;color:#B0A99F;letter-spacing:1.5px">커튼 · 블라인드</div>';
     out += prodHTML;
     out += '</div>';
   }
@@ -2105,7 +2105,7 @@ function buildCustomerHTML() {
   // 6. 시공비 테이블
   if(svcHTML){
     out += '<div class="pv-section" style="padding:0;border-radius:0;border:none;border-top:1px solid #EEE6DC;margin-bottom:0">';
-    out += '<div style="padding:12px 20px 8px;font-size:11px;font-weight:800;color:#ADADAD;letter-spacing:1.5px">시공 서비스</div>';
+    out += '<div style="padding:12px 20px 8px;font-size:11px;font-weight:800;color:#B0A99F;letter-spacing:1.5px">시공 서비스</div>';
     out += svcHTML;
     out += '</div>';
   }
@@ -2116,7 +2116,7 @@ function buildCustomerHTML() {
   out += '<table class="pv-sum-table" style="border-top:1px solid #EEE6DC;margin-top:0">';
   out += '<tr><td class="sum-lbl">제품 소계</td><td class="sum-val">'+sumCurtain+'</td></tr>';
   if(svcRows.length) out += '<tr><td class="sum-lbl">시공 서비스</td><td class="sum-val">'+sumSvc+'</td></tr>';
-  if(sumDisc && sumDisc !== '-0원' && sumDisc !== '') out += '<tr><td class="sum-lbl">할인</td><td class="sum-val" style="color:#1A1A1A">'+sumDisc+'</td></tr>';
+  if(sumDisc && sumDisc !== '-0원' && sumDisc !== '') out += '<tr><td class="sum-lbl">할인</td><td class="sum-val" style="color:#282828">'+sumDisc+'</td></tr>';
   out += '<tr class="total-row"><td class="sum-lbl">최종 견적</td><td class="sum-val">'+sumTotal+'</td></tr>';
   out += '</table>';
 
@@ -2143,7 +2143,7 @@ function buildCustomerHTML() {
   // 11. 푸터
   out += '<div class="pv-footer">'
       +'<div style="margin-bottom:6px"><strong>결제 계좌</strong>&nbsp;&nbsp;국민은행 015401-04-258798&nbsp;&nbsp;예금주: 장선혜(드로잉엣홈)</div>'
-      +'<div style="color:rgba(255,255,255,0.38);font-size:12px">맞춤제작 특성상 제작 시작 후 취소·변경은 불가합니다. 문의사항은 언제든지 연락주세요.</div>'
+      +'<div style="color:rgba(255,255,255,0.4);font-size:12px">맞춤제작 특성상 제작 시작 후 취소·변경은 불가합니다. 문의사항은 언제든지 연락주세요.</div>'
       +'</div>';
 
   out += '</div>';
@@ -2159,7 +2159,7 @@ function printForCustomer() {
   ov.id = 'pv-overlay';
   ov.style.cssText = [
     'position:fixed;top:0;left:0;width:100%;height:100%',
-    'background:#EFEBE5;z-index:9999;overflow-y:auto',
+    'background:#F5F0EB;z-index:9999;overflow-y:auto',
     'display:flex;flex-direction:column'
   ].join(';');
 
@@ -2167,7 +2167,7 @@ function printForCustomer() {
   var nav = document.createElement('div');
   nav.style.cssText = [
     'position:sticky;top:0;z-index:10001',
-    'background:#1A1A1A;padding:0 24px',
+    'background:#282828;padding:0 24px',
     'display:flex;align-items:center;justify-content:space-between',
     'height:52px;flex-shrink:0'
   ].join(';');
@@ -2187,7 +2187,7 @@ function printForCustomer() {
   var printBtn = document.createElement('button');
   printBtn.textContent = '인쇄 / PDF 저장';
   printBtn.onclick = openPdfModal;
-  printBtn.style.cssText = 'padding:7px 18px;background:#1A1A1A;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit';
+  printBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit';
   navBtns.appendChild(closeBtn);
   navBtns.appendChild(printBtn);
   nav.appendChild(navLabel);
@@ -2267,7 +2267,7 @@ function renderCustLoadList(q) {
   // 최근 순 정렬
   filtered.sort(function(a,b){ return (b.updatedAt||b.date||'') > (a.updatedAt||a.date||'') ? 1 : -1; });
   if(!filtered.length) {
-    list.innerHTML = '<div class="cust-load-empty">'+( q ? '검색 결과 없음' : '저장된 고객이 없습니다<br><span style="font-size:12px;color:#CCC">견적서 저장 시 자동으로 등록됩니다</span>')+'</div>';
+    list.innerHTML = '<div class="cust-load-empty">'+( q ? '검색 결과 없음' : '저장된 고객이 없습니다<br><span style="font-size:12px;color:#B0A99F">견적서 저장 시 자동으로 등록됩니다</span>')+'</div>';
     return;
   }
   list.innerHTML = filtered.slice(0,30).map(function(c) {
@@ -2307,7 +2307,7 @@ function searchCustomer() {
   el.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9998;display:flex;align-items:center;justify-content:center';
   var inner=document.createElement('div');
   inner.style.cssText='background:#fff;border-radius:12px;padding:24px;width:480px;max-width:90vw';
-  inner.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span style="font-size:14px;font-weight:700">고객 검색</span><span id="cs-close" style="cursor:pointer;font-size:15px">&#x2715;</span></div><div style="display:flex;gap:8px;margin-bottom:12px"><input type="text" id="cs-query" placeholder="이름 또는 전화번호" style="flex:1;padding:9px 12px;border:1.5px solid #E4E0DB;border-radius:6px;font-size:13px;font-family:inherit;outline:none"><button id="cs-btn" style="padding:8px 16px;background:#282828;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">검색</button></div><div id="cs-results" style="color:#777;font-size:13px;text-align:center;padding:20px">Supabase 연동 후 사용 가능합니다.</div>';
+  inner.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span style="font-size:14px;font-weight:700">고객 검색</span><span id="cs-close" style="cursor:pointer;font-size:15px">&#x2715;</span></div><div style="display:flex;gap:8px;margin-bottom:12px"><input type="text" id="cs-query" placeholder="이름 또는 전화번호" style="flex:1;padding:9px 12px;border:1.5px solid #EEE6DC;border-radius:6px;font-size:13px;font-family:inherit;outline:none"><button id="cs-btn" style="padding:8px 16px;background:#282828;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">검색</button></div><div id="cs-results" style="color:#6B6B6B;font-size:13px;text-align:center;padding:20px">Supabase 연동 후 사용 가능합니다.</div>';
   el.appendChild(inner);
   document.body.appendChild(el);
   document.getElementById('cs-close').onclick=function(){el.style.display='none';};
