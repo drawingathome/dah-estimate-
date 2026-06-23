@@ -1808,6 +1808,41 @@ function saveEstimate() {
       // 최근 300건만 보관
       if (saved.length > 300) saved = saved.slice(0, 300);
       localStorage.setItem('dah_saved', JSON.stringify(saved));
+
+      // ── 대시보드 dah_customers 동기화 ──
+      try {
+        var customers = JSON.parse(localStorage.getItem('dah_customers')||'[]');
+        var cidx = customers.findIndex(function(c){ return c.id === entry.id; });
+        var custEntry = {
+          id: entry.id,
+          clientName: entry.clientName,
+          phone: entry.phone,
+          addr: entry.addr,
+          space: entry.space,
+          price: entry.price,
+          performanceRevenue: entry.performanceRevenue,
+          staffName: entry.staffName,
+          stage: entry.contractStatus === 'contracted' ? '계약금' : '상담',
+          date: entry.date || new Date().toISOString().slice(0,10),
+          measureDate: document.getElementById('c-measure')?.value || '',
+          installDate: entry.installDate || '',
+          memo: entry.memo || '',
+          visitCount: 1,
+          estimateNo: entry.no,
+          estimateStatus: entry.status,
+          createdAt: entry.savedAt
+        };
+        if (cidx >= 0) {
+          // 기존 고객 정보 유지하면서 견적 정보만 업데이트
+          custEntry.stage = customers[cidx].stage || custEntry.stage;
+          custEntry.visitCount = customers[cidx].visitCount || 1;
+          customers[cidx] = Object.assign(customers[cidx], custEntry);
+        } else {
+          customers.unshift(custEntry);
+        }
+        localStorage.setItem('dah_customers', JSON.stringify(customers));
+      } catch(e2) { console.warn('dah_customers 동기화 실패', e2); }
+
     } catch(e) { console.warn('localStorage 저장 실패', e); }
   }
   saveToCustomers();
