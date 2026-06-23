@@ -1,9 +1,10 @@
 <!DOCTYPE html>
+<!-- DAH-ESTIMATE-VERSION-20260621 -->
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>드로잉엣홈 견적서</title>
+<title>드로잉엣홈 견적서 v20260621</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 /* ═══════════════════════════════════════
@@ -792,7 +793,7 @@ td.amt{
 
   <!-- 고객 정보 -->
   <div class="section">
-    <div class="sec-label"><span class="sec-title">고객 정보</span><button type="button" onclick="openCustomerLoad()" class="load-cust-btn print-hide">🔍 고객 불러오기</button></div>
+    <div class="sec-label"><span class="sec-title">고객 정보</span><div style="display:flex;gap:6px"><button type="button" onclick="openCustomerLoad()" class="load-cust-btn print-hide">🔍 고객 불러오기</button><button type="button" onclick="loadSurveyFromSheet()" class="load-cust-btn print-hide" id="btn-load-survey">📋 설문 불러오기</button></div></div>
     <div class="info-grid">
       <div class="info-item">
         <label>고객명</label>
@@ -1611,6 +1612,55 @@ function copySvcRow(btn) {
   clone.removeAttribute('data-rail-src');
   clone.removeAttribute('data-rail-svc-src');
   calcTotal();
+}
+
+// ── 설문 불러오기 (구글 시트) ──────────────────────
+var SURVEY_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-MQSYO69RvaLNdQ8KjZLWVE7Nqp43SBzvAegRxgtAq3DrPn_vAXvppDRMkobP04AwTQ/exec';
+
+function loadSurveyFromSheet() {
+  var nameVal = document.getElementById('c-name').value.trim();
+  var btn = document.getElementById('btn-load-survey');
+  if(btn) btn.textContent = '⏳ 불러오는 중...';
+
+  var url = SURVEY_SCRIPT_URL;
+  if(nameVal) url += '?name=' + encodeURIComponent(nameVal);
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.onload = function() {
+    if(btn) btn.textContent = '📋 설문 불러오기';
+    try {
+      var data = JSON.parse(xhr.responseText);
+      if(data.result === 'success') {
+        // 고객 정보 자동 입력
+        if(data.name && !document.getElementById('c-name').value) {
+          document.getElementById('c-name').value = data.name;
+        }
+        if(data.phone && !document.getElementById('c-phone').value) {
+          document.getElementById('c-phone').value = data.phone;
+        }
+        if(data.addr && !document.getElementById('c-addr').value) {
+          document.getElementById('c-addr').value = data.addr;
+        }
+        // 설문 내용 표시
+        displaySurvey(data);
+        showToast('✅ 설문 데이터를 불러왔습니다');
+      } else if(data.result === 'notfound') {
+        showToast('⚠️ 해당 고객 설문이 없습니다');
+      } else if(data.result === 'empty') {
+        showToast('⚠️ 설문 데이터가 없습니다');
+      } else {
+        showToast('⚠️ 불러오기 실패');
+      }
+    } catch(e) {
+      showToast('⚠️ 불러오기 실패');
+    }
+  };
+  xhr.onerror = function() {
+    if(btn) btn.textContent = '📋 설문 불러오기';
+    showToast('⚠️ 네트워크 오류');
+  };
+  xhr.send();
 }
 
 // ── 설문 표시 ─────────────────────────────────────
