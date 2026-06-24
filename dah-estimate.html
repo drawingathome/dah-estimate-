@@ -13,12 +13,7 @@
    기준: 14px body, 24px 섹션제목
 ═══════════════════════════════════════ */
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{
-  font-family:'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-  width:210mm;margin:0 auto;padding:0;
-  background:#FAF7F5;
-  font-size:15px;line-height:1.6;color:#282828
-}
+html,body{font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:#F0EBE5;margin:0;padding:0;color:#282828;-webkit-text-size-adjust:100%}
 
 /* ── 상태 탭 바 — 헤더 탭바에서 정의 ── */
 
@@ -139,15 +134,15 @@ html,body{
 .section{
   background:#fff;
   border-radius:0;
-  padding:16px 16px;
-  margin-bottom:10px;
+  padding:16px;
+  margin-bottom:1px;
   border-top:1px solid #EEE6DC;
   border-bottom:1px solid #EEE6DC
 }
 .sec-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:6px}
 .sec-title{
-  font-size:11px;font-weight:700;color:#6B6B6B;
-  letter-spacing:2px;text-transform:uppercase;
+  font-size:10px;font-weight:800;color:#B0A99F;
+  letter-spacing:2.5px;text-transform:uppercase;
   white-space:nowrap
 }
 .sec-badge{
@@ -164,8 +159,8 @@ html,body{
 /* ── 고객 정보 ── */
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
 .info-item{
-  padding:16px 0;
-  border-bottom:1px solid #F5F0EB;
+  padding:14px 0;
+  border-bottom:1px solid #EEE6DC;
   margin-bottom:0
 }
 .info-item.date-item{
@@ -221,13 +216,14 @@ html,body{
 .info-internal .info-item{padding-bottom:12px}
 
 /* ── 테이블 공통 ── */
-.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0;border-radius:6px}
 .tbl-wrap table{min-width:520px}
 table{width:100%;border-collapse:collapse;font-size:14px;min-width:0!important}
 
 thead th{
-  font-size:11px;font-weight:700;color:#6B6B6B;
-  letter-spacing:0.3px;padding:8px 5px;
+  font-size:10px;font-weight:800;color:#282828;
+  letter-spacing:0.5px;padding:9px 4px;
+  background:#EEE6DC;
   text-align:center;white-space:nowrap;
   background:#FAF7F5;border-bottom:2px solid #EEE6DC
 }
@@ -302,7 +298,7 @@ td.amt{
 
 .sum-row{
   display:flex;justify-content:space-between;align-items:center;
-  padding:10px 0;border-bottom:1px solid #F5F0EB
+  padding:12px 0;border-bottom:1px solid #EEE6DC
 }
 .sum-row:last-child{border-bottom:none}
 .sum-row .lbl{font-size:14px;color:#6B6B6B;font-weight:500}
@@ -338,7 +334,7 @@ td.amt{
   margin-bottom:16px
 }
 .summary-inner{
-  padding:18px 20px 0
+  padding:16px 16px 0
 }
 .summary-total-block{
   background:#282828;
@@ -362,24 +358,11 @@ td.amt{
 .summary-deposit-row, .summary-balance-row{
   display:flex;flex-direction:column;gap:2px
 }
-.summary-sub-label{
-  font-size:10px;color:rgba(255,255,255,0.4);
-  letter-spacing:1px;text-transform:uppercase
-}
-.summary-sub-amount{
-  font-size:15px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:-0.3px
-}
+.summary-sub-label{font-size:11px;font-weight:500;color:rgba(255,255,255,0.55);letter-spacing:0.5px}
+.summary-sub-amount{font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.5px}
 .summary-sub-amount.orange{color:#282828;font-size:17px}
-.action-bar{
-  background:#FAF7F5;border-top:1px solid #EEE6DC;
-  padding:16px 16px 24px;
-  display:flex;flex-direction:column;gap:8px
-}
-.action-bar button{
-  padding:11px 20px;font-size:14px;font-family:inherit;
-  font-weight:600;border-radius:8px;cursor:pointer;
-  transition:all 0.15s;letter-spacing:0.2px
-}
+.action-bar{background:#fff;border-top:2px solid #EEE6DC;padding:16px 16px 40px;display:flex;flex-direction:column;gap:8px}
+.action-bar button{font-size:14px;font-family:inherit;font-weight:700;border-radius:8px;cursor:pointer;transition:all 0.15s}
 .action-main{display:flex;gap:10px}
 .btn-new{background:transparent;color:#B0A99F;border:1.5px solid #EEE6DC}
 .btn-new:hover{color:#282828;border-color:#282828}
@@ -391,17 +374,9 @@ td.amt{
   cursor:pointer;font-family:inherit;transition:all 0.15s
 }
 .btn-pdf:hover{background:#282828}
-.btn-print{
-  background:#fff;color:#282828;border:1.5px solid #282828;
-  padding:11px 24px;font-size:14px;font-weight:700;
-  border-radius:8px;font-family:inherit;cursor:pointer
-}
+.btn-print{padding:14px 0;background:#fff;color:#282828;border:1.5px solid #282828;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px}
 .btn-print:hover{background:#FAF7F5}
-.btn-save{
-  padding:11px 24px;background:#282828;color:#fff;
-  border:none;border-radius:8px;font-size:14px;font-weight:700;
-  cursor:pointer;font-family:inherit;transition:all 0.15s
-}
+.btn-save{padding:14px 0;background:#282828;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px}
 .btn-save:hover{background:#282828}
 
 /* ── 공간 선택 팝업 ── */
@@ -494,8 +469,8 @@ td.amt{
   white-space:nowrap;letter-spacing:0.3px
 }
 .pv-prod-table tbody td{
-  padding:8px 6px;font-size:12px;
-  border-bottom:1px solid #F5F0EB;
+  padding:10px 6px;font-size:12px;
+  border-bottom:1px solid #EEE6DC;
   vertical-align:top;line-height:1.5;
   word-break:keep-all;overflow-wrap:break-word
 }
@@ -517,7 +492,7 @@ td.amt{
   background:#282828;border-top:none
 }
 .pv-sum-table .total-row .sum-lbl{color:rgba(255,255,255,0.6);font-weight:500;font-size:13px}
-.pv-sum-table .total-row .sum-val{color:#fff;font-size:22px;font-weight:900;letter-spacing:-0.5px;font-size:18px;font-weight:800}
+.pv-sum-table .total-row .sum-val{font-size:14px;font-weight:700;color:#282828;text-align:right}
 /* 참고사항 */
 .pv-notes{
   padding:16px 28px;background:#F5F0EB;
@@ -538,10 +513,7 @@ td.amt{
   display:flex;justify-content:space-between;align-items:flex-end;
   border-bottom:2px solid #282828
 }
-.pv-logo{
-  height:20px;display:block;opacity:1;
-  filter:brightness(0)
-}
+.pv-logo{height:32px;display:block;object-fit:contain;object-position:left}
 .pv-header-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .pv-doc-label{
   font-size:13px;font-weight:700;color:#B0A99F;
@@ -798,7 +770,7 @@ button:active{opacity:0.7;transform:scale(0.98)}
 /* ── 타이포그래피 시스템 ── */
 .t-title{font-size:18px;font-weight:700;color:#282828;letter-spacing:-0.3px}
 .t-sub{font-size:14px;font-weight:600;color:#282828}
-.t-body{font-size:14px;font-weight:400;color:#282828;line-height:1.6}
+.t-body{font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:#F0EBE5;margin:0;padding:0;color:#282828;-webkit-text-size-adjust:100%}
 .t-caption{font-size:12px;font-weight:400;color:#6B6B6B}
 .t-label{font-size:11px;font-weight:600;color:#B0A99F;letter-spacing:1px;text-transform:uppercase}
 
@@ -809,6 +781,15 @@ select:focus{outline:2px solid #282828;outline-offset:2px;border-radius:4px}
 textarea:focus{border-color:#282828}
 
 @keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ── 버튼 래퍼 ── */
+.btn-row{display:flex;gap:10px}
+.btn-row .btn-print,.btn-row .btn-save{padding:14px 0;background:#282828;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px}
+
+/* ── 버튼 영역 ── */
+.action-main{padding:0}
+.btn-row{display:flex;gap:10px;width:100%}
+.btn-row .btn-print,.btn-row .btn-save{padding:14px 0;background:#282828;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px}
 </style>
 </head>
 <body>
@@ -1139,8 +1120,8 @@ textarea:focus{border-color:#282828}
       </button>
     </div>
     <div class="action-main">
-      <button class="btn-print" onclick="printForCustomer()">🖨 고객용 출력</button>
-      <button class="btn-save" onclick="saveEstimate()">저장</button>
+      <div class="btn-row" style="display:flex;gap:10px;width:100%"><button class="btn-print" style="flex:1" onclick="printForCustomer()">🖨 고객용 출력</button>
+      <button class="btn-save" style="flex:1" onclick="saveEstimate()">저장</button></div>
     </div>
   </div>
 
@@ -2222,7 +2203,7 @@ function buildCustomerHTML() {
 
   // 1. 헤더
   out += '<div class="pv-header">'
-      +'<img class="pv-logo" src="'+DAH_LOGO_B64+'" alt="드로잉엣홈">'
+      +'<img class="pv-logo" style="height:36px;display:block;object-fit:contain" src="'+DAH_LOGO_B64+'" alt="드로잉엣홈">'
       +'<div class="pv-header-right">'
       +'<span class="pv-doc-label">ESTIMATE</span>'
       +'<div class="pv-doc-title">'+docLabel+'</div>'
