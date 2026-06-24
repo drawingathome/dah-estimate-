@@ -115,10 +115,7 @@ body{
   border-radius:10px;padding:14px 16px;
   position:relative;overflow:hidden
 }
-.kpi-card::before{
-  content:'';position:absolute;top:0;left:0;
-  width:3px;height:100%;background:#F06E2D
-}
+
 .kpi-num{font-size:26px;font-weight:800;color:#fff;line-height:1;display:block;margin-bottom:4px;letter-spacing:-0.5px}
 .kpi-num em,.kpi-num-unit{font-size:11px;font-weight:500;opacity:0.5;font-style:normal;letter-spacing:0.5px}
 .kpi-label{font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase;font-weight:500;margin-bottom:4px;display:block}
@@ -228,12 +225,9 @@ body{
   border-bottom:1px solid #F5F0EB
 }
 .action-item:last-child{border-bottom:none}
-.ai-left{display:flex;align-items:flex-start;gap:10px;flex:1;min-width:0}
-.ai-bar{
-  width:3px;min-height:38px;border-radius:2px;
-  background:#F06E2D;flex-shrink:0;margin-top:2px
-}
-.ai-bar.warn{background:#B0A99F}
+.ai-left{display:flex;align-items:flex-start;flex:1;min-width:0}
+.ai-bar{display:none}
+.ai-bar.warn{display:none}
 .ai-name{
   font-size:15px;font-weight:700;color:#282828;
   margin-bottom:4px;
