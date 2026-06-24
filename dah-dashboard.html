@@ -108,7 +108,7 @@ body{
   padding:10px 16px 14px;
   position:sticky;top:52px;z-index:99
 }
-.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.kpi-grid{display:grid;grid-template-columns:3fr 2fr;gap:10px;margin-bottom:12px}
 .kpi-card{
   background:rgba(255,255,255,0.06);
   border:1px solid rgba(255,255,255,0.08);
@@ -1153,7 +1153,7 @@ function renderHome() {
       var isUrgent = a.urgency >= 2;
       var urgColor = isUrgent ? '#F06E2D' : '#6B6B6B';
 
-      var row = el('div', {class:'action-item'});
+      var row = el('div', {class: isUrgent ? 'action-item urgent-item' : 'action-item'});
       if (isLast) row.style.borderBottom = 'none';
 
       var aiLeft = el('div', {class:'ai-left'});
@@ -1245,7 +1245,7 @@ function renderHome() {
   } else {
     todayEvs.forEach(function(ev, ti) {
       var isLast = ti === todayEvs.length - 1;
-      var row = el('div', {class:'action-item'});
+      var row = el('div', {class: isUrgent ? 'action-item urgent-item' : 'action-item'});
       if (isLast) row.style.borderBottom = 'none';
 
       var aiLeft = el('div', {class:'ai-left'});
