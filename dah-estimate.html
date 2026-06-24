@@ -28,7 +28,7 @@ html,body{
 /* ── 헤더 ── */
 .doc-header{
   background:#282828;
-  padding:22px 32px 0;
+  padding:18px 16px 0;
   overflow:visible;
   display:grid;
   grid-template-columns:1fr auto;
@@ -88,24 +88,29 @@ html,body{
 /* 헤더 하단 탭바 */
 .doc-header-tabbar{
   grid-column:1/-1;grid-row:4;
-  display:flex;flex-wrap:wrap;align-items:flex-end;
-  gap:4px;padding-top:4px
+  display:flex;flex-wrap:nowrap;align-items:flex-end;
+  gap:2px;padding-top:4px;
+  overflow-x:auto;overflow-y:visible;
+  scrollbar-width:none;-ms-overflow-style:none;
+  padding-bottom:1px
 }
+.doc-header-tabbar::-webkit-scrollbar{display:none}
 .doc-header-tabbar-left{
   display:flex;gap:2px;align-items:flex-end;order:1
 }
 .doc-header-tabbar-right{
-  display:flex;gap:2px;align-items:flex-end;order:2
+  display:flex;gap:1px;align-items:flex-end;order:2
 }
 /* 탭 버튼 공통 */
 .est-status-btn{
-  padding:8px 22px;border:none;
+  padding:12px 14px;border:none;
   border-radius:6px 6px 0 0;
-  font-size:13px;font-weight:600;font-family:inherit;
+  font-size:12px;font-weight:600;font-family:inherit;
   cursor:pointer;
   background:rgba(255,255,255,0.08);
   color:rgba(255,255,255,0.4);
-  letter-spacing:0.5px;transition:all 0.15s;white-space:nowrap
+  letter-spacing:0.3px;transition:all 0.15s;white-space:nowrap;
+  min-height:44px
 }
 .est-status-btn.on{
   background:#FAF7F5;color:#282828;font-weight:700;letter-spacing:0.3px
@@ -114,13 +119,14 @@ html,body{
   background:rgba(255,255,255,0.13);color:rgba(255,255,255,0.65)
 }
 .cust-type-btn{
-  padding:7px 10px;border:none;
+  padding:12px 8px;border:none;
   border-radius:6px 6px 0 0;
-  font-size:12px;font-weight:600;font-family:inherit;
+  font-size:11px;font-weight:600;font-family:inherit;
   cursor:pointer;
   background:rgba(255,255,255,0.08);
   color:rgba(255,255,255,0.4);
-  transition:all 0.15s;letter-spacing:0.5px;white-space:nowrap
+  transition:all 0.15s;letter-spacing:0.3px;white-space:nowrap;
+  min-height:44px
 }
 .cust-type-btn.on{
   background:#FAF7F5;color:#282828;font-weight:700
