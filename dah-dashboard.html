@@ -224,7 +224,7 @@ body{
   display:flex;align-items:center;
   justify-content:space-between;
   padding:13px 16px;
-  border-bottom:1px solid #F5F0EB
+  border-bottom:1px solid #EEE6DC
 }
 .action-item:last-child{border-bottom:none}
 .ai-left{display:flex;align-items:flex-start;flex:1;min-width:0}
@@ -279,7 +279,7 @@ body{
 /* ── 담당자 성과 ── */
 .perf-item{
   display:flex;justify-content:space-between;align-items:center;
-  padding:13px 16px;border-bottom:1px solid #F5F0EB
+  padding:13px 16px;border-bottom:1px solid #EEE6DC
 }
 .perf-item:last-child{border-bottom:none}
 .perf-name{font-size:15px;font-weight:700;color:#282828}
@@ -312,7 +312,7 @@ body{
   display:flex;align-items:center;
   justify-content:space-between;
   padding:13px 16px;
-  border-bottom:1px solid #F5F0EB;
+  border-bottom:1px solid #EEE6DC;
   cursor:pointer
 }
 .pipe-item:last-child{border-bottom:none}
@@ -364,7 +364,7 @@ body{
   display:flex;align-items:center;
   justify-content:space-between;
   padding:13px 16px;
-  border-bottom:1px solid #F5F0EB;cursor:pointer
+  border-bottom:1px solid #EEE6DC;cursor:pointer
 }
 .cust-item:last-child{border-bottom:none}
 .cust-item:active{background:#FAF7F5}
@@ -410,7 +410,7 @@ body{
 .cal-ev-row{
   display:flex;align-items:center;gap:12px;
   padding:12px 16px;
-  border-bottom:1px solid #F5F0EB;cursor:pointer
+  border-bottom:1px solid #EEE6DC;cursor:pointer
 }
 .cal-ev-row:last-child{border-bottom:none}
 .cal-ev-row:active{background:#FAF7F5}
@@ -501,7 +501,7 @@ body{
 /* ── 설정 ── */
 .settings-row{
   display:flex;justify-content:space-between;align-items:center;
-  padding:14px 16px;border-bottom:1px solid #F5F0EB
+  padding:14px 16px;border-bottom:1px solid #EEE6DC
 }
 .settings-row:last-child{border-bottom:none}
 
@@ -522,6 +522,24 @@ body{
   z-index:999;white-space:nowrap;
   transition:opacity 0.2s;
   box-shadow:0 4px 16px rgba(0,0,0,0.2)
+}
+
+/* ── 터치 피드백 ── */
+button:active{opacity:0.75;transform:scale(0.97);transition:transform 0.08s}
+.hd-btn:active{transform:scale(0.95)}
+.tab:active{opacity:0.6}
+.pipe-item:active{background:#F8F4F1}
+.action-item:active{background:#F5F0EB}
+
+/* ── 빈 상태 ── */
+.empty-state{text-align:center;padding:48px 24px}
+.empty-state-emoji{font-size:36px;margin-bottom:12px}
+.empty-state-title{font-size:15px;font-weight:700;color:#282828;margin-bottom:6px}
+.empty-state-desc{font-size:13px;color:#B0A99F;line-height:1.6}
+
+/* ── 포커스 ── */
+input:focus,select:focus,textarea:focus{
+  outline:2px solid #282828;outline-offset:1px;border-radius:4px
 }
 </style>
 </head>
@@ -1245,7 +1263,7 @@ function renderHome() {
   } else {
     todayEvs.forEach(function(ev, ti) {
       var isLast = ti === todayEvs.length - 1;
-      var row = el('div', {class: isUrgent ? 'action-item urgent-item' : 'action-item'});
+      var row = el('div', {class:'action-item'});
       if (isLast) row.style.borderBottom = 'none';
 
       var aiLeft = el('div', {class:'ai-left'});
@@ -1744,16 +1762,74 @@ function renderChart(period) {
   });
 
   var maxRev = Math.max.apply(null, revenues) || 1;
-  periods.forEach(function(p, i) {
-    var isCurrent = p.key === currentKey;
-    var h = Math.round(revenues[i]/maxRev*100);
-    var col = div('flex:1;display:flex;flex-direction:column;align-items:center;gap:4px', [
-      span('font-size:11px;color:'+(isCurrent?'#282828':'#B0A99F')+';font-weight:'+(isCurrent?'700':'400'), revenues[i]>0?(revenues[i]/10000).toFixed(0)+'만':'0'),
-      div('width:100%;background:'+(isCurrent?'#282828':'#B0A99F')+';height:'+(h||2)+'px', []),
-      span('font-size:11px;color:'+(isCurrent?'#282828':'#B0A99F'), p.label)
-    ]);
-    barsEl.appendChild(col);
+  var W = barsEl.clientWidth || 340, H = 120, PAD = 16;
+  var chartW = W - PAD*2, chartH = H - 28;
+  var n = periods.length;
+  // SVG 라인차트
+  var pts = periods.map(function(p,i){
+    var x = PAD + (i/(n-1||1))*chartW;
+    var y = H - 28 - Math.round(revenues[i]/maxRev*chartH);
+    return {x:x, y:y, rev:revenues[i], label:p.label, isCurrent:p.key===currentKey};
   });
+  var pathD = pts.map(function(p,i){ return (i===0?'M':'L')+p.x.toFixed(1)+' '+p.y.toFixed(1); }).join(' ');
+  var areaD = pathD+' L'+pts[pts.length-1].x.toFixed(1)+' '+(H-28)+' L'+pts[0].x.toFixed(1)+' '+(H-28)+' Z';
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS,'svg');
+  svg.setAttribute('width','100%'); svg.setAttribute('height',H+'px');
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  // 그리드 라인
+  [0.25,0.5,0.75,1].forEach(function(r){
+    var y = H-28-Math.round(r*chartH);
+    var line = document.createElementNS(svgNS,'line');
+    line.setAttribute('x1',PAD); line.setAttribute('x2',W-PAD);
+    line.setAttribute('y1',y); line.setAttribute('y2',y);
+    line.setAttribute('stroke','#EEE6DC'); line.setAttribute('stroke-width','1');
+    svg.appendChild(line);
+    var lbl = document.createElementNS(svgNS,'text');
+    lbl.setAttribute('x',PAD-4); lbl.setAttribute('y',y+4);
+    lbl.setAttribute('text-anchor','end'); lbl.setAttribute('font-size','9');
+    lbl.setAttribute('fill','#B0A99F');
+    lbl.textContent = Math.round(maxRev*r/10000)+'만';
+    svg.appendChild(lbl);
+  });
+  // 면적
+  var area = document.createElementNS(svgNS,'path');
+  area.setAttribute('d',areaD);
+  area.setAttribute('fill','rgba(40,40,40,0.06)');
+  svg.appendChild(area);
+  // 라인
+  var path = document.createElementNS(svgNS,'path');
+  path.setAttribute('d',pathD);
+  path.setAttribute('fill','none'); path.setAttribute('stroke','#282828');
+  path.setAttribute('stroke-width','2'); path.setAttribute('stroke-linejoin','round');
+  svg.appendChild(path);
+  // 포인트 + 레이블
+  pts.forEach(function(p){
+    var circle = document.createElementNS(svgNS,'circle');
+    circle.setAttribute('cx',p.x); circle.setAttribute('cy',p.y);
+    circle.setAttribute('r', p.isCurrent?5:3);
+    circle.setAttribute('fill', p.isCurrent?'#282828':'#fff');
+    circle.setAttribute('stroke','#282828'); circle.setAttribute('stroke-width','2');
+    svg.appendChild(circle);
+    // 현재 기간 값 레이블
+    if(p.isCurrent && p.rev>0){
+      var val = document.createElementNS(svgNS,'text');
+      val.setAttribute('x',p.x); val.setAttribute('y',p.y-10);
+      val.setAttribute('text-anchor','middle'); val.setAttribute('font-size','11');
+      val.setAttribute('font-weight','700'); val.setAttribute('fill','#282828');
+      val.textContent = Math.round(p.rev/10000)+'만';
+      svg.appendChild(val);
+    }
+    // x축 레이블
+    var lbl2 = document.createElementNS(svgNS,'text');
+    lbl2.setAttribute('x',p.x); lbl2.setAttribute('y',H-8);
+    lbl2.setAttribute('text-anchor','middle'); lbl2.setAttribute('font-size','10');
+    lbl2.setAttribute('fill', p.isCurrent?'#282828':'#B0A99F');
+    lbl2.setAttribute('font-weight', p.isCurrent?'700':'400');
+    lbl2.textContent = p.label;
+    svg.appendChild(lbl2);
+  });
+  barsEl.appendChild(svg);
 
   // 현재 기간 요약
   var currentCustomers = customers.filter(function(c) {
