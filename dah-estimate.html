@@ -133,7 +133,7 @@ html,body{
 .section{
   background:#fff;
   border-radius:0;
-  padding:20px 16px;
+  padding:16px 16px;
   margin-bottom:10px;
   border-top:1px solid #EEE6DC;
   border-bottom:1px solid #EEE6DC
@@ -158,7 +158,7 @@ html,body{
 /* ── 고객 정보 ── */
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
 .info-item{
-  padding:14px 0;
+  padding:16px 0;
   border-bottom:1px solid #F5F0EB;
   margin-bottom:0
 }
@@ -190,9 +190,9 @@ html,body{
   letter-spacing:0.8px;text-transform:uppercase;white-space:nowrap
 }
 .region-row select,.region-row input{
-  padding:7px 12px;border:none;
+  padding:12px 0 8px;border:none;
   border-bottom:1.5px solid #EEE6DC;
-  font-size:14px;font-weight:600;font-family:inherit;
+  font-size:15px;font-weight:600;font-family:inherit;
   outline:none;background:transparent
 }
 .region-row select:focus,.region-row input:focus{border-bottom-color:#282828}
@@ -748,7 +748,7 @@ td.amt{
 .cust-load-search input{flex:1;padding:9px 12px;border:1.5px solid #EEE6DC;border-radius:6px;font-size:14px;font-family:inherit;outline:none}
 .cust-load-search input:focus{border-color:#282828}
 #cust-load-list{overflow-y:auto;max-height:360px}
-.cust-load-item{padding:13px 20px;border-bottom:1px solid #FAF7F5;cursor:pointer;transition:background 0.1s}
+.cust-load-item{padding:13px 20px;border-bottom:1px solid #EEE6DC;cursor:pointer;transition:background 0.1s}
 .cust-load-item:hover{background:#FAF7F5}
 .cust-load-name{font-size:14px;font-weight:700;color:#282828;margin-bottom:2px}
 .cust-load-info{font-size:13px;color:#B0A99F}
@@ -774,6 +774,35 @@ td.amt{
 /* ── 커튼 행 ── */
 .row-curtain td{padding:6px 4px;vertical-align:middle}
 
+
+/* ── 터치 피드백 ── */
+button:active{opacity:0.7;transform:scale(0.98)}
+.action-btn:active,.hd-btn:active,.est-status-btn:active,.cust-type-btn:active{
+  transform:scale(0.96);transition:transform 0.08s
+}
+.btn-save:active{background:#1a1a1a}
+
+/* ── 빈 상태 ── */
+.empty-state{
+  text-align:center;padding:40px 20px;color:#B0A99F
+}
+.empty-state-icon{font-size:32px;margin-bottom:12px}
+.empty-state-msg{font-size:14px;font-weight:500;color:#B0A99F;line-height:1.6}
+
+/* ── 타이포그래피 시스템 ── */
+.t-title{font-size:18px;font-weight:700;color:#282828;letter-spacing:-0.3px}
+.t-sub{font-size:14px;font-weight:600;color:#282828}
+.t-body{font-size:14px;font-weight:400;color:#282828;line-height:1.6}
+.t-caption{font-size:12px;font-weight:400;color:#6B6B6B}
+.t-label{font-size:11px;font-weight:600;color:#B0A99F;letter-spacing:1px;text-transform:uppercase}
+
+/* ── 입력 필드 포커스 ── */
+input:focus{border-bottom-color:#282828}
+input:focus::placeholder{color:transparent}
+select:focus{outline:2px solid #282828;outline-offset:2px;border-radius:4px}
+textarea:focus{border-color:#282828}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 </style>
 </head>
 <body>
@@ -1218,12 +1247,17 @@ var currentTab = 'ga';
 
 // 가견적/최종 상태
 function setStatus(s) {
+  var prev = currentTab;
   currentTab = s;
   ['ga','final'].forEach(function(t){
     document.getElementById('status-'+t).className = 'est-status-btn'+(t===s?' on':'');
   });
-  var titles = {ga:'가견적서', final:'최종견적서'};
+  var titles = {ga:'가견적서', final:'최종 견적서'};
   document.getElementById('hd-title').textContent = titles[s];
+  // 가견적 → 최종 전환 시 안내
+  if(prev==='ga' && s==='final'){
+    showToast('가견적 내용을 기반으로 최종견적서를 작성합니다 🙂');
+  }
 }
 
 // 고객 유형
