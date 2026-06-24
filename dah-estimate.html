@@ -492,7 +492,7 @@ td.amt{
   background:#282828;border-top:none
 }
 .pv-sum-table .total-row .sum-lbl{color:rgba(255,255,255,0.6);font-weight:500;font-size:13px}
-.pv-sum-table .total-row .sum-val{font-size:20px;font-weight:900;color:#fff;letter-spacing:-0.5px;text-align:right}
+.pv-sum-table .total-row .sum-val{font-size:14px;font-weight:700;color:#282828;text-align:right}
 /* 참고사항 */
 .pv-notes{
   padding:16px 28px;background:#F5F0EB;
@@ -813,6 +813,22 @@ textarea:focus{border-color:#282828}
   letter-spacing:1.5px;text-transform:uppercase;
   margin-bottom:4px;display:block;padding-top:4px
 }
+
+/* ── 유효기간 D-카운트 ── */
+.expiry-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;font-weight:700;padding:3px 8px;
+  border-radius:12px;margin-left:8px
+}
+.expiry-badge.ok{background:#E8F5E9;color:#2E7D32}
+.expiry-badge.warn{background:#FFF3E0;color:#E65100}
+.expiry-badge.over{background:#FFEBEE;color:#C62828}
+
+/* ── 시공 사례 사진 (PDF) ── */
+.pv-photos{margin-top:16px;padding-top:16px;border-top:1px solid #EEE6DC}
+.pv-photos-title{font-size:10px;font-weight:700;color:#B0A99F;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.pv-photos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pv-photos-grid img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px}
 </style>
 </head>
 <body>
@@ -1264,9 +1280,21 @@ function setStatus(s) {
   });
   var titles = {ga:'가견적서', final:'최종 견적서'};
   document.getElementById('hd-title').textContent = titles[s];
-  // 가견적 → 최종 전환 시 안내
+  // 가견적 → 최종 전환: 저장된 가견적 데이터가 있으면 자동 이어받기
   if(prev==='ga' && s==='final'){
-    showToast('가견적 내용을 기반으로 최종견적서를 작성합니다 🙂');
+    var cName = document.getElementById('c-name')?.value?.trim();
+    if(cName){
+      // 현재 폼 데이터는 그대로 유지 (이미 입력된 상태)
+      showToast('가견적 내용 기반으로 최종견적서를 작성합니다 🙂');
+    } else {
+      // 저장된 가견적 불러오기
+      try {
+        var saved = JSON.parse(localStorage.getItem('dah_saved')||'[]');
+        var gaEntry = saved.find(function(e){ return e.status==='ga'; });
+        if(gaEntry){ loadEstimateEntry(gaEntry); showToast('저장된 가견적을 불러왔습니다 🙂'); }
+        else { showToast('가견적 내용을 기반으로 최종견적서를 작성합니다 🙂'); }
+      } catch(e){ showToast('가견적 내용을 기반으로 최종견적서를 작성합니다 🙂'); }
+    }
   }
 }
 
@@ -1894,6 +1922,13 @@ function validateEstimate() {
   return true;
 }
 
+function getExpiryBadge(savedAt) {
+  if(!savedAt) return '';
+  var diff = Math.ceil((new Date(savedAt).getTime() + 7*24*60*60*1000 - Date.now()) / 86400000);
+  if(diff > 3) return '<span class="expiry-badge ok">D-'+diff+'</span>';
+  if(diff > 0) return '<span class="expiry-badge warn">D-'+diff+' 마감임박</span>';
+  return '<span class="expiry-badge over">유효기간 만료</span>';
+}
 function saveEstimate() {
   if (!validateEstimate()) return;
   var name=document.getElementById('c-name').value.trim();
@@ -1970,6 +2005,7 @@ function saveEstimate() {
         status: isFinal ? 'final' : 'ga',   // 가견적 or 최종
         contractStatus: 'pending',            // pending/contracted/rejected
         savedAt: new Date().toISOString(),
+        expiryAt: new Date(Date.now()+7*24*60*60*1000).toISOString(),
         date: document.getElementById('c-measure')?.value || '',
         installDate: document.getElementById('c-install')?.value || '',
         memo: custMemo
@@ -1977,7 +2013,7 @@ function saveEstimate() {
       if (idx >= 0) saved[idx] = entry;
       else saved.unshift(entry);
       // 최근 300건만 보관
-      if (saved.length > 300) saved = saved.slice(0, 300);
+      if (saved.length > 500) saved = saved.slice(0, 500);
       localStorage.setItem('dah_saved', JSON.stringify(saved));
 
       // 대시보드 dah_customers 동기화
@@ -2321,6 +2357,20 @@ function buildCustomerHTML() {
   out += processHTML;
 
   // 11. 푸터
+  // 시공 사례 사진 (있을 경우만)
+  try {
+    var photos = JSON.parse(localStorage.getItem('dah_photos')||'[]');
+    if(photos.length > 0) {
+      out += '<div class="pv-photos">';
+      out += '<div class="pv-photos-title">시공 사례</div>';
+      out += '<div class="pv-photos-grid">';
+      photos.slice(0,6).forEach(function(p){
+        out += '<img src="'+p.src+'" alt="시공사례">';
+      });
+      out += '</div></div>';
+    }
+  } catch(e){}
+
   out += '<div class="pv-footer">'
       +'<div style="margin-bottom:6px"><strong>결제 계좌</strong>&nbsp;&nbsp;국민은행 015401-04-258798&nbsp;&nbsp;예금주: 장선혜(드로잉엣홈)</div>'
       +'<div style="color:rgba(255,255,255,0.4);font-size:12px">맞춤제작 특성상 제작 시작 후 취소·변경은 불가합니다. 문의사항은 언제든지 연락주세요.</div>'
@@ -2450,13 +2500,30 @@ function renderCustLoadList(q) {
     list.innerHTML = '<div class="cust-load-empty">'+( q ? '검색 결과 없음' : '저장된 고객이 없습니다<br><span style="font-size:13px;color:#B0A99F">견적서 저장 시 자동으로 등록됩니다</span>')+'</div>';
     return;
   }
-  list.innerHTML = filtered.slice(0,30).map(function(c) {
+  // dah_saved에서 각 고객의 견적 히스토리
+  var savedAll = [];
+  try { savedAll = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e){}
+
+  var displayList = q ? filtered.slice(0,100) : filtered.slice(0,30);
+  list.innerHTML = displayList.map(function(c) {
     var info = [c.phone, c.addr].filter(Boolean).join(' · ');
     var lastEst = c.lastAmt ? c.lastAmt.toLocaleString()+'원 ('+c.lastDate+')' : '';
     var idx = customers.indexOf(c);
+    // 이전 견적 히스토리 (최근 3개)
+    var history = savedAll.filter(function(s){ return s.clientName === (c.name||''); }).slice(0,3);
+    var histHtml = history.length > 0
+      ? '<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">'
+        + history.map(function(h){
+            var lbl = h.status==='final'?'최종':'가견적';
+            var amt = h.price ? h.price.toLocaleString()+'원' : '';
+            return '<span style="font-size:11px;background:#F5F0EB;color:#6B6B6B;padding:2px 6px;border-radius:4px">'+lbl+(amt?' · '+amt:'')+'</span>';
+          }).join('')
+        + '</div>'
+      : '';
     return '<div class="cust-load-item" data-idx="'+idx+'" onclick="loadCustByIdx(this)">'
-      +'<div class="cust-load-name">'+( c.name||'이름없음')+'</div>'
+      +'<div class="cust-load-name">'+(c.name||'이름없음')+'</div>'
       +'<div class="cust-load-info">'+info+(lastEst?' &nbsp;|&nbsp; 최근: '+lastEst:'')+'</div>'
+      +histHtml
       +'</div>';
   }).join('');
 }
@@ -2654,6 +2721,87 @@ function renderEmptyState() {
   if(emWrap) emWrap.style.display = (!hasC && !hasB) ? 'flex' : 'none';
   if(cTable) cTable.style.display = hasC ? 'table' : 'none';
   if(bTable) bTable.style.display = hasB ? 'table' : 'none';
+}
+
+// ── 임시저장 (자동)
+var _draftTimer = null;
+function debounceDraft() {
+  clearTimeout(_draftTimer);
+  _draftTimer = setTimeout(function(){ saveDraft(); }, 1500);
+}
+function saveDraft() {
+  var name = document.getElementById('c-name')?.value?.trim();
+  if(!name) return;
+  try {
+    var data = {
+      name: name,
+      phone: document.getElementById('c-phone')?.value||'',
+      addr: document.getElementById('c-addr')?.value||'',
+      addr2: document.getElementById('c-addr2')?.value||'',
+      measure: document.getElementById('c-measure')?.value||'',
+      install: document.getElementById('c-install')?.value||'',
+      region: document.getElementById('c-region')?.value||'',
+      deposit: document.getElementById('deposit-input')?.value||'',
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem('dah_draft', JSON.stringify(data));
+  } catch(e){}
+}
+function loadDraftIfExists() {
+  try {
+    var draft = JSON.parse(localStorage.getItem('dah_draft')||'null');
+    if(!draft) return;
+    var age = (Date.now() - new Date(draft.savedAt).getTime()) / 1000 / 60;
+    if(age > 120) { localStorage.removeItem('dah_draft'); return; } // 2시간 초과 무시
+    var name = document.getElementById('c-name')?.value?.trim();
+    if(name) return; // 이미 입력된 경우 무시
+    if(confirm('[임시저장] ' + draft.name + '님의 작성 중인 견적서가 있습니다.\n불러올까요?')) {
+      if(draft.name) document.getElementById('c-name').value = draft.name;
+      if(draft.phone) document.getElementById('c-phone').value = draft.phone;
+      if(draft.addr) document.getElementById('c-addr').value = draft.addr;
+      if(draft.addr2 && document.getElementById('c-addr2')) document.getElementById('c-addr2').value = draft.addr2;
+      if(draft.measure) document.getElementById('c-measure').value = draft.measure;
+      if(draft.install) document.getElementById('c-install').value = draft.install;
+      if(draft.region) { document.getElementById('c-region').value = draft.region; document.getElementById('c-region').dispatchEvent(new Event('change')); }
+      if(draft.deposit) { document.getElementById('deposit-input').value = draft.deposit; document.getElementById('deposit-input').dispatchEvent(new Event('input')); }
+      showToast('임시저장 데이터를 불러왔습니다 ✅');
+    }
+  } catch(e){}
+}
+
+// ── 나가기 전 경고
+window.addEventListener('beforeunload', function(e) {
+  var name = document.getElementById('c-name')?.value?.trim();
+  var saved = document.getElementById('c-name')?.dataset?.saved;
+  if(name && !saved) {
+    saveDraft();
+    e.preventDefault(); e.returnValue = '';
+  }
+});
+
+// ── 오프라인 감지
+window.addEventListener('offline', function(){
+  showToast('⚠️ 인터넷 연결이 끊겼습니다. 저장한 데이터는 기기에 보존됩니다.', 'error');
+});
+window.addEventListener('online', function(){
+  showToast('✅ 인터넷에 다시 연결됐습니다.');
+});
+
+// ── 카카오/공유 버튼
+function shareEstimate() {
+  calcTotal();
+  var name = document.getElementById('c-name')?.value?.trim() || '고객';
+  var total = document.getElementById('sum-total')?.textContent || '';
+  var text = '[드로잉엣홈] '+name+'님 견적서\n총 금액: '+total+'\n\n견적서 확인 후 계약금(50%)을 입금해주시면 실측 일정을 잡아드리겠습니다 🙂';
+  if(navigator.share){
+    navigator.share({ title:'드로잉엣홈 견적서', text: text })
+      .then(function(){ showToast('공유 완료 ✅'); })
+      .catch(function(){});
+  } else {
+    navigator.clipboard?.writeText(text)
+      .then(function(){ showToast('견적 내용이 복사됐습니다. 카카오톡에 붙여넣기 해주세요 🙂'); })
+      .catch(function(){ showToast('공유 기능을 지원하지 않는 브라우저입니다'); });
+  }
 }
 </script>
 <div id="pdf-size-modal">
