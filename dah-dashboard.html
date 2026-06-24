@@ -1482,7 +1482,14 @@ function renderSearch() {
   var archivedCount = filtered.filter(isArchived).length;
   var countEl = document.getElementById('search-count'); if (countEl) countEl.textContent = q ? ('검색 결과 ' + customers.length + '건') : (showArchived ? '전체 ' + customers.length + '건 (보관 포함)' : '전체 ' + customers.length + '건')
   var listEl = document.getElementById('search-list'); listEl.innerHTML = '';
-  if (customers.length === 0) { listEl.appendChild(span('font-size:14px;color:#B0A99F;display:block;text-align:center;padding:20px 0', q ? '검색 결과가 없습니다' : '등록된 고객이 없습니다')); return; }
+  if (customers.length === 0) { listEl.appendChild((function(){
+    var _emp = document.createElement('div');
+    _emp.className = 'empty-state';
+    _emp.innerHTML = q
+      ? '<div class="empty-state-emoji">🔍</div><div class="empty-state-title">검색 결과가 없습니다</div><div class="empty-state-desc">다른 이름으로 검색해보세요</div>'
+      : '<div class="empty-state-emoji">📋</div><div class="empty-state-title">등록된 고객이 없습니다</div><div class="empty-state-desc">+ 고객 버튼으로<br>첫 고객을 등록해보세요</div>';
+    wrap.appendChild(_emp);
+  })()); return; }
   customers.forEach(function(c) {
     var row = el('div', {class:'cust-item'});
     var left = el('div', {class:'ci-left'});
