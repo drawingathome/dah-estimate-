@@ -3,17 +3,22 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" crossorigin>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>드로잉엣홈 견적서 v20260621</title>
 
 <style>
-@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+
+/* ── 폰트 시스템 */
+:root{--font-base:'Pretendard','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif}
+
 /* ═══════════════════════════════════════
    드로잉엣홈 견적서 — Design System v3
    기준: 14px body, 24px 섹션제목
 ═══════════════════════════════════════ */
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:#F0EBE5;margin:0;padding:0;color:#282828;-webkit-text-size-adjust:100%}
+html,body{font-family:var(--font-base);background:#F0EBE5;margin:0;padding:0;color:#282828;-webkit-text-size-adjust:100%}
 
 /* ── 상태 탭 바 — 헤더 탭바에서 정의 ── */
 
@@ -139,7 +144,7 @@ html,body{font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-ser
   border-top:1px solid #EEE6DC;
   border-bottom:1px solid #EEE6DC
 }
-.sec-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:6px}
+.sec-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px}
 .sec-title{
   font-size:10px;font-weight:800;color:#B0A99F;
   letter-spacing:2.5px;text-transform:uppercase;
@@ -184,7 +189,7 @@ html,body{font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-ser
 /* 지역선택 */
 .region-row{
   display:flex;align-items:center;gap:16px;flex-wrap:wrap;
-  margin-top:18px;padding-top:16px;border-top:1px dashed #EEE6DC
+  margin-top:16px;padding-top:16px;border-top:1px dashed #EEE6DC
 }
 .region-row label{
   font-size:13px;font-weight:700;color:#B0A99F;
@@ -304,7 +309,7 @@ td.amt{
 .sum-row .lbl{font-size:14px;color:#6B6B6B;font-weight:500}
 .sum-row .val{font-size:14px;font-weight:600;color:#282828}
 
-.sum-row.total{margin-top:6px}
+.sum-row.total{margin-top:8px}
 .sum-row.total 
 .sum-row.total 
 .sum-row.deposit 
@@ -352,7 +357,7 @@ td.amt{
 }
 .summary-total-sub{
   display:flex;justify-content:space-between;align-items:center;
-  margin-top:14px;padding-top:14px;
+  margin-top:16px;padding-top:14px;
   border-top:1px solid rgba(255,255,255,0.1)
 }
 .summary-deposit-row, .summary-balance-row{
@@ -388,7 +393,7 @@ td.amt{
   position:fixed!important;top:50%!important;left:50%!important;
   transform:translate(-50%,-50%);
   width:calc(100vw - 40px);max-width:320px;
-  background:#fff;border-radius:12px;padding:20px;
+  background:#fff;border-radius:12px;padding:16px;
   box-shadow:0 8px 32px rgba(0,0,0,0.18)
 }
 .space-btn{
@@ -424,7 +429,7 @@ td.amt{
 ═══════════════════════════════════════ */
 .pv-wrap{
   word-break:keep-all;
-  font-family:'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  font-family:var(--font-base)var(--font-base);
   background:#fff;color:#282828;
   max-width:680px;margin:0 auto;
   border-radius:10px;overflow:hidden;
@@ -446,9 +451,9 @@ td.amt{
 .pv-party:first-child{border-right:1px solid #EEE6DC}
 .pv-party-label{
   font-size:13px;font-weight:700;color:#B0A99F;
-  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px
+  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px
 }
-.pv-party-name{font-size:15px;font-weight:700;color:#282828;margin-bottom:6px}
+.pv-party-name{font-size:15px;font-weight:700;color:#282828;margin-bottom:8px}
 .pv-party-info{font-size:13px;color:#6B6B6B;line-height:1.8}
 .pv-party-info span{display:block}
 /* 일정 배너 */
@@ -527,10 +532,10 @@ td.amt{
 
 /* 고객 정보 블록 */
 .pv-customer{padding:24px 28px;border-bottom:1px solid #EEE6DC}
-.pv-cust-name{font-size:18px;font-weight:700;color:#282828;margin-bottom:3px}
+.pv-cust-name{font-size:18px;font-weight:700;color:#282828;margin-bottom:4px}
 .pv-cust-info{font-size:14px;color:#6B6B6B;line-height:1.7}
 .pv-cust-schedule{
-  display:flex;gap:32px;margin-top:18px;
+  display:flex;gap:32px;margin-top:16px;
   padding-top:16px;border-top:1px solid #F5F0EB
 }
 .pv-sch-label{
@@ -543,7 +548,7 @@ td.amt{
 .pv-section{padding:20px 28px;border-bottom:1px solid #EEE6DC}
 .pv-section-label{
   font-size:13px;font-weight:800;color:#282828;
-  margin-bottom:14px;padding:6px 12px;
+  margin-bottom:16px;padding:6px 12px;
   background:#F5F0EB;
   border-radius:0 4px 4px 0;letter-spacing:0.3px
 }
@@ -609,7 +614,7 @@ td.amt{
   font-size:13px;font-weight:700;color:#6B6B6B;
   letter-spacing:0.5px;margin-bottom:4px
 }
-.pv-payment-sub{font-size:13px;color:#B0A99F;margin-bottom:10px}
+.pv-payment-sub{font-size:13px;color:#B0A99F;margin-bottom:8px}
 .pv-payment-amount{font-size:18px;font-weight:700;color:#282828}
 
 /* 진행안내 */
@@ -630,7 +635,7 @@ td.amt{
   justify-content:center;flex-shrink:0;margin-top:1px;
   border:2px solid #282828
 }
-.pv-step-title{font-size:14px;font-weight:700;color:#282828;display:block;margin-bottom:3px}
+.pv-step-title{font-size:14px;font-weight:700;color:#282828;display:block;margin-bottom:4px}
 .pv-step-desc{font-size:13px;color:#6B6B6B;line-height:1.6;display:block}
 
 /* 푸터 */
@@ -690,16 +695,16 @@ td.amt{
 .inner-fields .inner-inp::placeholder{color:#B0A99F}
 .deposit-inp-wrap{display:flex;align-items:center;gap:6px}
 .cprice{text-align:right}
-.over243-wrap{display:none;color:#F06E2D;font-size:13px;margin-top:3px}
+.over243-wrap{display:none;color:#F06E2D;font-size:13px;margin-top:4px}
 .print-hide{}
 
 /* PDF 사이즈 선택 팝업 */
 #pdf-size-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:none;align-items:center;justify-content:center}
 #pdf-size-modal.open{display:flex}
 #pdf-size-box{background:#fff;border-radius:16px;padding:28px 24px 24px;width:400px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.25)}
-.pdf-modal-title{font-size:16px;font-weight:800;color:#282828;margin-bottom:6px;letter-spacing:-0.3px}
-.pdf-modal-sub{font-size:13px;color:#B0A99F;margin-bottom:20px}
-.pdf-modal-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.pdf-modal-title{font-size:16px;font-weight:800;color:#282828;margin-bottom:8px;letter-spacing:-0.3px}
+.pdf-modal-sub{font-size:13px;color:#B0A99F;margin-bottom:16px}
+.pdf-modal-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .pdf-opt{border:2px solid #EEE6DC;border-radius:12px;padding:18px 14px;cursor:pointer;text-align:center;transition:all 0.15s;background:#fff}
 .pdf-opt:hover{border-color:#282828;background:#FAF7F5}
 .pdf-opt.selected{border-color:#282828;background:#FAF7F5}
@@ -754,11 +759,11 @@ td.amt{
 
 
 /* ── 터치 피드백 ── */
-button:active{opacity:0.7;transform:scale(0.98)}
+
 .action-btn:active,.hd-btn:active,.est-status-btn:active,.cust-type-btn:active{
   transform:scale(0.96);transition:transform 0.08s
 }
-.btn-save:active{background:#1a1a1a}
+
 
 /* ── 빈 상태 ── */
 .empty-state{
@@ -770,7 +775,7 @@ button:active{opacity:0.7;transform:scale(0.98)}
 /* ── 타이포그래피 시스템 ── */
 .t-title{font-size:18px;font-weight:700;color:#282828;letter-spacing:-0.3px}
 .t-sub{font-size:14px;font-weight:600;color:#282828}
-.t-body{font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:#F0EBE5;margin:0;padding:0;color:#282828;-webkit-text-size-adjust:100%}
+.t-body{font-family:var(--font-base);background:#F0EBE5;margin:0;padding:0;color:#282828;-webkit-text-size-adjust:100%}
 .t-caption{font-size:12px;font-weight:400;color:#6B6B6B}
 .t-label{font-size:11px;font-weight:600;color:#B0A99F;letter-spacing:1px;text-transform:uppercase}
 
@@ -829,6 +834,78 @@ textarea:focus{border-color:#282828}
 .pv-photos-title{font-size:10px;font-weight:700;color:#B0A99F;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
 .pv-photos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .pv-photos-grid img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px}
+
+/* ══ 마이크로 애니메이션 ══ */
+
+/* 1. 모든 버튼 — press 효과 */
+button{transition:transform 0.1s ease,opacity 0.1s ease,box-shadow 0.1s ease}
+button:active{transform:scale(0.96);opacity:0.85}
+
+/* 2. 주요 버튼 — 더 강한 피드백 */
+.btn-save:active{transform:scale(0.97);box-shadow:0 1px 4px rgba(0,0,0,0.2)}
+.btn-print:active{transform:scale(0.97)}
+.hd-btn:active{transform:scale(0.95)}
+
+/* 3. 카드/리스트 아이템 hover */
+.pipe-item{transition:background 0.15s ease,transform 0.1s ease}
+.pipe-item:hover{background:#F8F4F1;transform:translateX(2px)}
+.action-item{transition:background 0.15s ease}
+.action-item:hover{background:#FFF8F5}
+.cust-load-item{transition:background 0.12s ease}
+.cust-load-item:hover{background:#F5F0EB}
+
+/* 4. 탭 전환 */
+.est-status-btn{transition:all 0.2s ease}
+.est-status-btn.on{transition:all 0.2s ease}
+.tab{transition:color 0.15s ease}
+.tab.on::after{transition:width 0.2s ease}
+
+/* 5. 입력 필드 포커스 */
+.info-item{transition:background 0.15s ease}
+.info-item:focus-within{background:#FAFAF8}
+input,select,textarea{transition:border-color 0.15s ease}
+
+/* 6. 섹션 등장 */
+@keyframes fadeSlideUp{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.section{animation:fadeSlideUp 0.25s ease both}
+.card{animation:fadeSlideUp 0.2s ease both}
+
+/* 7. 합계 숫자 변경 pulse */
+@keyframes numPulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.04)}
+  100%{transform:scale(1)}
+}
+.summary-total-amount.updated{animation:numPulse 0.3s ease}
+
+/* 8. 토스트 — 이미 있지만 강화 */
+@keyframes fadeInUp{
+  from{opacity:0;transform:translateX(-50%) translateY(12px)}
+  to{opacity:1;transform:translateX(-50%) translateY(0)}
+}
+@keyframes fadeOutDown{
+  from{opacity:1;transform:translateX(-50%) translateY(0)}
+  to{opacity:0;transform:translateX(-50%) translateY(8px)}
+}
+
+/* 9. notice-card 알림 등장 */
+.notice-card{animation:fadeSlideUp 0.2s ease both}
+.notice-item{transition:background 0.12s ease}
+
+/* 10. 스크롤 힌트 페이드 */
+.tbl-outer::after{transition:opacity 0.2s ease}
+
+/* 11. KPI 카드 숫자 */
+.kpi-num{transition:color 0.3s ease}
+.rev-bar-fill{transition:width 0.6s cubic-bezier(0.4,0,0.2,1)}
+
+/* 12. stage-pill hover */
+.stage-pill{transition:all 0.15s ease;cursor:default}
+.pipe-item .stage-pill{cursor:pointer}
+.pipe-item .stage-pill:hover{opacity:0.8}
 </style>
 </head>
 <body>
@@ -1296,6 +1373,7 @@ function setStatus(s) {
       } catch(e){ showToast('가견적 내용을 기반으로 최종견적서를 작성합니다 🙂'); }
     }
   }
+  triggerSumPulse();
 }
 
 // 고객 유형
@@ -1657,6 +1735,13 @@ function autoAddSvcFee() {
 }
 
 // 합계 계산
+function triggerSumPulse(){
+  var el=document.querySelector('.summary-total-amount');
+  if(!el) return;
+  el.classList.remove('updated');
+  requestAnimationFrame(function(){ el.classList.add('updated'); });
+  setTimeout(function(){ el.classList.remove('updated'); }, 350);
+}
 function calcTotal() {
   var curtainTotal = 0;
   document.querySelectorAll('#curtain-body tr').forEach(function(tr){
