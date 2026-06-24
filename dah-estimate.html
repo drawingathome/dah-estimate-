@@ -135,7 +135,7 @@ html,body{font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-ser
   background:#fff;
   border-radius:0;
   padding:16px;
-  margin-bottom:1px;
+  margin-bottom:12px;
   border-top:1px solid #EEE6DC;
   border-bottom:1px solid #EEE6DC
 }
@@ -790,6 +790,16 @@ textarea:focus{border-color:#282828}
 .action-main{padding:0}
 .btn-row{display:flex;gap:10px;width:100%}
 .btn-row .btn-print,.btn-row .btn-save{padding:14px 0;background:#282828;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px}
+
+/* ── 표 스크롤 힌트 ── */
+.tbl-outer{position:relative}
+.tbl-outer::after{
+  content:'';position:absolute;top:0;right:0;
+  width:32px;height:100%;
+  background:linear-gradient(to right,transparent,rgba(240,235,229,0.9));
+  pointer-events:none;border-radius:0 6px 6px 0
+}
+.tbl-outer.no-scroll::after{display:none}
 </style>
 </head>
 <body>
@@ -949,7 +959,7 @@ textarea:focus{border-color:#282828}
     </div>
 
     <!-- 커튼 -->
-    <div class="tbl-wrap">
+    <div class="tbl-outer"><div class="tbl-wrap">
       <table id="curtain-table">
         <colgroup>
           <col style="min-width:48px;width:9%">
@@ -975,10 +985,10 @@ textarea:focus{border-color:#282828}
         </thead>
         <tbody id="curtain-body"></tbody>
       </table>
-    </div>
+    </div></div>
 
     <!-- 블라인드 -->
-    <div class="tbl-wrap">
+    <div class="tbl-outer"><div class="tbl-wrap">
       <table id="blind-table">
         <colgroup>
           <col style="min-width:48px;width:9%">
@@ -1020,7 +1030,7 @@ textarea:focus{border-color:#282828}
     <div class="sec-label">
       <span class="sec-title">레일 · 시공비 · 기타</span>
     </div>
-    <div class="tbl-wrap">
+    <div class="tbl-outer"><div class="tbl-wrap">
       <table id="svc-table">
         <colgroup>
           <col style="width:12%"><col style="width:38%">
@@ -1650,7 +1660,7 @@ function calcTotal() {
   var totalEl = document.getElementById('sum-total');
   if(totalEl) totalEl.textContent = grand.toLocaleString()+'원';
   var depDispEl = document.getElementById('sum-deposit-disp');
-  if(depDispEl) depDispEl.textContent = deposit>0 ? deposit.toLocaleString()+'원' : '—';
+  if(depDispEl) depDispEl.textContent = deposit>0 ? deposit.toLocaleString()+'원' : (grand>0 ? Math.round(grand*0.5).toLocaleString()+'원 (예상)' : '—');
   var balDispEl = document.getElementById('sum-balance-disp');
   if(balDispEl) balDispEl.textContent = deposit>0 ? balance.toLocaleString()+'원' : '—';
   var discEl=document.getElementById('sum-discount');
@@ -2305,6 +2315,7 @@ function buildCustomerHTML() {
   return out;
 }
 function printForCustomer() {
+  calcTotal();
   var html = buildCustomerHTML();
   // 기존 오버레이 제거
   var existing = document.getElementById('pv-overlay');
