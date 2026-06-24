@@ -14,7 +14,7 @@
 ═══════════════════════════════════════ */
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{
-  font-family:'Pretendard', 'Pretendard', 'Apple SD Gothic Neo', 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  font-family:'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
   width:210mm;margin:0 auto;padding:0;
   background:#FAF7F5;
   font-size:15px;line-height:1.6;color:#282828
@@ -443,7 +443,8 @@ td.amt{
    고객용 미리보기 (pv-*)
 ═══════════════════════════════════════ */
 .pv-wrap{
-  font-family:'Pretendard', 'Pretendard', 'Apple SD Gothic Neo', 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  word-break:keep-all;
+  font-family:'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
   background:#fff;color:#282828;
   max-width:680px;margin:0 auto;
   border-radius:10px;overflow:hidden;
@@ -480,7 +481,7 @@ td.amt{
 }
 .pv-sch-item:last-child{border-right:none}
 /* 제품 테이블 — 공간+사이즈 분리 */
-.pv-prod-table{width:100%;border-collapse:collapse;font-size:13px}
+.pv-prod-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
 .pv-prod-table thead th{
   font-size:11px;font-weight:700;color:#6B6B6B;
   padding:8px 10px;background:#FAF7F5;
@@ -488,17 +489,18 @@ td.amt{
   white-space:nowrap;letter-spacing:0.3px
 }
 .pv-prod-table tbody td{
-  padding:10px 10px;font-size:13px;
+  padding:8px 6px;font-size:12px;
   border-bottom:1px solid #F5F0EB;
-  vertical-align:middle;line-height:1.5
+  vertical-align:top;line-height:1.5;
+  word-break:keep-all;overflow-wrap:break-word
 }
 .pv-prod-table tbody td.space{
-  font-size:13px;color:#6B6B6B;white-space:nowrap
+  font-size:12px;color:#6B6B6B;white-space:nowrap;width:40px
 }
 .pv-prod-table tbody td.sz{
   font-size:13px;color:#B0A99F;white-space:nowrap
 }
-.pv-prod-table tbody td.name{font-weight:600;color:#282828}
+.pv-prod-table tbody td.name{font-weight:600;color:#282828;width:auto}
 .pv-prod-table tbody td.spec-col{font-size:13px;color:#6B6B6B}
 .pv-prod-table tbody td.r{text-align:right}
 .pv-prod-table .sub-head td{
@@ -671,7 +673,7 @@ td.amt{
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   @page{size:A4;margin:8mm 12mm}
-  html,body{background:#fff!important;width:100%}
+  
   .doc-header-tabbar,.action-bar,.add-btn,.add-row-btns,
   .del-btn,.copy-btn,.btn-preview,.over243-wrap,
   .discount-wrap select,.sec-badge,.sec-tip,
@@ -690,24 +692,24 @@ td.amt{
   }
   /* 흑백 프린트 최적화 */
   .pv-header{background:#fff!important;border-bottom:2.5px solid #282828!important}
-  .pv-doc-label{color:#282828!important}
+  
   .pv-logo{filter:brightness(0)!important}
-  .pv-total-amount{color:#282828!important;font-weight:900!important}
-  .pv-payment-amount{color:#282828!important;font-weight:800!important}
-  .pv-payment-label{color:#282828!important}
-  .pv-step-num{background:#fff!important;color:#282828!important;border:2px solid #282828!important}
+  
+  
+  
+  
   .sum-row.total 
   .pv-prod-table .sub-head td{background:#EEE6DC!important}
-  .pv-prod-table thead th{background:#EEE6DC!important}
-  .pv-subtotals{background:#FAF7F5!important}
-  .pv-notes{background:#FAF7F5!important;border-top:1px solid #EEE6DC!important}
-  .pv-footer{background:#fff!important;border-top:2px solid #282828!important;color:#282828!important}
+  
+  
+  
+  
   .pv-footer strong{color:#282828!important}
-  .sec-title{border-left-color:#282828!important}
-  .pv-section-label{border-left-color:#282828!important;background:#EEE6DC!important}
+  
+  
   .pv-wrap{border:1.5px solid #282828!important}
-  .pv-parties{border-bottom:1px solid #EEE6DC!important}
-  .pv-party:first-child{border-right:1px solid #EEE6DC!important}
+  
+  
 }
 
 /* ── 기타 ── */
@@ -760,19 +762,19 @@ td.amt{
 /* 탭 → 헤더 탭바로 통합 */
 /* 반응형 */
 @media(max-width:768px){
-  html,body{width:100%}
+  
   
   .info-grid{grid-template-columns:1fr}
-  .doc-header{padding:18px 20px 0}
+  
   .doc-header-divider{margin:0 -20px}
   .doc-title-ko{font-size:18px;letter-spacing:0}
-  .doc-header-tabbar{flex-wrap:wrap;gap:4px}
+  
   .doc-header-tabbar-left,.doc-header-tabbar-right{gap:2px}
   .est-status-btn{padding:7px 14px;font-size:13px}
   .cust-type-btn{padding:6px 10px;font-size:13px}
 }
 @media(max-width:480px){
-  .doc-header-tabbar{flex-direction:column;align-items:flex-start}
+  
   .doc-header-tabbar-right{margin-top:2px}
 }
 /* ── 커튼 행 ── */
@@ -2147,7 +2149,7 @@ function buildCustomerHTML() {
   }
 
   // 조립
-  var out = '<div class="pv-wrap">';
+  var out = '<div class="pv-wrap" style="min-width:560px;max-width:720px;margin:0 auto">';
 
   // 1. 헤더
   out += '<div class="pv-header">'
