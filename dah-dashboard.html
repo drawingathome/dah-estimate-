@@ -110,13 +110,20 @@ body{
 }
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .kpi-card{
-  background:rgba(255,255,255,0.07);
-  border:1px solid rgba(255,255,255,0.1);
-  border-radius:10px;padding:12px 14px
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px;padding:14px 16px;
+  position:relative;overflow:hidden
 }
-.kpi-num{font-size:22px;font-weight:800;color:#fff;line-height:1;display:block;margin-bottom:5px}
-.kpi-num em{font-size:14px;font-weight:400;opacity:0.45;font-style:normal}
-.kpi-label{font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:0.5px}
+.kpi-card::before{
+  content:'';position:absolute;top:0;left:0;
+  width:3px;height:100%;background:#F06E2D
+}
+.kpi-num{font-size:26px;font-weight:800;color:#fff;line-height:1;display:block;margin-bottom:4px;letter-spacing:-0.5px}
+.kpi-num em,.kpi-num-unit{font-size:11px;font-weight:500;opacity:0.5;font-style:normal;letter-spacing:0.5px}
+.kpi-label{font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase;font-weight:500;margin-bottom:4px;display:block}
+.kpi-progress-wrap{height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:8px}
+.kpi-progress-bar{height:3px;background:#F06E2D;border-radius:2px;transition:width 0.5s ease}
 
 /* ── 단계칩 ── */
 .stage-chips{display:flex;gap:5px}
@@ -143,12 +150,17 @@ body{
 }
 .tabs::-webkit-scrollbar{display:none}
 .tab{
-  flex:1;min-width:52px;height:44px;
-  font-size:14px;font-weight:600;font-family:inherit;
+  flex:1;min-width:44px;height:46px;
+  font-size:12px;font-weight:600;font-family:inherit;
   color:#B0A99F;background:none;border:none;
   border-bottom:2px solid transparent;
-  cursor:pointer;white-space:nowrap
+  cursor:pointer;white-space:nowrap;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;
+  padding:0
 }
+.tab-icon{font-size:15px;line-height:1}
+.tab-lbl{font-size:10px;letter-spacing:0.2px}
 .tab.on,.tab.active{color:#F06E2D;border-bottom-color:#F06E2D;font-weight:700}
 
 /* ── 오늘 날짜 배너 ── */
@@ -560,10 +572,12 @@ body{
 <div class="kpi-bar" id="kpi-bar">
   <div class="kpi-grid">
     <div class="kpi-card">
-      <span class="kpi-num" id="hd-kpi-rev">—<em class="kpi-num-unit">만원</em></span>
       <span class="kpi-label">이번 달 매출</span>
+      <span class="kpi-num" id="hd-kpi-rev">—<em class="kpi-num-unit">만원</em></span>
+      <div class="kpi-progress-wrap"><div class="kpi-progress-bar" id="kpi-rev-bar" style="width:0%"></div></div>
     </div>
     <div class="kpi-card">
+      <span class="kpi-label">계약/상담</span>
       <span class="kpi-num" id="hd-kpi-con">—<em>건</em></span>
       <span class="kpi-label">계약 / 상담</span>
     </div>
@@ -571,11 +585,11 @@ body{
   <div class="stage-chips" id="hd-stages-bar"></div>
 </div>
 <div class="tabs">
-  <button class="tab on" data-tab="home">홈</button>
-  <button class="tab" data-tab="pipe">진행현황</button>
-  <button class="tab" data-tab="search">고객목록</button>
-  <button class="tab" data-tab="cal">일정</button>
-  <button class="tab" data-tab="chart">매출</button>
+  <button class="tab on" data-tab="home"><span class="tab-icon">🏠</span><span class="tab-lbl">홈</span></button>
+  <button class="tab" data-tab="pipe"><span class="tab-icon">📋</span><span class="tab-lbl">진행</span></button>
+  <button class="tab" data-tab="search"><span class="tab-icon">👥</span><span class="tab-lbl">고객</span></button>
+  <button class="tab" data-tab="cal"><span class="tab-icon">📅</span><span class="tab-lbl">일정</span></button>
+  <button class="tab" data-tab="chart"><span class="tab-icon">📊</span><span class="tab-lbl">매출</span></button>
   <button class="tab" data-tab="settings">설정</button>
 </div>
 
@@ -677,64 +691,26 @@ body{
     <!-- 폼 본문 -->
     <div style="padding:20px 20px 0">
 
-      <!-- 기본 정보 -->
+      <!-- 안내 -->
+      <div style="background:#FFF8F5;border:1px solid #F06E2D;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:#6B6B6B;line-height:1.6">
+        ✔ 네이버 예약 정보만 입력하세요<br>
+        나머지 정보는 상담 후 고객 상세에서 추가할 수 있어요
+      </div>
+
+      <!-- 필수 정보 (3개만) -->
       <div style="background:#fff;border-radius:10px;padding:16px 16px 4px;margin-bottom:12px;border:1px solid #EEE6DC">
-        <div style="font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">기본 정보</div>
+        <div style="font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">예약 정보</div>
         <div class="form-row">
           <label class="form-label">고객명 <span class="form-required">*</span></label>
           <input class="form-input" id="add-name" placeholder="홍길동">
         </div>
         <div class="form-row">
           <label class="form-label">연락처 <span class="form-required">*</span></label>
-          <input class="form-input" id="add-phone" placeholder="010-0000-0000">
+          <input class="form-input" id="add-phone" placeholder="010-0000-0000" inputmode="numeric">
         </div>
         <div class="form-row">
-          <label class="form-label">주소</label>
-          <div style="display:flex;gap:6px">
-            <input class="form-input" id="add-addr" placeholder="서울 서초구 반포동" style="flex:1;min-width:0">
-            <button type="button" onclick="openKakaoAddr('add-addr')"
-              style="padding:0 14px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0">
-              🔍 검색
-            </button>
-          </div>
-        </div>
-        <div class="form-row">
-          <label class="form-label">공간·품목</label>
-          <input class="form-input" id="add-space" placeholder="예) 거실+안방, 블라인드">
-        </div>
-        <div class="form-row">
-          <label class="form-label">메모</label>
-          <input class="form-input" id="add-memo" placeholder="레일 재활용, 샤시 간섭 등">
-        </div>
-      </div>
-
-      <!-- 일정 & 단계 -->
-      <div style="background:#fff;border-radius:10px;padding:16px 16px 4px;margin-bottom:12px;border:1px solid #EEE6DC">
-        <div style="font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">일정 & 단계</div>
-        <div class="form-row">
-          <label class="form-label">단계</label>
-          <select class="form-input" id="add-stage">
-            <option value="상담">① 상담</option>
-            <option value="계약금">② 계약금 납부</option>
-            <option value="실측">③ 실측 예정</option>
-            <option value="잔금">④ 잔금 대기</option>
-            <option value="시공">⑤ 시공 예정</option>
-            <option value="완료">⑥ 시공 완료</option>
-          </select>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div class="form-row">
-            <label class="form-label">상담일</label>
-            <input class="form-input" type="date" id="add-date" style="padding:10px 8px;font-size:14px">
-          </div>
-          <div class="form-row">
-            <label class="form-label">실측 예정일</label>
-            <input class="form-input" type="date" id="add-measure" style="padding:10px 8px;font-size:14px">
-          </div>
-        </div>
-        <div class="form-row" style="margin-top:10px;padding-bottom:4px">
-          <label class="form-label">시공 예정일</label>
-          <input class="form-input" type="date" id="add-install" style="padding:10px 8px;font-size:14px">
+          <label class="form-label">방문 예정일 <span class="form-required">*</span></label>
+          <input class="form-input" type="date" id="add-date" style="padding:10px 8px;font-size:14px">
         </div>
       </div>
 
@@ -744,8 +720,17 @@ body{
         <div id="staff-btn-wrap" style="display:flex;gap:8px"></div>
       </div>
 
+      <!-- 숨겨진 필드 (수정 모드용) -->
+      <input type="hidden" id="add-addr" value="">
+      <input type="hidden" id="add-space" value="">
+      <input type="hidden" id="add-memo" value="">
+      <input type="hidden" id="add-stage" value="상담">
+      <input type="hidden" id="add-measure" value="">
+      <input type="hidden" id="add-install" value="">
+
       <!-- 저장 버튼 -->
-      <button id="add-save-btn" style="width:100%;padding:14px;background:#282828;color:#fff;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:8px;letter-spacing:0.5px">저장</button>
+      <button id="add-save-btn" style="width:100%;padding:14px;background:#F06E2D;color:#fff;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:8px;letter-spacing:0.5px">저장 + 예약확인 알림톡 발송</button>
+      <button id="add-save-only-btn" style="width:100%;padding:12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:16px">저장만 하기</button>
     </div>
   </div>
 </div>
@@ -1049,6 +1034,10 @@ function updateHdKpi(allCustomers) {
   var revEl = document.getElementById('hd-kpi-rev');
   var conEl = document.getElementById('hd-kpi-con');
   if (revEl) revEl.innerHTML = Math.round(totalRev/10000).toLocaleString() + '<span class="kpi-num-unit">만원</span>';
+  var goal = parseInt(localStorage.getItem('dah_goal_마스터')||'50000000');
+  var pct = goal > 0 ? Math.min(100, Math.round(totalRev/goal*100)) : 0;
+  var barEl = document.getElementById('kpi-rev-bar');
+  if (barEl) barEl.style.width = pct + '%';
   if (conEl) conEl.innerHTML = contracted.length + '<span>/'+monthC.length+'건</span>';
 
   // 단계 현황 바
@@ -2108,6 +2097,8 @@ function openAdd(editName) {
   editingCustomerName = editName || null;
   document.getElementById('add-modal-title').textContent = editName ? '고객 정보 수정' : '고객 추가';
   if (editName) {
+    // 수정 모드: 전체 필드 표시
+    document.getElementById('add-modal-title').textContent = '고객 정보 수정';
     var arr = loadCustomers(); var c = arr.find(function(x) { return x.clientName === editName; });
     if (c) { document.getElementById('add-name').value = c.clientName; document.getElementById('add-phone').value = c.phone || ''; document.getElementById('add-addr').value = c.addr || ''; document.getElementById('add-space').value = c.space || ''; document.getElementById('add-stage').value = c.stage || '상담'; document.getElementById('add-date').value = c.date || todayStr(); document.getElementById('add-memo').value = c.memo || ''; document.getElementById('add-measure').value = c.measureDate || ''; document.getElementById('add-install').value = c.installDate || ''; }
   } else { document.getElementById('add-name').value = ''; document.getElementById('add-phone').value = ''; document.getElementById('add-addr').value = ''; document.getElementById('add-space').value = ''; document.getElementById('add-stage').value = '상담'; document.getElementById('add-date').value = todayStr(); document.getElementById('add-memo').value = ''; document.getElementById('add-measure').value = ''; document.getElementById('add-install').value = ''; }
@@ -2491,6 +2482,9 @@ document.getElementById('btn-master-login').addEventListener('click', function()
 document.getElementById('btn-master-confirm').addEventListener('click', function() { var pw = document.getElementById('master-pw-input').value; if (pw === MASTER_PW) { document.getElementById('master-pw-wrap').style.display = 'none'; loginAs('master'); } else { document.getElementById('master-pw-error').style.display = 'block'; document.getElementById('master-pw-input').value = ''; document.getElementById('master-pw-input').focus(); } });
 document.getElementById('master-pw-input').addEventListener('keydown', function(e) { if (e.keyCode === 13) document.getElementById('btn-master-confirm').click(); });
 document.getElementById('add-close-btn').addEventListener('click', closeAdd);
+document.getElementById('add-save-only-btn').addEventListener('click', function() {
+  document.getElementById('add-save-btn').click();
+});
 document.getElementById('detail-close-btn').addEventListener('click', closeDetail);
 document.getElementById('add-save-btn').addEventListener('click', saveCustomer);
 document.getElementById('add-phone').addEventListener('input', function() { this.value = fmtPhone(this.value); });
