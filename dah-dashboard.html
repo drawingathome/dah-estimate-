@@ -2,10 +2,15 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" crossorigin>
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>드로잉엣홈 대시보드</title>
 <style>
-@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+
+/* ── 폰트 시스템 */
+:root{--font-base:'Pretendard','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif}
+
 /* ============================================
    드로잉엣홈 대시보드 — CSS v2 (전문기업급)
    컨셉: 고급 인테리어 브랜드 내부 운영툴
@@ -16,7 +21,7 @@
 /* ── 리셋 ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{
-  font-family:'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  font-family:var(--font-base)var(--font-base);
   background:#F5F0EB;
   color:#282828;
   font-size:15px;
@@ -65,7 +70,7 @@ body{
 .user-btn-icon{font-size:22px;flex-shrink:0}
 .user-btn-name{display:block;font-size:15px;font-weight:700;color:#282828;margin-bottom:2px}
 .user-btn-desc{display:block;font-size:12px;color:#B0A99F}
-.master-pw-wrap{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.master-pw-wrap{margin-top:16px;display:flex;flex-direction:column;gap:8px}
 .master-pw-wrap input{
   width:100%;height:42px;padding:0 14px;
   border:1.5px solid #EEE6DC;border-radius:10px;
@@ -109,7 +114,7 @@ body{
   padding:12px 16px 14px;
   position:sticky;top:56px;z-index:99
 }
-.kpi-grid{display:grid;grid-template-columns:3fr 2fr;gap:8px;margin-bottom:10px}
+.kpi-grid{display:grid;grid-template-columns:3fr 2fr;gap:8px;margin-bottom:8px}
 .kpi-card{
   background:rgba(255,255,255,0.05);
   border:1px solid rgba(255,255,255,0.07);
@@ -119,7 +124,7 @@ body{
 
 .kpi-num{font-size:28px;font-weight:900;color:#fff;line-height:1;display:block;margin-bottom:2px;letter-spacing:-1px}
 .kpi-num em,.kpi-num-unit{font-size:13px;font-weight:400;opacity:0.45;font-style:normal;letter-spacing:0}
-.kpi-label{font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:1.5px;text-transform:uppercase;font-weight:600;margin-bottom:6px;display:block}
+.kpi-label{font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:1.5px;text-transform:uppercase;font-weight:600;margin-bottom:8px;display:block}
 .kpi-progress-wrap{display:none}
 .kpi-progress-bar{display:none}
 
@@ -271,7 +276,7 @@ body{
 .stat-item:last-child{border-right:none}
 .stat-val{
   font-size:14px;font-weight:800;color:#282828;
-  display:block;margin-bottom:3px;
+  display:block;margin-bottom:4px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
 .stat-lbl{font-size:11px;color:#B0A99F;letter-spacing:0.3px}
@@ -316,7 +321,7 @@ body{
   cursor:pointer
 }
 .pipe-item:last-child{border-bottom:none}
-.pipe-item:active{background:#FAF7F5}
+
 .pipe-left{flex:1;min-width:0}
 .pipe-name{
   font-size:15px;font-weight:700;color:#282828;
@@ -325,7 +330,7 @@ body{
 }
 .pipe-sub{font-size:13px;color:#B0A99F}
 .pipe-right{text-align:right;flex-shrink:0;margin-left:12px}
-.pipe-price{font-size:15px;font-weight:700;color:#282828;margin-bottom:3px}
+.pipe-price{font-size:15px;font-weight:700;color:#282828;margin-bottom:4px}
 .pipe-date{font-size:12px;color:#B0A99F}
 
 /* ── 단계 pill 뱃지 ── */
@@ -357,7 +362,7 @@ body{
 .archived-check{
   display:flex;align-items:center;gap:7px;
   font-size:13px;color:#B0A99F;cursor:pointer;
-  margin-top:9px
+  margin-top:8px
 }
 .archived-check input[type="checkbox"]{width:14px;height:14px;accent-color:#282828;cursor:pointer}
 .cust-item{
@@ -424,7 +429,7 @@ body{
 .cal-ev-info{flex:1;min-width:0}
 .cal-ev-name{
   font-size:15px;font-weight:700;color:#282828;
-  margin-bottom:3px;
+  margin-bottom:4px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
 .cal-ev-sub{font-size:13px;color:#B0A99F}
@@ -470,7 +475,7 @@ body{
 /* ── 고객추가 폼 ── */
 .form-row{margin-bottom:16px}
 .form-row:last-child{margin-bottom:0}
-.form-label{font-size:12px;font-weight:700;color:#6B6B6B;display:block;margin-bottom:6px;letter-spacing:0.3px}
+.form-label{font-size:12px;font-weight:700;color:#6B6B6B;display:block;margin-bottom:8px;letter-spacing:0.3px}
 .form-required{color:#F06E2D}
 .form-input{
   width:100%;height:44px;padding:0 14px;
@@ -525,16 +530,16 @@ body{
 }
 
 /* ── 터치 피드백 ── */
-button:active{opacity:0.75;transform:scale(0.97);transition:transform 0.08s}
-.hd-btn:active{transform:scale(0.95)}
-.tab:active{opacity:0.6}
 
-.action-item:active{background:#F5F0EB}
+
+
+
+
 
 /* ── 빈 상태 ── */
 .empty-state{text-align:center;padding:48px 24px}
 .empty-state-emoji{font-size:36px;margin-bottom:12px}
-.empty-state-title{font-size:15px;font-weight:700;color:#282828;margin-bottom:6px}
+.empty-state-title{font-size:15px;font-weight:700;color:#282828;margin-bottom:8px}
 .empty-state-desc{font-size:13px;color:#B0A99F;line-height:1.6}
 
 /* ── 포커스 ── */
@@ -550,7 +555,7 @@ input:focus,select:focus,textarea:focus{
   background:#fff;
   border-left:3px solid #E65100;
   border-radius:0 8px 8px 0;
-  margin-bottom:6px
+  margin-bottom:8px
 }
 .notice-item{
   display:flex;align-items:flex-start;
@@ -590,7 +595,7 @@ input:focus,select:focus,textarea:focus{
 }
 .kpi-sub-row{
   display:flex;justify-content:space-between;
-  align-items:center;margin-top:5px
+  align-items:center;margin-top:4px
 }
 .kpi-sub-pct{
   font-size:11px;color:rgba(255,255,255,0.6);font-weight:700
@@ -598,6 +603,85 @@ input:focus,select:focus,textarea:focus{
 .kpi-sub-goal{
   font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:0.3px
 }
+
+/* ══ 마이크로 애니메이션 ══ */
+
+/* 1. 모든 버튼 — press 효과 */
+button{transition:transform 0.1s ease,opacity 0.1s ease,box-shadow 0.1s ease}
+button:active{transform:scale(0.96);opacity:0.85}
+
+/* 2. 주요 버튼 — 더 강한 피드백 */
+.btn-save:active{transform:scale(0.97);box-shadow:0 1px 4px rgba(0,0,0,0.2)}
+.btn-print:active{transform:scale(0.97)}
+.hd-btn:active{transform:scale(0.95)}
+
+/* 3. 카드/리스트 아이템 hover */
+.pipe-item{transition:background 0.15s ease,transform 0.1s ease}
+.pipe-item:hover{background:#F8F4F1;transform:translateX(2px)}
+.action-item{transition:background 0.15s ease}
+.action-item:hover{background:#FFF8F5}
+.cust-load-item{transition:background 0.12s ease}
+.cust-load-item:hover{background:#F5F0EB}
+
+/* 4. 탭 전환 */
+.est-status-btn{transition:all 0.2s ease}
+.est-status-btn.on{transition:all 0.2s ease}
+.tab{transition:color 0.15s ease}
+.tab.on::after{transition:width 0.2s ease}
+
+/* 5. 입력 필드 포커스 */
+.info-item{transition:background 0.15s ease}
+.info-item:focus-within{background:#FAFAF8}
+input,select,textarea{transition:border-color 0.15s ease}
+
+/* 6. 섹션 등장 */
+@keyframes fadeSlideUp{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.section{animation:fadeSlideUp 0.25s ease both}
+.card{animation:fadeSlideUp 0.2s ease both}
+
+/* 7. 합계 숫자 변경 pulse */
+@keyframes numPulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.04)}
+  100%{transform:scale(1)}
+}
+.summary-total-amount.updated{animation:numPulse 0.3s ease}
+
+/* 8. 토스트 — 이미 있지만 강화 */
+@keyframes fadeInUp{
+  from{opacity:0;transform:translateX(-50%) translateY(12px)}
+  to{opacity:1;transform:translateX(-50%) translateY(0)}
+}
+@keyframes fadeOutDown{
+  from{opacity:1;transform:translateX(-50%) translateY(0)}
+  to{opacity:0;transform:translateX(-50%) translateY(8px)}
+}
+
+/* 9. notice-card 알림 등장 */
+.notice-card{animation:fadeSlideUp 0.2s ease both}
+.notice-item{transition:background 0.12s ease}
+
+/* 10. 스크롤 힌트 페이드 */
+.tbl-outer::after{transition:opacity 0.2s ease}
+
+/* 11. KPI 카드 숫자 */
+.kpi-num{transition:color 0.3s ease}
+.rev-bar-fill{transition:width 0.6s cubic-bezier(0.4,0,0.2,1)}
+
+/* 12. stage-pill hover */
+.stage-pill{transition:all 0.15s ease;cursor:default}
+.pipe-item .stage-pill{cursor:pointer}
+.pipe-item .stage-pill:hover{opacity:0.8}
+
+/* 대시보드 전용 마이크로 */
+.hd-btn{transition:all 0.15s ease}
+.hd-btn:hover{opacity:0.85}
+.sc{transition:background 0.1s ease,color 0.1s ease}
+.sc.on{transition:all 0.15s ease}
+.chart-tab{transition:color 0.15s ease,border-bottom 0.15s ease}
 </style>
 </head>
 <body>
