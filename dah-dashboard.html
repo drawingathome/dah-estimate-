@@ -93,7 +93,7 @@ body{
 .hd-right{display:flex;align-items:center;gap:8px}
 .hd-badge{font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:0.3px;flex-shrink:0}
 .hd-btn{
-  height:32px;padding:0 13px;
+  height:40px;padding:0 13px;
   font-size:12px;font-weight:600;font-family:inherit;
   border-radius:6px;cursor:pointer;
   white-space:nowrap;border:none;flex-shrink:0;
@@ -1760,11 +1760,14 @@ function renderChart(period) {
   // 매출 계산
   var revenues = periods.map(function(p) {
     return customers.filter(function(c) {
-      if (!c.date || c.stage === '상담') return false;
-      if (currentChartPeriod === 'daily') return c.date === p.key;
-      if (currentChartPeriod === 'weekly') return c.date >= p.key && c.date <= p.endKey;
-      if (currentChartPeriod === 'monthly') return c.date.slice(0,7) === p.key;
-      if (currentChartPeriod === 'yearly') return c.date.slice(0,4) === p.key;
+      var cDate = c.date || (c.createdAt||'').slice(0,10);
+      if (!cDate) return false;
+      if (c.stage === '상담' || !c.price || c.price <= 0) return false;
+      var useDate = cDate;
+      if (currentChartPeriod === 'daily') return useDate === p.key;
+      if (currentChartPeriod === 'weekly') return useDate >= p.key && useDate <= p.endKey;
+      if (currentChartPeriod === 'monthly') return useDate.slice(0,7) === p.key;
+      if (currentChartPeriod === 'yearly') return useDate.slice(0,4) === p.key;
     }).reduce(function(s,c) { return s+(Number(c.price)||0); }, 0);
   });
 
@@ -1841,10 +1844,11 @@ function renderChart(period) {
   // 현재 기간 요약
   var currentCustomers = customers.filter(function(c) {
     if (!c.date) return false;
-    if (currentChartPeriod === 'daily') return c.date === currentKey;
-    if (currentChartPeriod === 'weekly') { var p = periods[periods.length-1]; return c.date >= p.key && c.date <= p.endKey; }
-    if (currentChartPeriod === 'monthly') return c.date.slice(0,7) === currentKey;
-    if (currentChartPeriod === 'yearly') return c.date.slice(0,4) === currentKey;
+    var _cd = c.date || (c.createdAt||'').slice(0,10);
+    if (currentChartPeriod === 'daily') return _cd === currentKey;
+    if (currentChartPeriod === 'weekly') { var p = periods[periods.length-1]; return _cd >= p.key && _cd <= p.endKey; }
+    if (currentChartPeriod === 'monthly') return _cd.slice(0,7) === currentKey;
+    if (currentChartPeriod === 'yearly') return _cd.slice(0,4) === currentKey;
   });
   var curRev = currentCustomers.filter(function(c){return c.stage!=='상담';}).reduce(function(s,c){return s+(Number(c.price)||0);},0);
   var curPerf = currentCustomers.filter(function(c){return c.stage!=='상담';}).reduce(function(s,c){return s+(Number(c.performanceRevenue)||0);},0);
