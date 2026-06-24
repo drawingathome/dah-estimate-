@@ -132,10 +132,11 @@ html,body{
 /* ── 섹션 카드 ── */
 .section{
   background:#fff;
-  border-radius:6px;
-  padding:22px 28px;
-  margin-bottom:8px;
-  border:1px solid #EEE6DC
+  border-radius:0;
+  padding:20px 16px;
+  margin-bottom:10px;
+  border-top:1px solid #EEE6DC;
+  border-bottom:1px solid #EEE6DC
 }
 .sec-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:6px}
 .sec-title{
@@ -362,7 +363,7 @@ td.amt{
 .summary-sub-amount{
   font-size:15px;font-weight:700;color:rgba(255,255,255,0.85);letter-spacing:-0.3px
 }
-.summary-sub-amount.orange{color:#F06E2D;font-size:17px}
+.summary-sub-amount.orange{color:#282828;font-size:17px}
 .action-bar{
   background:#FAF7F5;border-top:1px solid #EEE6DC;
   padding:16px 16px 24px;
@@ -501,20 +502,16 @@ td.amt{
 .pv-prod-table tbody td.name{font-weight:600;color:#282828;width:auto}
 .pv-prod-table tbody td.spec-col{font-size:13px;color:#6B6B6B}
 .pv-prod-table tbody td.r{text-align:right}
-.pv-prod-table .sub-head td{
-  background:#F5F0EB;font-size:15px;font-weight:800;
-  color:#B0A99F;letter-spacing:1.5px;padding:6px 10px;
-  border-bottom:1px solid #F5F0EB
-}
+.pv-prod-table .sub-head td{background:#D0C8BE;color:#282828;font-size:11px;font-weight:900;letter-spacing:3px}
 /* 소계/합계 */
 .pv-sum-table{width:100%;font-size:14px}
 .pv-sum-table td{padding:8px 28px}
 .pv-sum-table .total-row td{
-  padding:14px 28px;font-size:15px;font-weight:800;
-  border-top:2px solid #282828
+  padding:16px 28px;font-size:15px;font-weight:800;
+  background:#282828;border-top:none
 }
-.pv-sum-table .total-row .sum-lbl{color:#282828}
-.pv-sum-table .total-row .sum-val{color:#282828;font-size:18px;font-weight:800}
+.pv-sum-table .total-row .sum-lbl{color:rgba(255,255,255,0.6);font-weight:500;font-size:13px}
+.pv-sum-table .total-row .sum-val{color:#fff;font-size:22px;font-weight:900;letter-spacing:-0.5px;font-size:18px;font-weight:800}
 /* 참고사항 */
 .pv-notes{
   padding:16px 28px;background:#F5F0EB;
@@ -618,11 +615,10 @@ td.amt{
 .pv-total-wrap{
   display:flex;justify-content:space-between;align-items:baseline;
   background:#282828;
-  padding:18px 28px;border-bottom:2px solid #282828;
-  background:#fff
+  padding:20px 28px
 }
-.pv-total-label{font-size:15px;font-weight:700;color:#282828}
-.pv-total-amount{font-size:22px;font-weight:800;color:#282828;letter-spacing:-1px}
+.pv-total-label{font-size:13px;font-weight:500;color:rgba(255,255,255,0.55);letter-spacing:0.5px}
+.pv-total-amount{font-size:26px;font-weight:900;color:#fff;letter-spacing:-1.5px}
 
 /* 계약금/잔금 */
 .pv-payment-split{
@@ -697,7 +693,7 @@ td.amt{
   
   
   .sum-row.total 
-  .pv-prod-table .sub-head td{background:#EEE6DC!important}
+  .pv-prod-table .sub-head td{background:#D0C8BE;color:#282828;font-size:11px;font-weight:900;letter-spacing:3px}
   
   
   
