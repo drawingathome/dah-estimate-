@@ -541,6 +541,43 @@ button:active{opacity:0.75;transform:scale(0.97);transition:transform 0.08s}
 input:focus,select:focus,textarea:focus{
   outline:2px solid #282828;outline-offset:1px;border-radius:4px
 }
+
+.alim-tag.알림{background:#FFF3E0;color:#E65100;border:1px solid #FFB74D;font-weight:700}
+.alim-tag.자동{background:#282828;color:#fff}
+
+/* ── 오늘 챙길 알림 섹션 ── */
+.notice-card{
+  background:#fff;
+  border-left:3px solid #E65100;
+  border-radius:0 8px 8px 0;
+  margin-bottom:6px
+}
+.notice-item{
+  display:flex;align-items:flex-start;
+  justify-content:space-between;
+  padding:14px 16px;
+  border-bottom:1px solid #F5F0EB;
+  cursor:pointer;gap:10px
+}
+.notice-item:last-child{border-bottom:none}
+.notice-item:active{background:#FFF8F5}
+.notice-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:#E65100;color:#fff;
+  font-size:10px;font-weight:800;
+  border-radius:10px;padding:2px 7px;
+  flex-shrink:0;margin-top:1px
+}
+.notice-name{font-size:14px;font-weight:700;color:#282828;margin-bottom:2px}
+.notice-msg{font-size:12px;color:#6B6B6B;line-height:1.5}
+.notice-send-btn{
+  background:#282828;color:#fff;
+  border:none;border-radius:6px;
+  font-size:12px;font-weight:700;font-family:inherit;
+  padding:7px 12px;cursor:pointer;
+  flex-shrink:0;white-space:nowrap;min-height:44px
+}
+.notice-send-btn:active{background:#444}
 </style>
 </head>
 <body>
@@ -796,15 +833,15 @@ var ALIM_META = {
   t02_reminder:       {label:'2. 방문 1일 전 리마인더',desc:'자동 · 방문일 D-1',        tag:'자동'},
   t03_estimate:       {label:'3. 가견적서 발송',       desc:'수동 · 상담 당일',         tag:'수동'},
   t31_deposit:        {label:'3-1. 계약금 결제 요청',  desc:'수동 · 가견적서 발송 후',  tag:'수동'},
-  t04_followup:       {label:'4. 팔로업',             desc:'자동 · 상담 2일 후',        tag:'자동'},
+  t04_followup:       {label:'4. 팔로업',             desc:'알림 · 상담 2일 후',        tag:'알림'},
   t05_measure_confirm:{label:'5. 실측 일정 확정',      desc:'수동 · 계약금 납부 후',    tag:'수동'},
-  t06_measure_dday:   {label:'6. 실측 하루 전 안내',   desc:'자동 · 실측일 D-1',        tag:'자동'},
+  t06_measure_dday:   {label:'6. 실측 하루 전 안내',   desc:'알림 · 실측일 D-1',        tag:'알림'},
   t07_final_estimate: {label:'7. 확정견적서 발송',     desc:'수동 · 실측 완료 후',      tag:'수동'},
   t71_balance_request:{label:'7-1. 잔금 결제 요청',    desc:'수동 · 확정견적서 확인 후',tag:'수동'},
-  t08_balance_remind: {label:'8. 잔금 리마인드',       desc:'선택 · 미납 시',           tag:'선택'},
+  t08_balance_remind: {label:'8. 잔금 리마인드',       desc:'알림 · 미납 2일 후',       tag:'알림'},
   t09_order_confirm:  {label:'9. 발주 확정+제작 안내', desc:'수동 · 잔금 완납 후',      tag:'수동'},
   t10_install_confirm:{label:'10. 시공 일정 확정',     desc:'수동 · 제작 완료 후',      tag:'수동'},
-  t11_install_dday:   {label:'11. 시공 전날 안내',     desc:'자동 · 시공일 D-1',        tag:'자동'},
+  t11_install_dday:   {label:'11. 시공 전날 안내',     desc:'알림 · 시공일 D-1',        tag:'알림'},
   t12_after_install:  {label:'12. 시공 후 안부',       desc:'자동 · 시공일 D+3',        tag:'자동'},
   t13_cancel:         {label:'13. 취소 안내',          desc:'선택 · 취소 시',           tag:'선택'},
   t14_noshow:         {label:'14. 노쇼 재예약 안내',   desc:'선택 · 노쇼 처리 후',      tag:'선택'}
@@ -1114,6 +1151,116 @@ function renderHome() {
   estBtnInner.textContent = '+ 새 견적서 작성';
   estBtnInner.addEventListener('click', function(){ openEstimate(null); });
   wrap.appendChild(estBtnInner);
+
+  /* ── 오늘 챙길 알림 (알림 태그 항목) ── */
+  var notices = [];
+  customers.forEach(function(c) {
+    var name = c.clientName;
+
+    // t04: 팔로업 — 상담 2일 후 미발송
+    if (c.stage === '상담' && c.date && daysDiff(c.date) >= 2) {
+      var k4 = 'dah_kakao_'+name+'_t04_followup';
+      var sent4 = false; try { sent4 = !!localStorage.getItem(k4); } catch(e){}
+      if (!sent4) notices.push({
+        name: name, space: c.space||'—',
+        key: 't04_followup',
+        label: ALIM_META['t04_followup'].label,
+        msg: '상담 '+daysDiff(c.date)+'일 경과 · 팔로업 발송 필요',
+        urgency: daysDiff(c.date) >= 5 ? 2 : 1
+      });
+    }
+
+    // t06: 실측 D-1
+    if (c.measureDate && daysDiff(c.measureDate) === 1) {
+      var k6 = 'dah_kakao_'+name+'_t06_measure_dday';
+      var sent6 = false; try { sent6 = !!localStorage.getItem(k6); } catch(e){}
+      if (!sent6) notices.push({
+        name: name, space: c.space||'—',
+        key: 't06_measure_dday',
+        label: ALIM_META['t06_measure_dday'].label,
+        msg: '내일 실측 예정 · 리마인드 발송 필요',
+        urgency: 2
+      });
+    }
+
+    // t08: 잔금 리마인드 — 잔금 단계 2일+
+    if (c.stage === '잔금' && c.date && daysDiff(c.date) >= 2) {
+      var k8 = 'dah_kakao_'+name+'_t08_balance_remind';
+      var sent8 = false; try { sent8 = !!localStorage.getItem(k8); } catch(e){}
+      if (!sent8) notices.push({
+        name: name, space: c.space||'—',
+        key: 't08_balance_remind',
+        label: ALIM_META['t08_balance_remind'].label,
+        msg: '잔금 미납 '+daysDiff(c.date)+'일 경과 · 리마인드 발송 필요',
+        urgency: daysDiff(c.date) >= 5 ? 2 : 1
+      });
+    }
+
+    // t11: 시공 D-1
+    if (c.installDate && daysDiff(c.installDate) === 1) {
+      var k11 = 'dah_kakao_'+name+'_t11_install_dday';
+      var sent11 = false; try { sent11 = !!localStorage.getItem(k11); } catch(e){}
+      if (!sent11) notices.push({
+        name: name, space: c.space||'—',
+        key: 't11_install_dday',
+        label: ALIM_META['t11_install_dday'].label,
+        msg: '내일 시공 예정 · 전날 안내 발송 필요',
+        urgency: 2
+      });
+    }
+  });
+  notices.sort(function(a,b){ return b.urgency - a.urgency; });
+
+  if (notices.length > 0) {
+    var noticeWrap = el('div', {class:'card notice-card'});
+    var noticeHd = el('div', {class:'card-head'});
+    var noticeHdRow = el('div', {class:'card-head-row'});
+    var noticeLbl = el('span', {class:'card-title'});
+    noticeLbl.textContent = '🔔 오늘 챙길 알림';
+    var noticeCnt = el('span', {class:'card-count'});
+    noticeCnt.textContent = notices.length + '건';
+    noticeHdRow.appendChild(noticeLbl); noticeHdRow.appendChild(noticeCnt);
+    noticeHd.appendChild(noticeHdRow); noticeWrap.appendChild(noticeHd);
+
+    notices.forEach(function(n, ni) {
+      var isLast = ni === notices.length - 1;
+      var row = el('div', {class:'notice-item'});
+      if (isLast) row.style.borderBottom = 'none';
+
+      var left = el('div', {style:'flex:1;min-width:0'});
+      var nameRow = el('div', {class:'notice-name'});
+      nameRow.textContent = n.name + ' · ' + n.space;
+      var msgRow = el('div', {class:'notice-msg'});
+      msgRow.innerHTML = '<span class="notice-badge">'+n.label.split('.')[0]+'</span> ' + n.msg;
+      left.appendChild(nameRow); left.appendChild(msgRow);
+
+      var sendBtn = el('button', {class:'notice-send-btn'});
+      sendBtn.textContent = '발송';
+      (function(nn) {
+        sendBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (!confirm('['+ALIM_META[nn.key].label+'] 알림톡을 발송할까요?')) return;
+          try {
+            localStorage.setItem('dah_kakao_'+nn.name+'_'+nn.key, new Date().toISOString());
+            var logs = JSON.parse(localStorage.getItem('dah_kakao_log')||'[]');
+            var now = new Date();
+            logs.unshift({name:nn.name, type:nn.key, label:ALIM_META[nn.key].label,
+              date:(now.getMonth()+1)+'월 '+now.getDate()+'일',
+              time:now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
+              method:'알림'});
+            localStorage.setItem('dah_kakao_log', JSON.stringify(logs.slice(0,200)));
+          } catch(e){}
+          showToast(ALIM_META[nn.key].label+' 발송 완료 ✅');
+          renderHome();
+        });
+      })(n);
+
+      row.appendChild(left); row.appendChild(sendBtn);
+      row.addEventListener('click', function(){ openDetail(n.name); });
+      noticeWrap.appendChild(row);
+    });
+    wrap.appendChild(noticeWrap);
+  }
 
   /* ── 처리 필요 ── */
   var alerts = [];
