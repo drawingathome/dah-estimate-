@@ -788,6 +788,35 @@ function openKakaoAddr(targetId) {
 }
 
 var STAGES = ['상담','계약금','실측','잔금','시공','완료'];
+var STAGES_ALL = ['상담','계약금','실측','잔금','시공','완료','취소','노쇼'];
+
+// 17개 알림톡 템플릿 단계별 매핑
+var STAGE_ALIM = {
+  상담:   ['t01_reservation','t02_reminder','t03_estimate','t04_followup'],
+  계약금: ['t03_estimate','t31_deposit','t05_measure_confirm'],
+  실측:   ['t05_measure_confirm','t06_measure_dday','t07_final_estimate','t71_balance_request'],
+  잔금:   ['t71_balance_request','t08_balance_remind','t09_order_confirm'],
+  시공:   ['t09_order_confirm','t10_install_confirm','t11_install_dday'],
+  완료:   ['t12_after_install','t13_cancel','t14_noshow']
+};
+var ALIM_META = {
+  t01_reservation:    {label:'1. 예약확인',           desc:'수동 · 예약 즉시',         tag:'수동'},
+  t02_reminder:       {label:'2. 방문 1일 전 리마인더',desc:'자동 · 방문일 D-1',        tag:'자동'},
+  t03_estimate:       {label:'3. 가견적서 발송',       desc:'수동 · 상담 당일',         tag:'수동'},
+  t31_deposit:        {label:'3-1. 계약금 결제 요청',  desc:'수동 · 가견적서 발송 후',  tag:'수동'},
+  t04_followup:       {label:'4. 팔로업',             desc:'자동 · 상담 2일 후',        tag:'자동'},
+  t05_measure_confirm:{label:'5. 실측 일정 확정',      desc:'수동 · 계약금 납부 후',    tag:'수동'},
+  t06_measure_dday:   {label:'6. 실측 하루 전 안내',   desc:'자동 · 실측일 D-1',        tag:'자동'},
+  t07_final_estimate: {label:'7. 확정견적서 발송',     desc:'수동 · 실측 완료 후',      tag:'수동'},
+  t71_balance_request:{label:'7-1. 잔금 결제 요청',    desc:'수동 · 확정견적서 확인 후',tag:'수동'},
+  t08_balance_remind: {label:'8. 잔금 리마인드',       desc:'선택 · 미납 시',           tag:'선택'},
+  t09_order_confirm:  {label:'9. 발주 확정+제작 안내', desc:'수동 · 잔금 완납 후',      tag:'수동'},
+  t10_install_confirm:{label:'10. 시공 일정 확정',     desc:'수동 · 제작 완료 후',      tag:'수동'},
+  t11_install_dday:   {label:'11. 시공 전날 안내',     desc:'자동 · 시공일 D-1',        tag:'자동'},
+  t12_after_install:  {label:'12. 시공 후 안부',       desc:'자동 · 시공일 D+3',        tag:'자동'},
+  t13_cancel:         {label:'13. 취소 안내',          desc:'선택 · 취소 시',           tag:'선택'},
+  t14_noshow:         {label:'14. 노쇼 재예약 안내',   desc:'선택 · 노쇼 처리 후',      tag:'선택'}
+};
 // 완료 14일 이상 → 보관 처리
 function isArchived(c) {
   if (c.stage !== '완료') return false;
@@ -1768,90 +1797,32 @@ function renderChart(period) {
 }
 
 // ── 알림톡 발송 ──────────────────────────────
-function sendAlimtalk(type) {
+function sendAlimtalk(key) {
   var arr = loadCustomers();
-  var c = arr.find(function(x) { return x.clientName === currentDetailName; });
+  var c = arr.find(function(x){ return x.clientName === currentDetailName; });
   if (!c) return;
-  var n = c.clientName;
-  var phone = (c.phone || '').replace(/[^0-9]/g, '');
-  if (!phone) { showToast('연락처가 없어 발송할 수 없습니다'); return; }
+  var meta = ALIM_META[key]; if (!meta) return;
+  if (!confirm('['+meta.label+'] 알림톡을 발송할까요?')) return;
 
-  var templates = {
-    survey: {
-      confirm: '설문지 발송',
-      msg: n + ' 고객님, 드로잉엣홈입니다 🙂\n방문 전 공간에 맞는 원단을 미리 준비해 드리려고 설문지를 보내드려요.\n3분이면 충분합니다!\n→ [설문지 링크]\n불편하신 점 있으시면 편하게 말씀 주세요.'
-    },
-    followup: {
-      confirm: '팔로업 발송',
-      msg: n + ' 고객님, 드로잉엣홈입니다 🙂\n지난번 상담 잘 마무리되셨는지 궁금해서 연락드렸어요.\n가견적서 검토하시다가 궁금하신 점이 있으시면 편하게 말씀 주세요.'
-    },
-    contract: {
-      confirm: '계약금 안내 발송',
-      msg: n + ' 고객님, 드로잉엣홈입니다 🙂\n계약금(견적 금액의 50%)을 아래 계좌로 입금해 주시면 실측 일정을 확정해 드릴게요.\n\n국민은행 015401-04-258798\n예금주: 장선혜(드로잉엣홈)\n\n입금 확인 후 실측 일정 안내 문자 드릴게요.'
-    },
-    measure_remind: {
-      confirm: '실측 전날 리마인드 발송',
-      msg: n + ' 고객님, 내일 실측 방문 예정입니다 🙂\n전담 실측 담당자가 직접 방문해서 꼼꼼히 측정해드릴게요.\n실측은 약 30분~1시간 소요돼요.\n방문 시간은 오늘 오후 중으로 별도 연락드릴게요.\n내일 뵙겠습니다!'
-    },
-    balance: {
-      confirm: '잔금 안내 발송',
-      msg: n + ' 고객님, 실측이 완료되었습니다 🙂\n최종 견적서를 카카오톡으로 보내드렸어요. 확인 부탁드려요.\n잔금 납부 후 제작 및 시공 일정이 확정됩니다.\n\n국민은행 015401-04-258798\n예금주: 장선혜(드로잉엣홈)\n\n궁금하신 점 있으시면 편하게 연락 주세요!'
-    },
-    construction_remind: {
-      confirm: '시공 전날 리마인드 발송',
-      msg: n + ' 고객님, 내일 시공 방문 예정입니다 🙂\n시공팀에서 오늘 오후 중으로 방문 시간 연락드릴 예정이에요.\n시공은 약 1~2시간 소요돼요.\n시공 당일 현장에서 핏과 길이감 함께 확인해 주시면 바로 조정해드릴게요.\n내일 뵙겠습니다!'
-    },
-    review_req: {
-      confirm: '후기 요청 발송',
-      msg: n + ' 고객님, 시공이 완료되었습니다! 🎉\n생활해보시다가 불편한 점 있으시면 편하게 연락 주세요.\n아래 방법으로 후기 남겨주시면 소정의 사은품을 드려요 🙏\n1. 네이버 플레이스 리뷰\n2. 네이버 블로그 후기\n3. 네이버 카페 후기\n후기 링크와 사진을 카카오톡으로 보내주시면 돼요!'
-    }
-  };
-
-  var tmpl = templates[type];
-  if (!tmpl) return;
-
-  if (!confirm('[' + tmpl.confirm + ']\n\n' + tmpl.msg + '\n\n위 알림톡을 ' + n + ' (' + c.phone + ')께 발송하시겠습니까?')) return;
-
-  // 발송 이력 저장
+  // 발송 이력 기록
   try {
-    var logs = JSON.parse(localStorage.getItem('dah_kakao_log') || '[]');
-    logs.unshift({ name: n, type: tmpl.confirm, date: todayStr(), time: new Date().toLocaleTimeString(), method: '알림톡' });
-    localStorage.setItem('dah_kakao_log', JSON.stringify(logs.slice(0,100)));
-  } catch(e) {}
+    var logs = JSON.parse(localStorage.getItem('dah_kakao_log')||'[]');
+    var now = new Date();
+    logs.unshift({
+      name: c.clientName,
+      type: key,
+      label: meta.label,
+      date: (now.getMonth()+1)+'월 '+now.getDate()+'일',
+      time: now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
+      method: meta.tag
+    });
+    localStorage.setItem('dah_kakao_log', JSON.stringify(logs.slice(0,200)));
+  } catch(e){}
 
-  // Make.com 웹훅 연동
-  var webhookUrl = '';
-  try { webhookUrl = localStorage.getItem('dah_webhook_url') || ''; } catch(e) {}
-  if (webhookUrl) {
-    fetch(webhookUrl, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({phone:phone, name:n, template:type, msg:tmpl.msg})
-    }).catch(function(e){ console.warn('웹훅 오류:', e); });
-  }
-  showToast(tmpl.confirm + ' ✅ 발송!');
-  renderKakaoLog();
+  alert('['+meta.label+'] 발송 완료\n\n※ 실제 발송은 Make.com 연동 후 자동화됩니다.\n지금은 발송 이력만 기록됩니다.');
+  closeDetail(); openDetail(c.clientName);
 }
 
-// ── 고객 상세 모달 ──────────────────────────
-// 단계 → 추천 발송 매핑
-var STAGE_ALIM = {
-  상담: ['survey','followup'],
-  계약금: ['contract','measure_remind'],
-  실측: ['measure_remind','construction_remind'],
-  잔금: ['balance'],
-  시공: ['construction_remind','review_req'],
-  완료: ['review_req']
-};
-var ALIM_META = {
-  survey:               {label:'설문지 발송',    desc:'방문 전 설문지 링크'},
-  followup:             {label:'팔로업',          desc:'상담 후 2일 미응답'},
-  contract:             {label:'계약금 안내',      desc:'50% 입금 요청'},
-  measure_remind:       {label:'실측 리마인드',   desc:'실측 전날 안내'},
-  balance:              {label:'잔금 안내',        desc:'실측 후 잔금 요청'},
-  construction_remind:  {label:'시공 리마인드',   desc:'시공 전날 안내'},
-  review_req:           {label:'후기 요청',        desc:'시공 완료 후'}
-};
 
 function openDetail(name) {
   var customers = loadCustomers();
@@ -1860,101 +1831,224 @@ function openDetail(name) {
   currentDetailName = name;
   var isMaster = currentUser && currentUser.role === 'master';
 
-  // 헤더
-  document.getElementById('detail-name').style.fontSize='17px'; document.getElementById('detail-name').textContent =
+  document.getElementById('detail-name').style.fontSize='17px';
+  document.getElementById('detail-name').textContent =
     c.clientName + (c.visitCount > 1 ? ' ∙ 재구매 '+c.visitCount+'회' : '');
 
   var body = document.getElementById('detail-body');
   body.innerHTML = '';
 
-  // ── ① 현재 단계 + 수정 버튼 ──
+  // ── ① 진행 단계 바 ──
   var stageNum = STAGE_NUM[c.stage] || 1;
   var stageSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
   var stageTop = div('display:flex;justify-content:space-between;align-items:center;margin-bottom:10px', [
     div('display:flex;align-items:center;gap:8px', [
-      el('span', {style:'display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#282828;color:#fff;font-size:12px;font-weight:700;flex-shrink:0', text:stageNum}),
+      el('span', {style:'display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#F06E2D;color:#fff;font-size:12px;font-weight:700;flex-shrink:0', text:stageNum}),
       el('span', {style:'font-size:15px;font-weight:700;color:#282828;letter-spacing:-0.3px', text:c.stage + ' 단계'})
     ]),
     isMaster ? btn('font-size:12px;color:#282828;background:#FAF7F5;border:1px solid #EEE6DC;padding:5px 10px;cursor:pointer;font-family:inherit;border-radius:4px', '✏️ 수정', function(){ closeDetail(); openAdd(c.clientName); }) : el('span',{})
   ]);
   stageSec.appendChild(stageTop);
 
-  // 단계 변경 pill
+  // 진행 바
+  var progressBar = div('display:flex;gap:3px;margin-bottom:10px', []);
+  STAGES.forEach(function(s) {
+    var done = STAGE_NUM[s] <= STAGE_NUM[c.stage];
+    var cur  = s === c.stage;
+    var seg  = div(
+      'flex:1;height:4px;border-radius:2px;background:'+(cur?'#F06E2D':done?'#282828':'#EEE6DC'),[]
+    );
+    progressBar.appendChild(seg);
+  });
+  stageSec.appendChild(progressBar);
+
+  // 단계 pill
   var stageBar = div('display:flex;flex-wrap:wrap;gap:5px', []);
   STAGES.forEach(function(s) {
     var on = s === c.stage;
     var num = STAGE_NUM[s] || 1;
-    var isDone = s === '완료';
     var pill = btn(
-      'padding:5px 11px;border:1px solid '+(on?'#282828':'#EEE6DC')+';'+
-      'background:'+(on?'#282828':'#fff')+';color:'+(on?'#fff':'#6B6B6B')+';'+
+      'padding:5px 11px;border:1px solid '+(on?'#F06E2D':'#EEE6DC')+';'+
+      'background:'+(on?'#F06E2D':'#fff')+';color:'+(on?'#fff':'#6B6B6B')+';'+
       'font-size:12px;font-weight:'+(on?'700':'400')+';font-family:inherit;cursor:pointer;border-radius:4px',
       num+'. '+s, function(){ changeStage(s); }
     );
     stageBar.appendChild(pill);
   });
+
+  // 취소/노쇼 버튼
+  var extraBtns = div('display:flex;gap:5px;margin-top:6px', []);
+  var cancelBtn = btn('flex:1;padding:6px;border:1px solid #EEE6DC;background:#fff;font-size:12px;color:#6B6B6B;font-family:inherit;cursor:pointer;border-radius:4px','취소 처리', function(){
+    if(confirm(c.clientName+'님을 취소 처리할까요? 자동 발송이 중단됩니다.')) {
+      changeStage('취소'); closeDetail();
+    }
+  });
+  var noshowBtn = btn('flex:1;padding:6px;border:1px solid #EEE6DC;background:#fff;font-size:12px;color:#6B6B6B;font-family:inherit;cursor:pointer;border-radius:4px','노쇼 처리', function(){
+    if(confirm(c.clientName+'님을 노쇼 처리할까요?')) {
+      changeStage('노쇼'); closeDetail();
+    }
+  });
+  extraBtns.appendChild(cancelBtn);
+  extraBtns.appendChild(noshowBtn);
   stageSec.appendChild(stageBar);
+  stageSec.appendChild(extraBtns);
   body.appendChild(stageSec);
 
-  // ── ② 카카오 발송 — 단계 맞춤 버튼 상단 배치 ──
-  var alimSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
-  alimSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'카카오톡 발송'}));
-
-  var recommended = STAGE_ALIM[c.stage] || [];
-  var allAlimKeys = ['survey','followup','contract','measure_remind','balance','construction_remind','review_req'];
-
-  // 추천 발송 (강조)
-  var recWrap = div('display:flex;flex-direction:column;gap:5px;margin-bottom:8px', []);
-  recommended.forEach(function(key) {
-    var meta = ALIM_META[key]; if(!meta) return;
-    var row = div('display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#fff;border:1.5px solid #282828;border-radius:6px;cursor:pointer', [
-      div('', [
-        el('span', {style:'font-size:15px;font-weight:700;color:#282828;display:block', text:meta.label}),
-        el('span', {style:'font-size:12px;color:#B0A99F', text:meta.desc})
-      ]),
-      el('span', {style:'font-size:12px;font-weight:700;color:#282828;background:#FAF7F5;border:1px solid #EEE6DC;padding:5px 12px;border-radius:6px;flex-shrink:0', text:'발송'})
-    ]);
-    (function(k){ row.addEventListener('click', function(){ sendAlimtalk(k); }); })(key);
-    recWrap.appendChild(row);
-  });
-  alimSec.appendChild(recWrap);
-
-  // 더보기 — 나머지 버튼
-  var otherKeys = allAlimKeys.filter(function(k){ return recommended.indexOf(k) < 0; });
-  if (otherKeys.length > 0) {
-    var moreToggle = btn('width:100%;padding:6px;border:1px solid #EEE6DC;background:#FAF7F5;font-size:12px;color:#6B6B6B;font-family:inherit;cursor:pointer;border-radius:4px;margin-bottom:5px', '▾ 다른 메시지 보기', function(){
-      var moreWrap2 = document.getElementById('alim-more-wrap');
-      if(moreWrap2){ moreWrap2.style.display = moreWrap2.style.display==='none'?'grid':'none'; this.textContent = moreWrap2.style.display==='none'?'▾ 다른 메시지 보기':'▴ 접기'; }
-    });
-    alimSec.appendChild(moreToggle);
-    var moreWrap = div('display:none;grid-template-columns:1fr 1fr;gap:5px', []);
-    moreWrap.id = 'alim-more-wrap';
-    otherKeys.forEach(function(key) {
+  // ── ② 지금 해야 할 일 (오렌지 강조) ──
+  var todoKeys = STAGE_ALIM[c.stage] || [];
+  var manualKeys = todoKeys.filter(function(k){ return ALIM_META[k] && ALIM_META[k].tag === '수동'; });
+  if (manualKeys.length > 0) {
+    var todoSec = div('margin-bottom:14px;padding:12px;background:#FFF8F5;border:1.5px solid #F06E2D;border-radius:8px', []);
+    todoSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:#F06E2D;letter-spacing:1.5px;margin-bottom:8px', text:'지금 해야 할 일'}));
+    manualKeys.forEach(function(key) {
       var meta = ALIM_META[key]; if(!meta) return;
-      var b = div('padding:9px 10px;background:#fff;border:1px solid #EEE6DC;border-radius:4px;cursor:pointer', [
-        el('span', {style:'font-size:13px;font-weight:700;color:#282828;display:block;margin-bottom:2px', text:meta.label}),
-        el('span', {style:'font-size:12px;color:#B0A99F', text:meta.desc})
+      var row = div('display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#fff;border:1px solid #F06E2D;border-radius:6px;margin-bottom:5px', [
+        div('', [
+          el('span', {style:'font-size:14px;font-weight:700;color:#282828;display:block', text:meta.label}),
+          el('span', {style:'font-size:11px;color:#B0A99F', text:meta.desc})
+        ]),
+        el('span', {style:'font-size:12px;font-weight:700;color:#fff;background:#F06E2D;padding:5px 12px;border-radius:6px;flex-shrink:0', text:'발송'})
       ]);
-      (function(k){ b.addEventListener('click', function(){ sendAlimtalk(k); }); })(key);
-      moreWrap.appendChild(b);
+      (function(k){ row.addEventListener('click', function(){ sendAlimtalk(k); }); })(key);
+      todoSec.appendChild(row);
     });
-    alimSec.appendChild(moreWrap);
+    body.appendChild(todoSec);
   }
 
-  // 발송 이력
-  var logRow = div('margin-top:8px', [el('div', {id:'kakao-log', style:'font-size:11px;color:#B0A99F'})]);
-  alimSec.appendChild(logRow);
+  // ── ③ 결제 관리 ──
+  var payData = JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}');
+  var paySec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
+  paySec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'결제 관리'}));
+
+  // 계약금 결제
+  var depositDone = payData.depositAmount && payData.depositDate;
+  var depSec = div('margin-bottom:8px;padding:10px;background:'+(depositDone?'#F5FAF5':'#FAF7F5')+';border-radius:6px;border:1px solid '+(depositDone?'#B0D4B0':'#EEE6DC'), []);
+  depSec.appendChild(el('div', {style:'font-size:12px;font-weight:700;color:#282828;margin-bottom:6px', text:(depositDone?'✅ ':'⏳ ')+'계약금'}));
+  if (depositDone) {
+    depSec.appendChild(el('div', {style:'font-size:13px;color:#282828', text:
+      (payData.depositMethod||'') + ' · ' + Number(payData.depositAmount).toLocaleString() + '원 · ' + (payData.depositDate||'') +
+      (payData.depositReceipt?' · 현금영수증 ✔':'')}));
+  } else {
+    var depForm = div('display:flex;flex-wrap:wrap;gap:5px', []);
+    // 결제방법
+    var depMethod = el('select', {style:'flex:1;min-width:80px;padding:5px;border:1px solid #EEE6DC;border-radius:4px;font-size:12px;font-family:inherit;background:#fff'});
+    ['카드','현금'].forEach(function(m){ var o=el('option',{}); o.value=m; o.textContent=m; depMethod.appendChild(o); });
+    // 금액
+    var depAmt = el('input', {type:'text', placeholder:'금액', style:'flex:2;min-width:80px;padding:5px;border:1px solid #EEE6DC;border-radius:4px;font-size:12px;font-family:inherit'});
+    // 날짜
+    var depDate = el('input', {type:'date', style:'flex:2;min-width:100px;padding:5px;border:1px solid #EEE6DC;border-radius:4px;font-size:12px;font-family:inherit'});
+    // 현금영수증
+    var depReceipt = el('label', {style:'display:flex;align-items:center;gap:3px;font-size:12px;color:#6B6B6B;cursor:pointer'});
+    var depReceiptChk = el('input', {type:'checkbox'}); depReceipt.appendChild(depReceiptChk);
+    depReceipt.appendChild(document.createTextNode('현금영수증'));
+    // 확인 버튼
+    var depSave = btn('width:100%;padding:7px;background:#282828;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:3px', '계약금 입력 완료', function(){
+      var pd = JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}');
+      pd.depositMethod = depMethod.value;
+      pd.depositAmount = depAmt.value.replace(/[^0-9]/g,'');
+      pd.depositDate = depDate.value;
+      pd.depositReceipt = depReceiptChk.checked;
+      localStorage.setItem('dah_pay_'+c.clientName, JSON.stringify(pd));
+      // 단계 자동 전환
+      if (c.stage === '상담') changeStage('계약금');
+      closeDetail(); openDetail(c.clientName);
+    });
+    depForm.appendChild(depMethod); depForm.appendChild(depAmt); depForm.appendChild(depDate); depForm.appendChild(depReceipt);
+    depSec.appendChild(depForm); depSec.appendChild(depSave);
+  }
+  paySec.appendChild(depSec);
+
+  // 잔금 결제
+  var balanceDone = payData.balanceAmount && payData.balanceDate;
+  var balSec = div('padding:10px;background:'+(balanceDone?'#F5FAF5':'#FAF7F5')+';border-radius:6px;border:1px solid '+(balanceDone?'#B0D4B0':'#EEE6DC'), []);
+  balSec.appendChild(el('div', {style:'font-size:12px;font-weight:700;color:#282828;margin-bottom:6px', text:(balanceDone?'✅ ':'⏳ ')+'잔금'}));
+  if (balanceDone) {
+    balSec.appendChild(el('div', {style:'font-size:13px;color:#282828', text:
+      (payData.balanceMethod||'') + ' · ' + Number(payData.balanceAmount).toLocaleString() + '원 · ' + (payData.balanceDate||'') +
+      (payData.balanceReceipt?' · 현금영수증 ✔':'')}));
+  } else {
+    var balForm = div('display:flex;flex-wrap:wrap;gap:5px', []);
+    var balMethod = el('select', {style:'flex:1;min-width:80px;padding:5px;border:1px solid #EEE6DC;border-radius:4px;font-size:12px;font-family:inherit;background:#fff'});
+    ['카드','현금'].forEach(function(m){ var o=el('option',{}); o.value=m; o.textContent=m; balMethod.appendChild(o); });
+    var balAmt = el('input', {type:'text', placeholder:'금액', style:'flex:2;min-width:80px;padding:5px;border:1px solid #EEE6DC;border-radius:4px;font-size:12px;font-family:inherit'});
+    var balDate = el('input', {type:'date', style:'flex:2;min-width:100px;padding:5px;border:1px solid #EEE6DC;border-radius:4px;font-size:12px;font-family:inherit'});
+    var balReceipt = el('label', {style:'display:flex;align-items:center;gap:3px;font-size:12px;color:#6B6B6B;cursor:pointer'});
+    var balReceiptChk = el('input', {type:'checkbox'}); balReceipt.appendChild(balReceiptChk);
+    balReceipt.appendChild(document.createTextNode('현금영수증'));
+    var balSave = btn('width:100%;padding:7px;background:#282828;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:3px', '잔금 입력 완료', function(){
+      var pd = JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}');
+      pd.balanceMethod = balMethod.value;
+      pd.balanceAmount = balAmt.value.replace(/[^0-9]/g,'');
+      pd.balanceDate = balDate.value;
+      pd.balanceReceipt = balReceiptChk.checked;
+      localStorage.setItem('dah_pay_'+c.clientName, JSON.stringify(pd));
+      // 단계 자동 전환
+      if (c.stage === '실측' || c.stage === '잔금') changeStage('시공');
+      closeDetail(); openDetail(c.clientName);
+    });
+    balForm.appendChild(balMethod); balForm.appendChild(balAmt); balForm.appendChild(balDate); balForm.appendChild(balReceipt);
+    balSec.appendChild(balForm); balSec.appendChild(balSave);
+  }
+  paySec.appendChild(balSec);
+  body.appendChild(paySec);
+
+  // ── ④ 전체 알림톡 발송 현황 ──
+  var alimSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
+  alimSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px', text:'알림톡 발송 현황'}));
+
+  var allKeys = ['t01_reservation','t02_reminder','t03_estimate','t31_deposit','t04_followup',
+    't05_measure_confirm','t06_measure_dday','t07_final_estimate','t71_balance_request',
+    't08_balance_remind','t09_order_confirm','t10_install_confirm','t11_install_dday',
+    't12_after_install','t13_cancel','t14_noshow'];
+
+  var logs = [];
+  try { logs = JSON.parse(localStorage.getItem('dah_kakao_log')||'[]'); } catch(e){}
+  var sentMap = {};
+  logs.forEach(function(l){ if(l.name===c.clientName) sentMap[l.type]=l; });
+
+  // 현재 단계 추천 키
+  var recommendedKeys = STAGE_ALIM[c.stage] || [];
+
+  allKeys.forEach(function(key) {
+    var meta = ALIM_META[key]; if(!meta) return;
+    var sent = sentMap[key];
+    var isRecommended = recommendedKeys.indexOf(key) >= 0;
+    var tagColor = meta.tag==='자동'?'#6B6B6B':(meta.tag==='선택'?'#B0A99F':'#282828');
+
+    var row = div(
+      'display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #FAF7F5',
+      []
+    );
+    var left = div('flex:1;min-width:0', []);
+    var labelRow = div('display:flex;align-items:center;gap:5px', []);
+    labelRow.appendChild(el('span', {style:'font-size:13px;font-weight:'+(isRecommended?'700':'500')+';color:'+(isRecommended?'#282828':'#6B6B6B'), text:meta.label}));
+    labelRow.appendChild(el('span', {style:'font-size:10px;color:'+tagColor+';background:#FAF7F5;padding:2px 5px;border-radius:3px', text:meta.tag}));
+    left.appendChild(labelRow);
+    if (sent) {
+      left.appendChild(el('span', {style:'font-size:11px;color:#B0A99F', text:'✅ '+sent.date+' '+sent.time}));
+    }
+    row.appendChild(left);
+
+    if (!sent) {
+      var sendBtn = el('span', {style:'font-size:11px;font-weight:700;color:'+(isRecommended?'#F06E2D':'#B0A99F')+';cursor:pointer;flex-shrink:0;padding:4px 8px;border:1px solid '+(isRecommended?'#F06E2D':'#EEE6DC')+';border-radius:4px', text:'발송'});
+      (function(k){ sendBtn.addEventListener('click', function(){ sendAlimtalk(k); }); })(key);
+      row.appendChild(sendBtn);
+    } else {
+      var resendBtn = el('span', {style:'font-size:11px;color:#B0A99F;cursor:pointer;flex-shrink:0;padding:4px 8px', text:'재발송'});
+      (function(k){ resendBtn.addEventListener('click', function(){ if(confirm('재발송할까요?')) sendAlimtalk(k); }); })(key);
+      row.appendChild(resendBtn);
+    }
+    alimSec.appendChild(row);
+  });
   body.appendChild(alimSec);
 
-  // ── ③ 고객 정보 ──
+  // ── ⑤ 고객 정보 ──
   var infoSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
-  infoSec.appendChild(el('div', {style:'font-size:12px;font-weight:700;color:#B0A99F;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px', text:'고객 정보'}));
-
+  infoSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px', text:'고객 정보'}));
   var phoneRow = div('display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #EEE6DC;font-size:14px', [span('color:#6B6B6B', '연락처')]);
   if (c.phone) { var telLink = el('a', {href:'tel:'+c.phone.replace(/[^0-9]/g,''), style:'font-weight:700;color:#282828;text-decoration:none'}); telLink.textContent = c.phone; phoneRow.appendChild(telLink); }
   else { phoneRow.appendChild(span('font-weight:700', '—')); }
   infoSec.appendChild(phoneRow);
-
   var infoRows = [
     ['주소', c.addr||'—'],
     ['공간·품목', c.space||'—'],
@@ -1972,10 +2066,10 @@ function openDetail(name) {
   });
   body.appendChild(infoSec);
 
-  // ── ④ 견적서 이력 ──
+  // ── ⑥ 견적서 이력 ──
   renderEstimateHistory(body, c.clientName);
 
-  // ── ⑤ 액션 버튼 ──
+  // ── ⑦ 액션 버튼 ──
   body.appendChild(btn('width:100%;padding:12px;background:#282828;color:#fff;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:6px;margin-bottom:6px', '📝 견적서 앱에서 열기', function(){ openEstimate(currentDetailName); }));
   var bottomBtns = [btn('flex:2;padding:11px;background:#282828;color:#fff;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:6px', '닫기', closeDetail)];
   if (isMaster) bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid #EEE6DC;font-size:13px;font-family:inherit;cursor:pointer;color:#282828;border-radius:6px', '삭제', deleteCustomer));
