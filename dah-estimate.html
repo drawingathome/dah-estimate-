@@ -32,7 +32,7 @@ html,body{
   overflow:visible;
   display:grid;
   grid-template-columns:1fr auto;
-  grid-template-rows:auto 1px auto 40px;
+  grid-template-rows:auto 1px auto auto;
   gap:0;
   border-radius:0 10px 0 0
 }
@@ -93,11 +93,14 @@ html,body{
 /* 헤더 하단 탭바 */
 .doc-header-tabbar{
   grid-column:1/-1;grid-row:4;
-  display:flex;justify-content:space-between;align-items:flex-end;
-  padding-top:0
+  display:flex;flex-wrap:wrap;align-items:flex-end;
+  gap:4px;padding-top:4px
 }
-.doc-header-tabbar-left,.doc-header-tabbar-right{
-  display:flex;gap:2px;align-items:flex-end
+.doc-header-tabbar-left{
+  display:flex;gap:2px;align-items:flex-end;order:1
+}
+.doc-header-tabbar-right{
+  display:flex;gap:2px;align-items:flex-end;order:2
 }
 /* 탭 버튼 공통 */
 .est-status-btn{
@@ -116,9 +119,9 @@ html,body{
   background:rgba(255,255,255,0.13);color:rgba(255,255,255,0.65)
 }
 .cust-type-btn{
-  padding:7px 16px;border:none;
+  padding:7px 10px;border:none;
   border-radius:6px 6px 0 0;
-  font-size:13px;font-weight:600;font-family:inherit;
+  font-size:12px;font-weight:600;font-family:inherit;
   cursor:pointer;
   background:rgba(255,255,255,0.08);
   color:rgba(255,255,255,0.4);
@@ -576,7 +579,7 @@ td.amt{
 }
 .pv-sub-label{
   display:inline-block;font-size:15px;font-weight:800;
-  color:#6B6B6B;letter-spacing:2px;
+  color:#282828;letter-spacing:2px;
   padding:3px 10px;border:1px solid #EEE6DC;
   border-radius:20px;margin-bottom:8px
 }
