@@ -492,7 +492,7 @@ td.amt{
   background:#282828;border-top:none
 }
 .pv-sum-table .total-row .sum-lbl{color:rgba(255,255,255,0.6);font-weight:500;font-size:13px}
-.pv-sum-table .total-row .sum-val{font-size:14px;font-weight:700;color:#282828;text-align:right}
+.pv-sum-table .total-row .sum-val{font-size:20px;font-weight:900;color:#fff;letter-spacing:-0.5px;text-align:right}
 /* 참고사항 */
 .pv-notes{
   padding:16px 28px;background:#F5F0EB;
@@ -802,6 +802,17 @@ textarea:focus{border-color:#282828}
 .tbl-outer.no-scroll::after{display:none}
 
 .info-val{font-size:16px;font-weight:700;color:#282828;line-height:1.35}
+
+/* 고객정보 입력 필드 강화 */
+.info-item input,.info-item textarea{
+  font-size:15px;font-weight:700;color:#282828;
+  padding:6px 0 10px;width:100%
+}
+.info-item label.info-label{
+  font-size:10px;font-weight:700;color:#B0A99F;
+  letter-spacing:1.5px;text-transform:uppercase;
+  margin-bottom:4px;display:block;padding-top:4px
+}
 </style>
 </head>
 <body>
@@ -849,15 +860,15 @@ textarea:focus{border-color:#282828}
     <div class="sec-label"><span class="sec-title">고객 정보</span><div style="display:flex;gap:6px"><button type="button" onclick="openCustomerLoad()" class="load-cust-btn print-hide">🔍 고객 불러오기</button><button type="button" onclick="loadSurveyFromSheet()" class="load-cust-btn print-hide" id="btn-load-survey">📋 설문 불러오기</button></div></div>
     <div class="info-grid">
       <div class="info-item">
-        <label>고객명</label>
+        <label class="info-label">고객명</label>
         <input type="text" id="c-name" placeholder="홍길동" oninput="debounceDraft()" oninput="fmtName(this)">
       </div>
       <div class="info-item">
-        <label>연락처</label>
+        <label class="info-label">연락처</label>
         <input type="text" id="c-phone" placeholder="010-0000-0000" oninput="fmtPhone(this)">
       </div>
       <div class="info-item">
-        <label>주소</label>
+        <label class="info-label">주소</label>
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
           <input type="text" id="c-addr" placeholder="서울 서초구 반포동" style="flex:1;min-width:0">
           <button type="button" onclick="openKakaoAddr('c-addr')"
@@ -871,11 +882,11 @@ textarea:focus{border-color:#282828}
     </div>
     <div class="info-grid" style="margin-top:16px;padding-top:14px;border-top:1px dashed #EEE6DC">
       <div class="info-item">
-        <label>실측 예정일</label>
+        <label class="info-label">실측 예정일</label>
         <input type="text" id="c-measure" placeholder="2026년 6월 23일" inputmode="numeric" oninput="fmtDateKo(this)" maxlength="14" style="letter-spacing:0.3px">
       </div>
       <div class="info-item">
-        <label>시공 예정일</label>
+        <label class="info-label">시공 예정일</label>
         <input type="text" id="c-install" placeholder="2026년 6월 23일" inputmode="numeric" oninput="fmtDateKo(this)" maxlength="14" style="letter-spacing:0.3px">
       </div>
     </div>
@@ -898,7 +909,7 @@ textarea:focus{border-color:#282828}
     </div>
     <div class="info-internal print-hide">
       <div class="info-item">
-        <label>담당자</label>
+        <label class="info-label">담당자</label>
         <input type="text" id="c-staff" placeholder="장선혜">
       </div>
       <input type="hidden" id="c-type" value="신규">
@@ -907,7 +918,7 @@ textarea:focus{border-color:#282828}
         <input type="text" id="c-no" readonly>
       </div>
       <div class="info-item">
-        <label>메모</label>
+        <label class="info-label">메모</label>
         <input type="text" id="c-memo" placeholder="내부 메모">
       </div>
     </div>
@@ -2026,7 +2037,9 @@ function buildCustomerHTML() {
   var cStaff      = document.getElementById('c-staff')?.value||'장선혜';
   var sumCurtain  = document.getElementById('sum-curtain')?.textContent||'0원';
   var sumSvc      = document.getElementById('sum-svc')?.textContent||'0원';
-  var sumTotal    = document.getElementById('sum-total')?.textContent||'0원';
+  var _grandEl = document.getElementById('sum-total');
+  var _grandNum = parseInt((_grandEl?.textContent||'0').replace(/[^0-9]/g,''))||0;
+  var sumTotal = _grandNum > 0 ? _grandNum.toLocaleString()+'원' : (document.getElementById('sum-total')?.textContent||'0원');
   var sumDisc     = document.getElementById('sum-discount')?.textContent||'';
   var depInp      = document.getElementById('deposit-input');
   var sumDeposit  = '—';
@@ -2284,7 +2297,7 @@ function buildCustomerHTML() {
   out += '<tr><td class="sum-lbl">제품 소계</td><td class="sum-val">'+sumCurtain+'</td></tr>';
   if(svcRows.length) out += '<tr><td class="sum-lbl">시공 서비스</td><td class="sum-val">'+sumSvc+'</td></tr>';
   if(sumDisc && sumDisc !== '-0원' && sumDisc !== '') out += '<tr><td class="sum-lbl">할인</td><td class="sum-val" style="color:#282828">'+sumDisc+'</td></tr>';
-  out += '<tr class="total-row"><td class="sum-lbl">최종 견적</td><td class="sum-val">'+sumTotal+'</td></tr>';
+  out += '<tr class="total-row"><td class="sum-lbl" style="font-size:13px;font-weight:500">최종 견적</td><td class="sum-val" style="font-size:20px;font-weight:900;letter-spacing:-0.5px">'+sumTotal+'</td></tr>';
   out += '</table>';
 
   // 8. 계약금/잔금
