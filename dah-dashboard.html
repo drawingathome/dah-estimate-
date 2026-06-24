@@ -122,8 +122,8 @@ body{
 .kpi-num{font-size:26px;font-weight:800;color:#fff;line-height:1;display:block;margin-bottom:4px;letter-spacing:-0.5px}
 .kpi-num em,.kpi-num-unit{font-size:11px;font-weight:500;opacity:0.5;font-style:normal;letter-spacing:0.5px}
 .kpi-label{font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase;font-weight:500;margin-bottom:4px;display:block}
-.kpi-progress-wrap{height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:8px}
-.kpi-progress-bar{height:3px;background:#F06E2D;border-radius:2px;transition:width 0.5s ease}
+.kpi-progress-wrap{display:none}
+.kpi-progress-bar{display:none}
 
 /* ── 단계칩 ── */
 .stage-chips{display:flex;gap:5px}
@@ -1827,7 +1827,7 @@ function openDetail(name) {
   var stageSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
   var stageTop = div('display:flex;justify-content:space-between;align-items:center;margin-bottom:10px', [
     div('display:flex;align-items:center;gap:8px', [
-      el('span', {style:'display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#282828;color:#fff;font-size:12px;font-weight:700;flex-shrink:0', text:stageNum}),
+      el('span', {style:'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#282828;color:#fff;font-size:11px;font-weight:700;flex-shrink:0', text:stageNum}),
       el('span', {style:'font-size:15px;font-weight:700;color:#282828;letter-spacing:-0.3px', text:c.stage + ' 단계'})
     ]),
     isMaster ? btn('font-size:12px;color:#282828;background:#FAF7F5;border:1px solid #EEE6DC;padding:5px 10px;cursor:pointer;font-family:inherit;border-radius:4px', '✏️ 수정', function(){ closeDetail(); openAdd(c.clientName); }) : el('span',{})
@@ -1852,8 +1852,8 @@ function openDetail(name) {
     var on = s === c.stage;
     var num = STAGE_NUM[s] || 1;
     var pill = btn(
-      'padding:5px 11px;border:1px solid '+(on?'#F06E2D':'#EEE6DC')+';'+
-      'background:'+(on?'#F06E2D':'#fff')+';color:'+(on?'#fff':'#6B6B6B')+';'+
+      'padding:5px 11px;border:1px solid '+(on?'#282828':'#EEE6DC')+';'+
+      'background:'+(on?'#282828':'#fff')+';color:'+(on?'#fff':'#6B6B6B')+';'+
       'font-size:12px;font-weight:'+(on?'700':'400')+';font-family:inherit;cursor:pointer;border-radius:4px',
       num+'. '+s, function(){ changeStage(s); }
     );
@@ -1886,12 +1886,12 @@ function openDetail(name) {
     todoSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:#282828;letter-spacing:1.5px;margin-bottom:8px', text:'지금 해야 할 일'}));
     manualKeys.forEach(function(key) {
       var meta = ALIM_META[key]; if(!meta) return;
-      var row = div('display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#fff;border:1px solid #F06E2D;border-radius:6px;margin-bottom:5px', [
+      var row = div('display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#fff;border:1px solid #EEE6DC;border-radius:6px;margin-bottom:5px', [
         div('', [
           el('span', {style:'font-size:14px;font-weight:700;color:#282828;display:block', text:meta.label}),
           el('span', {style:'font-size:11px;color:#B0A99F', text:meta.desc})
         ]),
-        el('span', {style:'font-size:12px;font-weight:700;color:#fff;background:#282828;padding:5px 12px;border-radius:6px;flex-shrink:0', text:'발송'})
+        el('span', {style:'font-size:12px;font-weight:600;color:#282828;background:#fff;border:1px solid #282828;padding:5px 12px;border-radius:6px;flex-shrink:0', text:'발송'})
       ]);
       (function(k){ row.addEventListener('click', function(){ sendAlimtalk(k); }); })(key);
       todoSec.appendChild(row);
@@ -1926,7 +1926,7 @@ function openDetail(name) {
     var depReceiptChk = el('input', {type:'checkbox'}); depReceipt.appendChild(depReceiptChk);
     depReceipt.appendChild(document.createTextNode('현금영수증'));
     // 확인 버튼
-    var depSave = btn('width:100%;padding:7px;background:#282828;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:3px', '계약금 입력 완료', function(){
+    var depSave = btn('width:100%;padding:8px;background:#FAF7F5;color:#282828;border:1px solid #282828;border-radius:4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:5px', '계약금 입력 완료', function(){
       var pd = JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}');
       pd.depositMethod = depMethod.value;
       pd.depositAmount = depAmt.value.replace(/[^0-9]/g,'');
@@ -1959,7 +1959,7 @@ function openDetail(name) {
     var balReceipt = el('label', {style:'display:flex;align-items:center;gap:3px;font-size:12px;color:#6B6B6B;cursor:pointer'});
     var balReceiptChk = el('input', {type:'checkbox'}); balReceipt.appendChild(balReceiptChk);
     balReceipt.appendChild(document.createTextNode('현금영수증'));
-    var balSave = btn('width:100%;padding:7px;background:#282828;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:3px', '잔금 입력 완료', function(){
+    var balSave = btn('width:100%;padding:8px;background:#FAF7F5;color:#282828;border:1px solid #282828;border-radius:4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:5px', '잔금 입력 완료', function(){
       var pd = JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}');
       pd.balanceMethod = balMethod.value;
       pd.balanceAmount = balAmt.value.replace(/[^0-9]/g,'');
@@ -2054,8 +2054,8 @@ function openDetail(name) {
   renderEstimateHistory(body, c.clientName);
 
   // ── ⑦ 액션 버튼 ──
-  body.appendChild(btn('width:100%;padding:12px;background:#282828;color:#fff;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:6px;margin-bottom:6px', '📝 견적서 앱에서 열기', function(){ openEstimate(currentDetailName); }));
-  var bottomBtns = [btn('flex:2;padding:11px;background:#282828;color:#fff;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:6px', '닫기', closeDetail)];
+  body.appendChild(btn('width:100%;padding:12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:6px;margin-bottom:6px', '견적서 앱에서 열기', function(){ openEstimate(currentDetailName); }));
+  var bottomBtns = [btn('flex:2;padding:11px;background:#282828;color:#fff;border:none;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:6px;letter-spacing:0.2px', '닫기', closeDetail)];
   if (isMaster) bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid #EEE6DC;font-size:13px;font-family:inherit;cursor:pointer;color:#282828;border-radius:6px', '삭제', deleteCustomer));
   body.appendChild(div('display:flex;gap:8px', bottomBtns));
 
