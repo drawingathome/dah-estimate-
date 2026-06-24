@@ -1850,7 +1850,42 @@ function newEstimate() {
 }
 
 // Supabase 저장
+
+function showFieldError(fieldId, msg) {
+  var el = document.getElementById(fieldId);
+  if (!el) return;
+  el.style.borderBottomColor = '#E53E3E';
+  var errEl = el.parentNode.querySelector('.field-err');
+  if (!errEl) {
+    errEl = document.createElement('div');
+    errEl.className = 'field-err';
+    errEl.style.cssText = 'font-size:11px;color:#E53E3E;margin-top:3px;font-weight:500';
+    el.parentNode.appendChild(errEl);
+  }
+  errEl.textContent = msg;
+  setTimeout(function() {
+    el.style.borderBottomColor = '';
+    if (errEl) errEl.remove();
+  }, 3000);
+  el.focus();
+}
+
+function validateEstimate() {
+  var name = document.getElementById('c-name')?.value?.trim();
+  if (!name) { showFieldError('c-name', '고객명을 입력해주세요'); return false; }
+  var hasProduct = false;
+  document.querySelectorAll('#curtain-body tr').forEach(function(r) {
+    if (getPriceVal(r.querySelector('.cprice')) > 0) hasProduct = true;
+  });
+  document.querySelectorAll('#blind-body tr').forEach(function(r) {
+    if (getPriceVal(r.querySelector('.blind-price')) > 0) hasProduct = true;
+  });
+  if (!hasProduct) { showToast('제품 금액을 1개 이상 입력해주세요', 'error'); return false; }
+  return true;
+}
+
 function saveEstimate() {
+  if (!validateEstimate()) return;
   var name=document.getElementById('c-name').value.trim();
   if(!name) { showToast('⚠️ 고객명을 입력하세요'); return; }
   var phone=document.getElementById('c-phone').value.trim();
