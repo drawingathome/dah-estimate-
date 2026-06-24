@@ -176,7 +176,7 @@ body{
 .today-sub{font-size:12px;color:#B0A99F;margin-left:auto}
 
 /* ── 콘텐츠 래퍼 ── */
-.wrap{padding:12px 0 32px;max-width:640px;margin:0 auto}
+.wrap{padding:12px 0 80px;max-width:640px;margin:0 auto;background:#F0EBE5}
 
 /* ── 카드 ── */
 .card{
@@ -620,6 +620,11 @@ input:focus,select:focus,textarea:focus{
     <div class="kpi-card main">
       <span class="kpi-label">REVENUE</span>
       <span class="kpi-num" id="hd-kpi-rev">—<em class="kpi-num-unit">만원</em></span>
+      <div class="kpi-bar-wrap"><div class="kpi-bar-fill" id="kpi-rev-bar" style="width:0%"></div></div>
+      <div class="kpi-sub-row">
+        <span class="kpi-sub-pct" id="kpi-rev-pct">0%</span>
+        <span class="kpi-sub-goal" id="kpi-rev-goal">목표 —</span>
+      </div>
     </div>
     <div class="kpi-card">
       <span class="kpi-label">CONTRACT</span>
@@ -1081,7 +1086,11 @@ function updateHdKpi(allCustomers) {
   var goal = parseInt(localStorage.getItem('dah_goal_마스터')||'50000000');
   var pct = goal > 0 ? Math.min(100, Math.round(totalRev/goal*100)) : 0;
   var barEl = document.getElementById('kpi-rev-bar');
+  var pctEl = document.getElementById('kpi-rev-pct');
+  var goalEl = document.getElementById('kpi-rev-goal');
   if (barEl) barEl.style.width = pct + '%';
+  if (pctEl) pctEl.textContent = pct + '%';
+  if (goalEl) goalEl.textContent = '목표 ' + Math.round(goal/10000).toLocaleString() + '만원';
   if (conEl) conEl.innerHTML = contracted.length + '<span>/'+monthC.length+'건</span>';
 
   // 단계 현황 바
