@@ -966,7 +966,7 @@ function getStaffList() {
 function loginAs(who) {
   if (who === 'master') { currentUser = {name:'마스터', role:'master'}; }
   else { currentUser = {name:who, role:'staff'}; }
-  try { localStorage.setItem('dah_session', JSON.stringify(currentUser)); } catch(e){}
+  try { currentUser.loginAt = Date.now(); localStorage.setItem('dah_session', JSON.stringify(currentUser)); } catch(e){}
   
   document.body.classList.remove('role-master','role-staff');
   document.body.classList.add(currentUser.role==='master'?'role-master':'role-staff');
@@ -2835,7 +2835,11 @@ document.getElementById('add-overlay').addEventListener('click', function(e) { i
 
 (function() {
   try {
-    var saved = JSON.parse(localStorage.getItem('dah_session') || 'null');
+    var _rawSess = JSON.parse(localStorage.getItem('dah_session') || 'null');
+    if (_rawSess && _rawSess.loginAt && (Date.now()-_rawSess.loginAt) > 8*60*60*1000) {
+      localStorage.removeItem('dah_session'); _rawSess = null;
+    }
+    var saved = _rawSess;
     if (saved && saved.name && saved.role) {
       var validStaffs = ['마스터'].concat(getStaffList());
       if (validStaffs.indexOf(saved.name) >= 0) {
