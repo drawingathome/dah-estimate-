@@ -10,10 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy to Vercel (dashboard + estimate)
+      - name: Deploy dah-dashboard
         run: |
-          # 응답 확인용 verbose
-          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "https://api.vercel.com/v13/deployments" \
+          RESULT=$(curl -s -X POST "https://api.vercel.com/v13/deployments?teamId=drawingathome-s-projects&forceNew=1" \
             -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{
@@ -25,12 +24,11 @@ jobs:
                 "ref": "main"
               }
             }')
-          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
-          BODY=$(echo "$RESPONSE" | head -1)
-          echo "dashboard HTTP: $HTTP_CODE"
-          echo "dashboard 응답: $BODY"
+          echo "dashboard: $RESULT" | head -c 500
 
-          RESPONSE2=$(curl -s -w "\n%{http_code}" -X POST "https://api.vercel.com/v13/deployments" \
+      - name: Deploy dah-estimate
+        run: |
+          RESULT=$(curl -s -X POST "https://api.vercel.com/v13/deployments?teamId=drawingathome-s-projects&forceNew=1" \
             -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{
@@ -42,7 +40,4 @@ jobs:
                 "ref": "main"
               }
             }')
-          HTTP_CODE2=$(echo "$RESPONSE2" | tail -1)
-          BODY2=$(echo "$RESPONSE2" | head -1)
-          echo "estimate HTTP: $HTTP_CODE2"
-          echo "estimate 응답: $BODY2"
+          echo "estimate: $RESULT" | head -c 500
