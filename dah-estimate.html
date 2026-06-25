@@ -893,6 +893,9 @@ input,select,textarea{transition:border-color 0.15s ease}
 .stage-pill{transition:all 0.15s ease;cursor:default}
 .pipe-item .stage-pill{cursor:pointer}
 .pipe-item .stage-pill:hover{opacity:0.8}
+
+.load-cust-btn{min-height:44px!important;padding:8px 12px!important}
+.copy-btn,.del-btn{min-width:36px!important;min-height:36px!important;padding:6px 8px!important}
 </style>
 </head>
 <body>
@@ -1313,8 +1316,13 @@ var currentTab = 'ga';
   document.getElementById('hd-date').textContent =
     d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';
   document.getElementById('c-no').value =
-    'DAH-'+d.getFullYear()+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1)+
-    (d.getDate()<10?'0':'')+d.getDate()+'-'+Math.floor(Math.random()*100);
+    (function(){
+      var base='DAH-'+d.getFullYear()+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1)+(d.getDate()<10?'0':'')+d.getDate()+'-';
+      try{var saved=JSON.parse(localStorage.getItem('dah_saved')||'[]');
+        var nums=saved.filter(function(e){return(e.no||'').indexOf(base)===0;}).map(function(e){return parseInt((e.no||'').slice(-2))||0;});
+        var next=(nums.length>0?Math.max.apply(null,nums):0)+1;
+        return base+(next<10?'0'+next:String(next));
+      }catch(e){return base+'01';}}())
   addCurtainRow();
   
   try {
@@ -1749,6 +1757,13 @@ function calcTotal() {
   if(grand<0) grand=0;
   var depInp=document.getElementById('deposit-input');
   var depRaw=getPriceVal(depInp)||0;
+  if(grand>0 && depInp && !depInp.dataset.manualEdit){
+    var auto50=Math.round(grand*0.5);
+    depInp.value=''; depInp.removeAttribute('data-raw');
+    depInp.value=auto50.toLocaleString();
+    depInp.dataset.raw=String(auto50);
+    depRaw=auto50;
+  }
   var deposit=depRaw>0 ? depRaw : 0;
   var balance=grand-deposit;
   var perf=Math.round(curtainTotal*0.95);
@@ -2624,6 +2639,7 @@ function calcDeposit() {
   var grand = getPriceVal(document.getElementById('sum-total'))||0;
   if(!grand) { calcTotal(); return; }
   var depInp = document.getElementById('deposit-input');
+  if(depInp) depInp.dataset.manualEdit = '1';
   var dep = getPriceVal(depInp)||0;
   var bal = grand - dep;
   var balEl = document.getElementById('sum-balance');
