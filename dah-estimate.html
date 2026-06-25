@@ -218,7 +218,7 @@ html,body{font-family:var(--font-base);background:#F0EBE5;margin:0;padding:0;col
 .info-toggle.open .toggle-arrow{transform:rotate(180deg)}
 .info-internal{max-height:none!important;display:none!important}
 .info-internal.open{max-height:200px;display:block!important}
-.info-internal .info-item{padding-bottom:12px}
+.info-internal 
 
 /* ── 테이블 공통 ── */
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0;border-radius:6px}
@@ -747,7 +747,7 @@ td.amt{
   .doc-title-ko{font-size:18px;letter-spacing:0}
   
   .doc-header-tabbar-left,.doc-header-tabbar-right{gap:2px}
-  .est-status-btn{padding:7px 14px;font-size:13px}
+  
   .cust-type-btn{padding:6px 10px;font-size:13px}
 }
 @media(max-width:480px){
@@ -851,24 +851,24 @@ button:active{transform:scale(0.96);opacity:0.85}
 .pipe-item:hover{background:#F8F4F1;transform:translateX(2px)}
 .action-item{transition:background 0.15s ease}
 .action-item:hover{background:#FFF8F5}
-.cust-load-item{transition:background 0.12s ease}
-.cust-load-item:hover{background:#F5F0EB}
+
+
 
 /* 4. 탭 전환 */
-.est-status-btn{transition:all 0.2s ease}
+
 .est-status-btn.on{transition:all 0.2s ease}
 .tab{transition:color 0.15s ease}
 .tab.on::after{transition:width 0.2s ease}
 
 /* 5. 입력 필드 포커스 */
-.info-item{transition:background 0.15s ease}
+
 .info-item:focus-within{background:#FAFAF8}
 input,select,textarea{transition:border-color 0.15s ease}
 
 /* 6. 섹션 등장 */
 @keyframes fadeSlideUp{
-  from{opacity:0;transform:translateY(8px)}
-  to{opacity:1;transform:translateY(0)}
+  
+  
 }
 .section{animation:fadeSlideUp 0.25s ease both}
 .card{animation:fadeSlideUp 0.2s ease both}
@@ -883,12 +883,12 @@ input,select,textarea{transition:border-color 0.15s ease}
 
 /* 8. 토스트 — 이미 있지만 강화 */
 @keyframes fadeInUp{
-  from{opacity:0;transform:translateX(-50%) translateY(12px)}
-  to{opacity:1;transform:translateX(-50%) translateY(0)}
+  
+  
 }
 @keyframes fadeOutDown{
-  from{opacity:1;transform:translateX(-50%) translateY(0)}
-  to{opacity:0;transform:translateX(-50%) translateY(8px)}
+  
+  
 }
 
 /* 9. notice-card 알림 등장 */
@@ -896,7 +896,7 @@ input,select,textarea{transition:border-color 0.15s ease}
 .notice-item{transition:background 0.12s ease}
 
 /* 10. 스크롤 힌트 페이드 */
-.tbl-outer::after{transition:opacity 0.2s ease}
+
 
 /* 11. KPI 카드 숫자 */
 .kpi-num{transition:color 0.3s ease}
