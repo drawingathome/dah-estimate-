@@ -27,11 +27,11 @@ body{
 
  
 :root{
-  --stage-상담:     #282828;
+  --stage-상담:     #5C7A9F;
   --stage-계약금:   #F06E2D;
-  --stage-실측:     #6B6B6B;
-  --stage-잔금:     #282828;
-  --stage-시공:     #F06E2D;
+  --stage-실측:     #8B6BB1;
+  --stage-잔금:     #2E7D6B;
+  --stage-시공:     #C0392B;
   --stage-완료:     #B0A99F;
 }
 
@@ -188,6 +188,7 @@ body{
 }
 .card-head{
   padding:12px 16px 11px;
+  background:#FAF7F5;
   border-bottom:1px solid #EEE6DC;
   display:flex;align-items:center;
   justify-content:space-between
@@ -247,7 +248,7 @@ body{
 .ai-tag.today{background:#FAF7F5;border-color:#EEE6DC;color:#F06E2D}
 .stage-btn{
   font-size:12px;font-weight:700;font-family:inherit;
-  padding:5px 11px;border-radius:20px;
+  padding:5px 11px;border-radius:6px;
   border:none;
   color:#fff;white-space:nowrap;cursor:pointer;
   flex-shrink:0;margin-left:10px
@@ -332,16 +333,16 @@ body{
  
 .stage-pill{
   display:inline-flex;align-items:center;justify-content:center;
-  padding:3px 9px;border-radius:20px;
+  padding:3px 9px;border-radius:6px;
   font-size:12px;font-weight:700;color:#fff;
   flex-shrink:0;white-space:nowrap
 }
-.stage-pill.상담{background:#282828;color:#fff}
-.stage-pill.계약금{background:#282828;color:#fff}
-.stage-pill.실측{background:#6B6B6B;color:#fff}
-.stage-pill.잔금{background:#282828;color:#fff}
-.stage-pill.시공{background:#282828;color:#fff}
-.stage-pill.완료{background:#B0A99F;color:#fff}
+.stage-pill.상담 {background:#5C7A9F;color:#fff}
+.stage-pill.계약금{background:#F06E2D;color:#fff}
+.stage-pill.실측  {background:#8B6BB1;color:#fff}
+.stage-pill.잔금  {background:#2E7D6B;color:#fff}
+.stage-pill.시공  {background:#C0392B;color:#fff}
+.stage-pill.완료  {background:#B0A99F;color:#fff}
 
  
 .search-top{padding:10px 14px 8px;background:#fff;border-bottom:1px solid #EEE6DC;margin-bottom:8px}
@@ -431,7 +432,7 @@ body{
 .cal-ev-sub{font-size:13px;color:#B0A99F}
 .cal-ev-badge{
   font-size:12px;font-weight:700;
-  padding:4px 9px;border-radius:20px;
+  padding:4px 9px;border-radius:6px;
   color:#fff;white-space:nowrap;flex-shrink:0
 }
 
@@ -494,7 +495,7 @@ body{
  
 .badge{
   font-size:12px;font-weight:700;
-  padding:4px 9px;border-radius:20px;
+  padding:4px 9px;border-radius:6px;
   white-space:nowrap;display:inline-block;
   color:#fff
 }
@@ -951,8 +952,8 @@ function isArchived(c) {
   if (!refDate) return false;
   return Math.floor((new Date() - new Date(refDate)) / 86400000) >= 14;
 }
-var STAGE_COLORS = {상담:'#282828',계약금:'#F06E2D',실측:'#6B6B6B',잔금:'#282828',시공:'#F06E2D',완료:'#B0A99F'};
-var STAGE_BG = {상담:'#F5F0EB',계약금:'#FAF7F5',실측:'#F5F0EB',잔금:'#F5F0EB',시공:'#FAF7F5',완료:'#F5F0EB'};
+var STAGE_COLORS = {상담:'#5C7A9F',계약금:'#F06E2D',실측:'#8B6BB1',잔금:'#2E7D6B',시공:'#C0392B',완료:'#B0A99F'};
+var STAGE_BG = {상담:'#EEF2F7',계약금:'#FFF3EE',실측:'#F3EFF8',잔금:'#EEF5F2',시공:'#FDECEA',완료:'#F5F0EB'};
 var STAGE_NUM = {상담:1,계약금:2,실측:3,잔금:4,시공:5,완료:6};
 var STAGE_ACTIVE = {상담:true,계약금:true,실측:true,잔금:true,시공:true,완료:false};
 var currentDetailName = null;
