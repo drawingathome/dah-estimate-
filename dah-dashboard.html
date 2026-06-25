@@ -407,20 +407,28 @@ body{
 
  
 .cal-day-cell{
-  min-height:40px;display:flex;flex-direction:column;
-  align-items:center;padding:3px 1px;
+  min-height:52px;display:flex;flex-direction:column;
+  align-items:stretch;padding:3px 2px;
   cursor:pointer;border-radius:6px;position:relative
 }
 .cal-day-cell:hover{background:#FAF7F5}
 .cal-day-num{
-  font-size:14px;font-weight:600;color:#282828;
-  width:26px;height:26px;display:flex;
+  font-size:13px;font-weight:600;color:#282828;
+  width:24px;height:24px;display:flex;
   align-items:center;justify-content:center;
-  border-radius:50%;line-height:1;flex-shrink:0
+  border-radius:50%;line-height:1;flex-shrink:0;
+  align-self:center
 }
-.cal-day-cell.today 
-.cal-day-cell.other-month 
-.cal-day-cell.selected 
+.cal-day-cell.today .cal-day-num{
+  background:#282828;color:#fff;font-weight:800
+}
+.cal-day-cell.other-month .cal-day-num{color:#D0C8C0}
+.cal-day-cell.selected .cal-day-num{
+  background:#F06E2D;color:#fff;font-weight:800
+}
+.cal-day-cell.today.selected .cal-day-num{
+  background:#F06E2D;color:#fff
+}
 .cal-dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;margin-top:2px}
 .cal-dot{width:5px;height:5px;border-radius:50%}
 
@@ -2228,10 +2236,12 @@ function renderCal() {
 
   
   var events = getCalEvents(customers, yr, mo);
-  var evMap = {}; 
+  // evMap: 날짜별 {types:[], items:[{type,name}]} 구조로 개선
+  var evMap = {};
   events.forEach(function(ev) {
-    if (!evMap[ev.date]) evMap[ev.date] = [];
-    if (evMap[ev.date].indexOf(ev.type) < 0) evMap[ev.date].push(ev.type);
+    if (!evMap[ev.date]) evMap[ev.date] = {types:[], items:[]};
+    if (evMap[ev.date].types.indexOf(ev.type) < 0) evMap[ev.date].types.push(ev.type);
+    evMap[ev.date].items.push({type:ev.type, name:ev.name, price:ev.price||0});
   });
 
   
@@ -2243,6 +2253,10 @@ function renderCal() {
   var daysInMonth = new Date(yr, mo+1, 0).getDate();
   var daysInPrev = new Date(yr, mo, 0).getDate();
   var totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+
+  // 이벤트 타입 색상
+  var TYPE_DOT_COLOR = {상담:'#5C7A9F', 실측:'#8B6BB1', 시공:'#F06E2D'};
+  var TYPE_TEXT_COLOR = {상담:'#5C7A9F', 실측:'#8B6BB1', 시공:'#F06E2D'};
 
   for (var i = 0; i < totalCells; i++) {
     var cell = document.createElement('div');
@@ -2269,16 +2283,27 @@ function renderCal() {
     numEl.textContent = dayNum;
     cell.appendChild(numEl);
 
-    
+    // 이벤트 표시 - 텍스트 레이블로 개선
     if (!isOther && evMap[dateStr]) {
-      var dotsEl = document.createElement('div');
-      dotsEl.className = 'cal-dots';
-      evMap[dateStr].slice(0,3).forEach(function(type) {
-        var d = document.createElement('div');
-        d.className = 'cal-dot type-' + type;
-        dotsEl.appendChild(d);
+      var evData = evMap[dateStr];
+      evData.items.slice(0,2).forEach(function(item) {
+        var evLabel = document.createElement('div');
+        evLabel.style.cssText =
+          'width:100%;font-size:9px;font-weight:700;line-height:1.3;' +
+          'padding:1px 3px;border-radius:3px;margin-top:1px;' +
+          'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
+          'background:' + (TYPE_DOT_COLOR[item.type]||'#282828') + '22;' +
+          'color:' + (TYPE_TEXT_COLOR[item.type]||'#282828');
+        evLabel.textContent = item.type[0] + ' ' + item.name;
+        cell.appendChild(evLabel);
       });
-      cell.appendChild(dotsEl);
+      // 3건 이상이면 +N 표시
+      if (evData.items.length > 2) {
+        var moreEl = document.createElement('div');
+        moreEl.style.cssText = 'font-size:9px;color:#9A9490;margin-top:1px;text-align:center';
+        moreEl.textContent = '+' + (evData.items.length - 2);
+        cell.appendChild(moreEl);
+      }
     }
 
     (function(ds, isOth) {
@@ -2604,56 +2629,111 @@ function renderDetailEstTab() {
   var all = [];
   try { all = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
   var ests = all.filter(function(e){ return e.clientName === currentDetailName; });
+  // 날짜 최신순 정렬
+  ests.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
 
   var cntEl = document.getElementById('dtab-est-cnt');
   if (cntEl) cntEl.textContent = ests.length > 0 ? ests.length+'건' : '';
 
   if (ests.length === 0) {
-    estEl.innerHTML = '<div class="empty-state"><span class="empty-state-emoji">📋</span><div class="empty-state-title">저장된 견적서가 없습니다</div></div>';
+    estEl.innerHTML = '<div class="empty-state"><span class="empty-state-emoji">📋</span>' +
+      '<div class="empty-state-title">저장된 견적서가 없습니다</div>' +
+      '<div class="empty-state-desc">견적서 앱에서 작성 후 저장하면 여기에 표시됩니다</div>' +
+      '<button onclick="openEstimate(\''+currentDetailName+'\')" style="margin-top:14px;padding:10px 20px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">+ 견적서 작성하기</button></div>';
     return;
   }
 
-  var CONTRACT_KO = {pending:'가견적', contracted:'계약됨', rejected:'미계약'};
-  var CONTRACT_BG = {pending:'#F5F0EB', contracted:'#EEF5F2', rejected:'#FDECEA'};
+  var CONTRACT_KO    = {pending:'가견적', contracted:'✅ 계약됨', rejected:'미계약'};
+  var CONTRACT_BG    = {pending:'#F5F0EB', contracted:'#EEF5F2', rejected:'#FDECEA'};
   var CONTRACT_COLOR = {pending:'#9A9490', contracted:'#2E7D6B', rejected:'#C0392B'};
-  var STATUS_KO = {ga:'가견적서', final:'최종견적서'};
+  var STATUS_KO      = {ga:'가견적서', final:'최종견적서'};
+
+  // 재구매 여부 - 계약된 견적이 2개 이상이면 재구매
+  var contractedCount = ests.filter(function(e){ return e.contractStatus === 'contracted'; }).length;
+  if (contractedCount > 1) {
+    var rebuyBanner = div('background:#FFF3EE;border:1px solid #F06E2D;border-radius:8px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px', [
+      el('span', {style:'font-size:16px', text:'🔄'}),
+      el('span', {style:'font-size:13px;font-weight:700;color:#F06E2D', text:'재구매 고객 — 계약 '+contractedCount+'회'})
+    ]);
+    estEl.appendChild(rebuyBanner);
+  }
 
   ests.forEach(function(e, i) {
     var cs = e.contractStatus || 'pending';
+    var isFinal = e.status === 'final';
+    var isContracted = cs === 'contracted';
+
     var card = div(
-      'border:1px solid #EEE6DC;border-radius:8px;padding:14px;margin-bottom:10px;background:#fff',
+      'border:1px solid '+(isContracted?'#B0D4B0':'#EEE6DC')+';border-radius:10px;padding:14px;margin-bottom:10px;' +
+      'background:'+(isContracted?'#FAFFF9':'#fff'),
       []
     );
+
+    // 순번 표시 (최신순)
+    var orderBadge = el('span', {style:'font-size:10px;color:#9A9490', text: (i+1)+'번째 견적'});
+
     // 상단: 번호 + 유형 + 계약상태
-    var top = div('display:flex;align-items:center;gap:6px;margin-bottom:8px', [
-      el('span', {style:'font-size:12px;font-weight:700;color:#282828', text: e.no||'—'}),
-      el('span', {style:'font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:'+(e.status==='final'?'#282828':'#F5F0EB')+';color:'+(e.status==='final'?'#fff':'#9A9490'), text: STATUS_KO[e.status]||'가견적서'}),
-      el('span', {style:'margin-left:auto;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:'+CONTRACT_BG[cs]+';color:'+CONTRACT_COLOR[cs], text: CONTRACT_KO[cs]})
+    var top = div('display:flex;align-items:center;gap:6px;margin-bottom:10px', [
+      orderBadge,
+      el('span', {style:'font-size:12px;font-weight:800;color:#282828', text: e.no||'—'}),
+      el('span', {style:'font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:'+(isFinal?'#282828':'#F5F0EB')+';color:'+(isFinal?'#fff':'#9A9490'), text: STATUS_KO[e.status]||'가견적서'}),
+      el('span', {style:'margin-left:auto;font-size:11px;font-weight:700;padding:3px 9px;border-radius:4px;background:'+CONTRACT_BG[cs]+';color:'+CONTRACT_COLOR[cs], text: CONTRACT_KO[cs]})
     ]);
-    // 중간: 금액
-    var mid = div('display:flex;justify-content:space-between;align-items:center;margin-bottom:6px', [
-      el('span', {style:'font-size:13px;color:#6B6B6B', text: e.space||'—'}),
-      el('span', {style:'font-size:17px;font-weight:900;color:#282828;letter-spacing:-0.5px', text: (Number(e.price)||0).toLocaleString()+'원'})
+
+    // 금액 크게
+    var priceRow = div('margin-bottom:8px', [
+      el('div', {style:'font-size:22px;font-weight:900;color:#282828;letter-spacing:-1px', text: (Number(e.price)||0).toLocaleString()+'원'}),
     ]);
-    // 하단: 원단 + 날짜
-    var bot = div('font-size:11px;color:#B0A99F;display:flex;justify-content:space-between', [
-      el('span', {text: e.fabric||''}),
-      el('span', {text: e.savedAt ? e.savedAt.slice(0,10) : (e.date||'')})
-    ]);
-    // 빠른 액션 버튼
-    var actions = div('display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid #EEE6DC', []);
-    var kakaoBtn = btn('flex:1;padding:8px 0;background:#FAE100;color:#3C1E1E;border:none;border-radius:6px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '카카오 발송', function(){
-      var text = '[드로잉엣홈] ' + e.clientName + '님 견적서 (' + (e.no||'') + ')\n금액: ' + (Number(e.price)||0).toLocaleString() + '원\n공간: ' + (e.space||'') + '\n원단: ' + (e.fabric||'');
-      navigator.clipboard.writeText(text).then(function(){ showToast('카카오톡에 붙여넣기 하세요 🙂'); }).catch(function(){ showToast('텍스트를 복사했습니다'); });
+
+    // 상세 정보 그리드
+    var infoGrid = div('display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px', []);
+    var infoItems = [
+      {label:'공간', value: e.space||'—'},
+      {label:'원단', value: e.fabric||'—'},
+      {label:'실측일', value: e.date||'—'},
+      {label:'시공일', value: e.installDate||'—'},
+    ];
+    infoItems.forEach(function(item){
+      infoGrid.appendChild(div('background:#F5F0EB;border-radius:6px;padding:7px 10px', [
+        el('div', {style:'font-size:9px;color:#9A9490;margin-bottom:2px', text:item.label}),
+        el('div', {style:'font-size:12px;font-weight:700;color:#282828;white-space:nowrap;overflow:hidden;text-overflow:ellipsis', text:item.value})
+      ]));
     });
-    var estAppBtn = btn('flex:1;padding:8px 0;background:#282828;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '견적서 앱 열기', function(){
+
+    // 저장일
+    var savedDate = e.savedAt ? e.savedAt.slice(0,10) : (e.date||'');
+    var dateRow = el('div', {style:'font-size:11px;color:#B0A99F;margin-bottom:10px', text:'저장일: ' + savedDate});
+
+    // 액션 버튼
+    var actions = div('display:flex;gap:6px', []);
+    var kakaoBtn = btn('flex:1;padding:9px 0;background:#FAE100;color:#3C1E1E;border:none;border-radius:6px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '📋 카카오 복사', function(){
+      var text = '[드로잉엣홈] ' + (e.clientName||'') + '님 견적서\n' +
+        '견적번호: ' + (e.no||'—') + '\n' +
+        '금액: ' + (Number(e.price)||0).toLocaleString() + '원\n' +
+        '공간: ' + (e.space||'—') + '\n' +
+        '원단: ' + (e.fabric||'—');
+      navigator.clipboard.writeText(text)
+        .then(function(){ showToast('카카오톡에 붙여넣기 하세요 🙂'); })
+        .catch(function(){ showToast('복사됐습니다'); });
+    });
+    var openBtn = btn('flex:1;padding:9px 0;background:#282828;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '📄 견적서 앱', function(){
       openEstimate(currentDetailName);
     });
     actions.appendChild(kakaoBtn);
-    actions.appendChild(estAppBtn);
-    card.appendChild(top); card.appendChild(mid); card.appendChild(bot); card.appendChild(actions);
+    actions.appendChild(openBtn);
+
+    card.appendChild(top);
+    card.appendChild(priceRow);
+    card.appendChild(infoGrid);
+    card.appendChild(dateRow);
+    card.appendChild(actions);
     estEl.appendChild(card);
   });
+
+  // 새 견적 버튼
+  var newEstBtn = btn('width:100%;padding:12px;background:#F5F0EB;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px',
+    '+ 새 견적서 작성', function(){ openEstimate(currentDetailName); });
+  estEl.appendChild(newEstBtn);
 }
 
 function openDetail(name) {
