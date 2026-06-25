@@ -888,9 +888,17 @@ input,select,textarea{transition:border-color 0.15s ease}
 <div class="overlay" id="detail-overlay">
   <div class="modal-box">
     <div class="modal-top-bar"></div>
-    <div style="padding:16px;border-bottom:1px solid #EEE6DC;display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:15px;font-weight:700" id="detail-name"></div>
-      <button id="detail-close-btn" style="background:none;border:none;font-size:20px;cursor:pointer;color:#B0A99F">✕</button>
+    <!-- 상단 헤더 -->
+    <div style="padding:16px 16px 0;border-bottom:1px solid #EEE6DC">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:20px;font-weight:900;color:#282828;letter-spacing:-0.5px;margin-bottom:6px" id="detail-name"></div>
+          <div id="detail-summary-row" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"></div>
+        </div>
+        <button id="detail-close-btn" style="background:none;border:none;font-size:20px;cursor:pointer;color:#B0A99F;flex-shrink:0;margin-left:8px;margin-top:2px">✕</button>
+      </div>
+      <!-- 핵심 정보 요약 바 -->
+      <div id="detail-info-bar" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:#EEE6DC;border-radius:8px;overflow:hidden;margin-bottom:16px"></div>
     </div>
     <div style="padding:16px" id="detail-body"></div>
   </div>
@@ -2398,9 +2406,45 @@ function openDetail(name) {
   currentDetailName = name;
   var isMaster = currentUser && currentUser.role === 'master';
 
-  document.getElementById('detail-name').style.fontSize='17px';
-  document.getElementById('detail-name').textContent =
-    c.clientName + (c.visitCount > 1 ? ' ∙ 재구매 '+c.visitCount+'회' : '');
+  // 이름
+  document.getElementById('detail-name').textContent = c.clientName;
+
+  // 요약 row: 단계뱃지 + 재구매 + 경과일
+  var summaryRow = document.getElementById('detail-summary-row');
+  summaryRow.innerHTML = '';
+  var stageBadge = document.createElement('span');
+  stageBadge.textContent = c.stage;
+  stageBadge.style.cssText = 'font-size:11px;font-weight:700;padding:3px 9px;border-radius:4px;color:#fff;background:' + (STAGE_COLORS[c.stage]||'#282828');
+  summaryRow.appendChild(stageBadge);
+  if (c.visitCount > 1) {
+    var reBadge = document.createElement('span');
+    reBadge.textContent = '재구매 '+c.visitCount+'회';
+    reBadge.style.cssText = 'font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;background:#FAF7F5;color:#F06E2D;border:1px solid #EEE6DC';
+    summaryRow.appendChild(reBadge);
+  }
+  if (c.date) {
+    var diff = daysDiff(c.date);
+    var diffBadge = document.createElement('span');
+    diffBadge.textContent = diff === 0 ? '오늘 상담' : diff > 0 ? diff+'일 경과' : Math.abs(diff)+'일 후';
+    diffBadge.style.cssText = 'font-size:11px;color:#9A9490';
+    summaryRow.appendChild(diffBadge);
+  }
+
+  // 핵심 정보 3칸 요약
+  var infoBar = document.getElementById('detail-info-bar');
+  infoBar.innerHTML = '';
+  var infoItems = [
+    {label:'견적금액', value: c.price ? fmt(c.price) : '—'},
+    {label:'공간',     value: c.space || '—'},
+    {label:'담당자',   value: c.staffName || '마스터'}
+  ];
+  infoItems.forEach(function(item) {
+    var cell = document.createElement('div');
+    cell.style.cssText = 'background:#FAF7F5;padding:10px 12px;text-align:center';
+    cell.innerHTML = '<div style="font-size:10px;color:#9A9490;letter-spacing:0.8px;margin-bottom:4px">' + item.label + '</div>' +
+                     '<div style="font-size:13px;font-weight:700;color:#282828;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + item.value + '</div>';
+    infoBar.appendChild(cell);
+  });
 
   var body = document.getElementById('detail-body');
   body.innerHTML = '';
@@ -2609,31 +2653,51 @@ function openDetail(name) {
   });
   body.appendChild(alimSec);
 
-  
+  // 고객 정보 섹션
   var infoSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
-  infoSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px', text:'고객 정보'}));
-  var phoneRow = div('display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #EEE6DC;font-size:14px', [span('color:#6B6B6B', '연락처')]);
-  if (c.phone) { var telLink = el('a', {href:'tel:'+c.phone.replace(/[^0-9]/g,''), style:'font-weight:700;color:#282828;text-decoration:none'}); telLink.textContent = c.phone; phoneRow.appendChild(telLink); }
-  else { phoneRow.appendChild(span('font-weight:700', '—')); }
-  infoSec.appendChild(phoneRow);
-  var infoRows = [
-    ['주소', c.addr||'—'],
-    ['공간·품목', c.space||'—'],
-    ['견적 금액', fmt(c.price)],
-    ['상담일', c.date||'—'],
-    ['실측 예정', c.measureDate||'—'],
-    ['시공 예정', c.installDate||'—'],
-    ['메모', c.memo||'—']
-  ];
-  infoRows.forEach(function(row) {
-    infoSec.appendChild(div('display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #EEE6DC;font-size:14px', [
-      el('span',{style:'font-size:13px;color:#6B6B6B', text:row[0]}),
-      el('span', {style:'font-size:15px;font-weight:600;text-align:right;max-width:60%', text:row[1]})
+  infoSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'고객 정보'}));
+
+  // 연락처 - 크고 눈에 띄게
+  var phoneBlock = div('background:#FAF7F5;border:1px solid #EEE6DC;border-radius:8px;padding:12px 14px;margin-bottom:8px', []);
+  phoneBlock.appendChild(el('div', {style:'font-size:10px;color:#9A9490;letter-spacing:0.8px;margin-bottom:4px', text:'연락처'}));
+  if (c.phone) {
+    var telLink = el('a', {href:'tel:'+c.phone.replace(/[^0-9]/g,''), style:'font-size:17px;font-weight:800;color:#282828;text-decoration:none;letter-spacing:-0.3px'});
+    telLink.textContent = c.phone;
+    phoneBlock.appendChild(telLink);
+  } else {
+    phoneBlock.appendChild(el('span', {style:'font-size:15px;font-weight:700;color:#B0A99F', text:'—'}));
+  }
+  infoSec.appendChild(phoneBlock);
+
+  // 주소
+  if (c.addr) {
+    var addrBlock = div('background:#FAF7F5;border:1px solid #EEE6DC;border-radius:8px;padding:10px 14px;margin-bottom:8px', [
+      el('div', {style:'font-size:10px;color:#9A9490;letter-spacing:0.8px;margin-bottom:3px', text:'주소'}),
+      el('div', {style:'font-size:14px;font-weight:600;color:#282828;line-height:1.4', text:c.addr})
+    ]);
+    infoSec.appendChild(addrBlock);
+  }
+
+  // 메모
+  if (c.memo) {
+    var memoBlock = div('background:#FFFBF5;border:1px solid #FFE5CC;border-radius:8px;padding:10px 14px;margin-bottom:8px', [
+      el('div', {style:'font-size:10px;color:#F06E2D;letter-spacing:0.8px;margin-bottom:3px', text:'메모'}),
+      el('div', {style:'font-size:13px;color:#282828;line-height:1.6', text:c.memo})
+    ]);
+    infoSec.appendChild(memoBlock);
+  }
+
+  // 날짜 3개 가로 배열
+  var dateGrid = div('display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px', []);
+  [{label:'상담일',value:c.date||'—'},{label:'실측 예정',value:c.measureDate||'—'},{label:'시공 예정',value:c.installDate||'—'}].forEach(function(item){
+    dateGrid.appendChild(div('background:#FAF7F5;border:1px solid #EEE6DC;border-radius:8px;padding:10px 8px;text-align:center',[
+      el('div',{style:'font-size:9px;color:#9A9490;letter-spacing:0.8px;margin-bottom:4px',text:item.label}),
+      el('div',{style:'font-size:12px;font-weight:700;color:'+(item.value==='—'?'#B0A99F':'#282828'),text:item.value})
     ]));
   });
+  infoSec.appendChild(dateGrid);
   body.appendChild(infoSec);
 
-  
   renderEstimateHistory(body, c.clientName);
 
   
