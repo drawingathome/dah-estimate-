@@ -8,36 +8,5 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy dah-dashboard
-        run: |
-          RESULT=$(curl -s -X POST "https://api.vercel.com/v13/deployments?teamId=drawingathome-s-projects&forceNew=1" \
-            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "name": "dah-dashboard",
-              "target": "production",
-              "gitSource": {
-                "type": "github",
-                "repoId": "1256814444",
-                "ref": "main"
-              }
-            }')
-          echo "dashboard: $RESULT" | head -c 500
-
-      - name: Deploy dah-estimate
-        run: |
-          RESULT=$(curl -s -X POST "https://api.vercel.com/v13/deployments?teamId=drawingathome-s-projects&forceNew=1" \
-            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "name": "dah-estimate",
-              "target": "production",
-              "gitSource": {
-                "type": "github",
-                "repoId": "1256814444",
-                "ref": "main"
-              }
-            }')
-          echo "estimate: $RESULT" | head -c 500
+      - name: Trigger Vercel Deploy (dah-dashboard)
+        run: curl -s -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_DASHBOARD }}"
