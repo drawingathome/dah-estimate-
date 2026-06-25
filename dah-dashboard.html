@@ -776,10 +776,16 @@ input,select,textarea{transition:border-color 0.15s ease}
       <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B0A99F" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="search" id="cust-search" class="search-input-clean" placeholder="고객명 · 연락처 · 주소 검색">
     </div>
-    <label class="archived-check">
-      <input type="checkbox" id="show-archived" onchange="renderSearch()">
-      <span>보관 고객 포함</span>
-    </label>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+      <label class="archived-check">
+        <input type="checkbox" id="show-archived" onchange="renderSearch()">
+        <span>보관 고객 포함</span>
+      </label>
+      <button onclick="exportExcel()" style="height:30px;padding:0 12px;background:#282828;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:5px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        엑셀 다운로드
+      </button>
+    </div>
   </div>
   <div class="card">
     <div class="card-head">
@@ -2550,6 +2556,62 @@ function backupData() {
   try { var data = {customers: loadCustomers(), exported: new Date().toISOString(), version: '1.0'}; var json = JSON.stringify(data, null, 2); var blob = new Blob([json], {type: 'application/json'}); var url = URL.createObjectURL(blob); var a = document.createElement('a'); var d = new Date(); a.href = url; a.download = 'dah_backup_' + d.getFullYear() + pad2(d.getMonth()+1) + pad2(d.getDate()) + '.json'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); showToast('백업 파일이 저장됐습니다'); } catch(e) { alert('백업 실패: ' + e.message); }
 }
 
+function exportExcel() {
+  try {
+    var customers = loadCustomers();
+    if (!customers || customers.length === 0) { showToast('내보낼 고객 데이터가 없습니다'); return; }
+
+    // 헤더
+    var headers = ['고객명','연락처','주소','공간','단계','금액','성과매출','담당자','계약일','실측일','시공일','방문횟수','메모'];
+
+    // 데이터 행
+    var rows = customers.map(function(c) {
+      return [
+        c.clientName   || '',
+        c.phone        || '',
+        c.addr         || '',
+        c.space        || '',
+        c.stage        || '',
+        c.price        || 0,
+        c.performanceRevenue || 0,
+        c.staffName    || '마스터',
+        c.date         || '',
+        c.measureDate  || '',
+        c.installDate  || '',
+        c.visitCount   || 1,
+        c.memo         || ''
+      ];
+    });
+
+    // CSV 생성 (엑셀에서 열림, BOM 추가로 한글 깨짐 방지)
+    var BOM = '\uFEFF';
+    var csv = BOM + [headers].concat(rows).map(function(row) {
+      return row.map(function(cell) {
+        var s = String(cell);
+        // 쉼표·줄바꿈·따옴표 포함시 따옴표로 감싸기
+        if (s.indexOf(',') >= 0 || s.indexOf('\n') >= 0 || s.indexOf('"') >= 0) {
+          s = '"' + s.replace(/"/g, '""') + '"';
+        }
+        return s;
+      }).join(',');
+    }).join('\r\n');
+
+    var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    var d    = new Date();
+    a.href     = url;
+    a.download = '드로잉엣홈_고객목록_' + d.getFullYear() + pad2(d.getMonth()+1) + pad2(d.getDate()) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('엑셀 파일 저장 완료 (' + customers.length + '건)');
+  } catch(e) {
+    alert('내보내기 실패: ' + e.message);
+  }
+}
+
 function getMonthRevenue(customers, monthKey) {
   return customers.filter(function(c) { return (c.date||'').slice(0,7) === monthKey && c.stage !== '상담'; }).reduce(function(s,c) { return s + (Number(c.price)||0); }, 0);
 }
@@ -2660,6 +2722,7 @@ function renderSettings() {
   var dataCard = div('background:#fff;margin-bottom:10px;padding:16px', [
     span('font-size:12px;font-weight:700;color:#B0A99F;letter-spacing:1.2px;display:block;margin-bottom:12px', '💾 데이터 관리')
   ]);
+  dataCard.appendChild(btn('width:100%;padding:11px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:8px', '📊 고객목록 엑셀 내보내기', exportExcel));
   dataCard.appendChild(btn('width:100%;padding:11px;background:#fff;border:1px solid #EEE6DC;font-size:14px;font-family:inherit;cursor:pointer;margin-bottom:8px', '💾 백업 (JSON 다운로드)', backupData));
   var restoreInput = el('input', {type:'file', accept:'.json', style:'display:none', id:'restore-input'});
   restoreInput.addEventListener('change', function(e) {
