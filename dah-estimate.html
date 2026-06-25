@@ -1228,6 +1228,7 @@ input,select,textarea{transition:border-color 0.15s ease}
     <div class="action-main">
       <div class="btn-row" style="display:flex;gap:10px;width:100%"><button class="btn-print" style="flex:1" onclick="printForCustomer()">🖨 고객용 출력</button>
       <button class="btn-save" style="flex:1" onclick="saveEstimate()">저장</button></div>
+      <button onclick="exportAllEstimatesExcel()" style="width:100%;margin-top:8px;padding:12px 0;background:#5C7A9F;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📊 전체 견적서 엑셀 다운로드</button>
     </div>
   </div>
 
@@ -2115,6 +2116,69 @@ function saveEstimate() {
   }
   saveToCustomers();
   showToast('✅ 저장 완료!');
+}
+
+function exportAllEstimatesExcel() {
+  try {
+    var estimates = [];
+    try { estimates = JSON.parse(localStorage.getItem('dah_saved') || '[]'); } catch(ex) {}
+    if (!estimates || estimates.length === 0) { showToast('저장된 견적서가 없습니다'); return; }
+
+    var CONTRACT_KO = {pending:'가견적', contracted:'계약됨', rejected:'미계약'};
+    var STATUS_KO   = {ga:'가견적서', final:'최종견적서'};
+
+    var headers = [
+      '견적번호','구분','계약상태','고객명','연락처','주소','공간',
+      '제품/원단','금액(원)','성과매출(원)',
+      '담당자','실측일','시공일','저장일','메모'
+    ];
+
+    var rows = estimates.map(function(e) {
+      return [
+        e.no                               || '',
+        STATUS_KO[e.status]                || '가견적서',
+        CONTRACT_KO[e.contractStatus]      || '가견적',
+        e.clientName                       || '',
+        e.phone                            || '',
+        e.addr                             || '',
+        e.space                            || '',
+        e.fabric                           || '',
+        Number(e.price)                    || 0,
+        Number(e.performanceRevenue)       || 0,
+        e.staffName                        || '',
+        e.date                             || '',
+        e.installDate                      || '',
+        e.savedAt ? e.savedAt.slice(0,10)  : '',
+        e.memo                             || ''
+      ];
+    });
+
+    var BOM = '\uFEFF';
+    var csv = BOM + [headers].concat(rows).map(function(row) {
+      return row.map(function(cell) {
+        var s = String(cell);
+        if (s.indexOf(',') >= 0 || s.indexOf('\n') >= 0 || s.indexOf('"') >= 0) {
+          s = '"' + s.replace(/"/g, '""') + '"';
+        }
+        return s;
+      }).join(',');
+    }).join('\r\n');
+
+    var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    var d    = new Date();
+    var pad  = function(n){ return String(n).padStart(2,'0'); };
+    a.href     = url;
+    a.download = '드로잉엣홈_견적서목록_' + d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('견적서 엑셀 저장 완료 (' + estimates.length + '건)');
+  } catch(e) {
+    alert('내보내기 실패: ' + e.message);
+  }
 }
 
 function showToast(msg) {
