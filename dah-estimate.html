@@ -489,10 +489,10 @@ td.amt{
 .pv-sum-table td{padding:8px 28px}
 .pv-sum-table .total-row td{
   padding:16px 28px;font-size:15px;font-weight:800;
-  background:#282828;border-top:none
+  background:#fff;border-top:2px solid #282828;border-bottom:2px solid #282828
 }
-.pv-sum-table .total-row .sum-lbl{color:rgba(255,255,255,0.6)!important;font-weight:500;font-size:13px}
-.pv-sum-table .total-row .sum-val{font-size:20px!important;font-weight:900!important;color:#fff!important;letter-spacing:-0.5px;text-align:right}
+.pv-sum-table .total-row .sum-lbl{color:#6B6B6B!important;font-weight:500;font-size:13px}
+.pv-sum-table .total-row .sum-val{font-size:20px!important;font-weight:900!important;color:#282828!important;letter-spacing:-0.5px;text-align:right}
  
 .pv-notes{
   padding:16px 28px;background:#F5F0EB;
@@ -2393,7 +2393,7 @@ function buildCustomerHTML() {
   out += '<tr><td class="sum-lbl">제품 소계</td><td class="sum-val">'+sumCurtain+'</td></tr>';
   if(svcRows.length) out += '<tr><td class="sum-lbl">시공 서비스</td><td class="sum-val">'+sumSvc+'</td></tr>';
   if(sumDisc && sumDisc !== '-0원' && sumDisc !== '') out += '<tr><td class="sum-lbl">할인</td><td class="sum-val" style="color:#282828">'+sumDisc+'</td></tr>';
-  out += '<tr class="total-row"><td class="sum-lbl" style="font-size:13px;font-weight:500;color:rgba(255,255,255,0.6)">최종 견적</td><td class="sum-val" style="font-size:20px;font-weight:900;letter-spacing:-0.5px;color:#fff">'+sumTotal+'</td></tr>';
+  out += '<tr class="total-row"><td class="sum-lbl" style="font-size:13px;font-weight:500;color:#6B6B6B">최종 견적</td><td class="sum-val" style="font-size:20px;font-weight:900;letter-spacing:-0.5px;color:#282828">'+sumTotal+'</td></tr>';
   out += '</table>';
 
   
