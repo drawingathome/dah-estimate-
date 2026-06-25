@@ -1586,7 +1586,7 @@ function addBlindRow() {
     '</td>'+
     '<td><select class="blind-kind" onchange="calcBlindRow(this)" style="'+SEL+'">'+
       '<option>롤스크린</option><option>알루미늄</option><option>우드</option>'+
-      '<option>허니콤</option><option>로만쉐이드</option><option>기타</option>'+
+      '<option>버티컬</option><option>허니컴</option><option>로만쉐이드</option><option>기타</option>'+
     '</select></td>'+
     '<td><select class="handle-dir" style="'+SEL+'"><option>좌손</option><option>우손</option><option>기타</option></select></td>'+
 
@@ -1943,7 +1943,19 @@ function newEstimate() {
   document.getElementById('survey-card').style.display='none';
   var d=new Date();
   document.getElementById('c-date').value=d.toISOString().slice(0,10);
-  document.getElementById('c-no').value='DAH-'+d.getFullYear()+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1)+(d.getDate()<10?'0':'')+d.getDate()+'-'+Math.floor(Math.random()*100);
+  // 견적번호 안전한 순번 채번
+  (function(){
+    var p2 = function(n){ return String(n).padStart(2,'0'); };
+    var saved = [];
+    try { saved = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
+    var prefix = 'DAH-' + d.getFullYear() + p2(d.getMonth()+1) + p2(d.getDate()) + '-';
+    var todayNos = saved
+      .map(function(e){ return e.no||''; })
+      .filter(function(no){ return no.indexOf(prefix) === 0; })
+      .map(function(no){ return parseInt(no.replace(prefix,''))||0; });
+    var nextSeq = todayNos.length > 0 ? Math.max.apply(null, todayNos) + 1 : 1;
+    document.getElementById('c-no').value = prefix + String(nextSeq).padStart(2,'0');
+  })();
   setStatus('ga');
   setCustType('new');
   addCurtainRow();
