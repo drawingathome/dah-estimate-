@@ -616,9 +616,9 @@ button:active{transform:scale(0.96);opacity:0.85}
 .hd-btn:active{transform:scale(0.95)}
 
 /* 3. 카드/리스트 아이템 hover */
-.pipe-item{transition:background 0.15s ease,transform 0.1s ease}
+
 .pipe-item:hover{background:#F8F4F1;transform:translateX(2px)}
-.action-item{transition:background 0.15s ease}
+
 .action-item:hover{background:#FFF8F5}
 .cust-load-item{transition:background 0.12s ease}
 .cust-load-item:hover{background:#F5F0EB}
@@ -626,7 +626,7 @@ button:active{transform:scale(0.96);opacity:0.85}
 /* 4. 탭 전환 */
 .est-status-btn{transition:all 0.2s ease}
 .est-status-btn.on{transition:all 0.2s ease}
-.tab{transition:color 0.15s ease}
+
 .tab.on::after{transition:width 0.2s ease}
 
 /* 5. 입력 필드 포커스 */
@@ -640,7 +640,7 @@ input,select,textarea{transition:border-color 0.15s ease}
   to{opacity:1;transform:translateY(0)}
 }
 .section{animation:fadeSlideUp 0.25s ease both}
-.card{animation:fadeSlideUp 0.2s ease both}
+
 
 /* 7. 합계 숫자 변경 pulse */
 @keyframes numPulse{
@@ -652,12 +652,12 @@ input,select,textarea{transition:border-color 0.15s ease}
 
 /* 8. 토스트 — 이미 있지만 강화 */
 @keyframes fadeInUp{
-  from{opacity:0;transform:translateX(-50%) translateY(12px)}
-  to{opacity:1;transform:translateX(-50%) translateY(0)}
+  
+  
 }
 @keyframes fadeOutDown{
-  from{opacity:1;transform:translateX(-50%) translateY(0)}
-  to{opacity:0;transform:translateX(-50%) translateY(8px)}
+  
+  
 }
 
 /* 9. notice-card 알림 등장 */
@@ -668,20 +668,20 @@ input,select,textarea{transition:border-color 0.15s ease}
 .tbl-outer::after{transition:opacity 0.2s ease}
 
 /* 11. KPI 카드 숫자 */
-.kpi-num{transition:color 0.3s ease}
+
 .rev-bar-fill{transition:width 0.6s cubic-bezier(0.4,0,0.2,1)}
 
 /* 12. stage-pill hover */
-.stage-pill{transition:all 0.15s ease;cursor:default}
-.pipe-item .stage-pill{cursor:pointer}
+
+.pipe-item 
 .pipe-item .stage-pill:hover{opacity:0.8}
 
 /* 대시보드 전용 마이크로 */
-.hd-btn{transition:all 0.15s ease}
+
 .hd-btn:hover{opacity:0.85}
-.sc{transition:background 0.1s ease,color 0.1s ease}
+
 .sc.on{transition:all 0.15s ease}
-.chart-tab{transition:color 0.15s ease,border-bottom 0.15s ease}
+
 </style>
 </head>
 <body>
