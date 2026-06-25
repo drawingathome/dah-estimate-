@@ -9,14 +9,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm install --global vercel@latest
-      - name: Deploy dah-dashboard
-        run: vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }} --name=dah-dashboard
-        
+      - name: Redeploy dah-dashboard via Vercel API
+        run: |
+          curl -sf -X POST "https://api.vercel.com/v13/deployments" \
+            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "name": "dah-dashboard",
+              "target": "production",
+              "gitSource": {
+                "type": "github",
+                "repoId": "1256814444",
+                "ref": "main"
+              }
+            }'
+
   deploy-estimate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm install --global vercel@latest
-      - name: Deploy dah-estimate
-        run: vercel deploy --prod --yes --token=${{ secrets.VERCEL_TOKEN }} --name=dah-estimate
+      - name: Redeploy dah-estimate via Vercel API
+        run: |
+          curl -sf -X POST "https://api.vercel.com/v13/deployments" \
+            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "name": "dah-estimate",
+              "target": "production",
+              "gitSource": {
+                "type": "github",
+                "repoId": "1256814444",
+                "ref": "main"
+              }
+            }'
