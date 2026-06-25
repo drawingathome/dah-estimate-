@@ -1767,7 +1767,113 @@ function renderHome() {
     wrap.appendChild(myStatWrap);
   }
 
-   
+  // 12개월 꺾은선 차트
+  (function(){
+    var chartCard = el('div', {class:'card'});
+    var chartHd = el('div', {class:'card-head'});
+    var chartHdRow = el('div', {class:'card-head-row'});
+    var chartLbl = el('span', {class:'card-title'}); chartLbl.textContent = '12개월 매출 추이';
+    var chartYear = el('span', {class:'card-count'}); chartYear.textContent = now.getFullYear()+'년';
+    chartHdRow.appendChild(chartLbl); chartHdRow.appendChild(chartYear);
+    chartHd.appendChild(chartHdRow); chartCard.appendChild(chartHd);
+
+    // 최근 12개월 데이터
+    var months12 = [];
+    for (var mi = 11; mi >= 0; mi--) {
+      var md = new Date(now.getFullYear(), now.getMonth()-mi, 1);
+      var mKey = md.getFullYear()+'-'+pad2(md.getMonth()+1);
+      var mRev = allCustomers.filter(function(c){
+        return (c.date||'').slice(0,7)===mKey && c.stage!=='상담' && (Number(c.price)||0)>0;
+      }).reduce(function(s,c){ return s+(Number(c.price)||0); }, 0);
+      months12.push({key:mKey, label:(md.getMonth()+1)+'월', rev:mRev, isCurrent:mKey===month});
+    }
+
+    var maxRev12 = Math.max.apply(null, months12.map(function(m){ return m.rev; })) || 1;
+    var svgNS = 'http://www.w3.org/2000/svg';
+    var W=340, H=100, PAD=28, BPAD=20;
+    var chartW = W-PAD*2, chartH = H-BPAD-8;
+    var n = months12.length;
+
+    var svg = document.createElementNS(svgNS,'svg');
+    svg.setAttribute('width','100%'); svg.setAttribute('height',H+'px');
+    svg.setAttribute('viewBox','0 0 '+W+' '+H);
+    svg.style.display='block';
+
+    // 가이드라인
+    [0.5, 1].forEach(function(r){
+      var y = H-BPAD-Math.round(r*chartH);
+      var gl = document.createElementNS(svgNS,'line');
+      gl.setAttribute('x1',PAD); gl.setAttribute('x2',W-PAD);
+      gl.setAttribute('y1',y); gl.setAttribute('y2',y);
+      gl.setAttribute('stroke','#EEE6DC'); gl.setAttribute('stroke-width','1');
+      svg.appendChild(gl);
+      var lt = document.createElementNS(svgNS,'text');
+      lt.setAttribute('x',PAD-4); lt.setAttribute('y',y+3);
+      lt.setAttribute('text-anchor','end'); lt.setAttribute('font-size','8');
+      lt.setAttribute('fill','#B0A99F');
+      lt.textContent = Math.round(maxRev12*r/10000)+'만';
+      svg.appendChild(lt);
+    });
+
+    var pts12 = months12.map(function(m,i){
+      var x = PAD + (i/(n-1))*chartW;
+      var y = H-BPAD - Math.round(m.rev/maxRev12*chartH);
+      return {x:x, y:y, rev:m.rev, label:m.label, isCurrent:m.isCurrent};
+    });
+
+    // 영역 채우기
+    var areaD = 'M'+pts12[0].x.toFixed(1)+' '+pts12[0].y.toFixed(1);
+    pts12.slice(1).forEach(function(p){ areaD += ' L'+p.x.toFixed(1)+' '+p.y.toFixed(1); });
+    areaD += ' L'+pts12[pts12.length-1].x.toFixed(1)+' '+(H-BPAD)+' L'+pts12[0].x.toFixed(1)+' '+(H-BPAD)+' Z';
+    var area12 = document.createElementNS(svgNS,'path');
+    area12.setAttribute('d',areaD); area12.setAttribute('fill','rgba(240,110,45,0.06)');
+    svg.appendChild(area12);
+
+    // 꺾은선
+    var pathD12 = 'M'+pts12[0].x.toFixed(1)+' '+pts12[0].y.toFixed(1);
+    pts12.slice(1).forEach(function(p){ pathD12 += ' L'+p.x.toFixed(1)+' '+p.y.toFixed(1); });
+    var path12 = document.createElementNS(svgNS,'path');
+    path12.setAttribute('d',pathD12); path12.setAttribute('fill','none');
+    path12.setAttribute('stroke','#F06E2D'); path12.setAttribute('stroke-width','2');
+    path12.setAttribute('stroke-linejoin','round');
+    svg.appendChild(path12);
+
+    // 포인트 + 레이블
+    pts12.forEach(function(p){
+      var c12 = document.createElementNS(svgNS,'circle');
+      c12.setAttribute('cx',p.x); c12.setAttribute('cy',p.y);
+      c12.setAttribute('r',p.isCurrent?4:2.5);
+      c12.setAttribute('fill',p.isCurrent?'#F06E2D':'#fff');
+      c12.setAttribute('stroke','#F06E2D'); c12.setAttribute('stroke-width','1.5');
+      svg.appendChild(c12);
+
+      if (p.isCurrent && p.rev > 0) {
+        var vt = document.createElementNS(svgNS,'text');
+        vt.setAttribute('x',p.x); vt.setAttribute('y',p.y-7);
+        vt.setAttribute('text-anchor','middle'); vt.setAttribute('font-size','10');
+        vt.setAttribute('font-weight','700'); vt.setAttribute('fill','#F06E2D');
+        vt.textContent = Math.round(p.rev/10000)+'만';
+        svg.appendChild(vt);
+      }
+
+      // 3개월마다 레이블
+      var idx12 = pts12.indexOf(p);
+      if (idx12 % 3 === 0 || p.isCurrent) {
+        var lt2 = document.createElementNS(svgNS,'text');
+        lt2.setAttribute('x',p.x); lt2.setAttribute('y',H-4);
+        lt2.setAttribute('text-anchor','middle'); lt2.setAttribute('font-size','9');
+        lt2.setAttribute('fill',p.isCurrent?'#F06E2D':'#B0A99F');
+        lt2.setAttribute('font-weight',p.isCurrent?'700':'400');
+        lt2.textContent = p.label;
+        svg.appendChild(lt2);
+      }
+    });
+
+    var chartInner = el('div', {style:'padding:12px 8px 4px'});
+    chartInner.appendChild(svg);
+    chartCard.appendChild(chartInner);
+    wrap.appendChild(chartCard);
+  })();
 
   applyPermissions();
 }
@@ -2720,7 +2826,12 @@ function openDetail(name) {
       pd.depositDate = depDate.value;
       pd.depositReceipt = depReceiptChk.checked;
       localStorage.setItem('dah_pay_'+c.clientName, JSON.stringify(pd));
-      
+      // Supabase 결제정보 동기화
+      if (c.id) {
+        var payMemo = '[계약금:'+pd.depositAmount+'원/'+pd.depositMethod+'/'+pd.depositDate+(pd.depositReceipt?' 현금영수증':'')+']';
+        var newMemo = (c.memo||'').replace(/\[계약금:[^\]]*\]/g,'').trim()+' '+payMemo;
+        sbXHR('PATCH','customers?id=eq.'+c.id,{memo:newMemo.trim()},function(){});
+      }
       if (c.stage === '상담') changeStage('계약금');
       closeDetail(); openDetail(c.clientName);
     });
@@ -2753,7 +2864,12 @@ function openDetail(name) {
       pd.balanceDate = balDate.value;
       pd.balanceReceipt = balReceiptChk.checked;
       localStorage.setItem('dah_pay_'+c.clientName, JSON.stringify(pd));
-      
+      // Supabase 결제정보 동기화
+      if (c.id) {
+        var payMemo2 = '[잔금:'+pd.balanceAmount+'원/'+pd.balanceMethod+'/'+pd.balanceDate+(pd.balanceReceipt?' 현금영수증':'')+']';
+        var newMemo2 = (c.memo||'').replace(/\[잔금:[^\]]*\]/g,'').trim()+' '+payMemo2;
+        sbXHR('PATCH','customers?id=eq.'+c.id,{memo:newMemo2.trim()},function(){});
+      }
       if (c.stage === '실측' || c.stage === '잔금') changeStage('시공');
       closeDetail(); openDetail(c.clientName);
     });
