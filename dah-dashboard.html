@@ -1103,11 +1103,11 @@ function sbXHR(method, path, data, callback) {
 var _customerCache = [];
 
 function dbRowToCustomer(row) {
-  return { id:row.id, clientName:row.client_name||'', phone:row.phone||'', addr:row.addr||'', space:row.space||'', price:Number(row.price)||0, performanceRevenue:Number(row.performance_revenue)||0, staffName:row.staff_name||'마스터', stage:row.stage||'상담', date:row.date||'', memo:row.memo||'', visitCount:Number(row.visit_count)||1, createdAt:row.created_at||new Date().toISOString() };
+  return { id:row.id, clientName:row.client_name||'', phone:row.phone||'', addr:row.addr||'', space:row.space||'', price:Number(row.price)||0, performanceRevenue:Number(row.performance_revenue)||0, staffName:row.staff_name||'마스터', stage:row.stage||'상담', date:row.date||'', memo:row.memo||'', visitCount:Number(row.visit_count)||1, measureDate:row.measure_date||'', installDate:row.install_date||'', createdAt:row.created_at||new Date().toISOString() };
 }
 
 function customerToDbRow(c) {
-  return { client_name:c.clientName||'', phone:c.phone||'', addr:c.addr||'', space:c.space||'', price:Number(c.price)||0, performance_revenue:Number(c.performanceRevenue)||0, staff_name:c.staffName||'마스터', stage:c.stage||'상담', date:c.date||'', memo:c.memo||'', visit_count:Number(c.visitCount)||1 };
+  return { client_name:c.clientName||'', phone:c.phone||'', addr:c.addr||'', space:c.space||'', price:Number(c.price)||0, performance_revenue:Number(c.performanceRevenue)||0, staff_name:c.staffName||'마스터', stage:c.stage||'상담', date:c.date||'', measure_date:c.measureDate||'', install_date:c.installDate||'', memo:c.memo||'', visit_count:Number(c.visitCount)||1 };
 }
 
 function loadCustomers() {
