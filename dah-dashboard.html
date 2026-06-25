@@ -1203,11 +1203,59 @@ function sbXHR(method, path, data, callback) {
 var _customerCache = [];
 
 function dbRowToCustomer(row) {
-  return { id:row.id, clientName:row.client_name||'', phone:row.phone||'', addr:row.addr||'', space:row.space||'', price:Number(row.price)||0, performanceRevenue:Number(row.performance_revenue)||0, staffName:row.staff_name||'마스터', stage:row.stage||'상담', date:row.date||'', memo:row.memo||'', visitCount:Number(row.visit_count)||1, measureDate:row.measure_date||'', installDate:row.install_date||'', createdAt:row.created_at||new Date().toISOString() };
+  return {
+    id:                 row.id,
+    clientName:         row.client_name||'',
+    phone:              row.phone||'',
+    addr:               row.addr||'',
+    space:              row.space||'',
+    price:              Number(row.price)||0,
+    performanceRevenue: Number(row.performance_revenue)||0,
+    staffName:          row.staff_name||'마스터',
+    stage:              row.stage||'상담',
+    date:               row.date||'',
+    memo:               row.memo||'',
+    visitCount:         Number(row.visit_count)||1,
+    measureDate:        row.measure_date||'',
+    installDate:        row.install_date||'',
+    createdAt:          row.created_at||new Date().toISOString(),
+    // 결제 필드
+    depositAmount:      Number(row.deposit_amount)||0,
+    depositDate:        row.deposit_date||'',
+    depositMethod:      row.deposit_method||'',
+    depositReceipt:     row.deposit_receipt||false,
+    balanceAmount:      Number(row.balance_amount)||0,
+    balanceDate:        row.balance_date||'',
+    balanceMethod:      row.balance_method||'',
+    balanceReceipt:     row.balance_receipt||false
+  };
 }
 
 function customerToDbRow(c) {
-  return { client_name:c.clientName||'', phone:c.phone||'', addr:c.addr||'', space:c.space||'', price:Number(c.price)||0, performance_revenue:Number(c.performanceRevenue)||0, staff_name:c.staffName||'마스터', stage:c.stage||'상담', date:c.date||'', measure_date:c.measureDate||'', install_date:c.installDate||'', memo:c.memo||'', visit_count:Number(c.visitCount)||1 };
+  return {
+    client_name:         c.clientName||'',
+    phone:               c.phone||'',
+    addr:                c.addr||'',
+    space:               c.space||'',
+    price:               Number(c.price)||0,
+    performance_revenue: Number(c.performanceRevenue)||0,
+    staff_name:          c.staffName||'마스터',
+    stage:               c.stage||'상담',
+    date:                c.date||'',
+    measure_date:        c.measureDate||'',
+    install_date:        c.installDate||'',
+    memo:                c.memo||'',
+    visit_count:         Number(c.visitCount)||1,
+    // 결제 필드
+    deposit_amount:      Number(c.depositAmount)||0,
+    deposit_date:        c.depositDate||'',
+    deposit_method:      c.depositMethod||'',
+    deposit_receipt:     c.depositReceipt||false,
+    balance_amount:      Number(c.balanceAmount)||0,
+    balance_date:        c.balanceDate||'',
+    balance_method:      c.balanceMethod||'',
+    balance_receipt:     c.balanceReceipt||false
+  };
 }
 
 function loadCustomers() {
@@ -1270,22 +1318,25 @@ function updateHdKpi(allCustomers) {
   var year = now.getFullYear();
   var month = thisMonthStr();
   var qtr = Math.floor(now.getMonth() / 3); // 0~3
+  var qtrMonths = [String(year)+'-'+pad2(qtr*3+1), String(year)+'-'+pad2(qtr*3+2), String(year)+'-'+pad2(qtr*3+3)];
   var isMaster = currentUser && currentUser.role === 'master';
   var targetC = isMaster ? allCustomers : allCustomers.filter(function(c){ return (c.staffName||'마스터')===(currentUser?currentUser.name:'마스터'); });
 
-  // 이달
+  // 이달 매출 - 선금/잔금 날짜 기준
   var monthC = targetC.filter(function(c){ return (c.date||'').slice(0,7)===month; });
   var contracted = monthC.filter(function(c){ return c.stage!=='상담'; });
-  var totalRev = contracted.reduce(function(s,c){ return s+(Number(c.price)||0); }, 0);
+  var totalRev = getMonthRevenue(targetC, month);
 
-  // 연간
-  var yearC = targetC.filter(function(c){ return (c.date||'').slice(0,4)===String(year) && c.stage!=='상담'; });
-  var yearRev = yearC.reduce(function(s,c){ return s+(Number(c.price)||0); }, 0);
+  // 연간 - 선금/잔금 기준
+  var yearRev = 0;
+  for (var ymi=0; ymi<12; ymi++) {
+    var ymKey = String(year) + '-' + pad2(ymi+1);
+    yearRev += getMonthRevenue(targetC, ymKey);
+  }
 
-  // 분기
-  var qtrMonths = [String(year)+'-'+pad2(qtr*3+1), String(year)+'-'+pad2(qtr*3+2), String(year)+'-'+pad2(qtr*3+3)];
-  var qtrC = targetC.filter(function(c){ return qtrMonths.indexOf((c.date||'').slice(0,7))>=0 && c.stage!=='상담'; });
-  var qtrRev = qtrC.reduce(function(s,c){ return s+(Number(c.price)||0); }, 0);
+  // 분기 - 선금/잔금 기준
+  var qtrRev = 0;
+  qtrMonths.forEach(function(qmk){ qtrRev += getMonthRevenue(targetC, qmk); });
 
   // 목표
   var goal = parseInt(localStorage.getItem('dah_goal_마스터')||'50000000');
@@ -1712,7 +1763,7 @@ function renderHome() {
  
   if (isMaster) {
     var totalActive = allCustomers.filter(function(c){ return (c.date||'').slice(0,7)===month && c.stage!=='상담'; });
-    var totalRev  = totalActive.reduce(function(s,c){ return s+(Number(c.price)||0); },0);
+    var totalRev  = getMonthRevenue(allCustomers, month);
     var totalPerf = totalActive.reduce(function(s,c){ return s+(Number(c.performanceRevenue)||0); },0);
     var totalCon  = totalActive.length;
     var totalCons = allCustomers.filter(function(c){ return (c.date||'').slice(0,7)===month; }).length;
@@ -1734,7 +1785,7 @@ function renderHome() {
     staffCardInner.appendChild(staffLbl);
     allStaffs.forEach(function(staff) {
       var sc = allCustomers.filter(function(c){ return (c.staffName||'마스터')===staff&&(c.date||'').slice(0,7)===month&&c.stage!=='상담'; });
-      var sv = sc.reduce(function(s,c){ return s+(Number(c.price)||0); },0);
+      var sv = getMonthRevenue(sc, month);
       var sp = sc.reduce(function(s,c){ return s+(Number(c.performanceRevenue)||0); },0);
       var goalKey = 'dah_goal_'+staff;
       var sGoal = Number(localStorage.getItem(goalKey)||0);
@@ -2188,16 +2239,18 @@ var calCurrentMonth = new Date().getMonth();
 var calSelectedDate = null;
 
 function getCalEvents(customers, year, month) {
-  
   var monStr = year + '-' + pad2(month+1);
   var events = [];
   customers.forEach(function(c) {
-    if ((c.date||'').slice(0,7) === monStr)
-      events.push({date:c.date, name:c.clientName, space:c.space||'—', type:'상담', stage:c.stage, price:c.price||0, cust:c});
+    // 실측일 - 메인 표시
     if ((c.measureDate||'').slice(0,7) === monStr)
       events.push({date:c.measureDate, name:c.clientName, space:c.space||'—', type:'실측', stage:c.stage, price:c.price||0, cust:c});
+    // 시공일 - 메인 표시
     if ((c.installDate||'').slice(0,7) === monStr)
       events.push({date:c.installDate, name:c.clientName, space:c.space||'—', type:'시공', stage:c.stage, price:c.price||0, cust:c});
+    // 상담일 - dotOnly (점만, 목록에선 표시)
+    if ((c.date||'').slice(0,7) === monStr)
+      events.push({date:c.date, name:c.clientName, space:c.space||'—', type:'상담', stage:c.stage, price:c.price||0, cust:c, dotOnly:true});
   });
   events.sort(function(a,b){ return a.date < b.date ? -1 : 1; });
   return events;
@@ -2213,8 +2266,7 @@ function renderCal() {
   // 월 요약바
   var monStr = yr + '-' + pad2(mo+1);
   var monC = customers.filter(function(c){ return (c.date||'').slice(0,7)===monStr && c.stage!=='상담'; });
-  var monRev = monC.reduce(function(s,c){ return s+(Number(c.price)||0); }, 0);
-  var monCons = customers.filter(function(c){ return (c.date||'').slice(0,7)===monStr; }).length;
+  var monRev = getMonthRevenue(customers, monStr);
   var monInstall = customers.filter(function(c){ return (c.installDate||'').slice(0,7)===monStr; }).length;
   var sumBar = document.getElementById('cal-summary-bar');
   if (sumBar) {
@@ -2283,10 +2335,14 @@ function renderCal() {
     numEl.textContent = dayNum;
     cell.appendChild(numEl);
 
-    // 이벤트 표시 - 텍스트 레이블로 개선
+    // 이벤트 표시 - 실측/시공은 텍스트, 상담은 점만
     if (!isOther && evMap[dateStr]) {
       var evData = evMap[dateStr];
-      evData.items.slice(0,2).forEach(function(item) {
+      // 실측/시공 먼저 텍스트로
+      var mainItems = evData.items.filter(function(item){ return !item.dotOnly; });
+      var dotItems  = evData.items.filter(function(item){ return item.dotOnly; });
+
+      mainItems.slice(0,2).forEach(function(item) {
         var evLabel = document.createElement('div');
         evLabel.style.cssText =
           'width:100%;font-size:9px;font-weight:700;line-height:1.3;' +
@@ -2297,12 +2353,22 @@ function renderCal() {
         evLabel.textContent = item.type[0] + ' ' + item.name;
         cell.appendChild(evLabel);
       });
-      // 3건 이상이면 +N 표시
-      if (evData.items.length > 2) {
+      if (mainItems.length > 2) {
         var moreEl = document.createElement('div');
         moreEl.style.cssText = 'font-size:9px;color:#9A9490;margin-top:1px;text-align:center';
-        moreEl.textContent = '+' + (evData.items.length - 2);
+        moreEl.textContent = '+' + (mainItems.length - 2);
         cell.appendChild(moreEl);
+      }
+      // 상담은 작은 점으로만
+      if (dotItems.length > 0) {
+        var dotsWrap = document.createElement('div');
+        dotsWrap.style.cssText = 'display:flex;gap:2px;justify-content:center;margin-top:2px;flex-wrap:wrap';
+        dotItems.slice(0,3).forEach(function(){
+          var dot = document.createElement('div');
+          dot.style.cssText = 'width:4px;height:4px;border-radius:50%;background:#9A9490;flex-shrink:0';
+          dotsWrap.appendChild(dot);
+        });
+        cell.appendChild(dotsWrap);
       }
     }
 
@@ -2360,15 +2426,20 @@ function renderCalList(customers, selectedDate) {
   }
 
   var DOW3 = ['일','월','화','수','목','금','토'];
+  var TYPE_BG_COLOR = {실측:'#F3EFF8', 시공:'#FFF3EE', 상담:'#F5F5F5'};
+  var TYPE_FONT_COLOR = {실측:'#8B6BB1', 시공:'#F06E2D', 상담:'#9A9490'};
+
   events.forEach(function(ev) {
+    var isMain = ev.type !== '상담'; // 실측/시공이 메인
     var d = new Date(ev.date);
     var row = document.createElement('div');
     row.className = 'cal-ev-row';
+    if (!isMain) row.style.opacity = '0.7'; // 상담은 흐리게
 
     var dateCol = document.createElement('div');
     dateCol.className = 'cal-ev-date';
     dateCol.innerHTML =
-      '<span class="cal-ev-day">' + d.getDate() + '</span>' +
+      '<span class="cal-ev-day" style="font-size:'+(isMain?'15px':'13px')+';font-weight:'+(isMain?'800':'600')+'">' + d.getDate() + '</span>' +
       '<span class="cal-ev-dow">' + DOW3[d.getDay()] + '</span>';
 
     var bar = document.createElement('div');
@@ -2377,16 +2448,17 @@ function renderCalList(customers, selectedDate) {
     var info = document.createElement('div');
     info.className = 'cal-ev-info';
     info.innerHTML =
-      '<div class="cal-ev-name">' + ev.name + '</div>' +
+      '<div class="cal-ev-name" style="font-size:'+(isMain?'15px':'13px')+';font-weight:'+(isMain?'700':'500')+'">' + ev.name + '</div>' +
       '<div class="cal-ev-sub">' + ev.space + '</div>';
 
     var right = document.createElement('div');
     right.style.cssText = 'text-align:right;flex-shrink:0';
     var badge = document.createElement('div');
     badge.className = 'cal-ev-badge';
+    badge.style.cssText += ';background:' + (TYPE_BG_COLOR[ev.type]||'#F5F0EB') + ';color:' + (TYPE_FONT_COLOR[ev.type]||'#282828') + ';font-size:'+(isMain?'12px':'10px');
     badge.textContent = ev.type;
     right.appendChild(badge);
-    if (ev.price > 0) {
+    if (isMain && ev.price > 0) {
       var priceEl = document.createElement('div');
       priceEl.style.cssText = 'font-size:11px;font-weight:700;color:#282828;margin-top:4px';
       priceEl.textContent = Math.round(ev.price/10000).toLocaleString() + '만원';
@@ -2872,10 +2944,145 @@ function openDetail(name) {
     body.appendChild(todoSec);
   }
 
-  
-  var payData = JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}');
+  // 결제 관리 섹션 - customers 객체 직접 사용 (localStorage 병행)
+  var payData = {
+    depositAmount:  c.depositAmount  || (function(){ try{ return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}').depositAmount||0; }catch(e){return 0;} })(),
+    depositDate:    c.depositDate    || (function(){ try{ return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}').depositDate||''; }catch(e){return '';} })(),
+    depositMethod:  c.depositMethod  || (function(){ try{ return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}').depositMethod||''; }catch(e){return '';} })(),
+    depositReceipt: c.depositReceipt || (function(){ try{ return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}').depositReceipt||false; }catch(e){return false;} })(),
+    balanceAmount:  c.balanceAmount  || (function(){ try{ return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}').balanceAmount||0; }catch(e){return 0;} })(),
+    balanceDate:    c.balanceDate    || (function(){ try{ return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}').balanceDate||''; }catch(e){return '';} })(),
+    balanceMethod:  c.balanceMethod  || (function(){ try{ return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}').balanceMethod||''; }catch(e){return '';} })(),
+    balanceReceipt: c.balanceReceipt || (function(){ try{ return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}').balanceReceipt||false; }catch(e){return false;} })()
+  };
+
   var paySec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
   paySec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'결제 관리'}));
+
+  function savePayData(pd) {
+    // 1) localStorage 백업
+    localStorage.setItem('dah_pay_'+c.clientName, JSON.stringify(pd));
+    // 2) customers 캐시 업데이트
+    var arr = loadCustomers();
+    var idx = arr.findIndex(function(x){ return x.clientName === c.clientName; });
+    if (idx >= 0) {
+      arr[idx].depositAmount  = Number(pd.depositAmount)||0;
+      arr[idx].depositDate    = pd.depositDate||'';
+      arr[idx].depositMethod  = pd.depositMethod||'';
+      arr[idx].depositReceipt = pd.depositReceipt||false;
+      arr[idx].balanceAmount  = Number(pd.balanceAmount)||0;
+      arr[idx].balanceDate    = pd.balanceDate||'';
+      arr[idx].balanceMethod  = pd.balanceMethod||'';
+      arr[idx].balanceReceipt = pd.balanceReceipt||false;
+      saveCustomers(arr);
+    }
+    // 3) Supabase 동기화
+    if (c.id) {
+      sbXHR('PATCH', 'customers?id=eq.'+c.id, {
+        deposit_amount:  Number(pd.depositAmount)||0,
+        deposit_date:    pd.depositDate||'',
+        deposit_method:  pd.depositMethod||'',
+        deposit_receipt: pd.depositReceipt||false,
+        balance_amount:  Number(pd.balanceAmount)||0,
+        balance_date:    pd.balanceDate||'',
+        balance_method:  pd.balanceMethod||'',
+        balance_receipt: pd.balanceReceipt||false
+      }, function(){});
+    }
+  }
+
+  // 선금 섹션
+  var depositDone = payData.depositAmount && payData.depositDate;
+  var depSec = div('margin-bottom:8px;padding:12px;background:'+(depositDone?'#F5FAF5':'#FAF7F5')+';border-radius:8px;border:1px solid '+(depositDone?'#B0D4B0':'#EEE6DC'), []);
+  var depTitle = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:8px', [
+    el('div', {style:'font-size:12px;font-weight:700;color:#282828', text:(depositDone?'✔ ':'')+'선금 (계약금)'}),
+  ]);
+  if (depositDone) {
+    var depEditBtn = btn('font-size:11px;color:#6B6B6B;background:none;border:1px solid #EEE6DC;border-radius:4px;padding:2px 8px;cursor:pointer;font-family:inherit', '수정', function(){
+      depSec.innerHTML = ''; buildDepForm();
+    });
+    depTitle.appendChild(depEditBtn);
+    depSec.appendChild(depTitle);
+    depSec.appendChild(el('div', {style:'font-size:14px;font-weight:800;color:#282828;letter-spacing:-0.5px;margin-bottom:2px', text: Number(payData.depositAmount).toLocaleString()+'원'}));
+    depSec.appendChild(el('div', {style:'font-size:12px;color:#6B6B6B', text: (payData.depositMethod||'') + ' · ' + (payData.depositDate||'') + (payData.depositReceipt?' · 현금영수증 ✔':'')}));
+  } else {
+    depSec.appendChild(depTitle);
+    buildDepForm();
+  }
+  function buildDepForm() {
+    var depForm = div('display:flex;flex-wrap:wrap;gap:5px', []);
+    var depMethod = el('select', {style:'flex:1;min-width:80px;padding:6px;border:1px solid #EEE6DC;border-radius:6px;font-size:12px;font-family:inherit;background:#fff'});
+    ['카드','현금'].forEach(function(m){ var o=el('option',{}); o.value=m; o.textContent=m; depMethod.appendChild(o); });
+    if (payData.depositMethod) depMethod.value = payData.depositMethod;
+    var depAmt = el('input', {type:'text', placeholder:'선금 금액', style:'flex:2;min-width:90px;padding:6px;border:1px solid #EEE6DC;border-radius:6px;font-size:12px;font-family:inherit'});
+    if (payData.depositAmount) depAmt.value = Number(payData.depositAmount).toLocaleString();
+    var depDate = el('input', {type:'date', style:'flex:2;min-width:110px;padding:6px;border:1px solid #EEE6DC;border-radius:6px;font-size:12px;font-family:inherit'});
+    if (payData.depositDate) depDate.value = payData.depositDate;
+    var depReceipt = el('label', {style:'display:flex;align-items:center;gap:4px;font-size:12px;color:#6B6B6B;cursor:pointer;width:100%'});
+    var depReceiptChk = el('input', {type:'checkbox'}); depReceiptChk.checked = payData.depositReceipt||false;
+    depReceipt.appendChild(depReceiptChk); depReceipt.appendChild(document.createTextNode('현금영수증'));
+    var depSave = btn('width:100%;padding:9px;background:#282828;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px', '선금 저장', function(){
+      var newPd = Object.assign({}, payData);
+      newPd.depositMethod  = depMethod.value;
+      newPd.depositAmount  = depAmt.value.replace(/[^0-9]/g,'');
+      newPd.depositDate    = depDate.value;
+      newPd.depositReceipt = depReceiptChk.checked;
+      savePayData(newPd);
+      if (c.stage === '상담') changeStage('계약금');
+      closeDetail(); openDetail(c.clientName);
+    });
+    depForm.appendChild(depMethod); depForm.appendChild(depAmt); depForm.appendChild(depDate); depForm.appendChild(depReceipt);
+    depSec.appendChild(depForm); depSec.appendChild(depSave);
+  }
+  paySec.appendChild(depSec);
+
+  // 잔금 섹션
+  var balanceDone = payData.balanceAmount && payData.balanceDate;
+  var balSec = div('padding:12px;background:'+(balanceDone?'#F5FAF5':'#FAF7F5')+';border-radius:8px;border:1px solid '+(balanceDone?'#B0D4B0':'#EEE6DC'), []);
+  var balTitle = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:8px', [
+    el('div', {style:'font-size:12px;font-weight:700;color:#282828', text:(balanceDone?'✔ ':'')+'잔금'})
+  ]);
+  if (balanceDone) {
+    var balEditBtn = btn('font-size:11px;color:#6B6B6B;background:none;border:1px solid #EEE6DC;border-radius:4px;padding:2px 8px;cursor:pointer;font-family:inherit', '수정', function(){
+      balSec.innerHTML = ''; buildBalForm();
+    });
+    balTitle.appendChild(balEditBtn);
+    balSec.appendChild(balTitle);
+    balSec.appendChild(el('div', {style:'font-size:14px;font-weight:800;color:#282828;letter-spacing:-0.5px;margin-bottom:2px', text: Number(payData.balanceAmount).toLocaleString()+'원'}));
+    balSec.appendChild(el('div', {style:'font-size:12px;color:#6B6B6B', text: (payData.balanceMethod||'') + ' · ' + (payData.balanceDate||'') + (payData.balanceReceipt?' · 현금영수증 ✔':'')}));
+  } else {
+    balSec.appendChild(balTitle);
+    buildBalForm();
+  }
+  function buildBalForm() {
+    var balForm = div('display:flex;flex-wrap:wrap;gap:5px', []);
+    var balMethod = el('select', {style:'flex:1;min-width:80px;padding:6px;border:1px solid #EEE6DC;border-radius:6px;font-size:12px;font-family:inherit;background:#fff'});
+    ['카드','현금'].forEach(function(m){ var o=el('option',{}); o.value=m; o.textContent=m; balMethod.appendChild(o); });
+    if (payData.balanceMethod) balMethod.value = payData.balanceMethod;
+    var balAmt = el('input', {type:'text', placeholder:'잔금 금액', style:'flex:2;min-width:90px;padding:6px;border:1px solid #EEE6DC;border-radius:6px;font-size:12px;font-family:inherit'});
+    if (payData.balanceAmount) balAmt.value = Number(payData.balanceAmount).toLocaleString();
+    var balDate = el('input', {type:'date', style:'flex:2;min-width:110px;padding:6px;border:1px solid #EEE6DC;border-radius:6px;font-size:12px;font-family:inherit'});
+    if (payData.balanceDate) balDate.value = payData.balanceDate;
+    var balReceipt = el('label', {style:'display:flex;align-items:center;gap:4px;font-size:12px;color:#6B6B6B;cursor:pointer;width:100%'});
+    var balReceiptChk = el('input', {type:'checkbox'}); balReceiptChk.checked = payData.balanceReceipt||false;
+    balReceipt.appendChild(balReceiptChk); balReceipt.appendChild(document.createTextNode('현금영수증'));
+    var balSave = btn('width:100%;padding:9px;background:#282828;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px', '잔금 저장', function(){
+      var newPd = Object.assign({}, payData);
+      newPd.balanceMethod  = balMethod.value;
+      newPd.balanceAmount  = balAmt.value.replace(/[^0-9]/g,'');
+      newPd.balanceDate    = balDate.value;
+      newPd.balanceReceipt = balReceiptChk.checked;
+      savePayData(newPd);
+      if (c.stage === '실측' || c.stage === '잔금') changeStage('시공');
+      closeDetail(); openDetail(c.clientName);
+    });
+    balForm.appendChild(balMethod); balForm.appendChild(balAmt); balForm.appendChild(balDate); balForm.appendChild(balReceipt);
+    balSec.appendChild(balForm); balSec.appendChild(balSave);
+  }
+  paySec.appendChild(balSec);
+  body.appendChild(paySec);
+
+  
 
   
   var depositDone = payData.depositAmount && payData.depositDate;
@@ -3313,8 +3520,38 @@ function exportEstimatesExcel() {
   }
 }
 
+// 월별 매출 계산 - 선금은 depositDate 기준, 잔금은 balanceDate 기준으로 각 월에 분산
 function getMonthRevenue(customers, monthKey) {
-  return customers.filter(function(c) { return (c.date||'').slice(0,7) === monthKey && c.stage !== '상담'; }).reduce(function(s,c) { return s + (Number(c.price)||0); }, 0);
+  var total = 0;
+  customers.forEach(function(c) {
+    if (c.stage === '상담') return;
+    var pd = (function(){
+      try { return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}'); } catch(e) { return {}; }
+    })();
+    var dep = Number(c.depositAmount) || Number(pd.depositAmount) || 0;
+    var depDate = c.depositDate || pd.depositDate || '';
+    var bal = Number(c.balanceAmount) || Number(pd.balanceAmount) || 0;
+    var balDate = c.balanceDate || pd.balanceDate || '';
+
+    // 선금/잔금 모두 없으면 계약일 기준으로 전체 금액
+    if (!dep && !bal) {
+      if ((c.date||'').slice(0,7) === monthKey) total += Number(c.price)||0;
+      return;
+    }
+    // 선금이 해당 월이면 선금 금액 포함
+    if (dep > 0 && depDate.slice(0,7) === monthKey) total += dep;
+    // 잔금이 해당 월이면 잔금 금액 포함
+    if (bal > 0 && balDate.slice(0,7) === monthKey) total += bal;
+  });
+  return total;
+}
+
+// 선금+잔금 기준 월별 건수 (계약 기준)
+function getMonthContractCount(customers, monthKey) {
+  return customers.filter(function(c) {
+    if (c.stage === '상담') return false;
+    return (c.date||'').slice(0,7) === monthKey;
+  }).length;
 }
 
 function renderSettings() {
