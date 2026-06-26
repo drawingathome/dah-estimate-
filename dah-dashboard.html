@@ -4035,44 +4035,63 @@ setTimeout(function(){
 <!-- 모바일 FAB -->
 <button class="mob-fab" id="mob-fab-add" onclick="openAddCustomer ? openAddCustomer() : alert('준비 중')">+</button>
 <script>
-/* ── 모바일 탭 연동 JS ── */
+/* ── 모바일 탭 연동 JS (안정화) ── */
 (function() {
-  function initMobNav() {
+  function updateMobNav(activeTab) {
     var btns = document.querySelectorAll('.mob-nav-btn');
-    btns.forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        var tab = this.getAttribute('data-mob-tab');
-        // 기존 switchTab 함수 호출
-        if (typeof switchTab === 'function') switchTab(tab);
-        // 하단 탭바 active 상태
-        btns.forEach(function(b){ b.classList.remove('on'); });
-        this.classList.add('on');
-      });
+    btns.forEach(function(b) {
+      b.classList.toggle('on', b.getAttribute('data-mob-tab') === activeTab);
     });
+  }
 
-    // 사용자 이름 표시
+  function updateMobUser() {
     var userEl = document.getElementById('mob-app-user-name');
-    if (userEl && typeof currentUser !== 'undefined' && currentUser) {
-      userEl.textContent = currentUser.name || '';
+    if (!userEl) return;
+    if (typeof currentUser !== 'undefined' && currentUser && currentUser.name) {
+      userEl.textContent = currentUser.name;
     }
   }
 
-  // 로그인 후 초기화
-  var origShowApp = window.showApp;
-  window.showApp = function() {
-    if (origShowApp) origShowApp.apply(this, arguments);
-    setTimeout(function() {
-      initMobNav();
-      var userEl = document.getElementById('mob-app-user-name');
-      if (userEl && typeof currentUser !== 'undefined' && currentUser) {
-        userEl.textContent = currentUser.name || '';
-      }
-    }, 100);
-  };
+  function initMobNav() {
+    // 하단 탭 클릭 → switchTab 호출
+    document.querySelectorAll('.mob-nav-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var tab = this.getAttribute('data-mob-tab');
+        if (typeof switchTab === 'function') switchTab(tab);
+        updateMobNav(tab);
+      });
+    });
 
-  // DOMContentLoaded 후에도 시도
+    // 기존 상단 탭 클릭 시 하단 탭도 동기화
+    document.querySelectorAll('.tab[data-tab]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var tab = this.getAttribute('data-tab');
+        updateMobNav(tab);
+      });
+    });
+
+    updateMobUser();
+  }
+
+  // DOMContentLoaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMobNav);
+  } else {
+    initMobNav();
+  }
+
+  // 로그인 완료 이벤트 감지 — login-screen 숨김 시점 MutationObserver
+  var observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(m) {
+      if (m.target.id === 'login-screen' && m.target.style.display === 'none') {
+        setTimeout(updateMobUser, 100);
+        observer.disconnect();
+      }
+    });
+  });
   document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(initMobNav, 500);
+    var ls = document.getElementById('login-screen');
+    if (ls) observer.observe(ls, { attributes: true, attributeFilter: ['style'] });
   });
 })();
 </script>
