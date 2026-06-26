@@ -4033,7 +4033,7 @@ setTimeout(function(){
   </div>
 </div>
 <!-- 모바일 FAB -->
-<button class="mob-fab" id="mob-fab-add" onclick="openAddCustomer ? openAddCustomer() : alert('준비 중')">+</button>
+<button class="mob-fab" id="mob-fab-add" onclick="openAdd()">+</button>
 <script>
 /* ── 모바일 탭 연동 JS (안정화) ── */
 (function() {
@@ -4053,11 +4053,11 @@ setTimeout(function(){
   }
 
   function initMobNav() {
-    // 하단 탭 클릭 → switchTab 호출
+    // 하단 탭 클릭 → goTab 호출
     document.querySelectorAll('.mob-nav-btn').forEach(function(btn) {
       btn.addEventListener('click', function() {
         var tab = this.getAttribute('data-mob-tab');
-        if (typeof switchTab === 'function') switchTab(tab);
+        if (typeof goTab === 'function') goTab(tab);
         updateMobNav(tab);
       });
     });
