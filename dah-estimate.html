@@ -1499,6 +1499,52 @@ function addCurtainRow() {
     '</td>';
   tbody.appendChild(tr);
   renderEmptyState();
+
+  // ── 레일 + 레일 시공비 자동 추가 ──
+  var svcBody = document.getElementById('svc-body');
+
+  // 레일 행
+  var trRail = document.createElement('tr');
+  trRail.className = 'auto-rail-row';
+  trRail.innerHTML =
+    '<td><select style="'+SEL+'" onchange="calcSvcRow(this)">'+
+    '<option value="레일" selected>레일</option>'+
+    '<option value="시공비">시공비</option><option value="전동">전동</option>'+
+    '<option value="실측비">실측비</option><option value="부자재">부자재</option>'+
+    '<option value="기타">기타</option></select></td>'+
+    '<td><input type="text" value="레일" style="'+INP+'"></td>'+
+    '<td><input type="text" inputmode="numeric" placeholder="단가" class="sprice" '+
+    'oninput="fmtPrice(this);calcSvcRow(this)" onfocus="fmtPriceFocus(this)" '+
+    'onblur="fmtPriceBlur(this);calcSvcRow(this)" style="'+INP+'"></td>'+
+    '<td><input type="number" value="1" class="sqty" oninput="calcSvcRow(this)" style="'+INP+'"></td>'+
+    '<td class="amt samt">0원</td>'+
+    '<td style="white-space:nowrap">'+
+      '<button class="copy-btn print-hide" onclick="copySvcRow(this)">⧉</button>'+
+      '<button class="del-btn print-hide" onclick="this.closest('tr').remove();calcAllTotals()">✕</button>'+
+    '</td>';
+  svcBody.appendChild(trRail);
+
+  // 레일 시공비 행 (25,000원/개 자동 입력)
+  var trRailCost = document.createElement('tr');
+  trRailCost.className = 'auto-rail-cost-row';
+  trRailCost.innerHTML =
+    '<td><select style="'+SEL+'" onchange="calcSvcRow(this)">'+
+    '<option value="시공비" selected>시공비</option>'+
+    '<option value="레일">레일</option><option value="전동">전동</option>'+
+    '<option value="실측비">실측비</option><option value="부자재">부자재</option>'+
+    '<option value="기타">기타</option></select></td>'+
+    '<td><input type="text" value="레일 시공비" style="'+INP+'"></td>'+
+    '<td><input type="text" inputmode="numeric" value="25,000" class="sprice" data-raw="25000" '+
+    'oninput="fmtPrice(this);calcSvcRow(this)" onfocus="fmtPriceFocus(this)" '+
+    'onblur="fmtPriceBlur(this);calcSvcRow(this)" style="'+INP+'"></td>'+
+    '<td><input type="number" value="1" class="sqty" oninput="calcSvcRow(this)" style="'+INP+'"></td>'+
+    '<td class="amt samt">25,000원</td>'+
+    '<td style="white-space:nowrap">'+
+      '<button class="copy-btn print-hide" onclick="copySvcRow(this)">⧉</button>'+
+      '<button class="del-btn print-hide" onclick="this.closest('tr').remove();calcAllTotals()">✕</button>'+
+    '</td>';
+  svcBody.appendChild(trRailCost);
+  calcAllTotals();
 }
 
 function calcCurtainRow(el) {
