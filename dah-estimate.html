@@ -643,45 +643,71 @@ td.amt{
 
  
 @media print{
-  
-  @page{size:A4;margin:8mm 12mm}
-  
-  .doc-header-tabbar,.action-bar,.add-btn,.add-row-btns,
-  .del-btn,.copy-btn,.btn-preview,.over243-wrap,
-  .discount-wrap select,.sec-badge,.sec-tip,
-  .info-toggle,.region-row,.print-hide,
-  #survey-card,#space-picker{display:none!important}
-  .section,.summary-section{
-    box-shadow:none!important;border:1px solid #EEE6DC!important
+  @page { size:A4; margin:10mm 14mm; }
+
+  /* 숨길 요소 */
+  .doc-header-tabbar, .action-bar, .add-btn, .add-row-btns,
+  .del-btn, .copy-btn, .btn-preview, .over243-wrap,
+  .discount-wrap select, .sec-badge, .sec-tip,
+  .info-toggle, .region-row, .print-hide,
+  #survey-card, #space-picker { display:none!important; }
+
+  /* 기본 */
+  body { background:#fff!important; font-size:11px!important; }
+  * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; }
+
+  /* 섹션 카드 */
+  .section, .summary-section {
+    box-shadow:none!important;
+    border:1px solid #EEE6DC!important;
+    break-inside:avoid;
+    margin-bottom:8px!important;
   }
-  thead{display:table-header-group}
-  tr{break-inside:avoid}
-  .summary-section{break-inside:avoid}
-  body.preview-open .container{display:none!important}
-  body.preview-open #pv-overlay{
-    position:static!important;background:transparent!important;
-    overflow:visible!important
+
+  /* 테이블 */
+  thead { display:table-header-group; }
+  tr { break-inside:avoid; }
+  th { background:#F5F2EE!important; font-size:10px!important; }
+  td { font-size:11px!important; }
+
+  /* 합계 섹션 */
+  .summary-section { break-inside:avoid; }
+
+  /* 고객용 출력 미리보기 */
+  body.preview-open .container { display:none!important; }
+  body.preview-open #pv-overlay {
+    position:static!important;
+    background:transparent!important;
+    overflow:visible!important;
   }
-   
-  .pv-header{background:#fff!important;border-bottom:2.5px solid #282828!important}
-  
-  .pv-logo{filter:brightness(0)!important}
-  
-  
-  
-  
-  .sum-row.total 
-  .pv-prod-table .sub-head td{background:#EEE6DC;color:#282828;font-size:11px;font-weight:900;letter-spacing:3px}
-  
-  
-  
-  
-  .pv-footer strong{color:#282828!important}
-  
-  
-  .pv-wrap{border:1.5px solid #282828!important}
-  
-  
+
+  /* 고객용 헤더 */
+  .pv-header {
+    background:#fff!important;
+    border-bottom:2px solid #282828!important;
+    padding:16px 20px!important;
+  }
+  .pv-logo { filter:none!important; }
+  .pv-brand { color:#282828!important; font-size:10px!important; }
+  .pv-title { font-size:20px!important; color:#282828!important; }
+
+  /* 고객용 테이블 */
+  .pv-section { break-inside:avoid; margin-bottom:8px!important; }
+  .pv-table th { background:#F5F2EE!important; font-size:10px!important; }
+  .pv-table td { font-size:11px!important; }
+
+  /* 합계 박스 */
+  .pv-total-box {
+    background:#FAF7F5!important;
+    border:1.5px solid #282828!important;
+    break-inside:avoid;
+  }
+
+  /* 입금 계좌 */
+  .pv-bank { background:#F5F2EE!important; break-inside:avoid; }
+
+  /* 페이지 나눔 */
+  .page-break { page-break-before:always; }
 }
 
  
