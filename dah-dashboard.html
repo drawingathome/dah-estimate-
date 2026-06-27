@@ -1149,16 +1149,50 @@ input,button,select,textarea { font-family:inherit; }
 <div id="toast"></div>
 
 <script>
+/* ── 글로벌 에러 핸들러 ── */
+window.addEventListener('error', function(e) {
+  console.error('DAH 오류:', e.message, e.filename, e.lineno);
+  // 치명적 오류만 토스트 표시
+  if (e.message && !e.message.includes('Script error')) {
+    if (typeof showToast === 'function') {
+      showToast('오류가 발생했습니다. 새로고침 해주세요.');
+    }
+  }
+});
+
+window.addEventListener('unhandledrejection', function(e) {
+  console.warn('DAH 미처리 Promise 오류:', e.reason);
+});
+
+/* ── localStorage 안전 래퍼 ── */
+var safeStorage = {
+  get: function(key, def) {
+    try { return JSON.parse(localStorage.getItem(key)) || def; }
+    catch(e) { return def; }
+  },
+  set: function(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); return true; }
+    catch(e) { console.warn('저장 실패:', key, e); return false; }
+  },
+  remove: function(key) {
+    try { localStorage.removeItem(key); } catch(e) {}
+  }
+};
+
 /* ── 견적번호 자동채번 (대시보드용) ── */
 function generateEstNo() {
-  var now = new Date();
-  var yy = String(now.getFullYear()).slice(2);
-  var mm = String(now.getMonth() + 1).padStart(2, '0');
-  var dd = String(now.getDate()).padStart(2, '0');
-  var key = 'dah_est_seq_' + yy + mm + dd;
-  var seq = parseInt(localStorage.getItem(key) || '0') + 1;
-  localStorage.setItem(key, String(seq));
-  return 'DAH-' + yy + mm + dd + '-' + String(seq).padStart(3, '0');
+  try {
+    var now = new Date();
+    var yy = String(now.getFullYear()).slice(2);
+    var mm = String(now.getMonth() + 1).padStart(2, '0');
+    var dd = String(now.getDate()).padStart(2, '0');
+    var key = 'dah_est_seq_' + yy + mm + dd;
+    var seq = parseInt(localStorage.getItem(key) || '0') + 1;
+    localStorage.setItem(key, String(seq));
+    return 'DAH-' + yy + mm + dd + '-' + String(seq).padStart(3, '0');
+  } catch(e) {
+    return 'DAH-' + Date.now();
+  }
 }
 
 /* ── 데이터 백업 ── */
@@ -1197,6 +1231,7 @@ var PIPE_STAGES = [
 ];
 
 function renderPipeKanban(customers) {
+  try {
   var wrap = document.getElementById('pipe');
   if (!wrap) return;
   wrap.innerHTML = '';
@@ -1254,6 +1289,7 @@ function renderKanbanCols(customers, kanbanWrap) {
   });
 }
 
+  } catch(e) { console.warn("renderPipeKanban:", e); }
 function filterPipe(q) {
   loadCustomersAsync(function(all) {
     var filtered = q ? all.filter(function(c) { return searchMatch(c, q); }) : all;
