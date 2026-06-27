@@ -1149,6 +1149,44 @@ input,button,select,textarea { font-family:inherit; }
 <div id="toast"></div>
 
 <script>
+/* ── 견적번호 자동채번 (대시보드용) ── */
+function generateEstNo() {
+  var now = new Date();
+  var yy = String(now.getFullYear()).slice(2);
+  var mm = String(now.getMonth() + 1).padStart(2, '0');
+  var dd = String(now.getDate()).padStart(2, '0');
+  var key = 'dah_est_seq_' + yy + mm + dd;
+  var seq = parseInt(localStorage.getItem(key) || '0') + 1;
+  localStorage.setItem(key, String(seq));
+  return 'DAH-' + yy + mm + dd + '-' + String(seq).padStart(3, '0');
+}
+
+/* ── 데이터 백업 ── */
+function doBackup() {
+  try {
+    var customers = loadCustomers();
+    var data = {
+      customers:  customers,
+      exportedAt: new Date().toISOString(),
+      version:    '1.0',
+    };
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'DAH_백업_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    
+    // 마지막 백업 시간 저장
+    localStorage.setItem('dah_last_backup', new Date().toISOString());
+    var el = document.getElementById('last-backup');
+    if (el) el.textContent = '마지막 백업: 방금 전';
+    showToast('백업 파일이 다운로드됩니다');
+  } catch(e) {
+    showToast('백업 실패: ' + e.message);
+  }
+}
+
 /* ── renderPipe 칸반 뷰 ── */
 var PIPE_STAGES = [
   { key:'계약금', dot:'#F06E2D' },
