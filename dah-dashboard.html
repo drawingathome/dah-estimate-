@@ -717,6 +717,14 @@ input,button,select,textarea { font-family:inherit; }
 .rev-summary-sub { font-size:10px; color:var(--terra); margin-top:2px; font-weight:600; }
 
 </style>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#282828">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DAH">
+  <link rel="apple-touch-icon" href="/logo.png">
 </head>
 <body>
 
@@ -4052,6 +4060,18 @@ setTimeout(function(){
     if (ls) observer.observe(ls, { attributes: true, attributeFilter: ['style'] });
   });
 })();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js').then(function(reg) {
+      console.log('DAH SW 등록:', reg.scope);
+    }).catch(function(e) {
+      console.warn('DAH SW 실패:', e);
+    });
+  });
+}
 </script>
 </body>
 </html>
