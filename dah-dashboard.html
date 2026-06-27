@@ -688,7 +688,7 @@ input,button,select,textarea { font-family:inherit; }
 }
 .chart-bar-group { cursor:pointer; }
 .chart-bar-group:hover .chart-bar-rect { opacity:0.85; }
-.chart-label { font-size:10px; fill:#B0A99F; font-family:'Pretendard',sans-serif; }
+.chart-label { font-size:10px; fill:var(--light); font-family:'Pretendard',sans-serif; }
 .chart-value { font-size:10px; fill:#282828; font-weight:700; font-family:'Pretendard',sans-serif; }
 .chart-tooltip {
   position:absolute; background:#282828; color:#fff;
@@ -1142,7 +1142,7 @@ body {
   </div>
   <div class="kpi-progress-3" id="kpi-progress-3" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px">
     <div style="background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 12px">
-      <div style="font-size:9px;color:#B0A99F;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">연간</div>
+      <div style="font-size:9px;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">연간</div>
       <div style="font-size:16px;font-weight:900;color:#282828;letter-spacing:-0.5px;margin-bottom:4px" id="kpi-year-rev">—</div>
       <div style="height:2px;background:#EEE6DC;border-radius:2px;overflow:hidden;margin-bottom:4px">
         <div id="kpi-year-bar" style="height:2px;background:#C4673A;border-radius:2px;width:0%;transition:width 0.6s ease"></div>
@@ -1150,7 +1150,7 @@ body {
       <div style="font-size:10px;color:#9A9490" id="kpi-year-pct">0% 달성</div>
     </div>
     <div style="background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 12px">
-      <div style="font-size:9px;color:#B0A99F;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">분기</div>
+      <div style="font-size:9px;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">분기</div>
       <div style="font-size:16px;font-weight:900;color:#282828;letter-spacing:-0.5px;margin-bottom:4px" id="kpi-qtr-rev">—</div>
       <div style="height:2px;background:#EEE6DC;border-radius:2px;overflow:hidden;margin-bottom:4px">
         <div id="kpi-qtr-bar" style="height:2px;background:#C4673A;border-radius:2px;width:0%;transition:width 0.6s ease"></div>
@@ -1158,7 +1158,7 @@ body {
       <div style="font-size:10px;color:#9A9490" id="kpi-qtr-pct">0% 달성</div>
     </div>
     <div style="background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 12px">
-      <div style="font-size:9px;color:#B0A99F;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">월간</div>
+      <div style="font-size:9px;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">월간</div>
       <div style="font-size:16px;font-weight:900;color:#282828;letter-spacing:-0.5px;margin-bottom:4px" id="kpi-mon-rev">—</div>
       <div style="height:2px;background:#EEE6DC;border-radius:2px;overflow:hidden;margin-bottom:4px">
         <div id="kpi-mon-bar" style="height:2px;background:#C4673A;border-radius:2px;width:0%;transition:width 0.6s ease"></div>
@@ -1170,8 +1170,8 @@ body {
   <!-- 12개월 차트 - 항상 상단 고정 -->
   <div id="kpi-chart-wrap" style="margin-top:8px;padding-bottom:4px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <span style="font-size:10px;font-weight:700;color:#B0A99F;letter-spacing:1px;text-transform:uppercase">12개월 매출 추이</span>
-      <span style="font-size:10px;color:#B0A99F" id="kpi-chart-year"></span>
+      <span style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase">12개월 매출 추이</span>
+      <span style="font-size:10px;color:var(--light)" id="kpi-chart-year"></span>
     </div>
     <div id="kpi-chart-svg" style="height:60px"></div>
   </div>
@@ -1201,7 +1201,7 @@ body {
 <div id="pipe" style="display:none" class="wrap">
   <div class="search-top" style="padding:10px 12px 8px">
     <div class="search-bar-wrap">
-      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B0A99F" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="search" id="pipe-search" class="search-input-clean" placeholder="고객명 검색">
     </div>
   </div>
@@ -1210,11 +1210,11 @@ body {
 <div id="est-list" style="display:none" class="wrap">
   <div class="search-top" style="padding:10px 12px 8px">
     <div class="search-bar-wrap">
-      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B0A99F" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="search" id="est-search" class="search-input-clean" placeholder="고객명 · 견적번호 검색" oninput="renderEstList()">
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
-      <span id="est-list-count" style="font-size:12px;color:#B0A99F"></span>
+      <span id="est-list-count" style="font-size:12px;color:var(--light)"></span>
       <button onclick="exportEstimatesExcel()" style="height:30px;padding:0 12px;background:#282828;color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         엑셀 다운로드
@@ -1226,7 +1226,7 @@ body {
 <div id="search" style="display:none" class="wrap">
   <div class="search-top">
     <div class="search-bar-wrap">
-      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B0A99F" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="search" id="cust-search" class="search-input-clean" placeholder="고객명 · 연락처 · 주소 검색">
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
@@ -1263,13 +1263,13 @@ body {
     </div>
     <!-- 요일 헤더 -->
     <div style="display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px">
-      <div style="text-align:center;font-size:11px;font-weight:700;color:#B0A99F;padding:3px 0">일</div>
-      <div style="text-align:center;font-size:11px;font-weight:700;color:#B0A99F;padding:3px 0">월</div>
-      <div style="text-align:center;font-size:11px;font-weight:700;color:#B0A99F;padding:3px 0">화</div>
-      <div style="text-align:center;font-size:11px;font-weight:700;color:#B0A99F;padding:3px 0">수</div>
-      <div style="text-align:center;font-size:11px;font-weight:700;color:#B0A99F;padding:3px 0">목</div>
-      <div style="text-align:center;font-size:11px;font-weight:700;color:#B0A99F;padding:3px 0">금</div>
-      <div style="text-align:center;font-size:11px;font-weight:700;color:#B0A99F;padding:3px 0">토</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--light);padding:3px 0">일</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--light);padding:3px 0">월</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--light);padding:3px 0">화</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--light);padding:3px 0">수</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--light);padding:3px 0">목</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--light);padding:3px 0">금</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--light);padding:3px 0">토</div>
     </div>
     <!-- 날짜 그리드 -->
     <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px"></div>
@@ -1307,14 +1307,14 @@ body {
           <div style="font-size:20px;font-weight:900;color:#282828;letter-spacing:-0.5px;margin-bottom:6px" id="detail-name"></div>
           <div id="detail-summary-row" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"></div>
         </div>
-        <button id="detail-close-btn" style="background:none;border:none;font-size:20px;cursor:pointer;color:#B0A99F;flex-shrink:0;margin-left:8px;margin-top:2px">✕</button>
+        <button id="detail-close-btn" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--light);flex-shrink:0;margin-left:8px;margin-top:2px">✕</button>
       </div>
       <!-- 핵심 정보 요약 바 -->
       <div id="detail-info-bar" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:#EEE6DC;border-radius:12px;overflow:hidden;margin-bottom:0"></div>
       <!-- 탭 -->
       <div style="display:flex;border-top:1px solid #EEE6DC;margin-top:12px">
         <button id="dtab-info" onclick="switchDetailTab('info')" style="flex:1;padding:12px 0;font-size:13px;font-weight:700;font-family:inherit;border:none;background:none;cursor:pointer;border-bottom:2px solid #282828;color:#282828">고객 정보</button>
-        <button id="dtab-est" onclick="switchDetailTab('est')" style="flex:1;padding:12px 0;font-size:13px;font-weight:600;font-family:inherit;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:#B0A99F">견적 이력 <span id="dtab-est-cnt" style="font-size:11px"></span></button>
+        <button id="dtab-est" onclick="switchDetailTab('est')" style="flex:1;padding:12px 0;font-size:13px;font-weight:600;font-family:inherit;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--light)">견적 이력 <span id="dtab-est-cnt" style="font-size:11px"></span></button>
       </div>
     </div>
     <div style="padding:16px" id="detail-body"></div>
@@ -1328,7 +1328,7 @@ body {
     <!-- 헤더 -->
     <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 16px;background:#fff;border-radius:14px 14px 0 0;border-bottom:1px solid #EEE6DC">
       <div style="font-size:15px;font-weight:700;color:#282828" id="add-modal-title">고객 추가</div>
-      <button id="add-close-btn" aria-label="닫기" style="background:none;border:none;font-size:20px;cursor:pointer;color:#B0A99F;line-height:1.2;padding:2px 4px">✕</button>
+      <button id="add-close-btn" aria-label="닫기" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--light);line-height:1.2;padding:2px 4px">✕</button>
     </div>
     <!-- 폼 본문 -->
     <div style="padding:20px 20px 0">
@@ -1341,7 +1341,7 @@ body {
 
       <!-- 필수 정보 (3개만) -->
       <div style="background:#fff;border-radius:12px;padding:16px 16px 4px;margin-bottom:12px;border:1px solid #EEE6DC">
-        <div style="font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">예약 정보</div>
+        <div style="font-size:11px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">예약 정보</div>
         <div class="form-row">
           <label class="form-label">고객명 <span class="form-required">*</span></label>
           <input class="form-input" id="add-name" placeholder="홍길동">
@@ -1358,7 +1358,7 @@ body {
 
       <!-- 담당자 -->
       <div style="background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #EEE6DC">
-        <div style="font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">담당자</div>
+        <div style="font-size:11px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">담당자</div>
         <div id="staff-btn-wrap" style="display:flex;gap:8px"></div>
       </div>
 
@@ -1914,7 +1914,7 @@ function renderPipeKanban(customers) {
   var searchWrap = document.createElement('div');
   searchWrap.className = 'search-top';
   searchWrap.style.cssText = 'padding:10px 16px 8px;position:sticky;top:52px;z-index:90;background:var(--ivory2)';
-  searchWrap.innerHTML = '<div class="search-bar-wrap"><svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B0A99F" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" id="pipe-search" class="search-input-clean" placeholder="고객명 검색" oninput="filterPipe(this.value)"></div>';
+  searchWrap.innerHTML = '<div class="search-bar-wrap"><svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" id="pipe-search" class="search-input-clean" placeholder="고객명 검색" oninput="filterPipe(this.value)"></div>';
   wrap.appendChild(searchWrap);
 
   // 칸반 래퍼
@@ -2243,11 +2243,11 @@ function createEmptyState(icon, title, desc, btnText, btnAction) {
 }
 
 var EMPTY_ICONS = {
-  customers: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B0A99F" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-  estimates: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B0A99F" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
-  calendar:  '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B0A99F" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
-  revenue:   '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B0A99F" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
-  search:    '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B0A99F" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+  customers: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  estimates: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+  calendar:  '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  revenue:   '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+  search:    '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
 };
 
 function openKakaoAddr(targetId) {
@@ -2321,7 +2321,7 @@ function isArchived(c) {
   if (!refDate) return false;
   return Math.floor((new Date() - new Date(refDate)) / 86400000) >= 14;
 }
-var STAGE_COLORS = {상담:'#5C7A9F',계약금:'#F06E2D',실측:'#8B6BB1',잔금:'#2E7D6B',시공:'#C0392B',완료:'#B0A99F'};
+var STAGE_COLORS = {상담:'#5C7A9F',계약금:'#F06E2D',실측:'#8B6BB1',잔금:'#2E7D6B',시공:'#C0392B',완료:'var(--light)'};
 var STAGE_BG = {상담:'#EEF2F7',계약금:'#FFF3EE',실측:'#F3EFF8',잔금:'#EEF5F2',시공:'#FDECEA',완료:'#F5F2EE'};
 var STAGE_NUM = {상담:1,계약금:2,실측:3,잔금:4,시공:5,완료:6};
 var STAGE_ACTIVE = {상담:true,계약금:true,실측:true,잔금:true,시공:true,완료:false};
@@ -2402,7 +2402,7 @@ function renderStaffLoginList() {
     wrap.style.cssText = 'margin-top:8px';
     var b = document.createElement('button');
     b.className = 'user-btn';
-    b.innerHTML = '<span style="font-size:18px">👤</span><div><div style="font-weight:700;font-size:15px">'+name+'</div><div style="font-size:12px;color:#B0A99F">담당 고객 현황</div></div>';
+    b.innerHTML = '<span style="font-size:18px">👤</span><div><div style="font-weight:700;font-size:15px">'+name+'</div><div style="font-size:12px;color:var(--light)">담당 고객 현황</div></div>';
     
     var pwWrap = document.createElement('div');
     pwWrap.style.cssText = 'display:none;margin-top:6px';
@@ -2756,7 +2756,7 @@ function updateHdKpi(allCustomers) {
         var lt2 = document.createElementNS(svgNS,'text');
         lt2.setAttribute('x', p.x); lt2.setAttribute('y', H-2);
         lt2.setAttribute('text-anchor','middle'); lt2.setAttribute('font-size','8');
-        lt2.setAttribute('fill', p.isCurrent ? '#F06E2D' : '#B0A99F');
+        lt2.setAttribute('fill', p.isCurrent ? '#F06E2D' : 'var(--light)');
         lt2.setAttribute('font-weight', p.isCurrent ? '700' : '400');
         lt2.textContent = p.label;
         svg.appendChild(lt2);
@@ -2978,7 +2978,7 @@ function renderHome() {
   alertHd.appendChild(alertHdRow);
   alertCard.appendChild(alertHd);
   if (alerts.length===0) {
-    var emptyA = el('div', {style:'text-align:center;padding:12px 0;font-size:12px;color:#B0A99F'});
+    var emptyA = el('div', {style:'text-align:center;padding:12px 0;font-size:12px;color:var(--light)'});
     emptyA.textContent='처리 필요 항목이 없습니다 ✅';
     alertCard.appendChild(emptyA);
   } else {
@@ -2998,7 +2998,7 @@ function renderHome() {
 
       var nameRow = el('div', {class:'ai-name'});
       var nameSpan = el('span', {}); nameSpan.textContent = a.name;
-      var subSpan = el('span', {style:'font-size:12px;color:#B0A99F;margin-left:6px;font-weight:400'});
+      var subSpan = el('span', {style:'font-size:12px;color:var(--light);margin-left:6px;font-weight:400'});
       subSpan.textContent = a.sub;
       nameRow.appendChild(nameSpan); nameRow.appendChild(subSpan);
 
@@ -3031,7 +3031,7 @@ function renderHome() {
 
    
   var todayEvs = [];
-  var TYPE_COLOR = {상담:'#282828', 실측:'#282828', 시공:'#B0A99F'};
+  var TYPE_COLOR = {상담:'#282828', 실측:'#282828', 시공:'var(--light)'};
   var TYPE_BG2   = {상담:'#FAF7F5', 실측:'#EEE6DC', 시공:'#EEE6DC'};
   
   var evKeys = {};
@@ -3074,7 +3074,7 @@ function renderHome() {
   todayCard.appendChild(todayHd);
 
   if (todayEvs.length === 0) {
-    var emptyT = el('div', {style:'text-align:center;padding:12px 0;font-size:13px;color:#B0A99F'});
+    var emptyT = el('div', {style:'text-align:center;padding:12px 0;font-size:13px;color:var(--light)'});
     emptyT.textContent = '오늘·내일 일정이 없습니다';
     todayCard.appendChild(emptyT);
   } else {
@@ -3137,7 +3137,7 @@ function renderHome() {
 
      
     var staffCardInner = el('div', {class:'card master-only', style:'margin-bottom:10px'});
-    var staffLbl = el('div', {class:'card-title', style:'padding:12px 14px 10px;border-bottom:1px solid #EEE6DC;font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:0.8px;text-transform:uppercase'});
+    var staffLbl = el('div', {class:'card-title', style:'padding:12px 14px 10px;border-bottom:1px solid #EEE6DC;font-size:11px;font-weight:700;color:var(--light);letter-spacing:0.8px;text-transform:uppercase'});
     staffLbl.textContent = '담당자별 성과';
     staffCardInner.appendChild(staffLbl);
     allStaffs.forEach(function(staff) {
@@ -3153,12 +3153,12 @@ function renderHome() {
           '<span style="font-size:14px;font-weight:700;color:#282828">'+staff+'</span>'+
           '<div style="text-align:right">'+
             '<span style="font-size:15px;font-weight:700;color:#282828;display:block">'+fmt(sv)+'</span>'+
-            '<span style="font-size:11px;color:#B0A99F">성과 '+fmt(sp)+'</span>'+
+            '<span style="font-size:11px;color:var(--light)">성과 '+fmt(sp)+'</span>'+
           '</div>'+
         '</div>'+
         (sGoal>0
           ? '<div style="height:4px;background:#F5F2EE;border-radius:4px;overflow:hidden;margin-top:4px"><div style="height:4px;border-radius:4px;background:#C4673A;width:'+sPct+'%"></div></div>'+
-            '<span style="font-size:11px;color:#B0A99F;display:block;margin-top:3px">목표 달성 '+sPct+'% · 목표 '+fmt(sGoal)+'원</span>'
+            '<span style="font-size:11px;color:var(--light);display:block;margin-top:3px">목표 달성 '+sPct+'% · 목표 '+fmt(sGoal)+'원</span>'
           : '');
       staffCardInner.appendChild(row);
     });
@@ -3264,7 +3264,7 @@ function renderEstList() {
     // 하단 행: 공간 + 원단 + 날짜
     var bot = el('div', {style:'font-size:12px;color:#9A9490;display:flex;gap:8px;flex-wrap:wrap'});
     if (e.space) { var s1=el('span'); s1.textContent=e.space; bot.appendChild(s1); }
-    if (e.fabric) { var s2=el('span',{style:'color:#B0A99F'}); s2.textContent=e.fabric; bot.appendChild(s2); }
+    if (e.fabric) { var s2=el('span',{style:'color:var(--light)'}); s2.textContent=e.fabric; bot.appendChild(s2); }
     var dateStr = e.savedAt ? e.savedAt.slice(0,10) : (e.date||'');
     if (dateStr) { var s3=el('span',{style:'margin-left:auto'}); s3.textContent=dateStr; bot.appendChild(s3); }
 
@@ -3345,7 +3345,7 @@ function renderSearch() {
 
     // 주소 + 담당자 (2번째 서브라인)
     if (c.addr || (c.staffName && c.staffName !== '마스터')) {
-      var sub2 = el('span', {style:'font-size:12px;color:#B0A99F;display:block;margin-top:2px'});
+      var sub2 = el('span', {style:'font-size:12px;color:var(--light);display:block;margin-top:2px'});
       sub2.textContent = [c.addr, c.staffName && c.staffName!=='마스터' ? c.staffName : ''].filter(Boolean).join(' · ');
       left.appendChild(sub2);
     }
@@ -3355,7 +3355,7 @@ function renderSearch() {
 
     // 단계 뱃지 + 날짜
     var stageEl = el('div', {class:'ci-stage stage-pill '+c.stage}); stageEl.textContent = c.stage;
-    var dateEl  = el('div', {style:'font-size:11px;color:#B0A99F;margin-top:4px;text-align:right'});
+    var dateEl  = el('div', {style:'font-size:11px;color:var(--light);margin-top:4px;text-align:right'});
     if (c.date) {
       var diff = daysDiff(c.date);
       dateEl.textContent = diff === 0 ? '오늘' : diff > 0 ? diff+'일 경과' : Math.abs(diff)+'일 후';
@@ -3554,7 +3554,7 @@ function renderCalList(customers, selectedDate) {
 
   if (events.length === 0) {
     var empty = document.createElement('div');
-    empty.style.cssText = 'text-align:center;padding:16px 0;font-size:13px;color:#B0A99F';
+    empty.style.cssText = 'text-align:center;padding:16px 0;font-size:13px;color:var(--light)';
     empty.textContent = selectedDate ? '이 날 일정이 없습니다' : '이번 달 일정이 없습니다';
     listEl.appendChild(empty); return;
   }
@@ -3753,7 +3753,7 @@ function renderChart(period) {
     var lbl = document.createElementNS(svgNS,'text');
     lbl.setAttribute('x',PAD-4); lbl.setAttribute('y',y+4);
     lbl.setAttribute('text-anchor','end'); lbl.setAttribute('font-size','9');
-    lbl.setAttribute('fill','#B0A99F');
+    lbl.setAttribute('fill','var(--light)');
     lbl.textContent = Math.round(maxRev*r/10000)+'만';
     svg.appendChild(lbl);
   });
@@ -3789,7 +3789,7 @@ function renderChart(period) {
     var lbl2 = document.createElementNS(svgNS,'text');
     lbl2.setAttribute('x',p.x); lbl2.setAttribute('y',H-8);
     lbl2.setAttribute('text-anchor','middle'); lbl2.setAttribute('font-size','10');
-    lbl2.setAttribute('fill', p.isCurrent?'#282828':'#B0A99F');
+    lbl2.setAttribute('fill', p.isCurrent?'#282828':'var(--light)');
     lbl2.setAttribute('font-weight', p.isCurrent?'700':'400');
     lbl2.textContent = p.label;
     svg.appendChild(lbl2);
@@ -3851,10 +3851,10 @@ function switchDetailTab(tab) {
   if (tab === 'info') {
     bodyEl.style.display = ''; estEl.style.display = 'none';
     if (tabInfo) { tabInfo.style.borderBottom='2px solid #282828'; tabInfo.style.color='#282828'; tabInfo.style.fontWeight='700'; }
-    if (tabEst)  { tabEst.style.borderBottom='2px solid transparent'; tabEst.style.color='#B0A99F'; tabEst.style.fontWeight='600'; }
+    if (tabEst)  { tabEst.style.borderBottom='2px solid transparent'; tabEst.style.color='var(--light)'; tabEst.style.fontWeight='600'; }
   } else {
     bodyEl.style.display = 'none'; estEl.style.display = '';
-    if (tabInfo) { tabInfo.style.borderBottom='2px solid transparent'; tabInfo.style.color='#B0A99F'; tabInfo.style.fontWeight='600'; }
+    if (tabInfo) { tabInfo.style.borderBottom='2px solid transparent'; tabInfo.style.color='var(--light)'; tabInfo.style.fontWeight='600'; }
     if (tabEst)  { tabEst.style.borderBottom='2px solid #282828'; tabEst.style.color='#282828'; tabEst.style.fontWeight='700'; }
     // 견적 이력 렌더
     renderDetailEstTab();
@@ -3942,7 +3942,7 @@ function renderDetailEstTab() {
 
     // 저장일
     var savedDate = e.savedAt ? e.savedAt.slice(0,10) : (e.date||'');
-    var dateRow = el('div', {style:'font-size:11px;color:#B0A99F;margin-bottom:10px', text:'저장일: ' + savedDate});
+    var dateRow = el('div', {style:'font-size:11px;color:var(--light);margin-bottom:10px', text:'저장일: ' + savedDate});
 
     // 액션 버튼
     var actions = div('display:flex;gap:6px', []);
@@ -4102,7 +4102,7 @@ function openDetail(name) {
       var row = div('display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#fff;border:1px solid #EEE6DC;border-radius:12px;margin-bottom:5px', [
         div('', [
           el('span', {style:'font-size:14px;font-weight:700;color:#282828;display:block', text:meta.label}),
-          el('span', {style:'font-size:11px;color:#B0A99F', text:meta.desc})
+          el('span', {style:'font-size:11px;color:var(--light)', text:meta.desc})
         ]),
         el('span', {style:'font-size:12px;font-weight:600;color:#282828;background:#fff;border:1px solid #282828;padding:5px 12px;border-radius:12px;flex-shrink:0', text:'발송'})
       ]);
@@ -4125,7 +4125,7 @@ function openDetail(name) {
   };
 
   var paySec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
-  paySec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'결제 관리'}));
+  paySec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'결제 관리'}));
 
   function savePayData(pd) {
     // 1) localStorage 백업
@@ -4336,7 +4336,7 @@ function openDetail(name) {
 
   
   var alimSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
-  alimSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px', text:'알림톡 발송 현황'}));
+  alimSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px', text:'알림톡 발송 현황'}));
 
   var allKeys = ['t01_reservation','t02_reminder','t03_estimate','t31_deposit','t04_followup',
     't05_measure_confirm','t06_measure_dday','t07_final_estimate','t71_balance_request',
@@ -4355,7 +4355,7 @@ function openDetail(name) {
     var meta = ALIM_META[key]; if(!meta) return;
     var sent = sentMap[key];
     var isRecommended = recommendedKeys.indexOf(key) >= 0;
-    var tagColor = meta.tag==='자동'?'#6B6B6B':(meta.tag==='선택'?'#B0A99F':'#282828');
+    var tagColor = meta.tag==='자동'?'#6B6B6B':(meta.tag==='선택'?'var(--light)':'#282828');
 
     var row = div(
       'display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #FAF7F5',
@@ -4367,16 +4367,16 @@ function openDetail(name) {
     labelRow.appendChild(el('span', {style:'font-size:10px;color:'+tagColor+';background:#FAF7F5;padding:2px 5px;border-radius:var(--r-btn)', text:meta.tag}));
     left.appendChild(labelRow);
     if (sent) {
-      left.appendChild(el('span', {style:'font-size:11px;color:#B0A99F', text:'✅ '+sent.date+' '+sent.time}));
+      left.appendChild(el('span', {style:'font-size:11px;color:var(--light)', text:'✅ '+sent.date+' '+sent.time}));
     }
     row.appendChild(left);
 
     if (!sent) {
-      var sendBtn = el('span', {style:'font-size:11px;font-weight:700;color:'+(isRecommended?'#282828':'#B0A99F')+';cursor:pointer;flex-shrink:0;padding:4px 8px;border:1px solid '+(isRecommended?'#282828':'#EEE6DC')+';border-radius:4px', text:'발송'});
+      var sendBtn = el('span', {style:'font-size:11px;font-weight:700;color:'+(isRecommended?'#282828':'var(--light)')+';cursor:pointer;flex-shrink:0;padding:4px 8px;border:1px solid '+(isRecommended?'#282828':'#EEE6DC')+';border-radius:4px', text:'발송'});
       (function(k){ sendBtn.addEventListener('click', function(){ sendAlimtalk(k); }); })(key);
       row.appendChild(sendBtn);
     } else {
-      var resendBtn = el('span', {style:'font-size:11px;color:#B0A99F;cursor:pointer;flex-shrink:0;padding:4px 8px', text:'재발송'});
+      var resendBtn = el('span', {style:'font-size:11px;color:var(--light);cursor:pointer;flex-shrink:0;padding:4px 8px', text:'재발송'});
       (function(k){ resendBtn.addEventListener('click', function(){ if(confirm('재발송할까요?')) sendAlimtalk(k); }); })(key);
       row.appendChild(resendBtn);
     }
@@ -4386,7 +4386,7 @@ function openDetail(name) {
 
   // 고객 정보 섹션
   var infoSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
-  infoSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'고객 정보'}));
+  infoSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'고객 정보'}));
 
   // 연락처 - 크고 눈에 띄게
   var phoneBlock = div('background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:12px 14px;margin-bottom:8px', []);
@@ -4396,7 +4396,7 @@ function openDetail(name) {
     telLink.textContent = c.phone;
     phoneBlock.appendChild(telLink);
   } else {
-    phoneBlock.appendChild(el('span', {style:'font-size:15px;font-weight:700;color:#B0A99F', text:'—'}));
+    phoneBlock.appendChild(el('span', {style:'font-size:15px;font-weight:700;color:var(--light)', text:'—'}));
   }
   infoSec.appendChild(phoneBlock);
 
@@ -4423,7 +4423,7 @@ function openDetail(name) {
   [{label:'상담일',value:c.date||'—'},{label:'실측 예정',value:c.measureDate||'—'},{label:'시공 예정',value:c.installDate||'—'}].forEach(function(item){
     dateGrid.appendChild(div('background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 8px;text-align:center',[
       el('div',{style:'font-size:9px;color:#9A9490;letter-spacing:0.8px;margin-bottom:4px',text:item.label}),
-      el('div',{style:'font-size:12px;font-weight:700;color:'+(item.value==='—'?'#B0A99F':'#282828'),text:item.value})
+      el('div',{style:'font-size:12px;font-weight:700;color:'+(item.value==='—'?'var(--light)':'#282828'),text:item.value})
     ]));
   });
   infoSec.appendChild(dateGrid);
@@ -4728,13 +4728,13 @@ function renderSettings() {
   wrap.innerHTML = '';
   var isMaster = currentUser && currentUser.role === 'master';
   if (!isMaster) {
-    wrap.appendChild(span('font-size:14px;color:#B0A99F;display:block;text-align:center;padding:40px 0', '마스터만 접근할 수 있습니다'));
+    wrap.appendChild(span('font-size:14px;color:var(--light);display:block;text-align:center;padding:40px 0', '마스터만 접근할 수 있습니다'));
     return;
   }
 
   
   var pwCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:12px;font-weight:700;color:#B0A99F;letter-spacing:1.2px;display:block;margin-bottom:12px', '🔐 비밀번호 변경')
+    span('font-size:12px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:12px', '🔐 비밀번호 변경')
   ]);
   [['change-pw-current2','현재 비밀번호'],['change-pw-new2','새 비밀번호 (4자 이상)'],['change-pw-confirm2','새 비밀번호 확인']].forEach(function(row) {
     var inp = el('input', {type:'password', id:row[0], placeholder:row[1], style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;font-size:14px;font-family:inherit;outline:none;margin-bottom:6px;box-sizing:border-box'});
@@ -4756,7 +4756,7 @@ function renderSettings() {
 
   
   var staffCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:12px;font-weight:700;color:#B0A99F;letter-spacing:1.2px;display:block;margin-bottom:12px', '👤 담당자 관리')
+    span('font-size:12px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:12px', '👤 담당자 관리')
   ]);
   var staffList = getStaffList();
   staffList.forEach(function(name) {
@@ -4789,7 +4789,7 @@ function renderSettings() {
 
   
   var goalCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:12px;font-weight:700;color:#B0A99F;letter-spacing:1.2px;display:block;margin-bottom:12px', '🎯 담당자별 월 목표 매출')
+    span('font-size:12px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:12px', '🎯 담당자별 월 목표 매출')
   ]);
   var allStaffs = ['마스터'].concat(getStaffList());
   allStaffs.forEach(function(staff) {
@@ -4812,8 +4812,8 @@ function renderSettings() {
 
   
   var webhookCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:12px;font-weight:700;color:#B0A99F;letter-spacing:1.2px;display:block;margin-bottom:4px', '⚙️ Make.com 웹훅 URL'),
-    span('font-size:12px;color:#B0A99F;display:block;margin-bottom:10px', '알림톡 자동 발송 연동 (검수 완료 후 입력)')
+    span('font-size:12px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:4px', '⚙️ Make.com 웹훅 URL'),
+    span('font-size:12px;color:var(--light);display:block;margin-bottom:10px', '알림톡 자동 발송 연동 (검수 완료 후 입력)')
   ]);
   var curWebhook = localStorage.getItem('dah_webhook_url') || '';
   var webhookInput = el('input', {type:'text', placeholder:'https://hook.make.com/...', value:curWebhook, style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px'});
@@ -4827,7 +4827,7 @@ function renderSettings() {
 
   
   var dataCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:12px;font-weight:700;color:#B0A99F;letter-spacing:1.2px;display:block;margin-bottom:12px', '💾 데이터 관리')
+    span('font-size:12px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:12px', '💾 데이터 관리')
   ]);
   dataCard.appendChild(btn('width:100%;padding:11px;background:#282828;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:8px', '📊 고객목록 엑셀 내보내기', exportExcel));
   dataCard.appendChild(btn('width:100%;padding:11px;background:#5C7A9F;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:8px', '📋 견적서목록 엑셀 내보내기', exportEstimatesExcel));
@@ -4861,13 +4861,13 @@ function loadEstimates(customerName, callback) {
 }
 
 var CONTRACT_LABELS = {pending:'가견적', contracted:'✅ 계약됨', rejected:'미계약'};
-var CONTRACT_COLORS = {pending:'#6B6B6B', contracted:'#282828', rejected:'#B0A99F'};
+var CONTRACT_COLORS = {pending:'#6B6B6B', contracted:'#282828', rejected:'var(--light)'};
 var STATUS_LABELS = {ga:'가견적서', final:'최종견적서'};
 
 function renderEstimateHistory(container, clientName) {
   var estSec = el('div', {style:'margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC'});
   var hd = el('div', {style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px'});
-  var lbl = el('div', {style:'font-size:12px;font-weight:700;color:#B0A99F;letter-spacing:1px;text-transform:uppercase', text:'견적서'});
+  var lbl = el('div', {style:'font-size:12px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase', text:'견적서'});
   hd.appendChild(lbl);
   estSec.appendChild(hd);
 
@@ -4878,7 +4878,7 @@ function renderEstimateHistory(container, clientName) {
   } catch(ex) {}
 
   if (estimates.length === 0) {
-    var emptyEl = el('div', {style:'font-size:13px;color:#B0A99F;padding:10px 0;text-align:center', text:'저장된 견적서 없음'});
+    var emptyEl = el('div', {style:'font-size:13px;color:var(--light);padding:10px 0;text-align:center', text:'저장된 견적서 없음'});
     estSec.appendChild(emptyEl);
     container.appendChild(estSec);
     return;
@@ -4942,12 +4942,12 @@ function renderEstimateHistory(container, clientName) {
 
     
     if (e.fabric) {
-      var fabEl = el('div', {style:'font-size:12px;color:#B0A99F;margin-bottom:4px', text:'원단: ' + e.fabric});
+      var fabEl = el('div', {style:'font-size:12px;color:var(--light);margin-bottom:4px', text:'원단: ' + e.fabric});
       card.appendChild(fabEl);
     }
 
     
-    var bot = el('div', {style:'font-size:11px;color:#B0A99F'});
+    var bot = el('div', {style:'font-size:11px;color:var(--light)'});
     var dateStr = e.savedAt ? e.savedAt.slice(0,10) : (e.date||'');
     bot.textContent = dateStr + (e.staffName ? ' · ' + e.staffName : '');
     card.appendChild(bot);
@@ -4965,10 +4965,10 @@ function showEstimateHistory(customerName) {
     if (histSection) histSection.remove();
 
     var section = el('div', {id:'estimate-history-section', style:'margin-top:14px'});
-    section.appendChild(span('font-size:12px;color:#B0A99F;letter-spacing:1.2px;display:block;margin-bottom:8px', '📋 시공 이력 (' + estimates.length + '건)'));
+    section.appendChild(span('font-size:12px;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:8px', '📋 시공 이력 (' + estimates.length + '건)'));
 
     if (estimates.length === 0) {
-      section.appendChild(span('font-size:14px;color:#B0A99F;display:block;text-align:center;padding:12px 0', '시공 이력이 없습니다'));
+      section.appendChild(span('font-size:14px;color:var(--light);display:block;text-align:center;padding:12px 0', '시공 이력이 없습니다'));
     } else {
       estimates.forEach(function(e) {
         var row = div('padding:10px;border:1px solid #EEE6DC;margin-bottom:6px;background:#FAF7F5', [
@@ -4979,7 +4979,7 @@ function showEstimateHistory(customerName) {
           e.product ? span('font-size:12px;color:#282828;display:block', '제품: ' + e.product) : null,
           e.fabric ? span('font-size:12px;color:#282828;display:block', '원단: ' + e.fabric) : null,
           (e.width && e.height) ? span('font-size:12px;color:#282828;display:block', '사이즈: ' + e.width + ' × ' + e.height + 'cm') : null,
-          span('font-size:11px;color:#B0A99F;display:block;margin-top:4px', (e.date||'') + ' · ' + (e.stage||'') + ' · ' + (e.staff_name||''))
+          span('font-size:11px;color:var(--light);display:block;margin-top:4px', (e.date||'') + ' · ' + (e.stage||'') + ' · ' + (e.staff_name||''))
         ]);
         section.appendChild(row);
       });
