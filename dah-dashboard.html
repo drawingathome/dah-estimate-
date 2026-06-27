@@ -895,13 +895,13 @@ textarea:disabled {
 
 
 /* ── hover 효과 강화 ── */
-.btn-primary:hover  { background:#B35C30; transform:translateY(-1px); box-shadow:0 4px 12px rgba(196,103,58,0.3); }
-.btn-dark:hover     { background:#3D3D3D; transform:translateY(-1px); }
-.btn-kakao:hover    { background:#F5D800; transform:translateY(-1px); }
+.btn-primary:hover  { background:var(--terra-dark); transform:translateY(-1px); box-shadow:0 4px 12px rgba(196,103,58,0.3); }
+.btn-dark:hover     { background:rgba(255,255,255,0.08); transform:translateY(-1px); }
+.btn-kakao:hover    { background:var(--kakao-dark); transform:translateY(-1px); }
 .btn-secondary:hover { background:#fff; border-color:var(--light); }
-.hd-btn-primary:hover { background:#B35C30; }
-.add-btn-save:hover   { background:#3D3D3D; }
-.add-btn-kakao:hover  { background:#F5D800; }
+.hd-btn-primary:hover { background:var(--terra-dark); }
+.add-btn-save:hover   { background:rgba(255,255,255,0.08); }
+.add-btn-kakao:hover  { background:var(--kakao-dark); }
 .mob-fab:hover { transform:scale(1.05); box-shadow:0 6px 20px rgba(196,103,58,0.5); }
 
 
@@ -965,7 +965,7 @@ a:focus-visible { outline:2px solid var(--terra); outline-offset:2px; }
   transition:width 0.6s cubic-bezier(0.4,0,0.2,1);
   min-width:2px;
 }
-.goal-progress-bar.over { background:linear-gradient(90deg, #2E7D32, #43A047); }
+.goal-progress-bar.over { background:linear-gradient(90deg, #2E7D32, var(--green)); }
 .goal-pct {
   font-size:10px; font-weight:700;
   color:var(--terra); margin-top:4px;
@@ -1039,6 +1039,8 @@ a:focus-visible { outline:2px solid var(--terra); outline-offset:2px; }
   --green-bg: #E8F5E9;
   --blue:  #1565C0;
   --blue-bg: #E3F2FD;
+  --kakao:     #FAE100;
+  --kakao-dark:#F5D800;
 }
 
 /* ── 한글 최적화 ── */
