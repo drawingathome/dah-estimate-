@@ -737,6 +737,26 @@ input,button,select,textarea { font-family:inherit; }
 }
 @keyframes spin { to { transform:rotate(360deg); } }
 
+
+/* ── 날짜 필터 ── */
+.date-filter-wrap {
+  display:flex; gap:6px; padding:8px 16px 4px;
+  overflow-x:auto; scrollbar-width:none;
+}
+.date-filter-wrap::-webkit-scrollbar { display:none; }
+.date-filter-btn {
+  flex-shrink:0; padding:5px 12px;
+  border-radius:var(--r-btn);
+  border:1px solid var(--border);
+  background:#fff; font-size:11px;
+  font-weight:600; color:var(--mid);
+  cursor:pointer; font-family:inherit;
+  transition:all 0.12s; white-space:nowrap;
+}
+.date-filter-btn.on {
+  background:var(--dark); color:#fff; border-color:var(--dark);
+}
+
 </style>
 
   <!-- PWA -->
@@ -1050,6 +1070,134 @@ input,button,select,textarea { font-family:inherit; }
 <div id="toast"></div>
 
 <script>
+/* ── 견적서 복사 ── */
+function copyEstimate(estId) {
+  try {
+    var estimates = JSON.parse(localStorage.getItem('dah_estimates') || '[]');
+    var orig = estimates.find(function(e) { return e.id === estId; });
+    if (!orig) { showToast('견적서를 찾을 수 없습니다'); return; }
+    
+    var copy = JSON.parse(JSON.stringify(orig));
+    copy.id       = 'EST-' + Date.now();
+    copy.no       = generateEstNo ? generateEstNo() : copy.no + '-복사';
+    copy.status   = 'ga'; // 가견적으로 초기화
+    copy.createdAt = new Date().toISOString();
+    copy.contractStatus = 'pending';
+    
+    estimates.unshift(copy);
+    localStorage.setItem('dah_estimates', JSON.stringify(estimates));
+    showToast('견적서가 복사되었습니다');
+    renderEstList();
+  } catch(e) { showToast('복사 실패: ' + e.message); }
+}
+
+/* ── 초성 검색 ── */
+var CHOSUNG = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㄱ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+
+function getChosung(str) {
+  return str.split('').map(function(ch) {
+    var code = ch.charCodeAt(0) - 0xAC00;
+    if (code < 0 || code > 11171) return ch;
+    return CHOSUNG[Math.floor(code / 588)];
+  }).join('');
+}
+
+function searchMatch(customer, query) {
+  if (!query) return true;
+  var q = query.trim().toLowerCase();
+  var name  = (customer.clientName || '').toLowerCase();
+  var phone = (customer.phone || '').replace(/-/g, '');
+  var addr  = (customer.addr || '').toLowerCase();
+  
+  // 일반 검색
+  if (name.includes(q) || phone.includes(q) || addr.includes(q)) return true;
+  
+  // 초성 검색
+  if (/^[ㄱ-ㅎ]+$/.test(q)) {
+    var nameChosung = getChosung(customer.clientName || '');
+    if (nameChosung.includes(q)) return true;
+  }
+  return false;
+}
+
+/* ── 날짜 필터 ── */
+var _currentDateFilter = 'all';
+
+function setDateFilter(period) {
+  _currentDateFilter = period;
+  document.querySelectorAll('.date-filter-btn').forEach(function(b) {
+    b.classList.toggle('on', b.getAttribute('data-period') === period);
+  });
+  loadCustomersAsync(renderChart);
+}
+
+function getDateFilterRange() {
+  var now = new Date();
+  var start, end = new Date(now);
+  
+  switch(_currentDateFilter) {
+    case 'this_month':
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      break;
+    case 'last_month':
+      start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      end   = new Date(now.getFullYear(), now.getMonth(), 0);
+      break;
+    case '3months':
+      start = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+      break;
+    case '6months':
+      start = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+      break;
+    default:
+      return null; // 전체
+  }
+  return { start: start, end: end };
+}
+
+function filterByDate(customers) {
+  var range = getDateFilterRange();
+  if (!range) return customers;
+  return customers.filter(function(c) {
+    var d = new Date(c.createdAt || c.date || '');
+    return d >= range.start && d <= range.end;
+  });
+}
+
+/* ── 매출 차트 실데이터 ── */
+function buildRevenueChartData(customers, period) {
+  var now = new Date();
+  var data = [];
+  
+  if (period === 'monthly') {
+    // 12개월
+    for (var i = 11; i >= 0; i--) {
+      var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      var label = (d.getMonth() + 1) + '월';
+      var value = customers.filter(function(c) {
+        var cd = new Date(c.depositDate || c.createdAt || '');
+        return cd.getFullYear() === d.getFullYear() && cd.getMonth() === d.getMonth();
+      }).reduce(function(sum, c) { return sum + (Number(c.depositAmount) || 0) + (Number(c.balanceAmount) || 0); }, 0);
+      data.push({ label: label, value: value, active: i === 0 });
+    }
+  } else if (period === 'weekly') {
+    // 최근 8주
+    for (var i = 7; i >= 0; i--) {
+      var weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - (i * 7));
+      var weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
+      var label = (weekStart.getMonth()+1) + '/' + weekStart.getDate();
+      var value = customers.filter(function(c) {
+        var cd = new Date(c.depositDate || c.createdAt || '');
+        return cd >= weekStart && cd <= weekEnd;
+      }).reduce(function(sum, c) { return sum + (Number(c.depositAmount) || 0) + (Number(c.balanceAmount) || 0); }, 0);
+      data.push({ label: label, value: value, active: i === 0 });
+    }
+  }
+  return data;
+}
+
 /* ── 설정 화면 저장/불러오기 ── */
 function loadSettings() {
   try {
@@ -2250,7 +2398,7 @@ function renderPipe() {
   var allC = loadCustomers();
   var customers = (currentUser && currentUser.role === 'staff') ? allC.filter(function(c) { return (c.staffName||'마스터') === currentUser.name; }) : allC;
   var q = (document.getElementById('pipe-search').value || '').trim();
-  if (q) customers = customers.filter(function(c) { return c.clientName.indexOf(q) >= 0 || (c.phone||'').indexOf(q) >= 0; });
+  if (q) customers = customers.filter(function(c) { return searchMatch(c, q); }));
   
   customers = customers.filter(function(c){ return !isArchived(c); });
   var listEl = document.getElementById('pipe-list'); listEl.innerHTML = '';
@@ -2384,7 +2532,7 @@ function renderSearch() {
   var q = (document.getElementById('cust-search').value || '').trim();
   var showArchived = document.getElementById('show-archived')?.checked || false;
   var filtered = q
-    ? all.filter(function(c){ return c.clientName.indexOf(q)>=0||(c.phone||'').indexOf(q)>=0||(c.addr||'').indexOf(q)>=0; })
+    ? all.filter(function(c) { return searchMatch(c, q); }))
     : all.slice().reverse();
   var customers = showArchived ? filtered : filtered.filter(function(c){ return !isArchived(c); });
   var archivedCount = filtered.filter(isArchived).length;
