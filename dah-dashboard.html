@@ -2379,6 +2379,7 @@ function fmtPhone(v) {
   if (d.length <= 7) return d.slice(0,3) + '-' + d.slice(3);
   return d.slice(0,3) + '-' + d.slice(3,7) + '-' + d.slice(7,11);
 }
+/** @param {string} msg 토스트 메시지 */
 function showToast(msg) {
   var t = document.getElementById('toast');
   t.textContent = msg;
@@ -2508,6 +2509,7 @@ function div(style, children) { return el('div', {style: style}, children); }
 function span(style, text) { return el('span', {style: style, text: text}); }
 function btn(style, text, onClick) { var b = el('button', {style: style, text: text}); b.addEventListener('click', onClick); return b; }
 
+/** @param {string} t 탭ID (home|pipe|search|est-list|cal|chart|settings) */
 function goTab(t) {
   ['home','pipe','est-list','search','cal','chart','settings'].forEach(function(id) { var el2 = document.getElementById(id); if(el2) el2.style.display = id === t ? 'block' : 'none'; });
   document.querySelectorAll('.tab').forEach(function(b) { b.className = b.getAttribute('data-tab') === t ? 'tab on' : 'tab'; });
@@ -2701,6 +2703,7 @@ function updateHdKpi(allCustomers) {
   })();
 }
 
+/** 홈 화면 렌더링 — 오늘 배너, 처리 필요, 일정 */
 function renderHome() {
   var wrap = document.getElementById('home');
   wrap.innerHTML = '';
@@ -3232,6 +3235,7 @@ function renderEstList() {
   body.appendChild(card);
 }
 
+/** @param {Array} customers 고객 목록 */
 function renderPipe(customers) {
   renderPipeKanban(customers);
 }
@@ -4398,6 +4402,7 @@ function deleteCustomer() {
 }
 
 var editingCustomerName = null;
+/** @param {string} [editName] 편집 시 기존 고객명 */
 function openAdd(editName) {
   editingCustomerName = editName || null;
   document.getElementById('add-modal-title').textContent = editName ? '고객 정보 수정' : '고객 추가';
