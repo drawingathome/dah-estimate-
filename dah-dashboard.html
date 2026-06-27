@@ -680,6 +680,42 @@ input,button,select,textarea { font-family:inherit; }
   font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;
 }
 
+
+/* ── 매출 차트 개선 ── */
+.chart-svg-wrap {
+  width:100%; overflow:hidden;
+  padding:8px 0 4px;
+}
+.chart-bar-group { cursor:pointer; }
+.chart-bar-group:hover .chart-bar-rect { opacity:0.85; }
+.chart-label { font-size:9px; fill:#B0A99F; font-family:'Pretendard',sans-serif; }
+.chart-value { font-size:9px; fill:#282828; font-weight:700; font-family:'Pretendard',sans-serif; }
+.chart-tooltip {
+  position:absolute; background:#282828; color:#fff;
+  padding:6px 10px; border-radius:4px;
+  font-size:11px; font-weight:600; pointer-events:none;
+  opacity:0; transition:opacity 0.15s; white-space:nowrap;
+  font-family:'Pretendard',sans-serif;
+}
+
+/* KPI 차트 라인 */
+.kpi-chart-line { stroke:var(--terra); stroke-width:2; fill:none; }
+.kpi-chart-dot { fill:var(--terra); }
+.kpi-chart-area { fill:rgba(196,103,58,0.08); }
+
+/* 매출 요약 카드 */
+.rev-summary-grid {
+  display:grid; grid-template-columns:1fr 1fr 1fr;
+  gap:8px; margin-bottom:12px;
+}
+.rev-summary-card {
+  background:#fff; border-radius:var(--r-card);
+  border:1px solid var(--border); padding:12px 14px;
+}
+.rev-summary-label { font-size:10px; color:var(--light); margin-bottom:4px; font-weight:600; }
+.rev-summary-num { font-size:17px; font-weight:700; color:var(--dark); }
+.rev-summary-sub { font-size:10px; color:var(--terra); margin-top:2px; font-weight:600; }
+
 </style>
 </head>
 <body>
@@ -2498,6 +2534,40 @@ function renderCalList(customers, selectedDate) {
 }
 
 var currentChartPeriod = 'daily';
+
+
+/* ── SVG 차트 헬퍼 ── */
+function drawBarChart(containerId, data, options) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  options = options || {};
+  var W = container.offsetWidth || 320;
+  var H = options.height || 120;
+  var pad = {top:20, right:10, bottom:24, left:10};
+  var maxVal = Math.max.apply(null, data.map(function(d){ return d.value; })) || 1;
+  var barW = Math.max(4, (W - pad.left - pad.right) / data.length - 4);
+  
+  var svg = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">';
+  
+  data.forEach(function(d, i) {
+    var x = pad.left + i * ((W - pad.left - pad.right) / data.length) + 2;
+    var barH = Math.max(2, (d.value / maxVal) * (H - pad.top - pad.bottom));
+    var y = H - pad.bottom - barH;
+    var color = d.active ? '#C4673A' : '#EEE6DC';
+    
+    svg += '<g class="chart-bar-group">';
+    svg += '<rect class="chart-bar-rect" x="' + x + '" y="' + y + '" width="' + barW + '" height="' + barH + '" rx="2" fill="' + color + '"/>';
+    if (d.value > 0) {
+      var valText = d.value >= 10000 ? Math.round(d.value/10000) + '만' : d.value;
+      svg += '<text class="chart-value" x="' + (x + barW/2) + '" y="' + (y - 4) + '" text-anchor="middle">' + valText + '</text>';
+    }
+    svg += '<text class="chart-label" x="' + (x + barW/2) + '" y="' + (H - 6) + '" text-anchor="middle">' + (d.label || '') + '</text>';
+    svg += '</g>';
+  });
+  
+  svg += '</svg>';
+  container.innerHTML = svg;
+}
 
 function renderChart(period) {
   if (period) currentChartPeriod = period;
