@@ -757,6 +757,85 @@ input,button,select,textarea { font-family:inherit; }
   background:var(--dark); color:#fff; border-color:var(--dark);
 }
 
+
+/* ── 고객 상세 PC 2컬럼 ── */
+.detail-layout {
+  display:flex; gap:16px; align-items:flex-start;
+  max-width:960px; margin:0 auto; padding:16px;
+}
+.detail-col {
+  flex:1; display:flex; flex-direction:column; gap:12px; min-width:0;
+}
+.detail-col-wide { flex:1.4; }
+.detail-card {
+  background:#fff; border-radius:var(--r-card);
+  border:1px solid var(--border); overflow:hidden;
+}
+.detail-card .card-head {
+  padding:11px 16px; border-bottom:1px solid var(--ivory2);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.card-head-title {
+  font-size:11px; font-weight:700; color:var(--mid);
+  letter-spacing:0.08em; text-transform:uppercase;
+}
+.card-head-action {
+  height:28px; padding:0 10px;
+  background:var(--ivory1); color:var(--mid);
+  border:1px solid var(--border); border-radius:var(--r-btn);
+  font-size:11px; font-weight:600; cursor:pointer; font-family:inherit;
+}
+.detail-field {
+  padding:10px 16px; border-bottom:1px solid var(--ivory2);
+  display:flex; align-items:center;
+}
+.detail-field:last-child { border-bottom:none; }
+.detail-field-label {
+  font-size:11px; font-weight:600; color:var(--mid);
+  width:72px; flex-shrink:0;
+}
+.detail-field-value { font-size:13px; color:var(--dark); flex:1; }
+
+@media (max-width:640px) {
+  .detail-layout { flex-direction:column; padding:12px; }
+}
+
+
+/* ── 인쇄 미리보기 개선 ── */
+#pv-overlay {
+  position:fixed; inset:0; z-index:400;
+  background:rgba(0,0,0,0.7);
+  display:none; flex-direction:column;
+  overflow-y:auto;
+}
+#pv-overlay.open { display:flex; }
+.pv-toolbar {
+  position:sticky; top:0; z-index:10;
+  background:var(--dark); padding:10px 20px;
+  display:flex; align-items:center; gap:10px;
+}
+.pv-toolbar-title { color:#fff; font-size:13px; font-weight:700; flex:1; }
+.pv-close-btn {
+  background:rgba(255,255,255,0.1); color:#fff;
+  border:none; border-radius:var(--r-btn);
+  padding:7px 14px; font-size:12px; font-weight:600;
+  cursor:pointer; font-family:inherit;
+}
+.pv-print-btn {
+  background:var(--terra); color:#fff;
+  border:none; border-radius:var(--r-btn);
+  padding:7px 16px; font-size:12px; font-weight:700;
+  cursor:pointer; font-family:inherit;
+}
+.pv-paper {
+  background:#fff; margin:20px auto;
+  width:210mm; min-height:297mm;
+  padding:16mm 20mm; box-shadow:0 4px 24px rgba(0,0,0,0.2);
+}
+@media (max-width:640px) {
+  .pv-paper { width:100%; margin:0; padding:12mm; }
+}
+
 </style>
 
   <!-- PWA -->
@@ -1070,6 +1149,81 @@ input,button,select,textarea { font-family:inherit; }
 <div id="toast"></div>
 
 <script>
+/* ── renderPipe 칸반 뷰 ── */
+var PIPE_STAGES = [
+  { key:'계약금', dot:'#F06E2D' },
+  { key:'실측',   dot:'#F06E2D' },
+  { key:'잔금',   dot:'#282828' },
+  { key:'시공',   dot:'#282828' },
+  { key:'완료',   dot:'#EEE6DC' },
+];
+
+function renderPipeKanban(customers) {
+  var wrap = document.getElementById('pipe');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+
+  // 검색바
+  var searchWrap = document.createElement('div');
+  searchWrap.className = 'search-top';
+  searchWrap.style.cssText = 'padding:10px 16px 8px;position:sticky;top:52px;z-index:90;background:var(--ivory2)';
+  searchWrap.innerHTML = '<div class="search-bar-wrap"><svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B0A99F" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" id="pipe-search" class="search-input-clean" placeholder="고객명 검색" oninput="filterPipe(this.value)"></div>';
+  wrap.appendChild(searchWrap);
+
+  // 칸반 래퍼
+  var kanbanWrap = document.createElement('div');
+  kanbanWrap.className = 'kanban-wrap';
+  kanbanWrap.id = 'kanban-wrap';
+  wrap.appendChild(kanbanWrap);
+
+  renderKanbanCols(customers, kanbanWrap);
+}
+
+function renderKanbanCols(customers, kanbanWrap) {
+  kanbanWrap.innerHTML = '';
+  PIPE_STAGES.forEach(function(stage) {
+    var stageCustomers = customers.filter(function(c) { return c.stage === stage.key; });
+
+    var col = document.createElement('div');
+    col.className = 'kanban-col';
+
+    // 헤더
+    var head = document.createElement('div');
+    head.className = 'kanban-head';
+    head.innerHTML = '<div class="kanban-dot" style="background:' + stage.dot + '"></div>' +
+      '<span class="kanban-label">' + stage.key + '</span>' +
+      '<span class="kanban-count">' + stageCustomers.length + '</span>';
+    col.appendChild(head);
+
+    if (stageCustomers.length === 0) {
+      var empty = document.createElement('div');
+      empty.className = 'kanban-empty';
+      empty.textContent = '진행 없음';
+      col.appendChild(empty);
+    } else {
+      stageCustomers.forEach(function(c) {
+        var item = document.createElement('div');
+        item.className = 'kanban-item';
+        item.innerHTML =
+          '<div class="kanban-item-name">' + (c.clientName || '') + '</div>' +
+          '<div class="kanban-item-sub">' + (c.phone || '') + '</div>' +
+          (c.price ? '<div class="kanban-item-price">' + Number(c.price).toLocaleString() + '원</div>' : '');
+        item.addEventListener('click', function() { openDetail(c.clientName); });
+        col.appendChild(item);
+      });
+    }
+    kanbanWrap.appendChild(col);
+  });
+}
+
+function filterPipe(q) {
+  loadCustomersAsync(function(all) {
+    var filtered = q ? all.filter(function(c) { return searchMatch(c, q); }) : all;
+    var kw = document.getElementById('kanban-wrap');
+    if (kw) renderKanbanCols(filtered, kw);
+  });
+}
+
 /* ── 견적서 복사 ── */
 function copyEstimate(estId) {
   try {
@@ -2394,136 +2548,8 @@ function renderEstList() {
   body.appendChild(card);
 }
 
-function renderPipe() {
-  var allC = loadCustomers();
-  var customers = (currentUser && currentUser.role === 'staff') ? allC.filter(function(c) { return (c.staffName||'마스터') === currentUser.name; }) : allC;
-  var q = (document.getElementById('pipe-search').value || '').trim();
-  if (q) customers = customers.filter(function(c) { return searchMatch(c, q); }));
-  
-  customers = customers.filter(function(c){ return !isArchived(c); });
-  var listEl = document.getElementById('pipe-list'); listEl.innerHTML = '';
-
-  STAGES.forEach(function(stage, idx) {
-    var list = customers.filter(function(c) { return c.stage === stage; });
-    var total = list.reduce(function(s,c) { return s + (Number(c.price)||0); }, 0);
-    var isDone = stage === '완료';
-    var num = STAGE_NUM[stage] || (idx+1);
-
-     
-    var section = el('div', {style:'margin-bottom:6px'});
-
-    // ③ 스테이지별 배경색
-    var stageBg = {상담:'#EEF2F7',계약금:'#FFF3EE',실측:'#F3EFF8',잔금:'#EEF5F2',시공:'#FDECEA',완료:'#F5F5F5'};
-
-     
-    var hd = el('div', {style:
-      'display:flex;align-items:center;gap:8px;padding:10px 14px;' +
-      'background:' + (stageBg[stage]||'#FAF7F5') + ';' +
-      'border:1px solid ' + (STAGE_COLORS[stage]||'#EEE6DC') + '44;' +
-      'border-radius:12px 8px ' +
-      (list.length > 0 ? '0 0' : '8px 8px') + ';' +
-      'cursor:default'
-    });
-
-     
-    var numBadge = el('span', {style:
-      'display:inline-flex;align-items:center;justify-content:center;' +
-      'width:20px;height:20px;border-radius:50%;flex-shrink:0;' +
-      'background:' + (isDone ? '#EEE6DC' : list.length > 0 ? '#282828' : '#EEE6DC') + ';' +
-      'color:' + (isDone ? '#6B6B6B' : list.length > 0 ? '#fff' : '#B0A99F') + ';' +
-      'font-size:11px;font-weight:700'
-    });
-    numBadge.textContent = num;
-
-     
-    var stageName = el('span', {style:
-      'font-size:13px;font-weight:700;flex:1;' +
-      'color:' + (isDone ? '#B0A99F' : list.length > 0 ? '#282828' : '#B0A99F') + ';' +
-      'letter-spacing:0.3px'
-    });
-    stageName.textContent = stage;
-
-     
-    var meta = el('div', {style:'display:flex;align-items:center;gap:8px'});
-    var cntBadge = el('span', {style:
-      'font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;' +
-      'background:' + (list.length>0 ? (STAGE_COLORS[stage]||'#282828') : '#EEE6DC') + ';' +
-      'color:' + (list.length>0 ? '#fff' : '#B0A99F')
-    });
-    cntBadge.textContent = list.length + '건';
-    meta.appendChild(cntBadge);
-    if (total > 0) {
-      var totalSpan = el('span', {style:'font-size:12px;color:#282828;font-weight:800;letter-spacing:-0.3px'});
-      totalSpan.textContent = fmtMan(total);
-      meta.appendChild(totalSpan);
-    }
-
-    hd.appendChild(numBadge);
-    hd.appendChild(stageName);
-    hd.appendChild(meta);
-    section.appendChild(hd);
-
-     
-    if (list.length > 0) {
-      var body = el('div', {style:
-        'background:#fff;border:1px solid #EEE6DC;border-top:none;' +
-        'border-radius:0 0 8px 8px;overflow:hidden'
-      });
-      list.forEach(function(c, ci) {
-        var isLast = ci === list.length - 1;
-        var row = el('div', {class:'pipe-item'});
-        var left = el('div', {class:'pipe-left'});
-        var nameRow = el('div', {class:'pipe-name'});
-        var nameEl = el('span', {}); nameEl.textContent = c.clientName;
-        nameRow.appendChild(nameEl);
-        if (c.visitCount > 1) {
-          var reBadge = el('span', {class:'rebuy-tag'}); reBadge.textContent = '재구매';
-          nameRow.appendChild(reBadge);
-        }
-        left.appendChild(nameRow);
-
-        // 공간 + 담당자
-        var subEl = el('div', {class:'pipe-sub'});
-        subEl.textContent = (c.space || '—') + (c.staffName && c.staffName !== '마스터' ? ' · ' + c.staffName : '');
-        left.appendChild(subEl);
-
-        // 실측일/시공일 표시 (있을 때만)
-        if (c.measureDate || c.installDate) {
-          var schedEl = el('div', {style:'font-size:11px;color:#8B6BB1;margin-top:2px;font-weight:600'});
-          if (c.measureDate) schedEl.textContent = '실측 ' + c.measureDate;
-          if (c.installDate) schedEl.textContent = (schedEl.textContent ? schedEl.textContent + ' · ' : '') + '시공 ' + c.installDate;
-          left.appendChild(schedEl);
-        }
-
-        var right = el('div', {class:'pipe-right'});
-        var priceEl = el('div', {class:'pipe-price'}); priceEl.textContent = fmt(c.price);
-
-        // 경과일 뱃지
-        var dateWrap = el('div', {style:'display:flex;align-items:center;justify-content:flex-end;gap:5px;margin-top:3px'});
-        if (c.date) {
-          var diff = daysDiff(c.date);
-          var isOver = diff >= 30;
-          var dayBadge = el('span', {style:
-            'font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;' +
-            'background:' + (isOver?'#FDECEA':'#F5F2EE') + ';' +
-            'color:' + (isOver?'#C0392B':'#9A9490')
-          });
-          dayBadge.textContent = diff === 0 ? '오늘' : diff > 0 ? diff+'일 경과' : Math.abs(diff)+'일 후';
-          dateWrap.appendChild(dayBadge);
-        }
-        var dateEl = el('div', {class:'pipe-date'}); dateEl.textContent = c.date || '';
-        dateWrap.appendChild(dateEl);
-
-        right.appendChild(priceEl); right.appendChild(dateWrap);
-        row.appendChild(left); row.appendChild(right);
-        (function(name){ row.addEventListener('click', function(){ openDetail(name); }); })(c.clientName);
-        body.appendChild(row);
-      });
-      section.appendChild(body);
-    }
-
-    listEl.appendChild(section);
-  });
+function renderPipe(customers) {
+  renderPipeKanban(customers);
 }
 
 function renderSearch() {
