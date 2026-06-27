@@ -949,6 +949,46 @@ a:focus-visible { outline:2px solid var(--terra); outline-offset:2px; }
   .detail-layout { gap:12px; padding:16px 24px; }
 }
 
+
+/* ── 목표 달성률 프로그레스 바 ── */
+.goal-progress-wrap {
+  margin-top:8px;
+  background:var(--ivory2);
+  border-radius:4px;
+  height:6px;
+  overflow:hidden;
+}
+.goal-progress-bar {
+  height:100%;
+  border-radius:4px;
+  background:linear-gradient(90deg, var(--terra), var(--orange));
+  transition:width 0.6s cubic-bezier(0.4,0,0.2,1);
+  min-width:2px;
+}
+.goal-progress-bar.over { background:linear-gradient(90deg, #2E7D32, #43A047); }
+.goal-pct {
+  font-size:10px; font-weight:700;
+  color:var(--terra); margin-top:4px;
+}
+.goal-pct.over { color:#2E7D32; }
+
+/* ── 고객 목록 정렬 ── */
+.sort-wrap {
+  display:flex; gap:6px; padding:8px 16px 4px;
+  overflow-x:auto; scrollbar-width:none;
+}
+.sort-wrap::-webkit-scrollbar { display:none; }
+.sort-btn {
+  flex-shrink:0; padding:4px 12px;
+  border-radius:var(--r-btn);
+  border:1px solid var(--border);
+  background:#fff; font-size:11px;
+  font-weight:600; color:var(--mid);
+  cursor:pointer; font-family:inherit;
+  transition:all 0.12s; white-space:nowrap;
+}
+.sort-btn.on { background:var(--dark); color:#fff; border-color:var(--dark); }
+
 </style>
 
   <!-- PWA -->
@@ -1262,6 +1302,192 @@ a:focus-visible { outline:2px solid var(--terra); outline-offset:2px; }
 <div id="toast"></div>
 
 <script>
+/* ── 목표 달성률 프로그레스 바 ── */
+function renderGoalProgress(currentAmount) {
+  var s = getSettings ? getSettings() : {};
+  var goalStr = (s.monthlyGoal || '5000').replace(/[^0-9]/g, '');
+  var goal = parseInt(goalStr) * (s.monthlyGoal && s.monthlyGoal.includes('만') ? 10000 : 1);
+  if (!goal) goal = 50000000; // 기본 5,000만원
+
+  var pct = goal > 0 ? Math.min(Math.round(currentAmount / goal * 100), 999) : 0;
+  var isOver = pct >= 100;
+
+  var bar = document.getElementById('goal-progress-bar');
+  var pctEl = document.getElementById('goal-pct');
+  if (bar) {
+    bar.style.width = Math.min(pct, 100) + '%';
+    bar.className = 'goal-progress-bar' + (isOver ? ' over' : '');
+  }
+  if (pctEl) {
+    pctEl.textContent = pct + '%';
+    pctEl.className = 'goal-pct' + (isOver ? ' over' : '');
+  }
+}
+
+/* ── 칸반 스테이지 변경 ── */
+var STAGE_ORDER = ['상담','계약금','실측','잔금','시공','완료'];
+
+function changeStage(customerName, newStage) {
+  try {
+    var customers = loadCustomers();
+    var idx = customers.findIndex(function(c) { return c.clientName === customerName; });
+    if (idx < 0) { showToast('고객을 찾을 수 없습니다'); return; }
+
+    var oldStage = customers[idx].stage;
+    customers[idx].stage = newStage;
+    customers[idx].updatedAt = new Date().toISOString();
+    saveCustomers(customers);
+
+    // Supabase 동기화
+    if (customers[idx].id) {
+      sbXHR('PATCH', '/customers?id=eq.' + customers[idx].id,
+        { stage: newStage },
+        function() {},
+        function(e) { console.warn('스테이지 동기화 실패:', e); }
+      );
+    }
+    showToast(customerName + ' → ' + newStage);
+    loadCustomersAsync(renderPipe);
+  } catch(e) { showToast('변경 실패: ' + e.message); }
+}
+
+function showStageMenu(customerName, currentStage, anchorEl) {
+  // 기존 메뉴 제거
+  var existing = document.getElementById('stage-menu');
+  if (existing) { existing.remove(); return; }
+
+  var menu = document.createElement('div');
+  menu.id = 'stage-menu';
+  menu.style.cssText = [
+    'position:fixed',
+    'background:#fff',
+    'border:1px solid var(--border)',
+    'border-radius:var(--r-card)',
+    'box-shadow:0 4px 20px rgba(0,0,0,0.15)',
+    'z-index:9999',
+    'overflow:hidden',
+    'min-width:120px',
+  ].join(';');
+
+  var rect = anchorEl.getBoundingClientRect();
+  menu.style.top  = (rect.bottom + 6) + 'px';
+  menu.style.left = Math.max(8, rect.left - 40) + 'px';
+
+  STAGE_ORDER.forEach(function(stage) {
+    var item = document.createElement('button');
+    item.style.cssText = [
+      'display:block', 'width:100%',
+      'padding:10px 16px',
+      'border:none',
+      'border-bottom:1px solid var(--ivory2)',
+      'background:' + (stage === currentStage ? 'var(--ivory2)' : '#fff'),
+      'color:' + (stage === currentStage ? 'var(--terra)' : 'var(--dark)'),
+      'font-size:12px',
+      'font-weight:' + (stage === currentStage ? '700' : '500'),
+      'text-align:left',
+      'cursor:pointer',
+      'font-family:inherit',
+    ].join(';');
+    item.textContent = (stage === currentStage ? '✓ ' : '') + stage;
+    item.addEventListener('click', function() {
+      menu.remove();
+      if (stage !== currentStage) changeStage(customerName, stage);
+    });
+    menu.appendChild(item);
+  });
+
+  document.body.appendChild(menu);
+  setTimeout(function() {
+    document.addEventListener('click', function handler(e) {
+      if (!menu.contains(e.target)) { menu.remove(); }
+      document.removeEventListener('click', handler);
+    });
+  }, 10);
+}
+
+/* ── 고객 목록 정렬 ── */
+var _currentSort = 'date_desc';
+
+function sortCustomers(customers, sortKey) {
+  var sorted = customers.slice();
+  switch(sortKey) {
+    case 'name_asc':
+      sorted.sort(function(a,b) { return (a.clientName||'').localeCompare(b.clientName||'', 'ko'); });
+      break;
+    case 'name_desc':
+      sorted.sort(function(a,b) { return (b.clientName||'').localeCompare(a.clientName||'', 'ko'); });
+      break;
+    case 'date_desc':
+      sorted.sort(function(a,b) { return new Date(b.createdAt||0) - new Date(a.createdAt||0); });
+      break;
+    case 'date_asc':
+      sorted.sort(function(a,b) { return new Date(a.createdAt||0) - new Date(b.createdAt||0); });
+      break;
+    case 'amount_desc':
+      sorted.sort(function(a,b) { return (Number(b.price)||0) - (Number(a.price)||0); });
+      break;
+    case 'amount_asc':
+      sorted.sort(function(a,b) { return (Number(a.price)||0) - (Number(b.price)||0); });
+      break;
+  }
+  return sorted;
+}
+
+function setSort(key) {
+  _currentSort = key;
+  document.querySelectorAll('.sort-btn').forEach(function(b) {
+    b.classList.toggle('on', b.getAttribute('data-sort') === key);
+  });
+  loadCustomersAsync(function(all) {
+    renderSearch(sortCustomers(all, _currentSort));
+  });
+}
+
+/* ── 입금 현황 실시간 계산 ── */
+function calcPaymentStatus(customer) {
+  var price    = Number(customer.price || 0);
+  var deposit  = Number(customer.depositAmount || 0);
+  var balance  = Number(customer.balanceAmount || 0);
+  var total    = deposit + balance;
+  var remaining = price - total;
+  var pct = price > 0 ? Math.round(total / price * 100) : 0;
+
+  return {
+    price:     price,
+    deposit:   deposit,
+    balance:   balance,
+    total:     total,
+    remaining: remaining,
+    pct:       pct,
+    isFullPaid: remaining <= 0 && price > 0,
+    depositPct: price > 0 ? Math.round(deposit / price * 100) : 0,
+    balancePct: price > 0 ? Math.round(balance / price * 100) : 0,
+  };
+}
+
+function renderPaymentBar(customer, containerId) {
+  var el = document.getElementById(containerId);
+  if (!el) return;
+  var s = calcPaymentStatus(customer);
+  if (!s.price) { el.innerHTML = '<span style="font-size:11px;color:var(--light)">견적 금액 없음</span>'; return; }
+
+  el.innerHTML = [
+    '<div style="font-size:11px;color:var(--mid);margin-bottom:6px;display:flex;justify-content:space-between">',
+      '<span>입금 현황</span>',
+      '<span style="font-weight:700;color:' + (s.isFullPaid ? '#2E7D32' : 'var(--terra)') + '">' + s.pct + '%</span>',
+    '</div>',
+    '<div style="background:var(--ivory2);border-radius:4px;height:6px;overflow:hidden;margin-bottom:6px">',
+      '<div style="height:100%;border-radius:4px;width:' + Math.min(s.pct,100) + '%;',
+        'background:' + (s.isFullPaid ? '#2E7D32' : 'var(--terra)') + ';transition:width 0.6s ease"></div>',
+    '</div>',
+    '<div style="display:flex;justify-content:space-between;font-size:11px">',
+      '<span style="color:var(--orange)">계약금 ' + s.deposit.toLocaleString() + '원</span>',
+      '<span style="color:var(--mid)">잔금 ' + s.balance.toLocaleString() + '원</span>',
+      '<span style="color:var(--light)">잔여 ' + Math.max(0,s.remaining).toLocaleString() + '원</span>',
+    '</div>',
+  ].join('');
+}
+
 /* ── 스켈레톤 UI 렌더 ── */
 function renderSkeletonList(containerId, count) {
   var wrap = document.getElementById(containerId);
