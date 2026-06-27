@@ -989,6 +989,20 @@ a:focus-visible { outline:2px solid var(--terra); outline-offset:2px; }
 }
 .sort-btn.on { background:var(--dark); color:#fff; border-color:var(--dark); }
 
+
+/* ── 메모 자주 쓰는 문구 ── */
+.memo-quick-wrap {
+  display:flex; flex-wrap:wrap; gap:4px;
+  padding:8px 16px 4px;
+}
+.memo-quick-btn {
+  padding:4px 10px; border-radius:var(--r-btn);
+  border:1px solid var(--border); background:var(--ivory1);
+  font-size:11px; color:var(--mid); cursor:pointer;
+  font-family:inherit; transition:all 0.12s;
+}
+.memo-quick-btn:hover { background:#fff; border-color:var(--light); }
+
 </style>
 
   <!-- PWA -->
@@ -1302,6 +1316,117 @@ a:focus-visible { outline:2px solid var(--terra); outline-offset:2px; }
 <div id="toast"></div>
 
 <script>
+/* ── 중복 고객 등록 방지 ── */
+function checkDuplicate(name, phone) {
+  try {
+    var customers = loadCustomers();
+    var cleanPhone = (phone || '').replace(/[^0-9]/g, '');
+
+    // 이름 중복
+    var nameDup = customers.filter(function(c) {
+      return c.clientName && c.clientName.trim() === name.trim();
+    });
+    // 연락처 중복
+    var phoneDup = customers.filter(function(c) {
+      return c.phone && c.phone.replace(/[^0-9]/g, '') === cleanPhone && cleanPhone.length >= 10;
+    });
+
+    if (phoneDup.length > 0) {
+      return { isDup: true, type: 'phone', customer: phoneDup[0],
+        msg: '이미 등록된 연락처예요 (' + phoneDup[0].clientName + ')' };
+    }
+    if (nameDup.length > 0) {
+      return { isDup: true, type: 'name', customer: nameDup[0],
+        msg: '같은 이름의 고객이 있어요 (' + nameDup[0].clientName + '). 그래도 등록할까요?' };
+    }
+    return { isDup: false };
+  } catch(e) { return { isDup: false }; }
+}
+
+// saveCustomer 후킹에 중복 체크 추가
+var _origSaveCustomerDup = window.saveCustomer;
+window.saveCustomer = function() {
+  if (editingCustomerName) {
+    if (_origSaveCustomerDup) _origSaveCustomerDup.apply(this, arguments);
+    return;
+  }
+  var name  = document.getElementById('add-name')?.value?.trim() || '';
+  var phone = document.getElementById('add-phone')?.value?.trim() || '';
+  if (!name) { if (_origSaveCustomerDup) _origSaveCustomerDup.apply(this, arguments); return; }
+
+  var dup = checkDuplicate(name, phone);
+  if (dup.isDup && dup.type === 'phone') {
+    showToast(dup.msg);
+    return; // 연락처 중복은 완전 차단
+  }
+  if (dup.isDup && dup.type === 'name') {
+    if (!confirm(dup.msg)) return; // 이름 중복은 확인 후 진행
+  }
+  if (_origSaveCustomerDup) _origSaveCustomerDup.apply(this, arguments);
+};
+
+/* ── 견적서 할인 퍼센트 ↔ 금액 연동 ── */
+function syncDiscount(type, subtotal) {
+  var pctEl = document.getElementById('discount-pct');
+  var amtEl = document.getElementById('discount-amt');
+  if (!pctEl || !amtEl) return;
+
+  if (type === 'pct') {
+    var pct = parseFloat(pctEl.value) || 0;
+    pct = Math.min(Math.max(pct, 0), 100);
+    amtEl.value = Math.round(subtotal * pct / 100).toLocaleString();
+  } else {
+    var amt = parseInt((amtEl.value || '0').replace(/[^0-9]/g, '')) || 0;
+    if (subtotal > 0) {
+      pctEl.value = (amt / subtotal * 100).toFixed(1);
+    }
+  }
+  if (typeof calcAllTotals === 'function') calcAllTotals();
+}
+
+/* ── 메모 자주 쓰는 문구 ── */
+var DEFAULT_MEMO_PHRASES = [
+  '네이버 예약', '쇼룸 방문', '전화 상담',
+  '거실 커튼', '안방 블라인드', '내추럴 린넨 선호',
+  '모던 심플', '재시공 문의', '신혼집',
+];
+
+function getMempoPhrases() {
+  try {
+    return JSON.parse(localStorage.getItem('dah_memo_phrases') || 'null') || DEFAULT_MEMO_PHRASES;
+  } catch(e) { return DEFAULT_MEMO_PHRASES; }
+}
+
+function saveMemoPhrase(phrase) {
+  var phrases = getMempoPhrases();
+  if (!phrases.includes(phrase)) {
+    phrases.unshift(phrase);
+    if (phrases.length > 20) phrases = phrases.slice(0, 20);
+    localStorage.setItem('dah_memo_phrases', JSON.stringify(phrases));
+  }
+}
+
+function insertMemoPhrase(phrase) {
+  var memoEl = document.getElementById('add-memo');
+  if (!memoEl) return;
+  var cur = memoEl.value;
+  memoEl.value = cur ? cur + ' / ' + phrase : phrase;
+  memoEl.focus();
+}
+
+function renderMemoPhrases() {
+  var wrap = document.getElementById('memo-quick-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  getMempoPhrases().slice(0, 9).forEach(function(p) {
+    var btn = document.createElement('button');
+    btn.className = 'memo-quick-btn';
+    btn.textContent = p;
+    btn.onclick = function() { insertMemoPhrase(p); };
+    wrap.appendChild(btn);
+  });
+}
+
 /* ── 목표 달성률 프로그레스 바 ── */
 function renderGoalProgress(currentAmount) {
   var s = getSettings ? getSettings() : {};
