@@ -553,6 +553,50 @@ input,button,select,textarea { font-family:inherit; }
   text-align:center;
   letter-spacing:0.06em;
 }
+
+/* ── 진행현황 칸반 ── */
+.kanban-wrap {
+  display:flex; gap:8px;
+  overflow-x:auto; padding:12px 16px;
+  scrollbar-width:none;
+}
+.kanban-wrap::-webkit-scrollbar { display:none; }
+.kanban-col {
+  flex-shrink:0; width:200px;
+  background:#fff; border-radius:var(--r-card);
+  border:1px solid var(--border); overflow:hidden;
+}
+.kanban-head {
+  padding:10px 14px;
+  border-bottom:1px solid var(--ivory2);
+  display:flex; align-items:center; gap:6px;
+  position:sticky; top:0; background:#fff;
+}
+.kanban-dot {
+  width:7px; height:7px; border-radius:50%; flex-shrink:0;
+}
+.kanban-label { font-size:11px; font-weight:700; color:var(--dark); }
+.kanban-count {
+  margin-left:auto;
+  font-size:10px; color:var(--light);
+  background:var(--ivory2);
+  padding:2px 6px; border-radius:3px; font-weight:600;
+}
+.kanban-item {
+  padding:10px 14px;
+  border-bottom:1px solid var(--ivory2);
+  cursor:pointer; transition:background 0.12s;
+}
+.kanban-item:last-child { border-bottom:none; }
+.kanban-item:hover { background:var(--ivory1); }
+.kanban-item-name { font-size:12px; font-weight:700; color:var(--dark); margin-bottom:2px; }
+.kanban-item-sub { font-size:10px; color:var(--light); }
+.kanban-item-price { font-size:11px; font-weight:600; color:var(--terra); margin-top:4px; }
+.kanban-empty {
+  padding:20px 14px; text-align:center;
+  font-size:11px; color:var(--light); line-height:1.8;
+}
+
 </style>
 </head>
 <body>
