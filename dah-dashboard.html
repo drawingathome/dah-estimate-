@@ -1409,26 +1409,7 @@ function checkDuplicate(name, phone) {
 }
 
 // saveCustomer 후킹에 중복 체크 추가
-var _origSaveCustomerDup = window.saveCustomer;
-window.saveCustomer = function() {
-  if (editingCustomerName) {
-    if (_origSaveCustomerDup) _origSaveCustomerDup.apply(this, arguments);
-    return;
-  }
-  var name  = document.getElementById('add-name')?.value?.trim() || '';
-  var phone = document.getElementById('add-phone')?.value?.trim() || '';
-  if (!name) { if (_origSaveCustomerDup) _origSaveCustomerDup.apply(this, arguments); return; }
 
-  var dup = checkDuplicate(name, phone);
-  if (dup.isDup && dup.type === 'phone') {
-    showToast(dup.msg);
-    return; // 연락처 중복은 완전 차단
-  }
-  if (dup.isDup && dup.type === 'name') {
-    if (!confirm(dup.msg)) return; // 이름 중복은 확인 후 진행
-  }
-  if (_origSaveCustomerDup) _origSaveCustomerDup.apply(this, arguments);
-};
 
 /* ── 견적서 할인 퍼센트 ↔ 금액 연동 ── */
 function syncDiscount(type, subtotal) {
