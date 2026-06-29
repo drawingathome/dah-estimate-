@@ -1095,7 +1095,7 @@ body {
   </div>
   <div class="login-card">
     <div class="login-sub" style="margin-bottom:20px">계정을 선택하세요</div>
-    <button class="user-btn master" id="btn-master-login">
+    <button class="user-btn master" id="btn-master-login" onclick="(function(){var w=document.getElementById('master-pw-wrap');w.style.display=w.style.display==='none'?'block':'none';if(w.style.display==='block'){document.getElementById('master-pw-input').value='';document.getElementById('master-pw-error').style.display='none';document.getElementById('master-pw-input').focus();}})()">
       <span class="user-btn-icon">👑</span>
       <div>
         <span class="user-btn-name">마스터</span>
