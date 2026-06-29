@@ -1103,8 +1103,20 @@ body {
       </div>
     </button>
     <div class="master-pw-wrap" id="master-pw-wrap" style="display:none">
-      <input id="master-pw-input" type="password" placeholder="비밀번호 입력" autocomplete="off">
-      <button id="btn-master-confirm" aria-label="비밀번호 확인">확인</button>
+      <input id="master-pw-input" onkeydown="if(event.key==='Enter')document.getElementById('btn-master-confirm').click()" type="password" placeholder="비밀번호 입력" autocomplete="off">
+      <button id="btn-master-confirm" class="master-pw-confirm" aria-label="비밀번호 확인" onclick="(function(){
+  var pw = document.getElementById('master-pw-input').value;
+  var MASTER_PW = (function(){ try{ return localStorage.getItem('dah_master_pw')||'dah2012'; }catch(e){ return 'dah2012'; }})();
+  if(pw === MASTER_PW){
+    document.getElementById('master-pw-wrap').style.display='none';
+    if(typeof loginAs==='function') loginAs('master');
+  } else {
+    var errEl = document.getElementById('master-pw-error');
+    if(errEl){ errEl.style.display='block'; }
+    document.getElementById('master-pw-input').value='';
+    document.getElementById('master-pw-input').focus();
+  }
+})()">확인</button>
       <div class="master-pw-error" id="master-pw-error">비밀번호가 틀렸습니다</div>
     </div>
     <div id="staff-login-list"></div>
