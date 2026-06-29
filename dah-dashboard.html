@@ -295,6 +295,7 @@ input,button,select,textarea { font-family:inherit; }
   display:flex; flex-direction:column;
   align-items:center; justify-content:center;
   padding:40px 24px;
+  position:relative; z-index:600;
 }
 .login-logo-wrap { text-align:center; margin-bottom:32px; }
 .login-logo-wrap img { height:28px; width:auto; display:block; margin:0 auto 10px; }
@@ -2204,7 +2205,10 @@ function hideLoading() {
 // loadCustomersAsync에 로딩 스피너 연결
 var _origLoadAsync = window.loadCustomersAsync;
 window.loadCustomersAsync = function(callback) {
-  showLoading('고객 데이터 불러오는 중...');
+  // 로그인 화면 표시 중이면 로딩 스피너 생략
+  var loginScreen = document.getElementById('login-screen');
+  var isLoggedIn = loginScreen && loginScreen.style.display === 'none';
+  if (isLoggedIn) showLoading('고객 데이터 불러오는 중...');
   var wrappedCb = function(customers) {
     hideLoading();
     if (callback) callback(customers);
