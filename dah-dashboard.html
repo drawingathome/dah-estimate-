@@ -2007,7 +2007,6 @@ function renderKanbanCols(customers, kanbanWrap) {
   });
 }
 
-  } catch(e) { console.warn("renderPipeKanban:", e); }
 function filterPipe(q) {
   loadCustomersAsync(function(all) {
     var filtered = q ? all.filter(function(c) { return searchMatch(c, q); }) : all;
