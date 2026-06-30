@@ -3356,7 +3356,7 @@ function renderSearch() {
   var q = (document.getElementById('cust-search').value || '').trim();
   var showArchived = document.getElementById('show-archived')?.checked || false;
   var filtered = q
-    ? all.filter(function(c) { return searchMatch(c, q); }))
+    ? all.filter(function(c) { return searchMatch(c, q); })
     : all.slice().reverse();
   var customers = showArchived ? filtered : filtered.filter(function(c){ return !isArchived(c); });
   var archivedCount = filtered.filter(isArchived).length;
