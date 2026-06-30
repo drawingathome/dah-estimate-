@@ -2585,7 +2585,7 @@ function loadCustomersAsync(callback) {
   sbXHR('GET', 'customers?select=*&order=created_at.desc', null, function(err, data) {
     if (err) { try { _customerCache = JSON.parse(localStorage.getItem('dah_customers') || '[]'); } catch(e) {} }
     else { _customerCache = (data || []).map(dbRowToCustomer); try { localStorage.setItem('dah_customers', JSON.stringify(_customerCache)); } catch(e) {} }
-    if (callback) callback();
+    if (callback) callback(_customerCache);
   });
 }
 
