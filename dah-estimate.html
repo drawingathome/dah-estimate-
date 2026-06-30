@@ -1569,7 +1569,7 @@ function addCurtainRow() {
     '<td class="amt samt">0원</td>'+
     '<td style="white-space:nowrap">'+
       '<button class="copy-btn print-hide" onclick="copySvcRow(this)">⧉</button>'+
-      '<button class="del-btn print-hide" onclick="this.closest(\'tr\').remove();calcAllTotals()">✕</button>'+
+      '<button class="del-btn print-hide" onclick="this.closest(\'tr\').remove();calcTotal()">✕</button>'+
     '</td>';
   svcBody.appendChild(trRail);
 
@@ -1590,10 +1590,10 @@ function addCurtainRow() {
     '<td class="amt samt">25,000원</td>'+
     '<td style="white-space:nowrap">'+
       '<button class="copy-btn print-hide" onclick="copySvcRow(this)">⧉</button>'+
-      '<button class="del-btn print-hide" onclick="this.closest(\'tr\').remove();calcAllTotals()">✕</button>'+
+      '<button class="del-btn print-hide" onclick="this.closest(\'tr\').remove();calcTotal()">✕</button>'+
     '</td>';
   svcBody.appendChild(trRailCost);
-  calcAllTotals();
+  calcTotal();
 }
 
 function calcCurtainRow(el) {
