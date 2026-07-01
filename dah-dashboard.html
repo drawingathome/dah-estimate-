@@ -4515,7 +4515,7 @@ function openAdd(editName) {
       sb.setAttribute('data-staff', sn);
       sb.className = 'staff-btn';
       sb.textContent = sn;
-      sb.style.cssText = 'flex:1;padding:10px 0;border:1.5px solid '+(isActive?'#282828':'#EEE6DC')+';font-size:13px;font-weight:'+(isActive?'700':'400')+';font-family:inherit;cursor:pointer;background:'+(isActive?'#282828':'#fff')+';color:'+(isActive?'#fff':'#282828')+';border-radius:12px;transition:all 0.15s';
+      sb.style.cssText = 'padding:7px 14px;border-radius:20px;border:1.5px solid '+(isActive?'var(--dark)':'var(--border)')+';font-size:12px;font-weight:'+(isActive?'700':'500')+';font-family:inherit;cursor:pointer;background:'+(isActive?'var(--dark)':'#fff')+';color:'+(isActive?'#fff':'var(--dark)');
       staffWrap.appendChild(sb);
     });
   }
