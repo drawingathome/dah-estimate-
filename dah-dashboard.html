@@ -1214,7 +1214,7 @@ body {
     <button class="hd-btn hd-btn-est" onclick="openEstimate(null)">견적서</button>
   </div>
 </div>
-<div class="kpi-bar" id="kpi-bar">
+<div class="kpi-bar" id="kpi-bar" style="display:none">
   <!-- 목표 달성률 -->
   <div style="padding:8px 16px 4px;border-bottom:1px solid var(--border)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
@@ -1540,8 +1540,6 @@ body {
       </div>
 
       <!-- 담당자 -->
-              return '<div data-n="' + (c.clientName||'').replace(/"/g,'&quot;') + '" onclick="openDetail(this.getAttribute(\'data-n\'))" ' +
-        <div style="font-size:11px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">담당자</div>
         <div id="staff-btn-wrap" style="display:flex;gap:8px"></div>
       </div>
 
