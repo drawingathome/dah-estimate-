@@ -1512,7 +1512,7 @@ body {
       </div>
 
       <!-- 담당자 -->
-      <div style="background:#fff;border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #EEE6DC">
+              return '<div data-n="' + (c.clientName||'').replace(/"/g,'&quot;') + '" onclick="openDetail(this.getAttribute(\'data-n\'))" ' +
         <div style="font-size:11px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">담당자</div>
         <div id="staff-btn-wrap" style="display:flex;gap:8px"></div>
       </div>
@@ -2916,436 +2916,221 @@ function updateHdKpi(allCustomers) {
 /** 홈 화면 렌더링 — 오늘 배너, 처리 필요, 일정 */
 function renderHome() {
   var wrap = document.getElementById('home');
-  wrap.innerHTML = '';
+  if (!wrap) return;
 
-  
   var _today = new Date();
   var _dowKo = ['일','월','화','수','목','금','토'][_today.getDay()]+'요일';
-  var _dateStr = _today.getFullYear()+'년 '+(_today.getMonth()+1)+'월 '+_today.getDate()+'일';
-  var _banner = el('div', {class:'today-banner'});
-  var _dateEl = el('span', {class:'today-date'}); _dateEl.textContent = _dateStr;
-  var _dowEl  = el('span', {class:'today-dow'});  _dowEl.textContent  = _dowKo;
-  var _subEl  = el('span', {class:'today-sub'});  _subEl.textContent  = 'DRAWING at HOME';
-  _banner.appendChild(_dateEl); _banner.appendChild(_dowEl); _banner.appendChild(_subEl);
-  wrap.appendChild(_banner);
+  var _month = _today.getMonth() + 1;
+  var _date  = _today.getDate();
+  var _year  = _today.getFullYear();
 
-  var allCustomers = loadCustomers();
-  var customers = (currentUser && currentUser.role === 'staff')
-    ? allCustomers.filter(function(c){ return (c.staffName||'마스터') === currentUser.name; })
-    : allCustomers;
-  var now = new Date();
-  var todayS = todayStr();
-  var month = thisMonthStr();
-  var isMaster = currentUser && currentUser.role === 'master';
-  var myName = currentUser ? currentUser.name : '마스터';
-  var allStaffs = ['마스터'].concat(getStaffList());
+  loadCustomersAsync(function(customers) {
+    if (!customers) customers = [];
 
-  
-  updateHdKpi(allCustomers);
+    // ── 이달 매출 계산 ──────────────────────────────
+    var thisMonthCustomers = customers.filter(function(c) {
+      var d = new Date(c.depositDate || c.createdAt || '');
+      return d.getFullYear() === _year && d.getMonth() === _today.getMonth();
+    });
+    var thisMonthRev = thisMonthCustomers.reduce(function(sum, c) {
+      return sum + (Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0);
+    }, 0);
+    var thisMonthContracts = customers.filter(function(c) {
+      return c.stage === '계약금' || c.stage === '실측' || c.stage === '잔금' || c.stage === '시공';
+    }).length;
 
-  var DOW_KR = ['일','월','화','수','목','금','토'];
-  function fmtDate(dateStr) {
-    
-    if (!dateStr) return '';
-    var d = new Date(dateStr);
-    return (d.getMonth()+1)+'/'+d.getDate()+' ('+DOW_KR[d.getDay()]+')';
-  }
-  function dayLabel(dateStr) {
-    
-    if (!dateStr) return '';
-    var diff = Math.floor((new Date(dateStr+'T00:00:00') - new Date(todayS+'T00:00:00')) / 86400000);
-    if (diff === 0) return '오늘';
-    if (diff === 1) return '내일';
-    if (diff === -1) return '어제';
-    if (diff < 0) return Math.abs(diff)+'일 경과';
-    return diff+'일 후';
-  }
+    // ── 목표 설정 ────────────────────────────────────
+    var s = typeof getSettings === 'function' ? getSettings() : {};
+    var goalWan = parseInt((s.monthlyGoal || '5000').replace(/[^0-9]/g,'')) || 5000;
+    var goalAmt = goalWan * 10000;
+    var pct = goalAmt > 0 ? Math.min(Math.round(thisMonthRev / goalAmt * 100), 100) : 0;
+    var remain = Math.max(0, goalAmt - thisMonthRev);
+    var isOver = thisMonthRev >= goalAmt && goalAmt > 0;
 
-   
-  var estBtnInner = el('button', {class:'new-est-btn'});
-  estBtnInner.textContent = '+ 새 견적서 작성';
-  estBtnInner.addEventListener('click', function(){ openEstimate(null); });
-  wrap.appendChild(estBtnInner);
+    // ── 스테이지별 카운트 ────────────────────────────
+    var stageCounts = {};
+    ['상담','계약금','실측','잔금','시공','완료'].forEach(function(s) { stageCounts[s] = 0; });
+    customers.forEach(function(c) { if (stageCounts[c.stage] !== undefined) stageCounts[c.stage]++; });
 
-   
-  var notices = [];
-  customers.forEach(function(c) {
-    var name = c.clientName;
+    // ── 처리 필요 항목 ───────────────────────────────
+    var needAction = customers.filter(function(c) {
+      return c.stage === '계약금' || c.stage === '잔금';
+    });
 
-    
-    if (c.stage === '상담' && c.date && daysDiff(c.date) >= 2) {
-      var k4 = 'dah_kakao_'+name+'_t04_followup';
-      var sent4 = false; try { sent4 = !!localStorage.getItem(k4); } catch(e){}
-      if (!sent4) notices.push({
-        name: name, space: c.space||'—',
-        key: 't04_followup',
-        label: ALIM_META['t04_followup'].label,
-        msg: '상담 '+daysDiff(c.date)+'일 경과 · 팔로업 발송 필요',
-        urgency: daysDiff(c.date) >= 5 ? 2 : 1
-      });
-    }
+    // ── 오늘/내일 일정 ───────────────────────────────
+    var tomorrow = new Date(_today); tomorrow.setDate(_today.getDate()+1);
+    var fmt = function(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+    var todayStr = fmt(_today), tomorrowStr = fmt(tomorrow);
+    var todaySchedule = customers.filter(function(c) {
+      return c.measureDate === todayStr || c.installDate === todayStr || c.date === todayStr;
+    });
+    var tomorrowSchedule = customers.filter(function(c) {
+      return c.measureDate === tomorrowStr || c.installDate === tomorrowStr || c.date === tomorrowStr;
+    });
 
-    
-    if (c.measureDate && daysDiff(c.measureDate) === 1) {
-      var k6 = 'dah_kakao_'+name+'_t06_measure_dday';
-      var sent6 = false; try { sent6 = !!localStorage.getItem(k6); } catch(e){}
-      if (!sent6) notices.push({
-        name: name, space: c.space||'—',
-        key: 't06_measure_dday',
-        label: ALIM_META['t06_measure_dday'].label,
-        msg: '내일 실측 예정 · 리마인드 발송 필요',
-        urgency: 2
-      });
-    }
+    // ── HTML 조립 ────────────────────────────────────
+    wrap.innerHTML = [
 
-    
-    if (c.stage === '잔금' && c.date && daysDiff(c.date) >= 2) {
-      var k8 = 'dah_kakao_'+name+'_t08_balance_remind';
-      var sent8 = false; try { sent8 = !!localStorage.getItem(k8); } catch(e){}
-      if (!sent8) notices.push({
-        name: name, space: c.space||'—',
-        key: 't08_balance_remind',
-        label: ALIM_META['t08_balance_remind'].label,
-        msg: '잔금 미납 '+daysDiff(c.date)+'일 경과 · 리마인드 발송 필요',
-        urgency: daysDiff(c.date) >= 5 ? 2 : 1
-      });
-    }
+      // 1. 날짜 헤더
+      '<div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);background:#fff">',
+        '<div style="font-size:11px;color:var(--light);font-weight:600;letter-spacing:0.06em;margin-bottom:4px">',
+          _year + '. ' + _month + '. ' + _date + ' ' + _dowKo,
+        '</div>',
+        '<div style="display:flex;align-items:center;justify-content:space-between">',
+          '<div style="font-size:22px;font-weight:800;color:var(--dark)">',
+            isOver
+              ? '🎉 ' + _month + '월 목표 달성!'
+              : _month + '월, 목표까지 <span style="color:var(--terra)">' + Math.round(remain/10000).toLocaleString() + '만원</span> 남았어요',
+          '</div>',
+          '<button onclick="openAdd()" style="height:36px;padding:0 16px;background:var(--terra);color:#fff;border:none;border-radius:var(--r-btn);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0">+ 고객 추가</button>',
+        '</div>',
+      '</div>',
 
-    
-    if (c.installDate && daysDiff(c.installDate) === 1) {
-      var k11 = 'dah_kakao_'+name+'_t11_install_dday';
-      var sent11 = false; try { sent11 = !!localStorage.getItem(k11); } catch(e){}
-      if (!sent11) notices.push({
-        name: name, space: c.space||'—',
-        key: 't11_install_dday',
-        label: ALIM_META['t11_install_dday'].label,
-        msg: '내일 시공 예정 · 전날 안내 발송 필요',
-        urgency: 2
-      });
-    }
-  });
-  notices.sort(function(a,b){ return b.urgency - a.urgency; });
+      // 2. 목표 달성률 바
+      '<div style="padding:12px 20px;background:#fff;border-bottom:1px solid var(--border)">',
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">',
+          '<span style="font-size:11px;font-weight:600;color:var(--mid)">이달 목표 달성률</span>',
+          '<span style="font-size:13px;font-weight:700;color:' + (isOver ? '#2E7D32' : 'var(--terra)') + '">' + pct + '% <span style="font-size:11px;font-weight:400;color:var(--light)">/ ' + goalWan.toLocaleString() + '만원</span></span>',
+        '</div>',
+        '<div style="background:var(--ivory2);border-radius:6px;height:8px;overflow:hidden">',
+          '<div style="height:100%;border-radius:6px;width:' + pct + '%;background:' + (isOver ? 'linear-gradient(90deg,#2E7D32,#43A047)' : 'linear-gradient(90deg,var(--terra),var(--orange))') + ';transition:width 0.8s cubic-bezier(0.4,0,0.2,1)"></div>',
+        '</div>',
+      '</div>',
 
-  if (notices.length > 0) {
-    var noticeWrap = el('div', {class:'card notice-card'});
-    var noticeHd = el('div', {class:'card-head'});
-    var noticeHdRow = el('div', {class:'card-head-row'});
-    var noticeLbl = el('span', {class:'card-title'});
-    noticeLbl.textContent = '🔔 오늘 챙길 알림';
-    var noticeCnt = el('span', {class:'card-count'});
-    noticeCnt.textContent = notices.length + '건';
-    noticeHdRow.appendChild(noticeLbl); noticeHdRow.appendChild(noticeCnt);
-    noticeHd.appendChild(noticeHdRow); noticeWrap.appendChild(noticeHd);
+      // 3. KPI 카드 3개
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-bottom:1px solid var(--border)">',
+        // 이달 매출
+        '<div style="background:#fff;padding:16px 20px">',
+          '<div style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">이달 매출</div>',
+          '<div style="font-size:22px;font-weight:800;color:var(--dark);line-height:1.1">' + Math.round(thisMonthRev/10000).toLocaleString() + '<span style="font-size:13px;font-weight:400;color:var(--mid)">만원</span></div>',
+          '<div style="font-size:11px;color:var(--terra);margin-top:4px;font-weight:600">' + pct + '% 달성</div>',
+        '</div>',
+        // 진행 건수
+        '<div style="background:#fff;padding:16px 20px">',
+          '<div style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">진행 건수</div>',
+          '<div style="font-size:22px;font-weight:800;color:var(--dark);line-height:1.1">' + thisMonthContracts + '<span style="font-size:13px;font-weight:400;color:var(--mid)">건</span></div>',
+          '<div style="font-size:11px;color:var(--mid);margin-top:4px">계약~시공 진행중</div>',
+        '</div>',
+        // 전체 고객
+        '<div style="background:#fff;padding:16px 20px">',
+          '<div style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">전체 고객</div>',
+          '<div style="font-size:22px;font-weight:800;color:var(--dark);line-height:1.1">' + customers.length + '<span style="font-size:13px;font-weight:400;color:var(--mid)">명</span></div>',
+          '<div style="font-size:11px;color:var(--mid);margin-top:4px">누적 등록 고객</div>',
+        '</div>',
+      '</div>',
 
-    notices.forEach(function(n, ni) {
-      var isLast = ni === notices.length - 1;
-      var row = el('div', {class:'notice-item'});
-      if (isLast) row.style.borderBottom = 'none';
+      // 4. 스테이지 현황 칩
+      '<div style="background:#fff;padding:14px 20px 12px;border-bottom:1px solid var(--border)">',
+        '<div style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:0.08em;margin-bottom:10px;text-transform:uppercase">진행 현황</div>',
+        '<div style="display:flex;gap:8px;flex-wrap:wrap">',
+          ['상담','계약금','실측','잔금','시공','완료'].map(function(stage) {
+            var cnt = stageCounts[stage] || 0;
+            var isOrange = stage === '계약금' || stage === '실측';
+            var isDark   = stage === '잔금'   || stage === '시공';
+            var bg    = isOrange ? 'var(--bg-org)'  : isDark ? '#F0F0F0' : 'var(--ivory2)';
+            var color = isOrange ? 'var(--terra)'   : isDark ? 'var(--dark)' : 'var(--mid)';
+            var bdr   = isOrange ? 'var(--terra)'   : isDark ? 'var(--dark)' : 'var(--border)';
+            return '<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--r-btn);border:1.5px solid ' + bdr + ';background:' + bg + '">' +
+              '<span style="font-size:16px;font-weight:800;color:' + color + ';line-height:1">' + cnt + '</span>' +
+              '<span style="font-size:11px;font-weight:600;color:' + color + '">' + stage + '</span>' +
+            '</div>';
+          }).join(''),
+        '</div>',
+      '</div>',
 
-      var left = el('div', {style:'flex:1;min-width:0'});
-      var nameRow = el('div', {class:'notice-name'});
-      nameRow.textContent = n.name + ' · ' + n.space;
-      var msgRow = el('div', {class:'notice-msg'});
-      msgRow.innerHTML = '<span class="notice-badge">'+n.label.split('.')[0]+'</span> ' + n.msg;
-      left.appendChild(nameRow); left.appendChild(msgRow);
+      // 5. 처리 필요
+      '<div style="background:#fff;border-bottom:1px solid var(--border)">',
+        '<div style="padding:14px 20px 10px;display:flex;align-items:center;justify-content:space-between">',
+          '<span style="font-size:11px;font-weight:700;color:var(--mid);letter-spacing:0.08em;text-transform:uppercase">처리 필요</span>',
+          needAction.length > 0 ? '<span style="font-size:10px;font-weight:700;color:var(--terra);background:var(--bg-org);padding:2px 8px;border-radius:10px">' + needAction.length + '건</span>' : '',
+        '</div>',
+        needAction.length === 0
+          ? '<div style="padding:20px;text-align:center;font-size:12px;color:var(--light)">처리 필요한 항목이 없습니다 ✅</div>'
+          : needAction.slice(0,5).map(function(c) {
+              var stageColor = (c.stage === '계약금' || c.stage === '실측') ? 'var(--terra)' : 'var(--dark)';
+              return '<div data-cname="' + (c.clientName||'').replace(/"/g,'') + '" onclick="openDetail(this.getAttribute(\'data-cname\'))" ' +
+                'style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:12px;cursor:pointer">' +
+                '<div style="width:6px;height:6px;border-radius:50%;background:' + stageColor + ';flex-shrink:0"></div>' +
+                '<div style="flex:1;min-width:0">' +
+                  '<div style="font-size:13px;font-weight:700;color:var(--dark);overflow:hidden;white-space:nowrap;text-overflow:ellipsis">' + (c.clientName||'') + '</div>' +
+                  '<div style="font-size:11px;color:var(--light);margin-top:2px">' + (c.phone||'') + '</div>' +
+                '</div>' +
+                '<span style="font-size:11px;font-weight:700;color:' + stageColor + ';flex-shrink:0">' + (c.stage||'') + '</span>' +
+              '</div>';
+            }).join(''),
+      '</div>',
 
-      var sendBtn = el('button', {class:'notice-send-btn'});
-      sendBtn.textContent = '발송';
-      (function(nn) {
-        sendBtn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          if (!confirm('['+ALIM_META[nn.key].label+'] 알림톡을 발송할까요?')) return;
-          try {
-            localStorage.setItem('dah_kakao_'+nn.name+'_'+nn.key, new Date().toISOString());
-            var logs = JSON.parse(localStorage.getItem('dah_kakao_log')||'[]');
-            var now = new Date();
-            logs.unshift({name:nn.name, type:nn.key, label:ALIM_META[nn.key].label,
-              date:(now.getMonth()+1)+'월 '+now.getDate()+'일',
-              time:now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
-              method:'알림'});
-            localStorage.setItem('dah_kakao_log', JSON.stringify(logs.slice(0,200)));
-          } catch(e){}
-          showToast(ALIM_META[nn.key].label+' 발송 완료 ✅');
-          renderHome();
+      // 6. 오늘/내일 일정
+      '<div style="background:#fff;border-bottom:1px solid var(--border)">',
+        '<div style="padding:14px 20px 10px">',
+          '<span style="font-size:11px;font-weight:700;color:var(--mid);letter-spacing:0.08em;text-transform:uppercase">오늘/내일 일정</span>',
+        '</div>',
+        (todaySchedule.length === 0 && tomorrowSchedule.length === 0)
+          ? '<div style="padding:20px;text-align:center;font-size:12px;color:var(--light)">예정된 일정이 없습니다</div>'
+          : [].concat(
+              todaySchedule.map(function(c) {
+                var type = c.measureDate === todayStr ? '실측' : c.installDate === todayStr ? '시공' : '방문';
+                return '<div style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:12px">' +
+                  '<div style="width:34px;height:34px;border-radius:50%;background:var(--bg-org);display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
+                    '<span style="font-size:10px;font-weight:700;color:var(--terra)">오늘</span>' +
+                  '</div>' +
+                  '<div style="flex:1">' +
+                    '<div style="font-size:13px;font-weight:700;color:var(--dark)">' + (c.clientName||'') + '</div>' +
+                    '<div style="font-size:11px;color:var(--mid);margin-top:2px">' + type + ' · ' + (c.addr||'주소 미입력') + '</div>' +
+                  '</div>' +
+                '</div>';
+              }),
+              tomorrowSchedule.map(function(c) {
+                var type = c.measureDate === tomorrowStr ? '실측' : c.installDate === tomorrowStr ? '시공' : '방문';
+                return '<div style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:12px">' +
+                  '<div style="width:34px;height:34px;border-radius:50%;background:var(--ivory2);display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
+                    '<span style="font-size:10px;font-weight:700;color:var(--mid)">내일</span>' +
+                  '</div>' +
+                  '<div style="flex:1">' +
+                    '<div style="font-size:13px;font-weight:700;color:var(--dark)">' + (c.clientName||'') + '</div>' +
+                    '<div style="font-size:11px;color:var(--mid);margin-top:2px">' + type + ' · ' + (c.addr||'주소 미입력') + '</div>' +
+                  '</div>' +
+                '</div>';
+              })
+            ).join(''),
+      '</div>',
+
+      // 7. 담당자별 성과
+      (function() {
+        if (!currentUser || currentUser.role !== 'master') return '';
+        var byStaff = {};
+        customers.forEach(function(c) {
+          var s = c.staffName || '미지정';
+          if (!byStaff[s]) byStaff[s] = { count: 0, rev: 0 };
+          byStaff[s].count++;
+          byStaff[s].rev += (Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0);
         });
-      })(n);
+        var rows = Object.keys(byStaff).map(function(s) {
+          return '<div style="padding:10px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center">' +
+            '<div style="width:28px;height:28px;border-radius:50%;background:var(--dark);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-right:10px">' + (s[0]||'?') + '</div>' +
+            '<div style="flex:1;font-size:13px;font-weight:600;color:var(--dark)">' + s + '</div>' +
+            '<div style="text-align:right">' +
+              '<div style="font-size:13px;font-weight:700;color:var(--dark)">' + Math.round(byStaff[s].rev/10000).toLocaleString() + '만원</div>' +
+              '<div style="font-size:10px;color:var(--light)">' + byStaff[s].count + '건</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+        return rows ? (
+          '<div style="background:#fff;border-bottom:1px solid var(--border)">' +
+            '<div style="padding:14px 20px 10px">' +
+              '<span style="font-size:11px;font-weight:700;color:var(--mid);letter-spacing:0.08em;text-transform:uppercase">담당자별 성과</span>' +
+            '</div>' + rows +
+          '</div>'
+        ) : '';
+      })(),
 
-      row.appendChild(left); row.appendChild(sendBtn);
-      row.addEventListener('click', function(){ openDetail(n.name); });
-      noticeWrap.appendChild(row);
-    });
-    wrap.appendChild(noticeWrap);
-  }
+    ].join('');
 
-   
-  var alerts = [];
-  var DOW = ['일','월','화','수','목','금','토'];
-  customers.forEach(function(c){
-    
-    if (c.stage==='잔금') {
-      var daysWait = c.date ? daysDiff(c.date) : 0;
-      alerts.push({name:c.clientName, sub:c.space||'—',
-        msg: '잔금 대기' + (daysWait > 0 ? ' · '+daysWait+'일 경과' : ' 중'),
-        date: c.date ? fmtDate(c.date) : '',
-        urgency: daysWait >= 3 ? 2 : 1, tag:'잔금'});
-    }
-    
-    if (c.stage==='상담' && c.date && daysDiff(c.date)>=2) {
-      var kakaoKey = 'dah_kakao_'+c.clientName+'_followup';
-      var sent = false; try { sent = !!localStorage.getItem(kakaoKey); } catch(e){}
-      if (!sent) alerts.push({name:c.clientName, sub:c.space||'—',
-        msg:'팔로업 미발송 · 상담 '+daysDiff(c.date)+'일 경과',
-        date: fmtDate(c.date),
-        urgency:1, tag:'팔로업'});
-    }
-    
-    if (c.measureDate) {
-      var md = daysDiff(c.measureDate);
-      if (md === 1) alerts.push({name:c.clientName, sub:c.space||'—', msg:'실측 리마인드 발송 필요', date:fmtDate(c.measureDate)+' 내일', urgency:2, tag:'실측 D-1'});
-      if (md === 0) alerts.push({name:c.clientName, sub:c.space||'—', msg:'오늘 실측 — 준비 확인', date:'오늘', urgency:2, tag:'실측 오늘'});
-    }
-    
-    if (c.installDate) {
-      var id = daysDiff(c.installDate);
-      if (id === 1) alerts.push({name:c.clientName, sub:c.space||'—', msg:'시공 리마인드 발송 필요', date:fmtDate(c.installDate)+' 내일', urgency:2, tag:'시공 D-1'});
-      if (id === 0) alerts.push({name:c.clientName, sub:c.space||'—', msg:'오늘 시공 — 준비 확인', date:'오늘', urgency:2, tag:'시공 오늘'});
-    }
+    // 목표 달성률 바 업데이트
+    if (typeof renderGoalProgress === 'function') renderGoalProgress(thisMonthRev);
+
+    applyPermissions();
   });
-  alerts.sort(function(a,b){ return b.urgency - a.urgency; });
-
-  var alertWrap = el('div', {});
-  var alertCard = el('div', {class:'card card-accent'});
-  var alertHd = el('div', {class:'card-head'});
-  var alertHdRow = el('div', {class:'card-head-row'});
-  var alertLbl = el('span', {class:'card-title'}); alertLbl.textContent='🔴 처리 필요';
-  var alertCnt = el('span', {class:'card-count'});
-  alertCnt.textContent = alerts.length ? alerts.length+'건' : '';
-  alertHdRow.appendChild(alertLbl); alertHdRow.appendChild(alertCnt);
-  alertHd.appendChild(alertHdRow);
-  alertCard.appendChild(alertHd);
-  if (alerts.length===0) {
-    var emptyA = el('div', {style:'text-align:center;padding:12px 0;font-size:12px;color:var(--light)'});
-    emptyA.textContent='처리 필요 항목이 없습니다 ✅';
-    alertCard.appendChild(emptyA);
-  } else {
-    alerts.forEach(function(a, ai) {
-      var isLast = ai === alerts.length - 1;
-      var isUrgent = a.urgency >= 2;
-      var urgColor = isUrgent ? '#F06E2D' : '#6B6B6B';
-
-      var row = el('div', {class: isUrgent ? 'action-item urgent-item' : 'action-item'});
-      if (isLast) row.style.borderBottom = 'none';
-
-      var aiLeft = el('div', {class:'ai-left'});
-      var bar = el('div', {class: isUrgent ? 'ai-bar' : 'ai-bar warn'});
-      bar.style.background = STAGE_COLORS[a.stage] || (isUrgent ? '#F06E2D' : '#EEE6DC');
-
-      var infoWrap = el('div', {style:'flex:1;min-width:0'});
-
-      var nameRow = el('div', {class:'ai-name'});
-      var nameSpan = el('span', {}); nameSpan.textContent = a.name;
-      var subSpan = el('span', {style:'font-size:12px;color:var(--light);margin-left:6px;font-weight:400'});
-      subSpan.textContent = a.sub;
-      nameRow.appendChild(nameSpan); nameRow.appendChild(subSpan);
-
-      var metaRow = el('div', {class:'ai-meta'});
-      var msgSpan = el('span', {}); msgSpan.textContent = a.msg;
-      metaRow.appendChild(msgSpan);
-      if (a.date) {
-        var dateTag = el('span', {class:'ai-tag' + (a.date.includes('오늘') ? ' today' : '')});
-        dateTag.textContent = a.date;
-        metaRow.appendChild(dateTag);
-      }
-
-      infoWrap.appendChild(nameRow);
-      infoWrap.appendChild(metaRow);
-      aiLeft.appendChild(bar);
-      aiLeft.appendChild(infoWrap);
-
-      var tag = el('span', {class: isUrgent ? 'stage-btn urgent' : 'stage-btn'});
-      tag.textContent = a.tag;
-      tag.setAttribute('data-stage', a.tag);
-
-      row.appendChild(aiLeft);
-      row.appendChild(tag);
-      (function(name){ row.addEventListener('click', function(){ openDetail(name); }); })(a.name);
-      alertCard.appendChild(row);
-    });
-  }
-  alertWrap.appendChild(alertCard);
-  wrap.appendChild(alertWrap);
-
-   
-  var todayEvs = [];
-  var TYPE_COLOR = {상담:'#282828', 실측:'#282828', 시공:'var(--light)'};
-  var TYPE_BG2   = {상담:'#FAF7F5', 실측:'#EEE6DC', 시공:'#EEE6DC'};
-  
-  var evKeys = {};
-  var TYPE_PRIORITY = {시공:3, 실측:2, 상담:1};
-  function pushEv(ev) {
-    var dayKey = ev.name + '|' + ev.date + '|' + (ev.isNext?'next':'today');
-    var existing = evKeys[dayKey];
-    if (!existing) {
-      evKeys[dayKey] = ev;
-      todayEvs.push(ev);
-    } else if ((TYPE_PRIORITY[ev.type]||0) > (TYPE_PRIORITY[existing.type]||0)) {
-      
-      var idx = todayEvs.indexOf(existing);
-      if (idx >= 0) todayEvs[idx] = ev;
-      evKeys[dayKey] = ev;
-    }
-  }
-  customers.forEach(function(c) {
-    if (c.date        === todayS) pushEv({name:c.clientName, space:c.space||'—', type:'상담', date:c.date,        cust:c});
-    if (c.measureDate === todayS) pushEv({name:c.clientName, space:c.space||'—', type:'실측', date:c.measureDate, cust:c});
-    if (c.installDate === todayS) pushEv({name:c.clientName, space:c.space||'—', type:'시공', date:c.installDate, cust:c});
-  });
-  
-  customers.forEach(function(c) {
-    var tomorrow = new Date(todayS); tomorrow.setDate(tomorrow.getDate()+1);
-    var tmrStr = tomorrow.toISOString().slice(0,10);
-    if (c.measureDate === tmrStr) pushEv({name:c.clientName, space:c.space||'—', type:'실측', date:c.measureDate, cust:c, isNext:true});
-    if (c.installDate === tmrStr) pushEv({name:c.clientName, space:c.space||'—', type:'시공', date:c.installDate, cust:c, isNext:true});
-  });
-
-  var todayWrap = el('div', {});
-  var todayCard = el('div', {class:'card'});
-  var todayHd = el('div', {class:'card-head'});
-  var todayHdRow = el('div', {class:'card-head-row'});
-  var todayLbl = el('span', {class:'card-title'}); todayLbl.textContent='오늘·내일 일정';
-  var todayCnt = el('span', {class:'card-count'});
-  todayCnt.textContent = todayEvs.length ? todayEvs.length+'건' : '';
-  todayHdRow.appendChild(todayLbl); todayHdRow.appendChild(todayCnt);
-  todayHd.appendChild(todayHdRow);
-  todayCard.appendChild(todayHd);
-
-  if (todayEvs.length === 0) {
-    var emptyT = el('div', {style:'text-align:center;padding:12px 0;font-size:13px;color:var(--light)'});
-    emptyT.textContent = '오늘·내일 일정이 없습니다';
-    todayCard.appendChild(emptyT);
-  } else {
-    todayEvs.forEach(function(ev, ti) {
-      var isLast = ti === todayEvs.length - 1;
-      var row = el('div', {class:'action-item'});
-      if (isLast) row.style.borderBottom = 'none';
-
-      var aiLeft = el('div', {class:'ai-left'});
-      var dot = el('div', {style:
-        'width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;'+
-        'background:'+(TYPE_COLOR[ev.type]||'#282828')
-      });
-
-      var infoWrap = el('div', {style:'flex:1;min-width:0'});
-      var nameRow = el('div', {class:'ai-name'});
-      var nameSpan = el('span',{}); nameSpan.textContent = ev.name;
-      var dateTag = el('span', {class:'ai-tag' + (!ev.isNext ? ' today' : '')});
-      dateTag.textContent = (ev.isNext ? '내일 · ' : '오늘 · ') + fmtDate(ev.date);
-      nameRow.appendChild(nameSpan); nameRow.appendChild(dateTag);
-
-      var spaceEl = el('div', {class:'ai-meta'});
-      spaceEl.textContent = ev.space;
-
-      infoWrap.appendChild(nameRow);
-      infoWrap.appendChild(spaceEl);
-      aiLeft.appendChild(dot);
-      aiLeft.appendChild(infoWrap);
-
-      var badge = el('span', {class:'stage-btn'});
-      badge.textContent = ev.type;
-
-      row.appendChild(aiLeft);
-      row.appendChild(badge);
-      (function(c){ row.addEventListener('click', function(){ openDetail(c.clientName); }); })(ev.cust);
-      todayCard.appendChild(row);
-    });
-  }
-  todayWrap.appendChild(todayCard);
-  wrap.appendChild(todayWrap);
-
-   
- 
-  if (isMaster) {
-    var totalActive = allCustomers.filter(function(c){ return (c.date||'').slice(0,7)===month && c.stage!=='상담'; });
-    var totalRev  = getMonthRevenue(allCustomers, month);
-    var totalPerf = totalActive.reduce(function(s,c){ return s+(Number(c.performanceRevenue)||0); },0);
-    var totalCon  = totalActive.length;
-    var totalCons = allCustomers.filter(function(c){ return (c.date||'').slice(0,7)===month; }).length;
-
-     
-    var statWrap = el('div', {class:'card', style:'overflow:hidden'});
-    var statGrid = el('div', {style:'display:grid;grid-template-columns:repeat(3,1fr)'});
-    statGrid.innerHTML =
-      '<div class="stat-item"><span class="stat-val">'+fmtMan(totalRev)+'</span><span class="stat-lbl">이달 매출</span></div>'+
-      '<div class="stat-item"><span class="stat-val">'+fmtMan(totalPerf)+'</span><span class="stat-lbl">성과매출</span></div>'+
-      '<div class="stat-item"><span class="stat-val">'+totalCon+'/'+totalCons+'건</span><span class="stat-lbl">계약/상담</span></div>';
-    statWrap.appendChild(statGrid);
-    wrap.appendChild(statWrap);
-
-     
-    var staffCardInner = el('div', {class:'card master-only', style:'margin-bottom:10px'});
-    var staffLbl = el('div', {class:'card-title', style:'padding:12px 14px 10px;border-bottom:1px solid #EEE6DC;font-size:11px;font-weight:700;color:var(--light);letter-spacing:0.8px;text-transform:uppercase'});
-    staffLbl.textContent = '담당자별 성과';
-    staffCardInner.appendChild(staffLbl);
-    allStaffs.forEach(function(staff) {
-      var sc = allCustomers.filter(function(c){ return (c.staffName||'마스터')===staff&&(c.date||'').slice(0,7)===month&&c.stage!=='상담'; });
-      var sv = getMonthRevenue(sc, month);
-      var sp = sc.reduce(function(s,c){ return s+(Number(c.performanceRevenue)||0); },0);
-      var goalKey = 'dah_goal_'+staff;
-      var sGoal = Number(localStorage.getItem(goalKey)||0);
-      var sPct = sGoal>0 ? Math.min(Math.round(sp/sGoal*100),100) : 0;
-      var row = el('div', {style:'padding:10px 0;border-bottom:1px solid #EEE6DC'});
-      row.innerHTML =
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:'+(sGoal>0?'6':'0')+'px">'+
-          '<span style="font-size:14px;font-weight:700;color:#282828">'+staff+'</span>'+
-          '<div style="text-align:right">'+
-            '<span style="font-size:15px;font-weight:700;color:#282828;display:block">'+fmt(sv)+'</span>'+
-            '<span style="font-size:11px;color:var(--light)">성과 '+fmt(sp)+'</span>'+
-          '</div>'+
-        '</div>'+
-        (sGoal>0
-          ? '<div style="height:4px;background:#F5F2EE;border-radius:4px;overflow:hidden;margin-top:4px"><div style="height:4px;border-radius:4px;background:#C4673A;width:'+sPct+'%"></div></div>'+
-            '<span style="font-size:11px;color:var(--light);display:block;margin-top:3px">목표 달성 '+sPct+'% · 목표 '+fmt(sGoal)+'원</span>'
-          : '');
-      staffCardInner.appendChild(row);
-    });
-    wrap.appendChild(staffCardInner);
-
-  } else {
-     
-    var myActive = customers.filter(function(c){ return (c.date||'').slice(0,7)===month && c.stage!=='상담'; });
-    var myRev  = myActive.reduce(function(s,c){ return s+(Number(c.price)||0); },0);
-    var myPerf = myActive.reduce(function(s,c){ return s+(Number(c.performanceRevenue)||0); },0);
-    var myGoalKey = 'dah_goal_'+myName;
-    var myGoal = Number(localStorage.getItem(myGoalKey)||0);
-    var myPct = myGoal>0 ? Math.min(Math.round(myPerf/myGoal*100),100) : 0;
-
-    var myStatWrap = el('div', {});
-    var myStatGrid = el('div', {class:'stat-grid'});
-    myStatGrid.innerHTML =
-      '<div class="stat-item"><span class="stat-val">'+fmt(myRev)+'</span><span class="stat-lbl">내 매출</span></div>'+
-      '<div class="stat-item"><span class="stat-val">'+fmt(myPerf)+'</span><span class="stat-lbl">성과매출</span></div>'+
-      '<div class="stat-item"><span class="stat-val">'+myActive.length+'건</span><span class="stat-lbl">계약 건수</span></div>';
-    myStatWrap.appendChild(myStatGrid);
-    wrap.appendChild(myStatWrap);
-  }
-
-  applyPermissions();
-
-  // 목표 달성률 업데이트
-  try {
-    loadCustomersAsync(function(customers) {
-      var now = new Date();
-      var totalRev = (customers||[])
-        .filter(function(c) {
-          var d = new Date(c.depositDate || c.createdAt || '');
-          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
-        })
-        .reduce(function(sum, c) {
-          return sum + (Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0);
-        }, 0);
-      if (typeof renderGoalProgress === 'function') renderGoalProgress(totalRev);
-    });
-  } catch(e) {}
 }
 
 function renderEstList() {
