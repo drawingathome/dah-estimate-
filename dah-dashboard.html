@@ -3328,6 +3328,22 @@ function renderHome() {
   }
 
   applyPermissions();
+
+  // 목표 달성률 업데이트
+  try {
+    loadCustomersAsync(function(customers) {
+      var now = new Date();
+      var totalRev = (customers||[])
+        .filter(function(c) {
+          var d = new Date(c.depositDate || c.createdAt || '');
+          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+        })
+        .reduce(function(sum, c) {
+          return sum + (Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0);
+        }, 0);
+      if (typeof renderGoalProgress === 'function') renderGoalProgress(totalRev);
+    });
+  } catch(e) {}
 }
 
 function renderEstList() {
