@@ -118,6 +118,7 @@ input,button,select,textarea { font-family:inherit; }
 
 /* ── 탭바 ── */
 .tabs {
+  background:#fff; border-top:1px solid var(--border);
   display:flex;
   background:var(--ivory2);
   border-bottom:1px solid var(--border);
@@ -165,7 +166,7 @@ input,button,select,textarea { font-family:inherit; }
   min-height:56px;
 }
 .customer-item:last-child { border-bottom:none; }
-.customer-item:hover { background:var(--ivory1); }
+.customer-item:hover { background:var(--ivory1); transform:none; background:var(--ivory1); }
 .ci-avatar {
   width:34px; height:34px; border-radius:50%;
   background:var(--dark); color:#fff;
@@ -1014,7 +1015,7 @@ a:focus-visible { outline:2px solid var(--terra); outline-offset:2px; }
 }
 
 /* ── 고객/파이프 아이템 hover shadow ── */
-.customer-item:hover {
+.customer-item:hover { background:var(--ivory1); transform:none;
   box-shadow:inset 0 0 0 1px var(--border);
 }
 .kanban-item:hover {
@@ -1067,6 +1068,33 @@ body {
   body { background:#fff !important; }
   .card { box-shadow:none !important; border:1px solid #EEE6DC !important; }
 }
+
+
+/* ── 칸반 스테이지 변경 버튼 ── */
+.ksb {
+  border:none; background:transparent; color:var(--light);
+  font-size:16px; cursor:pointer; padding:0 4px;
+  line-height:1; border-radius:4px; flex-shrink:0;
+}
+.ksb:hover { background:var(--ivory2); color:var(--dark); }
+
+
+/* ── 고객 등록 모달 필드 그룹 ── */
+.add-field-group {
+  display:flex; flex-direction:column; gap:4px; margin-bottom:12px;
+}
+.add-field-label {
+  font-size:11px; font-weight:700; color:var(--mid);
+  letter-spacing:0.04em;
+}
+.add-field-input {
+  height:44px; border:1.5px solid var(--border);
+  border-radius:var(--r-input); padding:0 12px;
+  font-size:14px; font-family:inherit; color:var(--dark);
+  background:#fff; outline:none; transition:border-color 0.15s;
+  width:100%; box-sizing:border-box;
+}
+.add-field-input:focus { border-color:var(--terra); }
 
 </style>
 
