@@ -4791,7 +4791,7 @@ function renderSettings() {
     var inp = el('input', {type:'password', id:row[0], placeholder:row[1], style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;font-size:14px;font-family:inherit;outline:none;margin-bottom:6px;box-sizing:border-box'});
     pwCard.appendChild(inp);
   });
-  pwCard.appendChild(btn('width:100%;padding:10px;background:#282828;color:#fff;border:none;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer', '비밀번호 변경', function() {
+  pwCard.appendChild(btn('width:100%;padding:12px;background:var(--terra);color:#fff;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:var(--r-btn)', '비밀번호 변경', function() {
     var cur = document.getElementById('change-pw-current2');
     var nw = document.getElementById('change-pw-new2');
     var con = document.getElementById('change-pw-confirm2');
