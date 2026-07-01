@@ -1187,6 +1187,16 @@ body {
   </div>
 </div>
 <div class="kpi-bar" id="kpi-bar">
+  <!-- 목표 달성률 -->
+  <div style="padding:8px 16px 4px;border-bottom:1px solid var(--border)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <span style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:0.06em">이달 목표</span>
+      <span id="goal-pct" class="goal-pct">0%</span>
+    </div>
+    <div class="goal-progress-wrap">
+      <div id="goal-progress-bar" class="goal-progress-bar" style="width:0%"></div>
+    </div>
+  </div>
   <!-- 목표 잔액 카피 -->
   <div id="kpi-goal-copy" style="padding:10px 0 8px;font-size:14px;font-weight:700;color:#282828;letter-spacing:-0.3px;line-height:1.4"></div>
   <div class="kpi-grid">
@@ -1293,6 +1303,14 @@ body {
       <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="search" id="cust-search" class="search-input-clean" placeholder="고객명 · 연락처 · 주소 검색">
     </div>
+    <!-- 정렬 버튼 -->
+    <div class="sort-wrap" style="margin-top:8px">
+      <button class="sort-btn on" data-sort="date_desc" onclick="setSort('date_desc')">최신순</button>
+      <button class="sort-btn" data-sort="date_asc" onclick="setSort('date_asc')">오래된순</button>
+      <button class="sort-btn" data-sort="name_asc" onclick="setSort('name_asc')">이름순</button>
+      <button class="sort-btn" data-sort="amount_desc" onclick="setSort('amount_desc')">금액높은순</button>
+      <button class="sort-btn" data-sort="amount_asc" onclick="setSort('amount_asc')">금액낮은순</button>
+    </div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
       <label class="archived-check">
         <input type="checkbox" id="show-archived" onchange="renderSearch()">
@@ -1349,6 +1367,14 @@ body {
   </div>
 </div>
 <div id="chart" style="display:none" class="wrap">
+  <!-- 날짜 필터 -->
+  <div class="date-filter-wrap">
+    <button class="date-filter-btn on" data-period="all" onclick="setDateFilter('all')">전체</button>
+    <button class="date-filter-btn" data-period="this_month" onclick="setDateFilter('this_month')">이번달</button>
+    <button class="date-filter-btn" data-period="last_month" onclick="setDateFilter('last_month')">지난달</button>
+    <button class="date-filter-btn" data-period="3months" onclick="setDateFilter('3months')">3개월</button>
+    <button class="date-filter-btn" data-period="6months" onclick="setDateFilter('6months')">6개월</button>
+  </div>
   <div class="chart-tab-bar">
     <button class="chart-tab on" data-period="daily">일</button>
     <button class="chart-tab" data-period="weekly">주</button>
@@ -2060,8 +2086,15 @@ function renderKanbanCols(customers, kanbanWrap) {
       stageCustomers.forEach(function(c) {
         var item = document.createElement('div');
         item.className = 'kanban-item';
+        item.style.position = 'relative';
+        var stageChangeName = c.clientName;
+        var stageChangeCurrent = stage.key;
         item.innerHTML =
-          '<div class="kanban-item-name">' + (c.clientName || '') + '</div>' +
+          '<div style="display:flex;align-items:flex-start;justify-content:space-between">' +
+            '<div class="kanban-item-name" style="flex:1">' + (c.clientName || '') + '</div>' +
+            '<button onclick="event.stopPropagation();showStageMenu('' + (c.clientName||'').replace(/'/g,"\'") + '','' + stage.key + '',this)" ' +
+              'style="border:none;background:transparent;color:var(--light);font-size:14px;cursor:pointer;padding:0 2px;line-height:1;font-family:inherit">···</button>' +
+          '</div>' +
           '<div class="kanban-item-sub">' + (c.phone || '') + '</div>' +
           (c.price ? '<div class="kanban-item-price">' + Number(c.price).toLocaleString() + '원</div>' : '');
         item.addEventListener('click', function() { openDetail(c.clientName); });
