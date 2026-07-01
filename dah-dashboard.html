@@ -268,8 +268,8 @@ input,button,select,textarea { font-family:inherit; }
 
 /* ── 모달 (고객 추가/편집) ── */
 #add-overlay {
-  display:none; position:fixed; inset:0; z-index:300;
-  background:rgba(0,0,0,0.5);
+  display:none; position:fixed; inset:0; ;
+  background:rgba(0,0,0,0.6);
   align-items:flex-end; justify-content:center;
 }
 #add-overlay.open { display:flex; }
@@ -1095,6 +1095,11 @@ body {
   width:100%; box-sizing:border-box;
 }
 .add-field-input:focus { border-color:var(--terra); }
+
+
+/* ── 고객 추가 모달 z-index 강화 ── */
+#add-overlay { z-index:9998 !important; background:rgba(0,0,0,0.6) !important; }
+#add-modal   { z-index:9999 !important; }
 
 </style>
 
