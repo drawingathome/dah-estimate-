@@ -14,20 +14,32 @@
    ══════════════════════════════════════════════════ */
 
 :root {
-  --terra:    #C4673A;
-  --orange:   #F06E2D;
+  /* ── 브랜드 컬러 ── */
+  --orange:   #F06E2D;   /* Primary */
   --dark:     #282828;
   --ivory1:   #FAF7F5;
   --ivory2:   #F5F2EE;
   --border:   #EEE6DC;
-  --mid:      #8E8078;
-  --light:    #9A9490;
+  --sub:      #B0A99F;   /* 서브텍스트 */
   --danger:   #C0392B;
-  --bg-org:   #FFF3EE;
-  --bg-red:   #FDECEA;
-  --r-btn:    4px;
-  --r-input:  8px;
-  --r-card:   12px;
+  --bg-org:   #FFF3EE;   /* 오렌지 강조배경 */
+  --bg-red:   #FDECEA;   /* 빨강 강조배경 */
+  /* ── 스테이지 ── */
+  --stage-hot: #F06E2D;  /* 계약금·실측 */
+  --stage-dark:#282828;  /* 잔금·시공 */
+  /* ── Border Radius ── */
+  --r-btn:    4px;   /* 버튼·뱃지·태그 */
+  --r-input:  8px;   /* 입력창·검색바 */
+  --r-card:   12px;  /* 카드·테이블 */
+  --r-icon:   14px;  /* 빠른액션 아이콘 */
+  /* ── 하위호환 alias ── */
+  --terra:    #F06E2D;
+  --mid:      #B0A99F;
+  --light:    #B0A99F;
+  --green:    #2E7D32;
+  --blue:     #1565C0;
+  --terra-dark:#D4601F;
+  --kakao-dark:#F5D800;
 }
 
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
@@ -79,7 +91,7 @@ input,button,select,textarea { font-family:inherit; }
   font-weight:700;
 }
 .hd-btn-primary {
-  background:var(--terra); color:#fff; font-weight:700;
+  background:var(--orange); color:#fff; font-weight:700;
 }
 
 /* ── KPI 바 ── */
@@ -190,7 +202,7 @@ input,button,select,textarea { font-family:inherit; }
 .pipe-stage-label { font-size:11px; font-weight:700; color:var(--dark); }
 .pipe-stage-num {
   width:18px; height:18px; border-radius:50%;
-  background:var(--terra); color:#fff;
+  background:var(--orange); color:#fff;
   font-size:10px; font-weight:700;
   display:flex; align-items:center; justify-content:center;
 }
@@ -244,7 +256,7 @@ input,button,select,textarea { font-family:inherit; }
 /* ── 버튼 ── */
 .btn-primary {
   width:100%; height:48px;
-  background:var(--terra); color:#fff;
+  background:var(--orange); color:#fff;
   border:none; border-radius:var(--r-btn);
   font-size:15px; font-weight:700; cursor:pointer;
 }
@@ -390,7 +402,7 @@ input,button,select,textarea { font-family:inherit; }
 .mob-nav-btn.on { color:var(--terra); }
 .mob-fab {
   display:none; position:fixed; bottom:72px; right:16px; z-index:200;
-  width:48px; height:48px; background:var(--terra); color:#fff;
+  width:48px; height:48px; background:var(--orange); color:#fff;
   border:none; border-radius:50%; font-size:24px; line-height:1.2;
   box-shadow:0 4px 16px rgba(196,103,58,0.4); cursor:pointer;
   align-items:center; justify-content:center;
@@ -824,7 +836,7 @@ input,button,select,textarea { font-family:inherit; }
   cursor:pointer; font-family:inherit;
 }
 .pv-print-btn {
-  background:var(--terra); color:#fff;
+  background:var(--orange); color:#fff;
   border:none; border-radius:var(--r-btn);
   padding:8px 16px; font-size:12px; font-weight:700;
   cursor:pointer; font-family:inherit;
@@ -1149,6 +1161,118 @@ body {
   margin-top: 8px;
 }
 
+
+/* ══════════════════════════════════════════
+   확정 디자인 시스템 — 버튼 4종
+   ══════════════════════════════════════════ */
+
+/* Primary */
+.btn-primary,
+button.btn-primary {
+  background: var(--orange) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: var(--r-btn) !important;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-primary:hover { background: var(--terra-dark) !important; }
+
+/* Secondary */
+.btn-secondary,
+button.btn-secondary {
+  background: var(--ivory1) !important;
+  color: var(--dark) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-btn) !important;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Danger */
+.btn-danger,
+button.btn-danger {
+  background: var(--bg-red) !important;
+  color: var(--danger) !important;
+  border: none !important;
+  border-radius: var(--r-btn) !important;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* 알림톡 */
+.btn-kakao,
+button.btn-kakao {
+  background: var(--dark) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: var(--r-btn) !important;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ── 스테이지 칩 컬러 규칙 ── */
+.stage-chip-hot { 
+  background: var(--bg-org); color: var(--orange); 
+  border-color: var(--orange) !important;
+}
+.stage-chip-dark { 
+  background: #F0F0F0; color: var(--dark); 
+  border-color: var(--dark) !important;
+}
+
+/* ── 담당자 버튼 (active) ── */
+.staff-btn.active {
+  background: var(--orange) !important;
+  color: #fff !important;
+  border-color: var(--orange) !important;
+  border-radius: var(--r-btn) !important;
+}
+.staff-btn {
+  background: #fff !important;
+  color: var(--sub) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-btn) !important;
+}
+
+/* ── + 고객 추가 버튼 ── */
+.hd-btn-primary {
+  background: var(--orange) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: var(--r-btn) !important;
+}
+
+/* ── 저장 버튼 ── */
+#add-save-btn {
+  background: var(--orange) !important;
+  border-radius: var(--r-btn) !important;
+}
+
+/* ── FAB ── */
+.mob-fab {
+  background: var(--orange) !important;
+}
+
+/* ── 탭바 active ── */
+.tab.on, .mob-nav-btn.on {
+  color: var(--orange) !important;
+}
+.tab.on svg, .mob-nav-btn.on svg {
+  stroke: var(--orange) !important;
+}
+
+/* ── 스테이지 칩 홈화면 ── */
+/* 계약금·실측 */
+[data-stage="계약금"], [data-stage="실측"] {
+  color: var(--orange) !important;
+  border-color: var(--orange) !important;
+}
+
 </style>
 
   <!-- PWA -->
@@ -1300,7 +1424,7 @@ body {
       <div style="font-size:9px;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">연간</div>
       <div style="font-size:16px;font-weight:900;color:#282828;letter-spacing:-0.5px;margin-bottom:4px" id="kpi-year-rev">—</div>
       <div style="height:2px;background:#EEE6DC;border-radius:2px;overflow:hidden;margin-bottom:4px">
-        <div id="kpi-year-bar" style="height:2px;background:#C4673A;border-radius:2px;width:0%;transition:width 0.6s ease"></div>
+        <div id="kpi-year-bar" style="height:2px;background:#F06E2D;border-radius:2px;width:0%;transition:width 0.6s ease"></div>
       </div>
       <div style="font-size:10px;color:#9A9490" id="kpi-year-pct">0% 달성</div>
     </div>
@@ -1308,7 +1432,7 @@ body {
       <div style="font-size:9px;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">분기</div>
       <div style="font-size:16px;font-weight:900;color:#282828;letter-spacing:-0.5px;margin-bottom:4px" id="kpi-qtr-rev">—</div>
       <div style="height:2px;background:#EEE6DC;border-radius:2px;overflow:hidden;margin-bottom:4px">
-        <div id="kpi-qtr-bar" style="height:2px;background:#C4673A;border-radius:2px;width:0%;transition:width 0.6s ease"></div>
+        <div id="kpi-qtr-bar" style="height:2px;background:#F06E2D;border-radius:2px;width:0%;transition:width 0.6s ease"></div>
       </div>
       <div style="font-size:10px;color:#9A9490" id="kpi-qtr-pct">0% 달성</div>
     </div>
@@ -1316,7 +1440,7 @@ body {
       <div style="font-size:9px;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">월간</div>
       <div style="font-size:16px;font-weight:900;color:#282828;letter-spacing:-0.5px;margin-bottom:4px" id="kpi-mon-rev">—</div>
       <div style="height:2px;background:#EEE6DC;border-radius:2px;overflow:hidden;margin-bottom:4px">
-        <div id="kpi-mon-bar" style="height:2px;background:#C4673A;border-radius:2px;width:0%;transition:width 0.6s ease"></div>
+        <div id="kpi-mon-bar" style="height:2px;background:#F06E2D;border-radius:2px;width:0%;transition:width 0.6s ease"></div>
       </div>
       <div style="font-size:10px;color:#9A9490" id="kpi-mon-pct">0% 달성</div>
     </div>
@@ -1608,7 +1732,7 @@ body {
       <input type="hidden" id="add-install" value="">
 
       <!-- 저장 버튼 -->
-      <button id="add-save-btn" style="width:100%;padding:14px;background:var(--terra);color:#fff;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:var(--r-btn);margin-bottom:8px;letter-spacing:0.5px">저장 + 예약확인 알림톡 발송</button>
+      <button id="add-save-btn" style="width:100%;padding:14px;background:var(--orange);color:#fff;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:var(--r-btn);margin-bottom:8px;letter-spacing:0.5px">저장 + 예약확인 알림톡 발송</button>
       <button id="add-save-only-btn" style="width:100%;padding:12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:12px;margin-bottom:16px">저장만 하기</button>
     </div>
   </div>
@@ -2461,7 +2585,7 @@ function createEmptyState(icon, title, desc, btnText, btnAction) {
   
   if (btnText && btnAction) {
     var btn = el('button', {
-      style:'height:44px;padding:0 24px;background:#C4673A;color:#fff;border:none;border-radius:4px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit'
+      style:'height:44px;padding:0 24px;background:#F06E2D;color:#fff;border:none;border-radius:4px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit'
     });
     btn.textContent = btnText;
     btn.addEventListener('click', btnAction);
@@ -3064,7 +3188,7 @@ function renderHome() {
               ? '🎉 ' + _month + '월 목표 달성!'
               : _month + '월, 목표까지 <span style="color:var(--terra)">' + Math.round(remain/10000).toLocaleString() + '만원</span> 남았어요',
           '</div>',
-          '<button onclick="openAdd()" style="height:36px;padding:0 16px;background:var(--terra);color:#fff;border:none;border-radius:var(--r-btn);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0">+ 고객 추가</button>',
+          '<button onclick="openAdd()" style="height:36px;padding:0 16px;background:var(--orange);color:#fff;border:none;border-radius:var(--r-btn);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0">+ 고객 추가</button>',
         '</div>',
       '</div>',
 
@@ -3657,7 +3781,7 @@ function drawBarChart(containerId, data, options) {
     var x = pad.left + i * ((W - pad.left - pad.right) / data.length) + 2;
     var barH = Math.max(2, (d.value / maxVal) * (H - pad.top - pad.bottom));
     var y = H - pad.bottom - barH;
-    var color = d.active ? '#C4673A' : '#EEE6DC';
+    var color = d.active ? '#F06E2D' : '#EEE6DC';
     
     svg += '<g class="chart-bar-group">';
     svg += '<rect class="chart-bar-rect" x="' + x + '" y="' + y + '" width="' + barW + '" height="' + barH + '" rx="2" fill="' + color + '"/>';
@@ -4518,13 +4642,13 @@ function openAdd(editName) {
       sb.setAttribute('data-staff', sn);
       sb.className = 'staff-btn';
       sb.textContent = sn;
-      sb.style.cssText = 'padding:7px 16px;border-radius:20px;border:1.5px solid '+(isActive?'#C4673A':'#EEE6DC')+';font-size:12px;font-weight:'+(isActive?'700':'500')+';font-family:inherit;cursor:pointer;background:'+(isActive?'#C4673A':'#fff')+';color:'+(isActive?'#fff':'#8E8078');
+      sb.style.cssText = 'padding:6px 12px;border-radius:4px;border:1px solid '+(isActive?'#F06E2D':'#EEE6DC')+';font-size:12px;font-weight:'+(isActive?'700':'500')+';font-family:inherit;cursor:pointer;background:'+(isActive?'#F06E2D':'#fff')+';color:'+(isActive?'#fff':'#B0A99F');
       staffWrap.appendChild(sb);
     });
   }
   document.querySelectorAll('.staff-btn').forEach(function(b) {
     var isActive = b.getAttribute('data-staff') === defaultStaff;
-    b.classList.toggle('active', isActive); b.style.background = isActive ? '#C4673A' : '#fff'; b.style.color = isActive ? '#fff' : '#8E8078'; b.style.borderRadius = '20px'; b.style.border = '1.5px solid ' + (isActive ? '#C4673A' : '#EEE6DC'); b.style.fontWeight = isActive ? '700' : '400';
+    b.classList.toggle('active', isActive); b.style.background = isActive ? '#F06E2D' : '#fff'; b.style.color = isActive ? '#fff' : '#8E8078'; b.style.borderRadius = '20px'; b.style.border = '1.5px solid ' + (isActive ? '#F06E2D' : '#EEE6DC'); b.style.fontWeight = isActive ? '700' : '400';
     if (isStaffUser) { b.style.pointerEvents = 'none'; b.style.opacity = isActive ? '1' : '0.3'; } else { b.style.pointerEvents = ''; b.style.opacity = ''; }
   });
   document.getElementById('add-overlay').className = 'overlay open';
@@ -4794,7 +4918,7 @@ function renderSettings() {
     var inp = el('input', {type:'password', id:row[0], placeholder:row[1], style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;font-size:14px;font-family:inherit;outline:none;margin-bottom:6px;box-sizing:border-box'});
     pwCard.appendChild(inp);
   });
-  pwCard.appendChild(btn('width:100%;padding:12px;background:var(--terra);color:#fff;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:var(--r-btn)', '비밀번호 변경', function() {
+  pwCard.appendChild(btn('width:100%;padding:12px;background:var(--orange);color:#fff;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:var(--r-btn)', '비밀번호 변경', function() {
     var cur = document.getElementById('change-pw-current2');
     var nw = document.getElementById('change-pw-new2');
     var con = document.getElementById('change-pw-confirm2');
