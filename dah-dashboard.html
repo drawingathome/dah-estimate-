@@ -279,11 +279,21 @@ input,button,select,textarea { font-family:inherit; }
 }
 
 /* ── 모달 (고객 추가/편집) ── */
+
+/* ── 모달 오버레이 완전 확정 ── */
 #add-overlay {
-  display:none; position:fixed; inset:0; ;
-  background:rgba(0,0,0,0.6);
-  align-items:flex-end; justify-content:center;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9998 !important;
+  background: rgba(0,0,0,0.65) !important;
+  display: none !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
 }
+#add-overlay.open {
+  display: flex !important;
+}
+
 #add-overlay.open { display:flex; }
 .add-modal {
   background:#fff; border-radius:16px 16px 0 0;
@@ -1395,6 +1405,24 @@ button.btn-kakao {
   color: #fff !important;
   border: 1px solid #F06E2D !important;
   font-weight: 700 !important;
+}
+
+
+/* ── 모바일 앱 헤더 ── */
+.mob-app-header {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #282828;
+  padding: 10px 16px;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  box-sizing: border-box;
+}
+@media (max-width:640px) {
+  .mob-app-header { display:flex !important; }
 }
 
 </style>
@@ -5439,6 +5467,17 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
+
+
+<!-- 모바일 앱 헤더 -->
+<div class="mob-app-header" id="mob-app-header">
+  <img src="https://raw.githubusercontent.com/drawingathome/dah-estimate-/main/logo.png" 
+       alt="드로잉엣홈" style="height:20px;display:block;filter:brightness(0) invert(1)">
+  <div style="display:flex;align-items:center;gap:8px">
+    <button onclick="goTab('settings')" style="border:none;background:transparent;color:rgba(255,255,255,0.7);cursor:pointer;font-size:12px;font-family:inherit;padding:4px 8px">설정</button>
+    <button onclick="openAdd()" style="border:none;background:#F06E2D;color:#fff;cursor:pointer;font-size:12px;font-family:inherit;padding:6px 12px;border-radius:4px;font-weight:700">+ 고객</button>
+  </div>
+</div>
 
 <!-- 모바일 하단 탭바 -->
 <nav class="mob-bottom-nav" id="mob-bottom-nav">
