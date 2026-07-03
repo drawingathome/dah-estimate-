@@ -127,7 +127,7 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
   min-height:44px
 }
 .est-status-btn.on{
-  background:#FAF7F5;color:#282828;font-weight:700;letter-spacing:0.3px
+  background:#FAF7F5;color:#F06E2D;font-weight:700;letter-spacing:0.3px;border-bottom:2px solid #F06E2D
 }
 .est-status-btn:hover:not(.on){
   background:rgba(255,255,255,0.13);color:rgba(255,255,255,0.65)
@@ -887,7 +887,7 @@ button:active{transform:scale(0.96);opacity:0.85}
 
  
 
-.est-status-btn.on{transition:all 0.2s ease}
+.est-status-btn.on{transition:all 0.2s ease;color:#F06E2D !important;border-bottom:2px solid #F06E2D !important}
 .tab{transition:color 0.15s ease}
 .tab.on::after{transition:width 0.2s ease}
 
@@ -960,19 +960,6 @@ input,select,textarea{transition:border-color 0.15s ease}
   transition: color 0.15s;
 }
 
-
-/* ── 견적서 상태 탭 오렌지 ── */
-.est-status-btn.on {
-  color: #F06E2D !important;
-  border-bottom: 2px solid #F06E2D !important;
-  font-weight: 700 !important;
-}
-.est-status-btn {
-  color: #B0A99F;
-  font-family: inherit;
-  cursor: pointer;
-  transition: color 0.15s;
-}
 
 </style>
 </head>
