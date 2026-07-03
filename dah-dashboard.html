@@ -5362,7 +5362,7 @@ document.getElementById('btn-backup').addEventListener('click', backupData);docu
 document.getElementById('add-save-only-btn').addEventListener('click', function() {
   document.getElementById('add-save-btn').click();
 });
-document.getElementById('detail-close-btn').addEventListener('click', closeDetail);
+var _dcb=document.getElementById('detail-close-btn'); if(_dcb) _dcb.addEventListener('click', closeDetail);
 document.getElementById('add-save-btn').addEventListener('click', saveCustomer);
 document.getElementById('add-phone').addEventListener('input', function() { this.value = fmtPhone(this.value); });
 document.addEventListener('click', function(e) {
