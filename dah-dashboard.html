@@ -1329,6 +1329,20 @@ button.btn-kakao {
   line-height: 1.6;
 }
 
+
+/* ── 헤더 + 고객 버튼 (.hd-btn-new) ── */
+.hd-btn-new {
+  background: #F06E2D !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 4px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+  font-family: inherit;
+}
+.hd-btn-new:hover { background: #D4601F !important; }
+
 </style>
 
   <!-- PWA -->
@@ -1477,7 +1491,7 @@ button.btn-kakao {
   </div>
   <div class="kpi-progress-3" id="kpi-progress-3" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px">
     <div style="background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 12px">
-      <div style="font-size:9px;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">연간</div>
+      <div style="font-size:10px;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">연간</div>
       <div style="font-size:15px;font-weight:900;color:#282828;letter-spacing:-0.5px;margin-bottom:4px" id="kpi-year-rev">—</div>
       <div style="height:2px;background:#EEE6DC;border-radius:2px;overflow:hidden;margin-bottom:4px">
         <div id="kpi-year-bar" style="height:2px;background:#F06E2D;border-radius:2px;width:0%;transition:width 0.6s ease"></div>
@@ -1485,7 +1499,7 @@ button.btn-kakao {
       <div style="font-size:10px;color:#9A9490" id="kpi-year-pct">0% 달성</div>
     </div>
     <div style="background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 12px">
-      <div style="font-size:9px;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">분기</div>
+      <div style="font-size:10px;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">분기</div>
       <div style="font-size:15px;font-weight:900;color:#282828;letter-spacing:-0.5px;margin-bottom:4px" id="kpi-qtr-rev">—</div>
       <div style="height:2px;background:#EEE6DC;border-radius:2px;overflow:hidden;margin-bottom:4px">
         <div id="kpi-qtr-bar" style="height:2px;background:#F06E2D;border-radius:2px;width:0%;transition:width 0.6s ease"></div>
@@ -1493,7 +1507,7 @@ button.btn-kakao {
       <div style="font-size:10px;color:#9A9490" id="kpi-qtr-pct">0% 달성</div>
     </div>
     <div style="background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 12px">
-      <div style="font-size:9px;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">월간</div>
+      <div style="font-size:10px;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">월간</div>
       <div style="font-size:15px;font-weight:900;color:#282828;letter-spacing:-0.5px;margin-bottom:4px" id="kpi-mon-rev">—</div>
       <div style="height:2px;background:#EEE6DC;border-radius:2px;overflow:hidden;margin-bottom:4px">
         <div id="kpi-mon-bar" style="height:2px;background:#F06E2D;border-radius:2px;width:0%;transition:width 0.6s ease"></div>
@@ -3688,7 +3702,7 @@ function renderCal() {
       mainItems.slice(0,2).forEach(function(item) {
         var evLabel = document.createElement('div');
         evLabel.style.cssText =
-          'width:100%;font-size:9px;font-weight:700;line-height:1.3;' +
+          'width:100%;font-size:10px;font-weight:700;line-height:1.3;' +
           'padding:1px 3px;border-radius:var(--r-btn);margin-top:1px;' +
           'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
           'background:' + (TYPE_DOT_COLOR[item.type]||'#282828') + '22;' +
@@ -3698,7 +3712,7 @@ function renderCal() {
       });
       if (mainItems.length > 2) {
         var moreEl = document.createElement('div');
-        moreEl.style.cssText = 'font-size:9px;color:#9A9490;margin-top:1px;text-align:center';
+        moreEl.style.cssText = 'font-size:10px;color:#9A9490;margin-top:1px;text-align:center';
         moreEl.textContent = '+' + (mainItems.length - 2);
         cell.appendChild(moreEl);
       }
@@ -4144,7 +4158,7 @@ function renderDetailEstTab() {
     ];
     infoItems.forEach(function(item){
       infoGrid.appendChild(div('background:#F5F2EE;border-radius:12px;padding:8px 10px', [
-        el('div', {style:'font-size:9px;color:#9A9490;margin-bottom:2px', text:item.label}),
+        el('div', {style:'font-size:10px;color:#9A9490;margin-bottom:2px', text:item.label}),
         el('div', {style:'font-size:12px;font-weight:700;color:#282828;white-space:nowrap;overflow:hidden;text-overflow:ellipsis', text:item.value})
       ]));
     });
@@ -4631,7 +4645,7 @@ function openDetail(name) {
   var dateGrid = div('display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px', []);
   [{label:'상담일',value:c.date||'—'},{label:'실측 예정',value:c.measureDate||'—'},{label:'시공 예정',value:c.installDate||'—'}].forEach(function(item){
     dateGrid.appendChild(div('background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 8px;text-align:center',[
-      el('div',{style:'font-size:9px;color:#9A9490;letter-spacing:0.8px;margin-bottom:4px',text:item.label}),
+      el('div',{style:'font-size:10px;color:#9A9490;letter-spacing:0.8px;margin-bottom:4px',text:item.label}),
       el('div',{style:'font-size:12px;font-weight:700;color:'+(item.value==='—'?'var(--light)':'#282828'),text:item.value})
     ]));
   });
