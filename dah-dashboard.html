@@ -4524,7 +4524,7 @@ function openAdd(editName) {
   }
   document.querySelectorAll('.staff-btn').forEach(function(b) {
     var isActive = b.getAttribute('data-staff') === defaultStaff;
-    b.classList.toggle('active', isActive); b.style.background = isActive ? '#282828' : '#fff'; b.style.color = isActive ? '#fff' : '#282828'; b.style.border = '1px solid ' + (isActive ? '#282828' : '#EEE6DC'); b.style.fontWeight = isActive ? '700' : '400';
+    b.classList.toggle('active', isActive); b.style.background = isActive ? '#C4673A' : '#fff'; b.style.color = isActive ? '#fff' : '#8E8078'; b.style.borderRadius = '20px'; b.style.border = '1.5px solid ' + (isActive ? '#C4673A' : '#EEE6DC'); b.style.fontWeight = isActive ? '700' : '400';
     if (isStaffUser) { b.style.pointerEvents = 'none'; b.style.opacity = isActive ? '1' : '0.3'; } else { b.style.pointerEvents = ''; b.style.opacity = ''; }
   });
   document.getElementById('add-overlay').className = 'overlay open';
@@ -5054,7 +5054,7 @@ document.getElementById('add-save-btn').addEventListener('click', saveCustomer);
 document.getElementById('add-phone').addEventListener('input', function() { this.value = fmtPhone(this.value); });
 document.addEventListener('click', function(e) {
   if (e.target.classList.contains('staff-btn')) {
-    document.querySelectorAll('.staff-btn').forEach(function(b) { b.classList.remove('active'); b.style.background = '#fff'; b.style.color = '#282828'; b.style.border = '1px solid #EEE6DC'; b.style.fontWeight = '400'; });
+    document.querySelectorAll('.staff-btn').forEach(function(b) { b.classList.remove('active'); b.style.background = '#fff'; b.style.color = '#8E8078'; b.style.borderRadius = '20px'; b.style.border = '1.5px solid #EEE6DC'; b.style.fontWeight = '400'; });
     e.target.classList.add('active'); e.target.style.background = '#282828'; e.target.style.color = '#fff'; e.target.style.border = '1px solid #282828'; e.target.style.fontWeight = '700';
   }
 });
