@@ -1460,6 +1460,16 @@ input[placeholder*="검색"],
   border-radius: 8px !important;
 }
 
+
+/* ── 설정 화면 입력창 radius 8px 확정 ── */
+#settings input[type="text"],
+#settings input[type="password"],
+#settings input[type="number"],
+#settings input[type="url"],
+#settings textarea {
+  border-radius: 8px !important;
+}
+
 </style>
 
   <!-- PWA -->
@@ -5151,7 +5161,7 @@ function renderSettings() {
     var gRow = div('margin-bottom:10px', [
       span('font-size:13px;font-weight:700;display:block;margin-bottom:4px', staff)
     ]);
-    var gInput = el('input', {type:'number', placeholder:'목표 금액 (원)', value:curGoal>0?String(curGoal):'', style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box'});
+    var gInput = el('input', {type:'number', placeholder:'목표 금액 (원)', value:curGoal>0?String(curGoal):'', style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-family:inherit;outline:none;box-sizing:border-box'});
     (function(k, s) {
       gInput.addEventListener('change', function() {
         var v = Number(this.value.replace(/[^0-9]/g,''));
