@@ -1470,6 +1470,10 @@ input[placeholder*="검색"],
   border-radius: 8px !important;
 }
 
+
+/* ── 백업 버튼 숨김 ── */
+#btn-backup { display: none !important; }
+
 </style>
 
   <!-- PWA -->
@@ -3121,7 +3125,7 @@ function goTab(t) {
   if (t === 'chart') loadCustomersAsync(function(){ renderChart(currentChartPeriod);
   if (t === 'settings') { loadSettings(); } });
 
-  if (typeof updateMobNav === 'function') updateMobNav(tab);
+  if (typeof updateMobNav === 'function') updateMobNav(t);
 }
 
 function updateHdKpi(allCustomers) {
@@ -5430,60 +5434,9 @@ setTimeout(function(){
 /* ── 모바일 탭 연동 JS (안정화) ── */
 (function() {
   function updateMobNav(activeTab) {
-    var btns = document.querySelectorAll('.mob-nav-btn');
-    btns.forEach(function(b) {
-      b.classList.toggle('on', b.getAttribute('data-mob-tab') === activeTab);
-    });
-  }
-
-  function updateMobUser() {
-    var userEl = document.getElementById('mob-app-user-name');
-    if (!userEl) return;
-    if (typeof currentUser !== 'undefined' && currentUser && currentUser.name) {
-      userEl.textContent = currentUser.name;
-    }
-  }
-
-  function initMobNav() {
-    // 하단 탭 클릭 → goTab 호출
-    document.querySelectorAll('.mob-nav-btn').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        var tab = this.getAttribute('data-mob-tab');
-        if (typeof goTab === 'function') goTab(tab);
-        updateMobNav(tab);
-      });
-    });
-
-    // 기존 상단 탭 클릭 시 하단 탭도 동기화
-    document.querySelectorAll('.tab[data-tab]').forEach(function(btn) {
-      btn.addEventListener('click', function() {
-        var tab = this.getAttribute('data-tab');
-        updateMobNav(tab);
-      });
-    });
-
-    updateMobUser();
-  }
-
-  // DOMContentLoaded
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initMobNav);
-  } else {
-    initMobNav();
-  }
-
-  // 로그인 완료 이벤트 감지 — login-screen 숨김 시점 MutationObserver
-  var observer = new MutationObserver(function(mutations) {
-    mutations.forEach(function(m) {
-      if (m.target.id === 'login-screen' && m.target.style.display === 'none') {
-        setTimeout(updateMobUser, 100);
-        observer.disconnect();
-      }
-    });
-  });
-  document.addEventListener('DOMContentLoaded', function() {
-    var ls = document.getElementById('login-screen');
-    if (ls) observer.observe(ls, { attributes: true, attributeFilter: ['style'] });
+  var btns = document.querySelectorAll('.mob-nav-btn');
+  btns.forEach(function(b) {
+    b.classList.toggle('on', b.getAttribute('data-mob-tab') === activeTab);
   });
 })();
 </script>
