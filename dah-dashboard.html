@@ -1343,6 +1343,60 @@ button.btn-kakao {
 }
 .hd-btn-new:hover { background: #D4601F !important; }
 
+
+/* ── 모달 오버레이 완전 수정 ── */
+#add-overlay { 
+  z-index:9998 !important; 
+  background:rgba(0,0,0,0.65) !important;
+}
+#add-overlay.open { display:flex !important; }
+.modal-box { z-index:9999 !important; }
+
+
+/* ── 고객추가 모달 버튼 완전 확정 ── */
+#add-save-btn {
+  background: #F06E2D !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 4px !important;
+  width: 100%;
+  padding: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 8px;
+}
+#add-save-only-btn {
+  background: #FAF7F5 !important;
+  color: #282828 !important;
+  border: 1px solid #EEE6DC !important;
+  border-radius: 4px !important;
+  width: 100%;
+  padding: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+.staff-btn {
+  padding: 6px 14px !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  cursor: pointer;
+  font-family: inherit;
+  background: #fff !important;
+  color: #B0A99F !important;
+  border: 1px solid #EEE6DC !important;
+}
+.staff-btn.active {
+  background: #F06E2D !important;
+  color: #fff !important;
+  border: 1px solid #F06E2D !important;
+  font-weight: 700 !important;
+}
+
 </style>
 
   <!-- PWA -->
@@ -1802,8 +1856,8 @@ button.btn-kakao {
       <input type="hidden" id="add-install" value="">
 
       <!-- 저장 버튼 -->
-      <button id="add-save-btn" style="width:100%;padding:14px;background:var(--orange);color:#fff;border:none;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:var(--r-btn);margin-bottom:8px;letter-spacing:0.5px">저장 + 예약확인 알림톡 발송</button>
-      <button id="add-save-only-btn" style="width:100%;padding:12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:12px;margin-bottom:16px">저장만 하기</button>
+      <button id="add-save-btn" style="width:100%;padding:14px;background:#F06E2D;color:#fff;border:none;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:4px;margin-bottom:8px;letter-spacing:0.5px">저장 + 예약확인 알림톡 발송</button>
+      <button id="add-save-only-btn" style="width:100%;padding:12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:4px;margin-bottom:16px">저장만 하기</button>
     </div>
   </div>
 </div>
@@ -4322,7 +4376,7 @@ function openDetail(name) {
     todoSec.appendChild(el('div', {style:'font-size:10px;font-weight:700;color:#282828;letter-spacing:1.5px;margin-bottom:8px', text:'지금 해야 할 일'}));
     manualKeys.forEach(function(key) {
       var meta = ALIM_META[key]; if(!meta) return;
-      var row = div('display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#fff;border:1px solid #EEE6DC;border-radius:12px;margin-bottom:5px', [
+      var row = div('display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#fff;border:1px solid #EEE6DC;border-radius:4px;margin-bottom:5px', [
         div('', [
           el('span', {style:'font-size:13px;font-weight:700;color:#282828;display:block', text:meta.label}),
           el('span', {style:'font-size:10px;color:var(--light)', text:meta.desc})
@@ -4655,7 +4709,7 @@ function openDetail(name) {
   renderEstimateHistory(body, c.clientName);
 
   
-  body.appendChild(btn('width:100%;padding:12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:12px;margin-bottom:6px', '견적서 앱에서 열기', function(){ openEstimate(currentDetailName); }));
+  body.appendChild(btn('width:100%;padding:12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:4px;margin-bottom:6px', '견적서 앱에서 열기', function(){ openEstimate(currentDetailName); }));
   var bottomBtns = [btn('flex:2;padding:11px;background:#282828;color:#fff;border:none;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:12px;letter-spacing:0.2px', '닫기', closeDetail)];
   if (isMaster) bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid #EEE6DC;font-size:13px;font-family:inherit;cursor:pointer;color:#282828;border-radius:12px', '삭제', deleteCustomer));
   body.appendChild(div('display:flex;gap:8px', bottomBtns));
@@ -4718,7 +4772,7 @@ function openAdd(editName) {
   }
   document.querySelectorAll('.staff-btn').forEach(function(b) {
     var isActive = b.getAttribute('data-staff') === defaultStaff;
-    b.classList.toggle('active', isActive); b.style.background = isActive ? '#F06E2D' : '#fff'; b.style.color = isActive ? '#fff' : '#8E8078'; b.style.borderRadius = '20px'; b.style.border = '1.5px solid ' + (isActive ? '#F06E2D' : '#EEE6DC'); b.style.fontWeight = isActive ? '700' : '400';
+    b.classList.toggle('active', isActive); b.style.background = isActive ? '#F06E2D' : '#fff'; b.style.color = isActive ? '#fff' : '#8E8078'; b.style.borderRadius = '4px'; b.style.border = '1.5px solid ' + (isActive ? '#F06E2D' : '#EEE6DC'); b.style.fontWeight = isActive ? '700' : '400';
     if (isStaffUser) { b.style.pointerEvents = 'none'; b.style.opacity = isActive ? '1' : '0.3'; } else { b.style.pointerEvents = ''; b.style.opacity = ''; }
   });
   document.getElementById('add-overlay').className = 'overlay open';
@@ -4988,7 +5042,7 @@ function renderSettings() {
     var inp = el('input', {type:'password', id:row[0], placeholder:row[1], style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;font-size:13px;font-family:inherit;outline:none;margin-bottom:6px;box-sizing:border-box'});
     pwCard.appendChild(inp);
   });
-  pwCard.appendChild(btn('width:100%;padding:12px;background:var(--orange);color:#fff;border:none;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:var(--r-btn)', '비밀번호 변경', function() {
+  pwCard.appendChild(btn('width:100%;padding:12px;background:#F06E2D;color:#fff;border:none;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:4px', '비밀번호 변경', function() {
     var cur = document.getElementById('change-pw-current2');
     var nw = document.getElementById('change-pw-new2');
     var con = document.getElementById('change-pw-confirm2');
@@ -5248,7 +5302,7 @@ document.getElementById('add-save-btn').addEventListener('click', saveCustomer);
 document.getElementById('add-phone').addEventListener('input', function() { this.value = fmtPhone(this.value); });
 document.addEventListener('click', function(e) {
   if (e.target.classList.contains('staff-btn')) {
-    document.querySelectorAll('.staff-btn').forEach(function(b) { b.classList.remove('active'); b.style.background = '#fff'; b.style.color = '#8E8078'; b.style.borderRadius = '20px'; b.style.border = '1.5px solid #EEE6DC'; b.style.fontWeight = '400'; });
+    document.querySelectorAll('.staff-btn').forEach(function(b) { b.classList.remove('active'); b.style.background = '#fff'; b.style.color = '#8E8078'; b.style.borderRadius = '4px'; b.style.border = '1.5px solid #EEE6DC'; b.style.fontWeight = '400'; });
     e.target.classList.add('active'); e.target.style.background = '#282828'; e.target.style.color = '#fff'; e.target.style.border = '1px solid #282828'; e.target.style.fontWeight = '700';
   }
 });
