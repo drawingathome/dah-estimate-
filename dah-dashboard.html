@@ -130,7 +130,7 @@ input,button,select,textarea { font-family:inherit; }
 
 /* ── 탭바 ── */
 .tabs {
-  background:#fff; border-top:1px solid var(--border);
+  background:#FFFFFF; border-top:1px solid var(--border);
   display:flex;
   background:var(--ivory2);
   border-bottom:1px solid var(--border);
@@ -281,18 +281,18 @@ input,button,select,textarea { font-family:inherit; }
 /* ── 모달 (고객 추가/편집) ── */
 
 /* ── 모달 오버레이 완전 확정 ── */
+/* ── 고객추가 모달 오버레이 ── */
 #add-overlay {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 9998 !important;
-  background: rgba(0,0,0,0.65) !important;
-  display: none !important;
-  align-items: flex-end !important;
-  justify-content: center !important;
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(0,0,0,0.65);
+  align-items: flex-end;
+  justify-content: center;
 }
-#add-overlay.open {
-  display: flex !important;
-}
+#add-overlay.open { display: flex !important; }
+.modal-box { position: relative; z-index: 9999; }
 
 #add-overlay.open { display:flex; }
 .add-modal {
@@ -389,16 +389,23 @@ input,button,select,textarea { font-family:inherit; }
 
 /* ── 모바일 대응 ── */
 .mob-app-header {
-  display:none; position:sticky; top:0; z-index:100;
-  background:var(--dark);
-  padding:12px 16px 10px;
-  align-items:center; justify-content:space-between;
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 150;
+  background: #282828;
+  padding: 0 16px;
+  height: 52px;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 .mob-app-logo { height:20px; display:block; object-fit:contain; filter:brightness(0) invert(1); }
 .mob-app-user { font-size:10px; color:rgba(255,255,255,0.45); font-weight:600; }
 .mob-bottom-nav {
   display:none; position:fixed; bottom:0; left:0; right:0; z-index:200;
-  background:#fff; border-top:1px solid var(--border);
+  background:#FFFFFF; border-top:1px solid var(--border);
   padding-bottom:env(safe-area-inset-bottom);
 }
 .mob-bottom-nav-inner { display:flex; height:56px; }
