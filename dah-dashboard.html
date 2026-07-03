@@ -569,7 +569,7 @@ input,button,select,textarea { font-family:inherit; }
   font-family:inherit;
   transition:background 0.12s;
 }
-.master-pw-confirm:hover { background:rgba(255,255,255,0.08); }
+.master-pw-confirm:hover { background:#F06E2D; }
 .master-pw-error {
   font-size:10px;
   color:var(--danger);
@@ -927,11 +927,11 @@ textarea:disabled {
 
 /* ── hover 효과 강화 ── */
 .btn-primary:hover  { background:var(--terra-dark); transform:translateY(-1px); box-shadow:0 4px 12px rgba(196,103,58,0.3); }
-.btn-dark:hover     { background:rgba(255,255,255,0.08); transform:translateY(-1px); }
+.btn-dark:hover     { background:#F06E2D; transform:translateY(-1px); }
 .btn-kakao:hover    { background:var(--kakao-dark); transform:translateY(-1px); }
 .btn-secondary:hover { background:#fff; border-color:var(--light); }
 .hd-btn-primary:hover { background:var(--terra-dark); }
-.add-btn-save:hover   { background:rgba(255,255,255,0.08); }
+.add-btn-save:hover   { background:#F06E2D; }
 .add-btn-kakao:hover  { background:var(--kakao-dark); }
 .mob-fab:hover { transform:scale(1.05); box-shadow:0 6px 20px rgba(196,103,58,0.5); }
 
@@ -1307,7 +1307,7 @@ button.btn-kakao {
 .hd-btn-primary:hover { background: #D4601F !important; }
 
 .hd-btn-sub {
-  background: rgba(255,255,255,0.08) !important;
+  background: #F06E2D !important;
   color: rgba(255,255,255,0.75) !important;
   border: 1px solid rgba(255,255,255,0.15) !important;
   border-radius: 4px !important;
@@ -1439,6 +1439,25 @@ button.btn-kakao {
   border-radius: 16px 16px 0 0 !important;
   position: relative !important;
   z-index: 9999 !important;
+}
+
+
+/* ── 헤더 +고객 버튼 확정 ── */
+.hd-btn-new, button.hd-btn-new, .hd .hd-btn-new {
+  background: #F06E2D !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 4px !important;
+  font-weight: 700 !important;
+}
+
+
+/* ── 검색바 radius 8px 확정 ── */
+.search-input-clean,
+input[type="text"][placeholder*="검색"],
+input[placeholder*="검색"],
+#pipe-search, #cust-search, #est-search {
+  border-radius: 8px !important;
 }
 
 </style>
