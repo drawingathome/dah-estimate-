@@ -1593,7 +1593,10 @@ body {
       </div>
 
       <!-- 담당자 -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:8px">담당자</label>
         <div id="staff-btn-wrap" style="display:flex;gap:8px"></div>
+      </div>
       </div>
 
       <!-- 숨겨진 필드 (수정 모드용) -->
@@ -1605,7 +1608,7 @@ body {
       <input type="hidden" id="add-install" value="">
 
       <!-- 저장 버튼 -->
-      <button id="add-save-btn" style="width:100%;padding:14px;background:#282828;color:#fff;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:12px;margin-bottom:8px;letter-spacing:0.5px">저장 + 예약확인 알림톡 발송</button>
+      <button id="add-save-btn" style="width:100%;padding:14px;background:var(--terra);color:#fff;border:none;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:var(--r-btn);margin-bottom:8px;letter-spacing:0.5px">저장 + 예약확인 알림톡 발송</button>
       <button id="add-save-only-btn" style="width:100%;padding:12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:12px;margin-bottom:16px">저장만 하기</button>
     </div>
   </div>
@@ -4515,7 +4518,7 @@ function openAdd(editName) {
       sb.setAttribute('data-staff', sn);
       sb.className = 'staff-btn';
       sb.textContent = sn;
-      sb.style.cssText = 'padding:7px 14px;border-radius:20px;border:1.5px solid '+(isActive?'var(--dark)':'var(--border)')+';font-size:12px;font-weight:'+(isActive?'700':'500')+';font-family:inherit;cursor:pointer;background:'+(isActive?'var(--dark)':'#fff')+';color:'+(isActive?'#fff':'var(--dark)');
+      sb.style.cssText = 'padding:7px 16px;border-radius:20px;border:1.5px solid '+(isActive?'var(--terra)':'var(--border)')+';font-size:12px;font-weight:'+(isActive?'700':'500')+';font-family:inherit;cursor:pointer;background:'+(isActive?'var(--terra)':'#fff')+';color:'+(isActive?'#fff':'var(--mid)');
       staffWrap.appendChild(sb);
     });
   }
