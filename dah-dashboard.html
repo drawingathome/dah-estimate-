@@ -1640,7 +1640,7 @@ input, textarea, select { font-size: 15px; }
     <button class="hd-btn hd-btn-sub" onclick="goTab('settings')" aria-label="설정" style="padding:0 10px" title="설정">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:block"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
-    <button class="hd-btn hd-btn-new" id="btn-add-customer">+ 고객</button>
+    <button class="hd-btn hd-btn-new" id="btn-add-customer" onclick="openAdd()">+ 고객</button>
     <button class="hd-btn hd-btn-est" onclick="openEstimate(null)">견적서</button>
   </div>
 </div>
@@ -4330,7 +4330,7 @@ function renderDetailEstTab() {
     infoItems.forEach(function(item){
       infoGrid.appendChild(div('background:#F5F2EE;border-radius:12px;padding:8px 10px', [
         el('div', {style:'font-size:10px;color:#9A9490;margin-bottom:2px', text:item.label}),
-        el('div', {style:'font-size:12px;font-weight:700;color:#282828;white-space:nowrap;overflow:hidden;text-overflow:ellipsis', text:item.value})
+        el('div', {style:'font-size:13px;font-weight:700;color:#282828;white-space:nowrap;overflow:hidden;text-overflow:ellipsis', text:item.value})
       ]));
     });
 
@@ -4557,7 +4557,7 @@ function openDetail(name) {
   var depositDone = payData.depositAmount && payData.depositDate;
   var depSec = div('margin-bottom:8px;padding:12px;background:'+(depositDone?'#F5FAF5':'#FAF7F5')+';border-radius:12px;border:1px solid '+(depositDone?'#B0D4B0':'#EEE6DC'), []);
   var depTitle = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:8px', [
-    el('div', {style:'font-size:12px;font-weight:700;color:#282828', text:(depositDone?'✔ ':'')+'선금 (계약금)'}),
+    el('div', {style:'font-size:13px;font-weight:700;color:#282828', text:(depositDone?'✔ ':'')+'선금 (계약금)'}),
   ]);
   if (depositDone) {
     var depEditBtn = btn('font-size:10px;color:#6B6B6B;background:none;border:1px solid #EEE6DC;border-radius:4px;padding:2px 8px;cursor:pointer;font-family:inherit', '수정', function(){
@@ -4602,7 +4602,7 @@ function openDetail(name) {
   var balanceDone = payData.balanceAmount && payData.balanceDate;
   var balSec = div('padding:12px;background:'+(balanceDone?'#F5FAF5':'#FAF7F5')+';border-radius:12px;border:1px solid '+(balanceDone?'#B0D4B0':'#EEE6DC'), []);
   var balTitle = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:8px', [
-    el('div', {style:'font-size:12px;font-weight:700;color:#282828', text:(balanceDone?'✔ ':'')+'잔금'})
+    el('div', {style:'font-size:13px;font-weight:700;color:#282828', text:(balanceDone?'✔ ':'')+'잔금'})
   ]);
   if (balanceDone) {
     var balEditBtn = btn('font-size:10px;color:#6B6B6B;background:none;border:1px solid #EEE6DC;border-radius:4px;padding:2px 8px;cursor:pointer;font-family:inherit', '수정', function(){
@@ -4649,7 +4649,7 @@ function openDetail(name) {
   
   var depositDone = payData.depositAmount && payData.depositDate;
   var depSec = div('margin-bottom:8px;padding:10px;background:'+(depositDone?'#F5FAF5':'#FAF7F5')+';border-radius:12px;border:1px solid '+(depositDone?'#B0D4B0':'#EEE6DC'), []);
-  depSec.appendChild(el('div', {style:'font-size:12px;font-weight:700;color:#282828;margin-bottom:6px', text:(depositDone?'✔ ':'')+'계약금'}));
+  depSec.appendChild(el('div', {style:'font-size:13px;font-weight:700;color:#282828;margin-bottom:6px', text:(depositDone?'✔ ':'')+'계약금'}));
   if (depositDone) {
     depSec.appendChild(el('div', {style:'font-size:13px;color:#282828', text:
       (payData.depositMethod||'') + ' · ' + Number(payData.depositAmount).toLocaleString() + '원 · ' + (payData.depositDate||'') +
@@ -4692,7 +4692,7 @@ function openDetail(name) {
   
   var balanceDone = payData.balanceAmount && payData.balanceDate;
   var balSec = div('padding:10px;background:'+(balanceDone?'#F5FAF5':'#FAF7F5')+';border-radius:12px;border:1px solid '+(balanceDone?'#B0D4B0':'#EEE6DC'), []);
-  balSec.appendChild(el('div', {style:'font-size:12px;font-weight:700;color:#282828;margin-bottom:6px', text:(balanceDone?'✔ ':'')+'잔금'}));
+  balSec.appendChild(el('div', {style:'font-size:13px;font-weight:700;color:#282828;margin-bottom:6px', text:(balanceDone?'✔ ':'')+'잔금'}));
   if (balanceDone) {
     balSec.appendChild(el('div', {style:'font-size:13px;color:#282828', text:
       (payData.balanceMethod||'') + ' · ' + Number(payData.balanceAmount).toLocaleString() + '원 · ' + (payData.balanceDate||'') +
@@ -4817,7 +4817,7 @@ function openDetail(name) {
   [{label:'상담일',value:c.date||'—'},{label:'실측 예정',value:c.measureDate||'—'},{label:'시공 예정',value:c.installDate||'—'}].forEach(function(item){
     dateGrid.appendChild(div('background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 8px;text-align:center',[
       el('div',{style:'font-size:10px;color:#9A9490;letter-spacing:0.8px;margin-bottom:4px',text:item.label}),
-      el('div',{style:'font-size:12px;font-weight:700;color:'+(item.value==='—'?'var(--light)':'#282828'),text:item.value})
+      el('div',{style:'font-size:13px;font-weight:700;color:'+(item.value==='—'?'var(--light)':'#282828'),text:item.value})
     ]));
   });
   infoSec.appendChild(dateGrid);
@@ -5153,7 +5153,7 @@ function renderSettings() {
   wrap.appendChild(acctCard);
 
   var pwCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:12px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:12px', '🔐 비밀번호 변경')
+    span('font-size:13px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:12px', '🔐 비밀번호 변경')
   ]);
   [['change-pw-current2','현재 비밀번호'],['change-pw-new2','새 비밀번호 (4자 이상)'],['change-pw-confirm2','새 비밀번호 확인']].forEach(function(row) {
     var inp = el('input', {type:'password', id:row[0], placeholder:row[1], style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-family:inherit;outline:none;margin-bottom:6px;box-sizing:border-box'});
@@ -5175,7 +5175,7 @@ function renderSettings() {
 
   
   var staffCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:12px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:12px', '👤 담당자 관리')
+    span('font-size:13px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:12px', '👤 담당자 관리')
   ]);
   var staffList = getStaffList();
   staffList.forEach(function(name) {
@@ -5208,7 +5208,7 @@ function renderSettings() {
 
   
   var goalCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:12px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:12px', '🎯 담당자별 월 목표 매출')
+    span('font-size:13px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:12px', '🎯 담당자별 월 목표 매출')
   ]);
   var allStaffs = ['마스터'].concat(getStaffList());
   allStaffs.forEach(function(staff) {
@@ -5231,7 +5231,7 @@ function renderSettings() {
 
   
   var webhookCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:12px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:4px', '⚙️ Make.com 웹훅 URL'),
+    span('font-size:13px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:4px', '⚙️ Make.com 웹훅 URL'),
     span('font-size:12px;color:var(--light);display:block;margin-bottom:10px', '알림톡 자동 발송 연동 (검수 완료 후 입력)')
   ]);
   var curWebhook = localStorage.getItem('dah_webhook_url') || '';
@@ -5246,7 +5246,7 @@ function renderSettings() {
 
   
   var dataCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:12px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:12px', '💾 데이터 관리')
+    span('font-size:13px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:12px', '💾 데이터 관리')
   ]);
   dataCard.appendChild(btn('width:100%;padding:11px;background:#282828;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:8px', '📊 고객목록 엑셀 내보내기', exportExcel));
   dataCard.appendChild(btn('width:100%;padding:11px;background:#5C7A9F;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:8px', '📋 견적서목록 엑셀 내보내기', exportEstimatesExcel));
@@ -5286,7 +5286,7 @@ var STATUS_LABELS = {ga:'가견적서', final:'최종견적서'};
 function renderEstimateHistory(container, clientName) {
   var estSec = el('div', {style:'margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC'});
   var hd = el('div', {style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px'});
-  var lbl = el('div', {style:'font-size:12px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase', text:'견적서'});
+  var lbl = el('div', {style:'font-size:13px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase', text:'견적서'});
   hd.appendChild(lbl);
   estSec.appendChild(hd);
 
@@ -5314,7 +5314,7 @@ function renderEstimateHistory(container, clientName) {
     
     var top = el('div', {style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px'});
     var noEl = el('div', {style:'display:flex;align-items:center;gap:6px'});
-    var noSpan = el('span', {style:'font-size:12px;font-weight:700;color:#282828', text:e.no||'—'});
+    var noSpan = el('span', {style:'font-size:13px;font-weight:700;color:#282828', text:e.no||'—'});
     var typeSpan = el('span', {style:
       'font-size:10px;color:#6B6B6B;border:1px solid #EEE6DC;' +
       'padding:1px 6px;border-radius:var(--r-btn)',
