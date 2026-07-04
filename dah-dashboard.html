@@ -4649,10 +4649,11 @@ function openDetail(name) {
   var isMaster = currentUser && currentUser.role === 'master';
 
   // 이름
-  document.getElementById('detail-name').textContent = c.clientName;
+  var _dn=document.getElementById('detail-name'); if(_dn) _dn.textContent = c.clientName;
 
   // 요약 row: 단계뱃지 + 재구매 + 경과일
   var summaryRow = document.getElementById('detail-summary-row');
+  if(!summaryRow) return;
   summaryRow.innerHTML = '';
   var stageBadge = document.createElement('span');
   stageBadge.textContent = c.stage;
