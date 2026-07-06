@@ -12,6 +12,7 @@
 
  
 :root {
+  /* ── 브랜드 컬러 ── */
   --orange:   #F06E2D;
   --dark:     #282828;
   --ivory1:   #FAF7F5;
@@ -21,13 +22,31 @@
   --danger:   #C0392B;
   --bg-org:   #FFF3EE;
   --bg-red:   #FDECEA;
-  --r-btn:    4px;
-  --r-input:  8px;
-  --r-card:   12px;
-  /* alias */
+
+  /* ── 스테이지 컬러 ── */
+  --stage-orange: #F06E2D;   /* 계약금·실측 */
+  --stage-dark:   #282828;   /* 잔금·시공 */
+  --stage-sub:    #B0A99F;   /* 상담 */
+  --stage-done:   #EEE6DC;   /* 완료 */
+
+  /* ── Border Radius ── */
+  --r-btn:    4px;    /* 버튼·뱃지·태그 */
+  --r-input:  8px;    /* 입력창·검색바 */
+  --r-card:   12px;   /* 카드·테이블 */
+  --r-icon:   14px;   /* 빠른액션 아이콘 */
+  --r-modal:  16px;   /* 모달 */
+
+  /* ── 여백 (4px 기반) ── */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px;
+  --sp-5:20px; --sp-6:24px; --sp-8:32px; --sp-10:40px; --sp-12:48px;
+
+  /* ── 하위 호환 ── */
   --terra:    #F06E2D;
   --mid:      #B0A99F;
   --light:    #B0A99F;
+  --green:    #2E7D32;
+  --blue:     #1565C0;
+  --terra-dark:#D4601F;
 }
 
  
@@ -1078,6 +1097,23 @@ input.error { border-color: #C0392B !important; box-shadow: 0 0 0 3px rgba(192,5
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .toast.success { background: #2E7D32; }
 .toast.error   { background: #C0392B; }
+
+
+/* ── 견적서 상태 탭 확정 ── */
+.est-status-btn { transition: color 0.15s, border-color 0.15s; }
+.est-status-btn.on {
+  color: #F06E2D !important;
+  border-bottom: 2px solid #F06E2D !important;
+  font-weight: 700 !important;
+}
+/* 미계약/계약됨 뱃지 */
+#contract-status-badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 4px;
+  font-size: 12px; font-weight: 700;
+}
+#contract-status-badge.none { background:#F5F2EE; color:#B0A99F; border:1px solid #EEE6DC; }
+#contract-status-badge.done { background:#FFF3EE; color:#F06E2D; border:1px solid #F06E2D; }
 
 </style>
 </head>
