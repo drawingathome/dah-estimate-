@@ -15,31 +15,40 @@
 
 :root {
   /* ── 브랜드 컬러 ── */
-  --orange:   #F06E2D;   /* Primary */
+  --orange:   #F06E2D;
   --dark:     #282828;
   --ivory1:   #FAF7F5;
   --ivory2:   #F5F2EE;
   --border:   #EEE6DC;
-  --sub:      #B0A99F;   /* 서브텍스트 */
+  --sub:      #B0A99F;
   --danger:   #C0392B;
-  --bg-org:   #FFF3EE;   /* 오렌지 강조배경 */
-  --bg-red:   #FDECEA;   /* 빨강 강조배경 */
-  /* ── 스테이지 ── */
-  --stage-hot: #F06E2D;  /* 계약금·실측 */
-  --stage-dark:#282828;  /* 잔금·시공 */
+  --bg-org:   #FFF3EE;
+  --bg-red:   #FDECEA;
+
+  /* ── 스테이지 컬러 ── */
+  --stage-orange: #F06E2D;   /* 계약금·실측 */
+  --stage-dark:   #282828;   /* 잔금·시공 */
+  --stage-sub:    #B0A99F;   /* 상담 */
+  --stage-done:   #EEE6DC;   /* 완료 */
+
   /* ── Border Radius ── */
-  --r-btn:    4px;   /* 버튼·뱃지·태그 */
-  --r-input:  8px;   /* 입력창·검색바 */
-  --r-card:   12px;  /* 카드·테이블 */
-  --r-icon:   14px;  /* 빠른액션 아이콘 */
-  /* ── 하위호환 alias ── */
+  --r-btn:    4px;    /* 버튼·뱃지·태그 */
+  --r-input:  8px;    /* 입력창·검색바 */
+  --r-card:   12px;   /* 카드·테이블 */
+  --r-icon:   14px;   /* 빠른액션 아이콘 */
+  --r-modal:  16px;   /* 모달 */
+
+  /* ── 여백 (4px 기반) ── */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px;
+  --sp-5:20px; --sp-6:24px; --sp-8:32px; --sp-10:40px; --sp-12:48px;
+
+  /* ── 하위 호환 ── */
   --terra:    #F06E2D;
   --mid:      #B0A99F;
   --light:    #B0A99F;
   --green:    #2E7D32;
   --blue:     #1565C0;
   --terra-dark:#D4601F;
-  --kakao-dark:#F5D800;
 }
 
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
@@ -2101,6 +2110,56 @@ input.error, select.error, textarea.error {
   margin: 12px 16px;
   font-size: 13px;
   color: #C0392B;
+}
+
+
+/* ── 스테이지 칩 컬러 규칙 확정 ── */
+/* 계약금·실측 → 오렌지 */
+[data-stage="계약금"], [data-stage="실측"] {
+  color: var(--stage-orange) !important;
+  border-color: var(--stage-orange) !important;
+  background: var(--bg-org) !important;
+}
+/* 잔금·시공 → 다크 */
+[data-stage="잔금"], [data-stage="시공"] {
+  color: var(--stage-dark) !important;
+  border-color: var(--stage-dark) !important;
+  background: #F0F0F0 !important;
+}
+/* 상담 → 서브 */
+[data-stage="상담"] {
+  color: var(--stage-sub) !important;
+  border-color: var(--border) !important;
+  background: var(--ivory2) !important;
+}
+/* 완료 → 구분선(연하게) */
+[data-stage="완료"] {
+  color: #A8A09A !important;
+  border-color: var(--border) !important;
+  background: var(--ivory2) !important;
+}
+
+
+/* ── 모달 radius --r-modal 16px ── */
+.modal-box {
+  border-radius: var(--r-modal) var(--r-modal) 0 0 !important;
+  background: #fff !important;
+}
+
+
+/* ── 계약 상태 뱃지 ── */
+.contract-badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 8px; border-radius: var(--r-btn);
+  font-size: 12px; font-weight: 700;
+}
+.contract-badge.none {
+  background: var(--ivory2); color: var(--sub);
+  border: 1px solid var(--border);
+}
+.contract-badge.done {
+  background: var(--bg-org); color: var(--orange);
+  border: 1px solid var(--orange);
 }
 
 </style>
