@@ -1115,6 +1115,56 @@ input.error { border-color: #C0392B !important; box-shadow: 0 0 0 3px rgba(192,5
 #contract-status-badge.none { background:#F5F2EE; color:#B0A99F; border:1px solid #EEE6DC; }
 #contract-status-badge.done { background:#FFF3EE; color:#F06E2D; border:1px solid #F06E2D; }
 
+
+/* ── 견적서 하단 버튼 통일 ── */
+.bottom-btn-group { display:flex; gap:8px; padding:12px 16px; }
+.bottom-btn-group button {
+  height: 48px;
+  border-radius: 4px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+}
+/* 고객용 출력 — Primary */
+#btn-print-customer, [onclick*="printCustomer"], [onclick*="openPreview"] {
+  background: #282828 !important;
+  color: #fff !important;
+  border-radius: 4px !important;
+}
+/* 저장 — Primary 오렌지 */
+#btn-save, [onclick*="saveEst"] {
+  background: #F06E2D !important;
+  color: #fff !important;
+  border-radius: 4px !important;
+}
+/* 엑셀 다운로드 — Secondary */
+[onclick*="exportAll"], [onclick*="Excel"] {
+  background: #FAF7F5 !important;
+  color: #282828 !important;
+  border: 1px solid #EEE6DC !important;
+  border-radius: 4px !important;
+}
+/* 대시보드로 / 새 견적서 */
+[onclick*="dashboard"], [onclick*="newEst"] {
+  background: #FAF7F5 !important;
+  color: #282828 !important;
+  border: 1px solid #EEE6DC !important;
+  border-radius: 4px !important;
+}
+
+
+/* ── 폰트 통일 ── */
+body, input, button, select, textarea {
+  font-family: 'Pretendard Variable', Pretendard, -apple-system,
+    BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
+/* 대·소 제목 */
+h1, h2, h3 { font-weight: 700; }
+
 </style>
 </head>
 <body>
@@ -1447,7 +1497,7 @@ input.error { border-color: #C0392B !important; box-shadow: 0 0 0 3px rgba(192,5
     <div class="action-main">
       <div class="btn-row" style="display:flex;gap:10px;width:100%"><button class="btn-print" style="flex:1" onclick="printForCustomer()">🖨 고객용 출력</button>
       <button class="btn-save" style="flex:1" onclick="saveEstimate()">저장</button></div>
-      <button onclick="exportAllEstimatesExcel()" style="width:100%;margin-top:8px;padding:12px 0;background:#5C7A9F;color:#fff;border:none;border-radius:8px;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📊 전체 견적서 엑셀 다운로드</button>
+      <button onclick="exportAllEstimatesExcel()" style="width:100%;margin-top:8px;padding:12px 0;background:#282828;color:#fff;border:none;border-radius:8px;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📊 전체 견적서 엑셀 다운로드</button>
     </div>
   </div>
 
