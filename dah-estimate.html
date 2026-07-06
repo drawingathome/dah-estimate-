@@ -1830,7 +1830,7 @@ function autoUpdateRail(curtainTr) {
   if(!mw) return;
   var rowIdx = curtainTr.rowIndex;
   var space = curtainTr.querySelector('.space-inp')?.value||'';
-  var ja = mw/30.3, jaR = Math.ceil(ja);
+  var ja = mw/30, jaR = Math.ceil(ja);
   if(jaR%2!==0) jaR++;
   var railPrice = jaR*1600;
   var svcBody = document.getElementById('svc-body');
