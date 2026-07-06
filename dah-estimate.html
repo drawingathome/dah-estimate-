@@ -1393,6 +1393,19 @@ button {
 }
 button:active { transform: scale(0.97) !important; }
 
+
+/* ── 남은 버튼 radius 확정 ── */
+button[onclick*="openCustSearch"],
+button[onclick*="loadSurvey"] {
+  border-radius: 4px !important;
+}
+/* 고객용 출력 */
+button:not(.est-status-btn):not(.cust-type-btn) {
+  border-radius: 4px !important;
+}
+/* 탭 버튼은 제외 */
+.est-status-btn { border-radius: 0 !important; }
+
 </style>
 </head>
 <body>
