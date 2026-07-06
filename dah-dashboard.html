@@ -1797,6 +1797,312 @@ html, body, input, button, select, textarea {
   }
 }
 
+
+/* ══════════════════════════════════════════════
+   인터랙션 시스템 — 대기업 디자인팀 기준
+   ══════════════════════════════════════════════ */
+
+/* 전역 transition */
+*, *::before, *::after {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── 버튼 hover/active ── */
+button {
+  transition: background 0.15s ease, box-shadow 0.15s ease,
+              transform 0.1s ease, opacity 0.15s ease;
+  cursor: pointer;
+}
+button:active { transform: scale(0.97); }
+
+/* Primary 버튼 */
+.hd-btn-new:hover,
+#btn-add-customer:hover,
+button[onclick*="openAdd"]:hover {
+  background: #D4601F !important;
+  box-shadow: 0 2px 8px rgba(240,110,45,0.35) !important;
+}
+
+/* 헤더 Secondary 버튼 */
+.hd-btn-sub:hover {
+  background: rgba(255,255,255,0.15) !important;
+}
+
+/* 저장/Primary 계열 */
+#add-save-btn:hover {
+  background: #D4601F !important;
+  box-shadow: 0 2px 12px rgba(240,110,45,0.4) !important;
+}
+#add-save-only-btn:hover {
+  background: #EDEAE6 !important;
+  border-color: #D4CEC8 !important;
+}
+
+/* 탭 hover */
+.tab:hover:not(.on) {
+  color: #F06E2D !important;
+  opacity: 0.75;
+}
+.tab { transition: color 0.15s ease, border-color 0.15s ease; }
+
+/* 정렬 버튼 */
+.sort-btn:hover:not(.on),
+button[class*=sort]:hover:not(.on) {
+  background: #EDEAE6 !important;
+}
+
+/* 카드 hover */
+.customer-item:hover,
+[class*=customer-row]:hover,
+[class*=cust-item]:hover {
+  background: #FAF7F5 !important;
+  border-left: 3px solid #F06E2D;
+  transition: all 0.15s ease;
+}
+.pipe-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+  border-color: #D4CEC8 !important;
+  transform: translateY(-1px);
+  transition: all 0.15s ease;
+}
+
+/* ── 입력창 focus ── */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #F06E2D !important;
+  box-shadow: 0 0 0 3px rgba(240,110,45,0.12) !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input, select, textarea {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* ── 검색바 focus ── */
+input[type="search"]:focus,
+input[placeholder*="검색"]:focus,
+#pipe-search:focus,
+#cust-search:focus,
+#est-search:focus {
+  border-color: #F06E2D !important;
+  box-shadow: 0 0 0 3px rgba(240,110,45,0.12) !important;
+}
+
+/* ── 모바일 탭바 hover ── */
+.mob-nav-btn:hover:not(.on) {
+  opacity: 0.65;
+}
+.mob-nav-btn { transition: color 0.15s ease, opacity 0.15s ease; }
+.mob-nav-btn.on { transition: color 0.15s ease; }
+
+/* ── FAB 버튼 ── */
+.mob-fab:hover {
+  background: #D4601F !important;
+  box-shadow: 0 6px 20px rgba(240,110,45,0.45) !important;
+  transform: scale(1.05);
+}
+.mob-fab { transition: all 0.2s ease; }
+
+/* ── 체크박스 ── */
+input[type="checkbox"] {
+  accent-color: #F06E2D;
+  cursor: pointer;
+}
+
+/* ── 스테이지 칩 hover ── */
+[data-stage]:hover {
+  opacity: 0.8;
+  cursor: default;
+}
+
+
+/* ── 빈 상태 화면 ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 32px;
+  text-align: center;
+  gap: 0;
+}
+.empty-state-icon {
+  width: 64px; height: 64px;
+  margin-bottom: 20px;
+  color: #EEE6DC;
+}
+.empty-state-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #282828;
+  margin-bottom: 8px;
+  letter-spacing: -0.3px;
+}
+.empty-state-desc {
+  font-size: 13px;
+  color: #B0A99F;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+.empty-state-action {
+  background: #F06E2D;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.empty-state-action:hover { background: #D4601F; }
+
+/* 칸반 빈 상태 */
+.pipe-col-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 0;
+  gap: 6px;
+}
+.pipe-col-empty-icon {
+  color: #EEE6DC;
+  margin-bottom: 4px;
+}
+.pipe-col-empty-text {
+  font-size: 12px;
+  color: #D4CEC8;
+  font-weight: 500;
+}
+
+
+/* ── 로딩 상태 ── */
+.loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(2px);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  z-index: 9999;
+  gap: 16px;
+}
+.loading-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid #EEE6DC;
+  border-top-color: #F06E2D;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.loading-text {
+  font-size: 13px;
+  color: #B0A99F;
+  font-weight: 500;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 인라인 로딩 (버튼) */
+.btn-loading {
+  opacity: 0.7;
+  pointer-events: none;
+  position: relative;
+}
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  right: 12px; top: 50%;
+  transform: translateY(-50%);
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+/* 스켈레톤 로딩 */
+.skeleton {
+  background: linear-gradient(90deg, #F5F2EE 25%, #EEE6DC 50%, #F5F2EE 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.2s ease-in-out infinite;
+  border-radius: 4px;
+}
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+
+/* ── 에러 상태 ── */
+/* 입력창 에러 */
+input.error, select.error, textarea.error {
+  border-color: #C0392B !important;
+  box-shadow: 0 0 0 3px rgba(192,57,43,0.12) !important;
+}
+.error-msg {
+  font-size: 12px;
+  color: #C0392B;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.error-msg::before {
+  content: '!';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px; height: 14px;
+  background: #C0392B;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* 토스트 알림 */
+.toast {
+  position: fixed;
+  bottom: 80px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #282828;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  z-index: 9999;
+  opacity: 0;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  max-width: calc(100% - 40px);
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.toast.success { background: #2E7D32; }
+.toast.error   { background: #C0392B; }
+.toast.warning { background: #F06E2D; }
+
+/* 네트워크 오류 배너 */
+.error-banner {
+  background: #FDECEA;
+  border: 1px solid #F5B7B1;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 16px;
+  font-size: 13px;
+  color: #C0392B;
+}
+
 </style>
 
   <!-- PWA -->
@@ -1846,6 +2152,67 @@ html, body, input, button, select, textarea {
 </div>
 
 <script>
+
+function createEmptyState(title, desc, actionLabel, actionFn) {
+  var wrap = document.createElement('div');
+  wrap.className = 'empty-state';
+
+  // 아이콘
+  var icon = document.createElement('div');
+  icon.className = 'empty-state-icon';
+  icon.innerHTML = '<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="12" width="48" height="40" rx="4" stroke="currentColor" stroke-width="3" fill="none"/><path d="M8 24h48" stroke="currentColor" stroke-width="3"/><path d="M20 38h24M20 44h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>';
+  wrap.appendChild(icon);
+
+  // 제목
+  var t = document.createElement('p');
+  t.className = 'empty-state-title';
+  t.textContent = title || '데이터가 없습니다';
+  wrap.appendChild(t);
+
+  // 설명
+  if (desc) {
+    var d = document.createElement('p');
+    d.className = 'empty-state-desc';
+    d.innerHTML = desc.replace(/\n/g, '<br>');
+    wrap.appendChild(d);
+  }
+
+  // 액션 버튼
+  if (actionLabel && actionFn) {
+    var btn = document.createElement('button');
+    btn.className = 'empty-state-action';
+    btn.textContent = actionLabel;
+    btn.onclick = actionFn;
+    wrap.appendChild(btn);
+  }
+
+  return wrap;
+}
+window.createEmptyState = createEmptyState;
+
+
+/* 토스트 알림 시스템 */
+function showToast(msg, type, duration) {
+  duration = duration || 2500;
+  var el = document.getElementById('global-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'global-toast';
+    el.className = 'toast';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.className = 'toast ' + (type || '');
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() { el.classList.add('show'); });
+  });
+  clearTimeout(el._timer);
+  el._timer = setTimeout(function() {
+    el.classList.remove('show');
+  }, duration);
+}
+window.showToast = showToast;
+
 // 로그인 화면 이벤트 — 인라인으로 직접 등록
 (function() {
   function initLogin() {
