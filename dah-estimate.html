@@ -1018,6 +1018,67 @@ html, body, input, button, select, textarea {
     'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif !important;
 }
 
+
+/* ══════════════════════════════════════════
+   견적서 인터랙션 시스템
+   ══════════════════════════════════════════ */
+button { transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease; cursor: pointer; }
+button:active { transform: scale(0.97); }
+
+/* 탭 */
+.est-status-btn { transition: color 0.15s ease, border-color 0.15s ease; }
+.est-status-btn:hover:not(.on) { color: #F06E2D !important; opacity: 0.75; }
+.cust-type-btn { transition: all 0.15s ease; }
+
+/* 입력창 */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #F06E2D !important;
+  box-shadow: 0 0 0 3px rgba(240,110,45,0.12) !important;
+}
+input, select, textarea { transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+
+/* 행 hover */
+#curtain-body tr:hover, #blind-body tr:hover, #svc-body tr:hover {
+  background: #FFF3EE;
+  transition: background 0.1s ease;
+}
+
+/* 버튼 */
+.btn-print:hover { background: #1A1A1A !important; box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important; }
+.btn-save:hover  { background: #D4601F !important; box-shadow: 0 2px 8px rgba(240,110,45,0.3) !important; }
+
+/* + 추가 버튼 */
+[onclick*="addCurtain"]:hover, [onclick*="addBlind"]:hover {
+  color: #F06E2D !important;
+  background: #FFF3EE !important;
+}
+
+/* 에러 */
+input.error { border-color: #C0392B !important; box-shadow: 0 0 0 3px rgba(192,57,43,0.12) !important; }
+.warn-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #FFF3EE; color: #F06E2D;
+  font-size: 12px; font-weight: 700;
+  padding: 2px 8px; border-radius: 4px;
+  border: 1px solid rgba(240,110,45,0.3);
+}
+
+/* 토스트 */
+.toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #282828; color: #fff;
+  padding: 12px 20px; border-radius: 8px;
+  font-size: 13px; font-weight: 500;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  z-index: 9999; opacity: 0;
+  transition: all 0.25s ease; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { background: #2E7D32; }
+.toast.error   { background: #C0392B; }
+
 </style>
 </head>
 <body>
