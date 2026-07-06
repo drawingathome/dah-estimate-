@@ -400,7 +400,7 @@ td.amt{
 .summary-sub-amount{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px}
 .summary-sub-amount.orange{color:#fff;font-size:22px;font-weight:800}
 .action-bar{background:#fff;border-top:2px solid #EEE6DC;padding:16px 16px 40px;display:flex;flex-direction:column;gap:8px}
-.action-bar button{font-size:10px;font-family:inherit;font-weight:700;border-radius:8px;cursor:pointer;transition:all 0.15s}
+.action-bar button{font-size:10px;font-family:inherit;font-weight:700;border-radius:4px;cursor:pointer;transition:all 0.15s}
 .action-main{display:flex;gap:10px}
 .btn-new{background:transparent;color:#B0A99F;border:1.5px solid #EEE6DC}
 .btn-new:hover{color:#282828;border-color:#282828}
@@ -412,9 +412,9 @@ td.amt{
   cursor:pointer;font-family:inherit;transition:all 0.15s
 }
 .btn-pdf:hover{background:#282828}
-.btn-print{padding:14px 0;background:#fff;color:#282828;border:1.5px solid #282828;border-radius:12px;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px}
+.btn-print{padding:14px 0;background:#fff;color:#282828;border:1.5px solid #282828;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px}
 .btn-print:hover{background:#FAF7F5}
-.btn-save{padding:14px 0;background:#282828;color:#fff;border:none;border-radius:12px;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px}
+.btn-save{padding:14px 0;background:#282828;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px}
 .btn-save:hover{background:#282828}
 
  
@@ -772,10 +772,10 @@ td.amt{
 .pdf-opt-label{font-size:10px;font-weight:700;color:#282828;margin-bottom:4px}
 .pdf-opt-desc{font-size:10px;color:#8E8078;line-height:1.5}
 .pdf-modal-btns{display:flex;gap:8px;justify-content:flex-end}
-.pdf-modal-cancel{padding:9px 18px;background:#FAF7F5;border:none;border-radius:8px;font-size:10px;font-weight:600;font-family:inherit;cursor:pointer;color:#8E8078}
-.pdf-modal-confirm{padding:9px 22px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer}
+.pdf-modal-cancel{padding:9px 18px;background:#FAF7F5;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;color:#8E8078}
+.pdf-modal-confirm{padding:9px 22px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
 .pdf-modal-confirm:hover{background:#282828}
-.load-cust-btn{padding:5px 10px;background:#fff;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:10px;font-weight:600;font-family:inherit;cursor:pointer;letter-spacing:0.2px;white-space:nowrap;padding:5px 8px}
+.load-cust-btn{padding:5px 10px;background:#fff;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;letter-spacing:0.2px;white-space:nowrap;padding:5px 8px}
 .load-cust-btn:hover{background:#F5F2EE;border-color:#B0A99F}
  
 #cust-load-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;display:none;align-items:center;justify-content:center}
@@ -844,7 +844,7 @@ textarea:focus{border-color:#282828}
 
  
 .btn-row{display:flex;gap:10px}
-.btn-row .btn-print,.btn-row .btn-save{padding:14px 0;background:#282828;color:#fff;border:none;border-radius:12px;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px}
+.btn-row .btn-print,.btn-row .btn-save{padding:14px 0;background:#282828;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px}
 
  
 
@@ -1165,6 +1165,234 @@ body, input, button, select, textarea {
 /* 대·소 제목 */
 h1, h2, h3 { font-weight: 700; }
 
+
+/* ══════════════════════════════════════════════════
+   견적서 디자인 시스템 완전 확정
+   타입스케일: 10/12/13/15/17/22/36px
+   버튼 radius: 4px
+   ══════════════════════════════════════════════════ */
+
+/* ── 1. 상태 탭 (가견적서/최종견적서) ── */
+.est-status-btn {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border-radius: 0 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 2px solid transparent !important;
+  padding: 12px 16px !important;
+  background: transparent !important;
+  color: #B0A99F !important;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s, border-color 0.15s;
+}
+.est-status-btn.on {
+  color: #F06E2D !important;
+  border-bottom-color: #F06E2D !important;
+  font-weight: 700 !important;
+}
+.est-status-btn:hover:not(.on) {
+  color: #F06E2D !important;
+  opacity: 0.7;
+}
+
+/* ── 2. 고객유형 탭 (신규/재구매/AS·수선) ── */
+.cust-type-btn {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
+  padding: 5px 12px !important;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  border: 1px solid #EEE6DC !important;
+  background: transparent !important;
+  color: #B0A99F !important;
+}
+.cust-type-btn.on {
+  background: #F06E2D !important;
+  color: #fff !important;
+  border-color: #F06E2D !important;
+  font-weight: 700 !important;
+}
+
+/* ── 3. 고객 불러오기 / 설문 불러오기 ── */
+button[onclick*="openCustSearch"],
+button[onclick*="loadSurvey"],
+[class*="cust-load"], [class*="survey-load"] {
+  font-size: 13px !important;
+  height: 32px !important;
+  padding: 0 12px !important;
+  border-radius: 4px !important;
+  border: 1px solid #EEE6DC !important;
+  background: #fff !important;
+  color: #282828 !important;
+  font-weight: 600;
+}
+
+/* ── 4. 주소 검색 버튼 ── */
+button[onclick*="search"], button[onclick*="addr"],
+.search-btn, [class*=search-btn] {
+  font-size: 13px !important;
+  border-radius: 4px !important;
+  height: 36px !important;
+}
+
+/* ── 5. 복제(⧉) / 삭제(✕) 버튼 ── */
+button[onclick*="copy"], button[onclick*="remove"],
+button[onclick*="del"], button[onclick*="dup"] {
+  border-radius: 4px !important;
+  width: 28px !important;
+  height: 28px !important;
+  font-size: 12px !important;
+}
+
+/* ── 6. + 커튼 추가 / + 블라인드 추가 / + 항목 추가 ── */
+button[onclick*="addCurtain"], button[onclick*="addBlind"],
+button[onclick*="addSvc"], button[onclick*="addRow"] {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #F06E2D !important;
+  border-radius: 4px !important;
+  padding: 6px 12px !important;
+  height: auto !important;
+}
+
+/* ── 7. 하단 버튼 3종 완전 확정 ── */
+/* 고객용 출력 — Primary Dark */
+#btn-print-customer,
+button[onclick*="printCustomer"],
+button[onclick*="openPreview"],
+button[onclick*="preview"] {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  height: 52px !important;
+  border-radius: 4px !important;
+  background: #282828 !important;
+  color: #fff !important;
+  border: none !important;
+  letter-spacing: -0.3px;
+}
+
+/* 저장 — Primary Orange */
+#btn-save,
+button[onclick*="saveEst"],
+button[onclick*="saveCur"] {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  height: 52px !important;
+  border-radius: 4px !important;
+  background: #F06E2D !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+/* 엑셀 다운로드 — Secondary */
+button[onclick*="exportAll"],
+button[onclick*="Excel"],
+button[onclick*="excel"] {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  height: 40px !important;
+  border-radius: 4px !important;
+  background: #FAF7F5 !important;
+  color: #282828 !important;
+  border: 1px solid #EEE6DC !important;
+}
+
+/* ← 대시보드 / 새 견적서 */
+button[onclick*="dashboard"],
+button[onclick*="newEst"],
+button[onclick*="location"] {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  height: 44px !important;
+  border-radius: 4px !important;
+  background: #FAF7F5 !important;
+  color: #282828 !important;
+  border: 1px solid #EEE6DC !important;
+}
+
+/* ── 8. 테이블 헤더/셀 폰트 ── */
+#curtain-head th,
+#blind-head th,
+#svc-head th {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #B0A99F !important;
+  letter-spacing: 0.03em;
+}
+#curtain-body td,
+#blind-body td,
+#svc-body td {
+  font-size: 13px !important;
+}
+#curtain-body input,
+#blind-body input,
+#svc-body input,
+#curtain-body select,
+#blind-body select,
+#svc-body select {
+  font-size: 13px !important;
+  border-radius: 4px !important;
+}
+
+/* ── 9. 합계 섹션 ── */
+.summary-section {
+  font-size: 13px;
+}
+/* 총 견적금액 */
+.grand-total-label {
+  font-size: 12px !important;
+  color: #B0A99F !important;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.grand-total-amount {
+  font-size: 36px !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+}
+/* 계약금/잔금 */
+.contract-label, .balance-label {
+  font-size: 12px !important;
+  color: rgba(255,255,255,0.6) !important;
+}
+.contract-amount, .balance-amount {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+}
+
+/* ── 10. 섹션 라벨 ── */
+.section-label, [class*=section-title] {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #B0A99F !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── 11. 고객정보 필드 ── */
+.field-label {
+  font-size: 12px !important;
+  color: #B0A99F !important;
+}
+.field-value {
+  font-size: 15px !important;
+  color: #282828 !important;
+}
+
+/* ── 12. 모든 버튼 기본 transition ── */
+button {
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+}
+button:active { transform: scale(0.97) !important; }
+
 </style>
 </head>
 <body>
@@ -1224,7 +1452,7 @@ h1, h2, h3 { font-weight: 700; }
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
           <input type="text" id="c-addr" placeholder="서울 서초구 반포동" style="flex:1;min-width:0">
           <button type="button" onclick="openKakaoAddr('c-addr')"
-            style="padding:6px 12px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:10px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0">
+            style="padding:6px 12px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0">
             🔍 검색
           </button>
         </div>
@@ -1483,21 +1711,21 @@ h1, h2, h3 { font-weight: 700; }
   <div class="action-bar print-hide">
     <div style="display:flex;gap:8px;margin-bottom:8px">
       <button onclick="location.href='dah-dashboard.html'"
-        style="flex:1;height:44px;background:#FAF7F5;color:#282828;border:1.5px solid #EEE6DC;border-radius:12px;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;letter-spacing:-0.3px">
+        style="flex:1;height:44px;background:#FAF7F5;color:#282828;border:1.5px solid #EEE6DC;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;letter-spacing:-0.3px">
         ← 대시보드
       </button>
       <button class="btn-new" onclick="newEstimate()" style="flex:2;height:44px">새 견적서</button>
     </div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
       <span style="font-size:10px;color:#B0A99F;letter-spacing:-0.2px">✔ 출력 시 내부 정보 자동 제거</span>
-      <button id="load-draft-btn" onclick="loadDraft()" style="display:none;padding:4px 10px;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0">
+      <button id="load-draft-btn" onclick="loadDraft()" style="display:none;padding:4px 10px;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0">
         💾 임시저장 불러오기
       </button>
     </div>
     <div class="action-main">
       <div class="btn-row" style="display:flex;gap:10px;width:100%"><button class="btn-print" style="flex:1" onclick="printForCustomer()">🖨 고객용 출력</button>
       <button class="btn-save" style="flex:1" onclick="saveEstimate()">저장</button></div>
-      <button onclick="exportAllEstimatesExcel()" style="width:100%;margin-top:8px;padding:12px 0;background:#282828;color:#fff;border:none;border-radius:8px;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📊 전체 견적서 엑셀 다운로드</button>
+      <button onclick="exportAllEstimatesExcel()" style="width:100%;margin-top:8px;padding:12px 0;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📊 전체 견적서 엑셀 다운로드</button>
     </div>
   </div>
 
@@ -2889,11 +3117,11 @@ function printForCustomer() {
     document.getElementById('pv-overlay').remove();
     document.body.style.overflow = '';
   };
-  closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;cursor:pointer;font-size:10px;font-family:inherit';
+  closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:10px;font-family:inherit';
   var printBtn = document.createElement('button');
   printBtn.textContent = '인쇄 / PDF 저장';
   printBtn.onclick = openPdfModal;
-  printBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
+  printBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:10px;font-weight:700;font-family:inherit';
   navBtns.appendChild(closeBtn);
   navBtns.appendChild(printBtn);
   nav.appendChild(navLabel);
