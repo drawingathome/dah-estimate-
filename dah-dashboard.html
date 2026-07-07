@@ -1821,6 +1821,37 @@ body, input, button, select, textarea {
 /* ━━ add-overlay 강제 수정 (유일 확정) ━━ */
 #add-overlay.open { display: flex !important; }
 
+
+/* ━━ 모바일 앱헤더/탭바 확정 ━━ */
+@media (max-width: 640px) {
+  #mob-app-header {
+    display: flex !important;
+    background: #282828 !important;
+    min-height: 48px !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 200 !important;
+  }
+  #mob-bottom-nav {
+    display: flex !important;
+    background: #fff !important;
+    border-top: 1px solid #EEE6DC !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    z-index: 200 !important;
+  }
+  .mob-fab {
+    display: flex !important;
+    position: fixed !important;
+    z-index: 150 !important;
+  }
+  .hd, .tabs { display: none !important; }
+}
+/* ━━ add-overlay 최종 ━━ */
+#add-overlay { display: none; position: fixed; inset: 0; z-index: 9998; background: rgba(0,0,0,0.65); align-items: flex-end; justify-content: center; }
+#add-overlay.open { display: flex !important; }
+
 </style>
 
   <!-- PWA -->
@@ -5754,6 +5785,13 @@ document.getElementById('add-overlay').addEventListener('click', function(e) { i
         currentUser = saved;
         var loginScreen = document.getElementById('login-screen'); if (loginScreen) loginScreen.style.display = 'none';
         var badge = document.getElementById('current-user-badge'); if (badge) badge.textContent = currentUser.name;
+        // 모바일 앱헤더 강제 표시
+        var mobHd = document.getElementById('mob-app-header');
+        if (mobHd) { mobHd.style.display = 'flex'; mobHd.style.background = '#282828'; mobHd.style.minHeight = '48px'; }
+        var mobNav = document.getElementById('mob-bottom-nav');
+        if (mobNav) { mobNav.style.display = 'flex'; }
+        var mobFab = document.querySelector('.mob-fab');
+        if (mobFab) { mobFab.style.display = 'flex'; }
         applyPermissions(); loadCustomersAsync(renderHome); return;
       }
     }
