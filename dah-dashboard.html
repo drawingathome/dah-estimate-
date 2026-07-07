@@ -2267,7 +2267,7 @@ button { cursor: pointer !important; }
   <!-- 목표 달성률 -->
   <div style="padding:8px 16px 4px;border-bottom:1px solid var(--border)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <span style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:0.06em">이달 목표</span>
+      <span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.06em">이달 목표</span>
       <span id="goal-pct" class="goal-pct">0%</span>
     </div>
     <div class="goal-progress-wrap">
@@ -2321,7 +2321,7 @@ button { cursor: pointer !important; }
   <!-- 12개월 차트 - 항상 상단 고정 -->
   <div id="kpi-chart-wrap" style="margin-top:8px;padding-bottom:4px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <span style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase">12개월 매출 추이</span>
+      <span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase">12개월 매출 추이</span>
       <span style="font-size:10px;color:var(--light)" id="kpi-chart-year"></span>
     </div>
     <div id="kpi-chart-svg" style="height:60px"></div>
@@ -2422,13 +2422,13 @@ button { cursor: pointer !important; }
     </div>
     <!-- 요일 헤더 -->
     <div style="display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px">
-      <div style="text-align:center;font-size:10px;font-weight:700;color:var(--light);padding:3px 0">일</div>
-      <div style="text-align:center;font-size:10px;font-weight:700;color:var(--light);padding:3px 0">월</div>
-      <div style="text-align:center;font-size:10px;font-weight:700;color:var(--light);padding:3px 0">화</div>
-      <div style="text-align:center;font-size:10px;font-weight:700;color:var(--light);padding:3px 0">수</div>
-      <div style="text-align:center;font-size:10px;font-weight:700;color:var(--light);padding:3px 0">목</div>
-      <div style="text-align:center;font-size:10px;font-weight:700;color:var(--light);padding:3px 0">금</div>
-      <div style="text-align:center;font-size:10px;font-weight:700;color:var(--light);padding:3px 0">토</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--sub);padding:3px 0">일</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--sub);padding:3px 0">월</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--sub);padding:3px 0">화</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--sub);padding:3px 0">수</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--sub);padding:3px 0">목</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--sub);padding:3px 0">금</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--sub);padding:3px 0">토</div>
     </div>
     <!-- 날짜 그리드 -->
     <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px"></div>
@@ -2464,11 +2464,11 @@ button { cursor: pointer !important; }
 <div id="settings" style="display:none" class="wrap">
   <div style="display:flex;flex-direction:column;gap:12px">
 
-    <div style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:0.1em;text-transform:uppercase;padding:0 2px">매출 목표</div>
+    <div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.1em;text-transform:uppercase;padding:0 2px">매출 목표</div>
     <div class="card">
       <div style="padding:12px 16px;display:flex;align-items:center">
         <div style="flex:1">
-          <div style="font-size:10px;font-weight:600;color:var(--dark)">월 목표 매출</div>
+          <div style="font-size:12px;font-weight:700;color:var(--dark)">월 목표 매출</div>
           <div style="font-size:10px;color:var(--light);margin-top:2px">홈 화면 목표 달성률 기준</div>
         </div>
         <input id="set-monthly-goal" aria-label="월 목표 매출" type="text" value="5000" placeholder="만원" onchange="saveSettings()"
@@ -2477,24 +2477,24 @@ button { cursor: pointer !important; }
       </div>
     </div>
 
-    <div style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:0.1em;text-transform:uppercase;padding:0 2px">입금 계좌</div>
+    <div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.1em;text-transform:uppercase;padding:0 2px">입금 계좌</div>
     <div class="card">
       <div style="padding:12px 16px;border-bottom:1px solid var(--ivory2);display:flex;align-items:center">
-        <div style="font-size:10px;font-weight:600;color:var(--dark);flex:1">계좌번호</div>
+        <div style="font-size:12px;font-weight:700;color:var(--dark);flex:1">계좌번호</div>
         <input id="set-account" aria-label="계좌번호" type="text" value="015401-04-258798" onchange="saveSettings()"
           style="text-align:right;border:none;outline:none;font-size:10px;color:var(--dark);background:transparent;font-family:inherit">
       </div>
       <div style="padding:12px 16px;display:flex;align-items:center">
-        <div style="font-size:10px;font-weight:600;color:var(--dark);flex:1">예금주</div>
+        <div style="font-size:12px;font-weight:700;color:var(--dark);flex:1">예금주</div>
         <input id="set-holder" aria-label="예금주" type="text" value="장선혜" onchange="saveSettings()"
           style="text-align:right;border:none;outline:none;font-size:10px;color:var(--dark);background:transparent;font-family:inherit">
       </div>
     </div>
 
-    <div style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:0.1em;text-transform:uppercase;padding:0 2px">보안</div>
+    <div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.1em;text-transform:uppercase;padding:0 2px">보안</div>
     <div class="card">
       <div style="padding:12px 16px;border-bottom:1px solid var(--ivory2);display:flex;align-items:center;cursor:pointer" onclick="changeMasterPassword()">
-        <div style="font-size:10px;font-weight:600;color:var(--dark);flex:1">마스터 비밀번호 변경</div>
+        <div style="font-size:12px;font-weight:700;color:var(--dark);flex:1">마스터 비밀번호 변경</div>
         <span style="color:var(--light);font-size:10px">›</span>
       </div>
       <div style="padding:12px 16px;display:flex;align-items:center;cursor:pointer" onclick="logout ? logout() : (location.reload())">
@@ -2503,18 +2503,18 @@ button { cursor: pointer !important; }
       </div>
     </div>
 
-    <div style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:0.1em;text-transform:uppercase;padding:0 2px">데이터</div>
+    <div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.1em;text-transform:uppercase;padding:0 2px">데이터</div>
     <div class="card">
       <div style="padding:12px 16px;border-bottom:1px solid var(--ivory2);display:flex;align-items:center;cursor:pointer" onclick="doBackup()">
         <div style="flex:1">
-          <div style="font-size:10px;font-weight:600;color:var(--dark)">전체 데이터 백업</div>
+          <div style="font-size:12px;font-weight:700;color:var(--dark)">전체 데이터 백업</div>
           <div style="font-size:10px;color:var(--light);margin-top:2px" id="last-backup">마지막 백업: 없음</div>
         </div>
         <span style="color:var(--light);font-size:10px">›</span>
       </div>
       <div style="padding:12px 16px;display:flex;align-items:center">
         <div style="flex:1">
-          <div style="font-size:10px;font-weight:600;color:var(--dark)">Supabase 연결 상태</div>
+          <div style="font-size:12px;font-weight:700;color:var(--dark)">Supabase 연결 상태</div>
         </div>
         <span id="db-status" style="font-size:10px;font-weight:700;color:var(--danger)">미연결</span>
       </div>
@@ -2559,7 +2559,7 @@ button { cursor: pointer !important; }
 
       <!-- 필수 정보 (3개만) -->
       <div style="background:#fff;border-radius:12px;padding:16px 16px 4px;margin-bottom:12px;border:1px solid #EEE6DC">
-        <div style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">예약 정보</div>
+        <div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">예약 정보</div>
         <div class="form-row">
           <label class="form-label">고객명 <span class="form-required">*</span></label>
           <input class="form-input" id="add-name" aria-label="고객명" placeholder="홍길동">
@@ -2576,7 +2576,7 @@ button { cursor: pointer !important; }
 
       <!-- 담당자 -->
       <div style="margin-bottom:16px">
-        <label style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:8px">담당자</label>
+        <label style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:8px">담당자</label>
         <div id="staff-btn-wrap" style="display:flex;gap:8px"></div>
       </div>
       </div>
@@ -4035,11 +4035,11 @@ function renderHome() {
 
       // 1. 날짜 헤더
       '<div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);background:#fff">',
-        '<div style="font-size:10px;color:var(--light);font-weight:600;letter-spacing:0.06em;margin-bottom:4px">',
+        '<div style="font-size:11px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;letter-spacing:0.06em;margin-bottom:4px">',
           _year + '. ' + _month + '. ' + _date + ' ' + _dowKo,
         '</div>',
         '<div style="display:flex;align-items:center;justify-content:space-between">',
-          '<div style="font-size:22px;font-weight:800;color:var(--dark)">',
+          '<div style="font-size:36px;font-weight:700;color:var(--dark)">',
             isOver
               ? '🎉 ' + _month + '월 목표 달성!'
               : _month + '월, 목표까지 <span style="color:var(--terra)">' + Math.round(remain/10000).toLocaleString() + '만원</span> 남았어요',
@@ -4051,7 +4051,7 @@ function renderHome() {
       // 2. 목표 달성률 바
       '<div style="padding:12px 20px;background:#fff;border-bottom:1px solid var(--border)">',
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">',
-          '<span style="font-size:10px;font-weight:600;color:var(--mid)">이달 목표 달성률</span>',
+          '<span style="font-size:12px;font-weight:600;color:var(--sub)">이달 목표 달성률</span>',
           '<span style="font-size:10px;font-weight:700;color:' + (isOver ? '#2E7D32' : 'var(--terra)') + '">' + pct + '% <span style="font-size:10px;font-weight:400;color:var(--light)">/ ' + goalWan.toLocaleString() + '만원</span></span>',
         '</div>',
         '<div style="background:var(--ivory2);border-radius:6px;height:8px;overflow:hidden">',
@@ -4063,27 +4063,27 @@ function renderHome() {
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-bottom:1px solid var(--border)">',
         // 이달 매출
         '<div style="background:#fff;padding:16px 20px">',
-          '<div style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">이달 매출</div>',
-          '<div style="font-size:22px;font-weight:800;color:var(--dark);line-height:1.1">' + Math.round(thisMonthRev/10000).toLocaleString() + '<span style="font-size:10px;font-weight:400;color:var(--mid)">만원</span></div>',
+          '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">이달 매출</div>',
+          '<div style="font-size:36px;font-weight:700;color:var(--dark);line-height:1">' + Math.round(thisMonthRev/10000).toLocaleString() + '<span style="font-size:10px;font-weight:400;color:var(--mid)">만원</span></div>',
           '<div style="font-size:10px;color:var(--terra);margin-top:4px;font-weight:600">' + pct + '% 달성</div>',
         '</div>',
         // 진행 건수
         '<div style="background:#fff;padding:16px 20px">',
-          '<div style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">진행 건수</div>',
-          '<div style="font-size:22px;font-weight:800;color:var(--dark);line-height:1.1">' + thisMonthContracts + '<span style="font-size:10px;font-weight:400;color:var(--mid)">건</span></div>',
+          '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">진행 건수</div>',
+          '<div style="font-size:36px;font-weight:700;color:var(--dark);line-height:1">' + thisMonthContracts + '<span style="font-size:10px;font-weight:400;color:var(--mid)">건</span></div>',
           '<div style="font-size:10px;color:var(--mid);margin-top:4px">계약~시공 진행중</div>',
         '</div>',
         // 전체 고객
         '<div style="background:#fff;padding:16px 20px">',
-          '<div style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">전체 고객</div>',
-          '<div style="font-size:22px;font-weight:800;color:var(--dark);line-height:1.1">' + customers.length + '<span style="font-size:10px;font-weight:400;color:var(--mid)">명</span></div>',
+          '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">전체 고객</div>',
+          '<div style="font-size:36px;font-weight:700;color:var(--dark);line-height:1">' + customers.length + '<span style="font-size:10px;font-weight:400;color:var(--mid)">명</span></div>',
           '<div style="font-size:10px;color:var(--mid);margin-top:4px">누적 등록 고객</div>',
         '</div>',
       '</div>',
 
       // 4. 스테이지 현황 칩
       '<div style="background:#fff;padding:14px 20px 12px;border-bottom:1px solid var(--border)">',
-        '<div style="font-size:10px;font-weight:700;color:var(--light);letter-spacing:0.08em;margin-bottom:10px;text-transform:uppercase">진행 현황</div>',
+        '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:10px;text-transform:uppercase">진행 현황</div>',
         '<div style="display:flex;gap:8px;flex-wrap:wrap">',
           ['상담','계약금','실측','잔금','시공','완료'].map(function(stage) {
             var cnt = stageCounts[stage] || 0;
@@ -4170,7 +4170,7 @@ function renderHome() {
         var rows = Object.keys(byStaff).map(function(s) {
           return '<div style="padding:10px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center">' +
             '<div style="width:28px;height:28px;border-radius:50%;background:var(--dark);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-right:10px">' + (s[0]||'?') + '</div>' +
-            '<div style="flex:1;font-size:10px;font-weight:600;color:var(--dark)">' + s + '</div>' +
+            '<div style="flex:1;font-size:12px;font-weight:700;color:var(--dark)">' + s + '</div>' +
             '<div style="text-align:right">' +
               '<div style="font-size:10px;font-weight:700;color:var(--dark)">' + Math.round(byStaff[s].rev/10000).toLocaleString() + '만원</div>' +
               '<div style="font-size:10px;color:var(--light)">' + byStaff[s].count + '건</div>' +
@@ -5135,7 +5135,7 @@ function openDetail(name) {
   };
 
   var paySec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
-  paySec.appendChild(el('div', {style:'font-size:10px;font-weight:700;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'결제 관리'}));
+  paySec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'결제 관리'}));
 
   function savePayData(pd) {
     // 1) localStorage 백업
@@ -5346,7 +5346,7 @@ function openDetail(name) {
 
   
   var alimSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
-  alimSec.appendChild(el('div', {style:'font-size:10px;font-weight:700;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px', text:'알림톡 발송 현황'}));
+  alimSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px', text:'알림톡 발송 현황'}));
 
   var allKeys = ['t01_reservation','t02_reminder','t03_estimate','t31_deposit','t04_followup',
     't05_measure_confirm','t06_measure_dday','t07_final_estimate','t71_balance_request',
@@ -5396,7 +5396,7 @@ function openDetail(name) {
 
   // 고객 정보 섹션
   var infoSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
-  infoSec.appendChild(el('div', {style:'font-size:10px;font-weight:700;color:var(--light);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'고객 정보'}));
+  infoSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'고객 정보'}));
 
   // 연락처 - 크고 눈에 띄게
   var phoneBlock = div('background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:12px 14px;margin-bottom:8px', []);
@@ -5406,7 +5406,7 @@ function openDetail(name) {
     telLink.textContent = c.phone;
     phoneBlock.appendChild(telLink);
   } else {
-    phoneBlock.appendChild(el('span', {style:'font-size:10px;font-weight:700;color:var(--light)', text:'—'}));
+    phoneBlock.appendChild(el('span', {style:'font-size:11px;font-weight:700;color:var(--sub)', text:'—'}));
   }
   infoSec.appendChild(phoneBlock);
 
@@ -5769,7 +5769,7 @@ function renderSettings() {
   wrap.appendChild(acctCard);
 
   var pwCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:10px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:12px', '🔐 비밀번호 변경')
+    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:12px', '🔐 비밀번호 변경')
   ]);
   [['change-pw-current2','현재 비밀번호'],['change-pw-new2','새 비밀번호 (4자 이상)'],['change-pw-confirm2','새 비밀번호 확인']].forEach(function(row) {
     var inp = el('input', {type:'password', id:row[0], placeholder:row[1], style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;border-radius:8px;font-size:10px;font-family:inherit;outline:none;margin-bottom:6px;box-sizing:border-box'});
@@ -5791,7 +5791,7 @@ function renderSettings() {
 
   
   var staffCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:10px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:12px', '👤 담당자 관리')
+    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:12px', '👤 담당자 관리')
   ]);
   var staffList = getStaffList();
   staffList.forEach(function(name) {
@@ -5824,7 +5824,7 @@ function renderSettings() {
 
   
   var goalCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:10px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:12px', '🎯 담당자별 월 목표 매출')
+    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:12px', '🎯 담당자별 월 목표 매출')
   ]);
   var allStaffs = ['마스터'].concat(getStaffList());
   allStaffs.forEach(function(staff) {
@@ -5847,7 +5847,7 @@ function renderSettings() {
 
   
   var webhookCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:10px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:4px', '⚙️ Make.com 웹훅 URL'),
+    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:4px', '⚙️ Make.com 웹훅 URL'),
     span('font-size:10px;color:var(--light);display:block;margin-bottom:10px', '알림톡 자동 발송 연동 (검수 완료 후 입력)')
   ]);
   var curWebhook = localStorage.getItem('dah_webhook_url') || '';
@@ -5862,7 +5862,7 @@ function renderSettings() {
 
   
   var dataCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:10px;font-weight:700;color:var(--light);letter-spacing:1.2px;display:block;margin-bottom:12px', '💾 데이터 관리')
+    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:12px', '💾 데이터 관리')
   ]);
   dataCard.appendChild(btn('width:100%;padding:11px;background:#282828;color:#fff;border:none;border-radius:12px;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:8px', '📊 고객목록 엑셀 내보내기', exportExcel));
   dataCard.appendChild(btn('width:100%;padding:11px;background:#282828;color:#fff;border:none;border-radius:12px;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:8px', '📋 견적서목록 엑셀 내보내기', exportEstimatesExcel));
@@ -5902,7 +5902,7 @@ var STATUS_LABELS = {ga:'가견적서', final:'최종견적서'};
 function renderEstimateHistory(container, clientName) {
   var estSec = el('div', {style:'margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC'});
   var hd = el('div', {style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px'});
-  var lbl = el('div', {style:'font-size:10px;font-weight:700;color:var(--light);letter-spacing:1px;text-transform:uppercase', text:'견적서'});
+  var lbl = el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase', text:'견적서'});
   hd.appendChild(lbl);
   estSec.appendChild(hd);
 
