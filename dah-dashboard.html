@@ -1540,6 +1540,28 @@ input::placeholder, textarea::placeholder {
   color: #B0A99F !important;
 }
 
+
+/* ── 모바일 폰트 조정 (390px) ── */
+@media (max-width: 640px) {
+  /* 페이지 타이틀: 36px → 22px */
+  #home [style*="font-size:36px;font-weight:700;color:var(--dark)"] {
+    font-size: 22px !important;
+    line-height: 1.3 !important;
+  }
+  /* KPI 숫자: 36px → 28px */
+  #home [style*="font-size:36px;font-weight:700;color:var(--dark);line-height:1"] {
+    font-size: 28px !important;
+  }
+  /* 진행현황 칩: 세로 나열 → 가로 줄바꿈 */
+  #home .stage-chips,
+  #home .home-chips,
+  #home [class*="chip-wrap"] {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
