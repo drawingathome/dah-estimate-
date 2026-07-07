@@ -2220,6 +2220,88 @@ button[onclick*="exportExcel"] {
   overflow: hidden !important;
 }
 
+
+/* ━━ KPI 숫자 강제 36px ━━ */
+#home span[style*="font-size:10px"],
+#home span[style*="font-size: 10px"] {
+  font-size: 36px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+  line-height: 1 !important;
+  letter-spacing: -0.5px !important;
+}
+/* KPI 퍼센트, 단위 */
+#home .kpi-sub,
+#home [class*=kpi-pct],
+#home [class*=kpi-unit] {
+  font-size: 12px !important;
+  color: #B0A99F !important;
+  font-weight: 400 !important;
+}
+/* 진행현황 칩 — 실제 inline style 강제 */
+.stage-chips button[style*="font-size:10px"],
+.home-chips button[style*="font-size:10px"],
+#home button[style*="font-size:10px"] {
+  font-size: 12px !important;
+}
+
+/* ━━ 수정 2: 견적서 검색 버튼 → Secondary ━━ */
+/* (견적서에서 처리) */
+
+/* ━━ 수정 3: 모달 입력창 플레이스홀더 색 ━━ */
+#add-overlay input::placeholder,
+#add-overlay textarea::placeholder {
+  color: #B0A99F !important;
+  font-size: 13px !important;
+}
+
+/* ━━ 수정 4: 모달 모바일 바텀시트 ━━ */
+@media (max-width: 640px) {
+  #add-overlay .modal-box {
+    max-height: 95vh !important;
+    border-radius: 20px 20px 0 0 !important;
+  }
+}
+
+/* ━━ 수정 5: 홈 하단 빈 공간 ━━ */
+#home {
+  padding-bottom: 24px !important;
+}
+
+/* ━━ 수정 6: 진행현황 칩 완료 색상 ━━ */
+.stage-chip-done, [data-stage="완료"] {
+  color: #B0A99F !important;
+  border-color: #EEE6DC !important;
+  background: #F5F2EE !important;
+}
+
+/* ━━ 수정 7: 탭 아이콘 크기 통일 ━━ */
+.tab svg, .tabs svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* ━━ 수정 8: 전체 버튼 cursor 통일 ━━ */
+button { cursor: pointer !important; }
+
+/* ━━ 수정 9: 카드 hover 시 그림자 ━━ */
+.pipe-col:hover {
+  box-shadow: none !important;
+}
+.pipe-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important;
+  transform: translateY(-1px) !important;
+  transition: all 0.15s ease !important;
+}
+
+/* ━━ 수정 10: 헤더 로고 폰트 ━━ */
+.hd-logo {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  color: #fff !important;
+}
+
 </style>
 
   <!-- PWA -->
