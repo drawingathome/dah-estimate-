@@ -370,6 +370,165 @@ html, body, input, button, select, textarea {
   font-weight: 500 !important;
 }
 
+
+/* ════════════════════════════════════════════════
+   DAH 폰트 위계 시스템 확정 2026.07.07
+   ════════════════════════════════════════════════
+
+   페이지 타이틀    22px / 700 / #282828
+   KPI 숫자        36px / 700 / #282828
+   KPI 단위        13px / 400 / #B0A99F
+   KPI 라벨        11px / 700 / #B0A99F
+   섹션 타이틀      12px / 700 / #B0A99F (대문자)
+   본문 텍스트      15px / 400 / #282828
+   서브 텍스트      12px / 400 / #B0A99F
+   버튼 텍스트      13px / 700
+   탭 라벨          12px / 500(off) 700(on)
+   칸반 스테이지    12px / 700
+   날짜/보조        11px / 400 / #B0A99F
+   ════════════════════════════════════════════════ */
+
+/* ① 페이지 타이틀 (홈 7월 목표 텍스트) */
+.home-title, .page-title-area h2,
+#home > .wrap > .card:first-child h2,
+#home .goal-title {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+  letter-spacing: -0.5px !important;
+}
+
+/* ② KPI 숫자 — 36px */
+.kpi-num {
+  font-size: 36px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+  line-height: 1 !important;
+  letter-spacing: -1px !important;
+}
+.kpi-num em, .kpi-num-unit, .kpi-unit {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: #B0A99F !important;
+  font-style: normal !important;
+  letter-spacing: 0 !important;
+  margin-left: 1px !important;
+}
+
+/* ③ KPI 라벨 — 11px Bold */
+.kpi-label {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #B0A99F !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 4px !important;
+}
+
+/* ④ 목표 달성률 바 — 진행현황 칩과 혼동되는 36px 텍스트 수정 */
+.kpi-bar-label, .rev-bar-wrap + *,
+.goal-pct-text, [class*=kpi-bar] > span,
+#home .kpi-card .kpi-bar-desc {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #B0A99F !important;
+}
+
+/* ⑤ 섹션 타이틀 — 12px Bold 서브컬러 */
+.section-title, .home-section-title,
+#home .section-hd, #home h3,
+.section-header {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #B0A99F !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 8px !important;
+}
+
+/* ⑥ 진행현황 칩 — 너무 큰 문제 수정 */
+#home .stage-chips button,
+#home .home-chips button,
+#home [class*=chip] button,
+#home button[class*=chip] {
+  height: 28px !important;
+  padding: 0 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  white-space: nowrap !important;
+}
+
+/* ⑦ 탭 네비 */
+.tab, .tab-item, .tabs button {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #B0A99F !important;
+}
+.tab.on, .tab-item.on, .tabs button.on, .tabs button.active {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+}
+
+/* ⑧ 칸반 스테이지 라벨 */
+.pipe-col-title, .kanban-col-title,
+.pipe-stage-name {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+/* ⑨ 본문 / 서브텍스트 */
+.pipe-card-name { font-size: 15px !important; font-weight: 600 !important; color: #282828 !important; }
+.pipe-card-sub  { font-size: 12px !important; font-weight: 400 !important; color: #B0A99F !important; }
+
+/* ⑩ 날짜·보조 */
+.date-label, .home-date, #home .date {
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  color: #B0A99F !important;
+}
+
+/* ⑪ 버튼 통일 */
+button {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  font-family: inherit !important;
+  cursor: pointer !important;
+}
+/* 예외: 탭 버튼은 위 ⑦ 적용 */
+.tab, .tab-item, .tabs button {
+  font-size: 12px !important;
+}
+/* 예외: 작은 버튼 */
+.btn-sm { font-size: 12px !important; }
+
+/* ⑫ 입력창·플레이스홀더 */
+input, select, textarea {
+  font-size: 15px !important;
+  font-family: inherit !important;
+}
+input::placeholder, textarea::placeholder {
+  font-size: 13px !important;
+  color: #C8C2BA !important;
+}
+
+/* ⑬ 설정 화면 라벨 */
+#settings .field-label,
+#settings label {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+}
+#settings .field-desc {
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  color: #B0A99F !important;
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
