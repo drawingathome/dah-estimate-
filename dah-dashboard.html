@@ -671,6 +671,648 @@ input::placeholder, textarea::placeholder {
 }
 
 
+/* ══ 로그인 화면 — Drawing at HOME ══ */
+.login-screen {
+  min-height: 100vh;
+  background: #FAF7F5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.login-logo-wrap {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.login-logo-wrap img {
+  height: 34px;
+  width: auto;
+  display: block;
+  margin: 0 auto 10px;
+}
+.login-brand-sub {
+  font-size: 10px;
+  color: #B0A99F;
+  letter-spacing: 0.22em;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.login-card {
+  background: #fff;
+  border-radius: 20px;
+  border: 1px solid #EEE6DC;
+  padding: 32px 28px 28px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 2px 4px rgba(40,40,40,0.04), 0 12px 40px rgba(40,40,40,0.10);
+}
+.login-card-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #282828;
+  letter-spacing: -0.5px;
+  margin-bottom: 6px;
+}
+.login-card-sub {
+  font-size: 13px;
+  color: #B0A99F;
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+.login-master-btn {
+  width: 100%;
+  height: 52px;
+  background: #282828;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.15s, transform 0.1s;
+  letter-spacing: -0.2px;
+  -webkit-font-smoothing: antialiased;
+}
+.login-master-btn:hover { background: #1A1A1A; transform: translateY(-1px); }
+.login-master-btn:active { transform: translateY(0); }
+.master-pw-area {
+  margin-top: 10px;
+}
+.master-pw-area input {
+  width: 100%;
+  height: 48px;
+  border: 1.5px solid #EEE6DC;
+  border-radius: 10px;
+  padding: 0 16px;
+  font-size: 17px;
+  font-family: inherit;
+  color: #282828;
+  background: #FAF7F5;
+  outline: none;
+  margin-bottom: 8px;
+  letter-spacing: 4px;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-font-smoothing: antialiased;
+}
+.master-pw-area input:focus {
+  border-color: #F06E2D;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(240,110,45,0.10);
+}
+.master-pw-area input::placeholder {
+  letter-spacing: 0;
+  color: #C8C2BA;
+  font-size: 13px;
+}
+.login-confirm-btn {
+  width: 100%;
+  height: 48px;
+  background: #F06E2D;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+  -webkit-font-smoothing: antialiased;
+}
+.login-confirm-btn:hover { background: #D4601F; }
+.login-pw-error {
+  font-size: 12px;
+  color: #C0392B;
+  margin-top: 8px;
+  text-align: center;
+  display: none;
+}
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0 20px;
+}
+.login-divider::before, .login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #EEE6DC;
+}
+.login-divider span {
+  font-size: 11px;
+  color: #B0A99F;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+}
+.staff-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.staff-grid-btn {
+  height: 52px;
+  background: #FAF7F5;
+  border: 1.5px solid #EEE6DC;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #282828;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  -webkit-font-smoothing: antialiased;
+}
+.staff-grid-btn:hover {
+  border-color: #F06E2D;
+  color: #F06E2D;
+  background: #FFF3EE;
+  transform: translateY(-1px);
+}
+.staff-avatar-sm {
+  width: 26px;
+  height: 26px;
+  background: #EEE6DC;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #B0A99F;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.staff-grid-btn:hover .staff-avatar-sm {
+  background: #FFF3EE;
+  color: #F06E2D;
+}
+.login-footer {
+  margin-top: 20px;
+  font-size: 11px;
+  color: #C8C2BA;
+  text-align: center;
+  letter-spacing: 0.03em;
+}
+
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   Priority 1 수정 — 2026.07.07
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+
+/* ① 홈 진행현황 칩 — 숫자/텍스트 위계 */
+.home-chips .chip,
+.stage-chips .chip,
+.stage-chip-btn,
+#home .chip-wrap button {
+  height: 36px !important;
+  padding: 0 12px !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+}
+/* 칩 안 숫자 강조 */
+.home-chips .chip .chip-num,
+.stage-chips .chip .chip-num,
+.chip-count {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.3px !important;
+}
+/* 칩 안 텍스트 서브 */
+.home-chips .chip .chip-label,
+.stage-chips .chip .chip-label,
+.chip-label {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  opacity: 0.85 !important;
+}
+
+/* ② 매출 탭 active/passive 구분 강화 */
+.chart-period-tabs button,
+.period-tab,
+#chart .tab-group button {
+  height: 32px !important;
+  padding: 0 14px !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border: 1px solid transparent !important;
+  color: #B0A99F !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+  transition: all 0.15s !important;
+}
+.chart-period-tabs button.on,
+.chart-period-tabs button.active,
+.period-tab.on,
+.period-tab.active,
+#chart .tab-group button.on {
+  background: #282828 !important;
+  color: #fff !important;
+  border-color: #282828 !important;
+  font-weight: 700 !important;
+}
+.chart-period-tabs button:hover:not(.on):not(.active) {
+  color: #282828 !important;
+  border-color: #EEE6DC !important;
+  background: #FAF7F5 !important;
+}
+/* 일/주/월/연 탭 */
+.chart-view-tabs button,
+.view-tab {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #B0A99F !important;
+  background: none !important;
+  border: none !important;
+  padding: 4px 10px !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+  border-bottom: 2px solid transparent !important;
+  transition: all 0.15s !important;
+}
+.chart-view-tabs button.on,
+.chart-view-tabs button.active,
+.view-tab.on {
+  color: #F06E2D !important;
+  font-weight: 700 !important;
+  border-bottom-color: #F06E2D !important;
+}
+
+/* ③ 진행현황 칸반 min-height */
+.pipe-col,
+.kanban-col,
+[class*=pipe-col],
+[class*=kanban-col] {
+  min-height: 240px !important;
+}
+.pipe-col-body,
+.kanban-col-body {
+  min-height: 180px !important;
+}
+/* 칸반 헤더 — 스테이지 컬러 도트 + 이름 + 카운트 */
+.pipe-col-header,
+.kanban-col-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 10px 14px !important;
+  border-bottom: 1px solid #EEE6DC !important;
+  background: #fff !important;
+}
+.pipe-col-title,
+.kanban-col-title {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+}
+.pipe-col-count,
+.kanban-col-count {
+  font-size: 11px !important;
+  color: #B0A99F !important;
+  font-weight: 500 !important;
+  margin-left: auto !important;
+}
+/* 칸반 빈 상태 */
+.pipe-empty,
+.kanban-empty {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 140px !important;
+  gap: 6px !important;
+}
+.pipe-empty-text,
+.kanban-empty-text {
+  font-size: 12px !important;
+  color: #C8C2BA !important;
+  font-weight: 500 !important;
+}
+
+
+/* ════════════════════════════════════════════════
+   DAH 폰트 위계 시스템 확정 2026.07.07
+   ════════════════════════════════════════════════
+
+   페이지 타이틀    22px / 700 / #282828
+   KPI 숫자        36px / 700 / #282828
+   KPI 단위        13px / 400 / #B0A99F
+   KPI 라벨        11px / 700 / #B0A99F
+   섹션 타이틀      12px / 700 / #B0A99F (대문자)
+   본문 텍스트      15px / 400 / #282828
+   서브 텍스트      12px / 400 / #B0A99F
+   버튼 텍스트      13px / 700
+   탭 라벨          12px / 500(off) 700(on)
+   칸반 스테이지    12px / 700
+   날짜/보조        11px / 400 / #B0A99F
+   ════════════════════════════════════════════════ */
+
+/* ① 페이지 타이틀 (홈 7월 목표 텍스트) */
+.home-title, .page-title-area h2,
+#home > .wrap > .card:first-child h2,
+#home .goal-title {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+  letter-spacing: -0.5px !important;
+}
+
+/* ② KPI 숫자 — 36px */
+.kpi-num {
+  font-size: 36px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+  line-height: 1 !important;
+  letter-spacing: -1px !important;
+}
+.kpi-num em, .kpi-num-unit, .kpi-unit {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: #B0A99F !important;
+  font-style: normal !important;
+  letter-spacing: 0 !important;
+  margin-left: 1px !important;
+}
+
+/* ③ KPI 라벨 — 11px Bold */
+.kpi-label {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #B0A99F !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 4px !important;
+}
+
+/* ④ 목표 달성률 바 — 진행현황 칩과 혼동되는 36px 텍스트 수정 */
+.kpi-bar-label, .rev-bar-wrap + *,
+.goal-pct-text, [class*=kpi-bar] > span,
+#home .kpi-card .kpi-bar-desc {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #B0A99F !important;
+}
+
+/* ⑤ 섹션 타이틀 — 12px Bold 서브컬러 */
+.section-title, .home-section-title,
+#home .section-hd, #home h3,
+.section-header {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #B0A99F !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 8px !important;
+}
+
+/* ⑥ 진행현황 칩 — 너무 큰 문제 수정 */
+#home .stage-chips button,
+#home .home-chips button,
+#home [class*=chip] button,
+#home button[class*=chip] {
+  height: 28px !important;
+  padding: 0 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  white-space: nowrap !important;
+}
+
+/* ⑦ 탭 네비 */
+.tab, .tab-item, .tabs button {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #B0A99F !important;
+}
+.tab.on, .tab-item.on, .tabs button.on, .tabs button.active {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+}
+
+/* ⑧ 칸반 스테이지 라벨 */
+.pipe-col-title, .kanban-col-title,
+.pipe-stage-name {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+/* ⑨ 본문 / 서브텍스트 */
+.pipe-card-name { font-size: 15px !important; font-weight: 600 !important; color: #282828 !important; }
+.pipe-card-sub  { font-size: 12px !important; font-weight: 400 !important; color: #B0A99F !important; }
+
+/* ⑩ 날짜·보조 */
+.date-label, .home-date, #home .date {
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  color: #B0A99F !important;
+}
+
+/* ⑪ 버튼 통일 */
+button {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  font-family: inherit !important;
+  cursor: pointer !important;
+}
+/* 예외: 탭 버튼은 위 ⑦ 적용 */
+.tab, .tab-item, .tabs button {
+  font-size: 12px !important;
+}
+/* 예외: 작은 버튼 */
+.btn-sm { font-size: 12px !important; }
+
+/* ⑫ 입력창·플레이스홀더 */
+input, select, textarea {
+  font-size: 15px !important;
+  font-family: inherit !important;
+}
+input::placeholder, textarea::placeholder {
+  font-size: 13px !important;
+  color: #C8C2BA !important;
+}
+
+/* ⑬ 설정 화면 라벨 */
+#settings .field-label,
+#settings label {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+}
+#settings .field-desc {
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  color: #B0A99F !important;
+}
+
+
+/* ════════════════════════════════════════
+   수정 3가지 — 2026.07.07
+   ① 홈 칩 28px  ② 모바일 진행현황 2열  ③ 매출탭 active
+   ════════════════════════════════════════ */
+
+/* ① 홈 진행현황 칩 — 높이 28px, 폰트 작게 */
+#home .stage-chips,
+#home .home-chips,
+#home [class*=stage-chip],
+#home [class*=chip-wrap] {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+}
+#home .stage-chips button,
+#home .home-chips button,
+#home [class*=chip-wrap] button,
+#home button[class*=chip] {
+  height: 28px !important;
+  padding: 0 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+}
+/* 칩 숫자 */
+#home .stage-chips button .num,
+#home .home-chips button .num,
+#home button[class*=chip] span:first-child {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.3px !important;
+}
+/* 칩 텍스트 */
+#home .stage-chips button .lbl,
+#home .home-chips button .lbl {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+}
+
+/* ② 모바일 진행현황 — 2열 그리드 */
+@media (max-width: 640px) {
+  #pipe .pipe-cols,
+  #pipe .kanban-cols,
+  #pipe [class*=pipe-list],
+  #pipe [class*=kanban-list] {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    padding: 12px !important;
+  }
+  #pipe .pipe-col,
+  #pipe .kanban-col,
+  #pipe [class*=pipe-col] {
+    min-height: 120px !important;
+    border-radius: 12px !important;
+  }
+  /* 완료 컬럼 — 2열에서 전체 너비 */
+  #pipe .pipe-col:last-child,
+  #pipe .kanban-col:last-child {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+/* ③ 매출 탭 active 강화 */
+/* 기간 탭 (전체/이번달/지난달/3개월/6개월) */
+#chart .period-tabs,
+#chart [class*=period-tab],
+.chart-period-tabs {
+  display: flex !important;
+  gap: 4px !important;
+  padding: 4px !important;
+  background: #F5F2EE !important;
+  border-radius: 8px !important;
+  margin-bottom: 12px !important;
+}
+#chart .period-tabs button,
+#chart [class*=period-btn],
+.chart-period-tabs button {
+  height: 30px !important;
+  padding: 0 12px !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #B0A99F !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+  transition: all 0.12s !important;
+  white-space: nowrap !important;
+}
+#chart .period-tabs button.on,
+#chart .period-tabs button.active,
+#chart [class*=period-btn].on,
+.chart-period-tabs button.on,
+.chart-period-tabs button.active {
+  background: #fff !important;
+  color: #282828 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 4px rgba(40,40,40,0.12) !important;
+}
+/* 일/주/월/연 탭 */
+#chart .view-tabs,
+#chart [class*=view-tab-wrap],
+.chart-view-tabs {
+  display: flex !important;
+  gap: 0 !important;
+  border-bottom: 1.5px solid #EEE6DC !important;
+  margin-bottom: 16px !important;
+}
+#chart .view-tabs button,
+#chart [class*=view-btn],
+.chart-view-tabs button {
+  height: 34px !important;
+  padding: 0 14px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #B0A99F !important;
+  background: none !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  margin-bottom: -1.5px !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+  transition: all 0.12s !important;
+}
+#chart .view-tabs button.on,
+#chart .view-tabs button.active,
+#chart [class*=view-btn].on,
+.chart-view-tabs button.on {
+  color: #F06E2D !important;
+  font-weight: 700 !important;
+  border-bottom-color: #F06E2D !important;
+}
+
+
 /* ════════════════════════════════════════════════════════
    DAH 폰트 위계 시스템 — 전 페이지 일괄 적용 2026.07.07
    ════════════════════════════════════════════════════════
@@ -2053,15 +2695,6 @@ body, input, button, select, textarea {
   }
 }
 
-/* ━━ 전역 기본값 확정 (최우선) ━━ */
-html, body { font-size: 15px !important; }
-body {
-  font-family: 'Pretendard Variable', Pretendard, -apple-system,
-    BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif !important;
-  -webkit-font-smoothing: antialiased;
-}
-input, button, select, textarea { font-family: inherit !important; font-size: 13px !important; }
-
 /* ━━ add-overlay 최종 확정 ━━ */
 #add-overlay { display: none; position: fixed !important; inset: 0 !important; z-index: 9998 !important; background: rgba(0,0,0,0.65) !important; align-items: flex-end !important; justify-content: center !important; }
 #add-overlay.open { display: flex !important; }
@@ -2395,8 +3028,6 @@ button[onclick*="exportExcel"] {
   overflow: hidden !important;
 }
 
-
-/* ━━ KPI 숫자 강제 36px ━━ */
 
 /* KPI 퍼센트, 단위 */
 #home .kpi-sub,
