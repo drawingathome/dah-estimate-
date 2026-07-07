@@ -529,6 +529,147 @@ input::placeholder, textarea::placeholder {
   color: #B0A99F !important;
 }
 
+
+/* ════════════════════════════════════════
+   수정 3가지 — 2026.07.07
+   ① 홈 칩 28px  ② 모바일 진행현황 2열  ③ 매출탭 active
+   ════════════════════════════════════════ */
+
+/* ① 홈 진행현황 칩 — 높이 28px, 폰트 작게 */
+#home .stage-chips,
+#home .home-chips,
+#home [class*=stage-chip],
+#home [class*=chip-wrap] {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+}
+#home .stage-chips button,
+#home .home-chips button,
+#home [class*=chip-wrap] button,
+#home button[class*=chip] {
+  height: 28px !important;
+  padding: 0 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+}
+/* 칩 숫자 */
+#home .stage-chips button .num,
+#home .home-chips button .num,
+#home button[class*=chip] span:first-child {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.3px !important;
+}
+/* 칩 텍스트 */
+#home .stage-chips button .lbl,
+#home .home-chips button .lbl {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+}
+
+/* ② 모바일 진행현황 — 2열 그리드 */
+@media (max-width: 640px) {
+  #pipe .pipe-cols,
+  #pipe .kanban-cols,
+  #pipe [class*=pipe-list],
+  #pipe [class*=kanban-list] {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    padding: 12px !important;
+  }
+  #pipe .pipe-col,
+  #pipe .kanban-col,
+  #pipe [class*=pipe-col] {
+    min-height: 120px !important;
+    border-radius: 12px !important;
+  }
+  /* 완료 컬럼 — 2열에서 전체 너비 */
+  #pipe .pipe-col:last-child,
+  #pipe .kanban-col:last-child {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+/* ③ 매출 탭 active 강화 */
+/* 기간 탭 (전체/이번달/지난달/3개월/6개월) */
+#chart .period-tabs,
+#chart [class*=period-tab],
+.chart-period-tabs {
+  display: flex !important;
+  gap: 4px !important;
+  padding: 4px !important;
+  background: #F5F2EE !important;
+  border-radius: 8px !important;
+  margin-bottom: 12px !important;
+}
+#chart .period-tabs button,
+#chart [class*=period-btn],
+.chart-period-tabs button {
+  height: 30px !important;
+  padding: 0 12px !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #B0A99F !important;
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+  transition: all 0.12s !important;
+  white-space: nowrap !important;
+}
+#chart .period-tabs button.on,
+#chart .period-tabs button.active,
+#chart [class*=period-btn].on,
+.chart-period-tabs button.on,
+.chart-period-tabs button.active {
+  background: #fff !important;
+  color: #282828 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 4px rgba(40,40,40,0.12) !important;
+}
+/* 일/주/월/연 탭 */
+#chart .view-tabs,
+#chart [class*=view-tab-wrap],
+.chart-view-tabs {
+  display: flex !important;
+  gap: 0 !important;
+  border-bottom: 1.5px solid #EEE6DC !important;
+  margin-bottom: 16px !important;
+}
+#chart .view-tabs button,
+#chart [class*=view-btn],
+.chart-view-tabs button {
+  height: 34px !important;
+  padding: 0 14px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #B0A99F !important;
+  background: none !important;
+  border: none !important;
+  border-bottom: 2px solid transparent !important;
+  margin-bottom: -1.5px !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+  transition: all 0.12s !important;
+}
+#chart .view-tabs button.on,
+#chart .view-tabs button.active,
+#chart [class*=view-btn].on,
+.chart-view-tabs button.on {
+  color: #F06E2D !important;
+  font-weight: 700 !important;
+  border-bottom-color: #F06E2D !important;
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
