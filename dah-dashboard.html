@@ -3262,6 +3262,13 @@ function loginAs(who) {
   if (loginScreen) loginScreen.style.display = 'none';
   var badge = document.getElementById('current-user-badge');
   if (badge) badge.textContent = currentUser.name;
+  // 모바일 앱헤더/탭바/FAB 강제 표시
+  var _mobHd = document.getElementById('mob-app-header');
+  if (_mobHd) { _mobHd.style.cssText = 'display:flex !important; background:#282828 !important; min-height:48px !important; position:sticky !important; top:0 !important; z-index:200 !important; color:#fff !important;'; }
+  var _mobNav = document.getElementById('mob-bottom-nav');
+  if (_mobNav) { _mobNav.style.cssText = 'display:flex !important; position:fixed !important; bottom:0 !important; width:100% !important; z-index:200 !important; background:#fff !important; border-top:1px solid #EEE6DC !important;'; }
+  var _mobFab = document.querySelector('.mob-fab');
+  if (_mobFab) { _mobFab.style.display = 'flex'; }
   applyPermissions();
   loadCustomersAsync(renderHome);
 }
