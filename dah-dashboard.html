@@ -1937,6 +1937,289 @@ button[onclick*="excel"], button[onclick*="download"] {
   border-radius: 4px !important;
 }
 
+
+/* ═══════════════════════════════════════════════════
+   대기업 디자인팀 기준 수정 — 2026.07.07
+   ═══════════════════════════════════════════════════ */
+
+/* ── 1. KPI 숫자 강조 ── */
+.kpi-number, .home-kpi-num {
+  font-size: 36px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+  line-height: 1 !important;
+  letter-spacing: -1px !important;
+}
+.kpi-unit {
+  font-size: 12px !important;
+  color: #B0A99F !important;
+  font-weight: 400 !important;
+}
+.kpi-label {
+  font-size: 12px !important;
+  color: #B0A99F !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.03em !important;
+  text-transform: uppercase !important;
+}
+/* 홈 KPI 박스 내부 숫자 — 실제 렌더 기준 */
+#home .kpi-box strong,
+#home [class*=kpi] strong,
+#home [class*=number] {
+  font-size: 36px !important;
+  font-weight: 700 !important;
+  letter-spacing: -1px !important;
+}
+
+/* ── 2. 진행현황 칸반 카드 높이 ── */
+.pipe-col {
+  min-height: 240px !important;
+}
+.pipe-col-body {
+  min-height: 180px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+.pipe-col-empty {
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 120px !important;
+}
+/* 칸반 카드 — 데이터 들어왔을 때 */
+.pipe-card {
+  background: #fff !important;
+  border: 1px solid #EEE6DC !important;
+  border-radius: 12px !important;
+  padding: 14px 16px !important;
+  margin-bottom: 8px !important;
+  cursor: pointer !important;
+  transition: box-shadow 0.15s, border-color 0.15s !important;
+}
+.pipe-card:hover {
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08) !important;
+  border-color: #D4CEC8 !important;
+}
+.pipe-card-name {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #282828 !important;
+  margin-bottom: 4px !important;
+}
+.pipe-card-sub {
+  font-size: 12px !important;
+  color: #B0A99F !important;
+}
+
+/* ── 3. 고객목록 엑셀 버튼 → Secondary ── */
+button[onclick*="export"], button[onclick*="Excel"],
+button[onclick*="excel"], button[onclick*="download"] {
+  background: #FAF7F5 !important;
+  color: #282828 !important;
+  border: 1px solid #EEE6DC !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+button[onclick*="export"]:hover, button[onclick*="Excel"]:hover {
+  background: #F0ECE8 !important;
+  border-color: #D4CEC8 !important;
+}
+
+/* ── 4. 모달 타이틀 ── */
+#add-modal-title {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+  letter-spacing: -0.3px !important;
+}
+/* 모달 섹션 라벨 */
+.modal-section-label, [class*=modal-label] {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #B0A99F !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 8px !important;
+}
+/* 모달 입력창 */
+#add-overlay input, #add-overlay select, #add-overlay textarea {
+  font-size: 15px !important;
+  border-radius: 8px !important;
+  border: 1px solid #EEE6DC !important;
+  padding: 10px 14px !important;
+}
+#add-overlay input:focus, #add-overlay select:focus {
+  border-color: #F06E2D !important;
+  box-shadow: 0 0 0 3px rgba(240,110,45,0.1) !important;
+  outline: none !important;
+}
+
+/* ── 5. 견적서 하단 버튼 3종 높이 통일 ── */
+/* 고객용 출력 */
+#btn-print-customer,
+button[onclick*="printCustomer"],
+button[onclick*="openPreview"] {
+  height: 52px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  border-radius: 4px !important;
+  background: #282828 !important;
+  color: #fff !important;
+  border: none !important;
+  flex: 1 !important;
+}
+/* 저장 */
+#btn-save, button[onclick*="saveEst"] {
+  height: 52px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  border-radius: 4px !important;
+  background: #F06E2D !important;
+  color: #fff !important;
+  border: none !important;
+  flex: 1 !important;
+}
+/* 엑셀 다운로드 */
+button[onclick*="exportAll"],
+button[onclick*="exportExcel"] {
+  height: 52px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  border-radius: 4px !important;
+  background: #FAF7F5 !important;
+  color: #282828 !important;
+  border: 1px solid #EEE6DC !important;
+  flex: 1.5 !important;
+}
+
+/* ── 6. 탭 네비게이션 폰트 위계 ── */
+.tab, .tab-item {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #B0A99F !important;
+  transition: color 0.15s !important;
+}
+.tab.on, .tab-item.on, .tab.active {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+}
+
+/* ── 7. 섹션 헤더 일관성 ── */
+.section-header, [class*=section-head] {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #B0A99F !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  padding-bottom: 10px !important;
+  border-bottom: 1px solid #EEE6DC !important;
+  margin-bottom: 12px !important;
+}
+
+/* ── 8. 스테이지 칩 크기 통일 ── */
+.stage-chip, [data-stage] {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 3px 8px !important;
+  border-radius: 4px !important;
+  border: 1px solid currentColor !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* ── 9. 정렬 버튼 그룹 ── */
+.sort-btn, .filter-btn {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  height: 32px !important;
+  padding: 0 14px !important;
+  border-radius: 4px !important;
+  border: 1px solid #EEE6DC !important;
+  background: #FAF7F5 !important;
+  color: #B0A99F !important;
+  cursor: pointer !important;
+  transition: all 0.15s !important;
+}
+.sort-btn.on, .filter-btn.on, .sort-btn.active {
+  background: #282828 !important;
+  color: #fff !important;
+  border-color: #282828 !important;
+}
+
+/* ── 10. 빈 상태 텍스트 일관성 ── */
+.empty-msg, .empty-text, [class*=empty] p {
+  font-size: 13px !important;
+  color: #B0A99F !important;
+  text-align: center !important;
+  line-height: 1.7 !important;
+}
+
+/* ── 11. 설정 화면 라벨 ── */
+#settings .setting-label,
+#settings label {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+}
+#settings .setting-desc {
+  font-size: 12px !important;
+  color: #B0A99F !important;
+}
+
+/* ── 12. 홈 화면 섹션 타이틀 ── */
+.home-section-title {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #B0A99F !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+}
+
+/* ── 13. 헤더 버튼 크기 통일 ── */
+.hd-btn {
+  height: 32px !important;
+  padding: 0 14px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  border-radius: 4px !important;
+}
+.hd-btn-new {
+  background: #F06E2D !important;
+  color: #fff !important;
+  border: none !important;
+}
+.hd-btn-sub {
+  background: transparent !important;
+  color: rgba(255,255,255,0.75) !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+}
+.hd-btn-sub:hover { background: rgba(255,255,255,0.1) !important; }
+
+/* ── 14. 매출 화면 ── */
+#chart .chart-period-btn {
+  font-size: 12px !important;
+  height: 30px !important;
+  padding: 0 12px !important;
+  border-radius: 4px !important;
+}
+#chart .summary-row {
+  font-size: 13px !important;
+  border-bottom: 1px solid #EEE6DC !important;
+  padding: 12px 0 !important;
+}
+#chart .summary-label { color: #B0A99F !important; }
+#chart .summary-value { font-weight: 700 !important; color: #282828 !important; }
+
+/* ── 15. 전체 카드 일관성 ── */
+.card, .section-card {
+  background: #fff !important;
+  border-radius: 12px !important;
+  border: 1px solid #EEE6DC !important;
+  overflow: hidden !important;
+}
+
 </style>
 
   <!-- PWA -->
