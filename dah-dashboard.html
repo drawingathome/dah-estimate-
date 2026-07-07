@@ -670,6 +670,234 @@ input::placeholder, textarea::placeholder {
   border-bottom-color: #F06E2D !important;
 }
 
+
+/* ════════════════════════════════════════════════════════
+   DAH 폰트 위계 시스템 — 전 페이지 일괄 적용 2026.07.07
+   ════════════════════════════════════════════════════════
+   페이지 타이틀  22px / 700 / #282828
+   KPI 숫자      36px / 700 / #282828
+   KPI 단위      13px / 400 / #B0A99F
+   KPI 라벨      11px / 700 / #B0A99F (uppercase)
+   섹션 타이틀   12px / 700 / #B0A99F (uppercase)
+   본문          15px / 400 / #282828
+   서브텍스트    12px / 400 / #B0A99F
+   버튼          13px / 700
+   탭 라벨       12px / 500(off) 700(on)
+   날짜/보조     11px / 400 / #B0A99F
+   ════════════════════════════════════════════════════════ */
+
+/* ── 전역 기본 ── */
+html { font-size: 15px; }
+body {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #282828;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+* { -webkit-font-smoothing: antialiased; }
+
+/* ── KPI 숫자 36px ── */
+.kpi-num {
+  font-size: 36px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+  line-height: 1 !important;
+  letter-spacing: -1px !important;
+}
+.kpi-num em, .kpi-unit, .kpi-num-unit {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: #B0A99F !important;
+  font-style: normal !important;
+  letter-spacing: 0 !important;
+}
+
+/* ── KPI 라벨 11px ── */
+.kpi-label {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #B0A99F !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+}
+
+/* ── 섹션 타이틀 12px ── */
+.section-title, .home-section-title,
+.section-header, .section-hd {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #B0A99F !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+}
+
+/* ── 버튼 13px ── */
+button {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  font-family: inherit !important;
+  cursor: pointer !important;
+}
+/* 탭 버튼 예외 */
+.tab, .tab-item, .tabs button,
+.est-tab, .est-status-btn {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+.tab.on, .tab.active, .tab-item.on,
+.tabs button.on, .tabs button.active,
+.est-tab.on, .est-status-btn.on {
+  font-weight: 700 !important;
+}
+
+/* ── 입력창 15px ── */
+input, select, textarea {
+  font-size: 15px !important;
+  font-family: inherit !important;
+}
+input::placeholder, textarea::placeholder {
+  font-size: 13px !important;
+  color: #C8C2BA !important;
+  font-weight: 400 !important;
+}
+
+/* ── 날짜/보조 11px ── */
+.date-label, .home-date {
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  color: #B0A99F !important;
+}
+
+/* ── 서브텍스트 12px ── */
+.sub-text, .empty-desc, .desc-text,
+.kpi-sub-pct, .kpi-sub {
+  font-size: 12px !important;
+  color: #B0A99F !important;
+}
+
+/* ── 홈 칩 28px 높이 ── */
+#home .stage-chips button,
+#home .home-chips button,
+#home button[class*=chip] {
+  height: 28px !important;
+  padding: 0 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+}
+
+/* ── 칸반 스테이지 12px ── */
+.pipe-col-title, .kanban-col-title {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+.pipe-col-count, .kanban-col-count {
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: #B0A99F !important;
+}
+
+/* ── 카드 본문 ── */
+.pipe-card-name { font-size: 15px !important; font-weight: 600 !important; }
+.pipe-card-sub  { font-size: 12px !important; font-weight: 400 !important; color: #B0A99F !important; }
+
+/* ── 모바일 진행현황 2열 ── */
+@media (max-width: 640px) {
+  #pipe .pipe-cols,
+  #pipe .kanban-cols {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    padding: 12px !important;
+  }
+  #pipe .pipe-col:last-child,
+  #pipe .kanban-col:last-child {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+/* ── 매출 탭 active 강화 ── */
+#chart .period-tabs,
+.chart-period-tabs {
+  display: flex !important;
+  gap: 4px !important;
+  padding: 4px !important;
+  background: #F5F2EE !important;
+  border-radius: 8px !important;
+  margin-bottom: 12px !important;
+}
+#chart .period-tabs button,
+.chart-period-tabs button {
+  height: 30px !important;
+  padding: 0 12px !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #B0A99F !important;
+  background: transparent !important;
+  border: none !important;
+  transition: all 0.12s !important;
+}
+#chart .period-tabs button.on,
+#chart .period-tabs button.active,
+.chart-period-tabs button.on {
+  background: #fff !important;
+  color: #282828 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 4px rgba(40,40,40,0.12) !important;
+}
+#chart .view-tabs button,
+.chart-view-tabs button {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #B0A99F !important;
+  border-bottom: 2px solid transparent !important;
+  transition: all 0.12s !important;
+}
+#chart .view-tabs button.on,
+.chart-view-tabs button.on {
+  color: #F06E2D !important;
+  font-weight: 700 !important;
+  border-bottom-color: #F06E2D !important;
+}
+
+/* ── 견적서 ── */
+.est-table th {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #B0A99F !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+}
+.est-table td {
+  font-size: 13px !important;
+}
+.total-amount {
+  font-size: 36px !important;
+  font-weight: 700 !important;
+  letter-spacing: -1px !important;
+}
+.total-label {
+  font-size: 10px !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+}
+
+/* ── 설정 ── */
+#settings .field-label, #settings label {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+}
+#settings .field-desc {
+  font-size: 11px !important;
+  color: #B0A99F !important;
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
