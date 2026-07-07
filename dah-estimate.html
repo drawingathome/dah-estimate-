@@ -1406,6 +1406,69 @@ button:not(.est-status-btn):not(.cust-type-btn) {
 /* 탭 버튼은 제외 */
 .est-status-btn { border-radius: 0 !important; }
 
+
+/* ━━ 견적서 검색 버튼 Secondary ━━ */
+button[onclick*="search"][onclick*="addr"],
+button[onclick*="addrSearch"],
+.addr-search-btn {
+  background: #FAF7F5 !important;
+  color: #282828 !important;
+  border: 1px solid #EEE6DC !important;
+  border-radius: 4px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+button[onclick*="search"][onclick*="addr"]:hover {
+  background: #F0ECE8 !important;
+}
+
+/* ━━ 견적서 테이블 헤더 통일 ━━ */
+#curtain-head th,
+#blind-head th,
+#svc-head th {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #B0A99F !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  padding: 10px 8px !important;
+  border-bottom: 2px solid #EEE6DC !important;
+}
+
+/* ━━ 견적서 행 hover ━━ */
+#curtain-body tr:hover td,
+#blind-body tr:hover td,
+#svc-body tr:hover td {
+  background: #FFF3EE !important;
+  transition: background 0.1s !important;
+}
+
+/* ━━ 견적서 섹션 구분선 강화 ━━ */
+.section-divider {
+  border: none !important;
+  border-top: 1px solid #EEE6DC !important;
+  margin: 20px 0 !important;
+}
+
+/* ━━ 견적서 합계 영역 ━━ */
+.total-section {
+  background: #282828 !important;
+  border-radius: 12px !important;
+  padding: 20px 24px !important;
+}
+.total-amount {
+  font-size: 36px !important;
+  font-weight: 700 !important;
+  color: #fff !important;
+  letter-spacing: -1px !important;
+}
+.total-label {
+  font-size: 10px !important;
+  color: rgba(255,255,255,0.5) !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase !important;
+}
+
 </style>
 </head>
 <body>
