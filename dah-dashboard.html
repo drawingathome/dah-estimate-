@@ -1562,6 +1562,126 @@ input::placeholder, textarea::placeholder {
   }
 }
 
+
+/* ━━ DAH 디자인 핵심 수정 ━━ */
+
+/* 칸반 레이아웃 — PC: 5열 가로, 모바일: 2열 그리드 */
+.kanban-wrap {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  padding: 12px 20px 20px;
+}
+.kanban-col {
+  background: #fff;
+  border: 1px solid #EEE6DC;
+  border-radius: 12px;
+  overflow: hidden;
+  min-height: 200px;
+}
+.kanban-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #EEE6DC;
+  background: #FAF7F5;
+}
+.kanban-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.kanban-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #282828;
+  flex: 1;
+}
+.kanban-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: #B0A99F;
+  background: #F5F2EE;
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+.kanban-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  font-size: 12px;
+  color: #C8C2BA;
+  font-weight: 500;
+}
+.kanban-item {
+  padding: 12px 14px;
+  border-bottom: 1px solid #F5F2EE;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.kanban-item:hover { background: #FAF7F5; }
+.kanban-item:last-child { border-bottom: none; }
+
+/* 모바일 칸반 — 2열 */
+@media (max-width: 640px) {
+  .kanban-wrap {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 12px;
+  }
+  .kanban-col:last-child {
+    grid-column: 1 / -1;
+  }
+  .kanban-empty { min-height: 80px; }
+}
+
+/* 홈 섹션 여백 */
+#home .section-block {
+  background: #fff;
+  border: 1px solid #EEE6DC;
+  border-radius: 12px;
+  margin: 0 20px 12px;
+  overflow: hidden;
+}
+@media (max-width: 640px) {
+  #home .section-block { margin: 0 12px 10px; }
+}
+
+/* 진행현황 칩 — 홈 */
+#home .stage-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 20px 16px;
+}
+#home .stage-chips button {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  font-family: inherit;
+}
+@media (max-width: 640px) {
+  #home .stage-chips { padding: 0 12px 14px; }
+}
+
+/* 섹션 타이틀 */
+.section-title-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #B0A99F;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
