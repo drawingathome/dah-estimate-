@@ -40,6 +40,11 @@
   --blue:     #282828;
   --terra-dark:#D4601F;
   --kakao-dark:#F5D800;
+
+  --r-modal:  16px;
+  --stage-orange: #F06E2D;
+  --stage-sub:    #B0A99F;
+  --stage-done:   #EEE6DC;
 }
 
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
@@ -1825,6 +1830,13 @@ button[onclick*="excel"],
 button[class*="excel"] {
   border-radius: 4px !important;
 }
+
+
+/* ── 누락 토큰 보완 ── */
+#chart *, #settings * { min-font-size: 10px; }
+#chart [style*="font-size:9px"],
+#settings [style*="font-size:9px"] { font-size: 10px !important; }
+.kpi-bar-label, .kpi-sub-text { font-size: 10px !important; }
 
 </style>
 
