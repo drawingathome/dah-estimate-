@@ -1425,6 +1425,45 @@ button[onclick="exportExcel()"] {
   #home .section-hd { padding: 12px 12px 10px; }
 }
 
+
+/* ── 태블릿 반응형 (641px ~ 1024px) ── */
+@media (min-width: 641px) and (max-width: 1024px) {
+  /* 헤더 */
+  .hd { padding: 0 16px; height: 48px; }
+  .hd-logo { font-size: 13px; }
+  .hd-btn-new { height: 32px; padding: 0 12px; font-size: 12px; }
+
+  /* 탭 */
+  .tabs { gap: 0; }
+  .tab { padding: 8px 12px; font-size: 11px; }
+
+  /* 홈 KPI */
+  #home .kpi-grid { grid-template-columns: repeat(3,1fr); }
+  #home .kpi-card { padding: 14px 16px; }
+  .kpi-num { font-size: 28px !important; }
+
+  /* 홈 칩 */
+  #home .stage-chips { padding: 12px 16px 14px; gap: 5px; }
+  #home .stage-chips button { height: 28px; padding: 0 9px; font-size: 11px; }
+
+  /* 칸반 — 태블릿에서 3열 */
+  .kanban-wrap {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 10px !important;
+    padding: 10px 16px 16px !important;
+  }
+  .kanban-col:last-child,
+  .kanban-col:nth-last-child(2) {
+    grid-column: auto !important;
+  }
+
+  /* 고객목록 */
+  #search .search-bar { font-size: 13px; }
+
+  /* 설정 */
+  #settings .wrap { padding: 16px; }
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
