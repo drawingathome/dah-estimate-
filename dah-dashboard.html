@@ -1781,6 +1781,60 @@ button[onclick*="excel"], button[onclick*="download"],
   height: 32px !important;
 }
 
+
+/* ④ 매출 탭 — 정확한 클래스명으로 */
+.date-filter-btn {
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #B0A99F;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+}
+.date-filter-btn.on, .date-filter-btn.active {
+  background: #282828 !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  border-radius: 4px !important;
+}
+/* 일/주/월/연 탭 */
+.chart-tab {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #B0A99F;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+}
+.chart-tab.on, .chart-tab.active {
+  color: #F06E2D !important;
+  font-weight: 700 !important;
+  border-bottom-color: #F06E2D !important;
+}
+
+/* ⑤ 엑셀 버튼 — onclick="exportExcel()" */
+button[onclick="exportExcel()"] {
+  background: #FAF7F5 !important;
+  color: #282828 !important;
+  border: 1px solid #EEE6DC !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  height: 32px !important;
+  padding: 0 14px !important;
+  width: auto !important;
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
