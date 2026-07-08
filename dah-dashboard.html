@@ -1579,6 +1579,38 @@ button[onclick="exportExcel()"] {
   font-family: inherit !important;
 }
 
+
+/* ── 대기업 디자인팀 최종 3가지 수정 ── */
+
+/* ① PC 홈 섹션 헤더 배경 — 아이보리2로 구분 */
+#home .section-hd,
+#home [style*="padding:14px 20px 10px"][style*="display:flex"],
+#home [style*="padding:14px 20px 10px"] {
+  background: #F5F2EE !important;
+  border-bottom: 1px solid #EEE6DC !important;
+}
+
+/* ② 모달 오버레이 dim — 배경 어둡게 */
+#add-overlay,
+.overlay {
+  background: rgba(0,0,0,0.5) !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9999 !important;
+  display: none;
+  align-items: flex-end !important;
+  justify-content: center !important;
+}
+#add-overlay.open,
+.overlay.open {
+  display: flex !important;
+}
+
+/* ③ 매출 차트 Y축 레이블 스타일 */
+#chart canvas {
+  max-width: 100%;
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
