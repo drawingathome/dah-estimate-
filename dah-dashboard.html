@@ -1476,6 +1476,41 @@ button[onclick="exportExcel()"] {
   }
 }
 
+
+/* ── 수정 ① 모바일 칩 줄바꿈 + ② 빈섹션 높이 ── */
+
+/* ① 모바일 칩 — 6개가 한 줄에 들어오도록 축소 */
+@media (max-width: 640px) {
+  #home .stage-chips {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding-bottom: 4px !important;
+    gap: 5px !important;
+  }
+  #home .stage-chips::-webkit-scrollbar { display: none; }
+  #home .stage-chips button {
+    flex-shrink: 0 !important;
+    height: 28px !important;
+    padding: 0 8px !important;
+    font-size: 11px !important;
+    white-space: nowrap !important;
+  }
+}
+
+/* ② PC 빈 섹션 (처리필요 / 오늘일정) — 최소 높이 */
+#home .section-block {
+  min-height: 80px !important;
+}
+.empty-inline {
+  padding: 28px 16px !important;
+  font-size: 12px !important;
+  color: var(--sub) !important;
+  text-align: center !important;
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
