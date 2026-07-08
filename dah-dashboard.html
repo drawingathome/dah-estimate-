@@ -1640,6 +1640,18 @@ button[onclick="exportExcel()"] {
   #mob-app-header { display: none !important; }
 }
 
+
+/* PC에서 모바일 헤더 완전 숨김 — 최우선 */
+@media screen and (min-width: 641px) {
+  #mob-app-header,
+  div#mob-app-header {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
