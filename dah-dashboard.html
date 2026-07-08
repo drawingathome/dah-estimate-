@@ -4651,11 +4651,7 @@ function loginAs(who) {
   // 모바일 앱헤더/탭바/FAB — 모바일에서만 표시
   var _mobHd = document.getElementById('mob-app-header');
   if (_mobHd) {
-    if (window.innerWidth <= 640) {
-      _mobHd.removeAttribute('style');
-    } else {
-      _mobHd.style.display = 'none';
-    }
+    _mobHd.style.display = (window.innerWidth <= 640) ? 'flex' : 'none';
   }
   var _mobNav = document.getElementById('mob-bottom-nav');
   if (_mobNav) { _mobNav.style.cssText = 'display:flex !important; position:fixed !important; bottom:0 !important; width:100% !important; z-index:200 !important; background:#fff !important; border-top:1px solid #EEE6DC !important;'; }
