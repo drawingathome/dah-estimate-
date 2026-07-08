@@ -2992,7 +2992,15 @@ button { cursor: pointer; }
   border-radius: 12px;
 }
 
-</style>
+
+@media screen and (min-width: 641px) {
+  #mob-app-header,
+  div#mob-app-header {
+    display: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+}</style>
 
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json">
