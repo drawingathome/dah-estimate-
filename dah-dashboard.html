@@ -1464,6 +1464,18 @@ button[onclick="exportExcel()"] {
   #settings .wrap { padding: 16px; }
 }
 
+
+/* 태블릿 KPI 크기 — 최우선 */
+@media (min-width: 641px) and (max-width: 1024px) {
+  body .kpi-num,
+  #home .kpi-num,
+  div.kpi-num {
+    font-size: 26px !important;
+    letter-spacing: -0.5px !important;
+    line-height: 1 !important;
+  }
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
