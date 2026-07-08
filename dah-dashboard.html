@@ -1542,6 +1542,43 @@ button[onclick="exportExcel()"] {
   font-weight: 500;
 }
 
+
+/* ── 개선점 수정 ── */
+
+/* ① 매출 일/주/월/연 탭 언더라인 */
+.chart-tab {
+  border-bottom: 2px solid transparent !important;
+  padding-bottom: 0 !important;
+}
+.chart-tab.on, .chart-tab.active {
+  border-bottom: 2px solid #F06E2D !important;
+  color: #F06E2D !important;
+  font-weight: 700 !important;
+}
+
+/* ② 모바일 정렬버튼 한줄 가로스크롤 */
+.sort-wrap {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  gap: 6px !important;
+  padding-bottom: 2px !important;
+}
+.sort-wrap::-webkit-scrollbar { display: none; }
+.sort-btn {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  height: 30px !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
