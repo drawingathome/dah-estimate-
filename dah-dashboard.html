@@ -1511,6 +1511,37 @@ button[onclick="exportExcel()"] {
   text-align: center !important;
 }
 
+
+/* ── 로딩 오버레이 ── */
+.loading-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 8000;
+  background: rgba(250,247,245,0.85);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+}
+.loading-overlay.show {
+  display: flex;
+}
+.loading-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #EEE6DC;
+  border-top-color: #F06E2D;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-size: 13px;
+  color: #B0A99F;
+  font-weight: 500;
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -4708,6 +4739,7 @@ function loadCustomers() {
 
 function loadCustomersAsync(callback) {
   sbXHR('GET', 'customers?select=*&order=created_at.desc', null, function(err, data) {
+    hideLoading();
     if (err) { try { _customerCache = JSON.parse(localStorage.getItem('dah_customers') || '[]'); } catch(e) {} }
     else { _customerCache = (data || []).map(dbRowToCustomer); try { localStorage.setItem('dah_customers', JSON.stringify(_customerCache)); } catch(e) {} }
     if (callback) callback(_customerCache);
