@@ -2,6 +2,8 @@
 <!-- DAH-DASHBOARD-VERSION-20260627-INTEGRATED -->
 <html lang="ko">
 <head>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+
 <style>
 /* ── Pretendard 직접 내장 (CDN 불필요) ── */
 @font-face {
@@ -1352,6 +1354,76 @@ button[onclick="exportExcel()"] {
   }
 }
 
+
+
+/* ── 빈 상태 화면 확정 ── */
+.empty-inline {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--sub);
+  line-height: 1.7;
+}
+.kanban-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  gap: 6px;
+  font-size: 12px;
+  color: #C8C2BA;
+  font-weight: 500;
+}
+.empty-state-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  gap: 8px;
+  text-align: center;
+}
+.empty-state-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4px;
+  font-size: 20px;
+}
+.empty-state-title {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: var(--dark) !important;
+  letter-spacing: -0.3px;
+}
+.empty-state-desc {
+  font-size: 12px !important;
+  color: var(--sub) !important;
+  line-height: 1.7;
+}
+
+
+/* ── 여백 체계 (8px 기반) ── */
+#home .wrap > * { margin-bottom: 0; }
+#home .kpi-bar  { padding: 12px 20px 14px; }
+#home .kpi-grid { padding: 0 20px; margin-bottom: 0; gap: 1px; }
+#home .kpi-card { padding: 16px 20px; }
+#home .stage-chips { padding: 14px 20px 16px; gap: 6px; }
+#home .section-block { margin: 0 20px 12px; background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+#home .section-hd { padding: 14px 20px 12px; font-size:12px; font-weight:700; color:var(--sub); letter-spacing:0.05em; text-transform:uppercase; border-bottom:1px solid var(--border); }
+@media (max-width:640px) {
+  #home .kpi-bar  { padding: 10px 12px 12px; }
+  #home .kpi-grid { padding: 0 12px; }
+  #home .kpi-card { padding: 14px 12px; }
+  #home .stage-chips { padding: 12px 12px 14px; }
+  #home .section-block { margin: 0 12px 10px; }
+  #home .section-hd { padding: 12px 12px 10px; }
+}
 
 </style>
 <meta charset="UTF-8">
@@ -4914,7 +4986,7 @@ function renderHome() {
           needAction.length > 0 ? '<span style="font-size:12px;font-weight:700;color:var(--terra);background:var(--bg-org);padding:2px 8px;border-radius:10px">' + needAction.length + '건</span>' : '',
         '</div>',
         needAction.length === 0
-          ? '<div style="padding:20px;text-align:center;font-size:11px;color:var(--sub)">처리 필요한 항목이 없습니다 ✅</div>'
+          ? '<div class="empty-inline">처리 필요한 항목이 없습니다 ✅</div>'
           : needAction.slice(0,5).map(function(c) {
               var stageColor = (c.stage === '계약금' || c.stage === '실측') ? 'var(--terra)' : 'var(--dark)';
               return '<div data-cname="' + (c.clientName||'').replace(/"/g,'') + '" onclick="openDetail(this.getAttribute(\'data-cname\'))" ' +
@@ -4935,7 +5007,7 @@ function renderHome() {
           '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">오늘/내일 일정</span>',
         '</div>',
         (todaySchedule.length === 0 && tomorrowSchedule.length === 0)
-          ? '<div style="padding:20px;text-align:center;font-size:11px;color:var(--sub)">예정된 일정이 없습니다</div>'
+          ? '<div class="empty-inline">예정된 일정이 없습니다</div>'
           : [].concat(
               todaySchedule.map(function(c) {
                 var type = c.measureDate === todayStr ? '실측' : c.installDate === todayStr ? '시공' : '방문';
