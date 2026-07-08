@@ -24,215 +24,8 @@ html, body, input, button, select, textarea {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ━━ 폰트 렌더링 선명하게 ━━ */
-* { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-.login-screen * { text-rendering: optimizeLegibility; }
 
 
-/* ══ 로그인 화면 — Drawing at HOME ══ */
-.login-screen {
-  min-height: 100vh;
-  background: #FAF7F5;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 24px;
-  position: fixed;
-  inset: 0;
-  z-index: 9000;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-.login-logo-wrap {
-  text-align: center;
-  margin-bottom: 32px;
-}
-.login-logo-wrap img {
-  height: 34px;
-  width: auto;
-  display: block;
-  margin: 0 auto 10px;
-}
-.login-brand-sub {
-  font-size: 10px;
-  color: #B0A99F;
-  letter-spacing: 0.22em;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-.login-card {
-  background: #fff;
-  border-radius: 20px;
-  border: 1px solid #EEE6DC;
-  padding: 32px 28px 28px;
-  width: 100%;
-  max-width: 360px;
-  box-shadow: 0 2px 4px rgba(40,40,40,0.04), 0 12px 40px rgba(40,40,40,0.10);
-}
-.login-card-title {
-  font-size: 22px;
-  font-weight: 700;
-  color: #282828;
-  letter-spacing: -0.5px;
-  margin-bottom: 6px;
-}
-.login-card-sub {
-  font-size: 13px;
-  color: #B0A99F;
-  margin-bottom: 28px;
-  line-height: 1.6;
-}
-.login-master-btn {
-  width: 100%;
-  height: 52px;
-  background: #282828;
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: inherit;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: background 0.15s, transform 0.1s;
-  letter-spacing: -0.2px;
-  -webkit-font-smoothing: antialiased;
-}
-.login-master-btn:hover { background: #1A1A1A; transform: translateY(-1px); }
-.login-master-btn:active { transform: translateY(0); }
-.master-pw-area {
-  margin-top: 10px;
-}
-.master-pw-area input {
-  width: 100%;
-  height: 48px;
-  border: 1.5px solid #EEE6DC;
-  border-radius: 10px;
-  padding: 0 16px;
-  font-size: 17px;
-  font-family: inherit;
-  color: #282828;
-  background: #FAF7F5;
-  outline: none;
-  margin-bottom: 8px;
-  letter-spacing: 4px;
-  box-sizing: border-box;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  -webkit-font-smoothing: antialiased;
-}
-.master-pw-area input:focus {
-  border-color: #F06E2D;
-  background: #fff;
-  box-shadow: 0 0 0 3px rgba(240,110,45,0.10);
-}
-.master-pw-area input::placeholder {
-  letter-spacing: 0;
-  color: #C8C2BA;
-  font-size: 13px;
-}
-.login-confirm-btn {
-  width: 100%;
-  height: 48px;
-  background: #F06E2D;
-  color: #fff;
-  border: none;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.15s;
-  -webkit-font-smoothing: antialiased;
-}
-.login-confirm-btn:hover { background: #D4601F; }
-.login-pw-error {
-  font-size: 12px;
-  color: #C0392B;
-  margin-top: 8px;
-  text-align: center;
-  display: none;
-}
-.login-divider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin: 24px 0 20px;
-}
-.login-divider::before, .login-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #EEE6DC;
-}
-.login-divider span {
-  font-size: 11px;
-  color: #B0A99F;
-  font-weight: 600;
-  white-space: nowrap;
-  letter-spacing: 0.04em;
-}
-.staff-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.staff-grid-btn {
-  height: 52px;
-  background: #FAF7F5;
-  border: 1.5px solid #EEE6DC;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #282828;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.15s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  -webkit-font-smoothing: antialiased;
-}
-.staff-grid-btn:hover {
-  border-color: #F06E2D;
-  color: #F06E2D;
-  background: #FFF3EE;
-  transform: translateY(-1px);
-}
-.staff-avatar-sm {
-  width: 26px;
-  height: 26px;
-  background: #EEE6DC;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  color: #B0A99F;
-  flex-shrink: 0;
-  transition: all 0.15s;
-}
-.staff-grid-btn:hover .staff-avatar-sm {
-  background: #FFF3EE;
-  color: #F06E2D;
-}
-.login-footer {
-  margin-top: 20px;
-  font-size: 11px;
-  color: #C8C2BA;
-  text-align: center;
-  letter-spacing: 0.03em;
-}
-
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   Priority 1 수정 — 2026.07.07
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 
 /* ① 홈 진행현황 칩 — 숫자/텍스트 위계 */
 .home-chips .chip,
@@ -371,22 +164,6 @@ html, body, input, button, select, textarea {
 }
 
 
-/* ════════════════════════════════════════════════
-   DAH 폰트 위계 시스템 확정 2026.07.07
-   ════════════════════════════════════════════════
-
-   페이지 타이틀    22px / 700 / #282828
-   KPI 숫자        36px / 700 / #282828
-   KPI 단위        13px / 400 / #B0A99F
-   KPI 라벨        11px / 700 / #B0A99F
-   섹션 타이틀      12px / 700 / #B0A99F (대문자)
-   본문 텍스트      15px / 400 / #282828
-   서브 텍스트      12px / 400 / #B0A99F
-   버튼 텍스트      13px / 700
-   탭 라벨          12px / 500(off) 700(on)
-   칸반 스테이지    12px / 700
-   날짜/보조        11px / 400 / #B0A99F
-   ════════════════════════════════════════════════ */
 
 /* ① 페이지 타이틀 (홈 7월 목표 텍스트) */
 .home-title, .page-title-area h2,
@@ -530,10 +307,6 @@ input::placeholder, textarea::placeholder {
 }
 
 
-/* ════════════════════════════════════════
-   수정 3가지 — 2026.07.07
-   ① 홈 칩 28px  ② 모바일 진행현황 2열  ③ 매출탭 active
-   ════════════════════════════════════════ */
 
 /* ① 홈 진행현황 칩 — 높이 28px, 폰트 작게 */
 #home .stage-chips,
@@ -1340,29 +1113,6 @@ input::placeholder, textarea::placeholder {
 }
 
 
-/* ── 모바일 폰트 조정 (390px) ── */
-@media (max-width: 640px) {
-  /* 페이지 타이틀: 36px → 22px */
-  #home [style*="font-size:36px;font-weight:700;color:var(--dark)"] {
-    font-size: 22px !important;
-    line-height: 1.3 !important;
-  }
-  /* KPI 숫자: 36px → 28px */
-  #home [style*="font-size:36px;font-weight:700;color:var(--dark);line-height:1"] {
-    font-size: 28px !important;
-  }
-  /* 진행현황 칩: 세로 나열 → 가로 줄바꿈 */
-  #home .stage-chips,
-  #home .home-chips,
-  #home [class*="chip-wrap"] {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 6px !important;
-  }
-}
-
-
-/* ━━ DAH 디자인 핵심 수정 ━━ */
 
 /* 칸반 레이아웃 — PC: 5열 가로, 모바일: 2열 그리드 */
 .kanban-wrap {
@@ -1482,21 +1232,7 @@ input::placeholder, textarea::placeholder {
 }
 
 
-/* ━━ DAH 디자인 수정 ━━ */
 
-/* ① PC 홈 섹션 카드 */
-.home-card {
-  background: #fff;
-  border: 1px solid #EEE6DC;
-  border-radius: 12px;
-  margin: 0 20px 12px;
-  overflow: hidden;
-}
-#home .section-row {
-  padding: 14px 20px;
-  border-bottom: 1px solid #EEE6DC;
-}
-#home .section-row:last-child { border-bottom: none; }
 
 /* ② 모바일 홈 타이틀 크기 */
 @media (max-width: 640px) {
@@ -1537,19 +1273,7 @@ input::placeholder, textarea::placeholder {
   font-style: normal !important;
 }
 
-/* ④ 매출 탭 active 강화 */
-.chart-tabs { display: flex; gap: 4px; background: #F5F2EE; padding: 4px; border-radius: 8px; }
-.chart-tab-btn {
-  flex: 1; height: 30px; border: none; border-radius: 6px;
-  font-size: 12px; font-weight: 600; color: #B0A99F;
-  background: transparent; cursor: pointer; font-family: inherit;
-  transition: all 0.12s;
-}
-.chart-tab-btn.on, .chart-tab-btn.active {
-  background: #fff !important; color: #282828 !important;
-  font-weight: 700 !important;
-  box-shadow: 0 1px 4px rgba(40,40,40,0.12) !important;
-}
+
 /* 기간 탭 (전체/이번달 등) */
 #chart [class*=period] button,
 #chart [class*=tab] button {
@@ -1635,25 +1359,7 @@ button[onclick="exportExcel()"] {
 }
 
 
-/* mob-app-header PC에서 완전히 숨기기 */
-@media (min-width: 641px) {
-  #mob-app-header { display: none !important; }
-}
 
-
-/* PC에서 모바일 헤더 완전 숨김 — 최우선 */
-@media screen and (min-width: 641px) {
-  #mob-app-header,
-  div#mob-app-header {
-    display: none !important;
-    visibility: hidden !important;
-    height: 0 !important;
-    overflow: hidden !important;
-  }
-}
-
-
-/* ━━ 수정: 소형 폰트 + 칸반 가변 ━━ */
 
 /* 고객목록 체크박스 라벨 + 카운트 11px */
 #search [style*="font-size:10px"],
