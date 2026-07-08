@@ -1652,6 +1652,46 @@ button[onclick="exportExcel()"] {
   }
 }
 
+
+/* ━━ 수정: 소형 폰트 + 칸반 가변 ━━ */
+
+/* 고객목록 체크박스 라벨 + 카운트 11px */
+#search [style*="font-size:10px"],
+#search label,
+#search .count-label {
+  font-size: 11px !important;
+}
+
+/* 매출 차트 축 숫자 11px */
+#chart canvas ~ * [style*="font-size:9px"],
+#chart canvas ~ * [style*="font-size:10px"],
+#chart [style*="font-size:9px"],
+#chart [style*="font-size:10px"],
+#chart text,
+#chart .chart-label,
+#chart .axis-label {
+  font-size: 11px !important;
+}
+/* chart.js 캔버스 폰트 — CSS로 직접 불가, JS로 처리 필요 */
+
+/* 칸반 열 가변 — 1fr */
+.kanban-wrap {
+  display: grid !important;
+  grid-template-columns: repeat(5, 1fr) !important;
+  gap: 12px !important;
+  padding: 12px 20px 20px !important;
+}
+@media (max-width: 640px) {
+  .kanban-wrap {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    padding: 12px !important;
+  }
+  .kanban-col:last-child {
+    grid-column: 1 / -1 !important;
+  }
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
