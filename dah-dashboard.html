@@ -1634,6 +1634,12 @@ button[onclick="exportExcel()"] {
   width: auto !important;
 }
 
+
+/* mob-app-header PC에서 완전히 숨기기 */
+@media (min-width: 641px) {
+  #mob-app-header { display: none !important; }
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -4642,9 +4648,15 @@ function loginAs(who) {
   if (loginScreen) loginScreen.style.display = 'none';
   var badge = document.getElementById('current-user-badge');
   if (badge) badge.textContent = currentUser.name;
-  // 모바일 앱헤더/탭바/FAB 강제 표시
+  // 모바일 앱헤더/탭바/FAB — 모바일에서만 표시
   var _mobHd = document.getElementById('mob-app-header');
-    if (_mobHd) _mobHd.removeAttribute('style');  // 인라인 스타일 초기화
+  if (_mobHd) {
+    if (window.innerWidth <= 640) {
+      _mobHd.removeAttribute('style');
+    } else {
+      _mobHd.style.display = 'none';
+    }
+  }
   var _mobNav = document.getElementById('mob-bottom-nav');
   if (_mobNav) { _mobNav.style.cssText = 'display:flex !important; position:fixed !important; bottom:0 !important; width:100% !important; z-index:200 !important; background:#fff !important; border-top:1px solid #EEE6DC !important;'; }
   var _mobFab = document.querySelector('.mob-fab');
