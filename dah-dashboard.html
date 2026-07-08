@@ -1682,6 +1682,105 @@ input::placeholder, textarea::placeholder {
   text-transform: uppercase;
 }
 
+
+/* ━━ DAH 디자인 수정 ━━ */
+
+/* ① PC 홈 섹션 카드 */
+.home-card {
+  background: #fff;
+  border: 1px solid #EEE6DC;
+  border-radius: 12px;
+  margin: 0 20px 12px;
+  overflow: hidden;
+}
+#home .section-row {
+  padding: 14px 20px;
+  border-bottom: 1px solid #EEE6DC;
+}
+#home .section-row:last-child { border-bottom: none; }
+
+/* ② 모바일 홈 타이틀 크기 */
+@media (max-width: 640px) {
+  #home [style*="font-size:36px;font-weight:700;color:var(--dark)"] {
+    font-size: 18px !important;
+    line-height: 1.35 !important;
+  }
+  #home [style*="font-size:36px;font-weight:700;color:var(--dark);line-height:1"] {
+    font-size: 26px !important;
+  }
+}
+
+/* ③ PC KPI 위계 강화 */
+.kpi-card {
+  padding: 16px 20px 14px !important;
+  position: relative;
+}
+.kpi-label {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #B0A99F !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  margin-bottom: 6px !important;
+  display: block !important;
+}
+.kpi-num {
+  font-size: 36px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+  line-height: 1 !important;
+  letter-spacing: -1px !important;
+}
+.kpi-num em, .kpi-num-unit {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: #B0A99F !important;
+  font-style: normal !important;
+}
+
+/* ④ 매출 탭 active 강화 */
+.chart-tabs { display: flex; gap: 4px; background: #F5F2EE; padding: 4px; border-radius: 8px; }
+.chart-tab-btn {
+  flex: 1; height: 30px; border: none; border-radius: 6px;
+  font-size: 12px; font-weight: 600; color: #B0A99F;
+  background: transparent; cursor: pointer; font-family: inherit;
+  transition: all 0.12s;
+}
+.chart-tab-btn.on, .chart-tab-btn.active {
+  background: #fff !important; color: #282828 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 4px rgba(40,40,40,0.12) !important;
+}
+/* 기간 탭 (전체/이번달 등) */
+#chart [class*=period] button,
+#chart [class*=tab] button {
+  height: 30px; padding: 0 12px; border-radius: 6px;
+  font-size: 12px; font-weight: 600; color: #B0A99F;
+  background: transparent; border: none; cursor: pointer;
+  font-family: inherit; transition: all 0.12s;
+}
+#chart [class*=period] button.on,
+#chart [class*=period] button.active {
+  background: #282828 !important; color: #fff !important;
+  font-weight: 700 !important; border-radius: 4px !important;
+}
+
+/* ⑤ 엑셀 버튼 너비 제한 */
+button[onclick*="export"], button[onclick*="Excel"],
+button[onclick*="excel"], button[onclick*="download"],
+.excel-btn {
+  width: auto !important;
+  max-width: 160px !important;
+  background: #FAF7F5 !important;
+  color: #282828 !important;
+  border: 1px solid #EEE6DC !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 0 14px !important;
+  height: 32px !important;
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
