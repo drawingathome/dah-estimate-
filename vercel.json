@@ -25,6 +25,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/",          "destination": "/dah-dashboard" },
     { "source": "/dashboard", "destination": "/dah-dashboard" },
     { "source": "/estimate",  "destination": "/dah-estimate" },
     { "source": "/survey",    "destination": "/survey" }
