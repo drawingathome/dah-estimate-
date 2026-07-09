@@ -1590,21 +1590,8 @@ button[onclick="exportExcel()"] {
   border-bottom: 1px solid #EEE6DC !important;
 }
 
-/* ② 모달 오버레이 dim — 배경 어둡게 */
-#add-overlay,
-.overlay {
-  background: rgba(0,0,0,0.5) !important;
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 9999 !important;
-  display: none;
-  align-items: flex-end !important;
-  justify-content: center !important;
-}
-#add-overlay.open,
-.overlay.open {
-  display: flex !important;
-}
+/* ② 모달 오버레이 dim — 배경만 수정 */
+#add-overlay.open { background: rgba(0,0,0,0.55) !important; }
 
 /* ③ 매출 차트 Y축 레이블 스타일 */
 #chart canvas {
