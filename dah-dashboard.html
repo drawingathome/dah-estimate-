@@ -1679,6 +1679,36 @@ button[onclick="exportExcel()"] {
   margin-bottom: 4px !important;
 }
 
+
+/* ── 고객추가 모달 최종 확정 ── */
+#add-overlay {
+  display: none;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 99999 !important;
+  background: rgba(0,0,0,0.55) !important;
+  align-items: flex-end !important;
+  justify-content: center !important;
+}
+#add-overlay.open {
+  display: flex !important;
+}
+#add-overlay .modal-box {
+  background: #fff !important;
+  border-radius: 16px 16px 0 0 !important;
+  width: 100% !important;
+  max-width: 640px !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  position: relative !important;
+  z-index: 100000 !important;
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
