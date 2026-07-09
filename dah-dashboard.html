@@ -3768,7 +3768,7 @@ function renderGoalProgress(currentAmount) {
 /* ── 칸반 스테이지 변경 ── */
 var STAGE_ORDER = ['상담','계약금','실측','잔금','시공','완료'];
 
-function changeStage(customerName, newStage) {
+function changeStageByName(customerName, newStage) {
   try {
     var customers = loadCustomers();
     var idx = customers.findIndex(function(c) { return c.clientName === customerName; });
@@ -3832,7 +3832,7 @@ function showStageMenu(customerName, currentStage, anchorEl) {
     item.textContent = (stage === currentStage ? '✓ ' : '') + stage;
     item.addEventListener('click', function() {
       menu.remove();
-      if (stage !== currentStage) changeStage(customerName, stage);
+      if (stage !== currentStage) changeStageByName(customerName, stage);
     });
     menu.appendChild(item);
   });
