@@ -1207,7 +1207,7 @@ input::placeholder, textarea::placeholder {
 /* ② 모바일 홈 타이틀 크기 */
 @media (max-width: 640px) {
   #home [style*="font-size:36px;font-weight:700;color:var(--dark)"] {
-    font-size: 18px !important;
+    font-size: 22px !important;
     line-height: 1.35 !important;
   }
   #home [style*="font-size:36px;font-weight:700;color:var(--dark);line-height:1"] {
@@ -2116,7 +2116,7 @@ input,button,select,textarea { font-family:inherit; }
   background:#FFFFFF; border-top:1px solid var(--border);
   padding-bottom:env(safe-area-inset-bottom);
 }
-.mob-bottom-nav-inner { display:flex; height:56px; }
+.mob-bottom-nav-inner { display:flex; height:56px; width:100%; }
 .mob-nav-btn {
   flex:1; display:flex; flex-direction:column;
   align-items:center; justify-content:center; gap:4px;
@@ -3204,8 +3204,8 @@ button { cursor: pointer; }
   <img src="https://raw.githubusercontent.com/drawingathome/dah-estimate-/main/logo.png" 
        alt="드로잉엣홈" style="height:20px;display:block;">
   <div style="display:flex;align-items:center;gap:8px">
-    <button onclick="goTab('settings')" style="border:none;background:transparent;color:rgba(255,255,255,0.7);cursor:pointer;font-size:11px;font-family:inherit;padding:4px 8px">설정</button>
-    <button onclick="openAdd()" style="border:none;background:#F06E2D;color:#fff;cursor:pointer;font-size:11px;font-family:inherit;padding:6px 12px;border-radius:4px;font-weight:700">+ 고객</button>
+    <button onclick="goTab('settings')" style="border:none;background:transparent;color:rgba(255,255,255,0.7);cursor:pointer;font-size:11px;font-family:inherit;padding:10px 12px;min-height:40px;min-width:40px;display:inline-flex;align-items:center;justify-content:center">설정</button>
+    <button onclick="openAdd()" style="border:none;background:#F06E2D;color:#fff;cursor:pointer;font-size:11px;font-family:inherit;padding:10px 14px;min-height:40px;border-radius:4px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">+ 고객</button>
   </div>
 </div>
 
@@ -3464,9 +3464,9 @@ button { cursor: pointer; }
   <div class="card" style="padding:14px 14px 10px">
     <!-- 월 네비 -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <button id="cal-prev" style="background:none;border:none;font-size:11px;cursor:pointer;color:#282828;padding:2px 8px;line-height:1">‹</button>
+      <button id="cal-prev" style="background:none;border:none;font-size:17px;cursor:pointer;color:#282828;padding:8px 14px;line-height:1;min-height:36px;min-width:36px">‹</button>
       <div id="cal-month-label" style="font-size:12px;font-weight:700;color:#282828;letter-spacing:0.3px"></div>
-      <button id="cal-next" style="background:none;border:none;font-size:11px;cursor:pointer;color:#282828;padding:2px 8px;line-height:1">›</button>
+      <button id="cal-next" style="background:none;border:none;font-size:17px;cursor:pointer;color:#282828;padding:8px 14px;line-height:1;min-height:36px;min-width:36px">›</button>
     </div>
     <!-- 요일 헤더 -->
     <div style="display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px">
@@ -4218,8 +4218,7 @@ function renderKanbanCols(customers, kanbanWrap) {
             '<div class="kanban-item-name" style="flex:1">' + (c.clientName || '') + '</div>' +
             '<button class="ksb" data-n="' + (c.clientName||'').replace(/"/g,'') + '" data-s="' + stage.key + '" ' +
               'onclick="event.stopPropagation();var t=this;showStageMenu(t.dataset.n,t.dataset.s,t)" ' +
-              'style="border:none;background:none;color:var(--light);font-size:11px;cursor:pointer;padding:0 4px;line-height:1">···</button>' +
-              'style="border:none;background:transparent;color:var(--light);font-size:11px;cursor:pointer;padding:0 2px;line-height:1;font-family:inherit">···</button>' +
+              'style="border:none;background:none;color:var(--light);font-size:15px;cursor:pointer;padding:8px 10px;line-height:1;min-height:32px;min-width:32px">···</button>' +
           '</div>' +
           '<div class="kanban-item-sub">' + (c.phone || '') + '</div>' +
           (c.price ? '<div class="kanban-item-price">' + Number(c.price).toLocaleString() + '원</div>' : '');
