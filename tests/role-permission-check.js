@@ -95,14 +95,13 @@ async function evaluateChecks(page) {
     const hasDeleteBtn = detailButtons.some(b => /^삭제$/.test((b.textContent || '').trim()));
     const hasEditBtn = detailButtons.some(b => /수정/.test(b.textContent || ''));
 
-    const salesTab = document.querySelector('[data-tab="chart"]');
+    const salesTab = document.querySelector('[data-mob-tab="chart"]');
     const salesRect = salesTab ? salesTab.getBoundingClientRect() : null;
 
     return {
       bodyRole: document.body.className,
       deleteBtnVisible: hasDeleteBtn,
       editBtnVisible: hasEditBtn,
-      // 매출탭은 display로 판단하되, rect 0x0 여부도 별도 기록 (known-issues.md 참고)
       salesTabDisplayed: isVisible(salesTab),
       salesTabRectZero: salesRect ? (salesRect.width === 0 && salesRect.height === 0) : null
     };
@@ -133,7 +132,7 @@ async function run() {
     const checks = [
       ['고객상세 삭제 버튼', 'deleteBtnVisible'],
       ['고객상세 수정 버튼', 'editBtnVisible'],
-      ['매출탭 (CSS display 기준)', 'salesTabDisplayed']
+      ['모바일 하단네비 매출탭', 'salesTabDisplayed']
     ];
 
     let failed = false;
@@ -145,10 +144,6 @@ async function run() {
       if (!ok) failed = true;
       console.log(`${ok ? '✅' : '❌'} ${desc}: 마스터=${m ? '노출' : '숨김'} / 스태프=${s ? '노출' : '숨김'} (마스터에만 노출되어야 함)`);
     });
-
-    if (master.salesTabRectZero) {
-      console.log('⚠️  참고: 매출탭이 display:flex로 켜져도 실제 크기가 0x0입니다 (known-issues.md 참고 — UI 미표시 가능성).');
-    }
 
     process.exitCode = failed ? 1 : 0;
   } finally {
