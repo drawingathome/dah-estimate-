@@ -2788,45 +2788,84 @@ function loadSurveyFromSheet() {
   var btn = document.getElementById('btn-load-survey');
   if(btn) btn.textContent = '⏳ 불러오는 중...';
 
-  var url = SURVEY_SCRIPT_URL;
-  if(nameVal) url += '?name=' + encodeURIComponent(nameVal);
-
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', url, true);
-  xhr.onload = function() {
-    if(btn) btn.textContent = '📋 설문 불러오기';
-    try {
-      var data = JSON.parse(xhr.responseText);
-      if(data.result === 'success') {
-        
-        if(data.name && !document.getElementById('c-name').value) {
-          document.getElementById('c-name').value = data.name;
+  function fromSheet() {
+    var url = SURVEY_SCRIPT_URL;
+    if(nameVal) url += '?name=' + encodeURIComponent(nameVal);
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onload = function() {
+      if(btn) btn.textContent = '📋 설문 불러오기';
+      try {
+        var data = JSON.parse(xhr.responseText);
+        if(data.result === 'success') {
+          applySurveyData(data);
+          showToast('✅ 설문 데이터를 불러왔습니다 (구글시트)');
+        } else if(data.result === 'notfound') {
+          showToast('⚠️ 해당 고객 설문이 없습니다');
+        } else if(data.result === 'empty') {
+          showToast('⚠️ 설문 데이터가 없습니다');
+        } else {
+          showToast('⚠️ 불러오기 실패');
         }
-        if(data.phone && !document.getElementById('c-phone').value) {
-          document.getElementById('c-phone').value = data.phone;
-        }
-        if(data.addr && !document.getElementById('c-addr').value) {
-          document.getElementById('c-addr').value = data.addr;
-        }
-        
-        displaySurvey(data);
-        showToast('✅ 설문 데이터를 불러왔습니다');
-      } else if(data.result === 'notfound') {
-        showToast('⚠️ 해당 고객 설문이 없습니다');
-      } else if(data.result === 'empty') {
-        showToast('⚠️ 설문 데이터가 없습니다');
-      } else {
+      } catch(e) {
         showToast('⚠️ 불러오기 실패');
       }
+    };
+    xhr.onerror = function() {
+      if(btn) btn.textContent = '📋 설문 불러오기';
+      showToast('⚠️ 네트워크 오류');
+    };
+    xhr.send();
+  }
+
+  function applySurveyData(data) {
+    if(data.name && !document.getElementById('c-name').value) {
+      document.getElementById('c-name').value = data.name;
+    }
+    if(data.phone && !document.getElementById('c-phone').value) {
+      document.getElementById('c-phone').value = data.phone;
+    }
+    if(data.addr && !document.getElementById('c-addr').value) {
+      document.getElementById('c-addr').value = data.addr;
+    }
+    displaySurvey(data);
+  }
+
+  if(!nameVal) { fromSheet(); return; }
+
+  // 1순위: Supabase surveys 테이블에서 이름으로 최신 1건 조회
+  var sxhr = new XMLHttpRequest();
+  var sUrl = SUPABASE_URL + '/rest/v1/surveys?name=eq.' + encodeURIComponent(nameVal) + '&order=created_at.desc&limit=1';
+  sxhr.open('GET', sUrl, true);
+  sxhr.setRequestHeader('apikey', SUPABASE_KEY);
+  sxhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_KEY);
+  sxhr.onload = function() {
+    try {
+      var rows = JSON.parse(sxhr.responseText);
+      if(Array.isArray(rows) && rows.length > 0) {
+        var r = rows[0];
+        if(btn) btn.textContent = '📋 설문 불러오기';
+        applySurveyData({
+          name: r.name, phone: r.phone, addr: r.addr,
+          spaces: r.spaces || [], pyeong: r.pyeong,
+          homeDir: r.home_dir, wallTone: r.wall_tone, floorType: r.floor_type,
+          moods: r.moods || [], functions: r.functions || [],
+          budget: r.budget, memo: r.memo
+        });
+        showToast('✅ 설문 데이터를 불러왔습니다 (Supabase)');
+      } else {
+        // Supabase에 없으면 구글시트로 폴백 (surveys 테이블 생성 전 또는 이전 데이터)
+        fromSheet();
+      }
     } catch(e) {
-      showToast('⚠️ 불러오기 실패');
+      fromSheet();
     }
   };
-  xhr.onerror = function() {
-    if(btn) btn.textContent = '📋 설문 불러오기';
-    showToast('⚠️ 네트워크 오류');
+  sxhr.onerror = function() {
+    // Supabase 조회 실패 시에도 구글시트로 폴백
+    fromSheet();
   };
-  xhr.send();
+  sxhr.send();
 }
 
 function displaySurvey(s) {
