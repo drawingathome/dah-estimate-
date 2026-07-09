@@ -1724,7 +1724,6 @@ button[onclick*="search"][onclick*="addr"]:hover {
       <div class="doc-header-meta">
         <span>No. <strong id="hd-no-display">—</strong></span>
         <span>담당자 <strong id="hd-staff-display">장선혜</strong></span>
-        <span id="draft-status" style="display:none;font-size:11px;color:#F06E2D;font-weight:600">💾 <span id="draft-time"></span></span>
       </div>
     </div>
     <!-- 탭바 -->
@@ -1747,7 +1746,7 @@ button[onclick*="search"][onclick*="addr"]:hover {
     <div class="info-grid">
       <div class="info-item">
         <label class="info-label">고객명</label>
-        <input type="text" id="c-name" placeholder="홍길동" oninput="debounceDraft()" oninput="fmtName(this)">
+        <input type="text" id="c-name" placeholder="홍길동">
       </div>
       <div class="info-item">
         <label class="info-label">연락처</label>
@@ -2320,7 +2319,6 @@ function fmtPhone(el) {
   else if(v.length<=7) el.value=v.slice(0,3)+'-'+v.slice(3);
   else el.value=v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);
 }
-function fmtName(el) { el.value = el.value; }
 
 function addCurtainRow() {
   var tbody = document.getElementById('curtain-body');
@@ -4131,65 +4129,20 @@ function openKakaoAddr(targetId) {
   }
 }
 
-function saveDraft() {
-  try {
-    var data = {};
-    ['c-name','c-phone','c-addr','c-addr2','c-measure','c-install','c-region','c-memo'].forEach(function(id){
-      var el = document.getElementById(id);
-      if(el) data[id] = el.value;
-    });
-    data._curtain = document.getElementById('curtain-body')?.innerHTML || '';
-    data._blind   = document.getElementById('blind-body')?.innerHTML || '';
-    data._svc     = document.getElementById('svc-body')?.innerHTML || '';
-    data._discount = document.getElementById('discount')?.value || '0';
-    data._savedAt = new Date().toISOString();
-    localStorage.setItem('dah_draft', JSON.stringify(data));
-    var t = new Date();
-    var el = document.getElementById('draft-status');
-    var tel = document.getElementById('draft-time');
-    if(el) el.style.display='inline';
-    if(tel) tel.textContent = pad2(t.getHours())+':'+pad2(t.getMinutes())+' 임시저장';
-  } catch(e) { console.warn('임시저장 실패', e); }
-}
-
-function loadDraft() {
-  try {
-    var raw = localStorage.getItem('dah_draft');
-    if(!raw) { showToast('임시저장 내용이 없습니다'); return; }
-    var data = JSON.parse(raw);
-    var savedAt = data._savedAt ? new Date(data._savedAt).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'}) : '';
-    if(!confirm(savedAt+' 임시저장 내용을 불러올까요?')) return;
-    ['c-name','c-phone','c-addr','c-addr2','c-measure','c-install','c-region','c-memo'].forEach(function(id){
-      var el = document.getElementById(id);
-      if(el && data[id] !== undefined) el.value = data[id];
-    });
-    if(data._curtain) document.getElementById('curtain-body').innerHTML = data._curtain;
-    if(data._blind) {
-      document.getElementById('blind-body').innerHTML = data._blind;
-      if(data._blind.trim()) document.getElementById('blind-table').style.display='table';
-    }
-    if(data._svc) document.getElementById('svc-body').innerHTML = data._svc;
-    if(data._discount) document.getElementById('discount').value = data._discount;
-    calcTotal();
-    showToast('✅ 임시저장 내용을 불러왔습니다');
-  } catch(e) { showToast('❌ 불러오기 실패'); }
-}
-
-function checkDraftExists() {
-  var raw = localStorage.getItem('dah_draft');
-  var btn = document.getElementById('load-draft-btn');
-  if(raw && btn) btn.style.display = 'inline-block';
-}
-
-setInterval(function() {
-  if(document.getElementById('c-name')?.value) saveDraft();
-}, 300000);
-
 window.addEventListener('load', function() {
   var _logoEl = document.getElementById('hd-logo');
   if(_logoEl) _logoEl.src = DAH_LOGO_B64;
-  checkDraftExists();
   renderEmptyState();
+  // 불러오기 버튼: 실제 자동저장 시스템(dah_estimate_draft) 기준으로 유효한 초안이 있으면만 표시
+  try {
+    var raw = localStorage.getItem('dah_estimate_draft');
+    var btn = document.getElementById('load-draft-btn');
+    if (raw && btn) {
+      var d = JSON.parse(raw);
+      var diffMin = (Date.now() - new Date(d.savedAt).getTime()) / 60000;
+      if (diffMin <= 60) btn.style.display = 'inline-block';
+    }
+  } catch(e) {}
 });
 
 function fmtDateKo(el) {
@@ -4219,56 +4172,18 @@ function renderEmptyState() {
   if(bTable) bTable.style.display = hasB ? 'table' : 'none';
 }
 
-var _draftTimer = null;
-function debounceDraft() {
-  clearTimeout(_draftTimer);
-  _draftTimer = setTimeout(function(){ saveDraft(); }, 1500);
-}
-function saveDraft() {
-  var name = document.getElementById('c-name')?.value?.trim();
-  if(!name) return;
-  try {
-    var data = {
-      name: name,
-      phone: document.getElementById('c-phone')?.value||'',
-      addr: document.getElementById('c-addr')?.value||'',
-      addr2: document.getElementById('c-addr2')?.value||'',
-      measure: document.getElementById('c-measure')?.value||'',
-      install: document.getElementById('c-install')?.value||'',
-      region: document.getElementById('c-region')?.value||'',
-      deposit: document.getElementById('deposit-input')?.value||'',
-      savedAt: new Date().toISOString()
-    };
-    localStorage.setItem('dah_draft', JSON.stringify(data));
-  } catch(e){}
-}
-function loadDraftIfExists() {
-  try {
-    var draft = JSON.parse(localStorage.getItem('dah_draft')||'null');
-    if(!draft) return;
-    var age = (Date.now() - new Date(draft.savedAt).getTime()) / 1000 / 60;
-    if(age > 120) { localStorage.removeItem('dah_draft'); return; } 
-    var name = document.getElementById('c-name')?.value?.trim();
-    if(name) return; 
-    if(confirm('[임시저장] ' + draft.name + '님의 작성 중인 견적서가 있습니다.\n불러올까요?')) {
-      if(draft.name) document.getElementById('c-name').value = draft.name;
-      if(draft.phone) document.getElementById('c-phone').value = draft.phone;
-      if(draft.addr) document.getElementById('c-addr').value = draft.addr;
-      if(draft.addr2 && document.getElementById('c-addr2')) document.getElementById('c-addr2').value = draft.addr2;
-      if(draft.measure) document.getElementById('c-measure').value = draft.measure;
-      if(draft.install) document.getElementById('c-install').value = draft.install;
-      if(draft.region) { document.getElementById('c-region').value = draft.region; document.getElementById('c-region').dispatchEvent(new Event('change')); }
-      if(draft.deposit) { document.getElementById('deposit-input').value = draft.deposit; document.getElementById('deposit-input').dispatchEvent(new Event('input')); }
-      showToast('임시저장 데이터를 불러왔습니다 ✅');
-    }
-  } catch(e){}
-}
-
 window.addEventListener('beforeunload', function(e) {
   var name = document.getElementById('c-name')?.value?.trim();
   var saved = document.getElementById('c-name')?.dataset?.saved;
   if(name && !saved) {
-    saveDraft();
+    // 자동저장 시스템(dah_estimate_draft)에 마감 직전 동기 저장
+    try {
+      localStorage.setItem('dah_estimate_draft', JSON.stringify({
+        data: collectFormData(),
+        savedAt: new Date().toISOString(),
+        version: '1.0'
+      }));
+    } catch(err) {}
     e.preventDefault(); e.returnValue = '';
   }
 });
