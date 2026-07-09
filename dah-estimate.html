@@ -2129,6 +2129,14 @@ function getPriceVal(el) {
 
 const LOGO_SRC = 'logo.png';
 const SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 const SUPABASE_KEY = 'sb_publishable_9nYjQBzwiyausr7-Cd-elw_S9inJlge';
 var currentTab = 'ga';
 
@@ -3097,13 +3105,13 @@ function showToast(msg) {
 }
 
 function buildCustomerHTML() {
-  var cName       = document.getElementById('c-name')?.value||'';
-  var cPhone      = document.getElementById('c-phone')?.value||'';
-  var cAddr       = document.getElementById('c-addr')?.value||'';
+  var cName       = escHtml(document.getElementById('c-name')?.value||'');
+  var cPhone      = escHtml(document.getElementById('c-phone')?.value||'');
+  var cAddr       = escHtml(document.getElementById('c-addr')?.value||'');
   var measureDate = document.getElementById('c-measure')?.value||'';
   var installDate = document.getElementById('c-install')?.value||'';
   var cNo         = document.getElementById('c-no')?.value||'';
-  var cStaff      = document.getElementById('c-staff')?.value||'장선혜';
+  var cStaff      = escHtml(document.getElementById('c-staff')?.value||'장선혜');
   var sumCurtain  = document.getElementById('sum-curtain')?.textContent||'0원';
   var sumSvc      = document.getElementById('sum-svc')?.textContent||'0원';
   var _grandEl = document.getElementById('sum-total');
@@ -3148,7 +3156,7 @@ function buildCustomerHTML() {
     var amt  =tr.querySelector('.camt')?.textContent||'—';
     var spec =[pleat,open,hem].filter(Boolean).join(' · ');
     if(name||space) curtainRows.push({
-      space:space||'기타',name:name,spec:spec,
+      space:escHtml(space||'기타'),name:escHtml(name),spec:escHtml(spec),
       mw:mw,mh:mh,pnum:pnum,price:price,amt:amt,type:'curtain'
     });
   });
@@ -3167,8 +3175,8 @@ function buildCustomerHTML() {
     var amt  =tr.querySelector('.bamt')?.textContent||'—';
     var addon=tr.querySelector('.blind-opt')?.value||'';
     if(name||space) blindRows.push({
-      space:space||'기타',name:name,kind:kind,handle:handle,
-      addon:addon,bw:bw,bh:bh,sqm:sqm,price:price,amt:amt,type:'blind'
+      space:escHtml(space||'기타'),name:escHtml(name),kind:escHtml(kind),handle:escHtml(handle),
+      addon:escHtml(addon),bw:bw,bh:bh,sqm:sqm,price:price,amt:amt,type:'blind'
     });
   });
 
@@ -3181,7 +3189,7 @@ function buildCustomerHTML() {
     var price=getPriceVal(tds[2]?.querySelector('input'));
     var qty  =parseFloat(tds[3]?.querySelector('input')?.value)||1;
     var amt  =tds[4]?.textContent||'';
-    if(desc&&amt&&amt!=='0원') svcRows.push({svcType:svcType,desc:desc,price:price,qty:qty,amt:amt});
+    if(desc&&amt&&amt!=='0원') svcRows.push({svcType:escHtml(svcType),desc:escHtml(desc),price:price,qty:qty,amt:amt});
   });
 
   
@@ -3557,8 +3565,8 @@ function renderCustLoadList(q) {
         + '</div>'
       : '';
     return '<div class="cust-load-item" data-idx="'+idx+'" onclick="loadCustByIdx(this)">'
-      +'<div class="cust-load-name">'+(c.clientName||'이름없음')+'</div>'
-      +'<div class="cust-load-info">'+info+(lastEst?' &nbsp;|&nbsp; 최근: '+lastEst:'')+'</div>'
+      +'<div class="cust-load-name">'+escHtml(c.clientName||'이름없음')+'</div>'
+      +'<div class="cust-load-info">'+escHtml(info)+(lastEst?' &nbsp;|&nbsp; 최근: '+escHtml(lastEst):'')+'</div>'
       +histHtml
       +'</div>';
   }).join('');

@@ -4215,12 +4215,12 @@ function renderKanbanCols(customers, kanbanWrap) {
         var stageChangeCurrent = stage.key;
         item.innerHTML =
           '<div style="display:flex;align-items:flex-start;justify-content:space-between">' +
-            '<div class="kanban-item-name" style="flex:1">' + (c.clientName || '') + '</div>' +
-            '<button class="ksb" data-n="' + (c.clientName||'').replace(/"/g,'') + '" data-s="' + stage.key + '" ' +
+            '<div class="kanban-item-name" style="flex:1">' + escHtml(c.clientName || '') + '</div>' +
+            '<button class="ksb" data-n="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-s="' + stage.key + '" ' +
               'onclick="event.stopPropagation();var t=this;showStageMenu(t.dataset.n,t.dataset.s,t)" ' +
               'style="border:none;background:none;color:var(--light);font-size:15px;cursor:pointer;padding:8px 10px;line-height:1;min-height:32px;min-width:32px">···</button>' +
           '</div>' +
-          '<div class="kanban-item-sub">' + (c.phone || '') + '</div>' +
+          '<div class="kanban-item-sub">' + escHtml(c.phone || '') + '</div>' +
           (c.price ? '<div class="kanban-item-price">' + Number(c.price).toLocaleString() + '원</div>' : '');
         item.addEventListener('click', function() { openDetail(c.clientName); });
         col.appendChild(item);
@@ -4597,6 +4597,14 @@ var STAGE_ACTIVE = {상담:true,계약금:true,실측:true,잔금:true,시공:tr
 var currentDetailName = null;
 
 var MASTER_PW = (function(){ try{ return localStorage.getItem('dah_master_pw')||'dah2012'; }catch(e){ return 'dah2012'; } })();
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 var currentUser = null;
 
 function getStaffList() {
@@ -5172,12 +5180,12 @@ function renderHome() {
           ? '<div class="empty-inline">처리 필요한 항목이 없습니다 ✅</div>'
           : needAction.slice(0,5).map(function(c) {
               var stageColor = (c.stage === '계약금' || c.stage === '실측') ? 'var(--terra)' : 'var(--dark)';
-              return '<div data-cname="' + (c.clientName||'').replace(/"/g,'') + '" onclick="openDetail(this.getAttribute(\'data-cname\'))" ' +
+              return '<div data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" onclick="openDetail(this.getAttribute(\'data-cname\'))" ' +
                 'style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:12px;cursor:pointer">' +
                 '<div style="width:6px;height:6px;border-radius:50%;background:' + stageColor + ';flex-shrink:0"></div>' +
                 '<div style="flex:1;min-width:0">' +
-                  '<div style="font-size:12px;font-weight:700;color:var(--dark);overflow:hidden;white-space:nowrap;text-overflow:ellipsis">' + (c.clientName||'') + '</div>' +
-                  '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + (c.phone||'') + '</div>' +
+                  '<div style="font-size:12px;font-weight:700;color:var(--dark);overflow:hidden;white-space:nowrap;text-overflow:ellipsis">' + escHtml(c.clientName||'') + '</div>' +
+                  '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(c.phone||'') + '</div>' +
                 '</div>' +
                 '<span style="font-size:12px;font-weight:700;color:' + stageColor + ';flex-shrink:0">' + (c.stage||'') + '</span>' +
               '</div>';
@@ -5199,8 +5207,8 @@ function renderHome() {
                     '<span style="font-size:12px;font-weight:700;color:var(--terra)">오늘</span>' +
                   '</div>' +
                   '<div style="flex:1">' +
-                    '<div style="font-size:12px;font-weight:700;color:var(--dark)">' + (c.clientName||'') + '</div>' +
-                    '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + type + ' · ' + (c.addr||'주소 미입력') + '</div>' +
+                    '<div style="font-size:12px;font-weight:700;color:var(--dark)">' + escHtml(c.clientName||'') + '</div>' +
+                    '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(type) + ' · ' + escHtml(c.addr||'주소 미입력') + '</div>' +
                   '</div>' +
                 '</div>';
               }),
@@ -5211,8 +5219,8 @@ function renderHome() {
                     '<span style="font-size:11px;font-weight:700;color:var(--sub)">내일</span>' +
                   '</div>' +
                   '<div style="flex:1">' +
-                    '<div style="font-size:12px;font-weight:700;color:var(--dark)">' + (c.clientName||'') + '</div>' +
-                    '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + type + ' · ' + (c.addr||'주소 미입력') + '</div>' +
+                    '<div style="font-size:12px;font-weight:700;color:var(--dark)">' + escHtml(c.clientName||'') + '</div>' +
+                    '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(type) + ' · ' + escHtml(c.addr||'주소 미입력') + '</div>' +
                   '</div>' +
                 '</div>';
               })
