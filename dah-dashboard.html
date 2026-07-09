@@ -1598,6 +1598,50 @@ button[onclick="exportExcel()"] {
   max-width: 100%;
 }
 
+
+/* ① PC 홈 KPI 구분 강화 */
+/* KPI 카드 3개 배경 차별화 */
+#home .kpi-grid > div:nth-child(1) { background: #fff !important; }
+#home .kpi-grid > div:nth-child(2) { background: #FAFAFA !important; }
+#home .kpi-grid > div:nth-child(3) { background: #fff !important; }
+/* 목표 달성률 바 진행률 표시 강화 */
+#home .goal-progress-bar,
+#home [id*="goal-progress-bar"] {
+  background: #F06E2D !important;
+  border-radius: 2px !important;
+  min-width: 2px !important;
+}
+#home .goal-progress-wrap,
+#home [class*="progress-wrap"] {
+  background: #EEE6DC !important;
+  border-radius: 2px !important;
+  height: 4px !important;
+  overflow: hidden !important;
+  margin: 6px 0 4px !important;
+}
+/* 섹션 블록 구분 더 명확하게 */
+#home .section-block,
+#home [style*="border-bottom:1px solid var(--border)"][style*="background:#fff"] {
+  border-left: 3px solid #EEE6DC !important;
+}
+
+/* ② 모바일 칩 — 모든 칩 항상 보이도록 */
+@media (max-width: 640px) {
+  #home [style*="flex-wrap:nowrap"],
+  #home [style*="flex-wrap: nowrap"] {
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+  }
+  /* 각 칩 크기 최소화하여 6개 한눈에 보이도록 */
+  #home [style*="flex-wrap:nowrap"] > div,
+  #home [style*="flex-wrap: nowrap"] > div {
+    padding: 0 7px !important;
+    font-size: 11px !important;
+    min-width: 0 !important;
+    flex-shrink: 1 !important;
+  }
+}
+
 </style>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -3414,7 +3458,7 @@ button { cursor: pointer; }
       <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="search" id="est-search" aria-label="견적서 검색" class="search-input-clean" placeholder="고객명 · 견적번호 검색" oninput="renderEstList()">
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+    <div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">
       <span id="est-list-count" style="font-size:11px;color:var(--sub)"></span>
       <button onclick="exportEstimatesExcel()" style="height:30px;padding:0 12px;background:#282828;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -3443,7 +3487,7 @@ button { cursor: pointer; }
         <input type="checkbox" id="show-archived" onchange="renderSearch()">
         <span>보관 고객 포함</span>
       </label>
-      <button onclick="exportExcel()" style="height:30px;padding:0 12px;background:#282828;color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px">
+      <button onclick="exportExcel()" style="height:28px;padding:0 12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;border-radius:6px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         엑셀 다운로드
       </button>
@@ -5816,7 +5860,7 @@ function renderChart(period) {
     lbl.setAttribute('x',PAD-4); lbl.setAttribute('y',y+4);
     lbl.setAttribute('text-anchor','end'); lbl.setAttribute('font-size','9');
     lbl.setAttribute('fill','var(--light)');
-    lbl.textContent = Math.round(maxRev*r/10000)+'만';
+    lbl.textContent = Math.round(maxRev*r/10000)+'만원';
     svg.appendChild(lbl);
   });
   
