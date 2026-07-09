@@ -1,5 +1,5 @@
-/* DAH Service Worker v1.0 */
-const CACHE_NAME = 'dah-cache-v1';
+/* DAH Service Worker v1.1 */
+const CACHE_NAME = 'dah-cache-v2';
 const CACHE_URLS = [
   '/dah-dashboard',
   '/dah-estimate',
@@ -11,7 +11,15 @@ const CACHE_URLS = [
 self.addEventListener('install', function(e) {
   e.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(CACHE_URLS);
+      // cache.addAll()은 URL 하나라도 실패하면 전체가 실패하는 구조라,
+      // 개별적으로 캐싱해서 하나 실패해도 나머지는 정상 캐싱되게 함
+      return Promise.allSettled(
+        CACHE_URLS.map(function(url) {
+          return cache.add(url).catch(function(err) {
+            console.warn('SW: 캐싱 실패(무시하고 계속):', url, err);
+          });
+        })
+      );
     })
   );
   self.skipWaiting();
