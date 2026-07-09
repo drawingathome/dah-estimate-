@@ -1790,11 +1790,11 @@ button[onclick*="search"][onclick*="addr"]:hover {
     <div class="info-grid" style="margin-top:16px;padding-top:14px;border-top:1px dashed #EEE6DC">
       <div class="info-item">
         <label class="info-label">실측 예정일</label>
-        <input type="text" id="c-measure" placeholder="2026년 6월 23일" inputmode="numeric" oninput="fmtDateKo(this)" maxlength="14" style="letter-spacing:0.3px">
+        <input type="date" id="c-measure" style="letter-spacing:0.3px">
       </div>
       <div class="info-item">
         <label class="info-label">시공 예정일</label>
-        <input type="text" id="c-install" placeholder="2026년 6월 23일" inputmode="numeric" oninput="fmtDateKo(this)" maxlength="14" style="letter-spacing:0.3px">
+        <input type="date" id="c-install" style="letter-spacing:0.3px">
       </div>
     </div>
     <div class="region-row print-hide">
@@ -1802,7 +1802,7 @@ button[onclick*="search"][onclick*="addr"]:hover {
       <select id="c-region" onchange="autoAddSvcFee()">
         <option value="">시공 안함 (배송)</option>
         <option value="서울">서울 — 실측 40,000 + 시공 50,000원</option>
-        <option value="경기">경기 — 실측 70,000 + 시공 100,000원</option>
+        <option value="경기">경기 — 실측 60,000 + 시공 80,000원</option>
         <option value="기타">기타지역 (직접입력)</option>
       </select>
       <input type="number" id="c-region-price" placeholder="0" onchange="autoAddSvcFee()"
@@ -2527,9 +2527,30 @@ function calcBlindRow(el) {
   }
   if(bmwEl) bmwEl.style.borderBottom = bw>200 ? '2px solid #F06E2D' : '';
   if(bwWarnEl) bwWarnEl.style.display = bw>200 ? 'block' : 'none';
-  var amt = Math.round(price*sqm)+extra;
+  var amt = Math.round(price*sqm);
   tr.querySelector('.bamt').textContent = amt>0 ? amt.toLocaleString()+'원' : '—';
+  recalcBlindOptionExtras();
   calcTotal();
+}
+
+function recalcBlindOptionExtras() {
+  var blindBody = document.getElementById('blind-body');
+  var svcBody = document.getElementById('svc-body');
+  if (!blindBody || !svcBody) return;
+  var extraSum = 0;
+  blindBody.querySelectorAll('.blind-extra').forEach(function(inp){
+    extraSum += parseFloat(inp.value.replace(/[^0-9.-]/g,''))||0;
+  });
+  var svcRow = svcBody.querySelector('[data-svc-type="시공비"]');
+  if (!svcRow) return; // 시공 지역이 선택 안 된 경우 옵션추가금 반영 대상 없음
+  var base = parseFloat(svcRow.getAttribute('data-install-base'))||0;
+  var priceInput = svcRow.querySelectorAll('td')[2]?.querySelector('input');
+  if (priceInput) {
+    var total = base + extraSum;
+    priceInput.setAttribute('data-raw', String(total));
+    priceInput.value = total.toLocaleString();
+    calcSvcRow(priceInput);
+  }
 }
 
 function autoAddBlindSvc() {
@@ -2579,14 +2600,17 @@ function autoAddSvcFee() {
   var hint = document.getElementById('region-hint');
   var customInp = document.getElementById('c-region-price');
   customInp.style.display = region==='기타' ? 'inline-block' : 'none';
-  var basePrice = region==='서울'?50000
-    :region==='경기'?100000
-    :(region==='기타'?parseFloat(document.getElementById('c-region-price').value)||0:0);
+  var customBase = parseFloat(document.getElementById('c-region-price').value)||0;
+  var priceMap = {
+    '서울': {'실측비':40000, '시공비':50000},
+    '경기': {'실측비':60000, '시공비':80000},
+    '기타': {'실측비':customBase, '시공비':customBase}
+  };
+  var prices = priceMap[region];
   if(!svcBody) return;
   var rows = svcBody.querySelectorAll('[data-svc-type="실측비"],[data-svc-type="시공비"]');
   rows.forEach(function(r){ r.remove(); });
-    if(basePrice===0) {
-    
+  if(!prices || (prices['실측비']===0 && prices['시공비']===0)) {
     Array.from(svcBody.querySelectorAll('tr')).forEach(function(r){
       var type=r.querySelector('select')?.value||'';
       if(type==='실측비'||type==='시공비'||type==='레일') r.remove();
@@ -2595,17 +2619,20 @@ function autoAddSvcFee() {
     calcTotal(); return;
   }
   ['실측비','시공비'].forEach(function(type) {
+    var typePrice = prices[type];
     addSvcRow();
     var row = svcBody.lastElementChild;
     row.setAttribute('data-svc-type', type);
     var tds = row.querySelectorAll('td');
     if(tds[0]) { var sel=tds[0].querySelector('select'); if(sel) sel.value=type==='실측비'?'실측비':'시공비'; }
     if(tds[1]) { var inp=tds[1].querySelector('input'); if(inp) inp.value=region+(type==='실측비'?' 실측비':' 시공비'); }
-    if(tds[2]) { var inp=tds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw',String(basePrice)); inp.value=basePrice.toLocaleString(); } }
+    if(tds[2]) { var inp=tds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw',String(typePrice)); inp.value=typePrice.toLocaleString(); } }
+    if(type==='시공비') row.setAttribute('data-install-base', String(typePrice));
     if(tds[3]) { var inp=tds[3].querySelector('input'); if(inp) inp.value=1; }
     calcSvcRow(tds[2]?.querySelector('input'));
   });
-  if(hint) hint.textContent='→ 실측+시공 '+(basePrice*2).toLocaleString()+'원 자동추가';
+  if(hint) hint.textContent='→ 실측 '+prices['실측비'].toLocaleString()+'원 + 시공 '+prices['시공비'].toLocaleString()+'원 자동추가';
+  recalcBlindOptionExtras();
 }
 
 function triggerSumPulse(){
