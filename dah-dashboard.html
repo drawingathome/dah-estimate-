@@ -4645,6 +4645,8 @@ function applyPermissions() {
     ['매출','chart'].forEach(function(t){
       var salesTab = document.querySelector('[data-tab="'+t+'"]');
       if (salesTab) salesTab.style.display = isMaster ? '' : 'none';
+      var mobSalesTab = document.querySelector('[data-mob-tab="'+t+'"]');
+      if (mobSalesTab) mobSalesTab.style.display = isMaster ? '' : 'none';
     });
     
     var perfCards = document.querySelectorAll('.perf-card, [data-perf]');
