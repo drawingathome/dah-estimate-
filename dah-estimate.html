@@ -564,7 +564,8 @@ td.amt{
  
 .add-row-btns{display:flex;gap:16px;margin-top:8px;padding-top:4px}
 .add-btn{
-  padding:8px 0;border:none;
+  padding:8px 0;border:none;min-height:32px;
+  display:inline-flex;align-items:center;
   background:transparent;
   font-size:11px;font-weight:500;font-family:inherit;
   color:#B0A99F;cursor:pointer;letter-spacing:0.2px
@@ -692,7 +693,7 @@ td.amt{
   background:#F5F2EE;border:1.5px solid #EEE6DC;
   border-radius:8px;padding:5px 3px;width:100%;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  outline:none;min-width:54px
+  outline:none;min-width:54px;min-height:32px;box-sizing:border-box
 }
 .space-inp:not(:placeholder-shown){background:#282828;color:#FAF7F5;border-color:#282828}
 
@@ -2004,7 +2005,7 @@ button[onclick*="search"][onclick*="addr"]:hover {
           placeholder="금액 입력"
           oninput="fmtPrice(this);calcDeposit()"
           style="width:110px;padding:4px 8px;border:1.5px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;text-align:right;outline:none;background:#FAF7F5">
-        <button onclick="setDepositAuto(50)" style="padding:4px 10px;font-size:11px;background:#FAF7F5;border:1px solid #EEE6DC;border-radius:4px;cursor:pointer;font-family:inherit;margin-left:4px">50%</button>
+        <button onclick="setDepositAuto(50)" style="padding:8px 12px;min-height:32px;font-size:11px;background:#FAF7F5;border:1px solid #EEE6DC;border-radius:4px;cursor:pointer;font-family:inherit;margin-left:4px">50%</button>
 
       </span>
     </div>
