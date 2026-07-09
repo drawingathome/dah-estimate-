@@ -1782,6 +1782,16 @@ button[onclick*="search"][onclick*="addr"]:hover {
         <input type="date" id="c-install" style="letter-spacing:0.3px">
       </div>
     </div>
+    <div class="info-grid print-hide" style="margin-top:10px">
+      <div class="info-item">
+        <label class="info-label">설치기사명 (실측/시공 의뢰서용)</label>
+        <input type="text" id="c-installer-name" placeholder="예: 유지철 팀장님">
+      </div>
+      <div class="info-item">
+        <label class="info-label">설치기사 연락처</label>
+        <input type="text" id="c-installer-phone" placeholder="예: 010-4464-7463" oninput="fmtPhone(this)">
+      </div>
+    </div>
     <div class="region-row print-hide">
       <label>시공 지역</label>
       <select id="c-region" onchange="autoAddSvcFee()">
@@ -2039,8 +2049,8 @@ button[onclick*="search"][onclick*="addr"]:hover {
       <button class="btn-save" style="flex:1" onclick="saveEstimate()">저장</button></div>
       <button onclick="exportAllEstimatesExcel()" style="width:100%;margin-top:8px;padding:12px 0;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📊 전체 견적서 엑셀 다운로드</button>
       <button onclick="printForVendor()" style="width:100%;margin-top:8px;padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📦 발주서 출력 (거래처별)</button>
-      <button onclick="printRequest('measure')" style="width:100%;margin-top:8px;padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📋 실측 요청서</button>
-      <button onclick="printRequest('install')" style="width:100%;margin-top:8px;padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">🔧 시공 요청서</button>
+      <button onclick="printRequest('measure')" style="width:100%;margin-top:8px;padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📋 실측 의뢰서</button>
+      <button onclick="printRequest('install')" style="width:100%;margin-top:8px;padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">🔧 시공 의뢰서</button>
     </div>
   </div>
 
@@ -3661,82 +3671,154 @@ function printForVendor() {
 
 var _selectedPdfOpt = 'fit';
 
-function buildRequestHTML(kind) {
-  // kind: 'measure' (실측 요청서) or 'install' (시공 요청서)
+function buildRequestHTML(kind, extraNote) {
+  // kind: 'measure' (실측 의뢰서) or 'install' (시공 의뢰서)
   function today(){
     var d=new Date();
     return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';
   }
-  var cName  = escHtml(document.getElementById('c-name')?.value||'');
-  var cPhone = escHtml(document.getElementById('c-phone')?.value||'');
-  var cAddr  = escHtml(document.getElementById('c-addr')?.value||'');
-  var dateVal = document.getElementById(kind==='measure' ? 'c-measure' : 'c-install')?.value || '';
+  function infoRow(label, val) {
+    return '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px">'
+        +'<span style="color:#8E8078">'+label+'</span>'
+        +'<strong style="color:#282828;text-align:right">'+(val||'—')+'</strong>'
+        +'</div>';
+  }
+
+  var cName    = escHtml(document.getElementById('c-name')?.value||'');
+  var cPhone   = escHtml(document.getElementById('c-phone')?.value||'');
+  var cAddr    = escHtml(document.getElementById('c-addr')?.value||'');
+  var cStaff   = escHtml(document.getElementById('c-staff')?.value||'장선혜');
+  var instName = escHtml(document.getElementById('c-installer-name')?.value||'');
+  var instPhone= escHtml(document.getElementById('c-installer-phone')?.value||'');
+  var dateVal  = document.getElementById(kind==='measure' ? 'c-measure' : 'c-install')?.value || '';
   var label = kind==='measure' ? '실측' : '시공';
 
-  // 공간별 커튼/블라인드 목록 수집
-  var items = [];
-  document.querySelectorAll('#curtain-body tr').forEach(function(tr){
-    var space = tr.querySelector('.space-inp')?.value || '';
-    var fabric = tr.querySelector('.c-fabric')?.value || '';
-    var name = tr.querySelector('.c-display-name')?.value || '';
-    if(!space && !fabric && !name) return;
-    items.push({space: space||'—', kind:'커튼'});
-  });
-  document.querySelectorAll('#blind-body tr').forEach(function(tr){
-    var space = tr.querySelector('.space-inp')?.value || '';
-    var blindKind = tr.querySelector('.blind-kind')?.value || '블라인드';
-    var innerInps = tr.querySelectorAll('.inner-row .inner-inp');
-    var fabric = innerInps[0]?.value || '';
-    if(!space && !fabric) return;
-    items.push({space: space||'—', kind: blindKind});
-  });
+  var out = '<div class="pv-wrap" style="min-width:560px;max-width:720px;margin:0 auto;background:#fff;padding:36px 32px">';
 
-  var out = '<div class="pv-wrap" style="min-width:560px;max-width:720px;margin:0 auto">';
-  out += '<div class="pv-header">'
-      +'<img class="pv-logo" style="height:36px;display:block;object-fit:contain" src="'+DAH_LOGO_B64+'" alt="드로잉엣홈">'
-      +'<div class="pv-header-right">'
-      +'<span class="pv-doc-label">'+(kind==='measure'?'MEASUREMENT':'INSTALLATION')+' REQUEST</span>'
-      +'<div class="pv-doc-title">'+label+' 요청서</div>'
+  // 상단 로고/타이틀
+  out += '<div style="text-align:center;margin-bottom:6px">'
+      +'<div style="font-size:22px;font-weight:700;letter-spacing:1.5px;color:#282828">DRAWING at HOME</div>'
+      +'<div style="font-size:11px;color:#B0A99F;letter-spacing:3px;margin-top:6px">'+label+' 의 뢰 서</div>'
+      +'</div>';
+
+  // 좌: 업체정보(설치기사) / 우: 고객·일정 정보
+  out += '<div style="display:flex;gap:24px;margin-top:24px;padding-top:16px;border-top:1px solid #282828;font-size:13px">'
+      +'<div style="flex:1">'
+        +infoRow('업체정보', instName)
+        +infoRow('연락처', instPhone)
+      +'</div>'
+      +'<div style="flex:1">'
+        +infoRow(label+'일', dateVal||'미정')
+        +infoRow('고객명', cName)
+        +infoRow('연락처', cPhone)
+        +infoRow('주소', cAddr)
+        +infoRow('담당자', cStaff)
       +'</div>'
       +'</div>';
 
-  out += '<div class="pv-meta">'
-      +'<span>발행일 <strong>'+today()+'</strong></span>'
-      +'<span>희망일자 <strong>'+(dateVal||'미정')+'</strong></span>'
-      +'</div>';
+  out += '<div style="margin-top:10px;font-size:11px;color:#B0A99F">*아래와 같이 '+label+'요청 합니다.</div>';
+  out += '<div style="margin-top:14px;padding:8px 0;background:#F5F2EE;text-align:center;font-size:12px;font-weight:700;color:#282828">내 용</div>';
 
-  out += '<div style="margin-top:20px;padding:16px;background:#F5F2EE;border-radius:8px">'
-      +'<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:#B0A99F">고객명</span><strong>'+(cName||'—')+'</strong></div>'
-      +'<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:#B0A99F">연락처</span><strong>'+(cPhone||'—')+'</strong></div>'
-      +'<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:#B0A99F">주소</span><strong>'+(cAddr||'—')+'</strong></div>'
-      +'</div>';
-
-  out += '<div style="margin-top:20px;padding:10px 14px;background:#F5F2EE;font-size:13px;font-weight:700;color:#282828;border-radius:6px 6px 0 0">'+label+' 대상 공간</div>';
-  if(items.length === 0) {
-    out += '<div style="padding:20px;text-align:center;color:#B0A99F;font-size:12px;border:1px solid #EEE6DC;border-top:none">입력된 공간/제품이 없습니다.</div>';
-  } else {
-    out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
-        +'<thead><tr style="border-bottom:1.5px solid #282828">'
-        +'<th style="text-align:left;padding:8px 6px">공간</th>'
-        +'<th style="text-align:left;padding:8px 6px">종류</th>'
-        +'</tr></thead><tbody>';
-    items.forEach(function(it){
-      out += '<tr style="border-bottom:1px solid #EEE6DC">'
-          +'<td style="padding:8px 6px">'+escHtml(it.space)+'</td>'
-          +'<td style="padding:8px 6px">'+escHtml(it.kind)+'</td>'
-          +'</tr>';
+  if(kind === 'measure') {
+    // ── 실측 의뢰서: 공간별 번호 목록 ──
+    var items = [];
+    document.querySelectorAll('#curtain-body tr').forEach(function(tr){
+      var space  = tr.querySelector('.space-inp')?.value || '';
+      var fabric = tr.querySelector('.c-fabric')?.value || '';
+      var name   = tr.querySelector('.c-display-name')?.value || '';
+      if(!space && !fabric && !name) return;
+      items.push((space||'—')+' : 커튼 1조');
     });
-    out += '</tbody></table>';
+    document.querySelectorAll('#blind-body tr').forEach(function(tr){
+      var space  = tr.querySelector('.space-inp')?.value || '';
+      var kind2  = tr.querySelector('.blind-kind')?.value || '블라인드';
+      var innerInps = tr.querySelectorAll('.inner-row .inner-inp');
+      var fabric = innerInps[0]?.value || '';
+      if(!space && !fabric) return;
+      items.push((space||'—')+' : '+kind2);
+    });
+    if(items.length === 0) {
+      out += '<div style="padding:30px 0;text-align:center;color:#B0A99F;font-size:12px">입력된 공간/제품이 없습니다.</div>';
+    } else {
+      out += '<div style="padding:20px 10px;text-align:center">';
+      items.forEach(function(txt, i){
+        out += '<div style="font-size:13px;color:#282828;padding:8px 0">'+(i+1)+'. '+escHtml(txt)+'</div>';
+      });
+      out += '</div>';
+    }
+  } else {
+    // ── 시공 의뢰서: 위치/제작사이즈/내용/기타 표 ──
+    var rows = [];
+    document.querySelectorAll('#curtain-body tr').forEach(function(tr){
+      var space  = tr.querySelector('.space-inp')?.value || '';
+      var vendor = tr.querySelector('.c-vendor')?.value || '';
+      var mw = tr.querySelector('.mw')?.value || '';
+      var mh = tr.querySelector('.mh')?.value || '';
+      var pleat = (tr.querySelector('.pleat-type')?.value || '').replace('형','');
+      var open  = (tr.querySelector('.open-type')?.value || '').replace('형','');
+      if(!space && !mw && !vendor) return;
+      rows.push({
+        space: space||'—',
+        size: (mw&&mh) ? (mw+'×'+mh) : '—',
+        content: [pleat, open].filter(Boolean).join(' ')||'—',
+        etc: vendor||'—'
+      });
+    });
+    document.querySelectorAll('#blind-body tr').forEach(function(tr){
+      var space  = tr.querySelector('.space-inp')?.value || '';
+      var innerInps = tr.querySelectorAll('.inner-row .inner-inp');
+      var vendor = innerInps[1]?.value || '';
+      var bmw = tr.querySelector('.bmw')?.value || '';
+      var bmh = tr.querySelector('.bmh')?.value || '';
+      var handle = tr.querySelector('.handle-dir')?.value || '';
+      if(!space && !bmw && !vendor) return;
+      rows.push({
+        space: space||'—',
+        size: (bmw&&bmh) ? (bmw+'×'+bmh) : '—',
+        content: handle ? (handle==='기타'?'기타':handle+'잡이') : '—',
+        etc: vendor||'—'
+      });
+    });
+
+    if(rows.length === 0) {
+      out += '<div style="padding:30px 0;text-align:center;color:#B0A99F;font-size:12px">입력된 공간/제품이 없습니다.</div>';
+    } else {
+      out += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:2px">'
+          +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
+          +'<th style="text-align:left;padding:8px 6px">위치</th>'
+          +'<th style="text-align:center;padding:8px 6px">제작사이즈</th>'
+          +'<th style="text-align:left;padding:8px 6px">내용</th>'
+          +'<th style="text-align:left;padding:8px 6px">기타</th>'
+          +'</tr></thead><tbody>';
+      var lastSpace = null;
+      rows.forEach(function(r){
+        var spaceCell = (r.space === lastSpace) ? '' : escHtml(r.space);
+        lastSpace = r.space;
+        out += '<tr style="border-bottom:1px solid #EEE6DC">'
+            +'<td style="padding:8px 6px;font-weight:700">'+spaceCell+'</td>'
+            +'<td style="padding:8px 6px;text-align:center">'+escHtml(r.size)+'</td>'
+            +'<td style="padding:8px 6px">'+escHtml(r.content)+'</td>'
+            +'<td style="padding:8px 6px;color:#8E8078">'+escHtml(r.etc)+'</td>'
+            +'</tr>';
+      });
+      out += '</tbody></table>';
+    }
+  }
+
+  if(extraNote) {
+    out += '<div style="margin-top:24px;text-align:center;font-size:13px;color:#E4483A;font-weight:600;line-height:1.7;white-space:pre-wrap">'+escHtml(extraNote)+'</div>';
   }
 
   out += '</div>';
   return out;
 }
 
+
 function printRequest(kind) {
   calcTotal();
-  var html = buildRequestHTML(kind);
   var label = kind==='measure' ? '실측' : '시공';
+  var extraNote = window.prompt(label+' 담당자에게 남길 추가 메모가 있으면 입력해주세요 (없으면 취소 또는 빈칸으로 확인)', '');
+  var html = buildRequestHTML(kind, extraNote);
 
   var existing = document.getElementById('pv-overlay');
   if(existing) existing.remove();
@@ -3758,7 +3840,7 @@ function printRequest(kind) {
     'height:52px;flex-shrink:0'
   ].join(';');
   var navLabel = document.createElement('span');
-  navLabel.textContent = label+' 요청서 미리보기';
+  navLabel.textContent = label+' 의뢰서 미리보기';
   navLabel.style.cssText = 'color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;letter-spacing:0.3px';
   var navBtns = document.createElement('div');
   navBtns.style.cssText = 'display:flex;gap:8px';
