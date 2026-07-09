@@ -2999,14 +2999,19 @@ function saveEstimate() {
       xhr.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
       xhr.setRequestHeader('Content-Type','application/json');
       xhr.setRequestHeader('Prefer','return=minimal');
-      xhr.onload=function(){ saveToEstimates(); };
-      xhr.onerror=function(){ console.warn('Supabase 고객 저장 실패 (localStorage는 완료)'); };
+      xhr.onload=function(){
+        if (xhr.status < 200 || xhr.status >= 300) {
+          console.warn('Supabase 고객 저장 실패 (status='+xhr.status+'):', xhr.responseText);
+        }
+        saveToEstimates();
+      };
+      xhr.onerror=function(){ console.warn('Supabase 고객 저장 실패 (localStorage는 완료)'); saveToEstimates(); };
       xhr.send(JSON.stringify({
-        name:name, phone:phone, address:addr,
+        client_name:name, phone:phone, addr:addr+(addr2?' '+addr2:''),
         memo:custMemo+' | 커튼:'+grand+'원',
         staff_name:staffName
       }));
-    } catch(e) { console.warn('Supabase 연결 오류:', e); }
+    } catch(e) { console.warn('Supabase 연결 오류:', e); saveToEstimates(); }
   }
   function saveToEstimates() {
     try {
@@ -3016,15 +3021,22 @@ function saveEstimate() {
       xhr2.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
       xhr2.setRequestHeader('Content-Type','application/json');
       xhr2.setRequestHeader('Prefer','return=minimal');
-      xhr2.onload=function(){ showToast('✅ 저장 완료! (DB+로컬)'); };
-      xhr2.onerror=function(){ console.warn('Supabase 견적서 저장 실패 (localStorage는 완료)'); };
+      xhr2.onload=function(){
+        if (xhr2.status >= 200 && xhr2.status < 300) {
+          showToast('✅ 저장 완료! (DB+로컬)');
+        } else {
+          console.warn('Supabase 견적서 저장 실패 (status='+xhr2.status+'):', xhr2.responseText);
+          showToast('✅ 저장 완료 (로컬) — DB 동기화는 실패했어요');
+        }
+      };
+      xhr2.onerror=function(){ console.warn('Supabase 견적서 저장 실패 (localStorage는 완료)'); showToast('✅ 저장 완료 (로컬) — DB 동기화는 실패했어요'); };
       xhr2.send(JSON.stringify({
-        customer_name:name, phone:phone, space:spaceStr,
-        product:fabricStr, price:grand,
+        customer_name:name, price:grand,
         performance_revenue:perf, staff_name:staffName,
-        estimate_status:currentTab||'ga'
+        status:currentTab||'ga',
+        data: {phone:phone, space:spaceStr, product:fabricStr}
       }));
-    } catch(e) { console.warn('Supabase 연결 오류:', e); }
+    } catch(e) { console.warn('Supabase 연결 오류:', e); showToast('✅ 저장 완료 (로컬) — DB 동기화는 실패했어요'); }
   }
   function saveToLocalStorage() {
     try {
