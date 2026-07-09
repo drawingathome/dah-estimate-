@@ -2648,7 +2648,7 @@ function calcTotal() {
     var minSqm=kind==='우드'?1.5:(kind==='로만쉐이드'?2.0:0);
     if(sqmRaw<minSqm&&sqmRaw>0) sqmRaw=minSqm;
     var sqm=Math.ceil(sqmRaw*10)/10;
-    curtainTotal+=Math.round(price*sqm)+extra;
+    curtainTotal+=Math.round(price*sqm);
   });
   var svcTotal=0;
   document.querySelectorAll('#svc-body tr').forEach(function(tr){
