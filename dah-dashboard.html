@@ -6672,9 +6672,24 @@ function openAdd(editName) {
     b.classList.toggle('active', isActive); b.style.background = isActive ? '#F06E2D' : '#fff'; b.style.color = isActive ? '#fff' : '#8E8078'; b.style.borderRadius = '4px'; b.style.border = '1.5px solid ' + (isActive ? '#F06E2D' : '#EEE6DC'); b.style.fontWeight = isActive ? '700' : '400';
     if (isStaffUser) { b.style.pointerEvents = 'none'; b.style.opacity = isActive ? '1' : '0.3'; } else { b.style.pointerEvents = ''; b.style.opacity = ''; }
   });
-  document.getElementById('add-overlay').className = 'overlay open';
+  var _ov = document.getElementById('add-overlay');
+  _ov.className = 'overlay open';
+  _ov.style.display = 'flex';
+  _ov.style.position = 'fixed';
+  _ov.style.top = '0';
+  _ov.style.left = '0';
+  _ov.style.width = '100%';
+  _ov.style.height = '100%';
+  _ov.style.zIndex = '99999';
+  _ov.style.background = 'rgba(0,0,0,0.55)';
+  _ov.style.alignItems = 'flex-end';
+  _ov.style.justifyContent = 'center';
 }
-function closeAdd() { document.getElementById('add-overlay').className = 'overlay'; }
+function closeAdd() {
+  var _ov = document.getElementById('add-overlay');
+  _ov.className = 'overlay';
+  _ov.style.display = 'none';
+}
 
 function saveCustomer() {
   var name = document.getElementById('add-name').value.trim();
