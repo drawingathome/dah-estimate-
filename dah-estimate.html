@@ -3444,6 +3444,7 @@ function printForCustomer() {
 
   
   var nav = document.createElement('div');
+  nav.className = 'print-hide';
   nav.style.cssText = [
     'position:sticky;top:0;z-index:10001',
     'background:#282828;padding:0 24px',
@@ -3461,6 +3462,7 @@ function printForCustomer() {
   closeBtn.onclick = function(){
     document.getElementById('pv-overlay').remove();
     document.body.style.overflow = '';
+    document.body.classList.remove('preview-open');
   };
   closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:10px;font-family:inherit';
   var printBtn = document.createElement('button');
@@ -3484,6 +3486,7 @@ function printForCustomer() {
   ov.appendChild(content);
   document.body.appendChild(ov);
   document.body.style.overflow = 'hidden';
+  document.body.classList.add('preview-open');
 }
 
 var _selectedPdfOpt = 'fit';
