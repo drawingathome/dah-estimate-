@@ -651,7 +651,7 @@ td.amt{
 .summary-sub-amount.orange{color:#fff;font-size:22px;font-weight:800}
 .action-bar{background:#fff;border-top:2px solid #EEE6DC;padding:16px 16px 40px;display:flex;flex-direction:column;gap:8px}
 .action-bar button{font-size:11px;font-family:inherit;font-weight:700;border-radius:4px;cursor:pointer;transition:all 0.15s}
-.action-main{display:flex;gap:10px}
+.action-main{display:flex;flex-direction:column;gap:10px}
 .btn-new{background:transparent;color:#B0A99F;border:1.5px solid #EEE6DC}
 .btn-new:hover{color:#282828;border-color:#282828}
 .btn-preview{background:#fff;color:#282828;border:1.5px solid #EEE6DC}
@@ -2039,6 +2039,8 @@ button[onclick*="search"][onclick*="addr"]:hover {
       <button class="btn-save" style="flex:1" onclick="saveEstimate()">저장</button></div>
       <button onclick="exportAllEstimatesExcel()" style="width:100%;margin-top:8px;padding:12px 0;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📊 전체 견적서 엑셀 다운로드</button>
       <button onclick="printForVendor()" style="width:100%;margin-top:8px;padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📦 발주서 출력 (거래처별)</button>
+      <button onclick="printRequest('measure')" style="width:100%;margin-top:8px;padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📋 실측 요청서</button>
+      <button onclick="printRequest('install')" style="width:100%;margin-top:8px;padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">🔧 시공 요청서</button>
     </div>
   </div>
 
@@ -3658,6 +3660,138 @@ function printForVendor() {
 }
 
 var _selectedPdfOpt = 'fit';
+
+function buildRequestHTML(kind) {
+  // kind: 'measure' (실측 요청서) or 'install' (시공 요청서)
+  function today(){
+    var d=new Date();
+    return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';
+  }
+  var cName  = escHtml(document.getElementById('c-name')?.value||'');
+  var cPhone = escHtml(document.getElementById('c-phone')?.value||'');
+  var cAddr  = escHtml(document.getElementById('c-addr')?.value||'');
+  var dateVal = document.getElementById(kind==='measure' ? 'c-measure' : 'c-install')?.value || '';
+  var label = kind==='measure' ? '실측' : '시공';
+
+  // 공간별 커튼/블라인드 목록 수집
+  var items = [];
+  document.querySelectorAll('#curtain-body tr').forEach(function(tr){
+    var space = tr.querySelector('.space-inp')?.value || '';
+    var fabric = tr.querySelector('.c-fabric')?.value || '';
+    var name = tr.querySelector('.c-display-name')?.value || '';
+    if(!space && !fabric && !name) return;
+    items.push({space: space||'—', kind:'커튼'});
+  });
+  document.querySelectorAll('#blind-body tr').forEach(function(tr){
+    var space = tr.querySelector('.space-inp')?.value || '';
+    var blindKind = tr.querySelector('.blind-kind')?.value || '블라인드';
+    var innerInps = tr.querySelectorAll('.inner-row .inner-inp');
+    var fabric = innerInps[0]?.value || '';
+    if(!space && !fabric) return;
+    items.push({space: space||'—', kind: blindKind});
+  });
+
+  var out = '<div class="pv-wrap" style="min-width:560px;max-width:720px;margin:0 auto">';
+  out += '<div class="pv-header">'
+      +'<img class="pv-logo" style="height:36px;display:block;object-fit:contain" src="'+DAH_LOGO_B64+'" alt="드로잉엣홈">'
+      +'<div class="pv-header-right">'
+      +'<span class="pv-doc-label">'+(kind==='measure'?'MEASUREMENT':'INSTALLATION')+' REQUEST</span>'
+      +'<div class="pv-doc-title">'+label+' 요청서</div>'
+      +'</div>'
+      +'</div>';
+
+  out += '<div class="pv-meta">'
+      +'<span>발행일 <strong>'+today()+'</strong></span>'
+      +'<span>희망일자 <strong>'+(dateVal||'미정')+'</strong></span>'
+      +'</div>';
+
+  out += '<div style="margin-top:20px;padding:16px;background:#F5F2EE;border-radius:8px">'
+      +'<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:#B0A99F">고객명</span><strong>'+(cName||'—')+'</strong></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:#B0A99F">연락처</span><strong>'+(cPhone||'—')+'</strong></div>'
+      +'<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:#B0A99F">주소</span><strong>'+(cAddr||'—')+'</strong></div>'
+      +'</div>';
+
+  out += '<div style="margin-top:20px;padding:10px 14px;background:#F5F2EE;font-size:13px;font-weight:700;color:#282828;border-radius:6px 6px 0 0">'+label+' 대상 공간</div>';
+  if(items.length === 0) {
+    out += '<div style="padding:20px;text-align:center;color:#B0A99F;font-size:12px;border:1px solid #EEE6DC;border-top:none">입력된 공간/제품이 없습니다.</div>';
+  } else {
+    out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+        +'<thead><tr style="border-bottom:1.5px solid #282828">'
+        +'<th style="text-align:left;padding:8px 6px">공간</th>'
+        +'<th style="text-align:left;padding:8px 6px">종류</th>'
+        +'</tr></thead><tbody>';
+    items.forEach(function(it){
+      out += '<tr style="border-bottom:1px solid #EEE6DC">'
+          +'<td style="padding:8px 6px">'+escHtml(it.space)+'</td>'
+          +'<td style="padding:8px 6px">'+escHtml(it.kind)+'</td>'
+          +'</tr>';
+    });
+    out += '</tbody></table>';
+  }
+
+  out += '</div>';
+  return out;
+}
+
+function printRequest(kind) {
+  calcTotal();
+  var html = buildRequestHTML(kind);
+  var label = kind==='measure' ? '실측' : '시공';
+
+  var existing = document.getElementById('pv-overlay');
+  if(existing) existing.remove();
+
+  var ov = document.createElement('div');
+  ov.id = 'pv-overlay';
+  ov.style.cssText = [
+    'position:fixed;top:0;left:0;width:100%;height:100%',
+    'background:#F5F2EE;z-index:9999;overflow-y:auto',
+    'display:flex;flex-direction:column'
+  ].join(';');
+
+  var nav = document.createElement('div');
+  nav.className = 'print-hide';
+  nav.style.cssText = [
+    'position:sticky;top:0;z-index:10001',
+    'background:#282828;padding:0 24px',
+    'display:flex;align-items:center;justify-content:space-between',
+    'height:52px;flex-shrink:0'
+  ].join(';');
+  var navLabel = document.createElement('span');
+  navLabel.textContent = label+' 요청서 미리보기';
+  navLabel.style.cssText = 'color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;letter-spacing:0.3px';
+  var navBtns = document.createElement('div');
+  navBtns.style.cssText = 'display:flex;gap:8px';
+  var closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕ 닫기';
+  closeBtn.onclick = function(){
+    document.getElementById('pv-overlay').remove();
+    document.body.style.overflow = '';
+    document.body.classList.remove('preview-open');
+  };
+  closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit';
+  var printBtn = document.createElement('button');
+  printBtn.textContent = '인쇄 / PDF 저장';
+  printBtn.onclick = openPdfModal;
+  printBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';
+  navBtns.appendChild(closeBtn);
+  navBtns.appendChild(printBtn);
+  nav.appendChild(navLabel);
+  nav.appendChild(navBtns);
+
+  var content = document.createElement('div');
+  content.style.cssText = 'flex:1;padding:32px 20px 60px;display:flex;justify-content:center';
+  var inner = document.createElement('div');
+  inner.style.cssText = 'width:100%;max-width:640px';
+  inner.innerHTML = html;
+  content.appendChild(inner);
+
+  ov.appendChild(nav);
+  ov.appendChild(content);
+  document.body.appendChild(ov);
+  document.body.style.overflow = 'hidden';
+  document.body.classList.add('preview-open');
+}
 function openPdfModal() {
   _selectedPdfOpt = 'fit';
   document.getElementById('pdf-opt-fit')?.classList.add('selected');
