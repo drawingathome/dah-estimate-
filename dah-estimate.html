@@ -2533,15 +2533,21 @@ function recalcBlindOptionExtras() {
 
 function autoAddBlindSvc() {
   var svcBody = document.getElementById('svc-body');
-  if(!svcBody || svcBody.querySelector('[data-svc-type="블라인드시공"]')) return;
-  addSvcRow();
-  var row = svcBody.lastElementChild;
-  row.setAttribute('data-svc-type','블라인드시공');
+  var blindBody = document.getElementById('blind-body');
+  if(!svcBody || !blindBody) return;
+  var blindCount = blindBody.querySelectorAll('tr').length;
+  if(blindCount === 0) return;
+  var row = svcBody.querySelector('[data-svc-type="블라인드시공"]');
+  if(!row) {
+    addSvcRow();
+    row = svcBody.lastElementChild;
+    row.setAttribute('data-svc-type','블라인드시공');
+  }
   var tds = row.querySelectorAll('td');
   if(tds[0]) { var sel=tds[0].querySelector('select'); if(sel) sel.value='시공비'; }
-  if(tds[1]) { var inp=tds[1].querySelector('input'); if(inp) inp.value='블라인드 시공비'; }
+  if(tds[1]) { var inp=tds[1].querySelector('input'); if(inp) inp.value='블라인드 시공비 ('+blindCount+'개)'; }
   if(tds[2]) { var inp=tds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw','10000'); inp.value=(10000).toLocaleString(); } }
-  if(tds[3]) { var inp=tds[3].querySelector('input'); if(inp) inp.value=1; }
+  if(tds[3]) { var inp=tds[3].querySelector('input'); if(inp) inp.value=blindCount; }
   calcSvcRow(tds[2]?.querySelector('input'));
 }
 
@@ -2692,15 +2698,21 @@ function delRow(btn) {
   if(svcBody) {
     var railRow=svcBody.querySelector('[data-rail-src="'+rowIdx+'"]');
     if(railRow) railRow.remove();
+    var railCostRow=svcBody.querySelector('[data-railcost-src="'+rowIdx+'"]');
+    if(railCostRow) railCostRow.remove();
   }
   tr.remove();
   var blindBody=document.getElementById('blind-body');
   var blindTbl=document.getElementById('blind-table');
-  if(blindBody&&blindTbl&&blindBody.querySelectorAll('tr').length===0) {
-    blindTbl.style.display='none';
-    if(svcBody) {
-      var bs=svcBody.querySelector('[data-svc-type="블라인드시공"]');
-      if(bs) bs.remove();
+  if(blindBody&&blindTbl) {
+    if(blindBody.querySelectorAll('tr').length===0) {
+      blindTbl.style.display='none';
+      if(svcBody) {
+        var bs=svcBody.querySelector('[data-svc-type="블라인드시공"]');
+        if(bs) bs.remove();
+      }
+    } else {
+      autoAddBlindSvc();
     }
   }
   calcTotal();
@@ -2729,6 +2741,7 @@ function copyBlindRow(btn) {
     inp.setAttribute('data-raw',inp.getAttribute('data-raw'));
   });
   tr.parentNode.insertBefore(clone,tr.nextSibling);
+  autoAddBlindSvc();
   calcTotal();
 }
 function copySvcRow(btn) {
