@@ -2055,6 +2055,22 @@ button[onclick*="search"][onclick*="addr"]:hover {
 
 <div class="toast" id="toast"></div>
 
+<datalist id="vendor-list">
+  <option value="캔가공소">캔가공소</option>
+  <option value="디테라">디테라</option>
+  <option value="아이엔티">아이엔티</option>
+  <option value="예원">예원</option>
+  <option value="크바드라트">크바드라트</option>
+  <option value="이지패브릭">이지패브릭</option>
+  <option value="리더스">리더스</option>
+  <option value="유니밋">유니밋</option>
+  <option value="지오데코">지오데코</option>
+  <option value="윈텍">윈텍</option>
+  <option value="덱스터">덱스터</option>
+  <option value="헌터더글라스">헌터더글라스</option>
+  <option value="솜피">솜피</option>
+  <option value="목성">목성</option>
+</datalist>
 <!-- 원단 자동완성 -->
 <datalist id="fabric-list">
   <option value="린넨룩 No.1">린넨룩 No.1</option>
@@ -2311,7 +2327,7 @@ function addCurtainRow() {
       '<div class="inner-fields print-hide">'+
         '<div class="inner-row">'+
           '<input type="text" list="fabric-list" placeholder="원단명" class="c-fabric inner-inp">'+
-          '<input type="text" placeholder="거래처" class="c-vendor inner-inp" style="width:72px">'+
+          '<input type="text" list="vendor-list" placeholder="거래처" class="c-vendor inner-inp" style="width:72px">'+
           '<input type="text" placeholder="컬러" class="c-color inner-inp" style="width:60px">'+
           '<span class="c-yardage">원단량: —</span>'+
         '</div>'+
@@ -2444,7 +2460,7 @@ function addBlindRow() {
       '<div class="inner-fields print-hide">'+
         '<div class="inner-row">'+
           '<input type="text" list="blind-list" placeholder="원단명" class="inner-inp">'+
-          '<input type="text" placeholder="거래처" class="inner-inp" style="width:72px">'+
+          '<input type="text" list="vendor-list" placeholder="거래처" class="inner-inp" style="width:72px">'+
           '<input type="text" placeholder="컬러" class="inner-inp" style="width:60px">'+
         '</div>'+
       '</div>'+
