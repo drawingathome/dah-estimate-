@@ -5661,7 +5661,7 @@ function renderCalList(customers, selectedDate) {
     right.style.cssText = 'text-align:right;flex-shrink:0';
     var badge = document.createElement('div');
     badge.className = 'cal-ev-badge';
-    badge.style.cssText += ';background:' + (TYPE_BG_COLOR[ev.type]||'#F5F2EE') + ';color:' + (TYPE_FONT_COLOR[ev.type]||'#282828') + ';font-size:'+(isMain?'12px':'10px');
+    badge.style.cssText += ';background:' + (TYPE_BG_COLOR[ev.type]||'#F5F2EE') + ';color:' + (TYPE_FONT_COLOR[ev.type]||'#282828') + ';font-size:'+(isMain?'12px':'11px');
     badge.textContent = ev.type;
     right.appendChild(badge);
     if (isMain && ev.price > 0) {
