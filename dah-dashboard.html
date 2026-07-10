@@ -5044,6 +5044,16 @@ function sbSyncSetting(key, value) {
   xhr.send(JSON.stringify({ key: key, value: value, updated_at: new Date().toISOString() }));
 }
 
+function syncStaffGoalsToCloud() {
+  var allStaffs = ['마스터'].concat(getStaffList());
+  var goals = {};
+  allStaffs.forEach(function(staff) {
+    var v = Number(localStorage.getItem('dah_goal_'+staff)||0);
+    if (v > 0) goals[staff] = v;
+  });
+  sbSyncSetting('staff_goals', goals);
+}
+
 function loadAppSettingsAsync(callback) {
   sbXHR('GET', 'app_settings?select=*', null, function(err, rows) {
     if (err || !rows) { if (callback) callback(); return; }
@@ -5053,12 +5063,14 @@ function loadAppSettingsAsync(callback) {
       else if (row.key === 'settings') { try { localStorage.setItem('dah_settings', JSON.stringify(row.value)); } catch(e){} }
       else if (row.key === 'webhook_url') { try { localStorage.setItem('dah_webhook_url', row.value); } catch(e){} }
       else if (row.key === 'master_pw') { try { localStorage.setItem('dah_master_pw', row.value); MASTER_PW = row.value; } catch(e){} }
+      else if (row.key === 'staff_goals') { try { Object.keys(row.value||{}).forEach(function(staff){ localStorage.setItem('dah_goal_'+staff, String(row.value[staff])); }); } catch(e){} }
     });
     // Supabase에 아직 없는 값은 이 컴퓨터에 있는 값으로 최초 1회 올려줌 (첫 동기화)
     if (!found.staff_list) { try { var sl = JSON.parse(localStorage.getItem('dah_staff_list')||'[]'); if (sl.length) sbSyncSetting('staff_list', sl); } catch(e){} }
     if (!found.settings) { try { var s = JSON.parse(localStorage.getItem('dah_settings')||'{}'); if (Object.keys(s).length) sbSyncSetting('settings', s); } catch(e){} }
     if (!found.webhook_url) { try { var w = localStorage.getItem('dah_webhook_url'); if (w) sbSyncSetting('webhook_url', w); } catch(e){} }
     if (!found.master_pw) { try { var mp = localStorage.getItem('dah_master_pw'); if (mp) sbSyncSetting('master_pw', mp); } catch(e){} }
+    if (!found.staff_goals) { syncStaffGoalsToCloud(); }
     if (callback) callback();
   });
 }
@@ -7157,11 +7169,11 @@ function renderSettings() {
     var gRow = div('margin-bottom:10px', [
       span('font-size:12px;font-weight:700;display:block;margin-bottom:4px', staff)
     ]);
-    var gInput = el('input', {type:'number', placeholder:'목표 금액 (원)', value:curGoal>0?String(curGoal):'', style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box'});
+    var gInput = el('input', {type:'number', 'data-staff-goal':staff, placeholder:'목표 금액 (원)', value:curGoal>0?String(curGoal):'', style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box'});
     (function(k, s) {
       gInput.addEventListener('change', function() {
         var v = Number(this.value.replace(/[^0-9]/g,''));
-        if(v>0) { localStorage.setItem(k, String(v)); showToast(s+' 목표 설정됐습니다'); }
+        if(v>0) { localStorage.setItem(k, String(v)); syncStaffGoalsToCloud(); showToast(s+' 목표 설정됐습니다'); }
       });
     })(goalKey, staff);
     gRow.appendChild(gInput);
@@ -7175,7 +7187,7 @@ function renderSettings() {
     span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '알림톡 자동 발송 연동 (검수 완료 후 입력) · 입력 후 다른 곳을 클릭하면 자동 저장됩니다')
   ]);
   var curWebhook = localStorage.getItem('dah_webhook_url') || '';
-  var webhookInput = el('input', {type:'text', placeholder:'https://hook.make.com/...', value:curWebhook, style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box'});
+  var webhookInput = el('input', {type:'text', id:'set-webhook-url', placeholder:'https://hook.make.com/...', value:curWebhook, style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box'});
   webhookInput.addEventListener('change', function() {
     var url = this.value.trim();
     try { localStorage.setItem('dah_webhook_url', url); } catch(e){}
@@ -7184,6 +7196,28 @@ function renderSettings() {
   });
   webhookCard.appendChild(webhookInput);
   wrap.appendChild(webhookCard);
+
+  var saveAllCard = div('background:#fff;margin-bottom:10px;padding:16px', []);
+  saveAllCard.appendChild(btn('width:100%;padding:14px;background:#F06E2D;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer', '💾 전체 저장', function() {
+    // 매출목표/계좌정보
+    saveSettings();
+    // 담당자별 월목표
+    document.querySelectorAll('[data-staff-goal]').forEach(function(inp) {
+      var v = Number(inp.value.replace(/[^0-9]/g,''));
+      if (v > 0) { try { localStorage.setItem('dah_goal_'+inp.getAttribute('data-staff-goal'), String(v)); } catch(e){} }
+    });
+    syncStaffGoalsToCloud();
+    // 웹훅
+    var wh = document.getElementById('set-webhook-url');
+    if (wh) {
+      var url = wh.value.trim();
+      try { localStorage.setItem('dah_webhook_url', url); } catch(e){}
+      sbSyncSetting('webhook_url', url);
+    }
+    showToast('전체 설정이 저장되고 클라우드에 동기화됐습니다');
+  }));
+  wrap.appendChild(saveAllCard);
+
 
   
   var dataCard = div('background:#fff;margin-bottom:10px;padding:16px', [
