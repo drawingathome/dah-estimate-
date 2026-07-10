@@ -1,0 +1,26 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Puppeteer
+        run: npm install puppeteer@22
+
+      - name: 대시보드 회귀 테스트
+        run: node tests/run-all.js dah-dashboard.html
+
+      - name: 견적서 앱 회귀 테스트
+        run: node tests/run-all.js dah-estimate.html
