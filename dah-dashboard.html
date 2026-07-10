@@ -4655,6 +4655,7 @@ function saveSettings() {
       savedAt:     new Date().toISOString(),
     };
     localStorage.setItem('dah_settings', JSON.stringify(s));
+    sbSyncSetting('settings', s);
     showToast('설정이 저장되었습니다');
   } catch(e) { showToast('저장 실패'); }
 }
@@ -4932,6 +4933,7 @@ function changeMasterPassword() {
   if(nw.value !== con.value) { alert('새 비밀번호가 일치하지 않습니다.'); con.value=''; return; }
   MASTER_PW = nw.value;
   try { localStorage.setItem('dah_master_pw', MASTER_PW); } catch(e){}
+  sbSyncSetting('master_pw', MASTER_PW);
   cur.value=''; nw.value=''; con.value='';
   showToast('비밀번호가 변경됐습니다');
   var wrap = document.getElementById('pw-change-wrap');
@@ -5027,6 +5029,40 @@ function sbXHR(method, path, data, callback) {
 }
 
 var _customerCache = [];
+
+// ── 앱 설정 동기화 (담당자목록/월목표매출/계좌정보/웹훅/마스터비번) ──
+// 여러 컴퓨터·휴대폰에서 동일한 설정값이 보이도록 Supabase app_settings 테이블과 동기화
+function sbSyncSetting(key, value) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', SUPABASE_URL + '/rest/v1/app_settings?on_conflict=key', true);
+  xhr.setRequestHeader('apikey', SUPABASE_KEY);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_KEY);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.setRequestHeader('Prefer', 'resolution=merge-duplicates,return=minimal');
+  xhr.onload = function() { if (xhr.status < 200 || xhr.status >= 300) { console.warn('설정 동기화 실패:', key, xhr.status); } };
+  xhr.onerror = function() { console.warn('설정 동기화 실패(네트워크):', key); };
+  xhr.send(JSON.stringify({ key: key, value: value, updated_at: new Date().toISOString() }));
+}
+
+function loadAppSettingsAsync(callback) {
+  sbXHR('GET', 'app_settings?select=*', null, function(err, rows) {
+    if (err || !rows) { if (callback) callback(); return; }
+    var found = {};
+    rows.forEach(function(row) { found[row.key] = true;
+      if (row.key === 'staff_list') { try { localStorage.setItem('dah_staff_list', JSON.stringify(row.value)); } catch(e){} }
+      else if (row.key === 'settings') { try { localStorage.setItem('dah_settings', JSON.stringify(row.value)); } catch(e){} }
+      else if (row.key === 'webhook_url') { try { localStorage.setItem('dah_webhook_url', row.value); } catch(e){} }
+      else if (row.key === 'master_pw') { try { localStorage.setItem('dah_master_pw', row.value); MASTER_PW = row.value; } catch(e){} }
+    });
+    // Supabase에 아직 없는 값은 이 컴퓨터에 있는 값으로 최초 1회 올려줌 (첫 동기화)
+    if (!found.staff_list) { try { var sl = JSON.parse(localStorage.getItem('dah_staff_list')||'[]'); if (sl.length) sbSyncSetting('staff_list', sl); } catch(e){} }
+    if (!found.settings) { try { var s = JSON.parse(localStorage.getItem('dah_settings')||'{}'); if (Object.keys(s).length) sbSyncSetting('settings', s); } catch(e){} }
+    if (!found.webhook_url) { try { var w = localStorage.getItem('dah_webhook_url'); if (w) sbSyncSetting('webhook_url', w); } catch(e){} }
+    if (!found.master_pw) { try { var mp = localStorage.getItem('dah_master_pw'); if (mp) sbSyncSetting('master_pw', mp); } catch(e){} }
+    if (callback) callback();
+  });
+}
+
 
 function dbRowToCustomer(row) {
   return {
@@ -7069,6 +7105,7 @@ function renderSettings() {
     if(nw.value !== con.value) { alert('새 비밀번호가 일치하지 않습니다.'); con.value=''; return; }
     MASTER_PW = nw.value;
     try { localStorage.setItem('dah_master_pw', MASTER_PW); } catch(e){}
+    sbSyncSetting('master_pw', MASTER_PW);
     cur.value=''; nw.value=''; con.value='';
     showToast('비밀번호가 변경됐습니다');
   }));
@@ -7086,6 +7123,7 @@ function renderSettings() {
         if(!confirm(name + ' 담당자를 삭제할까요?')) return;
         var list = getStaffList().filter(function(s){ return s !== name; });
         try { localStorage.setItem('dah_staff_list', JSON.stringify(list)); } catch(e){}
+        sbSyncSetting('staff_list', list);
         renderSettings(); showToast(name + ' 담당자가 삭제됐습니다');
       })
     ]);
@@ -7101,6 +7139,7 @@ function renderSettings() {
     if(list.indexOf(name) >= 0) { showToast('이미 있는 담당자입니다'); return; }
     list.push(name);
     try { localStorage.setItem('dah_staff_list', JSON.stringify(list)); } catch(e){}
+    sbSyncSetting('staff_list', list);
     staffInput.value = '';
     renderSettings(); showToast(name + ' 담당자가 추가됐습니다');
   }));
@@ -7140,6 +7179,7 @@ function renderSettings() {
   webhookInput.addEventListener('change', function() {
     var url = this.value.trim();
     try { localStorage.setItem('dah_webhook_url', url); } catch(e){}
+    sbSyncSetting('webhook_url', url);
     showToast('웹훅 URL이 저장됐습니다');
   });
   webhookCard.appendChild(webhookInput);
@@ -7381,10 +7421,13 @@ document.getElementById('add-overlay').addEventListener('click', function(e) { i
         if (mobNav) { mobNav.style.display = isMobileWidth ? 'flex' : 'none'; }
         var mobFab = document.querySelector('.mob-fab');
         if (mobFab) { mobFab.style.display = isMobileWidth ? 'flex' : 'none'; }
-        applyPermissions(); loadCustomersAsync(renderHome); return;
+        applyPermissions(); loadCustomersAsync(renderHome);
+        loadAppSettingsAsync();
+        return;
       }
     }
   } catch(e) {}
+  loadAppSettingsAsync(renderStaffLoginList);
   renderStaffLoginList();
 })();
 
