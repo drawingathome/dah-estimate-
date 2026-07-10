@@ -6,9 +6,10 @@
  * 이 스크립트 하나로 두 가지를 처리합니다:
  *
  * 1) 문서 자동저장 (발주서/실측시공/견적서 등)
- *    DAH_문서보관/{카테고리}/{연-월}/{날짜}_{고객명}_{거래처}.html
- *    같은 날 같은 문서를 다시 저장하면 기존 파일을 덮어씁니다
- *    (그날의 최종본만 남음, 날짜가 바뀌면 새 파일로 이력이 쌓임)
+ *    DAH_문서보관/{카테고리}/{연-월}/{견적번호 또는 날짜}_{고객명}_{거래처}.html
+ *    견적번호(c-no)가 있으면 그걸 기준으로 덮어씁니다 — 며칠 뒤에
+ *    같은 건(같은 견적번호)을 수정해서 다시 저장해도 새 파일이 안 생기고
+ *    같은 파일이 갱신됩니다. 완전히 새 견적(새 견적번호)이면 새 파일이 됩니다.
  *    카테고리: 견적서 / 제작 / 원단 / 블라인드 / 레일외 부자재 / 전동 / 실측시공
  *
  * 2) 고객명단 시트 동기화 (현황판 방식 — 전화번호 기준으로
@@ -68,7 +69,11 @@ function saveDocumentFile(data) {
   var monthFolder = monthFolders.hasNext() ? monthFolders.next() : catFolder.createFolder(monthStr);
 
   var today = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
-  var fileName = today + '_' + customerName + vendor + '.html';
+  var estimateNo = data.estimateNo ? data.estimateNo.replace(/[\\\/:*?"<>|]/g, '_') : '';
+  // 견적번호가 있으면 그걸 기준키로 사용 (며칠 뒤 같은 건을 재저장해도 덮어써짐)
+  // 없으면 날짜를 기준키로 사용 (기존 방식)
+  var fileKey = estimateNo || today;
+  var fileName = fileKey + '_' + customerName + vendor + '.html';
 
   var fullHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
     + '<title>' + category + ' - ' + customerName + '</title></head><body>'
