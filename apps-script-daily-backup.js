@@ -17,15 +17,18 @@
  *    정상 작동하는지 확인 (실행 버튼 옆 드롭다운에서 함수 선택 후 실행)
  *
  * 백업 파일은 구글드라이브 > "DAH_자동백업" 폴더에
- * 날짜별로 저장됩니다 (예: DAH_백업_2026-07-10.json)
- * 30일 지난 백업은 자동으로 정리됩니다 (용량 관리)
+ * 날짜별로 영구 저장됩니다 (예: DAH_백업_2026-07-10.json)
+ * 자동 삭제 없음 — 10년 이상 장기 보관 목적이라 오래된 백업도
+ * 절대 지우지 않습니다 (JSON 텍스트 파일이라 용량 부담 거의 없음:
+ * 10년치 매일 백업해도 보통 1~2GB 수준으로 무료 용량 내에서 충분)
  * ══════════════════════════════════════════════════
  */
 
 var SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
 var SUPABASE_KEY = 'sb_publishable_9nYjQBzwiyausr7-Cd-elw_S9inJlge';
 var BACKUP_FOLDER_NAME = 'DAH_자동백업';
-var KEEP_DAYS = 30; // 이보다 오래된 백업 파일은 자동 삭제
+// 자동 삭제 없음(영구보관) — 이전엔 KEEP_DAYS로 30일 지나면 지웠으나
+// 10년 이상 보관해야 하는 요구사항이라 완전히 제거함
 
 function dahDailyBackup() {
   var tables = ['customers', 'estimates', 'surveys'];
@@ -59,31 +62,17 @@ function dahDailyBackup() {
   var folders = DriveApp.getFoldersByName(BACKUP_FOLDER_NAME);
   var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(BACKUP_FOLDER_NAME);
 
-  // 파일 저장
+  // 파일 저장 (영구 보관 — 자동 삭제 로직 없음)
   var today = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
   var fileName = 'DAH_백업_' + today + '.json';
   var content = JSON.stringify(backup, null, 2);
   folder.createFile(fileName, content, MimeType.PLAIN_TEXT);
 
-  // 오래된 백업 정리 (KEEP_DAYS일 지난 파일 삭제)
-  var cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - KEEP_DAYS);
-  var files = folder.getFiles();
-  var deletedCount = 0;
-  while (files.hasNext()) {
-    var f = files.next();
-    if (f.getDateCreated() < cutoff) {
-      f.setTrashed(true);
-      deletedCount++;
-    }
-  }
-
   // 결과 요약 (실행 로그에서 확인 가능: 보기 > 실행 로그)
   var summary = '백업 완료: ' + today
     + ' | customers ' + (backup.customers ? backup.customers.length : '실패') + '건'
     + ' | estimates ' + (backup.estimates ? backup.estimates.length : '실패') + '건'
-    + ' | surveys ' + (backup.surveys ? backup.surveys.length : '실패') + '건'
-    + (deletedCount > 0 ? ' | 오래된 백업 ' + deletedCount + '개 정리' : '');
+    + ' | surveys ' + (backup.surveys ? backup.surveys.length : '실패') + '건';
   Logger.log(summary);
 
   // 실패한 테이블이 있으면 이메일로 알림 (선택사항 — 본인 이메일로 변경)
