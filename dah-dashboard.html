@@ -7495,14 +7495,17 @@ setTimeout(function(){
 </script>
 
 <script>
+// 서비스워커를 더 이상 사용하지 않음 (캐시로 인해 배포한 최신버전이 늦게 반영되는 문제의 근본 원인이었음)
+// 기존에 설치된 서비스워커가 있다면 자동으로 제거함
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/sw.js').then(function(reg) {
-      console.log('DAH SW 등록:', reg.scope);
-    }).catch(function(e) {
-      console.warn('DAH SW 실패:', e);
-    });
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    regs.forEach(function(reg) { reg.unregister(); });
   });
+  if (window.caches) {
+    caches.keys().then(function(keys) {
+      keys.forEach(function(k) { caches.delete(k); });
+    });
+  }
 }
 </script>
 
