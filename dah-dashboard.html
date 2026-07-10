@@ -4802,7 +4802,7 @@ function loadCustomers() {
 }
 
 function loadCustomersAsync(callback) {
-  sbXHR('GET', 'customers?select=*&order=created_at.desc', null, function(err, data) {
+  sbXHR('GET', 'customers?select=*&is_archived=eq.false&order=created_at.desc', null, function(err, data) {
     hideLoading();
     if (err) { try { _customerCache = JSON.parse(localStorage.getItem('dah_customers') || '[]'); } catch(e) {} }
     else { _customerCache = (data || []).map(dbRowToCustomer); try { localStorage.setItem('dah_customers', JSON.stringify(_customerCache)); } catch(e) {} }
@@ -4822,7 +4822,8 @@ function saveCustomerToDb(customer, callback) {
 }
 
 function deleteCustomerFromDb(clientName, callback) {
-  sbXHR('DELETE', 'customers?client_name=eq.' + encodeURIComponent(clientName), null, function(err, data) { if(err) console.error('삭제 오류:', err.text); if(callback) callback(err, data); });
+  // 실제 DELETE는 RLS에서 막혀있음(데이터 보호) → 소프트 삭제(is_archived=true)로 처리
+  sbXHR('PATCH', 'customers?client_name=eq.' + encodeURIComponent(clientName), { is_archived: true }, function(err, data) { if(err) console.error('삭제 오류:', err.text); if(callback) callback(err, data); });
 }
 
 function el(tag, attrs, children) {
