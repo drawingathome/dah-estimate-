@@ -1830,7 +1830,7 @@ button[onclick="exportExcel()"] {
   flex-shrink: 0;
 }
 .cal-ev-badge.type-상담 { background: #282828; }
-.cal-ev-badge.type-실측 { background: #8B6BB1; }
+.cal-ev-badge.type-실측 { background: #A67C52; }
 .cal-ev-badge.type-시공 { background: #F06E2D; }
 .cal-ev-type {
   width: 4px;
@@ -1839,7 +1839,7 @@ button[onclick="exportExcel()"] {
   flex-shrink: 0;
 }
 .cal-ev-type.type-상담 { background: #282828; }
-.cal-ev-type.type-실측 { background: #8B6BB1; }
+.cal-ev-type.type-실측 { background: #A67C52; }
 .cal-ev-type.type-시공 { background: #F06E2D; }
 
 /* ══════════════ 칸반 카드 ══════════════ */
@@ -1880,7 +1880,7 @@ button[onclick="exportExcel()"] {
 }
 .stage-pill.상담 { background: #282828; }
 .stage-pill.계약금 { background: #F06E2D; }
-.stage-pill.실측 { background: #8B6BB1; }
+.stage-pill.실측 { background: #A67C52; }
 .stage-pill.잔금 { background: #2E7D6B; }
 .stage-pill.시공 { background: #C0392B; }
 .stage-pill.완료 { background: var(--light, #B0A99F); }
@@ -4851,7 +4851,7 @@ function isArchived(c) {
   if (!refDate) return false;
   return Math.floor((new Date() - new Date(refDate)) / 86400000) >= 14;
 }
-var STAGE_COLORS = {상담:'#282828',계약금:'#F06E2D',실측:'#8B6BB1',잔금:'#2E7D6B',시공:'#C0392B',완료:'var(--light)'};
+var STAGE_COLORS = {상담:'#282828',계약금:'#F06E2D',실측:'#A67C52',잔금:'#2E7D6B',시공:'#C0392B',완료:'var(--light)'};
 var STAGE_BG = {상담:'#EEF2F7',계약금:'#FFF3EE',실측:'#F3EFF8',잔금:'#EEF5F2',시공:'#FDECEA',완료:'#F5F2EE'};
 var STAGE_NUM = {상담:1,계약금:2,실측:3,잔금:4,시공:5,완료:6};
 var STAGE_ACTIVE = {상담:true,계약금:true,실측:true,잔금:true,시공:true,완료:false};
@@ -4889,9 +4889,9 @@ function loginAs(who) {
     _mobHd.style.display = (window.innerWidth <= 640) ? 'flex' : 'none';
   }
   var _mobNav = document.getElementById('mob-bottom-nav');
-  if (_mobNav) { _mobNav.style.cssText = 'display:flex !important; position:fixed !important; bottom:0 !important; width:100% !important; z-index:200 !important; background:#fff !important; border-top:1px solid #EEE6DC !important;'; }
+  if (_mobNav) { _mobNav.style.cssText = (window.innerWidth <= 640 ? 'display:flex' : 'display:none') + ' !important; position:fixed !important; bottom:0 !important; width:100% !important; z-index:200 !important; background:#fff !important; border-top:1px solid #EEE6DC !important;'; }
   var _mobFab = document.querySelector('.mob-fab');
-  if (_mobFab) { _mobFab.style.display = 'flex'; }
+  if (_mobFab) { _mobFab.style.display = (window.innerWidth <= 640) ? 'flex' : 'none'; }
   applyPermissions();
   loadCustomersAsync(renderHome);
 }
@@ -5801,8 +5801,8 @@ function renderCal() {
   var totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
 
   // 이벤트 타입 색상
-  var TYPE_DOT_COLOR = {상담:'#282828', 실측:'#8B6BB1', 시공:'#F06E2D'};
-  var TYPE_TEXT_COLOR = {상담:'#282828', 실측:'#8B6BB1', 시공:'#F06E2D'};
+  var TYPE_DOT_COLOR = {상담:'#282828', 실측:'#A67C52', 시공:'#F06E2D'};
+  var TYPE_TEXT_COLOR = {상담:'#282828', 실측:'#A67C52', 시공:'#F06E2D'};
 
   for (var i = 0; i < totalCells; i++) {
     var cell = document.createElement('div');
@@ -5921,7 +5921,7 @@ function renderCalList(customers, selectedDate) {
 
   var DOW3 = ['일','월','화','수','목','금','토'];
   var TYPE_BG_COLOR = {실측:'#F3EFF8', 시공:'#FFF3EE', 상담:'#F5F5F5'};
-  var TYPE_FONT_COLOR = {실측:'#8B6BB1', 시공:'#F06E2D', 상담:'#9A9490'};
+  var TYPE_FONT_COLOR = {실측:'#A67C52', 시공:'#F06E2D', 상담:'#9A9490'};
 
   events.forEach(function(ev) {
     var isMain = ev.type !== '상담'; // 실측/시공이 메인
@@ -7373,13 +7373,14 @@ document.getElementById('add-overlay').addEventListener('click', function(e) { i
         currentUser = saved;
         var loginScreen = document.getElementById('login-screen'); if (loginScreen) loginScreen.style.display = 'none';
         var badge = document.getElementById('current-user-badge'); if (badge) badge.textContent = currentUser.name;
-        // 모바일 앱헤더 강제 표시
+        // 모바일 앱헤더/하단네비/FAB — 모바일에서만 표시
         var mobHd = document.getElementById('mob-app-header');
-        if (mobHd) { mobHd.style.display = 'flex'; mobHd.style.background = '#282828'; mobHd.style.minHeight = '48px'; }
+        var isMobileWidth = window.innerWidth <= 640;
+        if (mobHd) { mobHd.style.display = isMobileWidth ? 'flex' : 'none'; mobHd.style.background = '#282828'; mobHd.style.minHeight = '48px'; }
         var mobNav = document.getElementById('mob-bottom-nav');
-        if (mobNav) { mobNav.style.display = 'flex'; }
+        if (mobNav) { mobNav.style.display = isMobileWidth ? 'flex' : 'none'; }
         var mobFab = document.querySelector('.mob-fab');
-        if (mobFab) { mobFab.style.display = 'flex'; }
+        if (mobFab) { mobFab.style.display = isMobileWidth ? 'flex' : 'none'; }
         applyPermissions(); loadCustomersAsync(renderHome); return;
       }
     }
