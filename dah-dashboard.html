@@ -6918,16 +6918,16 @@ function renderSettings() {
   
   var webhookCard = div('background:#fff;margin-bottom:10px;padding:16px', [
     span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:4px', '⚙️ Make.com 웹훅 URL'),
-    span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '알림톡 자동 발송 연동 (검수 완료 후 입력)')
+    span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '알림톡 자동 발송 연동 (검수 완료 후 입력) · 입력 후 다른 곳을 클릭하면 자동 저장됩니다')
   ]);
   var curWebhook = localStorage.getItem('dah_webhook_url') || '';
-  var webhookInput = el('input', {type:'text', placeholder:'https://hook.make.com/...', value:curWebhook, style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box;margin-bottom:8px'});
-  webhookCard.appendChild(webhookInput);
-  webhookCard.appendChild(btn('width:100%;padding:10px;background:#282828;color:#fff;border:none;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '저장', function() {
-    var url = webhookInput.value.trim();
+  var webhookInput = el('input', {type:'text', placeholder:'https://hook.make.com/...', value:curWebhook, style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box'});
+  webhookInput.addEventListener('change', function() {
+    var url = this.value.trim();
     try { localStorage.setItem('dah_webhook_url', url); } catch(e){}
     showToast('웹훅 URL이 저장됐습니다');
-  }));
+  });
+  webhookCard.appendChild(webhookInput);
   wrap.appendChild(webhookCard);
 
   
