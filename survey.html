@@ -569,13 +569,16 @@ function App() {
           'Prefer': 'return=minimal'
         },
         body: JSON.stringify({
-          name: form.name, phone: form.phone, addr: form.addr,
-          pyeong: form.pyeong, home_dir: form.homeDir,
-          wall_tone: form.wallTone, floor_type: form.floorType,
-          spaces: form.spaces, moods: form.moods, functions: form.functions,
-          budget: form.budget,
-          memo: form.sizeNote ? (form.sizeNote + (form.memo ? ' / ' + form.memo : '')) : form.memo,
-          synced_to_sheet: true
+          client_name: form.name, phone: form.phone, addr: form.addr,
+          space: form.spaces.join(', '),
+          answers: {
+            pyeong: form.pyeong, homeDir: form.homeDir,
+            wallTone: form.wallTone, floorType: form.floorType,
+            moods: form.moods, functions: form.functions,
+            budget: form.budget, sizeNote: form.sizeNote
+          },
+          memo: form.memo,
+          status: '신규'
         })
       });
     } catch(e) { console.warn('Supabase 저장 실패:', e); }

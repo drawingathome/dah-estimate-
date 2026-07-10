@@ -2827,7 +2827,7 @@ function loadSurveyFromSheet() {
 
   // 1순위: Supabase surveys 테이블에서 이름으로 최신 1건 조회
   var sxhr = new XMLHttpRequest();
-  var sUrl = SUPABASE_URL + '/rest/v1/surveys?name=eq.' + encodeURIComponent(nameVal) + '&order=created_at.desc&limit=1';
+  var sUrl = SUPABASE_URL + '/rest/v1/surveys?client_name=eq.' + encodeURIComponent(nameVal) + '&order=created_at.desc&limit=1';
   sxhr.open('GET', sUrl, true);
   sxhr.setRequestHeader('apikey', SUPABASE_KEY);
   sxhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_KEY);
@@ -2836,13 +2836,15 @@ function loadSurveyFromSheet() {
       var rows = JSON.parse(sxhr.responseText);
       if(Array.isArray(rows) && rows.length > 0) {
         var r = rows[0];
+        var a = r.answers || {};
         if(btn) btn.textContent = '📋 설문 불러오기';
         applySurveyData({
-          name: r.name, phone: r.phone, addr: r.addr,
-          spaces: r.spaces || [], pyeong: r.pyeong,
-          homeDir: r.home_dir, wallTone: r.wall_tone, floorType: r.floor_type,
-          moods: r.moods || [], functions: r.functions || [],
-          budget: r.budget, memo: r.memo
+          name: r.client_name, phone: r.phone, addr: r.addr,
+          spaces: r.space ? r.space.split(',').map(function(s){return s.trim();}).filter(Boolean) : [],
+          pyeong: a.pyeong,
+          homeDir: a.homeDir, wallTone: a.wallTone, floorType: a.floorType,
+          moods: a.moods || [], functions: a.functions || [],
+          budget: a.budget, memo: r.memo
         });
         showToast('✅ 설문 데이터를 불러왔습니다 (Supabase)');
       } else {
