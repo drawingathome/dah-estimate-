@@ -5,6 +5,7 @@
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
 <link rel="stylesheet" href="/dash-styles.css">
+<script src="/dash-utils.js"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>드로잉엣홈 대시보드</title>
@@ -1341,12 +1342,6 @@ var ALIM_META = {
   t14_noshow:         {label:'14. 노쇼 재예약 안내',   desc:'선택 · 노쇼 처리 후',      tag:'선택'}
 };
 
-function isArchived(c) {
-  if (c.stage !== '완료') return false;
-  var refDate = c.installDate || c.date || c.createdAt;
-  if (!refDate) return false;
-  return Math.floor((new Date() - new Date(refDate)) / 86400000) >= 14;
-}
 var STAGE_COLORS = {상담:'#282828',계약금:'#F06E2D',실측:'#A67C52',잔금:'#2E7D6B',시공:'#C0392B',완료:'var(--light)'};
 var STAGE_BG = {상담:'#EEF2F7',계약금:'#FFF3EE',실측:'#F3EFF8',잔금:'#EEF5F2',시공:'#FDECEA',완료:'#F5F2EE'};
 var STAGE_NUM = {상담:1,계약금:2,실측:3,잔금:4,시공:5,완료:6};
@@ -1354,14 +1349,6 @@ var STAGE_ACTIVE = {상담:true,계약금:true,실측:true,잔금:true,시공:tr
 var currentDetailName = null;
 
 var MASTER_PW = (function(){ try{ return localStorage.getItem('dah_master_pw')||'dah2012'; }catch(e){ return 'dah2012'; } })();
-function escHtml(s) {
-  return String(s == null ? '' : s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
 var currentUser = null;
 
 function getStaffList() {
@@ -1441,22 +1428,6 @@ function renderStaffLoginList() {
   }
 }
 
-function pad2(n) { return n < 10 ? '0' + n : '' + n; }
-function fmt(n) { return (Number(n) || 0).toLocaleString() + '원'; }
-function fmtMan(n) { return Math.round((Number(n)||0)/10000).toLocaleString() + '만원'; }
-function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
-function thisMonthStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1); }
-function daysDiff(dateStr) { return Math.floor((new Date() - new Date(dateStr)) / 86400000); }
-function fmtPhone(v) {
-  var d = v.replace(/[^0-9]/g, '');
-  if (d.slice(0,2) === '02') {
-    if (d.length <= 6) return d.slice(0,2) + '-' + d.slice(2);
-    if (d.length <= 9) return d.slice(0,2) + '-' + d.slice(2,5) + '-' + d.slice(5);
-    return d.slice(0,2) + '-' + d.slice(2,6) + '-' + d.slice(6,10);
-  }
-  if (d.length <= 7) return d.slice(0,3) + '-' + d.slice(3);
-  return d.slice(0,3) + '-' + d.slice(3,7) + '-' + d.slice(7,11);
-}
 /** @param {string} msg 토스트 메시지 */
 function showToast(msg) {
   var t = document.getElementById('toast');
