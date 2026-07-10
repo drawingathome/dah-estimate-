@@ -14,10 +14,12 @@
 -- 1. is_archived 컬럼 추가 (없으면)
 alter table customers  add column if not exists is_archived boolean default false;
 alter table estimates  add column if not exists is_archived boolean default false;
+alter table surveys    add column if not exists is_archived boolean default false;
 
 -- 기존 데이터 중 null인 값 false로 채우기 (조회 필터 안전하게 하기 위함)
 update customers set is_archived = false where is_archived is null;
 update estimates set is_archived = false where is_archived is null;
+update surveys set is_archived = false where is_archived is null;
 
 -- 2. as_records / surveys 테이블이 있으면 같이 보호 (없어도 에러 안 나게 예외 처리)
 do $$
@@ -28,11 +30,17 @@ begin
   end if;
 end $$;
 
--- 3. 기존 "allow_all" 정책 제거 (DELETE까지 전부 허용하던 정책)
+-- 3. 기존 정책 전부 제거 (allow_all_* 와 별도로 생성된 "anon full access" 정책까지
+--    DELETE까지 허용하던 정책이 테이블마다 겹쳐서 존재하는 것을 확인함 —
+--    하나만 지우면 나머지 정책으로 여전히 삭제가 가능하므로 전부 지워야 함)
 drop policy if exists "allow_all_customers" on customers;
+drop policy if exists "anon full access" on customers;
 drop policy if exists "allow_all_estimates" on estimates;
+drop policy if exists "anon full access" on estimates;
 drop policy if exists "allow_all_as_records" on as_records;
+drop policy if exists "anon full access" on as_records;
 drop policy if exists "allow_all_surveys" on surveys;
+drop policy if exists "anon full access" on surveys;
 
 -- 4. 읽기/생성/수정만 허용하는 정책으로 재생성 (DELETE 정책은 만들지 않음
 --    → RLS 기본 원칙상 정책 없는 작업은 자동으로 거부됨)
@@ -58,3 +66,8 @@ begin
 end $$;
 
 select '✅ 삭제방지 적용 완료 — 이제 anon key로는 절대 실제 삭제가 불가능합니다. 고객 삭제 기능은 소프트 삭제(is_archived)로 동작합니다.' as result;
+
+-- 최종 검증: 아래 결과가 0행이어야 정상 (DELETE 허용 정책이 하나도 없어야 함)
+select tablename, policyname, cmd from pg_policies
+where tablename in ('customers','estimates','surveys','as_records')
+  and (cmd = 'DELETE' or cmd = 'ALL');
