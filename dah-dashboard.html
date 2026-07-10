@@ -4720,6 +4720,26 @@ function showToast(msg) {
 var SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
 var SUPABASE_KEY = 'sb_publishable_9nYjQBzwiyausr7-Cd-elw_S9inJlge';
 
+// 구글드라이브 자동화 허브 웹훅 (배포 후 URL 채워넣을 예정) — 견적서 앱과 공유
+var DRIVE_WEBHOOK_URL = '';
+function syncCustomerToSheet(customer) {
+  if (!DRIVE_WEBHOOK_URL) return;
+  try {
+    fetch(DRIVE_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'syncCustomer',
+        clientName: customer.clientName, phone: customer.phone, addr: customer.addr,
+        staffName: customer.staffName, stage: customer.stage,
+        price: customer.price, performanceRevenue: customer.performanceRevenue,
+        date: customer.date, measureDate: customer.measureDate, installDate: customer.installDate,
+        memo: customer.memo
+      })
+    }).catch(function(e) { console.warn('고객명단 동기화 실패:', e); });
+  } catch (e) { console.warn('고객명단 동기화 실패:', e); }
+}
+
 function sbXHR(method, path, data, callback) {
   var xhr = new XMLHttpRequest();
   xhr.open(method, SUPABASE_URL + '/rest/v1/' + path, true);
@@ -4814,6 +4834,7 @@ function saveCustomers(arr) { _customerCache = arr; try { localStorage.setItem('
 
 function saveCustomerToDb(customer, callback) {
   var row = customerToDbRow(customer);
+  syncCustomerToSheet(customer);
   if (customer.id) {
     sbXHR('PATCH', 'customers?id=eq.' + customer.id, row, function(err, data) { if(err) console.error('수정 오류:', err.text); if(callback) callback(err, data); });
   } else {

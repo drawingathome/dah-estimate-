@@ -2161,6 +2161,46 @@ function escHtml(s) {
     .replace(/'/g, '&#39;');
 }
 const SUPABASE_KEY = 'sb_publishable_9nYjQBzwiyausr7-Cd-elw_S9inJlge';
+
+// 구글드라이브 자동저장 웹훅 (배포 후 URL 채워넣을 예정)
+var DRIVE_WEBHOOK_URL = '';
+
+// 거래처명 -> 카테고리 매핑 (발주서를 어느 폴더에 저장할지 결정)
+var VENDOR_CATEGORY_MAP = {
+  '캔가공소': '제작',
+  '디테라': '원단', '아이엔티': '원단', '예원': '원단', '크바드라트': '원단',
+  '이지패브릭': '원단', '리더스': '원단', '유니밋': '원단', '지오데코': '원단',
+  '윈텍': '블라인드', '덱스터': '블라인드', '헌터더글라스': '블라인드',
+  '솜피': '전동',
+  '목성': '레일외 부자재'
+};
+function vendorCategory(vendor) {
+  return VENDOR_CATEGORY_MAP[vendor] || '기타';
+}
+
+// 구글드라이브에 문서 저장 (실패해도 조용히 무시 — 화면 흐름을 절대 막지 않음)
+function saveDocumentToDrive(category, customerName, vendor, htmlContent) {
+  if (!DRIVE_WEBHOOK_URL) return;
+  try {
+    fetch(DRIVE_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' }, // Apps Script는 text/plain이 CORS 프리플라이트 없이 가장 안정적
+      body: JSON.stringify({ action: 'saveDocument', category: category, customerName: customerName, vendor: vendor || '', htmlContent: htmlContent })
+    }).catch(function(e) { console.warn('구글드라이브 저장 실패:', e); });
+  } catch (e) { console.warn('구글드라이브 저장 실패:', e); }
+}
+
+// 고객명단 구글시트 동기화 (실패해도 조용히 무시)
+function syncCustomerToSheet(customer) {
+  if (!DRIVE_WEBHOOK_URL) return;
+  try {
+    fetch(DRIVE_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'syncCustomer', clientName: customer.clientName, phone: customer.phone, addr: customer.addr, staffName: customer.staffName, stage: customer.stage, price: customer.price, performanceRevenue: customer.performanceRevenue, date: customer.date, measureDate: customer.measureDate, installDate: customer.installDate, memo: customer.memo })
+    }).catch(function(e) { console.warn('고객명단 동기화 실패:', e); });
+  } catch (e) { console.warn('고객명단 동기화 실패:', e); }
+}
 var currentTab = 'ga';
 
 (function(){
@@ -2991,6 +3031,26 @@ function saveEstimate() {
   function saveToCustomers() {
     
     saveToLocalStorage();
+
+    // 고객명단 구글시트 동기화 (항상 — 가견적/확정 상관없이 현재 상태 반영)
+    var isFinalForDrive = (currentTab === 'final' || document.getElementById('status-final')?.classList.contains('on'));
+    syncCustomerToSheet({
+      clientName: name, phone: phone, addr: addr+(addr2?' '+addr2:''),
+      staffName: staffName, stage: isFinalForDrive ? '확정견적' : '가견적',
+      price: grand, performanceRevenue: perf,
+      date: document.getElementById('c-measure')?.value||'',
+      measureDate: document.getElementById('c-measure')?.value||'',
+      installDate: document.getElementById('c-install')?.value||'',
+      memo: custMemo
+    });
+
+    // 견적서는 확정(최종) 견적서일 때만 구글드라이브에 저장 (가견적서는 저장 안 함)
+    if (isFinalForDrive && typeof buildCustomerHTML === 'function') {
+      try {
+        var custDocHtml = buildCustomerHTML();
+        saveDocumentToDrive('견적서', name || '미지정고객', phone, custDocHtml);
+      } catch(e) { console.warn('견적서 드라이브 저장용 HTML 생성 실패:', e); }
+    }
     
     try {
       var xhr=new XMLHttpRequest();
@@ -3557,21 +3617,70 @@ function printForCustomer() {
   document.body.classList.add('preview-open');
 }
 
-function buildVendorHTML(extraNote) {
-  function today(){
-    var d=new Date();
-    return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';
+function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, today) {
+  var out = '<div class="pv-wrap" style="min-width:560px;max-width:720px;margin:0 auto;background:#fff;padding:36px 32px">';
+
+  out += '<div style="text-align:center;margin-bottom:6px">'
+      +'<div style="font-size:22px;font-weight:700;letter-spacing:1.5px;color:#282828">DRAWING at HOME</div>'
+      +'<div style="font-size:11px;color:#B0A99F;letter-spacing:3px;margin-top:6px">발 주 서</div>'
+      +'</div>';
+
+  out += '<div style="display:flex;gap:24px;margin-top:24px;padding-top:16px;border-top:1px solid #282828;font-size:13px">'
+      +'<div style="flex:1">'
+        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">요청일</span><strong>'+today+'</strong></div>'
+        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">업체명</span><strong>드로잉엣홈</strong></div>'
+        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">담당자</span><strong>'+(cStaff||'—')+'</strong></div>'
+      +'</div>'
+      +'<div style="flex:1">'
+        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">받는곳</span><strong>'+escHtml(vendor)+'</strong></div>'
+        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">수령지</span><strong>드로잉엣홈으로 보내주세요</strong></div>'
+      +'</div>'
+      +'</div>';
+
+  out += '<div style="margin-top:10px;font-size:11px;color:#B0A99F">*아래와 같이 발주 합니다.</div>';
+
+  out += '<div style="margin-top:20px;padding:8px 14px;background:#F5F2EE;font-size:13px;font-weight:700;color:#282828">거래처: '+escHtml(vendor)+'</div>';
+  out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+      +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
+      +'<th style="text-align:left;padding:8px 6px">위치</th>'
+      +'<th style="text-align:left;padding:8px 6px">품명</th>'
+      +'<th style="text-align:left;padding:8px 6px">컬러</th>'
+      +'<th style="text-align:center;padding:8px 6px">사이즈</th>'
+      +'<th style="text-align:left;padding:8px 6px">내용</th>'
+      +'<th style="text-align:right;padding:8px 6px">수량</th>'
+      +'<th style="text-align:left;padding:8px 6px">고객명</th>'
+      +'</tr></thead><tbody>';
+  groupItems.forEach(function(it){
+    out += '<tr style="border-bottom:1px solid #EEE6DC">'
+        +'<td style="padding:8px 6px">'+escHtml(it.space)+'</td>'
+        +'<td style="padding:8px 6px">'+escHtml(it.product)+'</td>'
+        +'<td style="padding:8px 6px">'+escHtml(it.color)+'</td>'
+        +'<td style="padding:8px 6px;text-align:center">'+escHtml(it.size)+'</td>'
+        +'<td style="padding:8px 6px">'+escHtml(it.content)+'</td>'
+        +'<td style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
+        +'<td style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
+        +'</tr>';
+  });
+  out += '</tbody></table>';
+
+  if(extraNote) {
+    out += '<div style="margin-top:24px;text-align:center;font-size:13px;color:#E4483A;font-weight:600;line-height:1.7;white-space:pre-wrap">'+escHtml(extraNote)+'</div>';
   }
+
+  out += '</div>';
+  return out;
+}
+
+function collectVendorGroups() {
   var cName  = escHtml(document.getElementById('c-name')?.value||'');
   var cStaff = escHtml(document.getElementById('c-staff')?.value||'장선혜');
 
-  // 커튼 행 수집
   var items = [];
   document.querySelectorAll('#curtain-body tr').forEach(function(tr){
     var fabric = tr.querySelector('.c-fabric')?.value || '';
     var vendor = tr.querySelector('.c-vendor')?.value || '';
     var color  = tr.querySelector('.c-color')?.value || '';
-    if(!fabric && !vendor) return; // 빈 행 제외
+    if(!fabric && !vendor) return;
     var space  = tr.querySelector('.space-inp')?.value || '';
     var mw     = tr.querySelector('.mw')?.value || '';
     var mh     = tr.querySelector('.mh')?.value || '';
@@ -3587,7 +3696,6 @@ function buildVendorHTML(extraNote) {
     });
   });
 
-  // 블라인드 행 수집 (고유 클래스가 없어 inner-row 내 순서로 식별: 원단명/거래처/컬러)
   document.querySelectorAll('#blind-body tr').forEach(function(tr){
     var innerInps = tr.querySelectorAll('.inner-row .inner-inp');
     var fabric = innerInps[0]?.value || '';
@@ -3607,11 +3715,6 @@ function buildVendorHTML(extraNote) {
     });
   });
 
-  if(items.length === 0) {
-    return '<div class="pv-wrap" style="min-width:560px;max-width:720px;margin:0 auto;padding:60px 20px;text-align:center;color:#B0A99F;font-size:13px">거래처 또는 원단명이 입력된 항목이 없습니다.<br>커튼/블라인드 입력창의 "거래처" 필드를 채운 후 다시 시도해주세요.</div>';
-  }
-
-  // 거래처별로 그룹핑 (미입력은 "미지정"으로 묶음)
   var groups = {};
   items.forEach(function(it){
     var key = it.vendor || '미지정';
@@ -3619,58 +3722,28 @@ function buildVendorHTML(extraNote) {
     groups[key].push(it);
   });
 
-  var out = '<div class="pv-wrap" style="min-width:560px;max-width:720px;margin:0 auto;background:#fff;padding:36px 32px">';
+  return { groups: groups, cName: cName, cStaff: cStaff, itemCount: items.length };
+}
 
-  out += '<div style="text-align:center;margin-bottom:6px">'
-      +'<div style="font-size:22px;font-weight:700;letter-spacing:1.5px;color:#282828">DRAWING at HOME</div>'
-      +'<div style="font-size:11px;color:#B0A99F;letter-spacing:3px;margin-top:6px">발 주 서</div>'
-      +'</div>';
+function buildVendorHTML(extraNote) {
+  function today(){
+    var d=new Date();
+    return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';
+  }
+  var collected = collectVendorGroups();
 
-  out += '<div style="display:flex;gap:24px;margin-top:24px;padding-top:16px;border-top:1px solid #282828;font-size:13px">'
-      +'<div style="flex:1">'
-        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">요청일</span><strong>'+today()+'</strong></div>'
-        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">업체명</span><strong>드로잉엣홈</strong></div>'
-        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">담당자</span><strong>'+(cStaff||'—')+'</strong></div>'
-      +'</div>'
-      +'<div style="flex:1">'
-        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">받는곳</span><strong>캔가공소</strong></div>'
-        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">수령지</span><strong>드로잉엣홈으로 보내주세요</strong></div>'
-      +'</div>'
-      +'</div>';
-
-  out += '<div style="margin-top:10px;font-size:11px;color:#B0A99F">*아래와 같이 발주 합니다.</div>';
-
-  Object.keys(groups).forEach(function(vendor){
-    out += '<div style="margin-top:20px;padding:8px 14px;background:#F5F2EE;font-size:13px;font-weight:700;color:#282828">거래처: '+escHtml(vendor)+'</div>';
-    out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
-        +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
-        +'<th style="text-align:left;padding:8px 6px">위치</th>'
-        +'<th style="text-align:left;padding:8px 6px">품명</th>'
-        +'<th style="text-align:left;padding:8px 6px">컬러</th>'
-        +'<th style="text-align:center;padding:8px 6px">사이즈</th>'
-        +'<th style="text-align:left;padding:8px 6px">내용</th>'
-        +'<th style="text-align:right;padding:8px 6px">수량</th>'
-        +'<th style="text-align:left;padding:8px 6px">고객명</th>'
-        +'</tr></thead><tbody>';
-    groups[vendor].forEach(function(it){
-      out += '<tr style="border-bottom:1px solid #EEE6DC">'
-          +'<td style="padding:8px 6px">'+escHtml(it.space)+'</td>'
-          +'<td style="padding:8px 6px">'+escHtml(it.product)+'</td>'
-          +'<td style="padding:8px 6px">'+escHtml(it.color)+'</td>'
-          +'<td style="padding:8px 6px;text-align:center">'+escHtml(it.size)+'</td>'
-          +'<td style="padding:8px 6px">'+escHtml(it.content)+'</td>'
-          +'<td style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
-          +'<td style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
-          +'</tr>';
-    });
-    out += '</tbody></table>';
-  });
-
-  if(extraNote) {
-    out += '<div style="margin-top:24px;text-align:center;font-size:13px;color:#E4483A;font-weight:600;line-height:1.7;white-space:pre-wrap">'+escHtml(extraNote)+'</div>';
+  if(collected.itemCount === 0) {
+    return '<div class="pv-wrap" style="min-width:560px;max-width:720px;margin:0 auto;padding:60px 20px;text-align:center;color:#B0A99F;font-size:13px">거래처 또는 원단명이 입력된 항목이 없습니다.<br>커튼/블라인드 입력창의 "거래처" 필드를 채운 후 다시 시도해주세요.</div>';
   }
 
-  out += '</div>';
+  var todayStr = today();
+  var vendors = Object.keys(collected.groups);
+  var out = '';
+  vendors.forEach(function(vendor, i){
+    out += '<div style="' + (i > 0 ? 'page-break-before:always;margin-top:40px;' : '') + '">';
+    out += buildVendorDocForOne(vendor, collected.groups[vendor], collected.cName, collected.cStaff, i === vendors.length - 1 ? extraNote : null, todayStr);
+    out += '</div>';
+  });
   return out;
 }
 
@@ -3678,6 +3751,16 @@ function printForVendor() {
   calcTotal();
   var extraNote = window.prompt('발주서에 남길 추가 메모가 있으면 입력해주세요 (없으면 취소 또는 빈칸으로 확인)', '');
   var html = buildVendorHTML(extraNote);
+
+  // 구글드라이브에 거래처별로 각각 저장 (카테고리 자동 분류)
+  var collected = collectVendorGroups();
+  if (collected.itemCount > 0) {
+    var todayStr = (function(){ var d=new Date(); return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일'; })();
+    Object.keys(collected.groups).forEach(function(vendor){
+      var oneDoc = buildVendorDocForOne(vendor, collected.groups[vendor], collected.cName, collected.cStaff, extraNote, todayStr);
+      saveDocumentToDrive(vendorCategory(vendor), collected.cName || '미지정고객', vendor, oneDoc);
+    });
+  }
 
   var existing = document.getElementById('pv-overlay');
   if(existing) existing.remove();
@@ -3884,6 +3967,10 @@ function printRequest(kind) {
   var label = kind==='measure' ? '실측' : '시공';
   var extraNote = window.prompt(label+' 담당자에게 남길 추가 메모가 있으면 입력해주세요 (없으면 취소 또는 빈칸으로 확인)', '');
   var html = buildRequestHTML(kind, extraNote);
+
+  var cNameForDrive = document.getElementById('c-name')?.value || '미지정고객';
+  var instNameForDrive = document.getElementById('c-installer-name')?.value || '';
+  saveDocumentToDrive('실측시공', cNameForDrive, label + (instNameForDrive ? '_' + instNameForDrive : ''), html);
 
   var existing = document.getElementById('pv-overlay');
   if(existing) existing.remove();
