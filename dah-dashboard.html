@@ -1659,6 +1659,57 @@ button[onclick="exportExcel()"] {
 .login-master-btn:hover {
   background: #3a3a3a !important;
 }
+
+/* ── 마스터 비밀번호 확인 영역 (기존엔 스타일이 아예 없어서 브라우저 기본 UI로 보였음) ── */
+.master-pw-area {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: -8px 0 16px;
+}
+.master-pw-area .pw-input-row {
+  display: flex;
+  gap: 8px;
+}
+#master-pw-input {
+  flex: 1;
+  height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--border, #EEE6DC);
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--dark, #282828);
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+#master-pw-input:focus {
+  border-color: #282828;
+}
+.login-confirm-btn {
+  width: 72px;
+  height: 44px;
+  background: #282828;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.login-confirm-btn:hover {
+  background: #3a3a3a;
+}
+.login-pw-error {
+  font-size: 11px;
+  color: var(--danger, #E4483A);
+  text-align: center;
+  display: none;
+}
 /* 로그인 카드 내부 */
 .login-card-title {
   font-size: 22px !important;
@@ -3224,8 +3275,10 @@ button { cursor: pointer; }
       마스터 로그인
     </button>
     <div class="master-pw-area" id="master-pw-wrap" style="display:none">
-      <input type="password" id="master-pw-input" placeholder="비밀번호" maxlength="20" autocomplete="current-password">
-      <button class="login-confirm-btn" id="btn-master-confirm" type="button">확인</button>
+      <div class="pw-input-row">
+        <input type="password" id="master-pw-input" placeholder="비밀번호" maxlength="20" autocomplete="current-password">
+        <button class="login-confirm-btn" id="btn-master-confirm" type="button">확인</button>
+      </div>
       <div class="login-pw-error" id="master-pw-error">비밀번호가 올바르지 않습니다</div>
     </div>
     <div class="login-divider"><span>또는 담당자 선택</span></div>
