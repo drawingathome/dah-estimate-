@@ -1766,6 +1766,163 @@ button[onclick="exportExcel()"] {
   font-weight: 700;
   flex-shrink: 0;
 }
+
+/* ══════════════ 캘린더(일정) 탭 ══════════════ */
+.cal-day-cell {
+  min-height: 56px;
+  padding: 4px 2px;
+  background: #fff;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background 0.15s;
+}
+.cal-day-cell:hover { background: #FAF7F5; }
+.cal-day-cell.other-month { opacity: 0.35; }
+.cal-day-cell.today .cal-day-num {
+  background: var(--orange, #F06E2D);
+  color: #fff;
+}
+.cal-day-cell.selected {
+  background: #F5F2EE;
+  outline: 1.5px solid #282828;
+  outline-offset: -1.5px;
+}
+.cal-day-num {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  color: #282828;
+}
+.cal-ev-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 4px;
+  border-bottom: 1px solid #EEE6DC;
+}
+.cal-ev-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 36px;
+  flex-shrink: 0;
+}
+.cal-ev-day { color: #282828; }
+.cal-ev-dow { font-size: 11px; color: #B0A99F; }
+.cal-ev-info { flex: 1; min-width: 0; }
+.cal-ev-name { color: #282828; }
+.cal-ev-sub { font-size: 12px; color: #9A9490; margin-top: 2px; }
+.cal-ev-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 4px;
+  color: #fff;
+  flex-shrink: 0;
+}
+.cal-ev-badge.type-상담 { background: #282828; }
+.cal-ev-badge.type-실측 { background: #8B6BB1; }
+.cal-ev-badge.type-시공 { background: #F06E2D; }
+.cal-ev-type {
+  width: 4px;
+  align-self: stretch;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.cal-ev-type.type-상담 { background: #282828; }
+.cal-ev-type.type-실측 { background: #8B6BB1; }
+.cal-ev-type.type-시공 { background: #F06E2D; }
+
+/* ══════════════ 칸반 카드 ══════════════ */
+.kanban-item-name { font-size: 13px; font-weight: 700; color: #282828; }
+.kanban-item-sub { font-size: 11px; color: #9A9490; margin-top: 2px; }
+.kanban-item-price { font-size: 12px; font-weight: 700; color: #282828; margin-top: 4px; }
+
+/* ══════════════ KPI / 매출 진행바 ══════════════ */
+.kpi-sub-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.kpi-sub-goal { font-size: 11px; color: #B0A99F; }
+.rev-bar-wrap { width: 100%; height: 6px; background: #EEE6DC; border-radius: 3px; overflow: hidden; }
+.rev-bar-fill { height: 100%; background: var(--orange, #F06E2D); border-radius: 3px; transition: width 0.3s; }
+.goal-pct { font-size: 11px; font-weight: 700; color: var(--orange, #F06E2D); }
+
+/* ══════════════ 매출(차트) 탭 ══════════════ */
+.chart-tab-bar { display: flex; gap: 4px; margin-bottom: 10px; }
+.sec { font-size: 12px; font-weight: 700; color: #282828; margin-bottom: 8px; }
+.chart-value { font-size: 10px; fill: #282828; font-weight: 700; }
+
+/* ══════════════ 고객 목록 항목 ══════════════ */
+.cust-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 4px;
+  border-bottom: 1px solid #EEE6DC;
+  cursor: pointer;
+}
+.ci-left { flex: 1; min-width: 0; }
+.ci-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.ci-price { font-size: 12px; font-weight: 700; color: #282828; }
+.stage-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 4px;
+  color: #fff;
+}
+.stage-pill.상담 { background: #282828; }
+.stage-pill.계약금 { background: #F06E2D; }
+.stage-pill.실측 { background: #8B6BB1; }
+.stage-pill.잔금 { background: #2E7D6B; }
+.stage-pill.시공 { background: #C0392B; }
+.stage-pill.완료 { background: var(--light, #B0A99F); }
+.rebuy-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--orange, #F06E2D);
+  border: 1px solid var(--orange, #F06E2D);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-left: 6px;
+}
+
+/* ══════════════ 기타 ══════════════ */
+.card-head-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.date-filter-wrap { display: flex; gap: 6px; margin-bottom: 10px; }
+.field-err { font-size: 11px; color: var(--danger, #E4483A); margin-top: 4px; }
+.form-row { margin-bottom: 12px; }
+.login-footer { font-size: 11px; color: #B0A99F; text-align: center; margin-top: 16px; }
+.memo-quick-btn {
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 14px;
+  border: 1px solid #EEE6DC;
+  background: #fff;
+  color: #282828;
+  cursor: pointer;
+  font-family: inherit;
+}
+.modal-top-bar { width: 36px; height: 4px; background: #EEE6DC; border-radius: 2px; margin: 8px auto 4px; }
+.archived-check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #9A9490; cursor: pointer; }
+.empty-state-emoji { font-size: 32px; display: block; margin-bottom: 8px; }
+.sc-n { font-size: 13px; font-weight: 800; color: #282828; }
+.sc-n.zero { color: #B0A99F; }
+.sc-l { font-size: 11px; color: #9A9490; margin-left: 4px; }
+.skeleton { background: linear-gradient(90deg, #F5F2EE 25%, #EEE6DC 50%, #F5F2EE 75%); background-size: 200% 100%; animation: skeleton-pulse 1.4s ease infinite; border-radius: 6px; }
+.skeleton-card { height: 64px; margin-bottom: 8px; }
+.skeleton-line { height: 12px; margin-bottom: 6px; }
+.skeleton-line.long { width: 70%; }
+.skeleton-line.short { width: 40%; }
+.skeleton-avatar { width: 32px; height: 32px; border-radius: 50%; }
+@keyframes skeleton-pulse { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 /* 로그인 카드 내부 */
 .login-card-title {
   font-size: 22px !important;
@@ -1901,6 +2058,9 @@ input,button,select,textarea { font-family:inherit; }
 }
 .hd-btn-primary {
   background:var(--orange); color:#fff; font-weight:700;
+}
+.hd-btn-est {
+  background:var(--orange); color:#fff; font-weight:700; border:none;
 }
 
 /* ── KPI 바 ── */
