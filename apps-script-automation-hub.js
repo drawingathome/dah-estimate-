@@ -7,6 +7,8 @@
  *
  * 1) 문서 자동저장 (발주서/실측시공/견적서 등)
  *    DAH_문서보관/{카테고리}/{연-월}/{날짜}_{고객명}_{거래처}.html
+ *    같은 날 같은 문서를 다시 저장하면 기존 파일을 덮어씁니다
+ *    (그날의 최종본만 남음, 날짜가 바뀌면 새 파일로 이력이 쌓임)
  *    카테고리: 견적서 / 제작 / 원단 / 블라인드 / 레일외 부자재 / 전동 / 실측시공
  *
  * 2) 고객명단 시트 동기화 (현황판 방식 — 전화번호 기준으로
@@ -66,12 +68,18 @@ function saveDocumentFile(data) {
   var monthFolder = monthFolders.hasNext() ? monthFolders.next() : catFolder.createFolder(monthStr);
 
   var today = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
-  var time = Utilities.formatDate(new Date(), 'Asia/Seoul', 'HHmmss');
-  var fileName = today + '_' + customerName + vendor + '_' + time + '.html';
+  var fileName = today + '_' + customerName + vendor + '.html';
 
   var fullHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
     + '<title>' + category + ' - ' + customerName + '</title></head><body>'
     + htmlContent + '</body></html>';
+
+  // 같은 날 같은 이름의 파일이 이미 있으면 덮어쓰기 (기존 파일 삭제 후 새로 생성)
+  // — 하루 안에서는 최종본만 남고, 날짜가 바뀌면 새 파일로 이력이 남음
+  var existingFiles = monthFolder.getFilesByName(fileName);
+  while (existingFiles.hasNext()) {
+    existingFiles.next().setTrashed(true);
+  }
 
   var file = monthFolder.createFile(fileName, fullHtml, MimeType.HTML);
 
