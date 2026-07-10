@@ -1,5 +1,5 @@
-/* DAH Service Worker v1.1 */
-const CACHE_NAME = 'dah-cache-v2';
+/* DAH Service Worker v1.2 — 네트워크 우선 방식으로 전환 (캐시우선 방식이 배포 지연처럼 보이는 근본 원인이었음) */
+const CACHE_NAME = 'dah-cache-v3';
 const CACHE_URLS = [
   '/dah-dashboard',
   '/dah-estimate',
@@ -39,18 +39,20 @@ self.addEventListener('activate', function(e) {
 
 self.addEventListener('fetch', function(e) {
   if (e.request.method !== 'GET') return;
+  // 네트워크 우선: 인터넷 연결이 되어있으면 항상 최신 버전을 먼저 시도.
+  // 오프라인일 때만 캐시된 버전으로 대체 (예전엔 반대였음 — 캐시가 있으면 무조건 그것부터 보여줘서
+  // 배포를 해도 새로고침 한 번으로는 반영이 안 되고 한 박자 늦게 보이는 문제가 있었음)
   e.respondWith(
-    caches.match(e.request).then(function(cached) {
-      var networkFetch = fetch(e.request).then(function(res) {
-        if (res && res.status === 200) {
-          var resClone = res.clone();
-          caches.open(CACHE_NAME).then(function(cache) {
-            cache.put(e.request, resClone);
-          });
-        }
-        return res;
-      }).catch(function() { return cached; });
-      return cached || networkFetch;
+    fetch(e.request).then(function(res) {
+      if (res && res.status === 200) {
+        var resClone = res.clone();
+        caches.open(CACHE_NAME).then(function(cache) {
+          cache.put(e.request, resClone);
+        });
+      }
+      return res;
+    }).catch(function() {
+      return caches.match(e.request);
     })
   );
 });
