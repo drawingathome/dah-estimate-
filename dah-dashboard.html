@@ -2162,7 +2162,7 @@ function renderCal() {
           'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
           'background:' + (TYPE_DOT_COLOR[item.type]||'#282828') + '22;' +
           'color:' + (TYPE_TEXT_COLOR[item.type]||'#282828');
-        evLabel.textContent = item.type[0] + ' ' + item.name;
+        evLabel.textContent = item.type + ' ' + item.name;
         cell.appendChild(evLabel);
       });
       if (mainItems.length > 2) {
