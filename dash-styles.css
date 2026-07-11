@@ -1911,7 +1911,7 @@ button[onclick="exportExcel()"] {
 }
 .modal-top-bar { width: 36px; height: 4px; background: #EEE6DC; border-radius: 2px; margin: 8px auto 4px; }
 .archived-check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #9A9490; cursor: pointer; }
-.empty-state-emoji { font-size: 32px; display: block; margin-bottom: 8px; }
+.empty-state-emoji { font-size: 28px; display: block; margin-bottom: 8px; }
 .sc-n { font-size: 13px; font-weight: 800; color: #282828; }
 .sc-n.zero { color: #B0A99F; }
 .sc-l { font-size: 11px; color: #9A9490; margin-left: 4px; }
