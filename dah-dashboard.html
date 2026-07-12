@@ -428,23 +428,6 @@
 
 <script>
 /* ── 견적서 할인 퍼센트 ↔ 금액 연동 ── */
-function syncDiscount(type, subtotal) {
-  var pctEl = document.getElementById('discount-pct');
-  var amtEl = document.getElementById('discount-amt');
-  if (!pctEl || !amtEl) return;
-
-  if (type === 'pct') {
-    var pct = parseFloat(pctEl.value) || 0;
-    pct = Math.min(Math.max(pct, 0), 100);
-    amtEl.value = Math.round(subtotal * pct / 100).toLocaleString();
-  } else {
-    var amt = parseInt((amtEl.value || '0').replace(/[^0-9]/g, '')) || 0;
-    if (subtotal > 0) {
-      pctEl.value = (amt / subtotal * 100).toFixed(1);
-    }
-  }
-  if (typeof calcAllTotals === 'function') calcAllTotals();
-}
 
 /* ── 메모 자주 쓰는 문구 ── */
 /* ── 목표 달성률 프로그레스 바 ── */
@@ -472,67 +455,9 @@ function renderGoalProgress(currentAmount) {
 /* ── 칸반 스테이지 변경 ── */
 
 /* ── 입금 현황 실시간 계산 ── */
-function calcPaymentStatus(customer) {
-  var price    = Number(customer.price || 0);
-  var deposit  = Number(customer.depositAmount || 0);
-  var balance  = Number(customer.balanceAmount || 0);
-  var total    = deposit + balance;
-  var remaining = price - total;
-  var pct = price > 0 ? Math.round(total / price * 100) : 0;
 
-  return {
-    price:     price,
-    deposit:   deposit,
-    balance:   balance,
-    total:     total,
-    remaining: remaining,
-    pct:       pct,
-    isFullPaid: remaining <= 0 && price > 0,
-    depositPct: price > 0 ? Math.round(deposit / price * 100) : 0,
-    balancePct: price > 0 ? Math.round(balance / price * 100) : 0,
-  };
-}
-
-function renderPaymentBar(customer, containerId) {
-  var el = document.getElementById(containerId);
-  if (!el) return;
-  var s = calcPaymentStatus(customer);
-  if (!s.price) { el.innerHTML = '<span style="font-size:11px;color:var(--sub)">견적 금액 없음</span>'; return; }
-
-  el.innerHTML = [
-    '<div style="font-size:11px;color:var(--sub);margin-bottom:6px;display:flex;justify-content:space-between">',
-      '<span>입금 현황</span>',
-      '<span style="font-weight:700;color:' + (s.isFullPaid ? '#2E7D32' : 'var(--terra)') + '">' + s.pct + '%</span>',
-    '</div>',
-    '<div style="background:var(--ivory2);border-radius:4px;height:8px;overflow:hidden;margin-bottom:6px">',
-      '<div style="height:100%;border-radius:4px;width:' + Math.min(s.pct,100) + '%;',
-        'background:' + (s.isFullPaid ? '#2E7D32' : 'var(--terra)') + ';transition:width 0.6s ease"></div>',
-    '</div>',
-    '<div style="display:flex;justify-content:space-between;font-size:11px">',
-      '<span style="color:var(--orange)">계약금 ' + s.deposit.toLocaleString() + '원</span>',
-      '<span style="color:var(--mid)">잔금 ' + s.balance.toLocaleString() + '원</span>',
-      '<span style="color:var(--light)">잔여 ' + Math.max(0,s.remaining).toLocaleString() + '원</span>',
-    '</div>',
-  ].join('');
-}
 
 /* ── 스켈레톤 UI 렌더 ── */
-function renderSkeletonList(containerId, count) {
-  var wrap = document.getElementById(containerId);
-  if (!wrap) return;
-  wrap.innerHTML = '';
-  for (var i = 0; i < (count || 4); i++) {
-    var card = document.createElement('div');
-    card.className = 'skeleton-card';
-    card.innerHTML =
-      '<div class="skeleton skeleton-avatar"></div>' +
-      '<div style="flex:1">' +
-        '<div class="skeleton skeleton-line long"></div>' +
-        '<div class="skeleton skeleton-line short"></div>' +
-      '</div>';
-    wrap.appendChild(card);
-  }
-}
 
 // saveCustomer 전 유효성 검증 통합
 var _origSaveCustomer = window.saveCustomer;
@@ -618,42 +543,9 @@ var safeStorage = {
 };
 
 /* ── 견적번호 자동채번 (대시보드용) ── */
-function generateEstNo() {
-  try {
-    var now = new Date();
-    var yy = String(now.getFullYear()).slice(2);
-    var mm = String(now.getMonth() + 1).padStart(2, '0');
-    var dd = String(now.getDate()).padStart(2, '0');
-    var key = 'dah_est_seq_' + yy + mm + dd;
-    var seq = parseInt(localStorage.getItem(key) || '0') + 1;
-    localStorage.setItem(key, String(seq));
-    return 'DAH-' + yy + mm + dd + '-' + String(seq).padStart(3, '0');
-  } catch(e) {
-    return 'DAH-' + Date.now();
-  }
-}
 
 /* ── 데이터 백업 ── */
 
-function copyEstimate(estId) {
-  try {
-    var estimates = JSON.parse(localStorage.getItem('dah_estimates') || '[]');
-    var orig = estimates.find(function(e) { return e.id === estId; });
-    if (!orig) { showToast('견적서를 찾을 수 없습니다'); return; }
-    
-    var copy = JSON.parse(JSON.stringify(orig));
-    copy.id       = 'EST-' + Date.now();
-    copy.no       = generateEstNo ? generateEstNo() : copy.no + '-복사';
-    copy.status   = 'ga'; // 가견적으로 초기화
-    copy.createdAt = new Date().toISOString();
-    copy.contractStatus = 'pending';
-    
-    estimates.unshift(copy);
-    localStorage.setItem('dah_estimates', JSON.stringify(estimates));
-    showToast('견적서가 복사되었습니다');
-    renderEstList();
-  } catch(e) { showToast('복사 실패: ' + e.message); }
-}
 
 /* ── 초성 검색 ── */
 
