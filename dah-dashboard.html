@@ -145,70 +145,6 @@
     <button class="hd-btn hd-btn-est" onclick="openEstimate(null)">견적서</button>
   </div>
 </div>
-<div class="kpi-bar" id="kpi-bar" style="display:none">
-  <!-- 목표 달성률 -->
-  <div style="padding:8px 16px 4px;border-bottom:1px solid var(--border)">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.06em">이달 목표</span>
-      <span id="goal-pct" class="goal-pct">0%</span>
-    </div>
-    <div class="goal-progress-wrap">
-      <div id="goal-progress-bar" class="goal-progress-bar" style="width:0%"></div>
-    </div>
-  </div>
-  <!-- 목표 잔액 카피 -->
-  <div id="kpi-goal-copy" style="padding:10px 0 8px;font-size:12px;font-weight:700;color:#282828;letter-spacing:-0.3px;line-height:1.4"></div>
-  <div class="kpi-grid">
-    <div class="kpi-card main">
-      <span class="kpi-label">이달 매출</span>
-      <span class="kpi-num" id="hd-kpi-rev">—<em class="kpi-num-unit">만원</em></span>
-      <div class="rev-bar-wrap"><div class="rev-bar-fill" id="kpi-rev-bar" style="width:0%"></div></div>
-      <div class="kpi-sub-row">
-        <span class="kpi-sub-pct" id="kpi-rev-pct">0%</span>
-        <span class="kpi-sub-goal" id="kpi-rev-goal">목표 —</span>
-      </div>
-    </div>
-    <div class="kpi-card">
-      <span class="kpi-label">계약 / 상담</span>
-      <span class="kpi-num" id="hd-kpi-con">—<em>건</em></span>
-    </div>
-  </div>
-  <div class="kpi-progress-3" id="kpi-progress-3" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px">
-    <div style="background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 12px">
-      <div style="font-size:11px;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">연간</div>
-      <div style="font-size:11px;font-weight:900;color:#282828;letter-spacing:-0.5px;margin-bottom:4px" id="kpi-year-rev">—</div>
-      <div style="height:2px;background:#EEE6DC;border-radius:2px;overflow:hidden;margin-bottom:4px">
-        <div id="kpi-year-bar" style="height:2px;background:#F06E2D;border-radius:2px;width:0%;transition:width 0.6s ease"></div>
-      </div>
-      <div style="font-size:11px;color:#9A9490" id="kpi-year-pct">0% 달성</div>
-    </div>
-    <div style="background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 12px">
-      <div style="font-size:11px;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">분기</div>
-      <div style="font-size:11px;font-weight:900;color:#282828;letter-spacing:-0.5px;margin-bottom:4px" id="kpi-qtr-rev">—</div>
-      <div style="height:2px;background:#EEE6DC;border-radius:2px;overflow:hidden;margin-bottom:4px">
-        <div id="kpi-qtr-bar" style="height:2px;background:#F06E2D;border-radius:2px;width:0%;transition:width 0.6s ease"></div>
-      </div>
-      <div style="font-size:11px;color:#9A9490" id="kpi-qtr-pct">0% 달성</div>
-    </div>
-    <div style="background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 12px">
-      <div style="font-size:11px;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">월간</div>
-      <div style="font-size:11px;font-weight:900;color:#282828;letter-spacing:-0.5px;margin-bottom:4px" id="kpi-mon-rev">—</div>
-      <div style="height:2px;background:#EEE6DC;border-radius:2px;overflow:hidden;margin-bottom:4px">
-        <div id="kpi-mon-bar" style="height:2px;background:#F06E2D;border-radius:2px;width:0%;transition:width 0.6s ease"></div>
-      </div>
-      <div style="font-size:11px;color:#9A9490" id="kpi-mon-pct">0% 달성</div>
-    </div>
-  </div>
-  <div class="stage-chips" id="hd-stages-bar"></div>
-  <!-- 12개월 차트 - 항상 상단 고정 -->
-  <div id="kpi-chart-wrap" style="margin-top:8px;padding-bottom:4px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase">12개월 매출 추이</span>
-      <span style="font-size:11px;color:var(--sub)" id="kpi-chart-year"></span>
-    </div>
-    <div id="kpi-chart-svg" style="height:60px"></div>
-  </div>
-</div>
 <div class="tabs">
   <button class="tab on" data-tab="home">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:block;margin:0 auto 2px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>홈
@@ -676,18 +612,16 @@ document.getElementById('add-overlay').addEventListener('click', function(e) { i
 
 (function setTabTop(){
   var hd  = document.querySelector('.hd');
-  var kpi = document.getElementById('kpi-bar');
   var tb  = document.querySelector('.tabs');
-  if (hd && kpi && tb) {
-    tb.style.top = (hd.getBoundingClientRect().height + kpi.getBoundingClientRect().height) + 'px';
+  if (hd && tb) {
+    tb.style.top = hd.getBoundingClientRect().height + 'px';
   }
 })();
 setTimeout(function(){
   var hd  = document.querySelector('.hd');
-  var kpi = document.getElementById('kpi-bar');
   var tb  = document.querySelector('.tabs');
-  if (hd && kpi && tb) {
-    tb.style.top = (hd.getBoundingClientRect().height + kpi.getBoundingClientRect().height) + 'px';
+  if (hd && tb) {
+    tb.style.top = hd.getBoundingClientRect().height + 'px';
   }
 }, 500);
 </script>
