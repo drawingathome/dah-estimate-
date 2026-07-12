@@ -9,7 +9,7 @@
 //   node tests/font-check.js dah-estimate.html 1280
 
 const path = require('path');
-const { launchBrowser, startServer, ALLOWED_FONT_SIZES, SKIP_TAGS } = require('./_helpers');
+const { launchBrowser, blockRealNetwork, startServer, ALLOWED_FONT_SIZES, SKIP_TAGS } = require('./_helpers');
 
 async function run() {
   const filePath = process.argv[2];
@@ -27,6 +27,7 @@ async function run() {
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
+    await blockRealNetwork(page);
     await page.setViewport({ width: viewportWidth, height: 844, isMobile: viewportWidth < 500, hasTouch: viewportWidth < 500 });
     await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'networkidle0', timeout: 20000 });
     await new Promise(r => setTimeout(r, 800));

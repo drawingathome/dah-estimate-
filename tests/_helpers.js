@@ -50,6 +50,23 @@ async function launchBrowser() {
   });
 }
 
+// 테스트 중 실제 운영 Supabase로 요청이 나가는 것을 차단.
+// CI(GitHub Actions)는 실제 인터넷이 되기 때문에, 이걸 안 막으면
+// 테스트가 만든 가짜 데이터(_테스트실장 등)가 실제 운영 DB에 저장되고,
+// 실제 네트워크 왕복시간 때문에 로컬 결과와 타이밍이 달라져 테스트가
+// 불안정해짐. 각 테스트에서 페이지 생성 직후 반드시 호출할 것.
+async function blockRealNetwork(page) {
+  await page.setRequestInterception(true);
+  page.on('request', (req) => {
+    const url = req.url();
+    if (url.includes('supabase.co') || url.includes('script.google.com')) {
+      req.abort();
+    } else {
+      req.continue();
+    }
+  });
+}
+
 function startServer(dir, port) {
   return new Promise((resolve, reject) => {
     const proc = spawn('python3', ['-m', 'http.server', String(port)], { cwd: dir });
@@ -84,6 +101,7 @@ async function loginAs(page, role, masterPw) {
 
 module.exports = {
   launchBrowser,
+  blockRealNetwork,
   startServer,
   loginAs,
   SKIP_TAGS,

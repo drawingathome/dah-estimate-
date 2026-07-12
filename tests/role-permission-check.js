@@ -12,7 +12,7 @@
 // 이 구조가 바뀌면 이 스크립트도 같이 업데이트해야 합니다.
 
 const path = require('path');
-const { launchBrowser, startServer } = require('./_helpers');
+const { launchBrowser, blockRealNetwork, startServer } = require('./_helpers');
 
 const TEST_STAFF_NAME = '_테스트실장';
 const TEST_CUSTOMER_NAME = '_테스트고객';
@@ -20,11 +20,10 @@ const TEST_CUSTOMER_NAME = '_테스트고객';
 async function setupTestData(page) {
   // 스태프 로그인 버튼이 뜨려면 설정에 담당자가 최소 1명 있어야 함
   await page.evaluate((staffName, customerName) => {
-    var settings = {};
-    try { settings = JSON.parse(localStorage.getItem('dah_settings') || '{}'); } catch (e) {}
-    settings.staffs = settings.staffs || [];
-    if (settings.staffs.indexOf(staffName) === -1) settings.staffs.push(staffName);
-    localStorage.setItem('dah_settings', JSON.stringify(settings));
+    var staffList = [];
+    try { staffList = JSON.parse(localStorage.getItem('dah_staff_list') || '[]'); } catch (e) {}
+    if (staffList.indexOf(staffName) === -1) staffList.push(staffName);
+    localStorage.setItem('dah_staff_list', JSON.stringify(staffList));
 
     var customers = [];
     try { customers = JSON.parse(localStorage.getItem('dah_customers') || '[]'); } catch (e) {}
@@ -41,6 +40,7 @@ async function setupTestData(page) {
 
 async function checkAsMaster(browser, port, file, masterPw) {
   const page = await browser.newPage();
+  await blockRealNetwork(page);
   await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
   await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'networkidle0', timeout: 20000 });
   await new Promise(r => setTimeout(r, 500));
@@ -61,6 +61,7 @@ async function checkAsMaster(browser, port, file, masterPw) {
 
 async function checkAsStaff(browser, port, file) {
   const page = await browser.newPage();
+  await blockRealNetwork(page);
   await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
   await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'networkidle0', timeout: 20000 });
   await new Promise(r => setTimeout(r, 500));
