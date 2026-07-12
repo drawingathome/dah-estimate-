@@ -44,58 +44,6 @@ html, body, input, button, select, textarea {
 
 
 
-/* ② 매출 탭 active/passive 구분 강화 */
-.chart-period-tabs button,
-.period-tab,
-#chart .tab-group button {
-  height: 32px !important;
-  padding: 0 14px !important;
-  border-radius: 4px !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  border: 1px solid transparent !important;
-  color: #B0A99F !important;
-  background: transparent !important;
-  cursor: pointer !important;
-  font-family: inherit !important;
-  transition: all 0.15s !important;
-}
-.chart-period-tabs button.on,
-.chart-period-tabs button.active,
-.period-tab.on,
-.period-tab.active,
-#chart .tab-group button.on {
-  background: #282828 !important;
-  color: #fff !important;
-  border-color: #282828 !important;
-  font-weight: 700 !important;
-}
-.chart-period-tabs button:hover:not(.on):not(.active) {
-  color: #282828 !important;
-  border-color: #EEE6DC !important;
-  background: #FAF7F5 !important;
-}
-/* 일/주/월/연 탭 */
-.chart-view-tabs button,
-.view-tab {
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  color: #B0A99F !important;
-  background: none !important;
-  border: none !important;
-  padding: 4px 10px !important;
-  cursor: pointer !important;
-  font-family: inherit !important;
-  border-bottom: 2px solid transparent !important;
-  transition: all 0.15s !important;
-}
-.chart-view-tabs button.on,
-.chart-view-tabs button.active,
-.view-tab.on {
-  color: #F06E2D !important;
-  font-weight: 700 !important;
-  border-bottom-color: #F06E2D !important;
-}
 
 /* ③ 진행현황 칸반 min-height */
 .pipe-col,
@@ -417,28 +365,6 @@ body {
 }
 * { -webkit-font-smoothing: antialiased; }
 
-/* ── KPI 숫자 36px ── */
-
-.kpi-num em, .kpi-unit, .kpi-num-unit {
-  font-size: 13px !important;
-  font-weight: 400 !important;
-  color: #B0A99F !important;
-  font-style: normal !important;
-  letter-spacing: 0 !important;
-}
-
-/* ── KPI 라벨 11px ── */
-
-
-/* ── 섹션 타이틀 12px ── */
-.section-title, .home-section-title,
-.section-header, .section-hd {
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  color: #B0A99F !important;
-  letter-spacing: 0.06em !important;
-  text-transform: uppercase !important;
-}
 
 /* ── 버튼 13px ── */
 button {
