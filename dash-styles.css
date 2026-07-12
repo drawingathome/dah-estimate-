@@ -1037,7 +1037,6 @@ button[onclick="exportExcel()"] {
   #home .kpi-grid { padding: 0 12px; }
   #home .kpi-card { padding: 14px 12px; }
   #home .stage-chips { padding: 12px 12px 14px; }
-  #home .section-block { margin: 0 12px 10px; }
   #home .section-hd { padding: 12px 12px 10px; }
 }
 
@@ -2248,9 +2247,6 @@ button.btn-kakao {
   justify-content: space-between;
   height: 52px;
   box-sizing: border-box;
-}
-@media (max-width:640px) {
-  .mob-app-header { display:flex; }
 }
 
 
