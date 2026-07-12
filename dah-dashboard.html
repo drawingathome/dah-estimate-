@@ -409,10 +409,18 @@
         <label style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:8px">담당자</label>
         <div id="staff-btn-wrap" style="display:flex;gap:8px"></div>
       </div>
+
+      <!-- 주소 (선택) -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:8px">주소 (선택)</label>
+        <div style="display:flex;gap:6px">
+          <input class="form-input" id="add-addr" aria-label="주소" placeholder="주소 검색을 눌러주세요" readonly style="flex:1;background:#FAF7F5;cursor:pointer" onclick="openKakaoAddr('add-addr')">
+          <button type="button" onclick="openKakaoAddr('add-addr')" style="flex-shrink:0;padding:0 16px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer">주소 검색</button>
+        </div>
+      </div>
       </div>
 
       <!-- 숨겨진 필드 (수정 모드용) -->
-      <input type="hidden" id="add-addr" value="">
       <input type="hidden" id="add-space" value="">
       <input type="hidden" id="add-memo" value="">
       <input type="hidden" id="add-stage" value="상담">
