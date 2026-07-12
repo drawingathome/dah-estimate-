@@ -269,7 +269,6 @@ html, body, input, button, select, textarea {
 
 /* ⑨ 본문 / 서브텍스트 */
 .pipe-card-name { font-size: 15px !important; font-weight: 600 !important; color: #282828 !important; }
-.pipe-card-sub  { font-size: 12px !important; font-weight: 400 !important; color: #B0A99F !important; }
 
 /* ⑩ 날짜·보조 */
 .date-label, .home-date, #home .date {
