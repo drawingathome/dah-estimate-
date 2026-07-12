@@ -117,3 +117,88 @@ function clearFieldError(inputEl) {
   var errEl = inputEl.parentNode.querySelector('.field-err');
   if (errEl) errEl.remove();
 }
+
+/* ── 로딩 스피너 ── */
+function showLoading(msg) {
+  var overlay = document.getElementById('loading-overlay');
+  var text    = document.getElementById('loading-text');
+  if (overlay) overlay.classList.add('show');
+  if (text)    text.textContent = msg || '불러오는 중...';
+}
+function hideLoading() {
+  var overlay = document.getElementById('loading-overlay');
+  if (overlay) overlay.classList.remove('show');
+}
+
+/* ── 빈 상태(Empty State) 헬퍼 — 참고: 현재 어디서도 호출되지 않음, 삭제 보류중 ── */
+function createEmptyState(icon, title, desc, btnText, btnAction) {
+  var wrap = el('div', {class:'empty-state'});
+  
+  var iconWrap = el('div', {class:'empty-icon'});
+  iconWrap.innerHTML = icon;
+  wrap.appendChild(iconWrap);
+  
+  var t = el('div', {class:'empty-title'});
+  t.textContent = title;
+  wrap.appendChild(t);
+  
+  if (desc) {
+    var d = el('div', {class:'empty-desc'});
+    d.textContent = desc;
+    wrap.appendChild(d);
+  }
+  
+  if (btnText && btnAction) {
+    var btn = el('button', {
+      style:'height:44px;padding:0 24px;background:#F06E2D;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit'
+    });
+    btn.textContent = btnText;
+    btn.addEventListener('click', btnAction);
+    wrap.appendChild(btn);
+  }
+  return wrap;
+}
+
+var EMPTY_ICONS = {
+  customers: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  estimates: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+  calendar:  '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  revenue:   '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+  search:    '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',
+};
+
+/* ── 주소검색(다음 우편번호) — 참고: 현재 어디서도 호출되지 않음, 삭제 보류중 ── */
+function openKakaoAddr(targetId) {
+  var script = document.createElement('script');
+  script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+  script.onload = function() {
+    new daum.Postcode({
+      oncomplete: function(data) {
+        var addr = data.roadAddress || data.jibunAddress;
+        var el = document.getElementById(targetId);
+        if (el) {
+          el.value = addr;
+          el.dispatchEvent(new Event('input'));
+          el.dispatchEvent(new Event('change'));
+        }
+      }
+    }).open();
+  };
+  
+  if (window.daum && window.daum.Postcode) {
+    script.onload = null;
+    new daum.Postcode({
+      oncomplete: function(data) {
+        var addr = data.roadAddress || data.jibunAddress;
+        var el = document.getElementById(targetId);
+        if (el) {
+          el.value = addr;
+          el.dispatchEvent(new Event('input'));
+          el.dispatchEvent(new Event('change'));
+        }
+      }
+    }).open();
+  } else {
+    document.head.appendChild(script);
+  }
+}
