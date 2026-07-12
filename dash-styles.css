@@ -1605,7 +1605,6 @@ button[onclick="exportExcel()"] {
 }
 
 /* ② 모달 오버레이 dim — 배경만 수정 */
-#add-overlay.open { background: rgba(0,0,0,0.55) !important; }
 
 /* ③ 매출 차트 Y축 레이블 스타일 */
 #chart canvas {
@@ -1959,33 +1958,6 @@ button[onclick="exportExcel()"] {
 
 
 /* ── 고객추가 모달 최종 확정 ── */
-#add-overlay {
-  display: none;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  z-index: 99999 !important;
-  background: rgba(0,0,0,0.55) !important;
-  align-items: flex-end !important;
-  justify-content: center !important;
-}
-#add-overlay.open {
-  display: flex !important;
-}
-#add-overlay .modal-box {
-  background: #fff !important;
-  border-radius: 16px 16px 0 0 !important;
-  width: 100% !important;
-  max-width: 640px !important;
-  max-height: 90vh !important;
-  overflow-y: auto !important;
-  position: relative !important;
-  z-index: 100000 !important;
-}
 
 
 /* ══════════════════════════════════════════════════
@@ -2265,19 +2237,8 @@ input,button,select,textarea { font-family:inherit; }
 
 /* ── 모달 오버레이 완전 확정 ── */
 /* ── 고객추가 모달 오버레이 ── */
-#add-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-  background: rgba(0,0,0,0.65);
-  align-items: flex-end;
-  justify-content: center;
-}
-#add-overlay.open { display: flex !important; }
 .modal-box { position: relative; z-index: 9999; }
 
-#add-overlay.open { display:flex; }
 .add-modal {
   background:#fff; border-radius:16px 16px 0 0;
   width:100%; max-width:480px;
@@ -2625,7 +2586,6 @@ button.btn-kakao {
 
 /* ── 모달 오버레이 완전 수정 ── */
 
-#add-overlay.open { display:flex !important; }
 .modal-box { z-index:9999 !important; }
 
 
@@ -2938,16 +2898,6 @@ html, body, input, button, select, textarea {
 
 
 /* ── 고객추가 모달 오버레이 최종 확정 ── */
-#add-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: 9998;
-  background: rgba(0,0,0,0.65);
-  align-items: flex-end;
-  justify-content: center;
-}
-#add-overlay.open { display: flex !important; }
 
 
 /* ── 폰트 통일 ── */
@@ -2957,8 +2907,6 @@ body, input, button, select, textarea {
 }
 
 
-/* ━━ add-overlay 강제 수정 (유일 확정) ━━ */
-#add-overlay.open { display: flex !important; }
 
 
 /* ━━ 모바일 앱헤더/탭바 확정 ━━ */
@@ -2987,9 +2935,6 @@ body, input, button, select, textarea {
   }
   .hd, .tabs { display: none !important; }
 }
-/* ━━ add-overlay 최종 ━━ */
-#add-overlay { display: none; position: fixed; inset: 0; z-index: 9998; background: rgba(0,0,0,0.65); align-items: flex-end; justify-content: center; }
-#add-overlay.open { display: flex !important; }
 
 
 /* ━━ 모바일 앱헤더 min-height 확정 ━━ */
@@ -3017,17 +2962,6 @@ body, input, button, select, textarea {
   }
 }
 
-/* ━━ add-overlay 최종 확정 ━━ */
-#add-overlay { display: none; position: fixed; inset: 0 !important; z-index: 9998 !important; background: rgba(0,0,0,0.65) !important; align-items: flex-end; justify-content: center; }
-#add-overlay.open { display: flex !important; }
-
-/* ── detail-overlay 표시 규칙 (원래 누락되어 있었음) ── */
-#detail-overlay { display: none; position: fixed; inset: 0 !important; z-index: 9998 !important; background: rgba(0,0,0,0.65) !important; align-items: flex-end; justify-content: center; }
-#detail-overlay.open { display: flex !important; }
-#detail-overlay .modal-box { width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
-
-/* ━━ 모달박스 ━━ */
-#add-overlay .modal-box { background: #fff !important; border-radius: 16px 16px 0 0; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; z-index: 9999 !important; }
 
 
 /* ━━ 버튼 폰트 강제 ━━ */
@@ -3049,16 +2983,22 @@ button { font-size: 13px !important; font-family: inherit; }
   width: 100vw;
   height: 100vh;
   z-index: 99999 !important;
-  background: rgba(0,0,0,0.65) !important;
+  background: rgba(0,0,0,0.55) !important;
   align-items: flex-end;
   justify-content: center;
 }
 #add-overlay.open { display: flex !important; }
+
+/* ── detail-overlay 표시 규칙 ── */
+#detail-overlay { display: none; position: fixed; inset: 0 !important; z-index: 9998 !important; background: rgba(0,0,0,0.65) !important; align-items: flex-end; justify-content: center; }
+#detail-overlay.open { display: flex !important; }
+#detail-overlay .modal-box { width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+
 #add-overlay .modal-box {
   background: #fff !important;
   border-radius: 16px 16px 0 0;
   width: 100%;
-  max-width: 600px;
+  max-width: 640px;
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
