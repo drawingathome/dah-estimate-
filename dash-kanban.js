@@ -4,6 +4,14 @@
    고객 정렬, 단계변경 메뉴.
    ══════════════════════════════════════════════════ */
 
+var PIPE_STAGES = [
+  { key:'계약금', dot:'#F06E2D' },
+  { key:'실측',   dot:'#F06E2D' },
+  { key:'잔금',   dot:'#282828' },
+  { key:'시공',   dot:'#282828' },
+  { key:'완료',   dot:'#EEE6DC' },
+];
+
 var STAGE_ORDER = ['상담','계약금','실측','잔금','시공','완료'];
 
 function changeStageByName(customerName, newStage) {
