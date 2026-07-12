@@ -4,6 +4,27 @@
    분리한 파일입니다. 기능 변경 없음 — 순수 위치 이동만 수행함.
    ══════════════════════════════════════════════════ */
 
+/* ── 토스트 알림 (기존엔 스타일이 아예 없어서 저장확인 등이 화면에 안 보였음) ── */
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  transform: translateX(-50%);
+  background: #282828;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 99999;
+  max-width: 90vw;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+}
+
 /* ── Pretendard 직접 내장 (CDN 불필요) ── */
 @font-face {
   font-family: 'Pretendard Variable';
