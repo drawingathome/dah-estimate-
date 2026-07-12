@@ -454,20 +454,6 @@ window.addEventListener('unhandledrejection', function(e) {
 });
 
 /* ── localStorage 안전 래퍼 ── */
-var safeStorage = {
-  get: function(key, def) {
-    try { return JSON.parse(localStorage.getItem(key)) || def; }
-    catch(e) { return def; }
-  },
-  set: function(key, val) {
-    try { localStorage.setItem(key, JSON.stringify(val)); return true; }
-    catch(e) { console.warn('저장 실패:', key, e); return false; }
-  },
-  remove: function(key) {
-    try { localStorage.removeItem(key); } catch(e) {}
-  }
-};
-
 /* ── 견적번호 자동채번 (대시보드용) ── */
 
 /* ── 데이터 백업 ── */

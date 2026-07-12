@@ -420,7 +420,7 @@ input::placeholder, textarea::placeholder {
 
 /* ── 카드 본문 ── */
 .pipe-card-name { font-size: 15px !important; font-weight: 600 !important; }
-.pipe-card-sub  { font-size: 12px !important; font-weight: 400 !important; color: #B0A99F !important; }
+.pipe-card-sub { font-size: 12px !important; font-weight: 400 !important; color: #B0A99F !important; }
 
 /* ── 모바일 진행현황 2열 ── */
 @media (max-width: 640px) {
@@ -2155,10 +2155,6 @@ html, body, input, button, select, textarea {
   color: var(--dark);
   margin-bottom: 4px;
 }
-.pipe-card-sub {
-  font-size: 12px;
-  color: var(--sub);
-}
 .pipe-col-empty {
   flex: 1;
   display: flex;
@@ -2390,10 +2386,6 @@ button[onclick*="excel"], button[onclick*="download"] {
   font-weight: 600 !important;
   color: #282828 !important;
   margin-bottom: 4px;
-}
-.pipe-card-sub {
-  font-size: 12px !important;
-  color: #B0A99F !important;
 }
 
 /* ── 3. 고객목록 엑셀 버튼 → Secondary ── */
