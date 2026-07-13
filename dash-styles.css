@@ -909,7 +909,7 @@ button[onclick="exportExcel()"] {
   padding-bottom: 2px !important;
 }
 .sort-wrap::-webkit-scrollbar { display: none; }
-.sort-btn {
+.sort-btn, .filter-btn {
   flex-shrink: 0 !important;
   white-space: nowrap !important;
   height: 30px !important;
@@ -917,8 +917,17 @@ button[onclick="exportExcel()"] {
   font-size: 12px !important;
   font-weight: 600 !important;
   border-radius: 4px !important;
+  border: 1px solid #EEE6DC;
+  background: #FAF7F5 !important;
+  color: #B0A99F !important;
   cursor: pointer !important;
   font-family: inherit !important;
+  transition: all 0.15s;
+}
+.sort-btn.on, .filter-btn.on, .sort-btn.active {
+  background: #282828 !important;
+  color: #fff !important;
+  border-color: #282828;
 }
 
 
@@ -2194,7 +2203,6 @@ button { font-size: 13px !important; font-family: inherit; }
 .hd-btn-new, #btn-add-customer { font-size: 13px !important; font-weight: 700 !important; }
 .tab { font-size: 12px !important; }
 .stage-chip { font-size: 12px !important; }
-.sort-btn { font-size: 13px !important; }
 #add-save-btn, #add-save-only-btn { font-size: 13px !important; }
 
 
@@ -2419,23 +2427,6 @@ button[onclick*="exportExcel"] {
 }
 
 /* ── 9. 정렬 버튼 그룹 ── */
-.sort-btn, .filter-btn {
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  height: 32px;
-  padding: 0 14px;
-  border-radius: 4px;
-  border: 1px solid #EEE6DC;
-  background: #FAF7F5 !important;
-  color: #B0A99F !important;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.sort-btn.on, .filter-btn.on, .sort-btn.active {
-  background: #282828 !important;
-  color: #fff !important;
-  border-color: #282828;
-}
 
 /* ── 10. 빈 상태 텍스트 일관성 ── */
 .empty-msg, .empty-text, [class*=empty] p {
