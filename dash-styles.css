@@ -88,10 +88,10 @@ html, body, input, button, select, textarea {
   justify-content: center !important;
   min-height: 140px !important;
   gap: 6px !important;
-  padding: 32px 16px !important;
-  font-size: 12px !important;
-  color: #C8C2BA !important;
-  font-weight: 500 !important;
+  padding: 32px 16px;
+  font-size: 12px;
+  color: #C8C2BA;
+  font-weight: 500;
 }
 .pipe-empty-text,
 .kanban-empty-text {
