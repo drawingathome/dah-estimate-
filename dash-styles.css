@@ -775,11 +775,12 @@ button[onclick="exportExcel()"] {
   font-weight: 700 !important;
   color: var(--dark) !important;
   letter-spacing: -0.3px;
+  margin-bottom: 6px;
 }
 .empty-state-desc {
   font-size: 12px !important;
   color: var(--sub) !important;
-  line-height: 1.7;
+  line-height: 1.6;
 }
 
 
@@ -1829,17 +1830,6 @@ button.btn-kakao {
   height: 48px;
   margin-bottom: 16px;
   color: var(--border);
-}
-.empty-state-title {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--dark);
-  margin-bottom: 6px;
-}
-.empty-state-desc {
-  font-size: 10px;
-  color: var(--sub);
-  line-height: 1.6;
 }
 
 
