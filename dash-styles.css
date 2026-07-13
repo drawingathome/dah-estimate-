@@ -1666,7 +1666,6 @@ input,button,select,textarea { font-family:inherit; }
   .tabs { display:none !important; }
   .mob-app-header { display:flex; }
   .mob-bottom-nav { display:block; }
-  .mob-fab { display:flex; }
   .wrap { padding:0 0 72px; }
   
   .search-input-clean { font-size:11px !important; }
