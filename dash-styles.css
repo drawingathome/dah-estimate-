@@ -88,6 +88,10 @@ html, body, input, button, select, textarea {
   justify-content: center !important;
   min-height: 140px !important;
   gap: 6px !important;
+  padding: 32px 16px !important;
+  font-size: 12px !important;
+  color: #C8C2BA !important;
+  font-weight: 500 !important;
 }
 .pipe-empty-text,
 .kanban-empty-text {
@@ -559,15 +563,6 @@ input::placeholder, textarea::placeholder {
   padding: 1px 7px;
   border-radius: 10px;
 }
-.kanban-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 120px;
-  font-size: 12px;
-  color: #C8C2BA;
-  font-weight: 500;
-}
 .kanban-item {
   padding: 12px 14px;
   border-bottom: 1px solid #F5F2EE;
@@ -770,17 +765,6 @@ button[onclick="exportExcel()"] {
   font-size: 12px;
   color: var(--sub);
   line-height: 1.7;
-}
-.kanban-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100px;
-  gap: 6px;
-  font-size: 12px;
-  color: #C8C2BA;
-  font-weight: 500;
 }
 .empty-state-wrap {
   display: flex;
@@ -2092,14 +2076,6 @@ html, body, input, button, select, textarea {
   margin: 0;
 }
 /* 칸반 빈 상태 */
-.kanban-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 16px;
-  gap: 6px;
-}
 .kanban-empty-text {
   font-size: 13px;
   color: var(--sub);
