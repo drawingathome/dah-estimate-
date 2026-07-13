@@ -1216,7 +1216,6 @@ input.mw, input.mh, input.pnum, input.unit-price, input.space-name, input.prod-n
 html, body { font-size: 15px; }
 input, select, textarea { font-size: 15px !important; }
 label, th, td { font-size: 13px; }
-.est-status-btn { font-size: 13px !important; }
 
 
 /* ── Pretendard 폰트 적용 ── */
@@ -1232,7 +1231,6 @@ html, body, input, button, select, textarea {
 button { transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease; cursor: pointer; }
 
 /* 탭 */
-.est-status-btn { transition: color 0.15s ease, border-color 0.15s ease; }
 
 /* 입력창 */
 input:focus, select:focus, textarea:focus {
@@ -1285,7 +1283,6 @@ input.error { border-color: #C0392B !important; box-shadow: 0 0 0 3px rgba(192,5
 
 
 /* ── 견적서 상태 탭 확정 ── */
-.est-status-btn { transition: color 0.15s, border-color 0.15s; }
 /* 미계약/계약됨 뱃지 */
 #contract-status-badge {
   display: inline-flex; align-items: center;
@@ -1586,7 +1583,6 @@ button:not(.est-status-btn):not(.cust-type-btn) {
   border-radius: 4px !important;
 }
 /* 탭 버튼은 제외 */
-.est-status-btn { border-radius: 0 !important; }
 
 
 /* ━━ 견적서 검색 버튼 Secondary ━━ */
