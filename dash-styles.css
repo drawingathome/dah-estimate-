@@ -1758,16 +1758,22 @@ button.btn-kakao {
 
 /* ── 담당자 버튼 (active) ── */
 .staff-btn.active {
-  background: var(--orange) !important;
+  background: #F06E2D !important;
   color: #fff !important;
-  border-color: var(--orange);
-  border-radius: var(--r-btn);
+  border: 1px solid #F06E2D;
+  border-radius: 4px;
+  font-weight: 700 !important;
 }
 .staff-btn {
   background: #fff !important;
-  color: var(--sub) !important;
-  border: 1px solid var(--border);
-  border-radius: var(--r-btn);
+  color: #B0A99F !important;
+  border: 1px solid #EEE6DC;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 /* ── + 고객 추가 버튼 ── */
@@ -1890,23 +1896,6 @@ button.btn-kakao {
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
-}
-.staff-btn {
-  padding: 6px 14px;
-  border-radius: 4px;
-  font-size: 10px !important;
-  font-weight: 500 !important;
-  cursor: pointer;
-  font-family: inherit;
-  background: #fff !important;
-  color: #B0A99F !important;
-  border: 1px solid #EEE6DC;
-}
-.staff-btn.active {
-  background: #F06E2D !important;
-  color: #fff !important;
-  border: 1px solid #F06E2D;
-  font-weight: 700 !important;
 }
 
 
@@ -2224,7 +2213,6 @@ button { font-size: 13px !important; font-family: inherit; }
 .tab { font-size: 12px !important; }
 .stage-chip { font-size: 12px !important; }
 .sort-btn { font-size: 13px !important; }
-.staff-btn { font-size: 13px !important; }
 #add-save-btn, #add-save-only-btn { font-size: 13px !important; }
 
 
