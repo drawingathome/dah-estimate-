@@ -1658,10 +1658,6 @@ input,button,select,textarea { font-family:inherit; }
 }
 
 /* ── 기타 ── */
-.empty-state {
-  padding:48px 24px; text-align:center;
-  display:flex; flex-direction:column; align-items:center;
-}
 .empty-icon {
   width:56px; height:56px; border-radius:50%;
   background:var(--ivory1); display:flex; align-items:center; justify-content:center;
@@ -1808,14 +1804,6 @@ button.btn-kakao {
 
 
 /* ── 빈 상태 화면 ── */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 24px;
-  text-align: center;
-}
 .empty-state-icon {
   width: 48px;
   height: 48px;
