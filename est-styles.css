@@ -1109,7 +1109,7 @@ textarea:focus{border-color:#282828}
 
  
 button{transition:transform 0.1s ease,opacity 0.1s ease,box-shadow 0.1s ease}
-button:active{transform:scale(0.96);opacity:0.85}
+button:active{opacity:0.85}
 
  
 .btn-save:active{transform:scale(0.97);box-shadow:0 1px 4px rgba(0,0,0,0.2)}
@@ -1230,7 +1230,6 @@ html, body, input, button, select, textarea {
    견적서 인터랙션 시스템
    ══════════════════════════════════════════ */
 button { transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease; cursor: pointer; }
-button:active { transform: scale(0.97); }
 
 /* 탭 */
 .est-status-btn { transition: color 0.15s ease, border-color 0.15s ease; }
