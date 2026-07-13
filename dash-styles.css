@@ -1367,11 +1367,6 @@ input,button,select,textarea { font-family:inherit; }
   font-weight:600; cursor:pointer; border:none;
   display:inline-flex; align-items:center; gap:6px;
 }
-.hd-btn-sub {
-  background:transparent;
-  color:rgba(255,255,255,0.55);
-  border:1px solid rgba(255,255,255,0.15);
-}
 .hd-btn-primary {
   background:var(--orange); color:#fff; font-weight:700;
 }
@@ -1825,17 +1820,6 @@ button.btn-kakao {
 }
 .hd-btn-primary:hover { background: #D4601F !important; }
 
-.hd-btn-sub {
-  background: #F06E2D !important;
-  color: rgba(255,255,255,0.75) !important;
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 4px;
-  font-size: 10px;
-  height: 30px;
-  padding: 0 10px;
-  cursor: pointer;
-  font-family: inherit;
-}
 
 
 /* ── 빈 상태 화면 ── */
