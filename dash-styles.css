@@ -522,12 +522,6 @@ input::placeholder, textarea::placeholder {
 
 
 /* 칸반 레이아웃 — PC: 5열 가로, 모바일: 2열 그리드 */
-.kanban-wrap {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
-  padding: 12px 20px 20px;
-}
 .kanban-col {
   background: #fff;
   border: 1px solid #EEE6DC;
@@ -574,11 +568,6 @@ input::placeholder, textarea::placeholder {
 
 /* 모바일 칸반 — 2열 */
 @media (max-width: 640px) {
-  .kanban-wrap {
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    padding: 12px;
-  }
   .kanban-col:last-child {
     grid-column: 1 / -1;
   }
