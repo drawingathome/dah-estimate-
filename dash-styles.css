@@ -686,11 +686,6 @@ button[onclick*="excel"], button[onclick*="download"],
   font-family: inherit;
   transition: all 0.12s;
 }
-.chart-tab.on, .chart-tab.active {
-  color: #F06E2D !important;
-  font-weight: 700 !important;
-  border-bottom-color: #F06E2D !important;
-}
 
 /* ⑤ 엑셀 버튼 — onclick="exportExcel()" */
 button[onclick="exportExcel()"] {
@@ -1604,7 +1599,6 @@ input,button,select,textarea { font-family:inherit; }
   background:none; border:none; cursor:pointer;
   border-bottom:2px solid transparent;
 }
-.chart-tab.on { color:var(--terra); border-bottom-color:var(--terra); font-weight:700; }
 
 /* ── 매출 테이블 ── */
 .rev-table { width:100%; border-collapse:collapse; font-size:11px; }
