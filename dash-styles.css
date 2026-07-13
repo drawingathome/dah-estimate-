@@ -361,10 +361,7 @@ input::placeholder, textarea::placeholder {
 /* ── 전역 기본 ── */
 html { font-size: 15px; }
 body {
-  font-size: 15px;
-  line-height: 1.5;
   color: #282828;
-  -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 * { -webkit-font-smoothing: antialiased; }
@@ -1326,13 +1323,7 @@ button[onclick="exportExcel()"] {
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
 
 body {
-  font-size: 10px;
-  font-family:'Pretendard Variable',-apple-system,BlinkMacSystemFont,sans-serif;
   background:var(--ivory2);
-  color:var(--dark);
-  font-size:11px;
-  line-height:1.5;
-  -webkit-font-smoothing:antialiased;
   word-break:keep-all;
   min-height:100vh;
 }
