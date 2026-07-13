@@ -563,14 +563,6 @@ input::placeholder, textarea::placeholder {
 .kanban-item:hover { background: #FAF7F5; }
 .kanban-item:last-child { border-bottom: none; }
 
-/* 모바일 칸반 — 2열 */
-@media (max-width: 640px) {
-  .kanban-col:last-child {
-    grid-column: 1 / -1;
-  }
-  .kanban-empty { min-height: 80px; }
-}
-
 /* 홈 섹션 여백 */
 #home .section-block {
   background: #fff;
