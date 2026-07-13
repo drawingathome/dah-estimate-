@@ -387,20 +387,8 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
   background:rgba(255,255,255,0.13);color:rgba(255,255,255,0.65)
 }
 .cust-type-btn{
-  padding:12px 8px;border:none;
-  border-radius:8px 6px 0 0;
-  font-size:11px;font-weight:600;font-family:inherit;
-  cursor:pointer;
-  background:rgba(255,255,255,0.08);
-  color:rgba(255,255,255,0.4);
-  transition:all 0.15s;letter-spacing:0.3px;white-space:nowrap;
+  letter-spacing:0.3px;white-space:nowrap;
   min-height:44px
-}
-.cust-type-btn.on{
-  background:#FAF7F5;color:#282828;font-weight:700
-}
-.cust-type-btn:hover:not(.on){
-  background:rgba(255,255,255,0.13);color:rgba(255,255,255,0.65)
 }
 
  
@@ -1039,7 +1027,6 @@ td.amt{
   
   .doc-header-tabbar-left,.doc-header-tabbar-right{gap:2px}
   
-  .cust-type-btn{padding:6px 10px;font-size:11px}
 }
 @media(max-width:480px){
   
@@ -1233,15 +1220,6 @@ html, body { font-size: 15px; }
 input, select, textarea { font-size: 15px !important; }
 label, th, td { font-size: 13px; }
 .est-status-btn { font-size: 13px !important; }
-.cust-type-btn  { font-size: 12px !important; }
-
-
-/* ── 견적서 탭 active 오렌지 최종 확정 ── */
-.cust-type-btn.on {
-  background: #F06E2D !important;
-  color: #fff !important;
-  border-color: #F06E2D !important;
-}
 
 
 /* ── Pretendard 폰트 적용 ── */
@@ -1260,7 +1238,6 @@ button:active { transform: scale(0.97); }
 /* 탭 */
 .est-status-btn { transition: color 0.15s ease, border-color 0.15s ease; }
 .est-status-btn:hover:not(.on) { color: #F06E2D !important; opacity: 0.75; }
-.cust-type-btn { transition: all 0.15s ease; }
 
 /* 입력창 */
 input:focus, select:focus, textarea:focus {
