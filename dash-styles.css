@@ -2072,9 +2072,6 @@ html, body, input, button, select, textarea {
 
 
 /* ── 콘텐츠 영역 ── */
-.wrap {
-  background: var(--ivory2);
-}
 #home {
   min-height: auto;
   padding-bottom: var(--sp-8);
