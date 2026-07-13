@@ -1654,9 +1654,9 @@ input,button,select,textarea { font-family:inherit; }
 }
 .mob-nav-btn.on { color:var(--terra); }
 .mob-fab {
-  display:none; position:fixed; bottom:72px; right:16px; z-index:200;
-  width:48px; height:48px; background:var(--orange); color:#fff;
-  border:none; border-radius:50%; font-size:22px; line-height:1.2;
+  display:none; position:fixed; bottom:72px; right:16px;
+  width:48px; height:48px; background:#F06E2D; color:#fff;
+  border:none; border-radius:50%; line-height:1.2;
   box-shadow:0 4px 16px rgba(196,103,58,0.4); cursor:pointer;
   align-items:center; justify-content:center;
 }
@@ -1785,9 +1785,6 @@ button.btn-kakao {
 }
 
 /* ── FAB ── */
-.mob-fab {
-  background: var(--orange) !important;
-}
 
 /* ── 탭바 active ── */
 .tab.on, .mob-nav-btn.on {
