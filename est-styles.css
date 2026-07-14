@@ -1213,7 +1213,6 @@ input.mw, input.mh, input.pnum, input.unit-price, input.space-name, input.prod-n
 
 /* 견적서 확정 타입스케일 */
 html, body { font-size: 15px; }
-input, select, textarea { font-size: 15px !important; }
 label, th, td { font-size: 13px; }
 
 
@@ -1237,7 +1236,6 @@ input:focus, select:focus, textarea:focus {
   border-color: #F06E2D !important;
   box-shadow: 0 0 0 3px rgba(240,110,45,0.12) !important;
 }
-input, select, textarea { transition: border-color 0.15s ease, box-shadow 0.15s ease; }
 
 /* 행 hover */
 #curtain-body tr:hover, #blind-body tr:hover, #svc-body tr:hover {
