@@ -54,7 +54,7 @@ function loadSurveyFromSheet() {
     displaySurvey(data);
   }
 
-  if(!nameVal) { fromSheet(); return; }
+  if(!nameVal) { showToast('⚠️ 먼저 고객 이름을 입력해주세요'); if(btn) btn.textContent = '📋 설문 불러오기'; return; }
 
   // 1순위: Supabase surveys 테이블에서 이름으로 최신 1건 조회
   var sxhr = new XMLHttpRequest();
