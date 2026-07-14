@@ -23,12 +23,32 @@ function setStatus(s) {
       try {
         var saved = JSON.parse(localStorage.getItem('dah_saved')||'[]');
         var gaEntry = saved.find(function(e){ return e.status==='ga'; });
-        if(gaEntry){ loadEstimateEntry(gaEntry); showToast('저장된 가견적을 불러왔습니다 🙂'); }
+        if(gaEntry){ loadEstimateEntry(gaEntry); showToast('고객 정보를 불러왔습니다. 제품 목록은 다시 입력해주세요 🙂'); }
         else { showToast('가견적 내용을 기반으로 최종견적서를 작성합니다 🙂'); }
       } catch(e){ showToast('가견적 내용을 기반으로 최종견적서를 작성합니다 🙂'); }
     }
   }
   triggerSumPulse();
+}
+
+/* 저장된 가견적(dah_saved) 항목에서 고객 기본정보만 폼에 복원
+   ※ 커튼/블라인드 제품행 상세정보는 저장 데이터 구조상 애초에 저장되지 않아 복원 불가 */
+function loadEstimateEntry(entry) {
+  if (!entry) return;
+  var nameEl = document.getElementById('c-name');
+  if (nameEl && entry.clientName) nameEl.value = entry.clientName;
+  var phoneEl = document.getElementById('c-phone');
+  if (phoneEl && entry.phone) phoneEl.value = entry.phone;
+  var addrEl = document.getElementById('c-addr');
+  if (addrEl && entry.addr) addrEl.value = entry.addr;
+  var staffEl = document.getElementById('c-staff');
+  if (staffEl && entry.staffName) staffEl.value = entry.staffName;
+  var memoEl = document.getElementById('c-memo');
+  if (memoEl && entry.memo) memoEl.value = entry.memo;
+  var measureEl = document.getElementById('c-measure');
+  if (measureEl && entry.date) measureEl.value = entry.date;
+  var installEl = document.getElementById('c-install');
+  if (installEl && entry.installDate) installEl.value = entry.installDate;
 }
 
 var currentCustType = 'new';
