@@ -224,27 +224,6 @@ input::placeholder, textarea::placeholder {
 .est-table td {
   font-size: 13px !important;
 }
-.total-amount {
-  font-size: 36px !important;
-  font-weight: 700 !important;
-  letter-spacing: -1px !important;
-}
-.total-label {
-  font-size: 11px !important;
-  letter-spacing: 0.1em !important;
-  text-transform: uppercase !important;
-}
-
-/* ── 설정 ── */
-#settings .field-label, #settings label {
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  color: #282828 !important;
-}
-#settings .field-desc {
-  font-size: 11px !important;
-  color: #B0A99F !important;
-}
 
 
 
@@ -1616,31 +1595,5 @@ button[onclick*="search"][onclick*="addr"]:hover {
 #svc-body tr:hover td {
   background: #FFF3EE !important;
   transition: background 0.1s !important;
-}
-
-/* ━━ 견적서 섹션 구분선 강화 ━━ */
-.section-divider {
-  border: none !important;
-  border-top: 1px solid #EEE6DC !important;
-  margin: 20px 0 !important;
-}
-
-/* ━━ 견적서 합계 영역 ━━ */
-.total-section {
-  background: #282828 !important;
-  border-radius: 12px !important;
-  padding: 20px 24px !important;
-}
-.total-amount {
-  font-size: 36px !important;
-  font-weight: 700 !important;
-  color: #fff !important;
-  letter-spacing: -1px !important;
-}
-.total-label {
-  font-size: 11px !important;
-  color: rgba(255,255,255,0.5) !important;
-  letter-spacing: 0.1em !important;
-  text-transform: uppercase !important;
 }
 
