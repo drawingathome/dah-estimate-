@@ -371,7 +371,7 @@ function calcTotal() {
   }
   var deposit=depRaw>0 ? depRaw : 0;
   var balance=grand-deposit;
-  var perf=Math.round(curtainTotal*0.95);
+  var perf=curtainTotal;
   document.getElementById('sum-curtain').textContent=curtainTotal.toLocaleString()+'원';
   
   var totalEl = document.getElementById('sum-total');
