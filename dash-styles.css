@@ -1486,13 +1486,6 @@ input,button,select,textarea { font-family:inherit; }
 }
 
 /* ── 기타 ── */
-.empty-icon {
-  width:56px; height:56px; border-radius:50%;
-  background:var(--ivory1); display:flex; align-items:center; justify-content:center;
-  margin-bottom:16px;
-}
-.empty-title { font-size:11px; font-weight:700; color:var(--dark); margin-bottom:6px; }
-.empty-desc { font-size:11px; color:var(--sub); line-height:1.8; margin-bottom:20px; }
 .info-box {
   background:var(--ivory1); border-radius:var(--r-card);
   padding:12px 16px; font-size:11px; color:var(--sub); line-height:1.8;
@@ -1798,24 +1791,6 @@ html, body, input, button, select, textarea {
   padding: 56px 24px;
   text-align: center;
   gap: 8px;
-}
-.empty-icon {
-  width: 48px; height: 48px;
-  margin-bottom: 8px;
-  opacity: 0.25;
-  color: var(--sub);
-}
-.empty-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--dark);
-  margin: 0;
-}
-.empty-desc {
-  font-size: 13px;
-  color: var(--sub);
-  line-height: 1.6;
-  margin: 0;
 }
 /* 칸반 빈 상태 */
 .kanban-empty-text {

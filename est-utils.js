@@ -4,28 +4,6 @@
    구글드라이브 문서저장/고객시트 동기화.
    ══════════════════════════════════════════════════ */
 
-function generateEstNo() {
-  var now = new Date();
-  var yy = String(now.getFullYear()).slice(2);
-  var mm = String(now.getMonth() + 1).padStart(2, '0');
-  var dd = String(now.getDate()).padStart(2, '0');
-  
-  // localStorage에서 오늘 마지막 번호 가져오기
-  var key = 'dah_est_seq_' + yy + mm + dd;
-  var seq = parseInt(localStorage.getItem(key) || '0') + 1;
-  localStorage.setItem(key, String(seq));
-  
-  return 'DAH-' + yy + mm + dd + '-' + String(seq).padStart(3, '0');
-  // 예: DAH-260627-001
-}
-
-function setEstNo() {
-  var el = document.getElementById('est-no');
-  if (el && !el.value) {
-    el.value = generateEstNo();
-  }
-}
-
 var DAH_LOGO_B64 = 'https://raw.githubusercontent.com/drawingathome/dah-estimate-/main/logo.png';
 
 function fmtPrice(inp) {
