@@ -1,66 +1,139 @@
 // ════════════════════════════════════════════════
 // 드로잉엣홈 DAH — Apps Script
-// 설문 응답 → 대시보드 고객 자동 등록
-// Google Apps Script 에디터에서 실행하세요
+// 설문 응답(Supabase surveys 테이블) → 대시보드 고객 자동 등록
+//
+// ⚠️ 재작성 이력: 이 스크립트는 원래 구글폼 onFormSubmit 트리거용으로 작성되어
+// 있었으나, survey.html이 구글폼이 아니라 자체 React 앱이라 실제로는 절대
+// 실행될 수 없는 상태였습니다(연결할 구글폼 자체가 없음). survey.html은
+// 설문 제출 시 Supabase의 surveys 테이블에 직접 저장하므로, 이 스크립트는
+// "시간 기반 트리거"로 바꿔 surveys 테이블을 주기적으로 확인하는 방식으로
+// 다시 작성했습니다.
+//
+// 【설치 방법】
+// 1. Google Apps Script 편집기(script.google.com)에서 새 프로젝트 생성 후
+//    이 코드를 붙여넣기
+// 2. 왼쪽 메뉴 "트리거" → "트리거 추가"
+//    - 실행할 함수: processNewSurveys
+//    - 이벤트 소스: 시간 기반
+//    - 시간 기반 트리거 유형: 분 단위 타이머 (예: 10분마다)
+// 3. 처음 설치 시 반드시 testProcessSurveys()를 수동 실행해서 아래 두 가지를
+//    먼저 확인하세요:
+//    (a) surveys 테이블에 status='신규' 데이터가 있을 때 정상적으로
+//        가져와지는지 (Logger.log 확인)
+//    (b) customers 테이블에 정상 등록되고, surveys 테이블의 status가
+//        '등록완료'로 바뀌는지
+//    ※ surveys 테이블에 id 컬럼이 없거나 이름이 다르면 마지막 UPDATE 단계이
+//       실패할 수 있습니다 — 이 경우 실패해도 고객 등록 자체(가장 중요한 부분)는
+//       이미 끝난 상태이므로, marking 실패 시 다음 실행에서 같은 설문이 중복
+//       등록되지 않도록 UPDATE 필터 컬럼명을 실제 스키마에 맞게 조정하세요.
 // ════════════════════════════════════════════════
 
 var SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
 var SUPABASE_KEY = 'sb_publishable_9nYjQBzwiyausr7-Cd-elw_S9inJlge';
 
-// 설문 응답 시 자동 실행
-function onFormSubmit(e) {
+// 시간 기반 트리거로 주기 실행 — status가 '신규'인 설문을 찾아 고객으로 등록
+function processNewSurveys() {
   try {
-    var responses = e.values;
-    var timestamp = responses[0];
-    
-    // 설문 컬럼 순서에 맞게 매핑 (설문 구조에 따라 수정)
-    var customer = {
-      client_name:  responses[1] || '',   // 고객명
-      phone:        responses[2] || '',   // 연락처
-      addr:         responses[3] || '',   // 주소
-      space:        responses[4] || '',   // 공간 메모
-      memo:         '설문 자동 등록 ' + timestamp,
-      stage:        '상담',
-      staff_name:   '마스터',
-      visit_count:  1,
-      date:         formatDate(new Date()),
-    };
-    
-    // 빈 이름/연락처는 등록 스킵
-    if (!customer.client_name || !customer.phone) {
-      Logger.log('이름 또는 연락처 없음 — 스킵');
+    var newSurveys = fetchNewSurveys();
+    if (!newSurveys || newSurveys.length === 0) {
+      Logger.log('처리할 신규 설문 없음');
       return;
     }
-    
-    // Supabase에 등록
-    var result = insertCustomer(customer);
-    Logger.log('고객 등록 완료: ' + customer.client_name + ' / ' + JSON.stringify(result));
-    
-    // 스프레드시트에 처리 결과 기록
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-    var lastRow = sheet.getLastRow();
-    sheet.getRange(lastRow, sheet.getLastColumn() + 1).setValue('DAH 등록 완료');
-    
-  } catch(err) {
-    Logger.log('오류: ' + err.toString());
+
+    newSurveys.forEach(function(survey) {
+      try {
+        // 이름 또는 연락처가 없으면 등록 스킵 (다음 실행에서도 계속 대기 상태로 남음)
+        if (!survey.client_name || !survey.phone) {
+          Logger.log('이름 또는 연락처 없음 — 스킵: id=' + survey.id);
+          return;
+        }
+
+        var customer = {
+          client_name: survey.client_name,
+          phone: survey.phone,
+          addr: survey.addr || '',
+          space: survey.space || '',
+          memo: '설문 자동 등록' + (survey.memo ? ' | ' + survey.memo : ''),
+          stage: '상담',
+          staff_name: '마스터',
+          date: formatDate(new Date())
+        };
+
+        var result = insertCustomer(customer);
+        Logger.log('고객 등록 완료: ' + customer.client_name + ' / ' + JSON.stringify(result));
+
+        // 중복 등록 방지를 위해 처리 완료 표시
+        markSurveyProcessed(survey.id);
+
+      } catch (rowErr) {
+        Logger.log('개별 설문 처리 오류(id=' + survey.id + '): ' + rowErr.toString());
+      }
+    });
+
+  } catch (err) {
+    Logger.log('전체 오류: ' + err.toString());
   }
 }
 
+// status='신규'인 설문 목록 조회
+function fetchNewSurveys() {
+  var url = SUPABASE_URL + '/rest/v1/surveys?status=eq.' + encodeURIComponent('신규') + '&select=*';
+  var options = {
+    method: 'get',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY
+    },
+    muteHttpExceptions: true
+  };
+  var response = UrlFetchApp.fetch(url, options);
+  if (response.getResponseCode() !== 200) {
+    Logger.log('설문 조회 실패: ' + response.getContentText());
+    return [];
+  }
+  return JSON.parse(response.getContentText());
+}
+
+// customers 테이블에 등록
 function insertCustomer(customer) {
   var url = SUPABASE_URL + '/rest/v1/customers';
   var options = {
-    method: 'POST',
+    method: 'post',
     headers: {
-      'apikey':        SUPABASE_KEY,
+      'apikey': SUPABASE_KEY,
       'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Content-Type':  'application/json',
-      'Prefer':        'return=representation',
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
     },
     payload: JSON.stringify(customer),
-    muteHttpExceptions: true,
+    muteHttpExceptions: true
   };
   var response = UrlFetchApp.fetch(url, options);
   return JSON.parse(response.getContentText());
+}
+
+// 처리 완료된 설문의 status를 '등록완료'로 변경 (중복 등록 방지)
+function markSurveyProcessed(surveyId) {
+  if (surveyId === undefined || surveyId === null) {
+    Logger.log('⚠️ survey id가 없어 status 업데이트를 건너뜁니다. (id 컬럼명 확인 필요)');
+    return;
+  }
+  var url = SUPABASE_URL + '/rest/v1/surveys?id=eq.' + surveyId;
+  var options = {
+    method: 'patch',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    payload: JSON.stringify({ status: '등록완료' }),
+    muteHttpExceptions: true
+  };
+  var response = UrlFetchApp.fetch(url, options);
+  if (response.getResponseCode() >= 300) {
+    Logger.log('⚠️ status 업데이트 실패(id=' + surveyId + '): ' + response.getContentText());
+  }
 }
 
 function formatDate(date) {
@@ -70,14 +143,30 @@ function formatDate(date) {
   return y + '-' + m + '-' + d;
 }
 
-// ── 수동 테스트용 ──
+// ── 설치 후 반드시 먼저 이 함수를 수동 실행해서 정상 동작을 확인하세요 ──
+function testProcessSurveys() {
+  Logger.log('=== 신규 설문 조회 테스트 ===');
+  var surveys = fetchNewSurveys();
+  Logger.log('신규 설문 ' + surveys.length + '건 발견');
+  Logger.log(JSON.stringify(surveys));
+
+  if (surveys.length === 0) {
+    Logger.log('테스트할 신규 설문이 없습니다. survey.html에서 설문을 하나 제출한 뒤 다시 실행해보세요.');
+    return;
+  }
+
+  Logger.log('=== 실제 processNewSurveys() 실행 ===');
+  processNewSurveys();
+}
+
+// ── 수동 테스트용 (customers 테이블 직접 등록 테스트) ──
 function testInsert() {
   var testCustomer = {
     client_name: '테스트 고객',
     phone: '010-0000-0000',
     stage: '상담',
     staff_name: '마스터',
-    memo: 'Apps Script 테스트',
+    memo: 'Apps Script 테스트'
   };
   var result = insertCustomer(testCustomer);
   Logger.log(JSON.stringify(result));
