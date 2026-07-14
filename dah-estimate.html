@@ -577,7 +577,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.body.appendChild(indicator);
   
   // 입력 필드들에 이벤트 연결
-  var fields = ['c-name','c-phone','c-addr','c-addr-detail','c-measure','c-install','c-region','c-memo'];
+  var fields = ['c-name','c-phone','c-addr','c-addr2','c-measure','c-install','c-region','c-memo'];
   fields.forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.addEventListener('input', autoSave);

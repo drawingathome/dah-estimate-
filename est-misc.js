@@ -104,7 +104,7 @@ function collectFormData() {
   form.clientName  = document.getElementById('c-name')?.value || '';
   form.phone       = document.getElementById('c-phone')?.value || '';
   form.addr        = document.getElementById('c-addr')?.value || '';
-  form.addrDetail  = document.getElementById('c-addr-detail')?.value || '';
+  form.addrDetail  = document.getElementById('c-addr2')?.value || '';
   form.measureDate = document.getElementById('c-measure')?.value || '';
   form.installDate = document.getElementById('c-install')?.value || '';
   form.region      = document.getElementById('c-region')?.value || '';
@@ -134,7 +134,7 @@ function loadDraft() {
       if (d.clientName)  document.getElementById('c-name').value = d.clientName;
       if (d.phone)       document.getElementById('c-phone').value = d.phone;
       if (d.addr)        document.getElementById('c-addr').value = d.addr;
-      if (d.addrDetail)  document.getElementById('c-addr-detail') && (document.getElementById('c-addr-detail').value = d.addrDetail);
+      if (d.addrDetail)  document.getElementById('c-addr2') && (document.getElementById('c-addr2').value = d.addrDetail);
       if (d.measureDate) document.getElementById('c-measure').value = d.measureDate;
       if (d.installDate) document.getElementById('c-install').value = d.installDate;
       if (d.region)      document.getElementById('c-region').value = d.region;
