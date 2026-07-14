@@ -46,41 +46,12 @@ html, body, input, button, select, textarea {
 
 
 /* ③ 진행현황 칸반 min-height */
-.pipe-col,
 .kanban-col,
 [class*=pipe-col],
 [class*=kanban-col] {
   min-height: 240px !important;
 }
-.pipe-col-body,
-.kanban-col-body {
-  min-height: 180px !important;
-}
-/* 칸반 헤더 — 스테이지 컬러 도트 + 이름 + 카운트 */
-.pipe-col-header,
-.kanban-col-header {
-  display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  padding: 10px 14px !important;
-  border-bottom: 1px solid #EEE6DC !important;
-  background: #fff !important;
-}
-.pipe-col-title,
-.kanban-col-title {
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  color: #282828 !important;
-}
-.pipe-col-count,
-.kanban-col-count {
-  font-size: 11px !important;
-  color: #B0A99F !important;
-  font-weight: 500 !important;
-  margin-left: auto !important;
-}
 /* 칸반 빈 상태 */
-.pipe-empty,
 .kanban-empty {
   display: flex !important;
   flex-direction: column !important;
@@ -92,12 +63,6 @@ html, body, input, button, select, textarea {
   font-size: 12px;
   color: #C8C2BA;
   font-weight: 500;
-}
-.pipe-empty-text,
-.kanban-empty-text {
-  font-size: 12px !important;
-  color: #C8C2BA !important;
-  font-weight: 500 !important;
 }
 
 
@@ -133,18 +98,6 @@ html, body, input, button, select, textarea {
 
 
 
-/* ⑤ 섹션 타이틀 — 12px Bold 서브컬러 */
-.section-title, .home-section-title,
-#home .section-hd, #home h3,
-.section-header {
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  color: #B0A99F !important;
-  letter-spacing: 0.06em !important;
-  text-transform: uppercase !important;
-  margin-bottom: 8px !important;
-}
-
 /* ⑥ 진행현황 칩 — 너무 큰 문제 수정 */
 
 /* ⑦ 탭 네비 */
@@ -158,16 +111,6 @@ html, body, input, button, select, textarea {
   font-weight: 700 !important;
   color: #282828 !important;
 }
-
-/* ⑧ 칸반 스테이지 라벨 */
-.pipe-col-title, .kanban-col-title,
-.pipe-stage-name {
-  font-size: 12px !important;
-  font-weight: 700 !important;
-}
-
-/* ⑨ 본문 / 서브텍스트 */
-.pipe-card-name { font-size: 15px !important; font-weight: 600 !important; color: #282828 !important; }
 
 /* ⑩ 날짜·보조 */
 .date-label, .home-date, #home .date {
@@ -207,34 +150,17 @@ input::placeholder, textarea::placeholder {
   font-weight: 700 !important;
   color: #282828 !important;
 }
-#settings .field-desc {
-  font-size: 11px !important;
-  font-weight: 400 !important;
-  color: #B0A99F !important;
-}
 
 
 
 
 /* ② 모바일 진행현황 — 2열 그리드 */
 @media (max-width: 640px) {
-  #pipe .pipe-cols,
-  #pipe .kanban-cols,
-  #pipe [class*=pipe-list],
-  #pipe [class*=kanban-list] {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
-    padding: 12px !important;
-  }
-  #pipe .pipe-col,
-  #pipe .kanban-col,
-  #pipe [class*=pipe-col] {
+  #pipe .kanban-col {
     min-height: 120px !important;
     border-radius: 12px !important;
   }
   /* 완료 컬럼 — 2열에서 전체 너비 */
-  #pipe .pipe-col:last-child,
   #pipe .kanban-col:last-child {
     grid-column: 1 / -1 !important;
   }
@@ -408,35 +334,6 @@ input::placeholder, textarea::placeholder {
 
 /* ── 홈 칩 28px 높이 ── */
 
-/* ── 칸반 스테이지 12px ── */
-.pipe-col-title, .kanban-col-title {
-  font-size: 12px !important;
-  font-weight: 700 !important;
-}
-.pipe-col-count, .kanban-col-count {
-  font-size: 11px !important;
-  font-weight: 500 !important;
-  color: #B0A99F !important;
-}
-
-/* ── 카드 본문 ── */
-.pipe-card-name { font-size: 15px !important; font-weight: 600 !important; }
-.pipe-card-sub { font-size: 12px !important; font-weight: 400 !important; color: #B0A99F !important; }
-
-/* ── 모바일 진행현황 2열 ── */
-@media (max-width: 640px) {
-  #pipe .pipe-cols,
-  #pipe .kanban-cols {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
-    padding: 12px !important;
-  }
-  #pipe .pipe-col:last-child,
-  #pipe .kanban-col:last-child {
-    grid-column: 1 / -1 !important;
-  }
-}
 
 /* ── 매출 탭 active 강화 ── */
 #chart .period-tabs,
@@ -511,10 +408,6 @@ input::placeholder, textarea::placeholder {
   font-weight: 700 !important;
   color: #282828 !important;
 }
-#settings .field-desc {
-  font-size: 11px !important;
-  color: #B0A99F !important;
-}
 
 
 
@@ -562,29 +455,6 @@ input::placeholder, textarea::placeholder {
 }
 .kanban-item:hover { background: #FAF7F5; }
 .kanban-item:last-child { border-bottom: none; }
-
-/* 홈 섹션 여백 */
-#home .section-block {
-  background: #fff;
-  border: 1px solid #EEE6DC;
-  border-radius: 12px;
-  margin: 0 20px 12px;
-  overflow: hidden;
-}
-@media (max-width: 640px) {
-  #home .section-block { margin: 0 12px 10px; }
-}
-
-
-/* 섹션 타이틀 */
-.section-title-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: #B0A99F;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
 
 
 
@@ -775,11 +645,6 @@ button[onclick="exportExcel()"] {
 
 /* ── 여백 체계 (8px 기반) ── */
 #home .wrap > * { margin-bottom: 0; }
-#home .section-block { margin: 0 20px 12px; background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden; }
-#home .section-hd { padding: 14px 20px 12px; font-size:12px; font-weight:700; color:var(--sub); letter-spacing:0.05em; text-transform:uppercase; border-bottom:1px solid var(--border); }
-@media (max-width:640px) {
-  #home .section-hd { padding: 12px 12px 10px; }
-}
 
 
 /* ── 태블릿 반응형 (641px ~ 1024px) ── */
@@ -833,9 +698,6 @@ button[onclick="exportExcel()"] {
 
 
 /* ② PC 빈 섹션 (처리필요 / 오늘일정) — 최소 높이 */
-#home .section-block {
-  min-height: 80px !important;
-}
 .empty-inline {
   padding: 28px 16px !important;
   font-size: 12px !important;
@@ -924,7 +786,6 @@ button[onclick="exportExcel()"] {
 /* ── 대기업 디자인팀 최종 3가지 수정 ── */
 
 /* ① PC 홈 섹션 헤더 배경 — 아이보리2로 구분 */
-#home .section-hd,
 #home [style*="padding:14px 20px 10px"][style*="display:flex"],
 #home [style*="padding:14px 20px 10px"] {
   background: #F5F2EE !important;
@@ -957,7 +818,6 @@ button[onclick="exportExcel()"] {
   margin: 6px 0 4px !important;
 }
 /* 섹션 블록 구분 더 명확하게 */
-#home .section-block,
 #home [style*="border-bottom:1px solid var(--border)"][style*="background:#fff"] {
   border-left: 3px solid #EEE6DC !important;
 }
@@ -1417,29 +1277,6 @@ input,button,select,textarea { font-family:inherit; }
   flex-shrink:0;
 }
 
-/* ── pipe (진행현황) ── */
-.pipe-stage-head {
-  padding:10px 16px 8px;
-  border-bottom:1px solid var(--ivory2);
-  display:flex; align-items:center; gap:8px;
-}
-.pipe-stage-label { font-size:11px; font-weight:700; color:var(--dark); }
-.pipe-stage-num {
-  width:18px; height:18px; border-radius:50%;
-  background:var(--orange); color:#fff;
-  font-size:11px; font-weight:700;
-  display:flex; align-items:center; justify-content:center;
-}
-.pipe-stage-num.empty { background:var(--border); }
-.pipe-item {
-  padding:12px 16px; border-bottom:1px solid var(--ivory2);
-  cursor:pointer; min-height:56px;
-}
-.pipe-item:last-child { border-bottom:none; }
-.pipe-item:hover { background:var(--ivory1); }
-.pipe-name { font-size:11px; font-weight:700; color:var(--dark); }
-.pipe-sub { font-size:11px; color:var(--sub); margin-top:2px; }
-
 /* ── 검색 ── */
 .search-top {
   padding:10px 16px 8px;
@@ -1644,7 +1481,6 @@ input,button,select,textarea { font-family:inherit; }
   .wrap { padding:0 0 72px; }
   
   .search-input-clean { font-size:11px !important; }
-  .customer-item,.pipe-item { min-height:56px; }
   .login-screen { padding:40px 20px 32px; }
   .login-card { max-width:100%; }
 }
@@ -2009,48 +1845,6 @@ html, body, input, button, select, textarea {
 .card-pad-sm { padding: var(--sp-3) var(--sp-4); }
 
 
-/* ── 칸반 카드 높이/스타일 개선 ── */
-.pipe-col {
-  min-height: 200px;
-}
-.pipe-col-body {
-  min-height: 160px;
-  display: flex;
-  flex-direction: column;
-}
-.pipe-card {
-  background: #fff;
-  border-radius: var(--r-card);
-  border: 1px solid var(--border);
-  padding: 12px 14px;
-  margin-bottom: 8px;
-  cursor: pointer;
-  transition: box-shadow 0.15s, border-color 0.15s;
-}
-.pipe-card:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  border-color: #D4CEC8;
-}
-.pipe-card-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--dark);
-  margin-bottom: 4px;
-}
-.pipe-col-empty {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 0;
-}
-.pipe-col-empty-text {
-  font-size: 13px;
-  color: var(--border);
-  letter-spacing: 0.02em;
-}
-
-
 /* ── 콘텐츠 영역 ── */
 #home {
   min-height: auto;
@@ -2228,43 +2022,6 @@ button[onclick*="excel"], button[onclick*="download"] {
   letter-spacing: -1px;
 }
 
-/* ── 2. 진행현황 칸반 카드 높이 ── */
-.pipe-col {
-  min-height: 240px;
-}
-.pipe-col-body {
-  min-height: 180px;
-  display: flex !important;
-  flex-direction: column;
-}
-.pipe-col-empty {
-  flex: 1 !important;
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-  min-height: 120px;
-}
-/* 칸반 카드 — 데이터 들어왔을 때 */
-.pipe-card {
-  background: #fff !important;
-  border: 1px solid #EEE6DC;
-  border-radius: 12px;
-  padding: 14px 16px;
-  margin-bottom: 8px;
-  cursor: pointer;
-  transition: box-shadow 0.15s, border-color 0.15s;
-}
-.pipe-card:hover {
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08) !important;
-  border-color: #D4CEC8;
-}
-.pipe-card-name {
-  font-size: 15px !important;
-  font-weight: 600 !important;
-  color: #282828 !important;
-  margin-bottom: 4px;
-}
-
 /* ── 3. 고객목록 엑셀 버튼 → Secondary ── */
 button[onclick*="export"], button[onclick*="Excel"],
 button[onclick*="excel"], button[onclick*="download"] {
@@ -2360,18 +2117,6 @@ button[onclick*="exportExcel"] {
   color: #282828 !important;
 }
 
-/* ── 7. 섹션 헤더 일관성 ── */
-.section-header, [class*=section-head] {
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  color: #B0A99F !important;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #EEE6DC;
-  margin-bottom: 12px;
-}
-
 /* ── 8. 스테이지 칩 크기 통일 ── */
 .stage-chip, [data-stage] {
   font-size: 11px !important;
@@ -2404,14 +2149,6 @@ button[onclick*="exportExcel"] {
   color: #B0A99F !important;
 }
 
-/* ── 12. 홈 화면 섹션 타이틀 ── */
-.home-section-title {
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  color: #B0A99F !important;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
 
 /* ── 13. 헤더 버튼 크기 통일 ── */
 .hd-btn {
@@ -2491,16 +2228,6 @@ button[onclick*="exportExcel"] {
 
 /* ━━ 수정 8: 전체 버튼 cursor 통일 ━━ */
 button { cursor: pointer; }
-
-/* ━━ 수정 9: 카드 hover 시 그림자 ━━ */
-.pipe-col:hover {
-  box-shadow: none !important;
-}
-.pipe-card:hover {
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08) !important;
-  transform: translateY(-1px) !important;
-  transition: all 0.15s ease;
-}
 
 /* ━━ 수정 10: 헤더 로고 폰트 ━━ */
 .hd-logo {
