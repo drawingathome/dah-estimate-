@@ -114,13 +114,13 @@ function autoUpdateRail(curtainTr) {
     calcSvcRow(tds[2]?.querySelector('input'));
   }
 
-  // 레일 시공비 행: 단가 25,000원 × 레일수 (같은 레일수 기준)
+  // 레일 시공비 행: 단가 25,000원 × 1개 (레일수와 무관, 창문 1개 시공당 고정)
   var existingCost = svcBody.querySelector('[data-railcost-src="'+rowIdx+'"]');
   if(existingCost) {
     var ctds = existingCost.querySelectorAll('td');
     if(ctds[1]) { var inp=ctds[1].querySelector('input'); if(inp) inp.value=(space?space+' ':' ')+'레일 시공비'; }
     if(ctds[2]) { var inp=ctds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw','25000'); inp.value=(25000).toLocaleString(); } }
-    if(ctds[3]) { var inp=ctds[3].querySelector('input'); if(inp) inp.value=jaR; }
+    if(ctds[3]) { var inp=ctds[3].querySelector('input'); if(inp) inp.value=1; }
     calcSvcRow(ctds[2]?.querySelector('input'));
   } else {
     addSvcRow();
@@ -130,7 +130,7 @@ function autoUpdateRail(curtainTr) {
     if(ctds[0]) { var sel=ctds[0].querySelector('select'); if(sel) sel.value='시공비'; }
     if(ctds[1]) { var inp=ctds[1].querySelector('input'); if(inp) inp.value=(space?space+' ':' ')+'레일 시공비'; }
     if(ctds[2]) { var inp=ctds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw','25000'); inp.value=(25000).toLocaleString(); } }
-    if(ctds[3]) { var inp=ctds[3].querySelector('input'); if(inp) inp.value=jaR; }
+    if(ctds[3]) { var inp=ctds[3].querySelector('input'); if(inp) inp.value=1; }
     calcSvcRow(ctds[2]?.querySelector('input'));
   }
 
