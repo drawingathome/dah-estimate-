@@ -27,6 +27,11 @@ const scripts = [
 
 if (/dah-dashboard/.test(target)) {
   scripts.push(['role-permission-check.js', [target]]);
+  scripts.push(['dashboard-data-check.js', [target]]);
+}
+
+if (/dah-estimate/.test(target)) {
+  scripts.push(['estimate-calc-check.js', [target]]);
 }
 
 let anyFail = false;
