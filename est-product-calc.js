@@ -219,7 +219,13 @@ function recalcBlindOptionExtras() {
     extraSum += Math.max(0, parseFloat(inp.value.replace(/[^0-9.-]/g,''))||0);
   });
   var svcRow = svcBody.querySelector('[data-svc-type="시공비"]');
-  if (!svcRow) return; // 시공 지역이 선택 안 된 경우 옵션추가금 반영 대상 없음
+  if (!svcRow) {
+    // 시공 지역이 선택 안 된 경우 옵션추가금을 반영할 곳이 없어 금액이 누락될 수 있음 — 사용자에게 명확히 안내
+    if (extraSum > 0) {
+      showToast('⚠️ 옵션추가금을 반영하려면 먼저 지역(서울/경기/기타)을 선택해주세요');
+    }
+    return;
+  }
   var base = parseFloat(svcRow.getAttribute('data-install-base'))||0;
   var priceInput = svcRow.querySelectorAll('td')[2]?.querySelector('input');
   if (priceInput) {
