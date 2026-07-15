@@ -728,15 +728,7 @@ function renderKakaoLog() {
 }
 
 
-function loadEstimates(customerName, callback) {
-  sbXHR('GET', 'estimates?customer_name=eq.' + encodeURIComponent(customerName) + '&order=created_at.desc', null, function(err, data) {
-    if (err) { callback([]); return; }
-    callback(data || []);
-  });
-}
-
 var CONTRACT_LABELS = {pending:'가견적', contracted:'✅ 계약됨', rejected:'미계약'};
-var CONTRACT_COLORS = {pending:'#6B6B6B', contracted:'#282828', rejected:'var(--light)'};
 var STATUS_LABELS = {ga:'가견적서', final:'최종견적서'};
 
 function renderEstimateHistory(container, clientName) {
@@ -831,34 +823,4 @@ function renderEstimateHistory(container, clientName) {
   });
 
   container.appendChild(estSec);
-}
-
-function showEstimateHistory(customerName) {
-  loadEstimates(customerName, function(estimates) {
-    var body = document.getElementById('detail-body');
-    var histSection = document.getElementById('estimate-history-section');
-    if (histSection) histSection.remove();
-
-    var section = el('div', {id:'estimate-history-section', style:'margin-top:14px'});
-    section.appendChild(span('font-size:11px;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:8px', '📋 시공 이력 (' + estimates.length + '건)'));
-
-    if (estimates.length === 0) {
-      section.appendChild(span('font-size:11px;color:var(--sub);display:block;text-align:center;padding:12px 0', '시공 이력이 없습니다'));
-    } else {
-      estimates.forEach(function(e) {
-        var row = div('padding:10px;border:1px solid #EEE6DC;margin-bottom:6px;background:#FAF7F5', [
-          div('display:flex;justify-content:space-between;margin-bottom:4px', [
-            span('font-size:12px;font-weight:700', e.space || '—'),
-            span('font-size:11px;color:#282828;font-weight:700', (Number(e.price)||0).toLocaleString()+'원')
-          ]),
-          e.product ? span('font-size:11px;color:#282828;display:block', '제품: ' + e.product) : null,
-          e.fabric ? span('font-size:11px;color:#282828;display:block', '원단: ' + e.fabric) : null,
-          (e.width && e.height) ? span('font-size:11px;color:#282828;display:block', '사이즈: ' + e.width + ' × ' + e.height + 'cm') : null,
-          span('font-size:11px;color:var(--sub);display:block;margin-top:4px', (e.date||'') + ' · ' + (e.stage||'') + ' · ' + (e.staff_name||''))
-        ]);
-        section.appendChild(row);
-      });
-    }
-    body.appendChild(section);
-  });
 }
