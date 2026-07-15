@@ -37,6 +37,7 @@ function renderHome() {
 
   loadCustomersAsync(function(customers) {
     if (!customers) customers = [];
+    customers = customers.filter(function(c){ return !isSoftDeleted(c); });
 
     // ── 이달 매출 계산 ──────────────────────────────
     var thisMonthCustomers = customers.filter(function(c) {
@@ -366,8 +367,8 @@ function renderSearch() {
   var filtered = q
     ? all.filter(function(c) { return searchMatch(c, q); })
     : all.slice().reverse();
-  var customers = showArchived ? filtered : filtered.filter(function(c){ return !isArchived(c); });
-  var archivedCount = filtered.filter(isArchived).length;
+  var customers = showArchived ? filtered : filtered.filter(function(c){ return !isArchived(c) && !isSoftDeleted(c); });
+  var archivedCount = filtered.filter(function(c){ return isArchived(c) || isSoftDeleted(c); }).length;
   var countEl = document.getElementById('search-count'); if (countEl) countEl.textContent = q ? ('검색 결과 ' + customers.length + '건') : (showArchived ? '전체 ' + customers.length + '건 (보관 포함)' : '전체 ' + customers.length + '건')
   var listEl = document.getElementById('search-list'); listEl.innerHTML = '';
   if (customers.length === 0) { (function(){

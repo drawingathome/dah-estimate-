@@ -38,7 +38,7 @@ function backupData() {
 
 function exportExcel() {
   try {
-    var customers = loadCustomers();
+    var customers = loadCustomers().filter(function(c){ return !isSoftDeleted(c); });
     if (!customers || customers.length === 0) { showToast('내보낼 고객 데이터가 없습니다'); return; }
 
     var headers = ['고객명','연락처','주소','공간','단계','금액','성과매출','담당자','계약일','실측일','시공일','방문횟수','메모'];

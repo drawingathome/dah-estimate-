@@ -210,3 +210,8 @@ function deleteCustomerFromDb(clientName, callback) {
   sbXHR('PATCH', 'customers?client_name=eq.' + encodeURIComponent(clientName), { is_archived: true }, function(err, data) { if(err) console.error('삭제 오류:', err.text); if(callback) callback(err, data); });
 }
 
+// 소프트 삭제(보관 처리)된 고객을 다시 되돌림
+function restoreCustomerFromDb(clientName, callback) {
+  sbXHR('PATCH', 'customers?client_name=eq.' + encodeURIComponent(clientName), { is_archived: false }, function(err, data) { if(err) console.error('복구 오류:', err.text); if(callback) callback(err, data); });
+}
+

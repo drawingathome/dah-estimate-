@@ -131,6 +131,7 @@ function setSort(key) {
 }
 
 function renderPipeKanban(customers) {
+  customers = (customers || []).filter(function(c){ return !isSoftDeleted(c); });
   var wrap = document.getElementById('pipe');
   if (!wrap) return;
   wrap.innerHTML = '';

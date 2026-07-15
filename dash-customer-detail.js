@@ -575,7 +575,13 @@ function openDetail(name) {
   
   body.appendChild(btn('width:100%;padding:12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:4px;margin-bottom:6px', '견적서 앱에서 열기', function(){ openEstimate(currentDetailName); }));
   var bottomBtns = [btn('flex:2;padding:11px;background:#282828;color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:12px;letter-spacing:0.2px', '닫기', closeDetail)];
-  if (isMaster) bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid #EEE6DC;font-size:11px;font-family:inherit;cursor:pointer;color:#282828;border-radius:12px', '삭제', deleteCustomer));
+  if (isMaster) {
+    if (isSoftDeleted(c)) {
+      bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid #282828;font-size:11px;font-family:inherit;cursor:pointer;color:#282828;font-weight:700;border-radius:12px', '↩ 복구', function(){ restoreCustomer(c.clientName); }));
+    } else {
+      bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid #EEE6DC;font-size:11px;font-family:inherit;cursor:pointer;color:#282828;border-radius:12px', '삭제', deleteCustomer));
+    }
+  }
   body.appendChild(div('display:flex;gap:8px', bottomBtns));
 
   document.getElementById('detail-overlay').className = 'overlay open';
@@ -600,10 +606,25 @@ function changeStage(stage) {
 }
 
 function deleteCustomer() {
-  if (!confirm((currentDetailName||'고객') + '을(를) 삭제할까요?')) return;
+  if (!confirm((currentDetailName||'고객') + '을(를) 삭제할까요? (완전히 지워지지 않고 보관 처리되며, 필요하면 나중에 복구할 수 있어요)')) return;
   deleteCustomerFromDb(currentDetailName, function() { loadCustomersAsync(renderHome); });
-  saveCustomers(loadCustomers().filter(function(c) { return c.clientName !== currentDetailName; }));
+  var arr = loadCustomers();
+  var target = arr.find(function(c) { return c.clientName === currentDetailName; });
+  if (target) target.is_archived = true;
+  saveCustomers(arr);
   closeDetail(); renderHome();
+}
+
+function restoreCustomer(clientName) {
+  if (!confirm((clientName||'고객') + ' 정보를 복구할까요?')) return;
+  restoreCustomerFromDb(clientName, function() { loadCustomersAsync(renderHome); });
+  var arr = loadCustomers();
+  var target = arr.find(function(c) { return c.clientName === clientName; });
+  if (target) target.is_archived = false;
+  saveCustomers(arr);
+  showToast(clientName + ' 정보가 복구됐습니다');
+  closeDetail();
+  if (typeof renderSearch === 'function') renderSearch();
 }
 
 var editingCustomerName = null;

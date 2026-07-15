@@ -12,6 +12,12 @@ function isArchived(c) {
   return Math.floor((new Date() - new Date(refDate)) / 86400000) >= 14;
 }
 
+// "삭제"(소프트 삭제, 보관 처리)된 고객인지 판단.
+// 위 isArchived()와는 완전히 다른 개념(완료 후 14일 경과시 자동 보관)이므로 이름을 분리함.
+function isSoftDeleted(c) {
+  return c.is_archived === true;
+}
+
 function escHtml(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;')

@@ -26,7 +26,7 @@ function getCalEvents(customers, year, month) {
 }
 
 function renderCal() {
-  var allCal = loadCustomers();
+  var allCal = loadCustomers().filter(function(c){ return !isSoftDeleted(c); });
   var customers = (currentUser && currentUser.role === 'staff') ? allCal.filter(function(c) { return (c.staffName||'마스터') === currentUser.name; }) : allCal;
   var yr = calCurrentYear, mo = calCurrentMonth;
   var today = todayStr();

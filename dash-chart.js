@@ -75,7 +75,7 @@ function drawBarChart(containerId, data, options) {
 
 function renderChart(period) {
   if (period) currentChartPeriod = period;
-  var allChart = loadCustomers();
+  var allChart = loadCustomers().filter(function(c){ return !isSoftDeleted(c); });
   var customers = (currentUser && currentUser.role === 'staff') ? allChart.filter(function(c) { return (c.staffName||'마스터') === currentUser.name; }) : allChart;
   var now = new Date();
   var barsEl = document.getElementById('chart-bars'); barsEl.innerHTML = '';
