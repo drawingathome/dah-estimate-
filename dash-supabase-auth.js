@@ -76,6 +76,7 @@ function saveAuthSession(session) {
       email: session.user ? session.user.email : null
     }));
   } catch (e) { /* ignore */ }
+  if (typeof startAuthAutoRefresh === 'function') startAuthAutoRefresh();
 }
 
 // 저장된 세션 조회 (없으면 null)
@@ -89,6 +90,7 @@ function getAuthSession() {
 // 세션 삭제 (로그아웃)
 function clearAuthSession() {
   try { localStorage.removeItem('dah_auth_session'); } catch (e) { /* ignore */ }
+  if (typeof stopAuthAutoRefresh === 'function') stopAuthAutoRefresh();
 }
 
 // 토큰 만료 임박시 refresh_token으로 재발급
@@ -117,6 +119,28 @@ function refreshAuthSessionIfNeeded(callback) {
   xhr.onerror = function () { callback(false); };
   xhr.send(JSON.stringify({ refresh_token: s.refresh_token }));
 }
+
+// 백그라운드 자동 토큰 갱신 — 로그인 상태로 오래 작업해도(1시간 이상) 세션이 조용히
+// 만료되어 저장이 실패하는 일이 없도록, 주기적으로 만료 임박 여부를 확인해 미리 갱신한다.
+// startAuthAutoRefresh()는 로그인 성공 직후, 그리고 페이지 로드시 기존 세션이 있으면
+// 자동으로 호출되어야 한다(아래 즉시실행 부분 참고).
+var _authAutoRefreshTimer = null;
+function startAuthAutoRefresh() {
+  if (_authAutoRefreshTimer) return; // 중복 시작 방지
+  _authAutoRefreshTimer = setInterval(function () {
+    if (!getAuthSession()) return; // 로그아웃 상태면 아무것도 안 함
+    refreshAuthSessionIfNeeded(function () {});
+  }, 4 * 60 * 1000); // 4분마다 확인 (만료 5분 전 기준보다 촘촘하게)
+}
+function stopAuthAutoRefresh() {
+  if (_authAutoRefreshTimer) { clearInterval(_authAutoRefreshTimer); _authAutoRefreshTimer = null; }
+}
+
+// 페이지를 새로고침하거나 다시 열었을 때, 이미 로그인 세션이 남아있다면
+// 자동 갱신 타이머를 즉시 시작해 그 이후로도 계속 갱신되게 한다.
+(function () {
+  if (getAuthSession()) startAuthAutoRefresh();
+})();
 
 // 현재 세션의 access_token 반환 (API 호출시 Authorization 헤더에 사용)
 // 세션이 없으면 anon key로 폴백 (RLS가 막고있으면 어차피 서버에서 거부됨)
