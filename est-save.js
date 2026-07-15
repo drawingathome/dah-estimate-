@@ -77,6 +77,22 @@ function validateEstimate() {
     if (getPriceVal(r.querySelector('.blind-price')) > 0) hasProduct = true;
   });
   if (!hasProduct) { showToast('제품 금액을 1개 이상 입력해주세요', 'error'); return false; }
+
+  // 블라인드 옵션추가금(전동 등)이 있는데 지역(시공비 행)이 선택 안 된 경우 —
+  // 이 금액이 견적 총액에 반영되지 못하고 그대로 저장되어 누락될 수 있으므로 저장 자체를 막음
+  var blindBody = document.getElementById('blind-body');
+  var svcBody = document.getElementById('svc-body');
+  if (blindBody && svcBody) {
+    var extraSum = 0;
+    blindBody.querySelectorAll('.blind-extra').forEach(function(inp){
+      extraSum += Math.max(0, parseFloat(inp.value.replace(/[^0-9.-]/g,''))||0);
+    });
+    var hasSvcRow = !!svcBody.querySelector('[data-svc-type="시공비"]');
+    if (extraSum > 0 && !hasSvcRow) {
+      showToast('⚠️ 옵션추가금(전동 등)이 반영되려면 먼저 지역(서울/경기/기타)을 선택해주세요', 'error');
+      return false;
+    }
+  }
   return true;
 }
 
