@@ -55,11 +55,49 @@ async function launchBrowser() {
 // 테스트가 만든 가짜 데이터(_테스트실장 등)가 실제 운영 DB에 저장되고,
 // 실제 네트워크 왕복시간 때문에 로컬 결과와 타이밍이 달라져 테스트가
 // 불안정해짐. 각 테스트에서 페이지 생성 직후 반드시 호출할 것.
+//
+// 단, /auth/v1/token(로그인) 요청만은 가짜 성공 응답으로 처리한다.
+// Supabase Auth 도입 이후 로그인 자체가 이 엔드포인트를 거치므로,
+// 이걸 완전히 막으면 마스터/스태프 로그인 테스트 자체가 불가능해진다.
+// 비밀번호가 'TEST_OK_PW'일 때만 성공 처리 — 각 테스트는 이메일 등록 후
+// 이 고정 비밀번호로 로그인 시도하면 됨(실제 운영 비밀번호와 무관).
 async function blockRealNetwork(page) {
   await page.setRequestInterception(true);
   page.on('request', (req) => {
     const url = req.url();
     if (url.includes('supabase.co') || url.includes('script.google.com')) {
+      if (req.method() === 'OPTIONS' && url.includes('supabase.co')) {
+        req.respond({
+          status: 204,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS',
+            'Access-Control-Allow-Headers': '*'
+          }
+        });
+        return;
+      }
+      if (url.includes('/auth/v1/token') && req.postData()) {
+        let body;
+        try { body = JSON.parse(req.postData()); } catch (e) { body = {}; }
+        if (body.password === 'TEST_OK_PW') {
+          req.respond({
+            status: 200, contentType: 'application/json',
+            headers: { 'Access-Control-Allow-Origin': '*' },
+            body: JSON.stringify({
+              access_token: 'test-fake-token', refresh_token: 'test-fake-refresh',
+              expires_in: 3600, user: { id: 'test-fake-uuid', email: body.email }
+            })
+          });
+        } else {
+          req.respond({
+            status: 400, contentType: 'application/json',
+            headers: { 'Access-Control-Allow-Origin': '*' },
+            body: JSON.stringify({ error_description: 'Invalid login credentials' })
+          });
+        }
+        return;
+      }
       req.abort();
     } else {
       req.continue();
@@ -80,21 +118,42 @@ function startServer(dir, port) {
 
 async function loginAs(page, role, masterPw) {
   // role: 'master' | 'staff'
+  // Supabase Auth 도입 이후: 로그인 전에 테스트용 이메일을 등록하고,
+  // blockRealNetwork가 가로채는 고정 비밀번호(TEST_OK_PW)로 로그인한다.
   if (role === 'master') {
+    await page.evaluate(() => { if (typeof setMasterEmail === 'function') setMasterEmail('test-master@dah-test.local'); });
     await page.evaluate(() => document.getElementById('btn-master-login') && document.getElementById('btn-master-login').onclick());
     await new Promise(r => setTimeout(r, 300));
     await page.evaluate((pw) => {
       const el = document.getElementById('master-pw-input');
       if (el) el.value = pw;
-    }, masterPw || 'dah2012');
+    }, masterPw || 'TEST_OK_PW');
     await page.evaluate(() => document.getElementById('btn-master-confirm') && document.getElementById('btn-master-confirm').onclick());
     await new Promise(r => setTimeout(r, 1200));
   } else {
+    // 스태프 목록에 테스트 계정을 하나 등록하고, 그 이름으로 로그인 시도
     await page.evaluate(() => {
-      const btns = Array.from(document.querySelectorAll('button, [onclick]'));
-      const staffBtn = btns.find(b => /스태프|실장|staff/i.test(b.textContent || ''));
+      if (typeof getStaffList !== 'function') return;
+      var list = getStaffList();
+      if (list.indexOf('_테스트실장') < 0) {
+        list.push('_테스트실장');
+        localStorage.setItem('dah_staff_list', JSON.stringify(list));
+      }
+      if (typeof setStaffEmail === 'function') setStaffEmail('_테스트실장', 'test-staff@dah-test.local');
+      if (typeof renderStaffLoginList === 'function') renderStaffLoginList();
+    });
+    await new Promise(r => setTimeout(r, 300));
+    await page.evaluate(() => {
+      const btns = Array.from(document.querySelectorAll('#staff-login-list button, [onclick]'));
+      const staffBtn = btns.find(b => (b.textContent || '').includes('_테스트실장'));
       if (staffBtn) staffBtn.click();
     });
+    await new Promise(r => setTimeout(r, 300));
+    await page.evaluate((pw) => {
+      const el = document.getElementById('staff-pw-input');
+      if (el) el.value = pw;
+    }, masterPw || 'TEST_OK_PW');
+    await page.evaluate(() => document.getElementById('btn-staff-confirm') && document.getElementById('btn-staff-confirm').onclick());
     await new Promise(r => setTimeout(r, 1200));
   }
 }

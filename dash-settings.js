@@ -99,8 +99,21 @@ function renderSettings() {
     '</div>';
   wrap.appendChild(acctCard);
 
+  var masterEmailCard = div('background:#fff;margin-bottom:10px;padding:16px', [
+    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:8px', '🔑 마스터 로그인 이메일'),
+    span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', 'Supabase 대시보드(Authentication)에서 먼저 마스터 계정을 이메일+비밀번호로 만든 뒤, 그 이메일을 여기에 등록해주세요.')
+  ]);
+  var masterEmailInput = el('input', {type:'email', id:'set-master-email', placeholder:'마스터 로그인 이메일', value: getMasterEmail(), style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box'});
+  masterEmailInput.addEventListener('change', function(){
+    setMasterEmail(masterEmailInput.value.trim());
+    showToast('마스터 로그인 이메일이 저장됐습니다');
+  });
+  masterEmailCard.appendChild(masterEmailInput);
+  wrap.appendChild(masterEmailCard);
+
   var pwCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:12px', '🔐 비밀번호 변경')
+    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:12px', '🔐 비밀번호 변경'),
+    span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '이제 비밀번호는 Supabase 대시보드(Authentication > Users)에서 변경합니다. 아래는 예전 방식의 흔적으로, 더 이상 로그인에 사용되지 않습니다.')
   ]);
   [['change-pw-current2','현재 비밀번호'],['change-pw-new2','새 비밀번호 (4자 이상)'],['change-pw-confirm2','새 비밀번호 확인']].forEach(function(row) {
     var inp = el('input', {type:'password', id:row[0], placeholder:row[1], style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;outline:none;margin-bottom:6px;box-sizing:border-box'});
@@ -123,19 +136,29 @@ function renderSettings() {
 
   
   var staffCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:12px', '👤 담당자 관리')
+    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:12px', '👤 담당자 관리'),
+    span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '로그인용 이메일과 비밀번호는 Supabase 대시보드(Authentication)에서 먼저 계정을 만든 뒤, 아래에 그 이메일을 연결해주세요.')
   ]);
   var staffList = getStaffList();
   staffList.forEach(function(name) {
-    var row = div('display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #EEE6DC', [
-      span('font-size:12px;font-weight:700', name),
-      btn('font-size:11px;color:#F06E2D;background:none;border:1px solid #F06E2D;padding:3px 8px;cursor:pointer;font-family:inherit', '삭제', function() {
-        if(!confirm(name + ' 담당자를 삭제할까요?')) return;
-        var list = getStaffList().filter(function(s){ return s !== name; });
-        try { localStorage.setItem('dah_staff_list', JSON.stringify(list)); } catch(e){}
-        sbSyncSetting('staff_list', list);
-        renderSettings(); showToast(name + ' 담당자가 삭제됐습니다');
-      })
+    var emailInput = el('input', {type:'email', placeholder:'로그인용 이메일', value: getStaffEmail(name), style:'width:100%;padding:6px 8px;border:1px solid #EEE6DC;font-size:11px;font-family:inherit;outline:none;margin-top:4px;box-sizing:border-box'});
+    emailInput.addEventListener('change', function(){
+      setStaffEmail(name, emailInput.value.trim());
+      showToast(name + '의 로그인 이메일이 저장됐습니다');
+    });
+    var row = div('padding:8px 0;border-bottom:1px solid #EEE6DC', [
+      div('display:flex;justify-content:space-between;align-items:center', [
+        span('font-size:12px;font-weight:700', name),
+        btn('font-size:11px;color:#F06E2D;background:none;border:1px solid #F06E2D;padding:3px 8px;cursor:pointer;font-family:inherit', '삭제', function() {
+          if(!confirm(name + ' 담당자를 삭제할까요?')) return;
+          var list = getStaffList().filter(function(s){ return s !== name; });
+          try { localStorage.setItem('dah_staff_list', JSON.stringify(list)); } catch(e){}
+          sbSyncSetting('staff_list', list);
+          removeStaffEmail(name);
+          renderSettings(); showToast(name + ' 담당자가 삭제됐습니다');
+        })
+      ]),
+      emailInput
     ]);
     staffCard.appendChild(row);
   });
@@ -151,7 +174,7 @@ function renderSettings() {
     try { localStorage.setItem('dah_staff_list', JSON.stringify(list)); } catch(e){}
     sbSyncSetting('staff_list', list);
     staffInput.value = '';
-    renderSettings(); showToast(name + ' 담당자가 추가됐습니다');
+    renderSettings(); showToast(name + ' 담당자가 추가됐습니다 — 로그인하려면 이메일도 등록해주세요');
   }));
   staffCard.appendChild(addStaffWrap);
   wrap.appendChild(staffCard);

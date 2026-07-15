@@ -61,7 +61,7 @@ function loadSurveyFromSheet() {
   var sUrl = SUPABASE_URL + '/rest/v1/surveys?client_name=eq.' + encodeURIComponent(nameVal) + '&order=created_at.desc&limit=1';
   sxhr.open('GET', sUrl, true);
   sxhr.setRequestHeader('apikey', SUPABASE_KEY);
-  sxhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_KEY);
+  sxhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
   sxhr.onload = function() {
     try {
       var rows = JSON.parse(sxhr.responseText);

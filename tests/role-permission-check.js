@@ -25,6 +25,15 @@ async function setupTestData(page) {
     if (staffList.indexOf(staffName) === -1) staffList.push(staffName);
     localStorage.setItem('dah_staff_list', JSON.stringify(staffList));
 
+    // Supabase Auth 도입 이후 로그인하려면 마스터/스태프 이메일이 등록돼 있어야 함
+    try { localStorage.setItem('dah_master_email', 'test-master@dah-test.local'); } catch (e) {}
+    try {
+      var emailMap = {};
+      try { emailMap = JSON.parse(localStorage.getItem('dah_staff_emails') || '{}'); } catch (e2) {}
+      emailMap[staffName] = 'test-staff@dah-test.local';
+      localStorage.setItem('dah_staff_emails', JSON.stringify(emailMap));
+    } catch (e) {}
+
     var customers = [];
     try { customers = JSON.parse(localStorage.getItem('dah_customers') || '[]'); } catch (e) {}
     if (!customers.some(c => c.clientName === customerName)) {
@@ -111,7 +120,7 @@ async function evaluateChecks(page) {
 
 async function run() {
   const filePath = process.argv[2];
-  const masterPw = process.argv[3] || 'dah2012';
+  const masterPw = process.argv[3] || 'TEST_OK_PW';
   if (!filePath) {
     console.error('사용법: node role-permission-check.js <dah-dashboard.html 경로> [마스터비번]');
     process.exit(1);

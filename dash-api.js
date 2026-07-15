@@ -9,6 +9,27 @@ function getStaffList() {
   try { var list = JSON.parse(localStorage.getItem('dah_staff_list') || '[]'); return list.length > 0 ? list : []; } catch(e) { return []; }
 }
 
+// 담당자 이름 -> 로그인용 이메일 매핑 (Supabase Auth 연동용, 별도 저장)
+function getStaffEmailMap() {
+  try { return JSON.parse(localStorage.getItem('dah_staff_emails') || '{}'); } catch(e) { return {}; }
+}
+function getStaffEmail(name) {
+  var map = getStaffEmailMap();
+  return map[name] || '';
+}
+function setStaffEmail(name, email) {
+  var map = getStaffEmailMap();
+  if (email) { map[name] = email; } else { delete map[name]; }
+  try { localStorage.setItem('dah_staff_emails', JSON.stringify(map)); } catch(e){}
+  sbSyncSetting('staff_emails', map);
+}
+function removeStaffEmail(name) {
+  var map = getStaffEmailMap();
+  delete map[name];
+  try { localStorage.setItem('dah_staff_emails', JSON.stringify(map)); } catch(e){}
+  sbSyncSetting('staff_emails', map);
+}
+
 var SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
 var SUPABASE_KEY = 'sb_publishable_9nYjQBzwiyausr7-Cd-elw_S9inJlge';
 
@@ -36,7 +57,7 @@ function sbXHR(method, path, data, callback) {
   var xhr = new XMLHttpRequest();
   xhr.open(method, SUPABASE_URL + '/rest/v1/' + path, true);
   xhr.setRequestHeader('apikey', SUPABASE_KEY);
-  xhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_KEY);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.setRequestHeader('Prefer', method === 'POST' ? 'return=representation' : 'return=minimal');
   xhr.onload = function() {
@@ -58,7 +79,7 @@ function sbSyncSetting(key, value) {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', SUPABASE_URL + '/rest/v1/app_settings?on_conflict=key', true);
   xhr.setRequestHeader('apikey', SUPABASE_KEY);
-  xhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_KEY);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.setRequestHeader('Prefer', 'resolution=merge-duplicates,return=minimal');
   xhr.onload = function() { if (xhr.status < 200 || xhr.status >= 300) { console.warn('설정 동기화 실패:', key, xhr.status); } };

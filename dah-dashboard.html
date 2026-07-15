@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="/dash-styles.css">
 <script src="/dash-utils.js"></script>
 <script src="/dash-api.js"></script>
+<script src="/dash-supabase-auth.js"></script>
 <script src="/dash-ui-helpers.js"></script>
 <script src="/dash-core.js"></script>
 <script src="/dash-render.js"></script>
@@ -68,10 +69,18 @@
         <input type="password" id="master-pw-input" placeholder="비밀번호" maxlength="20" autocomplete="current-password">
         <button class="login-confirm-btn" id="btn-master-confirm" type="button">확인</button>
       </div>
-      <div class="login-pw-error" id="master-pw-error">비밀번호가 올바르지 않습니다</div>
+      <div class="login-pw-error" id="master-pw-error">이메일 또는 비밀번호가 올바르지 않습니다</div>
     </div>
     <div class="login-divider"><span>또는 담당자 선택</span></div>
     <div class="staff-grid" id="staff-login-list"></div>
+    <div class="master-pw-area" id="staff-pw-wrap" style="display:none">
+      <div id="staff-pw-selected-name" style="font-size:12px;font-weight:700;color:#282828;margin-bottom:6px"></div>
+      <div class="pw-input-row">
+        <input type="password" id="staff-pw-input" placeholder="비밀번호" maxlength="20" autocomplete="current-password">
+        <button class="login-confirm-btn" id="btn-staff-confirm" type="button">확인</button>
+      </div>
+      <div class="login-pw-error" id="staff-pw-error">이메일 또는 비밀번호가 올바르지 않습니다</div>
+    </div>
   </div>
   <div class="login-footer">ⓒ 2026 Drawing at Home. All rights reserved.</div>
 </div>
@@ -85,14 +94,25 @@
     var pwInput     = document.getElementById('master-pw-input');
     var confirmBtn  = document.getElementById('btn-master-confirm');
     var pwError     = document.getElementById('master-pw-error');
+    var staffPwWrap = document.getElementById('staff-pw-wrap');
+    var staffPwInput = document.getElementById('staff-pw-input');
+    var staffConfirmBtn = document.getElementById('btn-staff-confirm');
+    var staffPwError = document.getElementById('staff-pw-error');
+    var staffNameLabel = document.getElementById('staff-pw-selected-name');
 
-    if (!masterBtn || !pwWrap || !pwInput || !confirmBtn) {
+    if (!masterBtn || !pwWrap || !pwInput || !confirmBtn || !staffPwWrap) {
       setTimeout(initLogin, 100);
       return;
     }
 
+    function setBtnLoading(btn, loading, label) {
+      btn.disabled = loading;
+      btn.textContent = loading ? '확인 중...' : label;
+    }
+
     // 마스터 버튼 클릭
     masterBtn.onclick = function() {
+      staffPwWrap.style.display = 'none';
       pwWrap.style.display = pwWrap.style.display === 'none' ? 'block' : 'none';
       if (pwWrap.style.display === 'block') {
         pwInput.value = '';
@@ -101,28 +121,68 @@
       }
     };
 
-    // 확인 버튼 클릭
-    function doConfirm() {
-      var MASTER_PW;
-      try { MASTER_PW = localStorage.getItem('dah_master_pw') || 'dah2012'; }
-      catch(e) { MASTER_PW = 'dah2012'; }
-
-      if (pwInput.value === MASTER_PW) {
-        pwWrap.style.display = 'none';
-        if (typeof loginAs === 'function') loginAs('master');
-      } else {
-        if (pwError) pwError.style.display = 'block';
-        pwInput.value = '';
-        pwInput.focus();
+    // 마스터 확인 버튼 클릭 — Supabase Auth로 실제 인증
+    function doMasterConfirm() {
+      var email = (typeof getMasterEmail === 'function') ? getMasterEmail() : '';
+      if (!email) {
+        if (pwError) { pwError.textContent = '마스터 이메일이 아직 등록되지 않았습니다 (설정탭에서 등록해주세요)'; pwError.style.display = 'block'; }
+        return;
       }
+      setBtnLoading(confirmBtn, true, '확인');
+      supabaseAuthLogin(email, pwInput.value, function(result) {
+        setBtnLoading(confirmBtn, false, '확인');
+        if (result.ok) {
+          pwWrap.style.display = 'none';
+          if (pwError) pwError.style.display = 'none';
+          if (typeof loginAs === 'function') loginAs('master');
+        } else {
+          if (pwError) { pwError.textContent = result.msg || '이메일 또는 비밀번호가 올바르지 않습니다'; pwError.style.display = 'block'; }
+          pwInput.value = '';
+          pwInput.focus();
+        }
+      });
     }
 
-    confirmBtn.onclick = doConfirm;
+    confirmBtn.onclick = doMasterConfirm;
+    pwInput.onkeydown = function(e) { if (e.key === 'Enter') doMasterConfirm(); };
 
-    // Enter 키
-    pwInput.onkeydown = function(e) {
-      if (e.key === 'Enter') doConfirm();
+    // 스태프 이름 선택 시 호출됨 (dash-auth.js의 renderStaffLoginList에서 사용)
+    window.selectStaffForLogin = function(name) {
+      pwWrap.style.display = 'none';
+      staffPwWrap.style.display = 'block';
+      staffNameLabel.textContent = name + ' 님, 비밀번호를 입력해주세요';
+      staffPwInput.value = '';
+      staffPwError.style.display = 'none';
+      staffPwInput.setAttribute('data-staff-name', name);
+      staffPwInput.focus();
     };
+
+    function doStaffConfirm() {
+      var name = staffPwInput.getAttribute('data-staff-name');
+      var email = (typeof getStaffEmail === 'function') ? getStaffEmail(name) : '';
+      if (!email) {
+        staffPwError.textContent = name + '의 로그인 이메일이 아직 등록되지 않았습니다 (설정탭에서 등록해주세요)';
+        staffPwError.style.display = 'block';
+        return;
+      }
+      setBtnLoading(staffConfirmBtn, true, '확인');
+      supabaseAuthLogin(email, staffPwInput.value, function(result) {
+        setBtnLoading(staffConfirmBtn, false, '확인');
+        if (result.ok) {
+          staffPwWrap.style.display = 'none';
+          staffPwError.style.display = 'none';
+          if (typeof loginAs === 'function') loginAs(name);
+        } else {
+          staffPwError.textContent = result.msg || '이메일 또는 비밀번호가 올바르지 않습니다';
+          staffPwError.style.display = 'block';
+          staffPwInput.value = '';
+          staffPwInput.focus();
+        }
+      });
+    }
+
+    staffConfirmBtn.onclick = doStaffConfirm;
+    staffPwInput.onkeydown = function(e) { if (e.key === 'Enter') doStaffConfirm(); };
   }
 
   // DOM 준비되면 즉시 실행
@@ -589,6 +649,13 @@ document.getElementById('add-overlay').addEventListener('click', function(e) { i
   try {
     var _rawSess = JSON.parse(localStorage.getItem('dah_session') || 'null');
     if (_rawSess && _rawSess.loginAt && (Date.now()-_rawSess.loginAt) > 8*60*60*1000) {
+      localStorage.removeItem('dah_session'); _rawSess = null;
+    }
+    // Supabase Auth 세션이 없거나 만료됐으면(refresh_token도 없다고 간주) 자동 로그인 복원하지 않음 —
+    // dah_session만 남아있고 실제 인증 토큰이 없으면 화면은 로그인된 것처럼 보여도
+    // 모든 API 요청이 401로 실패하는 혼란스러운 상태가 되므로 방지
+    var _authSess = (typeof getAuthSession === 'function') ? getAuthSession() : null;
+    if (!_authSess || !_authSess.access_token) {
       localStorage.removeItem('dah_session'); _rawSess = null;
     }
     var saved = _rawSess;

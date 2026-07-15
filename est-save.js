@@ -149,7 +149,7 @@ function saveEstimate() {
       var xhr=new XMLHttpRequest();
       xhr.open('POST',SUPABASE_URL+'/rest/v1/customers',true);
       xhr.setRequestHeader('apikey',SUPABASE_KEY);
-      xhr.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
+      xhr.setRequestHeader('Authorization','Bearer '+(typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
       xhr.setRequestHeader('Content-Type','application/json');
       xhr.setRequestHeader('Prefer','return=minimal');
       xhr.onload=function(){
@@ -171,7 +171,7 @@ function saveEstimate() {
       var xhr2=new XMLHttpRequest();
       xhr2.open('POST',SUPABASE_URL+'/rest/v1/estimates',true);
       xhr2.setRequestHeader('apikey',SUPABASE_KEY);
-      xhr2.setRequestHeader('Authorization','Bearer '+SUPABASE_KEY);
+      xhr2.setRequestHeader('Authorization','Bearer '+(typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
       xhr2.setRequestHeader('Content-Type','application/json');
       xhr2.setRequestHeader('Prefer','return=minimal');
       xhr2.onload=function(){

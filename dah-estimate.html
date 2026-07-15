@@ -35,27 +35,47 @@
     try {
       var s = JSON.parse(localStorage.getItem('dah_session') || 'null');
       if (!s || !s.loginAt) return false;
-      return (Date.now() - s.loginAt) < SESSION_VALID_MS;
+      if ((Date.now() - s.loginAt) >= SESSION_VALID_MS) return false;
+      // Supabase Auth 세션도 함께 유효해야 함 (dah_session만으로는 실제 API 인증이 안 됨)
+      var authSess = JSON.parse(localStorage.getItem('dah_auth_session') || 'null');
+      return !!(authSess && authSess.access_token);
     } catch(e) { return false; }
-  }
-  function getMasterPw() {
-    try { return localStorage.getItem('dah_master_pw') || 'dah2012'; } catch(e) { return 'dah2012'; }
   }
   if (!hasValidDashboardSession()) {
     var gate = document.getElementById('est-auth-gate');
     gate.style.display = 'flex';
     var pwInput = document.getElementById('est-auth-pw');
     var errEl = document.getElementById('est-auth-error');
+    var authBtn = document.getElementById('est-auth-btn');
     function tryAuth() {
-      if (pwInput.value === getMasterPw()) {
-        gate.style.display = 'none';
-        // 확인 성공 시 이 창에서도 세션 갱신 (같은 브라우저에서 계속 쓸 수 있도록)
-        try { localStorage.setItem('dah_session', JSON.stringify({name:'견적서', role:'master', loginAt: Date.now()})); } catch(e) {}
-      } else {
+      if (typeof supabaseAuthLogin !== 'function' || typeof getMasterEmail !== 'function') {
+        errEl.textContent = '페이지를 아직 불러오는 중입니다. 잠시 후 다시 시도해주세요';
         errEl.style.display = 'block';
-        pwInput.value = '';
-        pwInput.focus();
+        return;
       }
+      var email = getMasterEmail();
+      if (!email) {
+        errEl.textContent = '마스터 이메일이 아직 등록되지 않았습니다 (대시보드 설정탭에서 등록해주세요)';
+        errEl.style.display = 'block';
+        return;
+      }
+      authBtn.disabled = true;
+      authBtn.textContent = '확인 중...';
+      supabaseAuthLogin(email, pwInput.value, function(result) {
+        authBtn.disabled = false;
+        authBtn.textContent = '확인';
+        if (result.ok) {
+          gate.style.display = 'none';
+          errEl.style.display = 'none';
+          // 확인 성공 시 이 창에서도 세션 갱신 (같은 브라우저에서 계속 쓸 수 있도록)
+          try { localStorage.setItem('dah_session', JSON.stringify({name:'견적서', role:'master', loginAt: Date.now()})); } catch(e) {}
+        } else {
+          errEl.textContent = result.msg || '이메일 또는 비밀번호가 올바르지 않습니다';
+          errEl.style.display = 'block';
+          pwInput.value = '';
+          pwInput.focus();
+        }
+      });
     }
     document.getElementById('est-auth-btn').addEventListener('click', tryAuth);
     pwInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') tryAuth(); });
@@ -461,6 +481,7 @@
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
 <script src="/est-utils.js"></script>
+<script src="/dash-supabase-auth.js"></script>
 <script src="/est-form-controls.js"></script>
 <script src="/est-product-calc.js"></script>
 <script src="/est-survey.js"></script>

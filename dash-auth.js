@@ -47,10 +47,13 @@ function applyPermissions() {
 function logout() {
   currentUser = null;
   try { localStorage.removeItem('dah_session'); } catch(e){}
+  if (typeof clearAuthSession === 'function') clearAuthSession();
   var ls = document.getElementById('login-screen');
   if(ls) ls.style.display = 'flex';
   var pw = document.getElementById('master-pw-wrap');
   if(pw) pw.style.display = 'none';
+  var staffPw = document.getElementById('staff-pw-wrap');
+  if(staffPw) staffPw.style.display = 'none';
   renderStaffLoginList();
 }
 
@@ -69,7 +72,9 @@ function renderStaffLoginList() {
     btn.className = 'staff-grid-btn';
     btn.type = 'button';
     btn.innerHTML = '<div class="staff-avatar-sm">'+name.charAt(0)+'</div><span>'+name+'</span>';
-    (function(n){ btn.onclick = function(){ loginAs(n); }; })(name);
+    (function(n){ btn.onclick = function(){
+      if (typeof window.selectStaffForLogin === 'function') window.selectStaffForLogin(n);
+    }; })(name);
     list.appendChild(btn);
   }
   if (filtered.length === 0) {
