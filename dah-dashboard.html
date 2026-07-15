@@ -124,10 +124,25 @@
     // 마스터 확인 버튼 클릭 — Supabase Auth로 실제 인증
     function doMasterConfirm() {
       var email = (typeof getMasterEmail === 'function') ? getMasterEmail() : '';
+
+      // 마스터 이메일이 아직 등록 안 된 초기상태 — 예전 방식(로컬 비밀번호)으로 부트스트랩 로그인 허용.
+      // 이걸로 로그인한 뒤 설정탭에서 이메일을 등록하면, 다음부터는 아래 Supabase Auth 경로로 전환됨.
       if (!email) {
-        if (pwError) { pwError.textContent = '마스터 이메일이 아직 등록되지 않았습니다 (설정탭에서 등록해주세요)'; pwError.style.display = 'block'; }
+        var MASTER_PW_BOOTSTRAP;
+        try { MASTER_PW_BOOTSTRAP = localStorage.getItem('dah_master_pw') || 'dah2012'; }
+        catch(e) { MASTER_PW_BOOTSTRAP = 'dah2012'; }
+        if (pwInput.value === MASTER_PW_BOOTSTRAP) {
+          pwWrap.style.display = 'none';
+          if (pwError) pwError.style.display = 'none';
+          if (typeof loginAs === 'function') loginAs('master');
+        } else {
+          if (pwError) { pwError.textContent = '비밀번호가 올바르지 않습니다 (마스터 이메일 미등록 — 로그인 후 설정탭에서 등록해주세요)'; pwError.style.display = 'block'; }
+          pwInput.value = '';
+          pwInput.focus();
+        }
         return;
       }
+
       setBtnLoading(confirmBtn, true, '확인');
       supabaseAuthLogin(email, pwInput.value, function(result) {
         setBtnLoading(confirmBtn, false, '확인');
