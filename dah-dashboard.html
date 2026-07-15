@@ -412,6 +412,16 @@ window.saveCustomer = function() {
       phoneEl.value = formatPhone(phoneEl.value);
     }
   }
+  var dateEl = document.getElementById('add-date');
+  if (dateEl && dateEl.value) {
+    var dateResult = validateDate(dateEl.value);
+    if (!dateResult.ok) {
+      showFieldError(dateEl, dateResult.msg);
+      hasError = true;
+    } else {
+      clearFieldError(dateEl);
+    }
+  }
   if (hasError) return;
 
   // 중복 고객(전화번호/이름) 체크 — 수정 모드일 때는 자기 자신과의 중복은 무시
