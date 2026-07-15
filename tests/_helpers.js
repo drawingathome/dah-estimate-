@@ -80,6 +80,17 @@ async function blockRealNetwork(page) {
       if (url.includes('/auth/v1/token') && req.postData()) {
         let body;
         try { body = JSON.parse(req.postData()); } catch (e) { body = {}; }
+        if (url.includes('grant_type=refresh_token') && body.refresh_token) {
+          req.respond({
+            status: 200, contentType: 'application/json',
+            headers: { 'Access-Control-Allow-Origin': '*' },
+            body: JSON.stringify({
+              access_token: 'test-refreshed-token', refresh_token: 'test-refreshed-refresh',
+              expires_in: 3600, user: { id: 'test-fake-uuid' }
+            })
+          });
+          return;
+        }
         if (body.password === 'TEST_OK_PW') {
           req.respond({
             status: 200, contentType: 'application/json',
