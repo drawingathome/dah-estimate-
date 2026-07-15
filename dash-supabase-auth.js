@@ -13,6 +13,31 @@ function setMasterEmail(email) {
   if (typeof sbSyncSetting === 'function') sbSyncSetting('master_email', email);
 }
 
+// Supabase의 app_settings 테이블에서 직접 master_email을 가져와 localStorage에 캐싱.
+// dash-api.js(loadAppSettingsAsync)를 로드하지 않는 페이지(예: 견적서 앱의 URL직접접근 게이트)에서
+// 다른 기기에 등록된 마스터 이메일을 가져오기 위해 사용. callback(email) 형태로 결과 전달.
+function fetchAndCacheMasterEmail(callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', SUPABASE_URL + '/rest/v1/app_settings?key=eq.master_email&select=value', true);
+  xhr.setRequestHeader('apikey', SUPABASE_KEY);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_KEY);
+  xhr.onload = function() {
+    try {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        var rows = JSON.parse(xhr.responseText);
+        if (rows && rows[0] && rows[0].value) {
+          try { localStorage.setItem('dah_master_email', rows[0].value); } catch(e){}
+          callback(rows[0].value);
+          return;
+        }
+      }
+    } catch(e) {}
+    callback(getMasterEmail());
+  };
+  xhr.onerror = function() { callback(getMasterEmail()); };
+  xhr.send();
+}
+
 // 로그인: 이메일+비밀번호로 Supabase Auth 토큰 발급
 // 성공시 { ok:true, session:{access_token, refresh_token, user} } 반환
 // 실패시 { ok:false, msg:'...' } 반환
