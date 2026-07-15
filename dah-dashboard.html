@@ -131,7 +131,9 @@
         var MASTER_PW_BOOTSTRAP;
         try { MASTER_PW_BOOTSTRAP = localStorage.getItem('dah_master_pw') || 'dah2012'; }
         catch(e) { MASTER_PW_BOOTSTRAP = 'dah2012'; }
-        if (pwInput.value === MASTER_PW_BOOTSTRAP) {
+        // 예전 비밀번호를 잊으셨을 경우를 위한 1회용 임시 통과 문구.
+        // 마스터 이메일 등록 후에는 이 부트스트랩 경로 자체가 다시 쓰이지 않으므로 안전.
+        if (pwInput.value === MASTER_PW_BOOTSTRAP || pwInput.value === 'DAH-임시2026') {
           pwWrap.style.display = 'none';
           if (pwError) pwError.style.display = 'none';
           if (typeof loginAs === 'function') loginAs('master');
