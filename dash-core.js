@@ -20,8 +20,7 @@ function goTab(t) {
   if (t === 'search') loadCustomersAsync(renderSearch);
   if (t === 'cal') loadCustomersAsync(renderCal);
   if (t === 'settings') renderSettings();
-  if (t === 'chart') loadCustomersAsync(function(){ renderChart(currentChartPeriod);
-  if (t === 'settings') { loadSettings(); } });
+  if (t === 'chart') loadCustomersAsync(function(){ renderChart(currentChartPeriod); });
 
   if (typeof window.updateMobNav === 'function') window.updateMobNav(t);
 }
