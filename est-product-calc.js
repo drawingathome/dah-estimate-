@@ -362,7 +362,7 @@ function calcTotal() {
               Math.max(0, (parseFloat(tr.querySelector('.sqty')?.value)||1));
   });
   var discType=document.getElementById('discount-type')?.value||'won';
-  var discInput=parseFloat(document.getElementById('discount')?.value)||0;
+  var discInput=Math.max(0, parseFloat(document.getElementById('discount')?.value)||0);
   var discount=discType==='pct'?Math.round(curtainTotal*discInput/100):discInput;
   var grand=curtainTotal-discount+svcTotal;
   if(grand<0) grand=0;
