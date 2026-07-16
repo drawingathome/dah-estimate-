@@ -147,14 +147,31 @@ function saveEstimate() {
     
     try {
       var xhr=new XMLHttpRequest();
-      xhr.open('POST',SUPABASE_URL+'/rest/v1/customers',true);
+      var existingCustId = window._estSaveCustomerId;
+      var isUpdate = !!existingCustId;
+      xhr.open(isUpdate ? 'PATCH' : 'POST', SUPABASE_URL+'/rest/v1/customers'+(isUpdate ? '?id=eq.'+existingCustId : ''), true);
       xhr.setRequestHeader('apikey',SUPABASE_KEY);
       xhr.setRequestHeader('Authorization','Bearer '+(typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
       xhr.setRequestHeader('Content-Type','application/json');
-      xhr.setRequestHeader('Prefer','return=minimal');
+      xhr.setRequestHeader('Prefer', isUpdate ? 'return=minimal' : 'return=representation');
       xhr.onload=function(){
         if (xhr.status < 200 || xhr.status >= 300) {
           console.warn('Supabase 고객 저장 실패 (status='+xhr.status+'):', xhr.responseText);
+        } else if (!isUpdate) {
+          // 신규 생성 성공 — 응답으로 받은 진짜 id를 로컬 customer 레코드와 견적이력에도 반영
+          try {
+            var resData = JSON.parse(xhr.responseText);
+            if (resData && resData[0] && resData[0].id) {
+              var newId = resData[0].id;
+              var arr = JSON.parse(localStorage.getItem('dah_customers')||'[]');
+              var idx = arr.findIndex(function(c){ return c.clientName === name && !c.id; });
+              if (idx >= 0) { arr[idx].id = newId; localStorage.setItem('dah_customers', JSON.stringify(arr)); }
+              var savedArr = JSON.parse(localStorage.getItem('dah_saved')||'[]');
+              var sIdx = savedArr.findIndex(function(e){ return e.no === document.getElementById('c-no')?.value.trim() && !e.clientId; });
+              if (sIdx >= 0) { savedArr[sIdx].clientId = newId; localStorage.setItem('dah_saved', JSON.stringify(savedArr)); }
+              window._estSaveCustomerId = newId;
+            }
+          } catch(e3) { /* 무시 — 로컬 id는 다음 저장시 이름+전화번호로 다시 매칭됨 */ }
         }
         saveToEstimates();
       };
@@ -187,7 +204,7 @@ function saveEstimate() {
         customer_name:name, price:grand,
         performance_revenue:perf, staff_name:staffName,
         status:currentTab||'ga',
-        data: {phone:phone, space:spaceStr, product:fabricStr, confirmedAt: window._estimateConfirmedAt || null, branch: '반포점'}
+        data: {phone:phone, space:spaceStr, product:fabricStr, confirmedAt: window._estimateConfirmedAt || null, branch: '반포점', client_id: window._estSaveCustomerId || null}
       }));
     } catch(e) { console.warn('Supabase 연결 오류:', e); showToast('✅ 저장 완료 (로컬) — DB 동기화는 실패했어요'); }
   }
@@ -228,9 +245,19 @@ function saveEstimate() {
       
       try {
         var customers = JSON.parse(localStorage.getItem('dah_customers')||'[]');
-        var cidx = customers.findIndex(function(c){ return c.id === entry.id; });
+        // ⚠️ 예전엔 cidx를 entry.id(견적서번호, 저장마다 값이 다름)로 찾아서, 같은 고객이
+        // 여러 번 저장할 때마다(가견적→확정견적 등) 매번 새 레코드가 로컬에 쌓이는 버그가 있었음.
+        // 이제 "이름+전화번호"로 기존 고객을 찾아서, 있으면 그 고객의 진짜 id(Supabase UUID)를
+        // 유지한 채 갱신하고, 없을 때만 새로 만든다.
+        var normPhone = function(p){ return (p||'').replace(/\D/g,''); };
+        var cidx = customers.findIndex(function(c){
+          return c.clientName === entry.clientName && normPhone(c.phone) === normPhone(entry.phone);
+        });
+        var existingId = cidx >= 0 ? customers[cidx].id : null;
+        entry.clientId = existingId; // dah_saved(견적이력)에도 고객 고유번호 반영
+        localStorage.setItem('dah_saved', JSON.stringify(saved));
         var custEntry = {
-          id: entry.id,
+          id: existingId, // 기존 고객이면 진짜 id 유지, 신규면 null(Supabase 저장 응답으로 채워짐)
           clientName: entry.clientName,
           phone: entry.phone,
           addr: entry.addr,
@@ -257,6 +284,7 @@ function saveEstimate() {
           customers.unshift(custEntry);
         }
         localStorage.setItem('dah_customers', JSON.stringify(customers));
+        window._estSaveCustomerId = existingId; // saveToCustomers/saveToEstimates에서 사용
       } catch(e2) { console.warn('dah_customers 동기화 실패', e2); }
 
     } catch(e) { console.warn('localStorage 저장 실패', e); }

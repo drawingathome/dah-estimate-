@@ -82,7 +82,9 @@ function renderCustLoadList(q) {
     var lastEst = c.lastAmt ? c.lastAmt.toLocaleString()+'원 ('+c.lastDate+')' : '';
     var idx = customers.indexOf(c);
     
-    var history = savedAll.filter(function(s){ return s.clientName === (c.clientName||''); }).slice(0,3);
+    var history = c.id
+      ? savedAll.filter(function(s){ return s.clientId === c.id; }).slice(0,3)
+      : savedAll.filter(function(s){ return s.clientName === (c.clientName||''); }).slice(0,3);
     var histHtml = history.length > 0
       ? '<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">'
         + history.map(function(h){
