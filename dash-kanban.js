@@ -14,10 +14,10 @@ var PIPE_STAGES = [
 
 var STAGE_ORDER = ['상담','계약금','실측','잔금','시공','완료'];
 
-function changeStageByName(customerName, newStage) {
+function changeStageByName(customerName, newStage, id) {
   try {
     var customers = loadCustomers();
-    var idx = customers.findIndex(function(c) { return c.clientName === customerName; });
+    var idx = id ? customers.findIndex(function(c) { return c.id === id; }) : customers.findIndex(function(c) { return c.clientName === customerName; });
     if (idx < 0) { showToast('고객을 찾을 수 없습니다'); return; }
 
     var oldStage = customers[idx].stage;
@@ -38,7 +38,7 @@ function changeStageByName(customerName, newStage) {
   } catch(e) { showToast('변경 실패: ' + e.message); }
 }
 
-function showStageMenu(customerName, currentStage, anchorEl) {
+function showStageMenu(customerName, currentStage, anchorEl, id) {
   // 기존 메뉴 제거
   var existing = document.getElementById('stage-menu');
   if (existing) { existing.remove(); return; }
@@ -78,7 +78,7 @@ function showStageMenu(customerName, currentStage, anchorEl) {
     item.textContent = (stage === currentStage ? '✓ ' : '') + stage;
     item.addEventListener('click', function() {
       menu.remove();
-      if (stage !== currentStage) changeStageByName(customerName, stage);
+      if (stage !== currentStage) changeStageByName(customerName, stage, id);
     });
     menu.appendChild(item);
   });
@@ -183,13 +183,13 @@ function renderKanbanCols(customers, kanbanWrap) {
         item.innerHTML =
           '<div style="display:flex;align-items:flex-start;justify-content:space-between">' +
             '<div class="kanban-item-name" style="flex:1">' + escHtml(c.clientName || '') + '</div>' +
-            '<button class="ksb" data-n="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-s="' + stage.key + '" ' +
-              'onclick="event.stopPropagation();var t=this;showStageMenu(t.dataset.n,t.dataset.s,t)" ' +
+            '<button class="ksb" data-n="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-s="' + stage.key + '" data-id="' + escHtml(c.id||'') + '" ' +
+              'onclick="event.stopPropagation();var t=this;showStageMenu(t.dataset.n,t.dataset.s,t,t.dataset.id)" ' +
               'style="border:none;background:none;color:var(--light);font-size:15px;cursor:pointer;padding:8px 10px;line-height:1;min-height:32px;min-width:32px">···</button>' +
           '</div>' +
           '<div class="kanban-item-sub">' + escHtml(c.phone || '') + '</div>' +
           (c.price ? '<div class="kanban-item-price">' + Number(c.price).toLocaleString() + '원</div>' : '');
-        item.addEventListener('click', function() { openDetail(c.clientName); });
+        item.addEventListener('click', function() { openDetail(c.clientName, c.id); });
         col.appendChild(item);
       });
     }

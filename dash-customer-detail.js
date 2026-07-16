@@ -215,11 +215,11 @@ function renderDetailEstTab() {
   estEl.appendChild(newEstBtn);
 }
 
-function openDetail(name) {
+function openDetail(name, id) {
   var customers = loadCustomers();
-  var c = customers.find(function(x) { return x.clientName === name; });
+  var c = id ? customers.find(function(x) { return x.id === id; }) : customers.find(function(x) { return x.clientName === name; });
   if (!c) return;
-  currentDetailName = name;
+  currentDetailName = c.clientName;
   currentDetailId = c.id || null;
   var isMaster = currentUser && currentUser.role === 'master';
 
@@ -272,7 +272,7 @@ function openDetail(name) {
   switchDetailTab('info');
   // 견적 건수 배지
   var all = []; try { all = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
-  var estCnt = all.filter(function(e){ return e.clientName === name; }).length;
+  var estCnt = all.filter(function(e){ return e.clientName === c.clientName; }).length;
   var cntEl = document.getElementById('dtab-est-cnt');
   if (cntEl) cntEl.textContent = estCnt > 0 ? estCnt+'건' : '';
 
