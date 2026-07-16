@@ -735,9 +735,11 @@ function restoreCustomer(clientName) {
 }
 
 var editingCustomerName = null;
+var editingCustomerId = null; // 동명이인 구분용
 /** @param {string} [editName] 편집 시 기존 고객명 */
 function openAdd(editName) {
   editingCustomerName = editName || null;
+  editingCustomerId = editName ? currentDetailId : null; // 상세화면에서 열렸다면 그 정확한 id를 이어받음
   document.getElementById('add-modal-title').textContent = editName ? '고객 정보 수정' : '고객 추가';
   if (editName) {
     
@@ -792,18 +794,34 @@ function saveCustomer() {
   if (!name || !phone) { alert('이름과 연락처는 필수입니다.'); return; }
   var arr = loadCustomers();
   if (editingCustomerName) {
+    var matched = false;
     arr = arr.map(function(c) {
-      if (c.clientName === editingCustomerName) {
+      // editingCustomerId가 있으면 정확히 그 레코드만, 없으면(예전 id없는 데이터) 이름 매칭 중 첫 건만 수정
+      var isTarget = editingCustomerId ? (c.id === editingCustomerId) : (!matched && c.clientName === editingCustomerName);
+      if (isTarget) {
+        matched = true;
         var staffName2; if (currentUser && currentUser.role === 'staff') { staffName2 = currentUser.name; } else { var asb2 = document.querySelector('.staff-btn.active'); staffName2 = asb2 ? asb2.getAttribute('data-staff') : (c.staffName||'마스터'); }
-        return { clientName:name, phone:phone, addr:document.getElementById('add-addr').value.trim(), space:document.getElementById('add-space').value.trim(), price:c.price||0, performanceRevenue:c.performanceRevenue||0, staffName:staffName2, stage:document.getElementById('add-stage').value, date:document.getElementById('add-date').value, measureDate:document.getElementById('add-measure').value, installDate:document.getElementById('add-install').value, memo:document.getElementById('add-memo').value.trim(), visitCount:c.visitCount||1, createdAt:c.createdAt||new Date().toISOString() };
+        return Object.assign({}, c, { clientName:name, phone:phone, addr:document.getElementById('add-addr').value.trim(), space:document.getElementById('add-space').value.trim(), staffName:staffName2, stage:document.getElementById('add-stage').value, date:document.getElementById('add-date').value, measureDate:document.getElementById('add-measure').value, installDate:document.getElementById('add-install').value, memo:document.getElementById('add-memo').value.trim() });
       } return c;
     });
-    saveCustomers(arr); closeAdd(); renderHome(true); openDetail(name); showToast('고객 정보가 수정됐습니다');
+    saveCustomers(arr);
+    var savedTarget = editingCustomerId ? arr.find(function(c){ return c.id === editingCustomerId; }) : arr.find(function(c){ return c.clientName === name; });
+    if (savedTarget) saveCustomerToDb(savedTarget, null);
+    closeAdd(); renderHome(true); openDetail(name); showToast('고객 정보가 수정됐습니다');
   } else {
-    var existing = arr.find(function(c) { return c.clientName === name; });
-    if (existing) { if (!confirm('"' + name + '" 고객이 이미 있습니다.\n재구매 고객으로 업데이트할까요?')) return; }
+    // 재구매 판단은 이름만으로 하지 않고 전화번호까지 같아야 "같은 사람"으로 봄.
+    // 이름만 같고 전화번호가 다르면 동명이인일 가능성이 높으므로, 기존 사람을
+    // 덮어쓰지 않고 명확히 안내한 뒤 완전히 별도의 새 레코드로 등록함.
+    var samePersonExisting = arr.find(function(c) { return c.clientName === name && (c.phone||'').replace(/\D/g,'') === (phone||'').replace(/\D/g,''); });
+    var sameNameDiffPhone = !samePersonExisting && arr.find(function(c) { return c.clientName === name; });
+    if (samePersonExisting) {
+      if (!confirm('"' + name + '"(' + phone + ') 고객이 이미 있습니다.\n재구매 고객으로 업데이트할까요?')) return;
+    } else if (sameNameDiffPhone) {
+      if (!confirm('"' + name + '" 이름의 다른 고객이 이미 있습니다(연락처: ' + (sameNameDiffPhone.phone||'미입력') + ').\n동명이인으로 보이는데, 별도의 새 고객으로 등록할까요?')) return;
+    }
+    var existing = samePersonExisting;
     var visitCount = existing ? (existing.visitCount||1)+1 : 1;
-    if (existing) arr = arr.filter(function(c) { return c.clientName !== name; });
+    if (existing) arr = arr.filter(function(c) { return !(c.clientName === name && (c.phone||'').replace(/\D/g,'') === (phone||'').replace(/\D/g,'')); });
     var staffName; if (currentUser && currentUser.role === 'staff') { staffName = currentUser.name; } else { var asb = document.querySelector('.staff-btn.active'); staffName = asb ? asb.getAttribute('data-staff') : '마스터'; }
     var newCustomer = { clientName:name, phone:phone, addr:document.getElementById('add-addr').value.trim(), space:document.getElementById('add-space').value.trim(), price:0, performanceRevenue:0, staffName:staffName, stage:document.getElementById('add-stage').value, date:document.getElementById('add-date').value, measureDate:document.getElementById('add-measure').value, installDate:document.getElementById('add-install').value, memo:document.getElementById('add-memo').value.trim(), visitCount:visitCount, createdAt:new Date().toISOString() };
     arr.unshift(newCustomer); saveCustomers(arr);
