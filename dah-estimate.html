@@ -171,7 +171,7 @@
         <input type="date" id="c-install" style="letter-spacing:0.3px">
       </div>
     </div>
-    <div class="info-grid print-hide" style="margin-top:10px">
+    <div class="info-grid print-hide" style="margin-top:10px; display:none">
       <div class="info-item">
         <label class="info-label">설치기사명 (실측/시공 의뢰서용)</label>
         <input type="text" id="c-installer-name" placeholder="예: 유지철 팀장님">
@@ -621,6 +621,14 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // 페이지 로드 시 초안 불러오기
   setTimeout(loadDraft, 500);
+
+  // 날짜 입력 필드(달력 아이콘이 작아 클릭하기 불편하다는 피드백) —
+  // 필드 어디를 클릭해도 달력이 바로 열리도록 개선
+  document.querySelectorAll('input[type="date"]').forEach(function(dateInput) {
+    dateInput.addEventListener('click', function() {
+      try { this.showPicker(); } catch (e) { /* showPicker 미지원 브라우저는 기본 동작(직접 아이콘 클릭)으로 폴백 */ }
+    });
+  });
 });
 </script>
 <div id="pdf-size-modal">

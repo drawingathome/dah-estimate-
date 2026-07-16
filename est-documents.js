@@ -730,6 +730,17 @@ function buildRequestHTML(kind, extraNote) {
 function printRequest(kind) {
   calcTotal();
   var label = kind==='measure' ? '실측' : '시공';
+
+  // 설치기사 정보는 견적서 화면에는 노출하지 않고, 의뢰서 생성 시점에만 물어봄
+  var installerNameEl = document.getElementById('c-installer-name');
+  var installerPhoneEl = document.getElementById('c-installer-phone');
+  var currentInstallerName = installerNameEl ? installerNameEl.value : '';
+  var newInstallerName = window.prompt(label+' 담당 설치기사명을 입력해주세요 (없으면 빈칸으로 확인)', currentInstallerName);
+  if (newInstallerName !== null && installerNameEl) installerNameEl.value = newInstallerName;
+  var currentInstallerPhone = installerPhoneEl ? installerPhoneEl.value : '';
+  var newInstallerPhone = window.prompt(label+' 담당 설치기사 연락처를 입력해주세요 (없으면 빈칸으로 확인)', currentInstallerPhone);
+  if (newInstallerPhone !== null && installerPhoneEl) installerPhoneEl.value = newInstallerPhone;
+
   var extraNote = window.prompt(label+' 담당자에게 남길 추가 메모가 있으면 입력해주세요 (없으면 취소 또는 빈칸으로 확인)', '');
   var html = buildRequestHTML(kind, extraNote);
 
