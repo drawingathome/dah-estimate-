@@ -105,39 +105,52 @@ function buildCustomerHTML() {
     prodHTML += '<th>사양</th><th class="r">폭</th><th class="r">단가</th><th class="r">금액</th>';
     prodHTML += '</tr></thead><tbody>';
 
-    
-    if(curtainRows.length) {
-      prodHTML += '<tr class="sub-head"><td colspan="7">CURTAIN</td></tr>';
-      curtainRows.forEach(function(r) {
-        var specParts = r.spec.split(' · ');
-        var specCell = specParts[0]+(specParts.length>1?'<br><span style="font-size:11px;color:#B0A99F">'+specParts.slice(1).join(' · ')+'</span>':'');
-        prodHTML += '<tr>';
-        prodHTML += '<td class="space">'+r.space+'</td>';
-        prodHTML += '<td class="sz">'+(r.mw?r.mw+'×'+r.mh:'—')+'</td>';
-        prodHTML += '<td class="name">'+r.name+'</td>';
-        prodHTML += '<td class="spec-col">'+specCell+'</td>';
-        prodHTML += '<td class="r" style="color:#B0A99F;font-size:11px">'+(r.pnum?r.pnum:'—')+'</td>';
-        prodHTML += '<td class="r" style="color:#B0A99F;font-size:11px">'+(r.price?r.price.toLocaleString():'—')+'</td>';
-        prodHTML += '<td class="amt">'+r.amt+'</td>';
-        prodHTML += '</tr>';
-      });
+    // 고객용 견적서는 "공간"(거실/안방/자녀방 등) 기준으로 묶어서 보여줌 —
+    // 입력화면(내부관리)에서는 커튼/블라인드로 나눠 작성하지만, 고객이 받는 문서는
+    // "이 방에 뭐가 들어가는지"가 한눈에 보이는 게 더 자연스럽다는 피드백 반영.
+    // 공간 등장 순서(처음 나온 순서)를 그대로 유지한다.
+    var spaceOrder = [];
+    var spaceGroups = {};
+    allRows.forEach(function(r) {
+      var key = r.space || '기타';
+      if (!spaceGroups[key]) { spaceGroups[key] = []; spaceOrder.push(key); }
+      spaceGroups[key].push(r);
+    });
+
+    function renderCurtainRow(r) {
+      var specParts = r.spec.split(' · ');
+      var specCell = specParts[0]+(specParts.length>1?'<br><span style="font-size:11px;color:#B0A99F">'+specParts.slice(1).join(' · ')+'</span>':'');
+      var html = '<tr>';
+      html += '<td class="space">'+r.space+'</td>';
+      html += '<td class="sz">'+(r.mw?r.mw+'×'+r.mh:'—')+'</td>';
+      html += '<td class="name">'+r.name+'</td>';
+      html += '<td class="spec-col">'+specCell+'</td>';
+      html += '<td class="r" style="color:#B0A99F;font-size:11px">'+(r.pnum?r.pnum:'—')+'</td>';
+      html += '<td class="r" style="color:#B0A99F;font-size:11px">'+(r.price?r.price.toLocaleString():'—')+'</td>';
+      html += '<td class="amt">'+r.amt+'</td>';
+      html += '</tr>';
+      return html;
     }
-    
-    if(blindRows.length) {
-      prodHTML += '<tr class="sub-head"><td colspan="7">BLIND</td></tr>';
-      blindRows.forEach(function(r) {
-        var spec = r.kind+(r.handle?' · '+r.handle:'');
-        prodHTML += '<tr>';
-        prodHTML += '<td class="space">'+r.space+'</td>';
-        prodHTML += '<td class="sz">'+(r.bw?r.bw+'×'+r.bh:'—')+'</td>';
-        prodHTML += '<td class="name">'+r.name+'</td>';
-        prodHTML += '<td class="spec-col">'+spec+(r.sqm?'<br><span style="font-size:11px;color:#B0A99F">'+r.sqm+'</span>':'')+'</td>';
-        prodHTML += '<td class="r">—</td>';
-        prodHTML += '<td class="r" style="color:#B0A99F;font-size:11px">'+(r.price?r.price.toLocaleString():'—')+'</td>';
-        prodHTML += '<td class="amt">'+r.amt+'</td>';
-        prodHTML += '</tr>';
-      });
+    function renderBlindRow(r) {
+      var spec = r.kind+(r.handle?' · '+r.handle:'');
+      var html = '<tr>';
+      html += '<td class="space">'+r.space+'</td>';
+      html += '<td class="sz">'+(r.bw?r.bw+'×'+r.bh:'—')+'</td>';
+      html += '<td class="name">'+r.name+'</td>';
+      html += '<td class="spec-col">'+spec+(r.sqm?'<br><span style="font-size:11px;color:#B0A99F">'+r.sqm+'</span>':'')+'</td>';
+      html += '<td class="r">—</td>';
+      html += '<td class="r" style="color:#B0A99F;font-size:11px">'+(r.price?r.price.toLocaleString():'—')+'</td>';
+      html += '<td class="amt">'+r.amt+'</td>';
+      html += '</tr>';
+      return html;
     }
+
+    spaceOrder.forEach(function(spaceKey) {
+      prodHTML += '<tr class="sub-head"><td colspan="7">'+spaceKey+'</td></tr>';
+      spaceGroups[spaceKey].forEach(function(r) {
+        prodHTML += (r.type === 'blind') ? renderBlindRow(r) : renderCurtainRow(r);
+      });
+    });
     prodHTML += '</tbody></table>';
   }
 

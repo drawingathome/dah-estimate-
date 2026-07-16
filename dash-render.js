@@ -45,7 +45,10 @@ function renderHome() {
       return d.getFullYear() === _year && d.getMonth() === _today.getMonth();
     });
     var thisMonthRev = thisMonthCustomers.reduce(function(sum, c) {
-      return sum + (Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0);
+      // 목표 달성률은 순수 실적매출(제품가격만, 실측비/시공비/레일비 등 제외) 기준으로 계산.
+      // 입금액(depositAmount+balanceAmount)은 시공서비스 금액까지 포함된 전체 결제액이라
+      // 목표관리 용도로는 맞지 않음 (선혜님 피드백: 시공서비스 금액이 목표매출에 안 섞이게).
+      return sum + (Number(c.performanceRevenue) || 0);
     }, 0);
     var thisMonthContracts = customers.filter(function(c) {
       return c.stage === '계약금' || c.stage === '실측' || c.stage === '잔금' || c.stage === '시공';
@@ -215,7 +218,8 @@ function renderHome() {
           var s = c.staffName || '미지정';
           if (!byStaff[s]) byStaff[s] = { count: 0, rev: 0 };
           byStaff[s].count++;
-          byStaff[s].rev += (Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0);
+          // 담당자별 성과도 목표매출과 동일하게 순수 실적매출 기준(시공서비스 금액 제외)
+          byStaff[s].rev += (Number(c.performanceRevenue) || 0);
         });
         var rows = Object.keys(byStaff).map(function(s) {
           return '<div style="padding:10px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center">' +
