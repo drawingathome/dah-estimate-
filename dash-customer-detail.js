@@ -136,13 +136,17 @@ function renderDetailEstTab() {
     // 순번 표시 (최신순)
     var orderBadge = el('span', {style:'font-size:11px;color:#9A9490', text: (i+1)+'번째 견적'});
 
-    // 상단: 번호 + 유형 + 계약상태
-    var top = div('display:flex;align-items:center;gap:6px;margin-bottom:10px', [
+    // 상단: 번호 + 유형 + 계약상태 + 확정여부
+    var topItems = [
       orderBadge,
       el('span', {style:'font-size:11px;font-weight:800;color:#282828', text: e.no||'—'}),
-      el('span', {style:'font-size:12px;font-weight:700;padding:2px 6px;border-radius:4px;background:'+(isFinal?'#282828':'#F5F2EE')+';color:'+(isFinal?'#fff':'#9A9490'), text: STATUS_KO[e.status]||'가견적서'}),
-      el('span', {style:'margin-left:auto;font-size:12px;font-weight:700;padding:3px 9px;border-radius:4px;background:'+CONTRACT_BG[cs]+';color:'+CONTRACT_COLOR[cs], text: CONTRACT_KO[cs]})
-    ]);
+      el('span', {style:'font-size:12px;font-weight:700;padding:2px 6px;border-radius:4px;background:'+(isFinal?'#282828':'#F5F2EE')+';color:'+(isFinal?'#fff':'#9A9490'), text: STATUS_KO[e.status]||'가견적서'})
+    ];
+    if (e.confirmedAt) {
+      topItems.push(el('span', {style:'font-size:11px;font-weight:700;color:#fff;background:#282828;padding:2px 8px;border-radius:20px', text:'✓ 확정'}));
+    }
+    topItems.push(el('span', {style:'margin-left:auto;font-size:12px;font-weight:700;padding:3px 9px;border-radius:4px;background:'+CONTRACT_BG[cs]+';color:'+CONTRACT_COLOR[cs], text: CONTRACT_KO[cs]}));
+    var top = div('display:flex;align-items:center;gap:6px;margin-bottom:10px', topItems);
 
     // 금액 크게
     var priceRow = div('margin-bottom:8px', [
@@ -846,6 +850,10 @@ function renderEstimateHistory(container, clientName) {
       text: STATUS_LABELS[e.status]||'가견적서'
     });
     noEl.appendChild(noSpan); noEl.appendChild(typeSpan);
+    if (e.confirmedAt) {
+      var confirmedSpan = el('span', {style:'font-size:11px;font-weight:700;color:#fff;background:#282828;padding:1px 8px;border-radius:20px', text:'✓ 확정'});
+      noEl.appendChild(confirmedSpan);
+    }
 
     
     var contractBadge = el('button', {style:
