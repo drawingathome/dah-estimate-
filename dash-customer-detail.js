@@ -574,6 +574,43 @@ function openDetail(name) {
 
   
   body.appendChild(btn('width:100%;padding:12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:4px;margin-bottom:6px', '견적서 앱에서 열기', function(){ openEstimate(currentDetailName); }));
+  // 발주 현황: 계약 이후(계약금 단계 이후)에만 표시 —
+  // 가견적/상담 단계에서는 아직 발주할 게 없으므로 불필요한 정보 노출 방지
+  var ORDER_STAGES = ['계약금', '실측', '잔금', '시공', '완료'];
+  if (ORDER_STAGES.indexOf(c.stage) >= 0) {
+    var orderStatus = c.orderStatus || {};
+    var orderItems = [
+      { key: 'fabric', label: '원단 발주' },
+      { key: 'production', label: '제작 발주' },
+      { key: 'blind', label: '블라인드 발주' },
+      { key: 'material', label: '자재 발주' },
+      { key: 'install', label: '시공 발주' }
+    ];
+    var orderCard = div('background:#fff;margin-bottom:10px;padding:16px', [
+      span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:10px', '📦 발주 현황')
+    ]);
+    orderItems.forEach(function(item) {
+      var row = div('display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #EEE6DC');
+      var label = span('font-size:12px;color:#282828', item.label);
+      var checkbox = el('input', { type: 'checkbox' });
+      checkbox.checked = !!orderStatus[item.key];
+      checkbox.style.cssText = 'width:20px;height:20px;cursor:pointer';
+      checkbox.addEventListener('change', function() {
+        var arr = loadCustomers();
+        var target = arr.find(function(x) { return x.clientName === name; });
+        if (!target) return;
+        if (!target.orderStatus) target.orderStatus = {};
+        target.orderStatus[item.key] = checkbox.checked;
+        saveCustomers(arr);
+        showToast(item.label + (checkbox.checked ? ' 완료 처리됐습니다' : ' 완료 취소됐습니다'));
+      });
+      row.appendChild(label);
+      row.appendChild(checkbox);
+      orderCard.appendChild(row);
+    });
+    body.appendChild(orderCard);
+  }
+
   var bottomBtns = [btn('flex:2;padding:11px;background:#282828;color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:12px;letter-spacing:0.2px', '닫기', closeDetail)];
   if (isMaster) {
     if (isSoftDeleted(c)) {

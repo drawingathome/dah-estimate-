@@ -187,7 +187,7 @@ function saveEstimate() {
         customer_name:name, price:grand,
         performance_revenue:perf, staff_name:staffName,
         status:currentTab||'ga',
-        data: {phone:phone, space:spaceStr, product:fabricStr}
+        data: {phone:phone, space:spaceStr, product:fabricStr, confirmedAt: window._estimateConfirmedAt || null}
       }));
     } catch(e) { console.warn('Supabase 연결 오류:', e); showToast('✅ 저장 완료 (로컬) — DB 동기화는 실패했어요'); }
   }
@@ -215,7 +215,8 @@ function saveEstimate() {
         expiryAt: new Date(Date.now()+7*24*60*60*1000).toISOString(),
         date: document.getElementById('c-measure')?.value || '',
         installDate: document.getElementById('c-install')?.value || '',
-        memo: custMemo
+        memo: custMemo,
+        confirmedAt: window._estimateConfirmedAt || null
       };
       if (idx >= 0) saved[idx] = entry;
       else saved.unshift(entry);

@@ -49,6 +49,8 @@ function loadEstimateEntry(entry) {
   if (measureEl && entry.date) measureEl.value = entry.date;
   var installEl = document.getElementById('c-install');
   if (installEl && entry.installDate) installEl.value = entry.installDate;
+  window._estimateConfirmedAt = entry.confirmedAt || null;
+  if (typeof renderConfirmBadge === 'function') renderConfirmBadge();
 }
 
 var currentCustType = 'new';
@@ -138,3 +140,57 @@ function fmtPhone(el) {
   else if(v.length<=7) el.value=v.slice(0,3)+'-'+v.slice(3);
   else el.value=v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);
 }
+
+// 견적 확정: "이 견적 내용(사이즈/금액)이 더 이상 안 바뀐다"는 걸 명시하는 기능.
+// 대시보드의 "계약상태"(가견적/계약됨/미계약)와는 별개 개념 —
+// 계약상태는 "고객이 계약금을 냈는지", 이 확정은 "견적 세부내용이 확정됐는지"를 나타냄.
+// (선혜님 워크플로우: 실측 후 확정견적서를 고객과 조율 → 더 안 바뀌면 [확정] 클릭)
+var _estimateConfirmedAt = null;
+function toggleConfirmEstimate() {
+  if (window._estimateConfirmedAt) {
+    if (!confirm('확정을 취소할까요? (다시 수정 가능한 상태로 돌아갑니다)')) return;
+    window._estimateConfirmedAt = null;
+    showToast('견적 확정이 취소됐습니다 — 다시 수정 가능합니다');
+  } else {
+    if (!confirm('이 견적 내용(사이즈·금액)을 확정할까요?\n확정 후에도 수정할 수 있지만, 수정하면 확정이 자동으로 취소됩니다.')) return;
+    window._estimateConfirmedAt = new Date().toISOString();
+    showToast('✅ 견적이 확정됐습니다');
+  }
+  renderConfirmBadge();
+  if (typeof calcTotal === 'function') calcTotal(); // 저장 전이라도 상태를 즉시 반영
+}
+
+function renderConfirmBadge() {
+  var badge = document.getElementById('hd-confirmed-badge');
+  var dateSpan = document.getElementById('hd-confirmed-date');
+  var btn = document.getElementById('btn-confirm-estimate');
+  if (!badge) return;
+  if (window._estimateConfirmedAt) {
+    badge.style.display = 'inline-block';
+    if (dateSpan) {
+      var d = new Date(window._estimateConfirmedAt);
+      dateSpan.textContent = '(' + d.getFullYear() + '.' + (d.getMonth()+1) + '.' + d.getDate() + ')';
+    }
+    if (btn) { btn.textContent = '확정 취소'; btn.classList.add('on'); }
+  } else {
+    badge.style.display = 'none';
+    if (btn) { btn.textContent = '✓ 확정'; btn.classList.remove('on'); }
+  }
+}
+
+// 확정된 상태에서 견적 내용(사이즈/금액에 영향 주는 입력)이 바뀌면 확정을 자동 취소.
+// autoSave가 이미 여러 필드의 input 이벤트를 구독하고 있으므로, 같은 시점에 확인만 추가.
+document.addEventListener('DOMContentLoaded', function() {
+  var watchSelectors = ['#curtain-body', '#blind-body', '#svc-body'];
+  watchSelectors.forEach(function(sel) {
+    var container = document.querySelector(sel);
+    if (!container) return;
+    container.addEventListener('input', function() {
+      if (window._estimateConfirmedAt) {
+        window._estimateConfirmedAt = null;
+        renderConfirmBadge();
+        showToast('⚠️ 견적 내용이 변경되어 확정이 취소됐습니다');
+      }
+    });
+  });
+});

@@ -111,6 +111,7 @@
     <div class="doc-header-type">
       <div class="doc-title">ESTIMATE</div>
       <div class="doc-title-ko" id="hd-title">가견적서</div>
+      <div id="hd-confirmed-badge" style="display:none;font-size:11px;font-weight:700;color:#fff;background:#282828;padding:3px 10px;border-radius:20px;margin-top:6px;letter-spacing:0.3px">✓ 확정됨 <span id="hd-confirmed-date"></span></div>
     </div>
     <!-- 구분선 -->
     <div class="doc-header-divider"></div>
@@ -127,6 +128,7 @@
       <div class="doc-header-tabbar-left">
         <button class="est-status-btn on" id="status-ga" onclick="setStatus('ga')">가견적서</button>
         <button class="est-status-btn" id="status-final" onclick="setStatus('final')">최종 견적서</button>
+        <button class="est-status-btn" id="btn-confirm-estimate" onclick="toggleConfirmEstimate()" style="margin-left:8px">✓ 확정</button>
       </div>
       <div class="doc-header-tabbar-right">
         <button class="cust-type-btn on" id="type-new" onclick="setCustType('new')">신규</button>
