@@ -661,7 +661,7 @@ function changeStage(stage) {
   saveCustomers(arr);
   var changed = arr.find(function(c){ return c.clientName===currentDetailName; });
   if(changed) saveCustomerToDb(changed, null);
-  renderHome(); openDetail(currentDetailName);
+  renderHome(true); openDetail(currentDetailName);
   showToast('"' + stage + '"으로 변경됐습니다');
 }
 
@@ -672,7 +672,7 @@ function deleteCustomer() {
   var target = arr.find(function(c) { return c.clientName === currentDetailName; });
   if (target) target.is_archived = true;
   saveCustomers(arr);
-  closeDetail(); renderHome();
+  closeDetail(); renderHome(true);
 }
 
 function restoreCustomer(clientName) {
@@ -751,7 +751,7 @@ function saveCustomer() {
         return { clientName:name, phone:phone, addr:document.getElementById('add-addr').value.trim(), space:document.getElementById('add-space').value.trim(), price:c.price||0, performanceRevenue:c.performanceRevenue||0, staffName:staffName2, stage:document.getElementById('add-stage').value, date:document.getElementById('add-date').value, measureDate:document.getElementById('add-measure').value, installDate:document.getElementById('add-install').value, memo:document.getElementById('add-memo').value.trim(), visitCount:c.visitCount||1, createdAt:c.createdAt||new Date().toISOString() };
       } return c;
     });
-    saveCustomers(arr); closeAdd(); renderHome(); openDetail(name); showToast('고객 정보가 수정됐습니다');
+    saveCustomers(arr); closeAdd(); renderHome(true); openDetail(name); showToast('고객 정보가 수정됐습니다');
   } else {
     var existing = arr.find(function(c) { return c.clientName === name; });
     if (existing) { if (!confirm('"' + name + '" 고객이 이미 있습니다.\n재구매 고객으로 업데이트할까요?')) return; }
@@ -761,7 +761,7 @@ function saveCustomer() {
     var newCustomer = { clientName:name, phone:phone, addr:document.getElementById('add-addr').value.trim(), space:document.getElementById('add-space').value.trim(), price:0, performanceRevenue:0, staffName:staffName, stage:document.getElementById('add-stage').value, date:document.getElementById('add-date').value, measureDate:document.getElementById('add-measure').value, installDate:document.getElementById('add-install').value, memo:document.getElementById('add-memo').value.trim(), visitCount:visitCount, createdAt:new Date().toISOString() };
     arr.unshift(newCustomer); saveCustomers(arr);
     saveCustomerToDb(newCustomer, function(err, data) { if(!err && data && data[0]) { newCustomer.id = data[0].id; saveCustomers(arr); } });
-    closeAdd(); renderHome(); openDetail(name);
+    closeAdd(); renderHome(true); openDetail(name);
     showToast('고객이 추가됐습니다');
   }
 }

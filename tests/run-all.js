@@ -30,6 +30,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['dashboard-data-check.js', [target]]);
   scripts.push(['multi-device-sync-check.js', [target]]);
   scripts.push(['data-safety-check.js', [target]]);
+  scripts.push(['race-condition-check.js', [target]]);
 }
 
 if (/dah-estimate/.test(target)) {

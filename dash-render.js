@@ -25,7 +25,7 @@ function renderGoalProgress(currentAmount) {
 
 
 /** 홈 화면 렌더링 — 오늘 배너, 처리 필요, 일정 */
-function renderHome() {
+function renderHome(skipServerFetch) {
   var wrap = document.getElementById('home');
   if (!wrap) return;
 
@@ -35,7 +35,11 @@ function renderHome() {
   var _date  = _today.getDate();
   var _year  = _today.getFullYear();
 
-  loadCustomersAsync(function(customers) {
+  // skipServerFetch=true: 방금 로컬(localStorage)을 이미 최신으로 갱신한 직후 호출되는 경우
+  // (고객 등록/수정/삭제 직후). 이때 서버 재조회를 하면, 저장 요청(POST/PATCH)이 아직
+  // 서버에 반영되기 전에 조회 응답이 먼저 와서 "방금 한 작업이 없던 옛날 상태"로
+  // 로컬을 덮어써버리는 경쟁조건이 생길 수 있어 방지함. 이미 로컬이 최신이므로 그대로 사용.
+  var doRender = function(customers) {
     if (!customers) customers = [];
     customers = customers.filter(function(c){ return !isSoftDeleted(c); });
 
@@ -246,7 +250,13 @@ function renderHome() {
     if (typeof renderGoalProgress === 'function') renderGoalProgress(thisMonthRev);
 
     applyPermissions();
-  });
+  };
+
+  if (skipServerFetch) {
+    doRender(loadCustomers());
+  } else {
+    loadCustomersAsync(doRender);
+  }
 }
 
 function renderEstList() {
