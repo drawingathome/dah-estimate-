@@ -25,7 +25,13 @@
  */
 
 var SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
-var SUPABASE_KEY = 'sb_publishable_9nYjQBzwiyausr7-Cd-elw_S9inJlge';
+// ⚠️ 이 키는 RLS(권한잠금)를 우회하는 관리자 전용 키(service_role/secret)입니다.
+// 이 저장소는 공개(public) 저장소이므로, 절대 여기에 실제 키 값을 하드코딩하지 않습니다.
+// 대신 Google Apps Script의 "스크립트 속성"(Project Settings > Script Properties)에
+// SUPABASE_SERVICE_ROLE_KEY라는 이름으로 등록해두면, 아래 코드가 안전하게 읽어옵니다.
+// 등록 방법: Apps Script 에디터 왼쪽 톱니바퀴(프로젝트 설정) → 맨 아래 "스크립트 속성" →
+// "속성 추가" → 속성: SUPABASE_SERVICE_ROLE_KEY, 값: (Supabase의 secret/service_role 키)
+var SUPABASE_SERVICE_ROLE_KEY = PropertiesService.getScriptProperties().getProperty('SUPABASE_SERVICE_ROLE_KEY');
 var BACKUP_FOLDER_NAME = 'DAH_자동백업';
 // 자동 삭제 없음(영구보관) — 이전엔 KEEP_DAYS로 30일 지나면 지웠으나
 // 10년 이상 보관해야 하는 요구사항이라 완전히 제거함
@@ -41,8 +47,8 @@ function dahDailyBackup() {
       var res = UrlFetchApp.fetch(url, {
         method: 'get',
         headers: {
-          'apikey': SUPABASE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_KEY
+          'apikey': SUPABASE_SERVICE_ROLE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY
         },
         muteHttpExceptions: true
       });
