@@ -31,6 +31,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['multi-device-sync-check.js', [target]]);
   scripts.push(['data-safety-check.js', [target]]);
   scripts.push(['race-condition-check.js', [target]]);
+  scripts.push(['home-duplication-check.js', [target]]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',
