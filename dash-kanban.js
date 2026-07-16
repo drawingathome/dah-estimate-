@@ -34,7 +34,7 @@ function changeStageByName(customerName, newStage) {
       );
     }
     showToast(customerName + ' → ' + newStage);
-    loadCustomersAsync(renderPipe);
+    renderPipe(loadCustomers());
   } catch(e) { showToast('변경 실패: ' + e.message); }
 }
 

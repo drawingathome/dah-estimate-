@@ -667,7 +667,7 @@ function changeStage(stage) {
 
 function deleteCustomer() {
   if (!confirm((currentDetailName||'고객') + '을(를) 삭제할까요? (완전히 지워지지 않고 보관 처리되며, 필요하면 나중에 복구할 수 있어요)')) return;
-  deleteCustomerFromDb(currentDetailName, function() { loadCustomersAsync(renderHome); });
+  deleteCustomerFromDb(currentDetailName, null);
   var arr = loadCustomers();
   var target = arr.find(function(c) { return c.clientName === currentDetailName; });
   if (target) target.is_archived = true;
@@ -677,7 +677,7 @@ function deleteCustomer() {
 
 function restoreCustomer(clientName) {
   if (!confirm((clientName||'고객') + ' 정보를 복구할까요?')) return;
-  restoreCustomerFromDb(clientName, function() { loadCustomersAsync(renderHome); });
+  restoreCustomerFromDb(clientName, null);
   var arr = loadCustomers();
   var target = arr.find(function(c) { return c.clientName === clientName; });
   if (target) target.is_archived = false;

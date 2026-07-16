@@ -100,6 +100,20 @@ async function run() {
     });
     check('단계변경 직후에도 서버응답으로 덮어써지지 않고 유지됨', afterStageChange === '계약금', '실제값=' + afterStageChange);
 
+    // 칸반(파이프라인) 화면에서 드래그로 단계를 바꿀 때 쓰이는 changeStageByName도 동일 위험이 있었음
+    await page.evaluate(() => {
+      saveCustomers([{ clientName: '경쟁조건칸반테스트고객', phone: '01088889999', stage: '상담', staffName: '마스터', price: 100000, date: (typeof todayStr === 'function' ? todayStr() : ''), createdAt: new Date().toISOString() }]);
+    });
+    await new Promise(r => setTimeout(r, 300));
+    await page.evaluate(() => { changeStageByName('경쟁조건칸반테스트고객', '계약금'); });
+    await new Promise(r => setTimeout(r, 800));
+    const kanbanStageAfter = await page.evaluate(() => {
+      const arr = JSON.parse(localStorage.getItem('dah_customers') || '[]');
+      const c = arr.find(x => x.clientName === '경쟁조건칸반테스트고객');
+      return c ? c.stage : 'not-found';
+    });
+    check('칸반 드래그(changeStageByName) 이후에도 서버응답으로 덮어써지지 않고 유지됨', kanbanStageAfter === '계약금', '실제값=' + kanbanStageAfter);
+
     process.exitCode = failCount === 0 ? 0 : 1;
     await page.close();
   } finally {
