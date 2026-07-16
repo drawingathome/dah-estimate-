@@ -386,6 +386,7 @@ function calcTotal() {
     svcTotal+=Math.max(0, (getPriceVal(tr.querySelector('.sprice'))||0))*
               Math.max(0, (parseFloat(tr.querySelector('.sqty')?.value)||1));
   });
+  renderSvcSummary();
   var discType=document.getElementById('discount-type')?.value||'won';
   var discInput=Math.max(0, parseFloat(document.getElementById('discount')?.value)||0);
   var discount=discType==='pct'?Math.round(curtainTotal*discInput/100):discInput;
@@ -487,4 +488,88 @@ function copySvcRow(btn) {
   clone.removeAttribute('data-rail-src');
   clone.removeAttribute('data-rail-svc-src');
   calcTotal();
+}
+
+// 레일/시공비/기타 항목을 그룹으로 묶어 요약카드로 보여줌 (선혜님 피드백: 항목이 너무 많아 한눈에 안 들어옴)
+// - 실측+시공비: 지역별 실측비/시공비(레일시공비 제외)
+// - 레일 자재비: 레일 자재 + 레일 시공비를 합쳐서 표시, 괄호안에 세부 내역 나열
+// - 전동 옵션: 구분이 '전동'인 항목
+// - 기타: 위 세 그룹에 안 속하는 나머지(부자재, 블라인드시공, 직접입력한 기타 등)
+function renderSvcSummary() {
+  var card = document.getElementById('svc-summary-card');
+  if (!card) return;
+  var rows = Array.from(document.querySelectorAll('#svc-body tr'));
+  if (rows.length === 0) { card.innerHTML = '<div style="font-size:11px;color:#B0A99F">레일/시공비/기타 항목이 없습니다</div>'; return; }
+
+  var groups = {
+    measureInstall: { label: '실측 + 시공비', sum: 0, details: [] },
+    rail: { label: '레일 자재비', sum: 0, details: [] },
+    motor: { label: '전동 옵션', sum: 0, details: [] },
+    etc: { label: '기타', sum: 0, details: [] }
+  };
+
+  // 블라인드 옵션추가금(전동 등)은 별도 행이 아니라 지역시공비 행의 금액에 합산되어 있으므로,
+  // 여기서 직접 합산해 "전동 옵션" 그룹으로 분리하고, 실측+시공비 그룹에서는 그만큼 제외한다.
+  var blindExtraSum = 0;
+  document.querySelectorAll('#blind-body .blind-extra').forEach(function(inp) {
+    blindExtraSum += Math.max(0, parseFloat((inp.value || '').replace(/[^0-9.-]/g, '')) || 0);
+  });
+  if (blindExtraSum > 0) {
+    groups.motor.sum += blindExtraSum;
+    groups.motor.details.push('전동/옵션 추가금');
+  }
+
+  rows.forEach(function(tr) {
+    var type = tr.querySelector('td select')?.value || '';
+    var priceInp = tr.querySelector('.sprice');
+    var qtyInp = tr.querySelector('.sqty');
+    var price = Math.max(0, getPriceVal(priceInp) || 0);
+    var qty = Math.max(0, parseFloat(qtyInp?.value) || 1);
+    var amt = price * qty;
+    var label = tr.querySelectorAll('td')[1]?.querySelector('input')?.value || '';
+    var isRail = tr.hasAttribute('data-rail-src') || tr.hasAttribute('data-railcost-src');
+    var isRegionInstall = tr.hasAttribute('data-install-base');
+
+    if (isRail) {
+      groups.rail.sum += amt;
+      groups.rail.details.push(label);
+    } else if (isRegionInstall) {
+      // 옵션추가금이 합산되어 있다면 그만큼 제외한 순수 실측/시공비만 반영
+      groups.measureInstall.sum += Math.max(0, amt - blindExtraSum);
+      groups.measureInstall.details.push(label);
+      blindExtraSum = 0; // 지역시공비 행은 보통 1개이므로 중복 차감 방지
+    } else if (type === '전동') {
+      groups.motor.sum += amt;
+      groups.motor.details.push(label);
+    } else if (type === '실측비' || type === '시공비') {
+      groups.measureInstall.sum += amt;
+      groups.measureInstall.details.push(label);
+    } else {
+      groups.etc.sum += amt;
+      groups.etc.details.push(label);
+    }
+  });
+
+  var html = '';
+  ['measureInstall', 'rail', 'motor', 'etc'].forEach(function(key) {
+    var g = groups[key];
+    if (g.details.length === 0) return;
+    var detailText = g.details.filter(Boolean).join(', ');
+    html += '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:4px 0">'
+      + '<div><span style="font-size:12px;font-weight:700;color:#282828">' + escHtml(g.label) + '</span>'
+      + (detailText ? '<div style="font-size:11px;color:#B0A99F;margin-top:1px">' + escHtml(detailText) + '</div>' : '')
+      + '</div>'
+      + '<span style="font-size:13px;font-weight:700;color:#282828;white-space:nowrap">' + g.sum.toLocaleString() + '원</span>'
+      + '</div>';
+  });
+  card.innerHTML = html || '<div style="font-size:11px;color:#B0A99F">레일/시공비/기타 항목이 없습니다</div>';
+}
+
+function toggleSvcDetail() {
+  var wrap = document.getElementById('svc-detail-wrap');
+  var btn = document.getElementById('svc-detail-toggle');
+  if (!wrap || !btn) return;
+  var isHidden = wrap.style.display === 'none';
+  wrap.style.display = isHidden ? '' : 'none';
+  btn.textContent = isHidden ? '상세 항목 접기 ▴' : '상세 항목 펼치기 ▾';
 }
