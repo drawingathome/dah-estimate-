@@ -39,6 +39,17 @@ var STAGE_BG = {상담:'#EEF2F7',계약금:'#FFF3EE',실측:'#F3EFF8',잔금:'#E
 var STAGE_NUM = {상담:1,계약금:2,실측:3,잔금:4,시공:5,완료:6};
 var STAGE_ACTIVE = {상담:true,계약금:true,실측:true,잔금:true,시공:true,완료:false};
 var currentDetailName = null;
+var currentDetailId = null; // 동명이인 구분용 — 상세를 열 때의 정확한 레코드 id를 기억해둠
+
+// 현재 열려있는 상세화면이 가리키는 정확한 고객 레코드를 찾음.
+// currentDetailId가 있으면 id로 정확히(동명이인 안전), 없는 예전 데이터만 이름으로 폴백.
+function findCurrentDetailCustomer(arr) {
+  if (currentDetailId) {
+    var byId = arr.find(function(c) { return c.id === currentDetailId; });
+    if (byId) return byId;
+  }
+  return arr.find(function(c) { return c.clientName === currentDetailName; });
+}
 
 function sendAlimtalk(key) {
   var arr = loadCustomers();
@@ -209,6 +220,7 @@ function openDetail(name) {
   var c = customers.find(function(x) { return x.clientName === name; });
   if (!c) return;
   currentDetailName = name;
+  currentDetailId = c.id || null;
   var isMaster = currentUser && currentUser.role === 'master';
 
   // 이름
@@ -683,19 +695,19 @@ function openDetail(name) {
   renderKakaoLog();
 }
 
-function closeDetail() { document.getElementById('detail-overlay').className = 'overlay'; currentDetailName = null; }
+function closeDetail() { document.getElementById('detail-overlay').className = 'overlay'; currentDetailName = null; currentDetailId = null; }
 
 function changeStage(stage) {
+  var arr = loadCustomers();
+  var target = findCurrentDetailCustomer(arr);
+  if (!target) return;
   if (currentUser && currentUser.role === 'staff') {
-    var arr0 = loadCustomers(); var c0 = arr0.find(function(x) { return x.clientName === currentDetailName; });
-    if (c0 && (c0.staffName||'마스터') !== currentUser.name) { alert('본인 담당 고객만 단계를 변경할 수 있습니다.'); return; }
+    if ((target.staffName||'마스터') !== currentUser.name) { alert('본인 담당 고객만 단계를 변경할 수 있습니다.'); return; }
   }
   if (stage === '완료') { if (!confirm(currentDetailName + ' 고객을 "시공 완료"로 변경할까요?')) return; }
-  var arr = loadCustomers();
-  arr = arr.map(function(c) { if (c.clientName === currentDetailName) c.stage = stage; return c; });
+  target.stage = stage;
   saveCustomers(arr);
-  var changed = arr.find(function(c){ return c.clientName===currentDetailName; });
-  if(changed) saveCustomerToDb(changed, null);
+  saveCustomerToDb(target, null);
   renderHome(true); openDetail(currentDetailName);
   showToast('"' + stage + '"으로 변경됐습니다');
 }
