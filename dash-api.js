@@ -149,7 +149,8 @@ function dbRowToCustomer(row) {
     balanceDate:        row.balance_date||'',
     balanceMethod:      row.balance_method||'',
     balanceReceipt:     row.balance_receipt||false,
-    orderStatus:        row.order_status||{}
+    orderStatus:        row.order_status||{},
+    branch:             row.branch||'반포점'
   };
 }
 
@@ -177,7 +178,8 @@ function customerToDbRow(c) {
     balance_date:        c.balanceDate||'',
     balance_method:      c.balanceMethod||'',
     balance_receipt:     c.balanceReceipt||false,
-    order_status:        c.orderStatus||{}
+    order_status:        c.orderStatus||{},
+    branch:              c.branch||'반포점'
   };
 }
 

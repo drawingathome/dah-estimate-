@@ -187,7 +187,7 @@ function saveEstimate() {
         customer_name:name, price:grand,
         performance_revenue:perf, staff_name:staffName,
         status:currentTab||'ga',
-        data: {phone:phone, space:spaceStr, product:fabricStr, confirmedAt: window._estimateConfirmedAt || null}
+        data: {phone:phone, space:spaceStr, product:fabricStr, confirmedAt: window._estimateConfirmedAt || null, branch: '반포점'}
       }));
     } catch(e) { console.warn('Supabase 연결 오류:', e); showToast('✅ 저장 완료 (로컬) — DB 동기화는 실패했어요'); }
   }
@@ -216,7 +216,8 @@ function saveEstimate() {
         date: document.getElementById('c-measure')?.value || '',
         installDate: document.getElementById('c-install')?.value || '',
         memo: custMemo,
-        confirmedAt: window._estimateConfirmedAt || null
+        confirmedAt: window._estimateConfirmedAt || null,
+        branch: '반포점'
       };
       if (idx >= 0) saved[idx] = entry;
       else saved.unshift(entry);
