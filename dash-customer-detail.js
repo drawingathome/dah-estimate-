@@ -373,7 +373,7 @@ function openDetail(name) {
     localStorage.setItem('dah_pay_'+c.clientName, JSON.stringify(pd));
     // 2) customers 캐시 업데이트
     var arr = loadCustomers();
-    var idx = arr.findIndex(function(x){ return x.clientName === c.clientName; });
+    var idx = c.id ? arr.findIndex(function(x){ return x.id === c.id; }) : arr.findIndex(function(x){ return x.clientName === c.clientName; });
     if (idx >= 0) {
       arr[idx].depositAmount  = Number(pd.depositAmount)||0;
       arr[idx].depositDate    = pd.depositDate||'';
@@ -620,7 +620,7 @@ function openDetail(name) {
         function commit(){
           var newVal = dateInp.value;
           var arr = loadCustomers();
-          var target = arr.find(function(x){ return x.clientName === currentDetailName; });
+          var target = findCurrentDetailCustomer(arr);
           if (target) {
             target[item.key] = newVal;
             saveCustomers(arr);
@@ -666,7 +666,7 @@ function openDetail(name) {
       checkbox.style.cssText = 'width:20px;height:20px;cursor:pointer';
       checkbox.addEventListener('change', function() {
         var arr = loadCustomers();
-        var target = arr.find(function(x) { return x.clientName === name; });
+        var target = findCurrentDetailCustomer(arr);
         if (!target) return;
         if (!target.orderStatus) target.orderStatus = {};
         target.orderStatus[item.key] = checkbox.checked;
