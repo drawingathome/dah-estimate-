@@ -180,7 +180,7 @@ function renderHome(skipServerFetch) {
           : needAction.slice(0,8).map(function(item) {
               var c = item.customer;
               var stageColor = (c.stage === '계약금' || c.stage === '실측') ? 'var(--terra)' : 'var(--dark)';
-              return '<div data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" onclick="openDetail(this.getAttribute(\'data-cname\'))" ' +
+              return '<div data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-cid="' + escHtml(c.id||'') + '" onclick="openDetail(this.getAttribute(\'data-cname\'),this.getAttribute(\'data-cid\')||undefined)" ' +
                 'style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:12px;cursor:pointer">' +
                 '<div style="width:6px;height:6px;border-radius:50%;background:' + stageColor + ';flex-shrink:0"></div>' +
                 '<div style="flex:1;min-width:0">' +
@@ -444,7 +444,7 @@ function renderSearch() {
 
     right.appendChild(priceEl); right.appendChild(stageEl); right.appendChild(dateEl);
     row.appendChild(left); row.appendChild(right);
-    (function(name) { row.addEventListener('click', function() { openDetail(name); }); })(c.clientName);
+    (function(name, id) { row.addEventListener('click', function() { openDetail(name, id); }); })(c.clientName, c.id);
     listEl.appendChild(row);
   });
 }

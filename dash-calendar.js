@@ -238,7 +238,7 @@ function renderCalList(customers, selectedDate) {
     row.appendChild(bar);
     row.appendChild(info);
     row.appendChild(right);
-    (function(name){ row.addEventListener('click', function(){ openDetail(name); }); })(ev.name);
+    (function(name, id){ row.addEventListener('click', function(){ openDetail(name, id); }); })(ev.name, ev.cust && ev.cust.id);
     listEl.appendChild(row);
   });
 }

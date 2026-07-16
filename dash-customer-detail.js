@@ -74,7 +74,7 @@ function sendAlimtalk(key) {
   } catch(e){}
 
   alert('['+meta.label+'] 발송 완료\n\n※ 실제 발송은 Make.com 연동 후 자동화됩니다.\n지금은 발송 이력만 기록됩니다.');
-  closeDetail(); openDetail(c.clientName);
+  closeDetail(); openDetail(c.clientName, c.id);
 }
 
 function switchDetailTab(tab) {
@@ -447,7 +447,7 @@ function openDetail(name, id) {
       newPd.depositReceipt = depReceiptChk.checked;
       savePayData(newPd);
       if (c.stage === '상담') changeStage('계약금');
-      closeDetail(); openDetail(c.clientName);
+      closeDetail(); openDetail(c.clientName, c.id);
     });
     depForm.appendChild(depMethod); depForm.appendChild(depAmt); depForm.appendChild(depDate); depForm.appendChild(depReceipt);
     depSec.appendChild(depForm); depSec.appendChild(depSave);
@@ -501,7 +501,7 @@ function openDetail(name, id) {
       newPd.balanceReceipt = balReceiptChk.checked;
       savePayData(newPd);
       if (c.stage === '실측' || c.stage === '잔금') changeStage('시공');
-      closeDetail(); openDetail(c.clientName);
+      closeDetail(); openDetail(c.clientName, c.id);
     });
     balForm.appendChild(balMethod); balForm.appendChild(balAmt); balForm.appendChild(balDate); balForm.appendChild(balReceipt);
     balSec.appendChild(balForm); balSec.appendChild(balSave);
@@ -708,7 +708,7 @@ function changeStage(stage) {
   target.stage = stage;
   saveCustomers(arr);
   saveCustomerToDb(target, null);
-  renderHome(true); openDetail(currentDetailName);
+  renderHome(true); openDetail(currentDetailName, target.id);
   showToast('"' + stage + '"으로 변경됐습니다');
 }
 
@@ -807,7 +807,7 @@ function saveCustomer() {
     saveCustomers(arr);
     var savedTarget = editingCustomerId ? arr.find(function(c){ return c.id === editingCustomerId; }) : arr.find(function(c){ return c.clientName === name; });
     if (savedTarget) saveCustomerToDb(savedTarget, null);
-    closeAdd(); renderHome(true); openDetail(name); showToast('고객 정보가 수정됐습니다');
+    closeAdd(); renderHome(true); openDetail(name, savedTarget && savedTarget.id); showToast('고객 정보가 수정됐습니다');
   } else {
     // 재구매 판단은 이름만으로 하지 않고 전화번호까지 같아야 "같은 사람"으로 봄.
     // 이름만 같고 전화번호가 다르면 동명이인일 가능성이 높으므로, 기존 사람을
@@ -826,7 +826,7 @@ function saveCustomer() {
     var newCustomer = { clientName:name, phone:phone, addr:document.getElementById('add-addr').value.trim(), space:document.getElementById('add-space').value.trim(), price:0, performanceRevenue:0, staffName:staffName, stage:document.getElementById('add-stage').value, date:document.getElementById('add-date').value, measureDate:document.getElementById('add-measure').value, installDate:document.getElementById('add-install').value, memo:document.getElementById('add-memo').value.trim(), visitCount:visitCount, createdAt:new Date().toISOString() };
     arr.unshift(newCustomer); saveCustomers(arr);
     saveCustomerToDb(newCustomer, function(err, data) { if(!err && data && data[0]) { newCustomer.id = data[0].id; saveCustomers(arr); } });
-    closeAdd(); renderHome(true); openDetail(name);
+    closeAdd(); renderHome(true); openDetail(name, newCustomer.id);
     showToast('고객이 추가됐습니다');
   }
 }
