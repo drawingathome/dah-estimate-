@@ -53,7 +53,7 @@ function findCurrentDetailCustomer(arr) {
 
 function sendAlimtalk(key) {
   var arr = loadCustomers();
-  var c = arr.find(function(x){ return x.clientName === currentDetailName; });
+  var c = findCurrentDetailCustomer(arr);
   if (!c) return;
   var meta = ALIM_META[key]; if (!meta) return;
   if (!confirm('['+meta.label+'] 알림톡을 발송할까요?')) return;
@@ -846,7 +846,7 @@ function openEstimate(name) {
 
 var KAKAO_LABELS = {followup:'팔로업', contract:'계약금 안내', measure:'실측 안내', balance:'잔금 안내'};
 function copyKakao(type) {
-  var arr = loadCustomers(); var c = arr.find(function(x) { return x.clientName === currentDetailName; });
+  var arr = loadCustomers(); var c = findCurrentDetailCustomer(arr);
   if (!c) return; var n = c.clientName;
   var msgs = {
     followup: '안녕하세요, ' + n + '님 🙂\n드로잉엣홈입니다.\n상담 후 궁금하신 점은 없으셨나요?\n편하게 말씀해 주세요!',
