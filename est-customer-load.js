@@ -28,8 +28,16 @@ function confirmPdfPrint() {
   var s = document.createElement('style');
   s.id = styleId;
   if(_selectedPdfOpt === 'fit') {
-    
-    s.textContent = '@media print { @page { size: auto; margin: 10mm 12mm; } .pv-wrap { page-break-inside: avoid; } }';
+    // "size: auto"는 사용자가 인쇄창에서 선택한 용지 크기를 그대로 따르는 것일 뿐,
+    // 콘텐츠 길이에 맞춰 페이지가 늘어나는 게 아니라서 실제로는 효과가 없었음(선혜님 발견).
+    // 실제 콘텐츠(.pv-wrap)의 렌더링된 높이를 측정해서, 그 길이에 정확히 맞는 커스텀
+    // 페이지 크기(폭 210mm 고정, 높이는 콘텐츠+여백)를 지정해야 한 페이지로 통으로 인쇄됨.
+    var contentEl = document.querySelector('#pv-overlay .pv-wrap') || document.querySelector('.pv-wrap');
+    var heightPx = contentEl ? contentEl.scrollHeight : 1123; // 못 구하면 A4 세로 기본값(약 297mm)으로 폴백
+    var PX_TO_MM = 25.4 / 96; // 웹 표준 96dpi 기준 px→mm 환산
+    var marginMm = 20; // 위아래 여백 10mm씩
+    var heightMm = Math.ceil(heightPx * PX_TO_MM) + marginMm;
+    s.textContent = '@media print { @page { size: 210mm ' + heightMm + 'mm; margin: 10mm 12mm; } .pv-wrap { page-break-inside: avoid; } }';
   } else {
     
     s.textContent = '@media print { @page { size: A4 portrait; margin: 10mm 12mm; } }';
