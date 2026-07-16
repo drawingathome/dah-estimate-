@@ -684,7 +684,7 @@ function openDetail(name) {
   var bottomBtns = [btn('flex:2;padding:11px;background:#282828;color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:12px;letter-spacing:0.2px', '닫기', closeDetail)];
   if (isMaster) {
     if (isSoftDeleted(c)) {
-      bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid #282828;font-size:11px;font-family:inherit;cursor:pointer;color:#282828;font-weight:700;border-radius:12px', '↩ 복구', function(){ restoreCustomer(c.clientName); }));
+      bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid #282828;font-size:11px;font-family:inherit;cursor:pointer;color:#282828;font-weight:700;border-radius:12px', '↩ 복구', function(){ restoreCustomer(c.clientName, c.id); }));
     } else {
       bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid #EEE6DC;font-size:11px;font-family:inherit;cursor:pointer;color:#282828;border-radius:12px', '삭제', deleteCustomer));
     }
@@ -715,17 +715,17 @@ function changeStage(stage) {
 function deleteCustomer() {
   if (!confirm((currentDetailName||'고객') + '을(를) 삭제할까요? (완전히 지워지지 않고 보관 처리되며, 필요하면 나중에 복구할 수 있어요)')) return;
   var arr = loadCustomers();
-  var target = arr.find(function(c) { return c.clientName === currentDetailName; });
+  var target = findCurrentDetailCustomer(arr);
   deleteCustomerFromDb(target || currentDetailName, null);
   if (target) target.is_archived = true;
   saveCustomers(arr);
   closeDetail(); renderHome(true);
 }
 
-function restoreCustomer(clientName) {
+function restoreCustomer(clientName, id) {
   if (!confirm((clientName||'고객') + ' 정보를 복구할까요?')) return;
   var arr = loadCustomers();
-  var target = arr.find(function(c) { return c.clientName === clientName; });
+  var target = id ? arr.find(function(c) { return c.id === id; }) : arr.find(function(c) { return c.clientName === clientName; });
   restoreCustomerFromDb(target || clientName, null);
   if (target) target.is_archived = false;
   saveCustomers(arr);
@@ -744,10 +744,10 @@ function openAdd(editName) {
   if (editName) {
     
     document.getElementById('add-modal-title').textContent = '고객 정보 수정';
-    var arr = loadCustomers(); var c = arr.find(function(x) { return x.clientName === editName; });
+    var arr = loadCustomers(); var c = editingCustomerId ? arr.find(function(x) { return x.id === editingCustomerId; }) : arr.find(function(x) { return x.clientName === editName; });
     if (c) { document.getElementById('add-name').value = c.clientName; document.getElementById('add-phone').value = c.phone || ''; document.getElementById('add-addr').value = c.addr || ''; document.getElementById('add-space').value = c.space || ''; document.getElementById('add-stage').value = c.stage || '상담'; document.getElementById('add-date').value = c.date || todayStr(); document.getElementById('add-memo').value = c.memo || ''; document.getElementById('add-measure').value = c.measureDate || ''; document.getElementById('add-install').value = c.installDate || ''; }
   } else { document.getElementById('add-name').value = ''; document.getElementById('add-phone').value = ''; document.getElementById('add-addr').value = ''; document.getElementById('add-space').value = ''; document.getElementById('add-stage').value = '상담'; document.getElementById('add-date').value = todayStr(); document.getElementById('add-memo').value = ''; document.getElementById('add-measure').value = ''; document.getElementById('add-install').value = ''; }
-  var defaultStaff = editName ? (function() { var arr = loadCustomers(); var c = arr.find(function(x) { return x.clientName === editName; }); return c ? (c.staffName || '마스터') : '마스터'; })() : (currentUser ? currentUser.name : '마스터');
+  var defaultStaff = editName ? (function() { var arr = loadCustomers(); var c = editingCustomerId ? arr.find(function(x) { return x.id === editingCustomerId; }) : arr.find(function(x) { return x.clientName === editName; }); return c ? (c.staffName || '마스터') : '마스터'; })() : (currentUser ? currentUser.name : '마스터');
   var isStaffUser = currentUser && currentUser.role === 'staff';
   
   var staffWrap = document.getElementById('staff-btn-wrap');
