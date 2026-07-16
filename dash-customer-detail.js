@@ -602,6 +602,7 @@ function openDetail(name) {
         if (!target.orderStatus) target.orderStatus = {};
         target.orderStatus[item.key] = checkbox.checked;
         saveCustomers(arr);
+        if (typeof saveCustomerToDb === 'function') saveCustomerToDb(target, function(err) { if (err) console.warn('발주현황 DB 동기화 실패:', err.text); });
         showToast(item.label + (checkbox.checked ? ' 완료 처리됐습니다' : ' 완료 취소됐습니다'));
       });
       row.appendChild(label);

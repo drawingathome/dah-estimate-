@@ -148,7 +148,8 @@ function dbRowToCustomer(row) {
     balanceAmount:      Number(row.balance_amount)||0,
     balanceDate:        row.balance_date||'',
     balanceMethod:      row.balance_method||'',
-    balanceReceipt:     row.balance_receipt||false
+    balanceReceipt:     row.balance_receipt||false,
+    orderStatus:        row.order_status||{}
   };
 }
 
@@ -175,7 +176,8 @@ function customerToDbRow(c) {
     balance_amount:      Number(c.balanceAmount)||0,
     balance_date:        c.balanceDate||'',
     balance_method:      c.balanceMethod||'',
-    balance_receipt:     c.balanceReceipt||false
+    balance_receipt:     c.balanceReceipt||false,
+    order_status:        c.orderStatus||{}
   };
 }
 
