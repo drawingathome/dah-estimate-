@@ -72,9 +72,21 @@ function renderHome(skipServerFetch) {
     customers.forEach(function(c) { if (stageCounts[c.stage] !== undefined) stageCounts[c.stage]++; });
 
     // ── 처리 필요 항목 ───────────────────────────────
-    var needAction = customers.filter(function(c) {
-      return c.stage === '계약금' || c.stage === '잔금';
+    // "계약금/잔금 단계" 조건과 "발주 시작 안 됨" 조건을 하나의 목록으로 통합.
+    // (선혜님 피드백으로 별도 카드를 만들었다가, 두 조건이 겹치는 고객이 화면에
+    // 중복으로 나타나는 문제를 발견해 하나로 병합함 — 각 항목에 이유를 표시)
+    var ORDER_STAGES_FOR_ACTION = ['계약금', '실측', '잔금', '시공'];
+    var needActionMap = {};
+    customers.forEach(function(c) {
+      var reasons = [];
+      if (c.stage === '계약금' || c.stage === '잔금') reasons.push(c.stage + ' 처리');
+      if (ORDER_STAGES_FOR_ACTION.indexOf(c.stage) >= 0) {
+        var os = c.orderStatus || {};
+        if (!os.fabric && !os.production && !os.blind && !os.material && !os.install) reasons.push('발주 필요');
+      }
+      if (reasons.length > 0) needActionMap[c.clientName] = { customer: c, reasons: reasons };
     });
+    var needAction = Object.keys(needActionMap).map(function(k) { return needActionMap[k]; });
 
     // ── 오늘/내일 일정 ───────────────────────────────
     var tomorrow = new Date(_today); tomorrow.setDate(_today.getDate()+1);
@@ -165,7 +177,8 @@ function renderHome(skipServerFetch) {
         '</div>',
         needAction.length === 0
           ? '<div class="empty-inline">처리 필요한 항목이 없습니다 ✅</div>'
-          : needAction.slice(0,5).map(function(c) {
+          : needAction.slice(0,8).map(function(item) {
+              var c = item.customer;
               var stageColor = (c.stage === '계약금' || c.stage === '실측') ? 'var(--terra)' : 'var(--dark)';
               return '<div data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" onclick="openDetail(this.getAttribute(\'data-cname\'))" ' +
                 'style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:12px;cursor:pointer">' +
@@ -174,7 +187,7 @@ function renderHome(skipServerFetch) {
                   '<div style="font-size:12px;font-weight:700;color:var(--dark);overflow:hidden;white-space:nowrap;text-overflow:ellipsis">' + escHtml(c.clientName||'') + '</div>' +
                   '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(c.phone||'') + '</div>' +
                 '</div>' +
-                '<span style="font-size:12px;font-weight:700;color:' + stageColor + ';flex-shrink:0">' + (c.stage||'') + '</span>' +
+                '<span style="font-size:11px;font-weight:700;color:' + stageColor + ';flex-shrink:0;text-align:right">' + item.reasons.map(escHtml).join('<br>') + '</span>' +
               '</div>';
             }).join(''),
       '</div>',
@@ -214,30 +227,6 @@ function renderHome(skipServerFetch) {
             ).join(''),
       '</div>',
 
-      // 6-2. 발주 시작 안 된 고객 (선혜님 피드백: 계약 이후 발주를 깜빡 놓치기 쉬움)
-      (function() {
-        var ORDER_STAGES = ['계약금', '실측', '잔금', '시공'];
-        var pendingOrder = customers.filter(function(c) {
-          if (ORDER_STAGES.indexOf(c.stage) < 0) return false;
-          var os = c.orderStatus || {};
-          return !os.fabric && !os.production && !os.blind && !os.material && !os.install;
-        });
-        if (pendingOrder.length === 0) return '';
-        return '<div style="background:#fff;border-bottom:1px solid var(--border)">' +
-          '<div style="padding:14px 20px 10px">' +
-            '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">📦 발주 시작 안 된 고객 · ' + pendingOrder.length + '건</span>' +
-          '</div>' +
-          pendingOrder.map(function(c) {
-            return '<div onclick="openDetail(\'' + escHtml(c.clientName).replace(/'/g,"\\'") + '\')" style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;justify-content:space-between;cursor:pointer">' +
-              '<div>' +
-                '<div style="font-size:12px;font-weight:700;color:var(--dark)">' + escHtml(c.clientName||'') + '</div>' +
-                '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(c.stage||'') + ' 단계</div>' +
-              '</div>' +
-              '<span style="font-size:11px;color:var(--terra);font-weight:700">발주 필요 →</span>' +
-            '</div>';
-          }).join('') +
-        '</div>';
-      })(),
       (function() {
         if (!currentUser || currentUser.role !== 'master') return '';
         var byStaff = {};
