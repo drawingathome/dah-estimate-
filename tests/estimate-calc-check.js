@@ -49,6 +49,10 @@ async function run() {
     await new Promise(r => setTimeout(r, 700));
 
     await page.evaluate(() => {
+      // 레일/시공비 자동계산은 지역(서울/경기/기타) 선택이 전제조건임
+      // (지역 미선택=배송 상태에서는 레일/시공비를 붙이지 않는 것이 올바른 동작 — 2026-07-16 버그수정)
+      document.getElementById('c-region').value = '서울';
+      autoAddSvcFee();
       var tr = document.querySelector('.row-curtain');
       tr.querySelector('.pleat-type').value = '나비주름형';
       tr.querySelector('.mw').value = '300';
@@ -71,7 +75,7 @@ async function run() {
     check('레일시공비 수량이 1개 고정 (레일자수를 곱하지 않음)', railInfo === '1', '실제값=' + railInfo + ' (예상: 1)');
 
     const totalBefore = await page.evaluate(() => document.getElementById('sum-total').textContent);
-    check('커튼 300cm·나비주름·단가5만원 손계산 일치', totalBefore === '291,000원', '실제값=' + totalBefore + ' (예상: 291,000원 = 커튼250,000+레일16,000+레일시공25,000)');
+    check('커튼 300cm·나비주름·단가5만원 손계산 일치', totalBefore === '381,000원', '실제값=' + totalBefore + ' (예상: 381,000원 = 커튼250,000+레일16,000+레일시공25,000+서울실측40,000+서울시공50,000)');
 
     // 할인 음수 방어
     const negDiscTotal = await page.evaluate(() => {
@@ -80,7 +84,7 @@ async function run() {
       calcTotal();
       return document.getElementById('sum-total').textContent;
     });
-    check('할인에 음수 입력시 총액이 오르지 않고 방어됨', negDiscTotal === '291,000원', '실제값=' + negDiscTotal + ' (음수할인 전과 동일해야 함, 291,000원)');
+    check('할인에 음수 입력시 총액이 오르지 않고 방어됨', negDiscTotal === '381,000원', '실제값=' + negDiscTotal + ' (음수할인 전과 동일해야 함, 381,000원)');
 
     // ── 테스트 2: 실적매출 = 제품가격 100% (95% 아님) ──
     const perfInfo = await page.evaluate(() => {
@@ -118,6 +122,48 @@ async function run() {
     const savedCountNoRegion = await page2.evaluate(() => JSON.parse(localStorage.getItem('dah_saved') || '[]').length);
     check('지역 미선택+옵션추가금 있을때 저장이 차단됨(금액유실 방지)', savedCountNoRegion === 0, '실제 저장건수=' + savedCountNoRegion + ' (예상: 0건, 차단되어야 함)');
     await page2.close();
+
+    // ── 테스트 6: 시공 지역 "시공 안함(배송)" 선택시 레일/블라인드 시공비가 자동추가되면 안 됨 ──
+    const page3 = await browser.newPage();
+    await blockRealNetwork(page3);
+    page3.on('dialog', async d => { try { await d.accept(''); } catch (e) {} });
+    await page3.goto(`http://localhost:${port}/${file}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await new Promise(r => setTimeout(r, 700));
+    await page3.evaluate(() => {
+      document.getElementById('c-region').value = '';
+      autoAddSvcFee();
+      var tr = document.querySelector('.row-curtain');
+      tr.querySelector('.mw').value = '300';
+      tr.querySelector('.mw').dispatchEvent(new Event('input'));
+      calcCurtainRow(tr.querySelector('.mw'));
+    });
+    await new Promise(r => setTimeout(r, 300));
+    const svcRowsShipping = await page3.evaluate(() => document.getElementById('svc-body').querySelectorAll('tr').length);
+    check('배송(시공안함) 선택시 레일/레일시공비가 자동추가되지 않음', svcRowsShipping === 0, '실제 시공비목록 행수=' + svcRowsShipping + ' (예상: 0건)');
+
+    await page3.evaluate(() => { addBlindRow(); });
+    await new Promise(r => setTimeout(r, 300));
+    await page3.evaluate(() => {
+      var tr = document.querySelector('#blind-body tr');
+      tr.querySelector('.bmw').value = '150'; tr.querySelector('.bmh').value = '100';
+      tr.querySelector('.blind-price').value = '50000';
+      calcBlindRow(tr.querySelector('.blind-price'));
+    });
+    await new Promise(r => setTimeout(r, 300));
+    const svcRowsShippingBlind = await page3.evaluate(() => document.getElementById('svc-body').querySelectorAll('tr').length);
+    check('배송(시공안함) 선택시 블라인드 시공비도 자동추가되지 않음', svcRowsShippingBlind === 0, '실제 시공비목록 행수=' + svcRowsShippingBlind + ' (예상: 0건)');
+
+    await page3.evaluate(() => {
+      document.getElementById('c-region').value = '서울';
+      autoAddSvcFee();
+      var tr = document.querySelector('.row-curtain');
+      tr.querySelector('.mw').dispatchEvent(new Event('input'));
+      calcCurtainRow(tr.querySelector('.mw'));
+    });
+    await new Promise(r => setTimeout(r, 300));
+    const svcRowsAfterRegionSelect = await page3.evaluate(() => document.getElementById('svc-body').querySelectorAll('tr').length);
+    check('지역 선택하면 정상적으로 시공비 행이 자동추가됨(회귀없음)', svcRowsAfterRegionSelect > 0, '실제 시공비목록 행수=' + svcRowsAfterRegionSelect + ' (예상: 0보다 커야 함)');
+    await page3.close();
 
     process.exitCode = failCount === 0 ? 0 : 1;
   } finally {

@@ -89,10 +89,25 @@ function autoUpdateRail(curtainTr) {
   var mw = Math.max(0, parseFloat(curtainTr.querySelector('.mw')?.value)||0);
   if(!mw) return;
   var rowIdx = curtainTr.rowIndex;
+  var svcBody = document.getElementById('svc-body');
+
+  // "시공 안함(배송)" 상태(지역 미선택)에서는 레일/레일시공비를 추가하지 않음 —
+  // 이미 만들어진 레일/레일시공비 행이 있다면(이전에 지역을 선택했다가 배송으로 바꾼 경우) 제거함
+  var regionEl = document.getElementById('c-region');
+  if (regionEl && regionEl.value === '') {
+    if (svcBody) {
+      var oldRail = svcBody.querySelector('[data-rail-src="'+rowIdx+'"]');
+      if (oldRail) oldRail.remove();
+      var oldRailCost = svcBody.querySelector('[data-railcost-src="'+rowIdx+'"]');
+      if (oldRailCost) oldRailCost.remove();
+    }
+    calcTotal();
+    return;
+  }
+
   var space = curtainTr.querySelector('.space-inp')?.value||'';
   var ja = mw/30, jaR = Math.ceil(ja);
   if(jaR%2!==0) jaR++;
-  var svcBody = document.getElementById('svc-body');
 
   // 레일 (자재) 행: 단가 1,600원 × 레일수
   var existing = svcBody.querySelector('[data-rail-src="'+rowIdx+'"]');
@@ -242,6 +257,16 @@ function autoAddBlindSvc() {
   if(!svcBody || !blindBody) return;
   var blindCount = blindBody.querySelectorAll('tr').length;
   if(blindCount === 0) return;
+
+  // "시공 안함(배송)" 상태(지역 미선택)에서는 블라인드 시공비를 추가하지 않음
+  var regionEl = document.getElementById('c-region');
+  if (regionEl && regionEl.value === '') {
+    var existingBlindSvc = svcBody.querySelector('[data-svc-type="블라인드시공"]');
+    if (existingBlindSvc) existingBlindSvc.remove();
+    calcTotal();
+    return;
+  }
+
   var row = svcBody.querySelector('[data-svc-type="블라인드시공"]');
   if(!row) {
     addSvcRow();
