@@ -207,13 +207,21 @@ function saveCustomerToDb(customer, callback) {
   }
 }
 
-function deleteCustomerFromDb(clientName, callback) {
+// customer 객체(id 포함 가능)를 받아 삭제. id가 있으면 id로 정확히 지정,
+// 없는 예전 데이터는 부득이 이름으로 폴백(이 경우에만 동명이인 위험이 남음).
+function deleteCustomerFromDb(customer, callback) {
+  var filter = customer && customer.id
+    ? 'id=eq.' + customer.id
+    : 'client_name=eq.' + encodeURIComponent(typeof customer === 'string' ? customer : (customer && customer.clientName) || '');
   // 실제 DELETE는 RLS에서 막혀있음(데이터 보호) → 소프트 삭제(is_archived=true)로 처리
-  sbXHR('PATCH', 'customers?client_name=eq.' + encodeURIComponent(clientName), { is_archived: true }, function(err, data) { if(err) console.error('삭제 오류:', err.text); if(callback) callback(err, data); });
+  sbXHR('PATCH', 'customers?' + filter, { is_archived: true }, function(err, data) { if(err) console.error('삭제 오류:', err.text); if(callback) callback(err, data); });
 }
 
-// 소프트 삭제(보관 처리)된 고객을 다시 되돌림
-function restoreCustomerFromDb(clientName, callback) {
-  sbXHR('PATCH', 'customers?client_name=eq.' + encodeURIComponent(clientName), { is_archived: false }, function(err, data) { if(err) console.error('복구 오류:', err.text); if(callback) callback(err, data); });
+// 소프트 삭제(보관 처리)된 고객을 다시 되돌림 (동일하게 id 우선, 없으면 이름 폴백)
+function restoreCustomerFromDb(customer, callback) {
+  var filter = customer && customer.id
+    ? 'id=eq.' + customer.id
+    : 'client_name=eq.' + encodeURIComponent(typeof customer === 'string' ? customer : (customer && customer.clientName) || '');
+  sbXHR('PATCH', 'customers?' + filter, { is_archived: false }, function(err, data) { if(err) console.error('복구 오류:', err.text); if(callback) callback(err, data); });
 }
 
