@@ -214,7 +214,30 @@ function renderHome(skipServerFetch) {
             ).join(''),
       '</div>',
 
-      // 7. 담당자별 성과
+      // 6-2. 발주 시작 안 된 고객 (선혜님 피드백: 계약 이후 발주를 깜빡 놓치기 쉬움)
+      (function() {
+        var ORDER_STAGES = ['계약금', '실측', '잔금', '시공'];
+        var pendingOrder = customers.filter(function(c) {
+          if (ORDER_STAGES.indexOf(c.stage) < 0) return false;
+          var os = c.orderStatus || {};
+          return !os.fabric && !os.production && !os.blind && !os.material && !os.install;
+        });
+        if (pendingOrder.length === 0) return '';
+        return '<div style="background:#fff;border-bottom:1px solid var(--border)">' +
+          '<div style="padding:14px 20px 10px">' +
+            '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">📦 발주 시작 안 된 고객 · ' + pendingOrder.length + '건</span>' +
+          '</div>' +
+          pendingOrder.map(function(c) {
+            return '<div onclick="openDetail(\'' + escHtml(c.clientName).replace(/'/g,"\\'") + '\')" style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;justify-content:space-between;cursor:pointer">' +
+              '<div>' +
+                '<div style="font-size:12px;font-weight:700;color:var(--dark)">' + escHtml(c.clientName||'') + '</div>' +
+                '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(c.stage||'') + ' 단계</div>' +
+              '</div>' +
+              '<span style="font-size:11px;color:var(--terra);font-weight:700">발주 필요 →</span>' +
+            '</div>';
+          }).join('') +
+        '</div>';
+      })(),
       (function() {
         if (!currentUser || currentUser.role !== 'master') return '';
         var byStaff = {};
