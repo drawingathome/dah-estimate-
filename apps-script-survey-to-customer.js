@@ -29,12 +29,17 @@
 // ════════════════════════════════════════════════
 
 var SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
-// ⚠️ 이 키는 RLS(권한잠금)를 우회하는 관리자 전용 키(service_role/secret)입니다.
+// ⚠️ 이 키는 RLS(권한잠금)를 우회하는 관리자 전용 키(service_role)입니다.
 // 이 저장소는 공개(public) 저장소이므로, 절대 여기에 실제 키 값을 하드코딩하지 않습니다.
 // 대신 Google Apps Script의 "스크립트 속성"(Project Settings > Script Properties)에
 // SUPABASE_SERVICE_ROLE_KEY라는 이름으로 등록해두면, 아래 코드가 안전하게 읽어옵니다.
 // 등록 방법: Apps Script 에디터 왼쪽 톱니바퀴(프로젝트 설정) → 맨 아래 "스크립트 속성" →
-// "속성 추가" → 속성: SUPABASE_SERVICE_ROLE_KEY, 값: (Supabase의 secret/service_role 키)
+// "속성 추가" → 속성: SUPABASE_SERVICE_ROLE_KEY, 값: (Supabase Legacy API Keys의 service_role 키, eyJ로 시작)
+//
+// ⚠️ 반드시 "Legacy API Keys" 탭의 service_role 키(JWT, eyJ로 시작)를 써야 합니다.
+// 신규 형식 키(sb_secret_...)는 Supabase가 User-Agent 헤더로 브라우저 여부를 판별해 차단하는데,
+// Google Apps Script(UrlFetchApp)는 구조적으로 User-Agent를 커스텀 설정할 수 없어(항상 자체
+// 고정값 전송) 항상 401로 거부됩니다. 레거시 service_role 키는 이 검사 자체가 없어 정상 작동합니다.
 var SUPABASE_SERVICE_ROLE_KEY = PropertiesService.getScriptProperties().getProperty('SUPABASE_SERVICE_ROLE_KEY');
 
 // 시간 기반 트리거로 주기 실행 — status가 '신규'인 설문을 찾아 고객으로 등록
@@ -87,8 +92,7 @@ function fetchNewSurveys() {
   var options = {
     method: 'get',
     headers: {
-      'apikey': SUPABASE_SERVICE_ROLE_KEY,
-      'User-Agent': 'GoogleAppsScript-DAH-SurveySync/1.0'
+      'apikey': SUPABASE_SERVICE_ROLE_KEY
     },
     muteHttpExceptions: true
   };
@@ -107,7 +111,6 @@ function insertCustomer(customer) {
     method: 'post',
     headers: {
       'apikey': SUPABASE_SERVICE_ROLE_KEY,
-      'User-Agent': 'GoogleAppsScript-DAH-SurveySync/1.0',
       'Content-Type': 'application/json',
       'Prefer': 'return=representation'
     },
@@ -129,7 +132,6 @@ function markSurveyProcessed(surveyId) {
     method: 'patch',
     headers: {
       'apikey': SUPABASE_SERVICE_ROLE_KEY,
-      'User-Agent': 'GoogleAppsScript-DAH-SurveySync/1.0',
       'Content-Type': 'application/json',
       'Prefer': 'return=minimal'
     },
