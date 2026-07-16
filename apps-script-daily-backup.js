@@ -48,7 +48,7 @@ function dahDailyBackup() {
         method: 'get',
         headers: {
           'apikey': SUPABASE_SERVICE_ROLE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY
+          'User-Agent': 'GoogleAppsScript-DAH-Backup/1.0'
         },
         muteHttpExceptions: true
       });

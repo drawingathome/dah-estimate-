@@ -88,7 +88,7 @@ function fetchNewSurveys() {
     method: 'get',
     headers: {
       'apikey': SUPABASE_SERVICE_ROLE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY
+      'User-Agent': 'GoogleAppsScript-DAH-SurveySync/1.0'
     },
     muteHttpExceptions: true
   };
@@ -107,7 +107,7 @@ function insertCustomer(customer) {
     method: 'post',
     headers: {
       'apikey': SUPABASE_SERVICE_ROLE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY,
+      'User-Agent': 'GoogleAppsScript-DAH-SurveySync/1.0',
       'Content-Type': 'application/json',
       'Prefer': 'return=representation'
     },
@@ -129,7 +129,7 @@ function markSurveyProcessed(surveyId) {
     method: 'patch',
     headers: {
       'apikey': SUPABASE_SERVICE_ROLE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY,
+      'User-Agent': 'GoogleAppsScript-DAH-SurveySync/1.0',
       'Content-Type': 'application/json',
       'Prefer': 'return=minimal'
     },
