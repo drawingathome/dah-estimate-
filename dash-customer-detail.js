@@ -415,6 +415,15 @@ function openDetail(name) {
     var depReceiptChk = el('input', {type:'checkbox'}); depReceiptChk.checked = payData.depositReceipt||false;
     depReceipt.appendChild(depReceiptChk); depReceipt.appendChild(document.createTextNode('현금영수증'));
     var depSave = btn('width:100%;padding:9px;background:#282828;color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px', '선금 저장', function(){
+      var inputAmt = Number(depAmt.value.replace(/[^0-9]/g,'')) || 0;
+      var expectedHalf = Math.round((c.price || 0) * 0.5);
+      if (c.price > 0 && inputAmt > 0 && inputAmt !== expectedHalf) {
+        var proceed = confirm(
+          '입력하신 선금(' + inputAmt.toLocaleString() + '원)이 견적금액의 50%(' + expectedHalf.toLocaleString() + '원)와 달라요.\n'
+          + '이대로 저장할까요?'
+        );
+        if (!proceed) return;
+      }
       var newPd = Object.assign({}, payData);
       newPd.depositMethod  = depMethod.value;
       newPd.depositAmount  = depAmt.value.replace(/[^0-9]/g,'');
