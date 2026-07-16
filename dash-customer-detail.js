@@ -581,13 +581,48 @@ function openDetail(name) {
     infoSec.appendChild(memoBlock);
   }
 
-  // 날짜 3개 가로 배열
+  // 날짜 3개 가로 배열 — 실측예정/시공예정은 클릭하면 바로 날짜를 고쳐 저장할 수 있음
+  // (기존엔 전체 "수정" 모달을 열어야만 했음 — 선혜님 피드백으로 원클릭 편집 추가)
   var dateGrid = div('display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px', []);
-  [{label:'상담일',value:c.date||'—'},{label:'실측 예정',value:c.measureDate||'—'},{label:'시공 예정',value:c.installDate||'—'}].forEach(function(item){
-    dateGrid.appendChild(div('background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 8px;text-align:center',[
+  var dateFields = [
+    {label:'상담일', value:c.date||'—', key:null},
+    {label:'실측 예정', value:c.measureDate||'—', key:'measureDate'},
+    {label:'시공 예정', value:c.installDate||'—', key:'installDate'}
+  ];
+  dateFields.forEach(function(item){
+    var box = div('background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 8px;text-align:center;position:relative'+(item.key?';cursor:pointer':''),[
       el('div',{style:'font-size:11px;color:#9A9490;letter-spacing:0.8px;margin-bottom:4px',text:item.label}),
       el('div',{style:'font-size:12px;font-weight:700;color:'+(item.value==='—'?'var(--light)':'#282828'),text:item.value})
-    ]));
+    ]);
+    if (item.key) {
+      box.addEventListener('click', function(){
+        if (box.querySelector('input')) return; // 이미 편집중이면 무시
+        var valueDiv = box.children[1];
+        var originalText = valueDiv.textContent;
+        valueDiv.textContent = '';
+        var dateInp = el('input', {type:'date', style:'width:100%;border:none;background:transparent;font-size:12px;font-weight:700;color:#282828;text-align:center;font-family:inherit;outline:none'});
+        if (c[item.key]) dateInp.value = c[item.key];
+        valueDiv.appendChild(dateInp);
+        dateInp.focus();
+        try { dateInp.showPicker(); } catch(e) {}
+        function commit(){
+          var newVal = dateInp.value;
+          var arr = loadCustomers();
+          var target = arr.find(function(x){ return x.clientName === currentDetailName; });
+          if (target) {
+            target[item.key] = newVal;
+            saveCustomers(arr);
+            saveCustomerToDb(target, null);
+          }
+          valueDiv.textContent = newVal || '—';
+          valueDiv.style.color = newVal ? '#282828' : 'var(--light)';
+          showToast(item.label + '이 저장됐습니다');
+        }
+        dateInp.addEventListener('change', commit);
+        dateInp.addEventListener('blur', function(){ if(!dateInp.value) { valueDiv.textContent = originalText; } });
+      });
+    }
+    dateGrid.appendChild(box);
   });
   infoSec.appendChild(dateGrid);
   body.appendChild(infoSec);
