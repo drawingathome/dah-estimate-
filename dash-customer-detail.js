@@ -469,6 +469,15 @@ function openDetail(name) {
     var balReceiptChk = el('input', {type:'checkbox'}); balReceiptChk.checked = payData.balanceReceipt||false;
     balReceipt.appendChild(balReceiptChk); balReceipt.appendChild(document.createTextNode('현금영수증'));
     var balSave = btn('width:100%;padding:9px;background:#282828;color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px', '잔금 저장', function(){
+      var inputAmt = Number(balAmt.value.replace(/[^0-9]/g,'')) || 0;
+      var expectedBalance = Math.max(0, (c.price || 0) - (Number(payData.depositAmount) || 0));
+      if (c.price > 0 && inputAmt > 0 && inputAmt !== expectedBalance) {
+        var proceed = confirm(
+          '입력하신 잔금(' + inputAmt.toLocaleString() + '원)이 예상 잔금(견적금액-선금, ' + expectedBalance.toLocaleString() + '원)과 달라요.\n'
+          + '이대로 저장할까요?'
+        );
+        if (!proceed) return;
+      }
       var newPd = Object.assign({}, payData);
       newPd.balanceMethod  = balMethod.value;
       newPd.balanceAmount  = balAmt.value.replace(/[^0-9]/g,'');
