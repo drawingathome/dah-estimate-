@@ -380,6 +380,50 @@ function dahDiagnoseSchema() {
     report('   (테스트 레코드 정리 완료)');
   }
 
+  report('');
+  report('########## 추가1: 테스트 데이터 청소 ##########');
+  var patterns = ['복구드릴테스트_', '스키마진단테스트_', '설문진단테스트_'];
+  var cleanupTables = [
+    { name: 'customers', nameCol: 'client_name' },
+    { name: 'estimates', nameCol: 'customer_name' },
+    { name: 'surveys', nameCol: 'client_name' }
+  ];
+  cleanupTables.forEach(function(t) {
+    patterns.forEach(function(p) {
+      var curl = SUPABASE_URL + '/rest/v1/' + t.name + '?' + t.nameCol + '=like.' + encodeURIComponent(p + '*') + '&select=id,' + t.nameCol;
+      var cres = UrlFetchApp.fetch(curl, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
+      if (cres.getResponseCode() !== 200) { report('❌ ' + t.name + ' 조회 실패: ' + cres.getContentText()); return; }
+      var crows = JSON.parse(cres.getContentText());
+      crows.forEach(function(row) {
+        var delRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + t.name + '?id=eq.' + row.id, {
+          method: 'delete', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Prefer': 'return=minimal' }, muteHttpExceptions: true
+        });
+        report((delRes.getResponseCode() < 300 ? '✅ 삭제됨: ' : '❌ 삭제실패: ') + t.name + ' — ' + row[t.nameCol]);
+      });
+    });
+  });
+  report('(청소 대상이 없었으면 위에 아무 줄도 안 뜸 — 정상입니다)');
+
+  report('');
+  report('########## 추가2: 010-5144-7409 원본 이름 진단 ##########');
+  var nurl = SUPABASE_URL + '/rest/v1/customers?phone=eq.' + encodeURIComponent('010-5144-7409') + '&select=id,client_name,phone,addr,created_at';
+  var nres = UrlFetchApp.fetch(nurl, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
+  if (nres.getResponseCode() !== 200) {
+    report('❌ 조회 실패: ' + nres.getContentText());
+  } else {
+    var nrows = JSON.parse(nres.getContentText());
+    report('전화번호로 찾은 레코드 수: ' + nrows.length);
+    nrows.forEach(function(row, i) {
+      report('--- 레코드 ' + (i+1) + ' (id: ' + row.id + ') ---');
+      report('  client_name 원본값: "' + row.client_name + '"');
+      report('  client_name 길이: ' + row.client_name.length + '자');
+      var ncodes = [];
+      for (var j = 0; j < row.client_name.length; j++) ncodes.push(row.client_name.charCodeAt(j));
+      report('  각 글자 유니코드: ' + ncodes.join(', '));
+      report('  addr: "' + (row.addr || '') + '"');
+    });
+  }
+
   report('=== 진단 완료 — 위 결과를 그대로 복사해서 알려주세요 ===');
 }
 
