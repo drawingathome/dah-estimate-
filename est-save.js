@@ -203,8 +203,13 @@ function saveEstimate() {
       xhr2.send(JSON.stringify({
         customer_name:name, price:grand,
         performance_revenue:perf, staff_name:staffName,
-        status:currentTab||'ga',
-        data: {phone:phone, space:spaceStr, product:fabricStr, confirmedAt: window._estimateConfirmedAt || null, branch: '반포점', client_id: window._estSaveCustomerId || null}
+        estimate_status:currentTab||'ga',
+        phone:phone, space:spaceStr, product:fabricStr,
+        date: document.getElementById('c-measure')?.value || '',
+        memo: custMemo,
+        confirmed_at: window._estimateConfirmedAt || null,
+        branch: '반포점',
+        client_id: window._estSaveCustomerId || null
       }));
     } catch(e) { console.warn('Supabase 연결 오류:', e); showToast('✅ 저장 완료 (로컬) — DB 동기화는 실패했어요'); }
   }
