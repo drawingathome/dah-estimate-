@@ -16,22 +16,22 @@ var STAGE_ALIM = {
   완료:   ['t12_after_install','t13_cancel','t14_noshow']
 };
 var ALIM_META = {
-  t01_reservation:    {label:'1. 예약확인',           desc:'수동 · 예약 즉시',         tag:'수동'},
-  t02_reminder:       {label:'2. 방문 1일 전 리마인더',desc:'자동 · 방문일 D-1',        tag:'자동'},
-  t03_estimate:       {label:'3. 가견적서 발송',       desc:'수동 · 상담 당일',         tag:'수동'},
-  t31_deposit:        {label:'3-1. 계약금 결제 요청',  desc:'수동 · 가견적서 발송 후',  tag:'수동'},
-  t04_followup:       {label:'4. 팔로업',             desc:'알림 · 상담 2일 후',        tag:'알림'},
-  t05_measure_confirm:{label:'5. 실측 일정 확정',      desc:'수동 · 계약금 납부 후',    tag:'수동'},
-  t06_measure_dday:   {label:'6. 실측 하루 전 안내',   desc:'알림 · 실측일 D-1',        tag:'알림'},
-  t07_final_estimate: {label:'7. 확정견적서 발송',     desc:'수동 · 실측 완료 후',      tag:'수동'},
-  t71_balance_request:{label:'7-1. 잔금 결제 요청',    desc:'수동 · 확정견적서 확인 후',tag:'수동'},
-  t08_balance_remind: {label:'8. 잔금 리마인드',       desc:'알림 · 미납 2일 후',       tag:'알림'},
-  t09_order_confirm:  {label:'9. 발주 확정+제작 안내', desc:'수동 · 잔금 완납 후',      tag:'수동'},
-  t10_install_confirm:{label:'10. 시공 일정 확정',     desc:'수동 · 제작 완료 후',      tag:'수동'},
-  t11_install_dday:   {label:'11. 시공 전날 안내',     desc:'알림 · 시공일 D-1',        tag:'알림'},
-  t12_after_install:  {label:'12. 시공 후 안부',       desc:'자동 · 시공일 D+3',        tag:'자동'},
-  t13_cancel:         {label:'13. 취소 안내',          desc:'선택 · 취소 시',           tag:'선택'},
-  t14_noshow:         {label:'14. 노쇼 재예약 안내',   desc:'선택 · 노쇼 처리 후',      tag:'선택'}
+  t01_reservation:    {label:'1. 예약확인',           desc:'수동 · 예약 즉시',         tag:'수동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n상담 예약이 확인됐습니다. 편하신 시간에 뵙겠습니다!'},
+  t02_reminder:       {label:'2. 방문 1일 전 리마인더',desc:'자동 · 방문일 D-1',        tag:'자동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n내일 방문 예정이신 것 리마인드 드려요. 편하게 뵙겠습니다!'},
+  t03_estimate:       {label:'3. 가견적서 발송',       desc:'수동 · 상담 당일',         tag:'수동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n상담 내용을 바탕으로 가견적서를 보내드립니다. 확인 부탁드려요!'},
+  t31_deposit:        {label:'3-1. 계약금 결제 요청',  desc:'수동 · 가견적서 발송 후',  tag:'수동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n계약 진행을 위해 계약금(견적금액의 50%) 결제를 부탁드려요. 입금 확인되면 실측 일정을 잡아드리겠습니다.'},
+  t04_followup:       {label:'4. 팔로업',             desc:'알림 · 상담 2일 후',        tag:'알림', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n상담 후 궁금하신 점은 없으셨나요? 편하게 말씀해 주세요!'},
+  t05_measure_confirm:{label:'5. 실측 일정 확정',      desc:'수동 · 계약금 납부 후',    tag:'수동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n계약금 확인됐습니다. 실측 방문 일정을 조율하고 싶어요. 편하신 날짜와 시간을 알려주세요!'},
+  t06_measure_dday:   {label:'6. 실측 하루 전 안내',   desc:'알림 · 실측일 D-1',        tag:'알림', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n내일 실측 방문 예정입니다. 편하게 뵙겠습니다!'},
+  t07_final_estimate: {label:'7. 확정견적서 발송',     desc:'수동 · 실측 완료 후',      tag:'수동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n실측한 사이즈 기준으로 확정견적서를 보내드립니다. 확인 부탁드려요!'},
+  t71_balance_request:{label:'7-1. 잔금 결제 요청',    desc:'수동 · 확정견적서 확인 후',tag:'수동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n잔금 결제를 부탁드려요. 완납 확인되면 시공 일정이 확정됩니다. 감사합니다!'},
+  t08_balance_remind: {label:'8. 잔금 리마인드',       desc:'알림 · 미납 2일 후',       tag:'알림', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n잔금 결제가 아직 확인되지 않아 안내드려요. 편하실 때 확인 부탁드립니다!'},
+  t09_order_confirm:  {label:'9. 발주 확정+제작 안내', desc:'수동 · 잔금 완납 후',      tag:'수동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n잔금 완납 확인됐습니다. 제작을 시작합니다. 완료되면 시공 일정을 안내드릴게요!'},
+  t10_install_confirm:{label:'10. 시공 일정 확정',     desc:'수동 · 제작 완료 후',      tag:'수동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n제작이 완료됐습니다. 시공 일정을 조율하고 싶어요. 편하신 날짜를 알려주세요!'},
+  t11_install_dday:   {label:'11. 시공 전날 안내',     desc:'알림 · 시공일 D-1',        tag:'알림', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n내일 시공 방문 예정입니다. 편하게 뵙겠습니다!'},
+  t12_after_install:  {label:'12. 시공 후 안부',       desc:'자동 · 시공일 D+3',        tag:'자동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n시공은 만족스러우셨나요? 불편하신 점 있으시면 언제든 말씀해 주세요!'},
+  t13_cancel:         {label:'13. 취소 안내',          desc:'선택 · 취소 시',           tag:'선택', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n요청하신 대로 취소 처리됐습니다. 다음에 또 좋은 인연으로 뵙겠습니다!'},
+  t14_noshow:         {label:'14. 노쇼 재예약 안내',   desc:'선택 · 노쇼 처리 후',      tag:'선택', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n지난 방문 일정에 연락이 닿지 않아 안내드려요. 편하실 때 다시 예약 부탁드립니다!'}
 };
 
 var STAGE_COLORS = {상담:'#282828',계약금:'#F06E2D',실측:'#A67C52',잔금:'#2E7D6B',시공:'#C0392B',완료:'var(--light)'};
@@ -56,25 +56,57 @@ function sendAlimtalk(key) {
   var c = findCurrentDetailCustomer(arr);
   if (!c) return;
   var meta = ALIM_META[key]; if (!meta) return;
-  if (!confirm('['+meta.label+'] 알림톡을 발송할까요?')) return;
+  var initialMsg = (meta.template || '').replace(/\{name\}/g, c.clientName || '');
+  _openAlimtalkPreview(meta, key, c, initialMsg);
+}
 
-  
-  try {
-    var logs = JSON.parse(localStorage.getItem('dah_kakao_log')||'[]');
-    var now = new Date();
-    logs.unshift({
-      name: c.clientName,
-      type: key,
-      label: meta.label,
-      date: (now.getMonth()+1)+'월 '+now.getDate()+'일',
-      time: now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
-      method: meta.tag
-    });
-    localStorage.setItem('dah_kakao_log', JSON.stringify(logs.slice(0,200)));
-  } catch(e){}
-
-  alert('['+meta.label+'] 발송 완료\n\n※ 실제 발송은 Make.com 연동 후 자동화됩니다.\n지금은 발송 이력만 기록됩니다.');
-  closeDetail(); openDetail(c.clientName, c.id);
+// 알림톡 발송 전 미리보기+수정 모달 — "제목만 보고 바로 발송확인" 대신 실제 내용을 보여주고 고칠 수 있게 함
+function _openAlimtalkPreview(meta, key, c, initialMsg) {
+  var existing = document.getElementById('alimtalk-preview-overlay');
+  if (existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'alimtalk-preview-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99998;display:flex;align-items:center;justify-content:center';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:16px;padding:20px;width:360px;max-width:90vw;max-height:85vh;overflow-y:auto';
+  box.innerHTML =
+    '<div style="font-size:12px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:4px">' + escHtml(meta.tag) + ' · ' + escHtml(meta.desc) + '</div>' +
+    '<div style="font-size:15px;font-weight:700;color:#282828;margin-bottom:12px">' + escHtml(meta.label) + '</div>' +
+    '<textarea id="alimtalk-msg-textarea" style="width:100%;min-height:140px;padding:10px;border:1.5px solid #EEE6DC;border-radius:10px;font-size:12px;font-family:inherit;box-sizing:border-box;resize:vertical;outline:none"></textarea>' +
+    '<div style="display:flex;gap:8px;margin-top:12px">' +
+      '<button id="alimtalk-cancel-btn" style="flex:1;padding:11px;background:#fff;border:1px solid #EEE6DC;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;color:#282828">취소</button>' +
+      '<button id="alimtalk-send-btn" style="flex:2;padding:11px;background:#282828;color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">발송</button>' +
+    '</div>';
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  var textarea = document.getElementById('alimtalk-msg-textarea');
+  textarea.value = initialMsg;
+  textarea.focus();
+  document.getElementById('alimtalk-cancel-btn').addEventListener('click', function(){ overlay.remove(); });
+  document.getElementById('alimtalk-send-btn').addEventListener('click', function(){
+    var finalMsg = textarea.value;
+    overlay.remove();
+    try {
+      var logs = JSON.parse(localStorage.getItem('dah_kakao_log')||'[]');
+      var now = new Date();
+      logs.unshift({
+        name: c.clientName,
+        type: key,
+        label: meta.label,
+        date: (now.getMonth()+1)+'월 '+now.getDate()+'일',
+        time: now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
+        method: meta.tag,
+        message: finalMsg
+      });
+      localStorage.setItem('dah_kakao_log', JSON.stringify(logs.slice(0,200)));
+    } catch(e){}
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(finalMsg).then(function(){ showToast('['+meta.label+'] 메시지가 복사됐어요 — 카카오톡에 붙여넣기 하세요'); });
+      }
+    } catch(e){}
+    closeDetail(); openDetail(c.clientName, c.id);
+  });
 }
 
 function switchDetailTab(tab) {
@@ -432,6 +464,11 @@ function openDetail(name, id) {
     depReceipt.appendChild(depReceiptChk); depReceipt.appendChild(document.createTextNode('현금영수증'));
     var depSave = btn('width:100%;padding:9px;background:#282828;color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px', '선금 저장', function(){
       var inputAmt = Number(depAmt.value.replace(/[^0-9]/g,'')) || 0;
+      if (inputAmt > 0 && !depDate.value) {
+        alert('입금 날짜를 입력해주세요.');
+        depDate.focus();
+        return;
+      }
       var expectedHalf = Math.round((c.price || 0) * 0.5);
       if (c.price > 0 && inputAmt > 0 && inputAmt !== expectedHalf) {
         var proceed = confirm(
@@ -486,6 +523,11 @@ function openDetail(name, id) {
     balReceipt.appendChild(balReceiptChk); balReceipt.appendChild(document.createTextNode('현금영수증'));
     var balSave = btn('width:100%;padding:9px;background:#282828;color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px', '잔금 저장', function(){
       var inputAmt = Number(balAmt.value.replace(/[^0-9]/g,'')) || 0;
+      if (inputAmt > 0 && !balDate.value) {
+        alert('입금 날짜를 입력해주세요.');
+        balDate.focus();
+        return;
+      }
       var expectedBalance = Math.max(0, (c.price || 0) - (Number(payData.depositAmount) || 0));
       if (c.price > 0 && inputAmt > 0 && inputAmt !== expectedBalance) {
         var proceed = confirm(
