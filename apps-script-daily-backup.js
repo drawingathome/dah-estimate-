@@ -208,16 +208,18 @@ function dahRestoreDrill() {
   }
   report('4단계 완료: 저장된 테스트 레코드를 다시 조회해서 정확히 확인됨 (phone: ' + checkData[0].phone + ')');
 
-  // 5. 테스트 레코드 정리 (실제 DELETE — 이건 테스트로 만든 레코드라 완전삭제해도 안전)
+  // 5. 테스트 레코드 정리 (이 프로젝트는 DELETE가 RLS로 막혀있어 실제로 안 지워짐이 확인됨 →
+  //    PATCH(is_archived=true 보관처리)로 확실하게 화면에서 숨김)
   var deleteRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?client_name=eq.' + encodeURIComponent(testName), {
-    method: 'delete',
-    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Prefer': 'return=minimal' },
+    method: 'patch',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    payload: JSON.stringify({ is_archived: true }),
     muteHttpExceptions: true
   });
   if (deleteRes.getResponseCode() >= 300) {
-    report('⚠️ 경고: 테스트 레코드 삭제 실패 — 수동으로 "' + testName + '"를 찾아 지워주세요 (HTTP ' + deleteRes.getResponseCode() + ')');
+    report('⚠️ 경고: 테스트 레코드 정리 실패 — 수동으로 "' + testName + '"를 찾아 보관처리해주세요 (HTTP ' + deleteRes.getResponseCode() + ')');
   } else {
-    report('5단계 완료: 테스트 레코드 정리 완료 — 실제 데이터엔 흔적이 전혀 안 남았습니다');
+    report('5단계 완료: 테스트 레코드 보관처리 완료 — 실제 화면엔 더 이상 안 보입니다');
   }
 
   report('=== ✅ 복구 드릴 전체 성공 — 백업 파일로 실제 복구가 가능함을 확인했습니다 ===');
@@ -307,7 +309,7 @@ function dahDiagnoseSchema() {
 
     // 정리
     UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?id=eq.' + createdId, {
-      method: 'delete', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Prefer': 'return=minimal' }, muteHttpExceptions: true
+      method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
     });
     report('   (테스트 레코드 정리 완료)');
   }
@@ -332,7 +334,7 @@ function dahDiagnoseSchema() {
     report('✅ estimates INSERT 성공');
     var estId = JSON.parse(estInsertRes.getContentText())[0].id;
     UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?id=eq.' + estId, {
-      method: 'delete', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Prefer': 'return=minimal' }, muteHttpExceptions: true
+      method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
     });
     report('   (테스트 레코드 정리 완료)');
   }
@@ -375,108 +377,14 @@ function dahDiagnoseSchema() {
     report('✅ surveys INSERT 성공 — 설문 제출이 정상적으로 서버에 저장됩니다');
     var surveyId = JSON.parse(surveyInsertRes.getContentText())[0].id;
     UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/surveys?id=eq.' + surveyId, {
-      method: 'delete', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Prefer': 'return=minimal' }, muteHttpExceptions: true
+      method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
     });
     report('   (테스트 레코드 정리 완료)');
   }
 
-  report('');
-  report('########## 추가1: 테스트 데이터 청소 ##########');
-  var patterns = ['복구드릴테스트_', '스키마진단테스트_', '설문진단테스트_'];
-  var cleanupTables = [
-    { name: 'customers', nameCol: 'client_name' },
-    { name: 'estimates', nameCol: 'customer_name' },
-    { name: 'surveys', nameCol: 'client_name' }
-  ];
-  cleanupTables.forEach(function(t) {
-    patterns.forEach(function(p) {
-      var curl = SUPABASE_URL + '/rest/v1/' + t.name + '?' + t.nameCol + '=like.' + encodeURIComponent(p + '*') + '&is_archived=eq.false&select=id,' + t.nameCol;
-      var cres = UrlFetchApp.fetch(curl, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
-      if (cres.getResponseCode() !== 200) { report('❌ ' + t.name + ' 조회 실패: ' + cres.getContentText()); return; }
-      var crows = JSON.parse(cres.getContentText());
-      crows.forEach(function(row) {
-        // ⚠️ DELETE는 이 프로젝트에서 RLS로 막혀있어 겉으로는 성공해도 실제로는 안 지워짐이 확인됨.
-        // PATCH(is_archived=true, 보관처리)로 확실히 화면에서 숨김.
-        var patchRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + t.name + '?id=eq.' + row.id, {
-          method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-          payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
-        });
-        report((patchRes.getResponseCode() < 300 ? '✅ 보관처리됨: ' : '❌ 처리실패: ') + t.name + ' — ' + row[t.nameCol]);
-      });
-    });
-  });
-  report('(청소 대상이 없었으면 위에 아무 줄도 안 뜸 — 정상입니다)');
-
-  report('');
-  report('########## 추가2: 010-5144-7409 원본 이름 진단 ##########');
-  var nurl = SUPABASE_URL + '/rest/v1/customers?phone=eq.' + encodeURIComponent('010-5144-7409') + '&select=id,client_name,phone,addr,created_at,is_archived';
-  var nres = UrlFetchApp.fetch(nurl, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
-  if (nres.getResponseCode() !== 200) {
-    report('❌ 조회 실패: ' + nres.getContentText());
-  } else {
-    var nrows = JSON.parse(nres.getContentText());
-    report('전화번호로 찾은 레코드 수(보관된 것 포함 전체): ' + nrows.length);
-    nrows.forEach(function(row, i) {
-      report('--- 레코드 ' + (i+1) + ' (id: ' + row.id + ', is_archived: ' + row.is_archived + ') ---');
-      report('  client_name 원본값: "' + row.client_name + '"');
-      report('  addr: "' + (row.addr || '') + '"');
-    });
-  }
-
-  report('');
-  report('########## 추가3: 장선혜 고객 중복레코드 정리(보관처리 방식) ##########');
-  var dedupUrl = SUPABASE_URL + '/rest/v1/customers?phone=eq.' + encodeURIComponent('010-5144-7409') + '&is_archived=eq.false&select=id,client_name,addr,created_at';
-  var dedupRes = UrlFetchApp.fetch(dedupUrl, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
-  if (dedupRes.getResponseCode() !== 200) {
-    report('❌ 조회 실패: ' + dedupRes.getContentText());
-  } else {
-    var allRows = JSON.parse(dedupRes.getContentText());
-    var janghyeRows = allRows.filter(function(r) { return r.client_name === '장선혜'; });
-    var junkRows = allRows.filter(function(r) {
-      return r.client_name.indexOf('복구드릴테스트_') === 0 || r.client_name.indexOf('스키마진단테스트_') === 0 || r.client_name.indexOf('설문진단테스트_') === 0;
-    });
-    report('발견된 "장선혜" 레코드(보관안된 것): ' + janghyeRows.length + '건, 남은 테스트쓰레기: ' + junkRows.length + '건');
-
-    var keeper = janghyeRows.find(function(r) { return r.addr && r.addr.trim() !== ''; });
-    if (!keeper && janghyeRows.length > 0) keeper = janghyeRows[0];
-
-    if (keeper) {
-      report('✅ 남길 레코드: id=' + keeper.id + ', addr="' + (keeper.addr||'') + '"');
-      janghyeRows.forEach(function(r) {
-        if (r.id === keeper.id) return;
-        var patchRes2 = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?id=eq.' + r.id, {
-          method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-          payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
-        });
-        report((patchRes2.getResponseCode() < 300 ? '✅ 중복 보관처리됨: id=' : '❌ 처리실패: id=') + r.id);
-      });
-    } else {
-      report('⚠️ "장선혜" 레코드를 못 찾았습니다 — 이미 정리됐거나 이름이 다를 수 있습니다');
-    }
-
-    junkRows.forEach(function(r) {
-      var patchRes3 = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?id=eq.' + r.id, {
-        method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-        payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
-      });
-      report((patchRes3.getResponseCode() < 300 ? '✅ 테스트쓰레기 보관처리됨: ' : '❌ 처리실패: ') + r.client_name);
-    });
-
-    // 최종 확인: is_archived=false인 것만 다시 조회 (실제로 화면에서 사라졌는지 확실히 검증)
-    var finalUrl = SUPABASE_URL + '/rest/v1/customers?phone=eq.' + encodeURIComponent('010-5144-7409') + '&is_archived=eq.false&select=id,client_name,addr';
-    var finalRes = UrlFetchApp.fetch(finalUrl, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
-    var finalRows = JSON.parse(finalRes.getContentText());
-    report('=== 정리 후 최종 상태: 화면에 실제로 보일 레코드(is_archived=false) ' + finalRows.length + '건 ===');
-    finalRows.forEach(function(r) { report('  - ' + r.client_name + ' (id=' + r.id + ', addr="' + (r.addr||'') + '")'); });
-    if (finalRows.length === 1) {
-      report('✅✅✅ 정리 성공 — 이제 화면에는 정확히 1건만 보입니다');
-    } else {
-      report('⚠️ 여전히 ' + finalRows.length + '건이 보관안됨 상태입니다 — 추가 확인이 필요합니다');
-    }
-  }
-
   report('=== 진단 완료 — 위 결과를 그대로 복사해서 알려주세요 ===');
 }
+
 
 /**
  * ══════════════════════════════════════════════════
@@ -498,16 +406,18 @@ function dahCleanupTestData() {
   ];
   tables.forEach(function(t) {
     patterns.forEach(function(p) {
-      var url = SUPABASE_URL + '/rest/v1/' + t.name + '?' + t.nameCol + '=like.' + encodeURIComponent(p + '*') + '&select=id,' + t.nameCol;
+      var url = SUPABASE_URL + '/rest/v1/' + t.name + '?' + t.nameCol + '=like.' + encodeURIComponent(p + '*') + '&is_archived=eq.false&select=id,' + t.nameCol;
       var res = UrlFetchApp.fetch(url, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
       if (res.getResponseCode() !== 200) { report('❌ ' + t.name + ' 조회 실패: ' + res.getContentText()); return; }
       var rows = JSON.parse(res.getContentText());
       if (rows.length === 0) return;
       rows.forEach(function(row) {
-        var delRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + t.name + '?id=eq.' + row.id, {
-          method: 'delete', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Prefer': 'return=minimal' }, muteHttpExceptions: true
+        // ⚠️ 이 프로젝트는 DELETE가 RLS로 막혀있어(2026-07-17 확인) 실제 삭제 대신 보관처리(PATCH)를 씀
+        var patchRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + t.name + '?id=eq.' + row.id, {
+          method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
         });
-        report((delRes.getResponseCode() < 300 ? '✅ 삭제됨: ' : '❌ 삭제실패: ') + t.name + ' — ' + row[t.nameCol]);
+        report((patchRes.getResponseCode() < 300 ? '✅ 보관처리됨: ' : '❌ 처리실패: ') + t.name + ' — ' + row[t.nameCol]);
       });
     });
   });
@@ -544,20 +454,3 @@ function dahPeekRawName(phone) {
   });
 }
 
-/**
- * ══════════════════════════════════════════════════
- * 오늘의 긴급조치 — 이 함수 하나만 실행하면 끝 (dahUrgentFix)
- * ══════════════════════════════════════════════════
- * 1) 테스트로 남은 쓰레기 데이터 청소
- * 2) 010-5144-7409 고객의 실제 저장된 이름을 안전하게(읽기만) 확인
- * 함수 선택 드롭다운을 건드릴 필요 없이, 이 함수 하나만 선택해서 실행하면 됩니다.
- */
-function dahUrgentFix() {
-  Logger.log('########## 1단계: 테스트 데이터 청소 ##########');
-  dahCleanupTestData();
-  Logger.log('');
-  Logger.log('########## 2단계: 이름 겹침 원인 진단 ##########');
-  dahPeekRawName('010-5144-7409');
-  Logger.log('');
-  Logger.log('=== 전체 완료 — 위 로그를 전부 복사해서 알려주세요 ===');
-}
