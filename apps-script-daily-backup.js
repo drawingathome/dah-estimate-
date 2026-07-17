@@ -316,7 +316,8 @@ function dahDiagnoseSchema() {
   report('=== estimates 테이블 진단 시작 ===');
   var estRow = {
     customer_name: testName, price: 100000, performance_revenue: 90000, staff_name: '마스터',
-    status: 'ga', data: { phone: '010-0000-0000', space: '거실', product: '테스트원단', confirmedAt: null, branch: '반포점', client_id: null }
+    estimate_status: 'ga', phone: '010-0000-0000', space: '거실', product: '테스트원단',
+    date: '2026-01-01', memo: '진단테스트', confirmed_at: null, branch: '반포점', client_id: null
   };
   var estInsertRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates', {
     method: 'post',
