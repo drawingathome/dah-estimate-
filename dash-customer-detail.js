@@ -286,7 +286,7 @@ function openDetail(name, id) {
   infoBar.innerHTML = '';
   var infoItems = [
     {label:'견적금액', value: c.price ? fmt(c.price) : '—'},
-    {label:'공간',     value: c.space || '—'},
+    {label:'연락처',   value: c.phone || '—'},
     {label:'담당자',   value: c.staffName || '마스터'}
   ];
   infoItems.forEach(function(item) {
@@ -337,7 +337,32 @@ function openDetail(name, id) {
   stageSec.appendChild(progressBar);
 
   
+  // 다음 단계 계산 (완료/취소/노쇼는 다음 단계 없음)
+  var curIdx = STAGES.indexOf(c.stage);
+  var nextStage = (curIdx >= 0 && curIdx < STAGES.length - 1) ? STAGES[curIdx + 1] : null;
+
+  var stageActionRow = div('display:flex;gap:6px;align-items:center', []);
+  if (nextStage) {
+    stageActionRow.appendChild(btn(
+      'flex:1;padding:9px;border:none;background:#282828;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:4px',
+      '다음 단계로 (' + nextStage + ') →', function(){ changeStage(nextStage); }
+    ));
+  }
+  var toggleStageBtn = btn(
+    'padding:9px 12px;border:1px solid #EEE6DC;background:#fff;color:#6B6B6B;font-size:11px;font-family:inherit;cursor:pointer;border-radius:4px;white-space:nowrap',
+    '다른 단계로', function(){
+      var wrap = document.getElementById('stage-manual-select');
+      if (wrap) wrap.style.display = wrap.style.display === 'none' ? '' : 'none';
+    }
+  );
+  stageActionRow.appendChild(toggleStageBtn);
+  stageSec.appendChild(stageActionRow);
+
+  // 평소엔 접혀있고, "다른 단계로" 눌렀을 때만 펼쳐지는 전체 단계 선택
   var stageBar = div('display:flex;flex-wrap:wrap;gap:6px', []);
+  stageBar.id = 'stage-manual-select';
+  stageBar.style.display = 'none';
+  stageBar.style.marginTop = '8px';
   STAGES.forEach(function(s) {
     var on = s === c.stage;
     var num = STAGE_NUM[s] || 1;
