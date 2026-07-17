@@ -77,6 +77,7 @@ function saveAuthSession(session) {
     }));
   } catch (e) { /* ignore */ }
   if (typeof startAuthAutoRefresh === 'function') startAuthAutoRefresh();
+  if (typeof startRealtimeSync === 'function') startRealtimeSync();
 }
 
 // 저장된 세션 조회 (없으면 null)
@@ -91,6 +92,7 @@ function getAuthSession() {
 function clearAuthSession() {
   try { localStorage.removeItem('dah_auth_session'); } catch (e) { /* ignore */ }
   if (typeof stopAuthAutoRefresh === 'function') stopAuthAutoRefresh();
+  if (typeof stopRealtimeSync === 'function') stopRealtimeSync();
 }
 
 // 토큰 만료 임박시 refresh_token으로 재발급
