@@ -305,7 +305,17 @@ function openDetail(name, id, forceTab) {
   // 탭 초기화
   var estBodyEl = document.getElementById('detail-est-body');
   if (estBodyEl) { estBodyEl.innerHTML = ''; }
-  switchDetailTab(forceTab || 'info');
+  var autoTab = forceTab;
+  if (!autoTab) {
+    if ((c.stage === '계약금' && !c.depositAmount) || (c.stage === '잔금' && !c.balanceAmount)) {
+      autoTab = 'pay'; // 입금 대기 중이면 결제탭부터
+    } else {
+      var os = c.orderStatus || {};
+      var orderNotStarted = !os.fabric && !os.production && !os.blind && !os.material && !os.install;
+      if (['계약금','실측','잔금','시공'].indexOf(c.stage) >= 0 && orderNotStarted) autoTab = 'order'; // 발주 전혀 안됐으면 발주탭부터
+    }
+  }
+  switchDetailTab(autoTab || 'info');
   // 견적 건수 배지
   var all = []; try { all = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
   var estCnt = all.filter(function(e){ return e.clientName === c.clientName; }).length;
