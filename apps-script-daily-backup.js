@@ -454,3 +454,33 @@ function dahPeekRawName(phone) {
   });
 }
 
+/**
+ * ══════════════════════════════════════════════════
+ * 웹 브릿지 (doGet) — Claude가 직접 실행할 수 있게 해주는 창구
+ * ══════════════════════════════════════════════════
+ * "배포 > 새 배포 > 웹 앱"으로 배포한 뒤 그 URL을 Claude에게 알려주면,
+ * 그 다음부터는 Claude가 이 URL을 직접 열어서(웹에서 접속하듯) 함수를
+ * 실행시키고 결과 로그까지 바로 받아볼 수 있음 — 매번 코드를 복사해서
+ * 붙여넣고 실행 버튼을 누르는 과정이 필요 없어짐.
+ *
+ * URL 예시: [배포후URL]?key=dah-bridge-2026&action=diagnoseSchema
+ * key는 아무나 이 주소로 실행하지 못하게 막는 간단한 비밀번호.
+ */
+function doGet(e) {
+  var SECRET_KEY = 'dah-bridge-2026';
+  if (!e || !e.parameter || e.parameter.key !== SECRET_KEY) {
+    return ContentService.createTextOutput('❌ 인증 실패 — key 파라미터가 올바르지 않습니다').setMimeType(ContentService.MimeType.TEXT);
+  }
+  var action = e.parameter.action;
+  try {
+    if (action === 'dailyBackup') dahDailyBackup();
+    else if (action === 'diagnoseSchema') dahDiagnoseSchema();
+    else if (action === 'cleanupTestData') dahCleanupTestData();
+    else if (action === 'restoreDrill') dahRestoreDrill();
+    else if (action === 'peekRawName') dahPeekRawName(e.parameter.phone || '');
+    else return ContentService.createTextOutput('❌ 알 수 없는 action: "' + action + '"\n사용가능: dailyBackup, diagnoseSchema, cleanupTestData, restoreDrill, peekRawName').setMimeType(ContentService.MimeType.TEXT);
+  } catch (err) {
+    return ContentService.createTextOutput('❌ 실행 중 오류 발생: ' + err.message + '\n' + err.stack).setMimeType(ContentService.MimeType.TEXT);
+  }
+  return ContentService.createTextOutput(Logger.getLog()).setMimeType(ContentService.MimeType.TEXT);
+}
