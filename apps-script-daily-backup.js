@@ -338,5 +338,48 @@ function dahDiagnoseSchema() {
   }
 
   report('');
+  report('');
+  report('=== surveys 테이블 진단 시작 ===');
+  var surveyPeekRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/surveys?select=*&limit=1', {
+    method: 'get',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY },
+    muteHttpExceptions: true
+  });
+  if (surveyPeekRes.getResponseCode() >= 300) {
+    report('❌ surveys 테이블 조회 실패 — HTTP ' + surveyPeekRes.getResponseCode() + ' ' + surveyPeekRes.getContentText());
+  } else {
+    var surveyPeekData = JSON.parse(surveyPeekRes.getContentText());
+    if (surveyPeekData.length === 0) {
+      report('⚠️ surveys 테이블에 기존 레코드가 하나도 없어서, 실제 컬럼 목록을 조회로는 못 봅니다');
+    } else {
+      report('✅ surveys 테이블의 실제 컬럼 목록: ' + Object.keys(surveyPeekData[0]).join(', '));
+    }
+  }
+  // 설문 앱(survey-app.js)이 실제로 보내는 필드 그대로 테스트
+  var surveyTestName = '설문진단테스트_' + new Date().getTime();
+  var surveyRow = {
+    client_name: surveyTestName, phone: '010-0000-0000', addr: '테스트주소',
+    space: '거실, 안방',
+    answers: { pyeong: '30', homeDir: '남향', wallTone: '화이트', floorType: '원목마루', moods: ['모던'], functions: ['암막'], budget: '100만원대', sizeNote: '' },
+    memo: '진단테스트', status: '신규'
+  };
+  var surveyInsertRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/surveys', {
+    method: 'post',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    payload: JSON.stringify(surveyRow),
+    muteHttpExceptions: true
+  });
+  if (surveyInsertRes.getResponseCode() >= 300) {
+    report('❌ surveys INSERT 실패 (설문 제출이 실제로 이렇게 실패하고 있을 수 있습니다) — HTTP ' + surveyInsertRes.getResponseCode());
+    report('   상세: ' + surveyInsertRes.getContentText());
+  } else {
+    report('✅ surveys INSERT 성공 — 설문 제출이 정상적으로 서버에 저장됩니다');
+    var surveyId = JSON.parse(surveyInsertRes.getContentText())[0].id;
+    UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/surveys?id=eq.' + surveyId, {
+      method: 'delete', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Prefer': 'return=minimal' }, muteHttpExceptions: true
+    });
+    report('   (테스트 레코드 정리 완료)');
+  }
+
   report('=== 진단 완료 — 위 결과를 그대로 복사해서 알려주세요 ===');
 }
