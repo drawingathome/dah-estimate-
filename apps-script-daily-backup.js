@@ -424,6 +424,52 @@ function dahDiagnoseSchema() {
     });
   }
 
+  report('');
+  report('########## 추가3: 장선혜 고객 중복레코드 정리 ##########');
+  var dedupUrl = SUPABASE_URL + '/rest/v1/customers?phone=eq.' + encodeURIComponent('010-5144-7409') + '&select=id,client_name,addr,created_at';
+  var dedupRes = UrlFetchApp.fetch(dedupUrl, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
+  if (dedupRes.getResponseCode() !== 200) {
+    report('❌ 조회 실패: ' + dedupRes.getContentText());
+  } else {
+    var allRows = JSON.parse(dedupRes.getContentText());
+    var janghyeRows = allRows.filter(function(r) { return r.client_name === '장선혜'; });
+    var junkRows = allRows.filter(function(r) {
+      return r.client_name.indexOf('복구드릴테스트_') === 0 || r.client_name.indexOf('스키마진단테스트_') === 0 || r.client_name.indexOf('설문진단테스트_') === 0;
+    });
+    report('발견된 "장선혜" 레코드: ' + janghyeRows.length + '건, 남은 테스트쓰레기: ' + junkRows.length + '건');
+
+    // 주소가 채워진 레코드를 "남길 것"으로 선정 (여러개면 첫번째)
+    var keeper = janghyeRows.find(function(r) { return r.addr && r.addr.trim() !== ''; });
+    if (!keeper && janghyeRows.length > 0) keeper = janghyeRows[0]; // 주소있는게 없으면 그냥 첫번째 유지
+
+    if (keeper) {
+      report('✅ 남길 레코드: id=' + keeper.id + ', addr="' + (keeper.addr||'') + '"');
+      janghyeRows.forEach(function(r) {
+        if (r.id === keeper.id) return;
+        var delRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?id=eq.' + r.id, {
+          method: 'delete', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Prefer': 'return=minimal' }, muteHttpExceptions: true
+        });
+        report((delRes.getResponseCode() < 300 ? '✅ 중복삭제됨: id=' : '❌ 삭제실패: id=') + r.id);
+      });
+    } else {
+      report('⚠️ "장선혜" 레코드를 못 찾았습니다 — 이미 정리됐거나 이름이 다를 수 있습니다');
+    }
+
+    // 이 전화번호에 남아있는 테스트쓰레기도 재확인 삭제
+    junkRows.forEach(function(r) {
+      var delRes2 = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?id=eq.' + r.id, {
+        method: 'delete', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Prefer': 'return=minimal' }, muteHttpExceptions: true
+      });
+      report((delRes2.getResponseCode() < 300 ? '✅ 테스트쓰레기 삭제됨: ' : '❌ 삭제실패: ') + r.client_name);
+    });
+
+    // 최종 확인
+    var finalRes = UrlFetchApp.fetch(dedupUrl, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
+    var finalRows = JSON.parse(finalRes.getContentText());
+    report('=== 정리 후 최종 상태: 이 전화번호로 남은 레코드 ' + finalRows.length + '건 ===');
+    finalRows.forEach(function(r) { report('  - ' + r.client_name + ' (id=' + r.id + ', addr="' + (r.addr||'') + '")'); });
+  }
+
   report('=== 진단 완료 — 위 결과를 그대로 복사해서 알려주세요 ===');
 }
 
