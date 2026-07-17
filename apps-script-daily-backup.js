@@ -382,3 +382,69 @@ function dahDiagnoseSchema() {
 
   report('=== 진단 완료 — 위 결과를 그대로 복사해서 알려주세요 ===');
 }
+
+/**
+ * ══════════════════════════════════════════════════
+ * 테스트 데이터 청소 (dahCleanupTestData)
+ * ══════════════════════════════════════════════════
+ * 오늘 진단/드릴 테스트 도중, 일부 테스트 레코드의 자동삭제가 실패해서
+ * 실제 고객목록에 "복구드릴테스트_...", "스키마진단테스트_...",
+ * "설문진단테스트_..."가 남아있는 게 발견됨. 이 함수는 그 패턴에
+ * 정확히 일치하는 레코드만 찾아서 삭제함(실제 고객 데이터는 절대 안 건드림).
+ */
+function dahCleanupTestData() {
+  var log = [];
+  function report(msg) { log.push(msg); Logger.log(msg); }
+  var patterns = ['복구드릴테스트_', '스키마진단테스트_', '설문진단테스트_'];
+  var tables = [
+    { name: 'customers', nameCol: 'client_name' },
+    { name: 'estimates', nameCol: 'customer_name' },
+    { name: 'surveys', nameCol: 'client_name' }
+  ];
+  tables.forEach(function(t) {
+    patterns.forEach(function(p) {
+      var url = SUPABASE_URL + '/rest/v1/' + t.name + '?' + t.nameCol + '=like.' + encodeURIComponent(p + '*') + '&select=id,' + t.nameCol;
+      var res = UrlFetchApp.fetch(url, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
+      if (res.getResponseCode() !== 200) { report('❌ ' + t.name + ' 조회 실패: ' + res.getContentText()); return; }
+      var rows = JSON.parse(res.getContentText());
+      if (rows.length === 0) return;
+      rows.forEach(function(row) {
+        var delRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + t.name + '?id=eq.' + row.id, {
+          method: 'delete', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Prefer': 'return=minimal' }, muteHttpExceptions: true
+        });
+        report((delRes.getResponseCode() < 300 ? '✅ 삭제됨: ' : '❌ 삭제실패: ') + t.name + ' — ' + row[t.nameCol]);
+      });
+    });
+  });
+  report('=== 테스트 데이터 청소 완료 ===');
+}
+
+/**
+ * ══════════════════════════════════════════════════
+ * 원본 문자열 진단 (dahPeekRawName) — 읽기 전용, 안전
+ * ══════════════════════════════════════════════════
+ * 특정 전화번호로 고객을 조회해서, 저장된 이름(client_name)의
+ * 정확한 원본 값과 각 글자의 유니코드 코드까지 로그로 남김.
+ * "실제 데이터 자체가 이상한지" vs "화면에 보여줄 때만 깨지는지"를 구분하기 위함.
+ * 데이터를 전혀 바꾸지 않는 순수 조회 함수라 100% 안전함.
+ */
+function dahPeekRawName(phone) {
+  var log = [];
+  function report(msg) { log.push(msg); Logger.log(msg); }
+  var url = SUPABASE_URL + '/rest/v1/customers?phone=eq.' + encodeURIComponent(phone) + '&select=id,client_name,phone,addr,created_at';
+  var res = UrlFetchApp.fetch(url, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
+  if (res.getResponseCode() !== 200) { report('❌ 조회 실패: ' + res.getContentText()); return; }
+  var rows = JSON.parse(res.getContentText());
+  report('전화번호 "' + phone + '"로 찾은 레코드 수: ' + rows.length);
+  rows.forEach(function(row, i) {
+    report('--- 레코드 ' + (i+1) + ' (id: ' + row.id + ') ---');
+    report('  client_name 원본값: "' + row.client_name + '"');
+    report('  client_name 길이: ' + row.client_name.length + '자');
+    var codes = [];
+    for (var j = 0; j < row.client_name.length; j++) codes.push(row.client_name.charCodeAt(j));
+    report('  각 글자 유니코드: ' + codes.join(', '));
+    report('  phone: "' + row.phone + '"');
+    report('  addr: "' + (row.addr || '') + '"');
+    report('  created_at: ' + row.created_at);
+  });
+}
