@@ -248,7 +248,7 @@ function renderDetailEstTab() {
   estEl.appendChild(newEstBtn);
 }
 
-function openDetail(name, id) {
+function openDetail(name, id, forceTab) {
   var customers = loadCustomers();
   var c = id ? customers.find(function(x) { return x.id === id; }) : customers.find(function(x) { return x.clientName === name; });
   if (!c) return;
@@ -305,7 +305,7 @@ function openDetail(name, id) {
   // 탭 초기화
   var estBodyEl = document.getElementById('detail-est-body');
   if (estBodyEl) { estBodyEl.innerHTML = ''; }
-  switchDetailTab('info');
+  switchDetailTab(forceTab || 'info');
   // 견적 건수 배지
   var all = []; try { all = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
   var estCnt = all.filter(function(e){ return e.clientName === c.clientName; }).length;
