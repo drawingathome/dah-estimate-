@@ -338,7 +338,6 @@ function dahDiagnoseSchema() {
   }
 
   report('');
-  report('');
   report('=== surveys 테이블 진단 시작 ===');
   var surveyPeekRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/surveys?select=*&limit=1', {
     method: 'get',
