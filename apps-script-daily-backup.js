@@ -222,3 +222,101 @@ function dahRestoreDrill() {
 
   report('=== ✅ 복구 드릴 전체 성공 — 백업 파일로 실제 복구가 가능함을 확인했습니다 ===');
 }
+
+/**
+ * ══════════════════════════════════════════════════
+ * 실제 데이터베이스 종합 진단 (dahDiagnoseSchema)
+ * ══════════════════════════════════════════════════
+ *
+ * 2026-07-17 발견: customers 테이블에 저장할 때마다 "record new has no
+ * field updated_at" 오류로 모든 PATCH(수정)가 실패하고 있었음 - DB 트리거가
+ * updated_at 컬럼을 기대하는데 실제로는 없었던 것. 이 문제는 앱 코드가 아니라
+ * 실제 운영 데이터베이스의 스키마/트리거 문제라서, 코드만 봐서는 절대 못 잡고
+ * 실제 DB에 진짜로 요청을 보내봐야만 발견할 수 있었다.
+ *
+ * 이 함수는 앱 코드가 customers/estimates 테이블에 실제로 쓰려고 하는 모든
+ * 필드를 하나하나 진짜 저장/수정해보면서, 어떤 필드가 실패하는지 전부 찾아냄.
+ * 진짜 데이터는 전혀 안 건드리고, 테스트용 임시 레코드만 만들었다가 끝나면 지움.
+ *
+ * 실행: 함수 목록에서 dahDiagnoseSchema 선택 후 실행. 결과는 실행 로그에서 확인.
+ */
+function dahDiagnoseSchema() {
+  var log = [];
+  function report(msg) { log.push(msg); Logger.log(msg); }
+
+  report('=== customers 테이블 진단 시작 ===');
+  var testName = '스키마진단테스트_' + new Date().getTime();
+
+  // 1) 앱이 실제로 저장하는 모든 필드를 포함해 INSERT 시도
+  var fullRow = {
+    client_name: testName, phone: '010-0000-0000', addr: '테스트주소', space: '거실',
+    price: 100000, performance_revenue: 90000, staff_name: '마스터', stage: '상담',
+    date: '2026-01-01', measure_date: '2026-01-02', install_date: '2026-01-03', memo: '진단테스트',
+    visit_count: 1,
+    deposit_amount: 50000, deposit_date: '2026-01-01', deposit_method: '카드', deposit_receipt: false,
+    balance_amount: 50000, balance_date: '2026-01-01', balance_method: '현금', balance_receipt: false,
+    order_status: { fabric: true }, branch: '반포점', is_archived: false
+  };
+  var insertRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers', {
+    method: 'post',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    payload: JSON.stringify(fullRow),
+    muteHttpExceptions: true
+  });
+  if (insertRes.getResponseCode() >= 300) {
+    report('❌ customers INSERT 실패 (필드가 하나라도 문제면 전체가 실패함) — HTTP ' + insertRes.getResponseCode());
+    report('   상세: ' + insertRes.getContentText());
+    report('   → 위 오류 메시지의 필드명을 확인해서, 해당 컬럼을 테이블에 추가하거나 코드에서 제외해야 합니다');
+  } else {
+    report('✅ customers INSERT 성공 — 모든 필드가 정상적으로 테이블에 존재합니다');
+    var createdId = JSON.parse(insertRes.getContentText())[0].id;
+
+    // 2) PATCH(수정) 시도 — 어제 발견된 updated_at 트리거 문제가 여기서 재현됐었음
+    var patchRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?id=eq.' + createdId, {
+      method: 'patch',
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      payload: JSON.stringify({ stage: '계약금', deposit_amount: 60000 }),
+      muteHttpExceptions: true
+    });
+    if (patchRes.getResponseCode() >= 300) {
+      report('❌ customers PATCH(수정) 실패 — HTTP ' + patchRes.getResponseCode());
+      report('   상세: ' + patchRes.getContentText());
+      report('   → 이 오류가 나면 앱에서 계약금 저장/단계변경/발주체크 등 모든 "수정" 기능이 실제로는 서버에 반영 안 되고 있는 것입니다');
+    } else {
+      report('✅ customers PATCH(수정) 성공 — 계약금 저장, 단계변경 등이 정상적으로 서버에 반영됩니다');
+    }
+
+    // 정리
+    UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?id=eq.' + createdId, {
+      method: 'delete', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Prefer': 'return=minimal' }, muteHttpExceptions: true
+    });
+    report('   (테스트 레코드 정리 완료)');
+  }
+
+  report('');
+  report('=== estimates 테이블 진단 시작 ===');
+  var estRow = {
+    customer_name: testName, price: 100000, performance_revenue: 90000, staff_name: '마스터',
+    status: 'ga', data: { phone: '010-0000-0000', space: '거실', product: '테스트원단', confirmedAt: null, branch: '반포점', client_id: null }
+  };
+  var estInsertRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates', {
+    method: 'post',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    payload: JSON.stringify(estRow),
+    muteHttpExceptions: true
+  });
+  if (estInsertRes.getResponseCode() >= 300) {
+    report('❌ estimates INSERT 실패 — HTTP ' + estInsertRes.getResponseCode());
+    report('   상세: ' + estInsertRes.getContentText());
+  } else {
+    report('✅ estimates INSERT 성공');
+    var estId = JSON.parse(estInsertRes.getContentText())[0].id;
+    UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?id=eq.' + estId, {
+      method: 'delete', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Prefer': 'return=minimal' }, muteHttpExceptions: true
+    });
+    report('   (테스트 레코드 정리 완료)');
+  }
+
+  report('');
+  report('=== 진단 완료 — 위 결과를 그대로 복사해서 알려주세요 ===');
+}
