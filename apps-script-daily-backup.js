@@ -244,6 +244,25 @@ function dahDiagnoseSchema() {
   var log = [];
   function report(msg) { log.push(msg); Logger.log(msg); }
 
+  // 0) estimates 테이블의 실제 컬럼이 뭔지 먼저 확인 (기존 레코드 1건 조회)
+  report('=== estimates 테이블 실제 컬럼 확인 ===');
+  var peekRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?select=*&limit=1', {
+    method: 'get',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY },
+    muteHttpExceptions: true
+  });
+  if (peekRes.getResponseCode() >= 300) {
+    report('❌ estimates 테이블 조회 실패 — HTTP ' + peekRes.getResponseCode() + ' ' + peekRes.getContentText());
+  } else {
+    var peekData = JSON.parse(peekRes.getContentText());
+    if (peekData.length === 0) {
+      report('⚠️ estimates 테이블에 기존 레코드가 하나도 없어서, 실제 컬럼 목록을 조회로는 못 봅니다');
+    } else {
+      report('✅ estimates 테이블의 실제 컬럼 목록: ' + Object.keys(peekData[0]).join(', '));
+    }
+  }
+  report('');
+
   report('=== customers 테이블 진단 시작 ===');
   var testName = '스키마진단테스트_' + new Date().getTime();
 
