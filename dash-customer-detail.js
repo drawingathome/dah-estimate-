@@ -109,23 +109,24 @@ function _openAlimtalkPreview(meta, key, c, initialMsg) {
   });
 }
 
+var DETAIL_TABS = ['info', 'pay', 'alim', 'order', 'est'];
 function switchDetailTab(tab) {
-  var bodyEl  = document.getElementById('detail-body');
-  var estEl   = document.getElementById('detail-est-body');
-  var tabInfo = document.getElementById('dtab-info');
-  var tabEst  = document.getElementById('dtab-est');
-  if (!bodyEl || !estEl) return;
-  if (tab === 'info') {
-    bodyEl.style.display = ''; estEl.style.display = 'none';
-    if (tabInfo) { tabInfo.style.borderBottom='2px solid #282828'; tabInfo.style.color='#282828'; tabInfo.style.fontWeight='700'; }
-    if (tabEst)  { tabEst.style.borderBottom='2px solid transparent'; tabEst.style.color='var(--light)'; tabEst.style.fontWeight='600'; }
-  } else {
-    bodyEl.style.display = 'none'; estEl.style.display = '';
-    if (tabInfo) { tabInfo.style.borderBottom='2px solid transparent'; tabInfo.style.color='var(--light)'; tabInfo.style.fontWeight='600'; }
-    if (tabEst)  { tabEst.style.borderBottom='2px solid #282828'; tabEst.style.color='#282828'; tabEst.style.fontWeight='700'; }
-    // 견적 이력 렌더
-    renderDetailEstTab();
-  }
+  var panels = { info:'detail-body', pay:'detail-pay-body', alim:'detail-alim-body', order:'detail-order-body', est:'detail-est-body' };
+  var tabBtns = { info:'dtab-info', pay:'dtab-pay', alim:'dtab-alim', order:'dtab-order', est:'dtab-est' };
+  var anyMissing = DETAIL_TABS.some(function(t){ return !document.getElementById(panels[t]); });
+  if (anyMissing) return;
+  DETAIL_TABS.forEach(function(t) {
+    var panel = document.getElementById(panels[t]);
+    var btn = document.getElementById(tabBtns[t]);
+    var isActive = (t === tab);
+    panel.style.display = isActive ? '' : 'none';
+    if (btn) {
+      btn.style.borderBottom = isActive ? '2px solid #282828' : '2px solid transparent';
+      btn.style.color = isActive ? '#282828' : 'var(--light)';
+      btn.style.fontWeight = isActive ? '700' : '600';
+    }
+  });
+  if (tab === 'est') renderDetailEstTab();
 }
 
 function renderDetailEstTab() {
@@ -298,9 +299,12 @@ function openDetail(name, id) {
 
   var body = document.getElementById('detail-body');
   body.innerHTML = '';
+  var payBody = document.getElementById('detail-pay-body'); if (payBody) payBody.innerHTML = '';
+  var alimBody = document.getElementById('detail-alim-body'); if (alimBody) alimBody.innerHTML = '';
+  var orderBody = document.getElementById('detail-order-body'); if (orderBody) orderBody.innerHTML = '';
   // 탭 초기화
   var estBodyEl = document.getElementById('detail-est-body');
-  if (estBodyEl) { estBodyEl.innerHTML = ''; estBodyEl.style.display = 'none'; }
+  if (estBodyEl) { estBodyEl.innerHTML = ''; }
   switchDetailTab('info');
   // 견적 건수 배지
   var all = []; try { all = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
@@ -549,7 +553,7 @@ function openDetail(name, id) {
     balSec.appendChild(balForm); balSec.appendChild(balSave);
   }
   paySec.appendChild(balSec);
-  body.appendChild(paySec);
+  if (payBody) payBody.appendChild(paySec);
 
   
   var alimSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
@@ -599,7 +603,7 @@ function openDetail(name, id) {
     }
     alimSec.appendChild(row);
   });
-  body.appendChild(alimSec);
+  if (alimBody) alimBody.appendChild(alimSec);
 
   // 고객 정보 섹션
   var infoSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
@@ -720,7 +724,7 @@ function openDetail(name, id) {
       row.appendChild(checkbox);
       orderCard.appendChild(row);
     });
-    body.appendChild(orderCard);
+    if (orderBody) orderBody.appendChild(orderCard);
   }
 
   var bottomBtns = [btn('flex:2;padding:11px;background:#282828;color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:12px;letter-spacing:0.2px', '닫기', closeDetail)];

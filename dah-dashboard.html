@@ -4,24 +4,24 @@
 <head>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
-<link rel="stylesheet" href="/dash-styles.css?v=202607170900">
+<link rel="stylesheet" href="/dash-styles.css?v=202607171000">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script src="/dash-utils.js?v=202607170900"></script>
-<script src="/dash-api.js?v=202607170900"></script>
-<script src="/dash-supabase-auth.js?v=202607170900"></script>
-<script src="/dash-realtime.js?v=202607170900"></script>
-<script src="/dash-ui-helpers.js?v=202607170900"></script>
-<script src="/dash-core.js?v=202607170900"></script>
-<script src="/dash-render.js?v=202607170900"></script>
-<script src="/dash-memo.js?v=202607170900"></script>
-<script src="/dash-chart.js?v=202607170900"></script>
-<script src="/dash-calendar.js?v=202607170900"></script>
-<script src="/dash-kanban.js?v=202607170900"></script>
-<script src="/dash-customer-detail.js?v=202607170900"></script>
-<script src="/dash-auth.js?v=202607170900"></script>
-<script src="/dash-settings.js?v=202607170900"></script>
-<script src="/dash-export.js?v=202607170900"></script>
-<script src="/dash-search.js?v=202607170900"></script>
+<script src="/dash-utils.js?v=202607171000"></script>
+<script src="/dash-api.js?v=202607171000"></script>
+<script src="/dash-supabase-auth.js?v=202607171000"></script>
+<script src="/dash-realtime.js?v=202607171000"></script>
+<script src="/dash-ui-helpers.js?v=202607171000"></script>
+<script src="/dash-core.js?v=202607171000"></script>
+<script src="/dash-render.js?v=202607171000"></script>
+<script src="/dash-memo.js?v=202607171000"></script>
+<script src="/dash-chart.js?v=202607171000"></script>
+<script src="/dash-calendar.js?v=202607171000"></script>
+<script src="/dash-kanban.js?v=202607171000"></script>
+<script src="/dash-customer-detail.js?v=202607171000"></script>
+<script src="/dash-auth.js?v=202607171000"></script>
+<script src="/dash-settings.js?v=202607171000"></script>
+<script src="/dash-export.js?v=202607171000"></script>
+<script src="/dash-search.js?v=202607171000"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>드로잉엣홈 대시보드</title>
@@ -373,13 +373,19 @@
       </div>
       <div id="detail-summary-row" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px"></div>
       <div id="detail-info-bar" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:#EEE6DC;margin:0 -16px;overflow:hidden"></div>
-      <div style="display:flex;margin-top:4px">
-        <button id="dtab-info" onclick="switchDetailTab('info')" style="flex:1;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid #282828;color:#282828;font-weight:700">정보</button>
-        <button id="dtab-est" onclick="switchDetailTab('est')" style="flex:1;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--light);font-weight:600">견적 이력 <span id="dtab-est-cnt" style="color:#F06E2D;font-weight:700"></span></button>
+      <div style="display:flex;margin-top:4px;overflow-x:auto">
+        <button id="dtab-info" onclick="switchDetailTab('info')" style="flex:1;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid #282828;color:#282828;font-weight:700;white-space:nowrap">정보</button>
+        <button id="dtab-pay" onclick="switchDetailTab('pay')" style="flex:1;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--light);font-weight:600;white-space:nowrap">결제</button>
+        <button id="dtab-alim" onclick="switchDetailTab('alim')" style="flex:1;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--light);font-weight:600;white-space:nowrap">소통</button>
+        <button id="dtab-order" onclick="switchDetailTab('order')" style="flex:1;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--light);font-weight:600;white-space:nowrap">발주</button>
+        <button id="dtab-est" onclick="switchDetailTab('est')" style="flex:1;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--light);font-weight:600;white-space:nowrap">이력 <span id="dtab-est-cnt" style="color:#F06E2D;font-weight:700"></span></button>
       </div>
     </div>
     <div style="max-height:65vh;overflow-y:auto">
       <div id="detail-body" style="padding:16px"></div>
+      <div id="detail-pay-body" style="padding:16px;display:none"></div>
+      <div id="detail-alim-body" style="padding:16px;display:none"></div>
+      <div id="detail-order-body" style="padding:16px;display:none"></div>
       <div id="detail-est-body" style="padding:16px;display:none"></div>
     </div>
   </div>
