@@ -376,7 +376,12 @@ function openDetail(name, id) {
   });
 
   
-  var extraBtns = div('display:flex;gap:6px;margin-top:6px', []);
+  var moreToggle = btn('width:100%;padding:7px;margin-top:6px;border:none;background:none;font-size:11px;color:var(--sub);font-family:inherit;cursor:pointer;text-align:center', '⋯ 더보기 (취소·노쇼 처리)', function(){
+    var wrap = document.getElementById('stage-more-actions');
+    if (wrap) wrap.style.display = wrap.style.display === 'none' ? '' : 'none';
+  });
+  var extraBtns = div('display:none;gap:6px;margin-top:4px', []);
+  extraBtns.id = 'stage-more-actions';
   var cancelBtn = btn('flex:1;padding:6px;border:1px solid #EEE6DC;background:#fff;font-size:11px;color:#6B6B6B;font-family:inherit;cursor:pointer;border-radius:4px','취소 처리', function(){
     if(confirm(c.clientName+'님을 취소 처리할까요? 자동 발송이 중단됩니다.')) {
       changeStage('취소'); closeDetail();
@@ -390,6 +395,7 @@ function openDetail(name, id) {
   extraBtns.appendChild(cancelBtn);
   extraBtns.appendChild(noshowBtn);
   stageSec.appendChild(stageBar);
+  stageSec.appendChild(moreToggle);
   stageSec.appendChild(extraBtns);
   body.appendChild(stageSec);
 
@@ -399,18 +405,36 @@ function openDetail(name, id) {
   if (manualKeys.length > 0) {
     var todoSec = div('margin-bottom:14px;padding:12px;background:#FAF7F5;border:1.5px solid #282828;border-radius:12px', []);
     todoSec.appendChild(el('div', {style:'font-size:12px;font-weight:700;color:#282828;letter-spacing:1.5px;margin-bottom:8px', text:'지금 해야 할 일'}));
-    manualKeys.forEach(function(key) {
-      var meta = ALIM_META[key]; if(!meta) return;
-      var row = div('display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#fff;border:1px solid #EEE6DC;border-radius:4px;margin-bottom:5px', [
-        div('', [
-          el('span', {style:'font-size:12px;font-weight:700;color:#282828;display:block', text:meta.label}),
-          el('span', {style:'font-size:11px;color:var(--sub)', text:meta.desc})
-        ]),
-        el('span', {style:'font-size:12px;font-weight:600;color:#282828;background:#fff;border:1px solid #282828;padding:5px 12px;border-radius:12px;flex-shrink:0', text:'발송'})
+    // 가장 급한 것 1개만 크게 보여주고, 나머지는 "N건 더 남음" 뒤에 접어둠(눌러야만 펼쳐짐)
+    var firstKey = manualKeys[0];
+    var firstMeta = ALIM_META[firstKey];
+    var primaryBtn = btn('width:100%;padding:11px;background:#282828;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:6px', firstMeta.label + ' 발송하기', function(){ sendAlimtalk(firstKey); });
+    todoSec.appendChild(primaryBtn);
+    if (manualKeys.length > 1) {
+      var moreRow = div('display:flex;align-items:center;justify-content:space-between', [
+        el('span', {style:'font-size:11px;color:var(--sub)', text:(manualKeys.length-1)+'건 더 남음'}),
+        btn('font-size:11px;color:#282828;background:none;border:1px solid #EEE6DC;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:inherit', '전체 보기', function(){
+          var wrap = document.getElementById('todo-rest');
+          if (wrap) wrap.style.display = wrap.style.display === 'none' ? '' : 'none';
+        })
       ]);
-      (function(k){ row.addEventListener('click', function(){ sendAlimtalk(k); }); })(key);
-      todoSec.appendChild(row);
-    });
+      todoSec.appendChild(moreRow);
+      var restWrap = div('display:none;margin-top:8px', []);
+      restWrap.id = 'todo-rest';
+      manualKeys.slice(1).forEach(function(key) {
+        var meta = ALIM_META[key]; if(!meta) return;
+        var row = div('display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#fff;border:1px solid #EEE6DC;border-radius:4px;margin-bottom:5px', [
+          div('', [
+            el('span', {style:'font-size:12px;font-weight:700;color:#282828;display:block', text:meta.label}),
+            el('span', {style:'font-size:11px;color:var(--sub)', text:meta.desc})
+          ]),
+          el('span', {style:'font-size:12px;font-weight:600;color:#282828;background:#fff;border:1px solid #282828;padding:5px 12px;border-radius:12px;flex-shrink:0', text:'발송'})
+        ]);
+        (function(k){ row.addEventListener('click', function(){ sendAlimtalk(k); }); })(key);
+        restWrap.appendChild(row);
+      });
+      todoSec.appendChild(restWrap);
+    }
     body.appendChild(todoSec);
   }
 
