@@ -417,7 +417,7 @@ function dahCleanupTestData() {
           method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
           payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
         });
-        report((patchRes.getResponseCode() < 300 ? '✅ 보관처리됨: ' : '❌ 처리실패: ') + t.name + ' — ' + row[t.nameCol]);
+        report((patchRes.getResponseCode() < 300 ? '✅ 보관처리됨: ' : '❌ 처리실패(HTTP ' + patchRes.getResponseCode() + '): ') + t.name + ' — ' + row[t.nameCol] + (patchRes.getResponseCode() >= 300 ? ' | 상세: ' + patchRes.getContentText() : ''));
       });
     });
   });
