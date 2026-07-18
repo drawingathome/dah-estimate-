@@ -117,40 +117,34 @@ function renderHome(skipServerFetch) {
         '</div>',
       '</div>',
 
-      // 2. 목표 달성률 바
-      '<div id="sec-goal" style="padding:12px 20px;background:#fff;border-bottom:1px solid var(--border)">',
-        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">',
-          '<span style="font-size:12px;font-weight:600;color:var(--sub)">이달 목표 달성률</span>',
-          '<span style="font-size:12px;font-weight:700;color:' + (isOver ? '#2E7D32' : 'var(--terra)') + '">' + pct + '% <span style="font-size:12px;font-weight:400;color:var(--sub)">/ ' + goalWan.toLocaleString() + '만원</span></span>',
+      // 2. 목표 및 이달 현황 (목표달성률 + KPI 3분할을 하나의 섹션으로 병합)
+      '<div id="sec-goal" style="background:#fff;border-bottom:1px solid var(--border)">',
+        '<div style="padding:12px 20px">',
+          '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">',
+            '<span style="font-size:12px;font-weight:600;color:var(--sub)">이달 목표 달성률</span>',
+            '<span style="font-size:12px;font-weight:700;color:' + (isOver ? '#2E7D32' : 'var(--terra)') + '">' + pct + '% <span style="font-size:12px;font-weight:400;color:var(--sub)">/ ' + goalWan.toLocaleString() + '만원</span></span>',
+          '</div>',
+          '<div style="background:var(--ivory2);border-radius:6px;height:8px;overflow:hidden">',
+            '<div style="height:100%;border-radius:6px;width:' + pct + '%;background:' + (isOver ? 'linear-gradient(90deg,#2E7D32,#43A047)' : 'linear-gradient(90deg,var(--terra),var(--orange))') + ';transition:width 0.8s cubic-bezier(0.4,0,0.2,1)"></div>',
+          '</div>',
         '</div>',
-        '<div style="background:var(--ivory2);border-radius:6px;height:8px;overflow:hidden">',
-          '<div style="height:100%;border-radius:6px;width:' + pct + '%;background:' + (isOver ? 'linear-gradient(90deg,#2E7D32,#43A047)' : 'linear-gradient(90deg,var(--terra),var(--orange))') + ';transition:width 0.8s cubic-bezier(0.4,0,0.2,1)"></div>',
-        '</div>',
-      '</div>',
-
-      // 3. KPI 카드 3개
-      '<div id="sec-kpi" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-bottom:1px solid var(--border)">',
-        // 이달 매출
-        '<div style="background:#fff;padding:16px 20px">',
-          '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">이달 매출</div>',
-          '<div style="font-size:36px;font-weight:700;color:var(--dark);line-height:1">' + Math.round(thisMonthRev/10000).toLocaleString() + '<span style="font-size:13px;font-weight:400;color:var(--sub)">만원</span></div>',
-          '<div style="font-size:11px;color:var(--terra);margin-top:4px;font-weight:600">' + pct + '% 달성</div>',
-        '</div>',
-        // 진행 건수
-        '<div style="background:#fff;padding:16px 20px">',
-          '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">진행 건수</div>',
-          '<div style="font-size:36px;font-weight:700;color:var(--dark);line-height:1">' + thisMonthContracts + '<span style="font-size:13px;font-weight:400;color:var(--sub)">건</span></div>',
-          '<div style="font-size:11px;color:var(--sub);margin-top:4px">계약~시공 진행중</div>',
-        '</div>',
-        // 전체 고객
-        '<div style="background:#fff;padding:16px 20px">',
-          '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">전체 고객</div>',
-          '<div style="font-size:36px;font-weight:700;color:var(--dark);line-height:1">' + customers.length + '<span style="font-size:13px;font-weight:400;color:var(--sub)">명</span></div>',
-          '<div style="font-size:11px;color:var(--sub);margin-top:4px">누적 등록 고객</div>',
+        '<div id="sec-kpi" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-top:1px solid var(--border)">',
+          '<div style="background:#fff;padding:14px 20px">',
+            '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">이달 매출</div>',
+            '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + Math.round(thisMonthRev/10000).toLocaleString() + '<span style="font-size:12px;font-weight:400;color:var(--sub)">만원</span></div>',
+          '</div>',
+          '<div style="background:#fff;padding:14px 20px">',
+            '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">진행 건수</div>',
+            '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + thisMonthContracts + '<span style="font-size:12px;font-weight:400;color:var(--sub)">건</span></div>',
+          '</div>',
+          '<div style="background:#fff;padding:14px 20px">',
+            '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">전체 고객</div>',
+            '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + customers.length + '<span style="font-size:12px;font-weight:400;color:var(--sub)">명</span></div>',
+          '</div>',
         '</div>',
       '</div>',
 
-      // 4. 스테이지 현황 칩
+      // 3. 스테이지 현황 칩
       '<div id="sec-stage" style="background:#fff;padding:14px 20px 12px;border-bottom:1px solid var(--border)">',
         '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:10px;text-transform:uppercase">진행 현황</div>',
         '<div style="display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px">',
@@ -169,8 +163,8 @@ function renderHome(skipServerFetch) {
         '</div>',
       '</div>',
 
-      // 5. 처리 필요
-      '<div id="sec-todo" style="background:#fff;border-bottom:1px solid var(--border);min-height:80px">',
+      // 4. 지금 챙길 것 (처리필요 + 오늘/내일 일정을 하나로 병합)
+      '<div id="sec-todo" style="background:#fff;border-bottom:1px solid var(--border)">',
         '<div style="padding:14px 20px 10px;display:flex;align-items:center;justify-content:space-between">',
           '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">처리 필요</span>',
           needAction.length > 0 ? '<span style="font-size:12px;font-weight:700;color:var(--terra);background:var(--bg-org);padding:2px 8px;border-radius:10px">' + needAction.length + '건</span>' : '',
@@ -180,7 +174,6 @@ function renderHome(skipServerFetch) {
           : needAction.slice(0,8).map(function(item) {
               var c = item.customer;
               var stageColor = (c.stage === '계약금' || c.stage === '실측') ? 'var(--terra)' : 'var(--dark)';
-              // 이유에 맞는 탭으로 바로 이동 - 계약금/잔금 처리면 결제탭, 발주필요면 발주탭
               var targetTab = 'info';
               var reasonStr = item.reasons.join(' ');
               if (reasonStr.indexOf('계약금 처리') >= 0 || reasonStr.indexOf('잔금 처리') >= 0) targetTab = 'pay';
@@ -194,11 +187,7 @@ function renderHome(skipServerFetch) {
                 '<span style="font-size:11px;font-weight:700;color:' + stageColor + ';flex-shrink:0;text-align:right">' + item.reasons.map(escHtml).join('<br>') + '</span>' +
               '</div>';
             }).join(''),
-      '</div>',
-
-      // 6. 오늘/내일 일정
-      '<div id="sec-schedule" style="background:#fff;border-bottom:1px solid var(--border);min-height:80px">',
-        '<div style="padding:14px 20px 10px">',
+        '<div style="padding:12px 20px 10px;border-top:1px solid var(--border);margin-top:2px">',
           '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">오늘/내일 일정</span>',
         '</div>',
         (todaySchedule.length === 0 && tomorrowSchedule.length === 0)
@@ -231,6 +220,7 @@ function renderHome(skipServerFetch) {
             ).join(''),
       '</div>',
 
+      // 5. 담당자별 성과 (마스터 전용, 기본 접힘 — 펼쳐진 섹션 개수에 안 잡히도록)
       (function() {
         if (!currentUser || currentUser.role !== 'master') return '';
         var byStaff = {};
@@ -238,7 +228,6 @@ function renderHome(skipServerFetch) {
           var s = c.staffName || '미지정';
           if (!byStaff[s]) byStaff[s] = { count: 0, rev: 0 };
           byStaff[s].count++;
-          // 담당자별 성과도 목표매출과 동일하게 순수 실적매출 기준(시공서비스 금액 제외)
           byStaff[s].rev += (Number(c.performanceRevenue) || 0);
         });
         var rows = Object.keys(byStaff).map(function(s) {
@@ -253,9 +242,11 @@ function renderHome(skipServerFetch) {
         }).join('');
         return rows ? (
           '<div id="sec-staff-perf" style="background:#fff;border-bottom:1px solid var(--border)">' +
-            '<div style="padding:14px 20px 10px">' +
+            '<div style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleHomeAccordion(this)">' +
               '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">담당자별 성과</span>' +
-            '</div>' + rows +
+              '<span style="font-size:11px;color:#B0A99F">▸</span>' +
+            '</div>' +
+            '<div style="display:none">' + rows + '</div>' +
           '</div>'
         ) : '';
       })(),
@@ -270,11 +261,9 @@ function renderHome(skipServerFetch) {
     // 빠른이동 내비게이션 (PC 전용)
     if (typeof renderQuickNav === 'function') {
       var homeNavItems = [
-        {id:'sec-goal', label:'목표'},
-        {id:'sec-kpi', label:'현황요약'},
+        {id:'sec-goal', label:'목표·현황'},
         {id:'sec-stage', label:'진행현황'},
-        {id:'sec-todo', label:'처리필요'},
-        {id:'sec-schedule', label:'일정'}
+        {id:'sec-todo', label:'지금챙길것'}
       ];
       if (currentUser && currentUser.role === 'master' && document.getElementById('sec-staff-perf')) {
         homeNavItems.push({id:'sec-staff-perf', label:'담당자성과'});
@@ -288,5 +277,15 @@ function renderHome(skipServerFetch) {
   } else {
     loadCustomersAsync(doRender);
   }
+}
+
+// 홈 화면 접이식 섹션(담당자별 성과 등) 토글 — 헤더 클릭시 바로 아래 형제 요소를 펼침/접음
+function toggleHomeAccordion(headerEl) {
+  var body = headerEl.nextElementSibling;
+  if (!body) return;
+  var arrow = headerEl.querySelector('span:last-child');
+  var isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (arrow) arrow.textContent = isOpen ? '▸' : '▾';
 }
 
