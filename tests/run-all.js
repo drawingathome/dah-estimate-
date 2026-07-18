@@ -43,6 +43,7 @@ if (/dah-dashboard/.test(target)) {
 
 if (/dah-estimate/.test(target)) {
   scripts.push(['estimate-calc-check.js', [target]]);
+  scripts.push(['estimate-validation-check.js', [target]]);
   scripts.push(['multi-device-sync-check.js', [target]]);
   scripts.push(['estimate-customer-link-check.js', [target]]);
 }
