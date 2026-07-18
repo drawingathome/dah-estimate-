@@ -48,12 +48,12 @@ function renderCal() {
   var sumBar = document.getElementById('cal-summary-bar');
   if (sumBar) {
     sumBar.innerHTML = [
-      {label:'매출', value: Math.round(monRev/10000).toLocaleString()+'만원', color:'#282828'},
+      {label:'매출', value: Math.round(monRev/10000).toLocaleString()+'만원', color:'var(--dark)'},
       {label:'계약', value: monC.length+'건', color:'#2E7D6B'},
-      {label:'시공', value: monInstall+'건', color:'#F06E2D'}
+      {label:'시공', value: monInstall+'건', color:'var(--terra)'}
     ].map(function(item, i) {
       return '<div style="flex:1;text-align:center;' + (i>0?'':'') + '">' +
-        '<div style="font-size:11px;color:#9A9490;letter-spacing:0.5px;margin-bottom:3px">' + item.label + '</div>' +
+        '<div style="font-size:11px;color:var(--sub);letter-spacing:0.5px;margin-bottom:3px">' + item.label + '</div>' +
         '<div style="font-size:11px;font-weight:800;color:' + item.color + ';letter-spacing:-0.5px">' + item.value + '</div>' +
         '</div>';
     }).join('');
@@ -84,8 +84,8 @@ function renderCal() {
   var totalCells = Math.ceil((firstDay + daysInMonth) / 7) * 7;
 
   // 이벤트 타입 색상
-  var TYPE_DOT_COLOR = {상담:'#282828', 실측:'#A67C52', 시공:'#F06E2D'};
-  var TYPE_TEXT_COLOR = {상담:'#282828', 실측:'#A67C52', 시공:'#F06E2D'};
+  var TYPE_DOT_COLOR = {상담:'var(--dark)', 실측:'#A67C52', 시공:'var(--terra)'};
+  var TYPE_TEXT_COLOR = {상담:'var(--dark)', 실측:'#A67C52', 시공:'var(--terra)'};
 
   for (var i = 0; i < totalCells; i++) {
     var cell = document.createElement('div');
@@ -125,14 +125,14 @@ function renderCal() {
           'width:100%;font-size:12px;font-weight:700;line-height:1.3;' +
           'padding:1px 3px;border-radius:var(--r-btn);margin-top:1px;' +
           'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
-          'background:' + (TYPE_DOT_COLOR[item.type]||'#282828') + '22;' +
-          'color:' + (TYPE_TEXT_COLOR[item.type]||'#282828');
+          'background:' + (TYPE_DOT_COLOR[item.type]||'var(--dark)') + '22;' +
+          'color:' + (TYPE_TEXT_COLOR[item.type]||'var(--dark)');
         evLabel.textContent = item.type + ' ' + item.name;
         cell.appendChild(evLabel);
       });
       if (mainItems.length > 2) {
         var moreEl = document.createElement('div');
-        moreEl.style.cssText = 'font-size:11px;color:#9A9490;margin-top:1px;text-align:center';
+        moreEl.style.cssText = 'font-size:11px;color:var(--sub);margin-top:1px;text-align:center';
         moreEl.textContent = '+' + (mainItems.length - 2);
         cell.appendChild(moreEl);
       }
@@ -142,7 +142,7 @@ function renderCal() {
         dotsWrap.style.cssText = 'display:flex;gap:2px;justify-content:center;margin-top:2px;flex-wrap:wrap';
         dotItems.slice(0,3).forEach(function(){
           var dot = document.createElement('div');
-          dot.style.cssText = 'width:4px;height:4px;border-radius:50%;background:#9A9490;flex-shrink:0';
+          dot.style.cssText = 'width:4px;height:4px;border-radius:50%;background:var(--sub);flex-shrink:0';
           dotsWrap.appendChild(dot);
         });
         cell.appendChild(dotsWrap);
@@ -204,7 +204,7 @@ function renderCalList(customers, selectedDate) {
 
   var DOW3 = ['일','월','화','수','목','금','토'];
   var TYPE_BG_COLOR = {실측:'#F3EFF8', 시공:'#FFF3EE', 상담:'#F5F5F5'};
-  var TYPE_FONT_COLOR = {실측:'#A67C52', 시공:'#F06E2D', 상담:'#9A9490'};
+  var TYPE_FONT_COLOR = {실측:'#A67C52', 시공:'var(--terra)', 상담:'var(--sub)'};
 
   events.forEach(function(ev) {
     var isMain = ev.type !== '상담'; // 실측/시공이 메인
@@ -232,12 +232,12 @@ function renderCalList(customers, selectedDate) {
     right.style.cssText = 'text-align:right;flex-shrink:0';
     var badge = document.createElement('div');
     badge.className = 'cal-ev-badge';
-    badge.style.cssText += ';background:' + (TYPE_BG_COLOR[ev.type]||'#F5F2EE') + ';color:' + (TYPE_FONT_COLOR[ev.type]||'#282828') + ';font-size:'+(isMain?'12px':'11px');
+    badge.style.cssText += ';background:' + (TYPE_BG_COLOR[ev.type]||'#F5F2EE') + ';color:' + (TYPE_FONT_COLOR[ev.type]||'var(--dark)') + ';font-size:'+(isMain?'12px':'11px');
     badge.textContent = ev.type;
     right.appendChild(badge);
     if (isMain && ev.price > 0) {
       var priceEl = document.createElement('div');
-      priceEl.style.cssText = 'font-size:12px;font-weight:700;color:#282828;margin-top:4px';
+      priceEl.style.cssText = 'font-size:12px;font-weight:700;color:var(--dark);margin-top:4px';
       priceEl.textContent = Math.round(ev.price/10000).toLocaleString() + '만원';
       right.appendChild(priceEl);
     }

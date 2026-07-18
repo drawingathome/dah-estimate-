@@ -4,7 +4,7 @@
    dash-customer-detail.js에서 분리됨 (2026-07-17). */
 
 function renderAlimSection(c, alimBody) {
-  var alimSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
+  var alimSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
   alimSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px', text:'알림톡 발송 현황'}));
 
   var allKeys = ['t01_reservation','t02_reminder','t03_estimate','t31_deposit','t04_followup',
@@ -24,16 +24,16 @@ function renderAlimSection(c, alimBody) {
     var meta = ALIM_META[key]; if(!meta) return;
     var sent = sentMap[key];
     var isRecommended = recommendedKeys.indexOf(key) >= 0;
-    var tagColor = meta.tag==='자동'?'#6B6B6B':(meta.tag==='선택'?'var(--light)':'#282828');
+    var tagColor = meta.tag==='자동'?'#6B6B6B':(meta.tag==='선택'?'var(--light)':'var(--dark)');
 
     var row = div(
-      'display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid #FAF7F5',
+      'display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--ivory1)',
       []
     );
     var left = div('flex:1;min-width:0', []);
     var labelRow = div('display:flex;align-items:center;gap:6px', []);
-    labelRow.appendChild(el('span', {style:'font-size:11px;font-weight:'+(isRecommended?'700':'500')+';color:'+(isRecommended?'#282828':'#6B6B6B'), text:meta.label}));
-    labelRow.appendChild(el('span', {style:'font-size:11px;color:'+tagColor+';background:#FAF7F5;padding:2px 5px;border-radius:var(--r-btn)', text:meta.tag}));
+    labelRow.appendChild(el('span', {style:'font-size:11px;font-weight:'+(isRecommended?'700':'500')+';color:'+(isRecommended?'var(--dark)':'#6B6B6B'), text:meta.label}));
+    labelRow.appendChild(el('span', {style:'font-size:11px;color:'+tagColor+';background:var(--ivory1);padding:2px 5px;border-radius:var(--r-btn)', text:meta.tag}));
     left.appendChild(labelRow);
     if (sent) {
       left.appendChild(el('span', {style:'font-size:11px;color:var(--sub)', text:'✅ '+sent.date+' '+sent.time}));
@@ -41,7 +41,7 @@ function renderAlimSection(c, alimBody) {
     row.appendChild(left);
 
     if (!sent) {
-      var sendBtn = el('span', {style:'font-size:12px;font-weight:700;color:'+(isRecommended?'#282828':'var(--light)')+';cursor:pointer;flex-shrink:0;padding:4px 8px;border:1px solid '+(isRecommended?'#282828':'#EEE6DC')+';border-radius:10px', text:'발송'});
+      var sendBtn = el('span', {style:'font-size:12px;font-weight:700;color:'+(isRecommended?'var(--dark)':'var(--light)')+';cursor:pointer;flex-shrink:0;padding:4px 8px;border:1px solid '+(isRecommended?'var(--dark)':'var(--border)')+';border-radius:10px', text:'발송'});
       (function(k){ sendBtn.addEventListener('click', function(){ sendAlimtalk(k); }); })(key);
       row.appendChild(sendBtn);
     } else {

@@ -5,11 +5,11 @@
    ══════════════════════════════════════════════════ */
 
 var PIPE_STAGES = [
-  { key:'계약금', dot:'#F06E2D' },
-  { key:'실측',   dot:'#F06E2D' },
-  { key:'잔금',   dot:'#282828' },
-  { key:'시공',   dot:'#282828' },
-  { key:'완료',   dot:'#EEE6DC' },
+  { key:'계약금', dot:'var(--terra)' },
+  { key:'실측',   dot:'var(--terra)' },
+  { key:'잔금',   dot:'var(--dark)' },
+  { key:'시공',   dot:'var(--dark)' },
+  { key:'완료',   dot:'var(--border)' },
 ];
 
 var STAGE_ORDER = ['상담','계약금','실측','잔금','시공','완료'];

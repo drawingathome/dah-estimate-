@@ -244,7 +244,7 @@ function renderHome(skipServerFetch) {
           '<div id="sec-staff-perf" style="background:#fff;border-bottom:1px solid var(--border)">' +
             '<div style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleHomeAccordion(this)">' +
               '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">담당자별 성과</span>' +
-              '<span style="font-size:11px;color:#B0A99F">▸</span>' +
+              '<span style="font-size:11px;color:var(--sub)">▸</span>' +
             '</div>' +
             '<div style="display:none">' + rows + '</div>' +
           '</div>'

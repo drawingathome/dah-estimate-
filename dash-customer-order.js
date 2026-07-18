@@ -35,8 +35,8 @@ function renderOrderSection(c, orderBody) {
       span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:10px', '발주 현황')
     ]);
     orderItems.forEach(function(item) {
-      var row = div('display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid #EEE6DC');
-      var label = span('font-size:12px;color:#282828', item.label);
+      var row = div('display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)');
+      var label = span('font-size:12px;color:var(--dark)', item.label);
       var checkbox = el('input', { type: 'checkbox' });
       checkbox.checked = !!orderStatus[item.key];
       checkbox.style.cssText = 'width:20px;height:20px;cursor:pointer';

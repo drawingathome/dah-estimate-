@@ -21,7 +21,7 @@ function loginAs(who) {
     _mobHd.style.display = (window.innerWidth <= 640) ? 'flex' : 'none';
   }
   var _mobNav = document.getElementById('mob-bottom-nav');
-  if (_mobNav) { _mobNav.style.cssText = (window.innerWidth <= 640 ? 'display:flex' : 'display:none') + ' !important; position:fixed !important; bottom:0 !important; width:100% !important; z-index:200 !important; background:#fff !important; border-top:1px solid #EEE6DC !important;'; }
+  if (_mobNav) { _mobNav.style.cssText = (window.innerWidth <= 640 ? 'display:flex' : 'display:none') + ' !important; position:fixed !important; bottom:0 !important; width:100% !important; z-index:200 !important; background:#fff !important; border-top:1px solid var(--border) !important;'; }
   var _mobFab = document.querySelector('.mob-fab');
   if (_mobFab) { _mobFab.style.display = (window.innerWidth <= 640) ? 'flex' : 'none'; }
   applyPermissions();
@@ -78,6 +78,6 @@ function renderStaffLoginList() {
     list.appendChild(btn);
   }
   if (filtered.length === 0) {
-    list.innerHTML = '<div style="grid-column:1/-1;text-align:center;font-size:13px;color:#B0A99F;padding:8px 0">설정에서 담당자를 추가해주세요</div>';
+    list.innerHTML = '<div style="grid-column:1/-1;text-align:center;font-size:13px;color:var(--sub);padding:8px 0">설정에서 담당자를 추가해주세요</div>';
   }
 }

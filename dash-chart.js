@@ -57,7 +57,7 @@ function drawBarChart(containerId, data, options) {
     var x = pad.left + i * ((W - pad.left - pad.right) / data.length) + 2;
     var barH = Math.max(2, (d.value / maxVal) * (H - pad.top - pad.bottom));
     var y = H - pad.bottom - barH;
-    var color = d.active ? '#F06E2D' : '#EEE6DC';
+    var color = d.active ? 'var(--terra)' : 'var(--border)';
     
     svg += '<g class="chart-bar-group">';
     svg += '<rect class="chart-bar-rect" x="' + x + '" y="' + y + '" width="' + barW + '" height="' + barH + '" rx="2" fill="' + color + '"/>';
@@ -177,7 +177,7 @@ function renderChart(period) {
     var line = document.createElementNS(svgNS,'line');
     line.setAttribute('x1',PAD); line.setAttribute('x2',W-PAD);
     line.setAttribute('y1',y); line.setAttribute('y2',y);
-    line.setAttribute('stroke','#EEE6DC'); line.setAttribute('stroke-width','1');
+    line.setAttribute('stroke','var(--border)'); line.setAttribute('stroke-width','1');
     svg.appendChild(line);
     var lbl = document.createElementNS(svgNS,'text');
     lbl.setAttribute('x',PAD-4); lbl.setAttribute('y',y+4);
@@ -194,7 +194,7 @@ function renderChart(period) {
   
   var path = document.createElementNS(svgNS,'path');
   path.setAttribute('d',pathD);
-  path.setAttribute('fill','none'); path.setAttribute('stroke','#282828');
+  path.setAttribute('fill','none'); path.setAttribute('stroke','var(--dark)');
   path.setAttribute('stroke-width','2'); path.setAttribute('stroke-linejoin','round');
   svg.appendChild(path);
   
@@ -202,15 +202,15 @@ function renderChart(period) {
     var circle = document.createElementNS(svgNS,'circle');
     circle.setAttribute('cx',p.x); circle.setAttribute('cy',p.y);
     circle.setAttribute('r', p.isCurrent?5:3);
-    circle.setAttribute('fill', p.isCurrent?'#282828':'#fff');
-    circle.setAttribute('stroke','#282828'); circle.setAttribute('stroke-width','2');
+    circle.setAttribute('fill', p.isCurrent?'var(--dark)':'#fff');
+    circle.setAttribute('stroke','var(--dark)'); circle.setAttribute('stroke-width','2');
     svg.appendChild(circle);
     
     if(p.isCurrent && p.rev>0){
       var val = document.createElementNS(svgNS,'text');
       val.setAttribute('x',p.x); val.setAttribute('y',p.y-10);
       val.setAttribute('text-anchor','middle'); val.setAttribute('font-size','11');
-      val.setAttribute('font-weight','700'); val.setAttribute('fill','#282828');
+      val.setAttribute('font-weight','700'); val.setAttribute('fill','var(--dark)');
       val.textContent = Math.round(p.rev/10000)+'만';
       svg.appendChild(val);
     }
@@ -218,7 +218,7 @@ function renderChart(period) {
     var lbl2 = document.createElementNS(svgNS,'text');
     lbl2.setAttribute('x',p.x); lbl2.setAttribute('y',H-8);
     lbl2.setAttribute('text-anchor','middle'); lbl2.setAttribute('font-size','10');
-    lbl2.setAttribute('fill', p.isCurrent?'#282828':'var(--light)');
+    lbl2.setAttribute('fill', p.isCurrent?'var(--dark)':'var(--light)');
     lbl2.setAttribute('font-weight', p.isCurrent?'700':'400');
     lbl2.textContent = p.label;
     svg.appendChild(lbl2);
@@ -240,8 +240,8 @@ function renderChart(period) {
   var curCons = currentCustomers.length;
   var conv = curCons > 0 ? Math.round(curCon/curCons*100) : 0;
 
-  [['전체 매출',fmt(curRev),'#282828'],['성과매출',fmt(curPerf),'#282828'],['상담 건수',curCons+'건','#282828'],['계약 건수',curCon+'건','#282828'],['전환율',conv+'%','#282828']].forEach(function(row) {
-    sumEl.appendChild(div('display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #EEE6DC', [span('font-size:11px;color:#282828', row[0]), span('font-size:12px;font-weight:700;color:'+row[2], row[1])]));
+  [['전체 매출',fmt(curRev),'var(--dark)'],['성과매출',fmt(curPerf),'var(--dark)'],['상담 건수',curCons+'건','var(--dark)'],['계약 건수',curCon+'건','var(--dark)'],['전환율',conv+'%','var(--dark)']].forEach(function(row) {
+    sumEl.appendChild(div('display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)', [span('font-size:11px;color:var(--dark)', row[0]), span('font-size:12px;font-weight:700;color:'+row[2], row[1])]));
   });
 }
 

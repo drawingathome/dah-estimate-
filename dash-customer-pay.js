@@ -19,7 +19,7 @@ function renderPaySection(c, payBody) {
     balanceReceipt: c.balanceReceipt || (function(){ try{ return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}').balanceReceipt||false; }catch(e){return false;} })()
   };
 
-  var paySec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
+  var paySec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
   paySec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'결제 관리'}));
 
   function savePayData(pd) {
@@ -56,17 +56,17 @@ function renderPaySection(c, payBody) {
 
   // 선금 섹션
   var depositDone = payData.depositAmount && payData.depositDate;
-  var depSec = div('margin-bottom:8px;padding:12px;background:'+(depositDone?'#F5FAF5':'#FAF7F5')+';border-radius:12px;border:1px solid '+(depositDone?'#B0D4B0':'#EEE6DC'), []);
+  var depSec = div('margin-bottom:8px;padding:12px;background:'+(depositDone?'#F5FAF5':'var(--ivory1)')+';border-radius:12px;border:1px solid '+(depositDone?'#B0D4B0':'var(--border)'), []);
   var depTitle = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:8px', [
-    el('div', {style:'font-size:12px;font-weight:700;color:#282828', text:(depositDone?'✔ ':'')+'선금 (계약금)'}),
+    el('div', {style:'font-size:12px;font-weight:700;color:var(--dark)', text:(depositDone?'✔ ':'')+'선금 (계약금)'}),
   ]);
   if (depositDone) {
-    var depEditBtn = btn('font-size:11px;color:#6B6B6B;background:none;border:1px solid #EEE6DC;border-radius:10px;padding:2px 8px;cursor:pointer;font-family:inherit', '수정', function(){
+    var depEditBtn = btn('font-size:11px;color:#6B6B6B;background:none;border:1px solid var(--border);border-radius:10px;padding:2px 8px;cursor:pointer;font-family:inherit', '수정', function(){
       depSec.innerHTML = ''; buildDepForm();
     });
     depTitle.appendChild(depEditBtn);
     depSec.appendChild(depTitle);
-    depSec.appendChild(el('div', {style:'font-size:11px;font-weight:800;color:#282828;letter-spacing:-0.5px;margin-bottom:2px', text: Number(payData.depositAmount).toLocaleString()+'원'}));
+    depSec.appendChild(el('div', {style:'font-size:11px;font-weight:800;color:var(--dark);letter-spacing:-0.5px;margin-bottom:2px', text: Number(payData.depositAmount).toLocaleString()+'원'}));
     depSec.appendChild(el('div', {style:'font-size:11px;color:#6B6B6B', text: (payData.depositMethod||'') + ' · ' + (payData.depositDate||'') + (payData.depositReceipt?' · 현금영수증 ✔':'')}));
   } else {
     depSec.appendChild(depTitle);
@@ -74,17 +74,17 @@ function renderPaySection(c, payBody) {
   }
   function buildDepForm() {
     var depForm = div('display:flex;flex-wrap:wrap;gap:6px', []);
-    var depMethod = el('select', {style:'flex:1;min-width:80px;padding:6px;border:1px solid #EEE6DC;border-radius:12px;font-size:11px;font-family:inherit;background:#fff'});
+    var depMethod = el('select', {style:'flex:1;min-width:80px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit;background:#fff'});
     ['카드','현금'].forEach(function(m){ var o=el('option',{}); o.value=m; o.textContent=m; depMethod.appendChild(o); });
     if (payData.depositMethod) depMethod.value = payData.depositMethod;
-    var depAmt = el('input', {type:'text', placeholder:'선금 금액', style:'flex:2;min-width:90px;padding:6px;border:1px solid #EEE6DC;border-radius:12px;font-size:11px;font-family:inherit'});
+    var depAmt = el('input', {type:'text', placeholder:'선금 금액', style:'flex:2;min-width:90px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit'});
     if (payData.depositAmount) depAmt.value = Number(payData.depositAmount).toLocaleString();
-    var depDate = el('input', {type:'date', style:'flex:2;min-width:110px;padding:6px;border:1px solid #EEE6DC;border-radius:12px;font-size:11px;font-family:inherit'});
+    var depDate = el('input', {type:'date', style:'flex:2;min-width:110px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit'});
     if (payData.depositDate) depDate.value = payData.depositDate;
     var depReceipt = el('label', {style:'display:flex;align-items:center;gap:4px;font-size:11px;color:#6B6B6B;cursor:pointer;width:100%'});
     var depReceiptChk = el('input', {type:'checkbox'}); depReceiptChk.checked = payData.depositReceipt||false;
     depReceipt.appendChild(depReceiptChk); depReceipt.appendChild(document.createTextNode('현금영수증'));
-    var depSave = btn('width:100%;padding:9px;background:#282828;color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px', '선금 저장', function(){
+    var depSave = btn('width:100%;padding:9px;background:var(--dark);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px', '선금 저장', function(){
       var inputAmt = Number(depAmt.value.replace(/[^0-9]/g,'')) || 0;
       if (inputAmt > 0 && !depDate.value) {
         alert('입금 날짜를 입력해주세요.');
@@ -115,17 +115,17 @@ function renderPaySection(c, payBody) {
 
   // 잔금 섹션
   var balanceDone = payData.balanceAmount && payData.balanceDate;
-  var balSec = div('padding:12px;background:'+(balanceDone?'#F5FAF5':'#FAF7F5')+';border-radius:12px;border:1px solid '+(balanceDone?'#B0D4B0':'#EEE6DC'), []);
+  var balSec = div('padding:12px;background:'+(balanceDone?'#F5FAF5':'var(--ivory1)')+';border-radius:12px;border:1px solid '+(balanceDone?'#B0D4B0':'var(--border)'), []);
   var balTitle = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:8px', [
-    el('div', {style:'font-size:12px;font-weight:700;color:#282828', text:(balanceDone?'✔ ':'')+'잔금'})
+    el('div', {style:'font-size:12px;font-weight:700;color:var(--dark)', text:(balanceDone?'✔ ':'')+'잔금'})
   ]);
   if (balanceDone) {
-    var balEditBtn = btn('font-size:11px;color:#6B6B6B;background:none;border:1px solid #EEE6DC;border-radius:10px;padding:2px 8px;cursor:pointer;font-family:inherit', '수정', function(){
+    var balEditBtn = btn('font-size:11px;color:#6B6B6B;background:none;border:1px solid var(--border);border-radius:10px;padding:2px 8px;cursor:pointer;font-family:inherit', '수정', function(){
       balSec.innerHTML = ''; buildBalForm();
     });
     balTitle.appendChild(balEditBtn);
     balSec.appendChild(balTitle);
-    balSec.appendChild(el('div', {style:'font-size:11px;font-weight:800;color:#282828;letter-spacing:-0.5px;margin-bottom:2px', text: Number(payData.balanceAmount).toLocaleString()+'원'}));
+    balSec.appendChild(el('div', {style:'font-size:11px;font-weight:800;color:var(--dark);letter-spacing:-0.5px;margin-bottom:2px', text: Number(payData.balanceAmount).toLocaleString()+'원'}));
     balSec.appendChild(el('div', {style:'font-size:11px;color:#6B6B6B', text: (payData.balanceMethod||'') + ' · ' + (payData.balanceDate||'') + (payData.balanceReceipt?' · 현금영수증 ✔':'')}));
   } else {
     balSec.appendChild(balTitle);
@@ -133,17 +133,17 @@ function renderPaySection(c, payBody) {
   }
   function buildBalForm() {
     var balForm = div('display:flex;flex-wrap:wrap;gap:6px', []);
-    var balMethod = el('select', {style:'flex:1;min-width:80px;padding:6px;border:1px solid #EEE6DC;border-radius:12px;font-size:11px;font-family:inherit;background:#fff'});
+    var balMethod = el('select', {style:'flex:1;min-width:80px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit;background:#fff'});
     ['카드','현금'].forEach(function(m){ var o=el('option',{}); o.value=m; o.textContent=m; balMethod.appendChild(o); });
     if (payData.balanceMethod) balMethod.value = payData.balanceMethod;
-    var balAmt = el('input', {type:'text', placeholder:'잔금 금액', style:'flex:2;min-width:90px;padding:6px;border:1px solid #EEE6DC;border-radius:12px;font-size:11px;font-family:inherit'});
+    var balAmt = el('input', {type:'text', placeholder:'잔금 금액', style:'flex:2;min-width:90px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit'});
     if (payData.balanceAmount) balAmt.value = Number(payData.balanceAmount).toLocaleString();
-    var balDate = el('input', {type:'date', style:'flex:2;min-width:110px;padding:6px;border:1px solid #EEE6DC;border-radius:12px;font-size:11px;font-family:inherit'});
+    var balDate = el('input', {type:'date', style:'flex:2;min-width:110px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit'});
     if (payData.balanceDate) balDate.value = payData.balanceDate;
     var balReceipt = el('label', {style:'display:flex;align-items:center;gap:4px;font-size:11px;color:#6B6B6B;cursor:pointer;width:100%'});
     var balReceiptChk = el('input', {type:'checkbox'}); balReceiptChk.checked = payData.balanceReceipt||false;
     balReceipt.appendChild(balReceiptChk); balReceipt.appendChild(document.createTextNode('현금영수증'));
-    var balSave = btn('width:100%;padding:9px;background:#282828;color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px', '잔금 저장', function(){
+    var balSave = btn('width:100%;padding:9px;background:var(--dark);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px', '잔금 저장', function(){
       var inputAmt = Number(balAmt.value.replace(/[^0-9]/g,'')) || 0;
       if (inputAmt > 0 && !balDate.value) {
         alert('입금 날짜를 입력해주세요.');

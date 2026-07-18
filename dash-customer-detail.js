@@ -34,7 +34,7 @@ var ALIM_META = {
   t14_noshow:         {label:'14. 노쇼 재예약 안내',   desc:'선택 · 노쇼 처리 후',      tag:'선택', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n지난 방문 일정에 연락이 닿지 않아 안내드려요. 편하실 때 다시 예약 부탁드립니다!'}
 };
 
-var STAGE_COLORS = {상담:'#282828',계약금:'#F06E2D',실측:'#A67C52',잔금:'#2E7D6B',시공:'#C0392B',완료:'var(--light)'};
+var STAGE_COLORS = {상담:'var(--dark)',계약금:'var(--terra)',실측:'#A67C52',잔금:'#2E7D6B',시공:'#C0392B',완료:'var(--light)'};
 var STAGE_BG = {상담:'#EEF2F7',계약금:'#FFF3EE',실측:'#F3EFF8',잔금:'#EEF5F2',시공:'#FDECEA',완료:'#F5F2EE'};
 var STAGE_NUM = {상담:1,계약금:2,실측:3,잔금:4,시공:5,완료:6};
 var STAGE_ACTIVE = {상담:true,계약금:true,실측:true,잔금:true,시공:true,완료:false};
@@ -71,11 +71,11 @@ function _openAlimtalkPreview(meta, key, c, initialMsg) {
   box.style.cssText = 'background:#fff;border-radius:12px;padding:20px;width:360px;max-width:90vw;max-height:85vh;overflow-y:auto';
   box.innerHTML =
     '<div style="font-size:12px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:4px">' + escHtml(meta.tag) + ' · ' + escHtml(meta.desc) + '</div>' +
-    '<div style="font-size:15px;font-weight:700;color:#282828;margin-bottom:12px">' + escHtml(meta.label) + '</div>' +
-    '<textarea id="alimtalk-msg-textarea" style="width:100%;min-height:140px;padding:10px;border:1.5px solid #EEE6DC;border-radius:10px;font-size:12px;font-family:inherit;box-sizing:border-box;resize:vertical;outline:none"></textarea>' +
+    '<div style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:12px">' + escHtml(meta.label) + '</div>' +
+    '<textarea id="alimtalk-msg-textarea" style="width:100%;min-height:140px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:12px;font-family:inherit;box-sizing:border-box;resize:vertical;outline:none"></textarea>' +
     '<div style="display:flex;gap:8px;margin-top:12px">' +
-      '<button id="alimtalk-cancel-btn" style="flex:1;padding:11px;background:#fff;border:1px solid #EEE6DC;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;color:#282828">취소</button>' +
-      '<button id="alimtalk-send-btn" style="flex:2;padding:11px;background:#282828;color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">발송</button>' +
+      '<button id="alimtalk-cancel-btn" style="flex:1;padding:11px;background:#fff;border:1px solid var(--border);border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;color:var(--dark)">취소</button>' +
+      '<button id="alimtalk-send-btn" style="flex:2;padding:11px;background:var(--dark);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">발송</button>' +
     '</div>';
   overlay.appendChild(box);
   document.body.appendChild(overlay);
@@ -121,8 +121,8 @@ function switchDetailTab(tab) {
     var isActive = (t === tab);
     panel.style.display = isActive ? '' : 'none';
     if (btn) {
-      btn.style.borderBottom = isActive ? '2px solid #282828' : '2px solid transparent';
-      btn.style.color = isActive ? '#282828' : 'var(--light)';
+      btn.style.borderBottom = isActive ? '2px solid var(--dark)' : '2px solid transparent';
+      btn.style.color = isActive ? 'var(--dark)' : 'var(--light)';
       btn.style.fontWeight = isActive ? '700' : '600';
     }
   });
@@ -147,21 +147,21 @@ function renderDetailEstTab() {
     estEl.innerHTML = '<div class="empty-state"><span class="empty-state-emoji">📋</span>' +
       '<div class="empty-state-title">저장된 견적서가 없습니다</div>' +
       '<div class="empty-state-desc">견적서 앱에서 작성 후 저장하면 여기에 표시됩니다</div>' +
-      '<button onclick="openEstimate(\''+currentDetailName+'\')" style="margin-top:14px;padding:10px 20px;background:#282828;color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">+ 견적서 작성하기</button></div>';
+      '<button onclick="openEstimate(\''+currentDetailName+'\')" style="margin-top:14px;padding:10px 20px;background:var(--dark);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">+ 견적서 작성하기</button></div>';
     return;
   }
 
   var CONTRACT_KO    = {pending:'가견적', contracted:'✅ 계약됨', rejected:'미계약'};
   var CONTRACT_BG    = {pending:'#F5F2EE', contracted:'#EEF5F2', rejected:'#FDECEA'};
-  var CONTRACT_COLOR = {pending:'#9A9490', contracted:'#2E7D6B', rejected:'#C0392B'};
+  var CONTRACT_COLOR = {pending:'var(--sub)', contracted:'#2E7D6B', rejected:'#C0392B'};
   var STATUS_KO      = {ga:'가견적서', final:'최종견적서'};
 
   // 재구매 여부 - 계약된 견적이 2개 이상이면 재구매
   var contractedCount = ests.filter(function(e){ return e.contractStatus === 'contracted'; }).length;
   if (contractedCount > 1) {
-    var rebuyBanner = div('background:#FFF3EE;border:1px solid #F06E2D;border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px', [
+    var rebuyBanner = div('background:#FFF3EE;border:1px solid var(--terra);border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px', [
       el('span', {style:'font-size:11px', text:'🔄'}),
-      el('span', {style:'font-size:12px;font-weight:700;color:#F06E2D', text:'재구매 고객 — 계약 '+contractedCount+'회'})
+      el('span', {style:'font-size:12px;font-weight:700;color:var(--terra)', text:'재구매 고객 — 계약 '+contractedCount+'회'})
     ]);
     estEl.appendChild(rebuyBanner);
   }
@@ -172,29 +172,29 @@ function renderDetailEstTab() {
     var isContracted = cs === 'contracted';
 
     var card = div(
-      'border:1px solid '+(isContracted?'#B0D4B0':'#EEE6DC')+';border-radius:12px;padding:14px;margin-bottom:10px;' +
+      'border:1px solid '+(isContracted?'#B0D4B0':'var(--border)')+';border-radius:12px;padding:14px;margin-bottom:10px;' +
       'background:'+(isContracted?'#FAFFF9':'#fff'),
       []
     );
 
     // 순번 표시 (최신순)
-    var orderBadge = el('span', {style:'font-size:11px;color:#9A9490', text: (i+1)+'번째 견적'});
+    var orderBadge = el('span', {style:'font-size:11px;color:var(--sub)', text: (i+1)+'번째 견적'});
 
     // 상단: 번호 + 유형 + 계약상태 + 확정여부
     var topItems = [
       orderBadge,
-      el('span', {style:'font-size:11px;font-weight:800;color:#282828', text: e.no||'—'}),
-      el('span', {style:'font-size:12px;font-weight:700;padding:2px 6px;border-radius:6px;background:'+(isFinal?'#282828':'#F5F2EE')+';color:'+(isFinal?'#fff':'#9A9490'), text: STATUS_KO[e.status]||'가견적서'})
+      el('span', {style:'font-size:11px;font-weight:800;color:var(--dark)', text: e.no||'—'}),
+      el('span', {style:'font-size:12px;font-weight:700;padding:2px 6px;border-radius:6px;background:'+(isFinal?'var(--dark)':'#F5F2EE')+';color:'+(isFinal?'#fff':'var(--sub)'), text: STATUS_KO[e.status]||'가견적서'})
     ];
     if (e.confirmedAt) {
-      topItems.push(el('span', {style:'font-size:11px;font-weight:700;color:#fff;background:#282828;padding:2px 8px;border-radius:20px', text:'✓ 확정'}));
+      topItems.push(el('span', {style:'font-size:11px;font-weight:700;color:#fff;background:var(--dark);padding:2px 8px;border-radius:20px', text:'✓ 확정'}));
     }
     topItems.push(el('span', {style:'margin-left:auto;font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px;background:'+CONTRACT_BG[cs]+';color:'+CONTRACT_COLOR[cs], text: CONTRACT_KO[cs]}));
     var top = div('display:flex;align-items:center;gap:6px;margin-bottom:10px', topItems);
 
     // 금액 크게
     var priceRow = div('margin-bottom:8px', [
-      el('div', {style:'font-size:22px;font-weight:900;color:#282828;letter-spacing:-1px', text: (Number(e.price)||0).toLocaleString()+'원'}),
+      el('div', {style:'font-size:22px;font-weight:900;color:var(--dark);letter-spacing:-1px', text: (Number(e.price)||0).toLocaleString()+'원'}),
     ]);
 
     // 상세 정보 그리드
@@ -207,8 +207,8 @@ function renderDetailEstTab() {
     ];
     infoItems.forEach(function(item){
       infoGrid.appendChild(div('background:#F5F2EE;border-radius:12px;padding:8px 10px', [
-        el('div', {style:'font-size:11px;color:#9A9490;margin-bottom:2px', text:item.label}),
-        el('div', {style:'font-size:12px;font-weight:700;color:#282828;white-space:nowrap;overflow:hidden;text-overflow:ellipsis', text:item.value})
+        el('div', {style:'font-size:11px;color:var(--sub);margin-bottom:2px', text:item.label}),
+        el('div', {style:'font-size:12px;font-weight:700;color:var(--dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis', text:item.value})
       ]));
     });
 
@@ -228,7 +228,7 @@ function renderDetailEstTab() {
         .then(function(){ showToast('카카오톡에 붙여넣기 하세요 🙂'); })
         .catch(function(){ showToast('복사됐습니다'); });
     });
-    var openBtn = btn('flex:1;padding:9px 0;background:#282828;color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '📄 견적서 앱', function(){
+    var openBtn = btn('flex:1;padding:9px 0;background:var(--dark);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '📄 견적서 앱', function(){
       openEstimate(currentDetailName);
     });
     actions.appendChild(kakaoBtn);
@@ -243,7 +243,7 @@ function renderDetailEstTab() {
   });
 
   // 새 견적 버튼
-  var newEstBtn = btn('width:100%;padding:12px;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px',
+  var newEstBtn = btn('width:100%;padding:12px;background:#F5F2EE;color:var(--dark);border:1px solid var(--border);border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px',
     '+ 새 견적서 작성', function(){ openEstimate(currentDetailName); });
   estEl.appendChild(newEstBtn);
 }
@@ -281,12 +281,12 @@ function openDetail(name, id, forceTab) {
   if (c.visitCount > 1) {
     var reBadge = document.createElement('span');
     reBadge.textContent = '재구매 '+c.visitCount+'회';
-    reBadge.style.cssText = 'font-size:11px;font-weight:700;color:#F06E2D';
+    reBadge.style.cssText = 'font-size:11px;font-weight:700;color:var(--terra)';
     summaryRow.appendChild(reBadge);
   }
   if (c.date) {
     var diff = daysDiff(c.date);
-    if (c.visitCount > 1) { var dot = document.createElement('span'); dot.textContent = '·'; dot.style.color = '#EEE6DC'; summaryRow.appendChild(dot); }
+    if (c.visitCount > 1) { var dot = document.createElement('span'); dot.textContent = '·'; dot.style.color = 'var(--border)'; summaryRow.appendChild(dot); }
     var diffBadge = document.createElement('span');
     diffBadge.textContent = diff === 0 ? '오늘 상담' : diff > 0 ? diff+'일 경과' : Math.abs(diff)+'일 후';
     summaryRow.appendChild(diffBadge);
@@ -305,14 +305,14 @@ function openDetail(name, id, forceTab) {
       var itemLabel = latestEst.itemCount ? ('총 '+latestEst.itemCount+'개 품목') : '';
       curEstBox.innerHTML =
         '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">' +
-          '<span style="width:6px;height:6px;border-radius:50%;background:#F06E2D;display:inline-block"></span>' +
+          '<span style="width:6px;height:6px;border-radius:50%;background:var(--terra);display:inline-block"></span>' +
           '<span style="font-size:10px;font-weight:600;color:#B85A2E;letter-spacing:0.3px">진행중인 견적' + (itemLabel ? ' · '+itemLabel : '') + '</span>' +
         '</div>' +
-        '<div style="font-size:22px;font-weight:700;color:#282828;letter-spacing:-0.5px">' + amt + '</div>';
+        '<div style="font-size:22px;font-weight:700;color:var(--dark);letter-spacing:-0.5px">' + amt + '</div>';
       curEstBox.style.display = 'block';
     } else {
       curEstBox.innerHTML =
-        '<div style="font-size:12px;color:#9A9490">아직 저장된 견적서가 없어요</div>';
+        '<div style="font-size:12px;color:var(--sub)">아직 저장된 견적서가 없어요</div>';
       curEstBox.style.display = 'block';
     }
   }
@@ -321,11 +321,11 @@ function openDetail(name, id, forceTab) {
   var infoBar = document.getElementById('detail-info-bar');
   infoBar.innerHTML = '';
   var phoneHtml = c.phone
-    ? '<a href="tel:' + c.phone.replace(/[^0-9]/g,'') + '" style="color:#282828;text-decoration:none;font-weight:500">' + c.phone + '</a>'
-    : '<span style="color:#9A9490">연락처 없음</span>';
+    ? '<a href="tel:' + c.phone.replace(/[^0-9]/g,'') + '" style="color:var(--dark);text-decoration:none;font-weight:500">' + c.phone + '</a>'
+    : '<span style="color:var(--sub)">연락처 없음</span>';
   infoBar.innerHTML =
     '<span>' + phoneHtml + '</span>' +
-    '<span style="color:#EEE6DC">|</span>' +
+    '<span style="color:var(--border)">|</span>' +
     '<span>' + (c.staffName || '마스터') + '</span>';
 
   var body = document.getElementById('detail-body');
@@ -355,13 +355,13 @@ function openDetail(name, id, forceTab) {
 
   
   var stageNum = STAGE_NUM[c.stage] || 1;
-  var stageSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
+  var stageSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
   var stageTop = div('display:flex;justify-content:space-between;align-items:center;margin-bottom:10px', [
     div('display:flex;align-items:center;gap:8px', [
-      el('span', {style:'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#282828;color:#fff;font-size:12px;font-weight:700;flex-shrink:0', text:stageNum}),
-      el('span', {style:'font-size:12px;font-weight:700;color:#282828;letter-spacing:-0.3px', text:c.stage + ' 단계'})
+      el('span', {style:'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--dark);color:#fff;font-size:12px;font-weight:700;flex-shrink:0', text:stageNum}),
+      el('span', {style:'font-size:12px;font-weight:700;color:var(--dark);letter-spacing:-0.3px', text:c.stage + ' 단계'})
     ]),
-    isMaster ? btn('font-size:11px;color:#282828;background:#FAF7F5;border:1px solid #EEE6DC;padding:5px 10px;cursor:pointer;font-family:inherit;border-radius:10px', '수정', function(){ closeDetail(); openAdd(c.clientName); }) : el('span',{})
+    isMaster ? btn('font-size:11px;color:var(--dark);background:var(--ivory1);border:1px solid var(--border);padding:5px 10px;cursor:pointer;font-family:inherit;border-radius:10px', '수정', function(){ closeDetail(); openAdd(c.clientName); }) : el('span',{})
   ]);
   stageSec.appendChild(stageTop);
 
@@ -371,7 +371,7 @@ function openDetail(name, id, forceTab) {
     var done = STAGE_NUM[s] <= STAGE_NUM[c.stage];
     var cur  = s === c.stage;
     var seg  = div(
-      'flex:1;height:3px;border-radius:2px;background:'+(done?'#282828':'#EEE6DC'),[]
+      'flex:1;height:3px;border-radius:2px;background:'+(done?'var(--dark)':'var(--border)'),[]
     );
     progressBar.appendChild(seg);
   });
@@ -385,12 +385,12 @@ function openDetail(name, id, forceTab) {
   var stageActionRow = div('display:flex;gap:8px;align-items:center', []);
   if (nextStage) {
     stageActionRow.appendChild(btn(
-      'flex:1;padding:11px;border:none;background:#282828;color:#fff;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px',
+      'flex:1;padding:11px;border:none;background:var(--dark);color:#fff;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px',
       nextStage + '으로 진행 →', function(){ changeStage(nextStage); }
     ));
   }
   var toggleStageBtn = btn(
-    'padding:11px 14px;border:none;background:#FAF7F5;color:#8A8378;font-size:12px;font-family:inherit;cursor:pointer;border-radius:10px;white-space:nowrap',
+    'padding:11px 14px;border:none;background:var(--ivory1);color:#8A8378;font-size:12px;font-family:inherit;cursor:pointer;border-radius:10px;white-space:nowrap',
     '다른 단계', function(){
       var wrap = document.getElementById('stage-manual-select');
       if (wrap) wrap.style.display = wrap.style.display === 'none' ? '' : 'none';
@@ -408,8 +408,8 @@ function openDetail(name, id, forceTab) {
     var on = s === c.stage;
     var num = STAGE_NUM[s] || 1;
     var pill = btn(
-      'padding:5px 11px;border:1px solid '+(on?'#282828':'#EEE6DC')+';'+
-      'background:'+(on?'#282828':'#fff')+';color:'+(on?'#fff':'#6B6B6B')+';'+
+      'padding:5px 11px;border:1px solid '+(on?'var(--dark)':'var(--border)')+';'+
+      'background:'+(on?'var(--dark)':'#fff')+';color:'+(on?'#fff':'#6B6B6B')+';'+
       'font-size:11px;font-weight:'+(on?'700':'400')+';font-family:inherit;cursor:pointer;border-radius:10px',
       num+'. '+s, function(){ changeStage(s); }
     );
@@ -423,12 +423,12 @@ function openDetail(name, id, forceTab) {
   });
   var extraBtns = div('display:none;gap:6px;margin-top:4px', []);
   extraBtns.id = 'stage-more-actions';
-  var cancelBtn = btn('flex:1;padding:9px;border:1px solid #EEE6DC;background:#fff;font-size:11px;color:#6B6B6B;font-family:inherit;cursor:pointer;border-radius:10px','취소 처리', function(){
+  var cancelBtn = btn('flex:1;padding:9px;border:1px solid var(--border);background:#fff;font-size:11px;color:#6B6B6B;font-family:inherit;cursor:pointer;border-radius:10px','취소 처리', function(){
     if(confirm(c.clientName+'님을 취소 처리할까요? 자동 발송이 중단됩니다.')) {
       changeStage('취소'); closeDetail();
     }
   });
-  var noshowBtn = btn('flex:1;padding:9px;border:1px solid #EEE6DC;background:#fff;font-size:11px;color:#6B6B6B;font-family:inherit;cursor:pointer;border-radius:10px','노쇼 처리', function(){
+  var noshowBtn = btn('flex:1;padding:9px;border:1px solid var(--border);background:#fff;font-size:11px;color:#6B6B6B;font-family:inherit;cursor:pointer;border-radius:10px','노쇼 처리', function(){
     if(confirm(c.clientName+'님을 노쇼 처리할까요?')) {
       changeStage('노쇼'); closeDetail();
     }
@@ -444,17 +444,17 @@ function openDetail(name, id, forceTab) {
   var todoKeys = STAGE_ALIM[c.stage] || [];
   var manualKeys = todoKeys.filter(function(k){ return ALIM_META[k] && ALIM_META[k].tag === '수동'; });
   if (manualKeys.length > 0) {
-    var todoSec = div('margin-bottom:14px;padding:12px;background:#FAF7F5;border:1.5px solid #282828;border-radius:12px', []);
-    todoSec.appendChild(el('div', {style:'font-size:12px;font-weight:700;color:#282828;letter-spacing:1.5px;margin-bottom:8px', text:'지금 해야 할 일'}));
+    var todoSec = div('margin-bottom:14px;padding:12px;background:var(--ivory1);border:1.5px solid var(--dark);border-radius:12px', []);
+    todoSec.appendChild(el('div', {style:'font-size:12px;font-weight:700;color:var(--dark);letter-spacing:1.5px;margin-bottom:8px', text:'지금 해야 할 일'}));
     // 가장 급한 것 1개만 크게 보여주고, 나머지는 "N건 더 남음" 뒤에 접어둠(눌러야만 펼쳐짐)
     var firstKey = manualKeys[0];
     var firstMeta = ALIM_META[firstKey];
-    var primaryBtn = btn('width:100%;padding:11px;background:#282828;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:6px', firstMeta.label + ' 발송하기', function(){ sendAlimtalk(firstKey); });
+    var primaryBtn = btn('width:100%;padding:11px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:6px', firstMeta.label + ' 발송하기', function(){ sendAlimtalk(firstKey); });
     todoSec.appendChild(primaryBtn);
     if (manualKeys.length > 1) {
       var moreRow = div('display:flex;align-items:center;justify-content:space-between', [
         el('span', {style:'font-size:11px;color:var(--sub)', text:(manualKeys.length-1)+'건 더 남음'}),
-        btn('font-size:11px;color:#282828;background:none;border:1px solid #EEE6DC;padding:4px 10px;border-radius:10px;cursor:pointer;font-family:inherit', '전체 보기', function(){
+        btn('font-size:11px;color:var(--dark);background:none;border:1px solid var(--border);padding:4px 10px;border-radius:10px;cursor:pointer;font-family:inherit', '전체 보기', function(){
           var wrap = document.getElementById('todo-rest');
           if (wrap) wrap.style.display = wrap.style.display === 'none' ? '' : 'none';
         })
@@ -464,12 +464,12 @@ function openDetail(name, id, forceTab) {
       restWrap.id = 'todo-rest';
       manualKeys.slice(1).forEach(function(key) {
         var meta = ALIM_META[key]; if(!meta) return;
-        var row = div('display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#fff;border:1px solid #EEE6DC;border-radius:10px;margin-bottom:5px', [
+        var row = div('display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:5px', [
           div('', [
-            el('span', {style:'font-size:12px;font-weight:700;color:#282828;display:block', text:meta.label}),
+            el('span', {style:'font-size:12px;font-weight:700;color:var(--dark);display:block', text:meta.label}),
             el('span', {style:'font-size:11px;color:var(--sub)', text:meta.desc})
           ]),
-          el('span', {style:'font-size:12px;font-weight:600;color:#282828;background:#fff;border:1px solid #282828;padding:5px 12px;border-radius:12px;flex-shrink:0', text:'발송'})
+          el('span', {style:'font-size:12px;font-weight:600;color:var(--dark);background:#fff;border:1px solid var(--dark);padding:5px 12px;border-radius:12px;flex-shrink:0', text:'발송'})
         ]);
         (function(k){ row.addEventListener('click', function(){ sendAlimtalk(k); }); })(key);
         restWrap.appendChild(row);
@@ -485,7 +485,7 @@ function openDetail(name, id, forceTab) {
   renderAlimSection(c, alimBody);
 
   // 고객 정보 섹션
-  var infoSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
+  var infoSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
   infoSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'고객 정보'}));
 
   // 연락처/주소는 헤더에 항상 고정 표시되므로 여기선 생략 (중복 방지).
@@ -494,8 +494,8 @@ function openDetail(name, id, forceTab) {
   // 메모
   if (c.memo) {
     var memoBlock = div('background:#FFFBF5;border:1px solid #FFE5CC;border-radius:12px;padding:10px 14px;margin-bottom:8px', [
-      el('div', {style:'font-size:11px;color:#F06E2D;letter-spacing:0.8px;margin-bottom:3px', text:'메모'}),
-      el('div', {style:'font-size:11px;color:#282828;line-height:1.6', text:c.memo})
+      el('div', {style:'font-size:11px;color:var(--terra);letter-spacing:0.8px;margin-bottom:3px', text:'메모'}),
+      el('div', {style:'font-size:11px;color:var(--dark);line-height:1.6', text:c.memo})
     ]);
     infoSec.appendChild(memoBlock);
   }
@@ -509,9 +509,9 @@ function openDetail(name, id, forceTab) {
     {label:'시공 예정', value:c.installDate||'—', key:'installDate'}
   ];
   dateFields.forEach(function(item){
-    var box = div('background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 8px;text-align:center;position:relative'+(item.key?';cursor:pointer':''),[
-      el('div',{style:'font-size:11px;color:#9A9490;letter-spacing:0.8px;margin-bottom:4px',text:item.label}),
-      el('div',{style:'font-size:12px;font-weight:700;color:'+(item.value==='—'?'var(--light)':'#282828'),text:item.value})
+    var box = div('background:var(--ivory1);border:1px solid var(--border);border-radius:12px;padding:10px 8px;text-align:center;position:relative'+(item.key?';cursor:pointer':''),[
+      el('div',{style:'font-size:11px;color:var(--sub);letter-spacing:0.8px;margin-bottom:4px',text:item.label}),
+      el('div',{style:'font-size:12px;font-weight:700;color:'+(item.value==='—'?'var(--light)':'var(--dark)'),text:item.value})
     ]);
     if (item.key) {
       box.addEventListener('click', function(){
@@ -519,7 +519,7 @@ function openDetail(name, id, forceTab) {
         var valueDiv = box.children[1];
         var originalText = valueDiv.textContent;
         valueDiv.textContent = '';
-        var dateInp = el('input', {type:'date', style:'width:100%;border:none;background:transparent;font-size:12px;font-weight:700;color:#282828;text-align:center;font-family:inherit;outline:none'});
+        var dateInp = el('input', {type:'date', style:'width:100%;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--dark);text-align:center;font-family:inherit;outline:none'});
         if (c[item.key]) dateInp.value = c[item.key];
         valueDiv.appendChild(dateInp);
         dateInp.focus();
@@ -534,7 +534,7 @@ function openDetail(name, id, forceTab) {
             saveCustomerToDb(target, null);
           }
           valueDiv.textContent = newVal || '—';
-          valueDiv.style.color = newVal ? '#282828' : 'var(--light)';
+          valueDiv.style.color = newVal ? 'var(--dark)' : 'var(--light)';
           showToast(item.label + '이 저장됐습니다');
         }
         dateInp.addEventListener('change', commit);
@@ -549,15 +549,15 @@ function openDetail(name, id, forceTab) {
   renderEstimateHistory(body, c.clientName);
 
   
-  body.appendChild(btn('width:100%;padding:12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:6px', '견적서 앱에서 열기', function(){ openEstimate(currentDetailName); }));
+  body.appendChild(btn('width:100%;padding:12px;background:var(--ivory1);color:var(--dark);border:1px solid var(--border);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:6px', '견적서 앱에서 열기', function(){ openEstimate(currentDetailName); }));
   renderOrderSection(c, orderBody);
 
-  var bottomBtns = [btn('flex:2;padding:11px;background:#282828;color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:12px;letter-spacing:0.2px', '닫기', closeDetail)];
+  var bottomBtns = [btn('flex:2;padding:11px;background:var(--dark);color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:12px;letter-spacing:0.2px', '닫기', closeDetail)];
   if (isMaster) {
     if (isSoftDeleted(c)) {
-      bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid #282828;font-size:11px;font-family:inherit;cursor:pointer;color:#282828;font-weight:700;border-radius:12px', '↩ 복구', function(){ restoreCustomer(c.clientName, c.id); }));
+      bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid var(--dark);font-size:11px;font-family:inherit;cursor:pointer;color:var(--dark);font-weight:700;border-radius:12px', '↩ 복구', function(){ restoreCustomer(c.clientName, c.id); }));
     } else {
-      bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid #EEE6DC;font-size:11px;font-family:inherit;cursor:pointer;color:#282828;border-radius:12px', '삭제', deleteCustomer));
+      bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid var(--border);font-size:11px;font-family:inherit;cursor:pointer;color:var(--dark);border-radius:12px', '삭제', deleteCustomer));
     }
   }
   body.appendChild(div('display:flex;gap:8px', bottomBtns));
@@ -631,13 +631,13 @@ function openAdd(editName) {
       sb.setAttribute('data-staff', sn);
       sb.className = 'staff-btn';
       sb.textContent = sn;
-      sb.style.cssText = 'padding:6px 12px;border-radius:10px;border:1px solid '+(isActive?'#F06E2D':'#EEE6DC')+';font-size:11px;font-weight:'+(isActive?'700':'500')+';font-family:inherit;cursor:pointer;background:'+(isActive?'#F06E2D':'#fff')+';color:'+(isActive?'#fff':'#B0A99F');
+      sb.style.cssText = 'padding:6px 12px;border-radius:10px;border:1px solid '+(isActive?'var(--terra)':'var(--border)')+';font-size:11px;font-weight:'+(isActive?'700':'500')+';font-family:inherit;cursor:pointer;background:'+(isActive?'var(--terra)':'#fff')+';color:'+(isActive?'#fff':'var(--sub)');
       staffWrap.appendChild(sb);
     });
   }
   document.querySelectorAll('.staff-btn').forEach(function(b) {
     var isActive = b.getAttribute('data-staff') === defaultStaff;
-    b.classList.toggle('active', isActive); b.style.background = isActive ? '#F06E2D' : '#fff'; b.style.color = isActive ? '#fff' : '#8E8078'; b.style.borderRadius = '4px'; b.style.border = '1.5px solid ' + (isActive ? '#F06E2D' : '#EEE6DC'); b.style.fontWeight = isActive ? '700' : '400';
+    b.classList.toggle('active', isActive); b.style.background = isActive ? 'var(--terra)' : '#fff'; b.style.color = isActive ? '#fff' : '#8E8078'; b.style.borderRadius = '4px'; b.style.border = '1.5px solid ' + (isActive ? 'var(--terra)' : 'var(--border)'); b.style.fontWeight = isActive ? '700' : '400';
     if (isStaffUser) { b.style.pointerEvents = 'none'; b.style.opacity = isActive ? '1' : '0.3'; } else { b.style.pointerEvents = ''; b.style.opacity = ''; }
   });
   var _ov = document.getElementById('add-overlay');
@@ -739,7 +739,7 @@ function renderKakaoLog() {
     logEl.innerHTML = '';
     logs.slice(0,3).forEach(function(l) {
       var methodBadge = l.method === '알림톡' ? ' [알림톡]' : ' [복사]';
-      logEl.appendChild(div('font-size:11px;color:#282828;padding:3px 0;border-bottom:1px solid #EEE6DC', [span('', l.date + ' ' + l.time + ' — ' + l.type + methodBadge)]));
+      logEl.appendChild(div('font-size:11px;color:var(--dark);padding:3px 0;border-bottom:1px solid var(--border)', [span('', l.date + ' ' + l.time + ' — ' + l.type + methodBadge)]));
     });
   } catch(e) {}
 }
@@ -749,7 +749,7 @@ var CONTRACT_LABELS = {pending:'가견적', contracted:'✅ 계약됨', rejected
 var STATUS_LABELS = {ga:'가견적서', final:'최종견적서'};
 
 function renderEstimateHistory(container, clientName) {
-  var estSec = el('div', {style:'margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC'});
+  var estSec = el('div', {style:'margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)'});
   var hd = el('div', {style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px'});
   var lbl = el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase', text:'견적서'});
   hd.appendChild(lbl);
@@ -772,22 +772,22 @@ function renderEstimateHistory(container, clientName) {
     var cs = e.contractStatus || 'pending';
     var isLast = ei === estimates.length - 1;
     var card = el('div', {style:
-      'border:1px solid #EEE6DC;border-radius:12px;padding:12px 14px;' +
+      'border:1px solid var(--border);border-radius:12px;padding:12px 14px;' +
       'margin-bottom:' + (isLast?'0':'8px') + ';background:#fff'
     });
 
     
     var top = el('div', {style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px'});
     var noEl = el('div', {style:'display:flex;align-items:center;gap:6px'});
-    var noSpan = el('span', {style:'font-size:12px;font-weight:700;color:#282828', text:e.no||'—'});
+    var noSpan = el('span', {style:'font-size:12px;font-weight:700;color:var(--dark)', text:e.no||'—'});
     var typeSpan = el('span', {style:
-      'font-size:11px;color:#6B6B6B;border:1px solid #EEE6DC;' +
+      'font-size:11px;color:#6B6B6B;border:1px solid var(--border);' +
       'padding:1px 6px;border-radius:var(--r-btn)',
       text: STATUS_LABELS[e.status]||'가견적서'
     });
     noEl.appendChild(noSpan); noEl.appendChild(typeSpan);
     if (e.confirmedAt) {
-      var confirmedSpan = el('span', {style:'font-size:11px;font-weight:700;color:#fff;background:#282828;padding:1px 8px;border-radius:20px', text:'✓ 확정'});
+      var confirmedSpan = el('span', {style:'font-size:11px;font-weight:700;color:#fff;background:var(--dark);padding:1px 8px;border-radius:20px', text:'✓ 확정'});
       noEl.appendChild(confirmedSpan);
     }
 
@@ -795,7 +795,7 @@ function renderEstimateHistory(container, clientName) {
     var contractBadge = el('button', {style:
       'font-size:12px;font-weight:700;border:none;cursor:pointer;' +
       'padding:3px 10px;border-radius:6px;font-family:inherit;' +
-      'background:' + (cs==='contracted'?'#282828':'#FAF7F5') + ';' +
+      'background:' + (cs==='contracted'?'var(--dark)':'var(--ivory1)') + ';' +
       'color:' + (cs==='contracted'?'#fff':'#6B6B6B'),
       text: CONTRACT_LABELS[cs]||'가견적'
     });
@@ -813,7 +813,7 @@ function renderEstimateHistory(container, clientName) {
           if (idx>=0) { arr[idx].contractStatus = next; localStorage.setItem('dah_saved', JSON.stringify(arr)); }
         } catch(ex2){}
         badge.textContent = CONTRACT_LABELS[next];
-        badge.style.background = next==='contracted'?'#282828':'#FAF7F5';
+        badge.style.background = next==='contracted'?'var(--dark)':'var(--ivory1)';
         badge.style.color = next==='contracted'?'#fff':'#6B6B6B';
       });
     })(e, contractBadge);
@@ -823,8 +823,8 @@ function renderEstimateHistory(container, clientName) {
 
     
     var mid = el('div', {style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:6px'});
-    var spaceEl = el('span', {style:'font-size:11px;color:#282828', text:e.space||'—'});
-    var priceEl = el('span', {style:'font-size:12px;font-weight:700;color:#282828', text:(Number(e.price)||0).toLocaleString()+'원'});
+    var spaceEl = el('span', {style:'font-size:11px;color:var(--dark)', text:e.space||'—'});
+    var priceEl = el('span', {style:'font-size:12px;font-weight:700;color:var(--dark)', text:(Number(e.price)||0).toLocaleString()+'원'});
     mid.appendChild(spaceEl); mid.appendChild(priceEl);
     card.appendChild(mid);
 
