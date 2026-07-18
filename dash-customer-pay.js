@@ -23,6 +23,7 @@ function renderPaySection(c, payBody) {
   paySec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'결제 관리'}));
 
   function savePayData(pd) {
+    if (typeof logEvent === 'function') logEvent('payment_save', { hasDeposit: Number(pd.depositAmount) > 0, hasBalance: Number(pd.balanceAmount) > 0 });
     // 1) localStorage 백업
     localStorage.setItem('dah_pay_'+c.clientName, JSON.stringify(pd));
     // 2) customers 캐시 업데이트
