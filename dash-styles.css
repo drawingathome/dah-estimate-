@@ -1197,8 +1197,8 @@ button[onclick="exportExcel()"] {
   --stage-hot: #F06E2D;  /* 계약금·실측 */
   --stage-dark:#282828;  /* 잔금·시공 */
   /* ── Border Radius ── */
-  --r-btn:    4px;   /* 버튼·뱃지·태그 */
-  --r-input:  8px;   /* 입력창·검색바 */
+  --r-btn:    10px;  /* 버튼·뱃지·태그 */
+  --r-input:  10px;  /* 입력창·검색바 */
   --r-card:   12px;  /* 카드·테이블 */
   --r-icon:   14px;  /* 빠른액션 아이콘 */
   /* ── 하위호환 alias ── */
