@@ -218,7 +218,9 @@ function saveEstimate() {
       var saved = JSON.parse(localStorage.getItem('dah_saved')||'[]');
       var noStr = document.getElementById('c-no').value.trim();
       var isFinal = (currentTab === 'final' || document.getElementById('status-final')?.classList.contains('on'));
-      var itemCount = document.querySelectorAll('#curtain-body tr').length + document.querySelectorAll('#blind-body tr').length;
+      var curtainCount = document.querySelectorAll('#curtain-body tr').length;
+      var blindCount = document.querySelectorAll('#blind-body tr').length;
+      var itemCount = curtainCount + blindCount;
 
       var idx = saved.findIndex(function(e){ return e.no === noStr; });
       var entry = {
@@ -230,6 +232,8 @@ function saveEstimate() {
         space: spaceStr,
         fabric: fabricStr,
         itemCount: itemCount,
+        curtainCount: curtainCount,
+        blindCount: blindCount,
         price: grand,
         performanceRevenue: perf,
         staffName: staffName,

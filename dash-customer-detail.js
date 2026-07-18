@@ -361,7 +361,7 @@ function openDetail(name, id, forceTab) {
       el('span', {style:'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:#282828;color:#fff;font-size:12px;font-weight:700;flex-shrink:0', text:stageNum}),
       el('span', {style:'font-size:12px;font-weight:700;color:#282828;letter-spacing:-0.3px', text:c.stage + ' 단계'})
     ]),
-    isMaster ? btn('font-size:11px;color:#282828;background:#FAF7F5;border:1px solid #EEE6DC;padding:5px 10px;cursor:pointer;font-family:inherit;border-radius:4px', '✏️ 수정', function(){ closeDetail(); openAdd(c.clientName); }) : el('span',{})
+    isMaster ? btn('font-size:11px;color:#282828;background:#FAF7F5;border:1px solid #EEE6DC;padding:5px 10px;cursor:pointer;font-family:inherit;border-radius:10px', '수정', function(){ closeDetail(); openAdd(c.clientName); }) : el('span',{})
   ]);
   stageSec.appendChild(stageTop);
 
@@ -423,12 +423,12 @@ function openDetail(name, id, forceTab) {
   });
   var extraBtns = div('display:none;gap:6px;margin-top:4px', []);
   extraBtns.id = 'stage-more-actions';
-  var cancelBtn = btn('flex:1;padding:6px;border:1px solid #EEE6DC;background:#fff;font-size:11px;color:#6B6B6B;font-family:inherit;cursor:pointer;border-radius:4px','취소 처리', function(){
+  var cancelBtn = btn('flex:1;padding:9px;border:1px solid #EEE6DC;background:#fff;font-size:11px;color:#6B6B6B;font-family:inherit;cursor:pointer;border-radius:10px','취소 처리', function(){
     if(confirm(c.clientName+'님을 취소 처리할까요? 자동 발송이 중단됩니다.')) {
       changeStage('취소'); closeDetail();
     }
   });
-  var noshowBtn = btn('flex:1;padding:6px;border:1px solid #EEE6DC;background:#fff;font-size:11px;color:#6B6B6B;font-family:inherit;cursor:pointer;border-radius:4px','노쇼 처리', function(){
+  var noshowBtn = btn('flex:1;padding:9px;border:1px solid #EEE6DC;background:#fff;font-size:11px;color:#6B6B6B;font-family:inherit;cursor:pointer;border-radius:10px','노쇼 처리', function(){
     if(confirm(c.clientName+'님을 노쇼 처리할까요?')) {
       changeStage('노쇼'); closeDetail();
     }
@@ -449,12 +449,12 @@ function openDetail(name, id, forceTab) {
     // 가장 급한 것 1개만 크게 보여주고, 나머지는 "N건 더 남음" 뒤에 접어둠(눌러야만 펼쳐짐)
     var firstKey = manualKeys[0];
     var firstMeta = ALIM_META[firstKey];
-    var primaryBtn = btn('width:100%;padding:11px;background:#282828;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:6px', firstMeta.label + ' 발송하기', function(){ sendAlimtalk(firstKey); });
+    var primaryBtn = btn('width:100%;padding:11px;background:#282828;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:6px', firstMeta.label + ' 발송하기', function(){ sendAlimtalk(firstKey); });
     todoSec.appendChild(primaryBtn);
     if (manualKeys.length > 1) {
       var moreRow = div('display:flex;align-items:center;justify-content:space-between', [
         el('span', {style:'font-size:11px;color:var(--sub)', text:(manualKeys.length-1)+'건 더 남음'}),
-        btn('font-size:11px;color:#282828;background:none;border:1px solid #EEE6DC;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:inherit', '전체 보기', function(){
+        btn('font-size:11px;color:#282828;background:none;border:1px solid #EEE6DC;padding:4px 10px;border-radius:10px;cursor:pointer;font-family:inherit', '전체 보기', function(){
           var wrap = document.getElementById('todo-rest');
           if (wrap) wrap.style.display = wrap.style.display === 'none' ? '' : 'none';
         })
@@ -549,7 +549,7 @@ function openDetail(name, id, forceTab) {
   renderEstimateHistory(body, c.clientName);
 
   
-  body.appendChild(btn('width:100%;padding:12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:4px;margin-bottom:6px', '견적서 앱에서 열기', function(){ openEstimate(currentDetailName); }));
+  body.appendChild(btn('width:100%;padding:12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:6px', '견적서 앱에서 열기', function(){ openEstimate(currentDetailName); }));
   renderOrderSection(c, orderBody);
 
   var bottomBtns = [btn('flex:2;padding:11px;background:#282828;color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:12px;letter-spacing:0.2px', '닫기', closeDetail)];

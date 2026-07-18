@@ -61,7 +61,7 @@ function renderPaySection(c, payBody) {
     el('div', {style:'font-size:12px;font-weight:700;color:#282828', text:(depositDone?'✔ ':'')+'선금 (계약금)'}),
   ]);
   if (depositDone) {
-    var depEditBtn = btn('font-size:11px;color:#6B6B6B;background:none;border:1px solid #EEE6DC;border-radius:4px;padding:2px 8px;cursor:pointer;font-family:inherit', '수정', function(){
+    var depEditBtn = btn('font-size:11px;color:#6B6B6B;background:none;border:1px solid #EEE6DC;border-radius:10px;padding:2px 8px;cursor:pointer;font-family:inherit', '수정', function(){
       depSec.innerHTML = ''; buildDepForm();
     });
     depTitle.appendChild(depEditBtn);
@@ -120,7 +120,7 @@ function renderPaySection(c, payBody) {
     el('div', {style:'font-size:12px;font-weight:700;color:#282828', text:(balanceDone?'✔ ':'')+'잔금'})
   ]);
   if (balanceDone) {
-    var balEditBtn = btn('font-size:11px;color:#6B6B6B;background:none;border:1px solid #EEE6DC;border-radius:4px;padding:2px 8px;cursor:pointer;font-family:inherit', '수정', function(){
+    var balEditBtn = btn('font-size:11px;color:#6B6B6B;background:none;border:1px solid #EEE6DC;border-radius:10px;padding:2px 8px;cursor:pointer;font-family:inherit', '수정', function(){
       balSec.innerHTML = ''; buildBalForm();
     });
     balTitle.appendChild(balEditBtn);
