@@ -259,6 +259,10 @@ function openDetail(name, id, forceTab) {
   // 이름
   var _dn=document.getElementById('detail-name'); if(_dn) _dn.textContent = c.clientName;
 
+  // 아바타 (이름 첫 글자)
+  var _dav=document.getElementById('detail-avatar');
+  if (_dav) _dav.textContent = (c.clientName||'?').charAt(0);
+
   // 주소 (헤더에 항상 고정 표시)
   var _da=document.getElementById('detail-addr');
   if (_da) {
@@ -266,64 +270,45 @@ function openDetail(name, id, forceTab) {
     else { _da.textContent = ''; _da.style.display = 'none'; }
   }
 
-  // 요약 row: 단계뱃지 + 재구매 + 경과일
+  // 단계 배지 (이름과 한 줄에)
+  var _dsb = document.getElementById('detail-stage-badge');
+  if (_dsb) { _dsb.textContent = c.stage; }
+
+  // 요약 row: 재구매 + 경과일 (조용한 보조정보로)
   var summaryRow = document.getElementById('detail-summary-row');
   if(!summaryRow) return;
   summaryRow.innerHTML = '';
-  var stageBadge = document.createElement('span');
-  stageBadge.textContent = c.stage;
-  stageBadge.style.cssText = 'font-size:12px;font-weight:700;padding:3px 9px;border-radius:4px;color:#fff;background:' + (STAGE_COLORS[c.stage]||'#282828');
-  summaryRow.appendChild(stageBadge);
   if (c.visitCount > 1) {
     var reBadge = document.createElement('span');
     reBadge.textContent = '재구매 '+c.visitCount+'회';
-    reBadge.style.cssText = 'font-size:12px;font-weight:700;padding:3px 8px;border-radius:4px;background:#FAF7F5;color:#F06E2D;border:1px solid #EEE6DC';
+    reBadge.style.cssText = 'font-size:11px;font-weight:700;color:#F06E2D';
     summaryRow.appendChild(reBadge);
   }
   if (c.date) {
     var diff = daysDiff(c.date);
+    if (c.visitCount > 1) { var dot = document.createElement('span'); dot.textContent = '·'; dot.style.color = '#EEE6DC'; summaryRow.appendChild(dot); }
     var diffBadge = document.createElement('span');
     diffBadge.textContent = diff === 0 ? '오늘 상담' : diff > 0 ? diff+'일 경과' : Math.abs(diff)+'일 후';
-    diffBadge.style.cssText = 'font-size:11px;color:#9A9490';
     summaryRow.appendChild(diffBadge);
   }
 
-  // 핵심 정보 2칸 요약 (연락처/담당자 — 주소는 헤더로, 견적은 아래 현재견적 블록으로 이동)
-  var infoBar = document.getElementById('detail-info-bar');
-  infoBar.innerHTML = '';
-  var phoneValueHtml = c.phone
-    ? '<a href="tel:' + c.phone.replace(/[^0-9]/g,'') + '" style="color:#282828;text-decoration:none">' + c.phone + '</a>'
-    : '—';
-  var infoItems = [
-    {label:'연락처', value: phoneValueHtml},
-    {label:'담당자', value: c.staffName || '마스터'}
-  ];
-  infoItems.forEach(function(item) {
-    var cell = document.createElement('div');
-    cell.style.cssText = 'background:#FAF7F5;padding:10px 12px;text-align:center';
-    cell.innerHTML = '<div style="font-size:11px;color:#9A9490;letter-spacing:0.8px;margin-bottom:4px">' + item.label + '</div>' +
-                     '<div style="font-size:12px;font-weight:700;color:#282828;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + item.value + '</div>';
-    infoBar.appendChild(cell);
-  });
-
   // 현재 견적 요약 (가장 최근 저장된 견적서 기준) — 이름/주소 다음으로 항상 눈에 보이는 자리
   var curEstBox = document.getElementById('detail-current-est');
+  var allEstsForCur = [];
+  try { allEstsForCur = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
+  var myEsts = allEstsForCur.filter(function(e){ return e.clientName === c.clientName; });
+  myEsts.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
+  var latestEst = myEsts[0];
   if (curEstBox) {
-    var allEstsForCur = [];
-    try { allEstsForCur = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
-    var myEsts = allEstsForCur.filter(function(e){ return e.clientName === c.clientName; });
-    myEsts.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
-    var latestEst = myEsts[0];
     if (latestEst) {
       var amt = (Number(latestEst.price)||0).toLocaleString()+'원';
-      var space = latestEst.space || '—';
-      var fabric = latestEst.fabric || '—';
+      var itemLabel = latestEst.itemCount ? ('총 '+latestEst.itemCount+'개 품목') : '';
       curEstBox.innerHTML =
-        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">' +
-          '<span style="font-size:10px;font-weight:800;color:#fff;background:#F06E2D;padding:2px 7px;border-radius:20px;letter-spacing:0.3px">현재 견적 · 진행중</span>' +
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">' +
+          '<span style="width:6px;height:6px;border-radius:50%;background:#F06E2D;display:inline-block"></span>' +
+          '<span style="font-size:10px;font-weight:600;color:#B85A2E;letter-spacing:0.3px">진행중인 견적' + (itemLabel ? ' · '+itemLabel : '') + '</span>' +
         '</div>' +
-        '<div style="font-size:18px;font-weight:900;color:#282828;letter-spacing:-0.5px;margin-bottom:2px">' + amt + '</div>' +
-        '<div style="font-size:12px;color:#6B6B6B">' + space + ' · ' + fabric + '</div>';
+        '<div style="font-size:22px;font-weight:700;color:#282828;letter-spacing:-0.5px">' + amt + '</div>';
       curEstBox.style.display = 'block';
     } else {
       curEstBox.innerHTML =
@@ -331,6 +316,17 @@ function openDetail(name, id, forceTab) {
       curEstBox.style.display = 'block';
     }
   }
+
+  // 핵심 정보 (연락처/담당자 — 아이콘형 인라인, 박스 없이)
+  var infoBar = document.getElementById('detail-info-bar');
+  infoBar.innerHTML = '';
+  var phoneHtml = c.phone
+    ? '<a href="tel:' + c.phone.replace(/[^0-9]/g,'') + '" style="color:#282828;text-decoration:none;font-weight:500">' + c.phone + '</a>'
+    : '<span style="color:#9A9490">연락처 없음</span>';
+  infoBar.innerHTML =
+    '<span>' + phoneHtml + '</span>' +
+    '<span style="color:#EEE6DC">|</span>' +
+    '<span>' + (c.staffName || '마스터') + '</span>';
 
   var body = document.getElementById('detail-body');
   body.innerHTML = '';
@@ -386,16 +382,16 @@ function openDetail(name, id, forceTab) {
   var curIdx = STAGES.indexOf(c.stage);
   var nextStage = (curIdx >= 0 && curIdx < STAGES.length - 1) ? STAGES[curIdx + 1] : null;
 
-  var stageActionRow = div('display:flex;gap:6px;align-items:center', []);
+  var stageActionRow = div('display:flex;gap:8px;align-items:center', []);
   if (nextStage) {
     stageActionRow.appendChild(btn(
-      'flex:1;padding:9px;border:none;background:#282828;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:4px',
-      '다음 단계로 (' + nextStage + ') →', function(){ changeStage(nextStage); }
+      'flex:1;padding:11px;border:none;background:#282828;color:#fff;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px',
+      nextStage + '으로 진행 →', function(){ changeStage(nextStage); }
     ));
   }
   var toggleStageBtn = btn(
-    'padding:9px 12px;border:1px solid #EEE6DC;background:#fff;color:#6B6B6B;font-size:11px;font-family:inherit;cursor:pointer;border-radius:4px;white-space:nowrap',
-    '다른 단계로', function(){
+    'padding:11px 14px;border:none;background:#FAF7F5;color:#8A8378;font-size:12px;font-family:inherit;cursor:pointer;border-radius:10px;white-space:nowrap',
+    '다른 단계', function(){
       var wrap = document.getElementById('stage-manual-select');
       if (wrap) wrap.style.display = wrap.style.display === 'none' ? '' : 'none';
     }

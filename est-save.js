@@ -218,7 +218,8 @@ function saveEstimate() {
       var saved = JSON.parse(localStorage.getItem('dah_saved')||'[]');
       var noStr = document.getElementById('c-no').value.trim();
       var isFinal = (currentTab === 'final' || document.getElementById('status-final')?.classList.contains('on'));
-      
+      var itemCount = document.querySelectorAll('#curtain-body tr').length + document.querySelectorAll('#blind-body tr').length;
+
       var idx = saved.findIndex(function(e){ return e.no === noStr; });
       var entry = {
         id: noStr || ('local-'+Date.now()),
@@ -228,6 +229,7 @@ function saveEstimate() {
         addr: addr+(addr2?' '+addr2:''),
         space: spaceStr,
         fabric: fabricStr,
+        itemCount: itemCount,
         price: grand,
         performanceRevenue: perf,
         staffName: staffName,
