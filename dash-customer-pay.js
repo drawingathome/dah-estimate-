@@ -82,6 +82,7 @@ function renderPaySection(c, payBody) {
     if (payData.depositAmount) depAmt.value = Number(payData.depositAmount).toLocaleString();
     var depDate = el('input', {type:'date', style:'flex:2;min-width:110px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit'});
     if (payData.depositDate) depDate.value = payData.depositDate;
+    else depDate.value = todayStr();
     var depReceipt = el('label', {style:'display:flex;align-items:center;gap:4px;font-size:11px;color:#6B6B6B;cursor:pointer;width:100%'});
     var depReceiptChk = el('input', {type:'checkbox'}); depReceiptChk.checked = payData.depositReceipt||false;
     depReceipt.appendChild(depReceiptChk); depReceipt.appendChild(document.createTextNode('현금영수증'));
@@ -141,6 +142,7 @@ function renderPaySection(c, payBody) {
     if (payData.balanceAmount) balAmt.value = Number(payData.balanceAmount).toLocaleString();
     var balDate = el('input', {type:'date', style:'flex:2;min-width:110px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit'});
     if (payData.balanceDate) balDate.value = payData.balanceDate;
+    else balDate.value = todayStr();
     var balReceipt = el('label', {style:'display:flex;align-items:center;gap:4px;font-size:11px;color:#6B6B6B;cursor:pointer;width:100%'});
     var balReceiptChk = el('input', {type:'checkbox'}); balReceiptChk.checked = payData.balanceReceipt||false;
     balReceipt.appendChild(balReceiptChk); balReceipt.appendChild(document.createTextNode('현금영수증'));
