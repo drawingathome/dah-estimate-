@@ -291,8 +291,11 @@ function openDetail(name, id, forceTab) {
   // 핵심 정보 2칸 요약 (연락처/담당자 — 주소는 헤더로, 견적은 아래 현재견적 블록으로 이동)
   var infoBar = document.getElementById('detail-info-bar');
   infoBar.innerHTML = '';
+  var phoneValueHtml = c.phone
+    ? '<a href="tel:' + c.phone.replace(/[^0-9]/g,'') + '" style="color:#282828;text-decoration:none">' + c.phone + '</a>'
+    : '—';
   var infoItems = [
-    {label:'연락처', value: c.phone || '—'},
+    {label:'연락처', value: phoneValueHtml},
     {label:'담당자', value: c.staffName || '마스터'}
   ];
   infoItems.forEach(function(item) {
@@ -489,26 +492,8 @@ function openDetail(name, id, forceTab) {
   var infoSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #EEE6DC', []);
   infoSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'고객 정보'}));
 
-  // 연락처 - 크고 눈에 띄게
-  var phoneBlock = div('background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:12px 14px;margin-bottom:8px', []);
-  phoneBlock.appendChild(el('div', {style:'font-size:11px;color:#9A9490;letter-spacing:0.8px;margin-bottom:4px', text:'연락처'}));
-  if (c.phone) {
-    var telLink = el('a', {href:'tel:'+c.phone.replace(/[^0-9]/g,''), style:'font-size:11px;font-weight:800;color:#282828;text-decoration:none;letter-spacing:-0.3px'});
-    telLink.textContent = c.phone;
-    phoneBlock.appendChild(telLink);
-  } else {
-    phoneBlock.appendChild(el('span', {style:'font-size:11px;font-weight:700;color:var(--sub)', text:'—'}));
-  }
-  infoSec.appendChild(phoneBlock);
-
-  // 주소
-  if (c.addr) {
-    var addrBlock = div('background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 14px;margin-bottom:8px', [
-      el('div', {style:'font-size:11px;color:#9A9490;letter-spacing:0.8px;margin-bottom:3px', text:'주소'}),
-      el('div', {style:'font-size:12px;font-weight:600;color:#282828;line-height:1.4', text:c.addr})
-    ]);
-    infoSec.appendChild(addrBlock);
-  }
+  // 연락처/주소는 헤더에 항상 고정 표시되므로 여기선 생략 (중복 방지).
+  // 단, 전화 클릭 기능은 정보바의 연락처 칸에서 그대로 사용 가능.
 
   // 메모
   if (c.memo) {
