@@ -2,6 +2,29 @@
 <!-- DAH-ESTIMATE-VERSION-20260621 -->
 <html lang="ko">
 <head>
+<script>
+// ── 캐시/서비스워커 강제 정리 (반드시 head 최상단) ──
+// 대시보드에서 등록된 서비스워커가 Service-Worker-Allowed:/ 설정으로 이 페이지도
+// 덮을 수 있어 동일하게 방어함.
+(function(){
+  var BUILD = '202607181800';
+  try {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs){
+        regs.forEach(function(reg){ reg.unregister(); });
+      });
+    }
+    if (window.caches) {
+      caches.keys().then(function(keys){ keys.forEach(function(k){ caches.delete(k); }); });
+    }
+    var seen = localStorage.getItem('dah_build_seen');
+    localStorage.setItem('dah_build_seen', BUILD);
+    if (seen && seen !== BUILD) {
+      location.reload(true);
+    }
+  } catch(e) {}
+})();
+</script>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
 <link rel="stylesheet" href="/est-styles.css?v=202607181800">
