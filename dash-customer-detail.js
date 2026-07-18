@@ -259,6 +259,13 @@ function openDetail(name, id, forceTab) {
   // 이름
   var _dn=document.getElementById('detail-name'); if(_dn) _dn.textContent = c.clientName;
 
+  // 주소 (헤더에 항상 고정 표시)
+  var _da=document.getElementById('detail-addr');
+  if (_da) {
+    if (c.addr) { _da.textContent = c.addr; _da.style.display = 'block'; }
+    else { _da.textContent = ''; _da.style.display = 'none'; }
+  }
+
   // 요약 row: 단계뱃지 + 재구매 + 경과일
   var summaryRow = document.getElementById('detail-summary-row');
   if(!summaryRow) return;
@@ -281,13 +288,12 @@ function openDetail(name, id, forceTab) {
     summaryRow.appendChild(diffBadge);
   }
 
-  // 핵심 정보 3칸 요약
+  // 핵심 정보 2칸 요약 (연락처/담당자 — 주소는 헤더로, 견적은 아래 현재견적 블록으로 이동)
   var infoBar = document.getElementById('detail-info-bar');
   infoBar.innerHTML = '';
   var infoItems = [
-    {label:'견적금액', value: c.price ? fmt(c.price) : '—'},
-    {label:'연락처',   value: c.phone || '—'},
-    {label:'담당자',   value: c.staffName || '마스터'}
+    {label:'연락처', value: c.phone || '—'},
+    {label:'담당자', value: c.staffName || '마스터'}
   ];
   infoItems.forEach(function(item) {
     var cell = document.createElement('div');
@@ -296,6 +302,32 @@ function openDetail(name, id, forceTab) {
                      '<div style="font-size:12px;font-weight:700;color:#282828;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + item.value + '</div>';
     infoBar.appendChild(cell);
   });
+
+  // 현재 견적 요약 (가장 최근 저장된 견적서 기준) — 이름/주소 다음으로 항상 눈에 보이는 자리
+  var curEstBox = document.getElementById('detail-current-est');
+  if (curEstBox) {
+    var allEstsForCur = [];
+    try { allEstsForCur = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
+    var myEsts = allEstsForCur.filter(function(e){ return e.clientName === c.clientName; });
+    myEsts.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
+    var latestEst = myEsts[0];
+    if (latestEst) {
+      var amt = (Number(latestEst.price)||0).toLocaleString()+'원';
+      var space = latestEst.space || '—';
+      var fabric = latestEst.fabric || '—';
+      curEstBox.innerHTML =
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">' +
+          '<span style="font-size:10px;font-weight:800;color:#fff;background:#F06E2D;padding:2px 7px;border-radius:20px;letter-spacing:0.3px">현재 견적 · 진행중</span>' +
+        '</div>' +
+        '<div style="font-size:18px;font-weight:900;color:#282828;letter-spacing:-0.5px;margin-bottom:2px">' + amt + '</div>' +
+        '<div style="font-size:12px;color:#6B6B6B">' + space + ' · ' + fabric + '</div>';
+      curEstBox.style.display = 'block';
+    } else {
+      curEstBox.innerHTML =
+        '<div style="font-size:12px;color:#9A9490">아직 저장된 견적서가 없어요</div>';
+      curEstBox.style.display = 'block';
+    }
+  }
 
   var body = document.getElementById('detail-body');
   body.innerHTML = '';
