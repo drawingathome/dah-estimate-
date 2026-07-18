@@ -296,16 +296,7 @@ input::placeholder, textarea::placeholder {
    날짜/보조        11px / 400 / #B0A99F
    ════════════════════════════════════════════════ */
 
-/* ① 페이지 타이틀 (홈 7월 목표 텍스트) */
-.home-title, .page-title-area h2,
-#home > .wrap > .card:first-child h2,
-#home .goal-title {
-  font-size: 22px !important;
-  font-weight: 700 !important;
-  color: #282828 !important;
-  letter-spacing: -0.5px !important;
-}
-
+/* ① 페이지 타이틀 — 위쪽 첫 번째 정의와 완전히 동일하여 중복 제거함 */
 
 
 /* ════════════════════════════════════════════════════════
@@ -333,13 +324,8 @@ body {
 
 
 /* ── 버튼 13px ── */
-button {
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  font-family: inherit !important;
-  cursor: pointer !important;
-}
-/* 탭 버튼 예외 */
+/* (button 폰트 규칙은 위쪽 ⑪번에 이미 정의되어 있어 중복 제거함) */
+/* 탭 버튼 예외 (est-tab/est-status-btn 포함, 위쪽 ⑦번과 별개로 필요) */
 .tab, .tab-item, .tabs button,
 .est-tab, .est-status-btn {
   font-size: 12px !important;
@@ -352,10 +338,7 @@ button {
 }
 
 /* ── 입력창 15px ── */
-input, select, textarea {
-  font-size: 15px !important;
-  font-family: inherit !important;
-}
+/* (input/select/textarea 폰트 규칙은 위쪽 ⑫번에 이미 정의되어 있어 중복 제거함) */
 input::placeholder, textarea::placeholder {
   font-size: 13px !important;
   color: #C8C2BA !important;
