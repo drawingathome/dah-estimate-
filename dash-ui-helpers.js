@@ -43,7 +43,12 @@ function renderQuickNav(items) {
     link.onclick = function(e) {
       e.preventDefault();
       var target = document.getElementById(item.id);
-      if (target) target.scrollIntoView({behavior:'smooth', block:'start'});
+      if (!target) return;
+      // 아코디언 패턴(헤더+본문 2개 자식, 본문이 접혀있음)이면 먼저 펼침
+      if (target.children.length === 2 && target.children[1].style.display === 'none') {
+        target.children[0].click();
+      }
+      target.scrollIntoView({behavior:'smooth', block:'start'});
     };
     nav.appendChild(link);
   });
