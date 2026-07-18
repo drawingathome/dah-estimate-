@@ -73,36 +73,83 @@ function renderSettings() {
     return;
   }
 
+  // 아코디언 그룹 컨테이너 생성 헬퍼 — 헤더 클릭시 펼침/접힘, 기본은 접힌 상태
+  function makeGroup(id, title, cards, openByDefault) {
+    var group = div('background:#fff;margin-bottom:10px;border-radius:12px;border:1px solid #EEE6DC;overflow:hidden', []);
+    group.id = id;
+    var body = div('padding:0 16px 16px', []);
+    body.style.display = openByDefault ? 'block' : 'none';
+    cards.forEach(function(c){ body.appendChild(c); });
+    var chevron = span('font-size:11px;color:#B0A99F;transition:transform 0.15s', openByDefault ? '▾' : '▸');
+    var header = div('display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer', [
+      span('font-size:12px;font-weight:700;color:#282828;letter-spacing:0.02em', title),
+      chevron
+    ]);
+    header.addEventListener('click', function(){
+      var isOpen = body.style.display !== 'none';
+      body.style.display = isOpen ? 'none' : 'block';
+      chevron.textContent = isOpen ? '▸' : '▾';
+    });
+    group.appendChild(header);
+    group.appendChild(body);
+    return group;
+  }
+
   
   // ── 월목표 설정 카드 ──
   var s = getSettings ? getSettings() : {};
-  var goalCard = div('background:#fff;margin-bottom:10px;padding:16px;border-radius:12px;border:1px solid #EEE6DC', []);
-  goalCard.id = 'sec-set-goal';
-  goalCard.innerHTML = '<div style="font-size:12px;font-weight:700;color:#B0A99F;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">매출 목표</div>' +
-    '<div style="display:flex;align-items:center">' +
+  var goalCard = div('padding-top:4px', []);
+  goalCard.innerHTML = '<div style="display:flex;align-items:center;padding-bottom:12px;border-bottom:1px solid #F5F2EE;margin-bottom:12px">' +
       '<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#282828">월 목표 매출</div>' +
       '<div style="font-size:11px;color:#B0A99F;margin-top:2px">홈 화면 목표 달성률 기준</div></div>' +
       '<input id="set-monthly-goal" type="text" value="' + (s.monthlyGoal || '5000') + '" placeholder="5000" onchange="saveSettings()" style="text-align:right;border:none;outline:none;font-size:11px;color:#282828;background:transparent;font-family:inherit;width:70px">' +
       '<span style="font-size:11px;color:#8E8078;margin-left:4px">만원</span>' +
     '</div>';
-  wrap.appendChild(goalCard);
 
-  // ── 계좌 설정 카드 ──
-  var acctCard = div('background:#fff;margin-bottom:10px;padding:16px;border-radius:12px;border:1px solid #EEE6DC', []);
-  acctCard.id = 'sec-set-acct';
-  acctCard.innerHTML = '<div style="font-size:12px;font-weight:700;color:#B0A99F;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">입금 계좌</div>' +
-    '<div style="display:flex;align-items:center;border-bottom:1px solid #F5F2EE;padding-bottom:10px;margin-bottom:10px">' +
-      '<div style="font-size:12px;font-weight:600;color:#282828;flex:1">계좌번호</div>' +
-      '<input id="set-account" type="text" value="' + (s.account || '015401-04-258798') + '" onchange="saveSettings()" style="text-align:right;border:none;outline:none;font-size:11px;color:#282828;background:transparent;font-family:inherit">' +
-    '</div>' +
-    '<div style="display:flex;align-items:center">' +
-      '<div style="font-size:12px;font-weight:600;color:#282828;flex:1">예금주</div>' +
-      '<input id="set-holder" type="text" value="' + (s.holder || '장선혜') + '" onchange="saveSettings()" style="text-align:right;border:none;outline:none;font-size:11px;color:#282828;background:transparent;font-family:inherit">' +
-    '</div>';
-  wrap.appendChild(acctCard);
+  // ── 담당자별 월 목표 ──
+  var staffGoalCard = div('', []);
+  var allStaffs = ['마스터'].concat(getStaffList());
+  allStaffs.forEach(function(staff) {
+    var goalKey = 'dah_goal_'+staff;
+    var curGoal = Number(localStorage.getItem(goalKey)||0);
+    var gRow = div('margin-bottom:10px', [
+      span('font-size:12px;font-weight:700;display:block;margin-bottom:4px', staff)
+    ]);
+    var gInput = el('input', {type:'number', 'data-staff-goal':staff, placeholder:'목표 금액 (원)', value:curGoal>0?String(curGoal):'', style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box'});
+    (function(k, s) {
+      gInput.addEventListener('change', function() {
+        var v = Number(this.value.replace(/[^0-9]/g,''));
+        if(v>0) { localStorage.setItem(k, String(v)); syncStaffGoalsToCloud(); showToast(s+' 목표 설정됐습니다'); }
+      });
+    })(goalKey, staff);
+    gRow.appendChild(gInput);
+    staffGoalCard.appendChild(gRow);
+  });
 
-  var masterEmailCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:8px', '🔑 마스터 로그인 이메일'),
+
+  // ── 전체 저장 (항상 최상단 고정) ──
+  var saveAllBtn = btn('width:100%;padding:14px;background:#F06E2D;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:10px', '전체 저장', function() {
+    saveSettings();
+    document.querySelectorAll('[data-staff-goal]').forEach(function(inp) {
+      var v = Number(inp.value.replace(/[^0-9]/g,''));
+      if (v > 0) { try { localStorage.setItem('dah_goal_'+inp.getAttribute('data-staff-goal'), String(v)); } catch(e){} }
+    });
+    syncStaffGoalsToCloud();
+    var wh = document.getElementById('set-webhook-url');
+    if (wh) {
+      var url = wh.value.trim();
+      try { localStorage.setItem('dah_webhook_url', url); } catch(e){}
+      sbSyncSetting('webhook_url', url);
+    }
+    showToast('전체 설정이 저장되고 클라우드에 동기화됐습니다');
+  });
+  wrap.appendChild(saveAllBtn);
+
+  var groupGoal = makeGroup('sec-set-goal', '매출 · 목표', [goalCard, labelDiv('담당자별 월 목표'), staffGoalCard], true);
+  wrap.appendChild(groupGoal);
+
+  // ── 마스터 로그인 이메일 ──
+  var masterEmailCard = div('padding-top:4px', [
     span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', 'Supabase 대시보드(Authentication)에서 먼저 마스터 계정을 이메일+비밀번호로 만든 뒤, 그 이메일을 여기에 등록해주세요.')
   ]);
   var masterEmailInput = el('input', {type:'email', id:'set-master-email', placeholder:'마스터 로그인 이메일', value: getMasterEmail(), style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box'});
@@ -111,18 +158,17 @@ function renderSettings() {
     showToast('마스터 로그인 이메일이 저장됐습니다');
   });
   masterEmailCard.appendChild(masterEmailInput);
-  masterEmailCard.id = 'sec-set-email';
-  wrap.appendChild(masterEmailCard);
 
-  var pwCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:12px', '🔐 비밀번호 변경'),
+  // ── 비밀번호 변경 ──
+  var pwCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:12px', [
+    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:4px', '비밀번호 변경'),
     span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '이제 비밀번호는 Supabase 대시보드(Authentication > Users)에서 변경합니다. 아래는 예전 방식의 흔적으로, 더 이상 로그인에 사용되지 않습니다.')
   ]);
   [['change-pw-current2','현재 비밀번호'],['change-pw-new2','새 비밀번호 (4자 이상)'],['change-pw-confirm2','새 비밀번호 확인']].forEach(function(row) {
     var inp = el('input', {type:'password', id:row[0], placeholder:row[1], style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;outline:none;margin-bottom:6px;box-sizing:border-box'});
     pwCard.appendChild(inp);
   });
-  pwCard.appendChild(btn('width:100%;padding:12px;background:#F06E2D;color:#fff;border:none;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:4px', '비밀번호 변경', function() {
+  pwCard.appendChild(btn('width:100%;padding:11px;background:#282828;color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px', '비밀번호 변경', function() {
     var cur = document.getElementById('change-pw-current2');
     var nw = document.getElementById('change-pw-new2');
     var con = document.getElementById('change-pw-confirm2');
@@ -135,12 +181,11 @@ function renderSettings() {
     cur.value=''; nw.value=''; con.value='';
     showToast('비밀번호가 변경됐습니다');
   }));
-  pwCard.id = 'sec-set-pw';
-  wrap.appendChild(pwCard);
 
   
-  var staffCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:12px', '👤 담당자 관리'),
+  // ── 담당자 관리 ──
+  var staffCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:12px', [
+    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:4px', '담당자 관리'),
     span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '로그인용 이메일과 비밀번호는 Supabase 대시보드(Authentication)에서 먼저 계정을 만든 뒤, 아래에 그 이메일을 연결해주세요.')
   ]);
   var staffList = getStaffList();
@@ -153,7 +198,7 @@ function renderSettings() {
     var row = div('padding:8px 0;border-bottom:1px solid #EEE6DC', [
       div('display:flex;justify-content:space-between;align-items:center', [
         span('font-size:12px;font-weight:700', name),
-        btn('font-size:11px;color:#F06E2D;background:none;border:1px solid #F06E2D;padding:3px 8px;cursor:pointer;font-family:inherit', '삭제', function() {
+        btn('font-size:11px;color:#E4483A;background:none;border:none;cursor:pointer;font-family:inherit', '삭제', function() {
           if(!confirm(name + ' 담당자를 삭제할까요?')) return;
           var list = getStaffList().filter(function(s){ return s !== name; });
           try { localStorage.setItem('dah_staff_list', JSON.stringify(list)); } catch(e){}
@@ -181,36 +226,25 @@ function renderSettings() {
     renderSettings(); showToast(name + ' 담당자가 추가됐습니다 — 로그인하려면 이메일도 등록해주세요');
   }));
   staffCard.appendChild(addStaffWrap);
-  staffCard.id = 'sec-set-staff';
-  wrap.appendChild(staffCard);
+
+  var groupAccount = makeGroup('sec-set-account', '계정 · 보안', [masterEmailCard, pwCard, staffCard], false);
+  wrap.appendChild(groupAccount);
 
   
-  var goalCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:12px', '🎯 담당자별 월 목표 매출')
-  ]);
-  var allStaffs = ['마스터'].concat(getStaffList());
-  allStaffs.forEach(function(staff) {
-    var goalKey = 'dah_goal_'+staff;
-    var curGoal = Number(localStorage.getItem(goalKey)||0);
-    var gRow = div('margin-bottom:10px', [
-      span('font-size:12px;font-weight:700;display:block;margin-bottom:4px', staff)
-    ]);
-    var gInput = el('input', {type:'number', 'data-staff-goal':staff, placeholder:'목표 금액 (원)', value:curGoal>0?String(curGoal):'', style:'width:100%;padding:9px 10px;border:1px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box'});
-    (function(k, s) {
-      gInput.addEventListener('change', function() {
-        var v = Number(this.value.replace(/[^0-9]/g,''));
-        if(v>0) { localStorage.setItem(k, String(v)); syncStaffGoalsToCloud(); showToast(s+' 목표 설정됐습니다'); }
-      });
-    })(goalKey, staff);
-    gRow.appendChild(gInput);
-    goalCard.appendChild(gRow);
-  });
-  goalCard.id = 'sec-set-staffgoal';
-  wrap.appendChild(goalCard);
+  // ── 계좌 정보 ──
+  var acctCard = div('padding-top:4px', []);
+  acctCard.innerHTML = '<div style="display:flex;align-items:center;border-bottom:1px solid #F5F2EE;padding-bottom:10px;margin-bottom:10px">' +
+      '<div style="font-size:12px;font-weight:600;color:#282828;flex:1">계좌번호</div>' +
+      '<input id="set-account" type="text" value="' + (s.account || '015401-04-258798') + '" onchange="saveSettings()" style="text-align:right;border:none;outline:none;font-size:11px;color:#282828;background:transparent;font-family:inherit">' +
+    '</div>' +
+    '<div style="display:flex;align-items:center">' +
+      '<div style="font-size:12px;font-weight:600;color:#282828;flex:1">예금주</div>' +
+      '<input id="set-holder" type="text" value="' + (s.holder || '장선혜') + '" onchange="saveSettings()" style="text-align:right;border:none;outline:none;font-size:11px;color:#282828;background:transparent;font-family:inherit">' +
+    '</div>';
 
-  
-  var webhookCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:4px', '⚙️ Make.com 웹훅 URL'),
+  // ── Make.com 웹훅 ──
+  var webhookCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:12px', [
+    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:4px', 'Make.com 웹훅 URL'),
     span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '알림톡 자동 발송 연동 (검수 완료 후 입력) · 입력 후 다른 곳을 클릭하면 자동 저장됩니다')
   ]);
   var curWebhook = localStorage.getItem('dah_webhook_url') || '';
@@ -222,39 +256,16 @@ function renderSettings() {
     showToast('웹훅 URL이 저장됐습니다');
   });
   webhookCard.appendChild(webhookInput);
-  webhookCard.id = 'sec-set-webhook';
-  wrap.appendChild(webhookCard);
 
-  var saveAllCard = div('background:#fff;margin-bottom:10px;padding:16px', []);
-  saveAllCard.appendChild(btn('width:100%;padding:14px;background:#F06E2D;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer', '💾 전체 저장', function() {
-    // 매출목표/계좌정보
-    saveSettings();
-    // 담당자별 월목표
-    document.querySelectorAll('[data-staff-goal]').forEach(function(inp) {
-      var v = Number(inp.value.replace(/[^0-9]/g,''));
-      if (v > 0) { try { localStorage.setItem('dah_goal_'+inp.getAttribute('data-staff-goal'), String(v)); } catch(e){} }
-    });
-    syncStaffGoalsToCloud();
-    // 웹훅
-    var wh = document.getElementById('set-webhook-url');
-    if (wh) {
-      var url = wh.value.trim();
-      try { localStorage.setItem('dah_webhook_url', url); } catch(e){}
-      sbSyncSetting('webhook_url', url);
-    }
-    showToast('전체 설정이 저장되고 클라우드에 동기화됐습니다');
-  }));
-  saveAllCard.id = 'sec-set-saveall';
-  wrap.appendChild(saveAllCard);
-
+  var groupIntegration = makeGroup('sec-set-integration', '계좌 · 연동', [acctCard, webhookCard], false);
+  wrap.appendChild(groupIntegration);
 
   
-  var dataCard = div('background:#fff;margin-bottom:10px;padding:16px', [
-    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:12px', '💾 데이터 관리')
-  ]);
-  dataCard.appendChild(btn('width:100%;padding:11px;background:#282828;color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:8px', '📊 고객목록 엑셀 내보내기', exportExcel));
-  dataCard.appendChild(btn('width:100%;padding:11px;background:#282828;color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:8px', '📋 견적서목록 엑셀 내보내기', exportEstimatesExcel));
-  dataCard.appendChild(btn('width:100%;padding:11px;background:#fff;border:1px solid #EEE6DC;font-size:11px;font-family:inherit;cursor:pointer;margin-bottom:8px', '💾 백업 (JSON 다운로드)', backupData));
+  // ── 데이터 관리 ──
+  var dataCard = div('padding-top:4px', []);
+  dataCard.appendChild(btn('width:100%;padding:11px;background:#282828;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:8px', '고객목록 엑셀 내보내기', exportExcel));
+  dataCard.appendChild(btn('width:100%;padding:11px;background:#282828;color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:8px', '견적서목록 엑셀 내보내기', exportEstimatesExcel));
+  dataCard.appendChild(btn('width:100%;padding:11px;background:#FAF7F5;border:none;border-radius:10px;font-size:11px;font-family:inherit;cursor:pointer;margin-bottom:8px;color:#282828', '백업 (JSON 다운로드)', backupData));
   var lastBackupIso = null;
   try { lastBackupIso = localStorage.getItem('dah_last_backup'); } catch(e){}
   var lastBackupLabel = '마지막 백업: 없음';
@@ -280,28 +291,25 @@ function renderSettings() {
     reader.readAsText(file);
   });
   dataCard.appendChild(restoreInput);
-  dataCard.appendChild(btn('width:100%;padding:11px;background:#fff;border:1px solid #EEE6DC;font-size:11px;font-family:inherit;cursor:pointer', '📂 복원 (JSON 업로드)', function() { document.getElementById('restore-input').click(); }));
-  dataCard.id = 'sec-set-data';
-  wrap.appendChild(dataCard);
+  dataCard.appendChild(btn('width:100%;padding:11px;background:#FAF7F5;border:none;border-radius:10px;font-size:11px;font-family:inherit;cursor:pointer;color:#282828', '복원 (JSON 업로드)', function() { document.getElementById('restore-input').click(); }));
 
-  var logoutCard = div('background:#fff;padding:16px', []);
-  logoutCard.appendChild(btn('width:100%;padding:12px;background:#fff;color:#E4483A;border:1px solid #EEE6DC;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer', '🚪 로그아웃', function() {
+  var logoutCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:12px', []);
+  logoutCard.appendChild(btn('width:100%;padding:11px;background:#fff;color:#E4483A;border:1px solid #EEE6DC;border-radius:10px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer', '로그아웃', function() {
     if (confirm('로그아웃 하시겠습니까?')) logout();
   }));
-  logoutCard.id = 'sec-set-logout';
-  wrap.appendChild(logoutCard);
 
-  // 빠른이동 내비게이션 (PC 전용)
+  var groupData = makeGroup('sec-set-data', '데이터 관리', [dataCard, logoutCard], false);
+  wrap.appendChild(groupData);
+
+  // 빠른이동 내비게이션 (PC 전용) — 그룹 단위로 축소
   if (typeof renderQuickNav === 'function') {
     renderQuickNav([
       {id:'sec-set-goal', label:'매출목표'},
-      {id:'sec-set-acct', label:'계좌정보'},
-      {id:'sec-set-email', label:'로그인계정'},
-      {id:'sec-set-pw', label:'비밀번호'},
-      {id:'sec-set-staff', label:'담당자'},
-      {id:'sec-set-staffgoal', label:'담당자목표'},
-      {id:'sec-set-webhook', label:'웹훅연동'},
+      {id:'sec-set-account', label:'계정보안'},
+      {id:'sec-set-integration', label:'계좌연동'},
       {id:'sec-set-data', label:'데이터관리'}
     ]);
   }
 }
+
+function labelDiv(text) { return span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:8px', text); }
