@@ -87,28 +87,8 @@ function renderEstList() {
 
     row.appendChild(top); row.appendChild(mid); row.appendChild(bot);
 
-    // 빠른 액션 버튼 행
-    var actions = el('div', {style:'display:flex;gap:6px;margin-top:8px'});
-    var kakaoBtn2 = el('button', {style:'flex:1;padding:6px 0;background:#FAE100;color:#3C1E1E;border:none;border-radius:5px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer'});
-    kakaoBtn2.textContent = '📋 카카오 복사';
-    (function(est){ kakaoBtn2.addEventListener('click', function(ev){
-      ev.stopPropagation();
-      var text = '[드로잉엣홈] ' + (est.clientName||'') + '님 견적서 (' + (est.no||'') + ')\n금액: ' + (Number(est.price)||0).toLocaleString() + '원\n공간: ' + (est.space||'') + '\n원단: ' + (est.fabric||'');
-      navigator.clipboard.writeText(text).then(function(){ showToast('카카오톡에 붙여넣기 하세요 🙂'); }).catch(function(){ showToast('복사됐습니다'); });
-    }); })(e);
-
-    var openBtn2 = el('button', {style:'flex:1;padding:6px 0;background:#282828;color:#fff;border:none;border-radius:5px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer'});
-    openBtn2.textContent = '📄 견적서 앱';
-    (function(clientN){ openBtn2.addEventListener('click', function(ev){
-      ev.stopPropagation();
-      openEstimate(clientN);
-    }); })(e.clientName);
-
-    actions.appendChild(kakaoBtn2); actions.appendChild(openBtn2);
-    row.appendChild(actions);
-
-    // 클릭 시 고객 상세
-    (function(name){ row.addEventListener('click', function(){ if(name) openDetail(name); }); })(e.clientName);
+    // 클릭 시 고객 상세 (이력 탭에 카카오복사/견적서앱 액션이 이미 있어 여기선 중복 버튼 생략)
+    (function(name){ row.addEventListener('click', function(){ if(name) openDetail(name, null, 'est'); }); })(e.clientName);
 
     card.appendChild(row);
   });
