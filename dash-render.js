@@ -118,7 +118,7 @@ function renderHome(skipServerFetch) {
       '</div>',
 
       // 2. 목표 달성률 바
-      '<div style="padding:12px 20px;background:#fff;border-bottom:1px solid var(--border)">',
+      '<div id="sec-goal" style="padding:12px 20px;background:#fff;border-bottom:1px solid var(--border)">',
         '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">',
           '<span style="font-size:12px;font-weight:600;color:var(--sub)">이달 목표 달성률</span>',
           '<span style="font-size:12px;font-weight:700;color:' + (isOver ? '#2E7D32' : 'var(--terra)') + '">' + pct + '% <span style="font-size:12px;font-weight:400;color:var(--sub)">/ ' + goalWan.toLocaleString() + '만원</span></span>',
@@ -129,7 +129,7 @@ function renderHome(skipServerFetch) {
       '</div>',
 
       // 3. KPI 카드 3개
-      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-bottom:1px solid var(--border)">',
+      '<div id="sec-kpi" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-bottom:1px solid var(--border)">',
         // 이달 매출
         '<div style="background:#fff;padding:16px 20px">',
           '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:8px;text-transform:uppercase">이달 매출</div>',
@@ -151,7 +151,7 @@ function renderHome(skipServerFetch) {
       '</div>',
 
       // 4. 스테이지 현황 칩
-      '<div style="background:#fff;padding:14px 20px 12px;border-bottom:1px solid var(--border)">',
+      '<div id="sec-stage" style="background:#fff;padding:14px 20px 12px;border-bottom:1px solid var(--border)">',
         '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:10px;text-transform:uppercase">진행 현황</div>',
         '<div style="display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px">',
           ['상담','계약금','실측','잔금','시공','완료'].map(function(stage) {
@@ -170,7 +170,7 @@ function renderHome(skipServerFetch) {
       '</div>',
 
       // 5. 처리 필요
-      '<div style="background:#fff;border-bottom:1px solid var(--border);min-height:80px">',
+      '<div id="sec-todo" style="background:#fff;border-bottom:1px solid var(--border);min-height:80px">',
         '<div style="padding:14px 20px 10px;display:flex;align-items:center;justify-content:space-between">',
           '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">처리 필요</span>',
           needAction.length > 0 ? '<span style="font-size:12px;font-weight:700;color:var(--terra);background:var(--bg-org);padding:2px 8px;border-radius:10px">' + needAction.length + '건</span>' : '',
@@ -197,7 +197,7 @@ function renderHome(skipServerFetch) {
       '</div>',
 
       // 6. 오늘/내일 일정
-      '<div style="background:#fff;border-bottom:1px solid var(--border);min-height:80px">',
+      '<div id="sec-schedule" style="background:#fff;border-bottom:1px solid var(--border);min-height:80px">',
         '<div style="padding:14px 20px 10px">',
           '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">오늘/내일 일정</span>',
         '</div>',
@@ -252,7 +252,7 @@ function renderHome(skipServerFetch) {
           '</div>';
         }).join('');
         return rows ? (
-          '<div style="background:#fff;border-bottom:1px solid var(--border)">' +
+          '<div id="sec-staff-perf" style="background:#fff;border-bottom:1px solid var(--border)">' +
             '<div style="padding:14px 20px 10px">' +
               '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">담당자별 성과</span>' +
             '</div>' + rows +
@@ -266,6 +266,21 @@ function renderHome(skipServerFetch) {
     if (typeof renderGoalProgress === 'function') renderGoalProgress(thisMonthRev);
 
     applyPermissions();
+
+    // 빠른이동 내비게이션 (PC 전용)
+    if (typeof renderQuickNav === 'function') {
+      var homeNavItems = [
+        {id:'sec-goal', label:'목표'},
+        {id:'sec-kpi', label:'현황요약'},
+        {id:'sec-stage', label:'진행현황'},
+        {id:'sec-todo', label:'처리필요'},
+        {id:'sec-schedule', label:'일정'}
+      ];
+      if (currentUser && currentUser.role === 'master' && document.getElementById('sec-staff-perf')) {
+        homeNavItems.push({id:'sec-staff-perf', label:'담당자성과'});
+      }
+      renderQuickNav(homeNavItems);
+    }
   };
 
   if (skipServerFetch) {

@@ -77,6 +77,7 @@ function renderSettings() {
   // ── 월목표 설정 카드 ──
   var s = getSettings ? getSettings() : {};
   var goalCard = div('background:#fff;margin-bottom:10px;padding:16px;border-radius:12px;border:1px solid #EEE6DC', []);
+  goalCard.id = 'sec-set-goal';
   goalCard.innerHTML = '<div style="font-size:12px;font-weight:700;color:#B0A99F;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">매출 목표</div>' +
     '<div style="display:flex;align-items:center">' +
       '<div style="flex:1"><div style="font-size:12px;font-weight:600;color:#282828">월 목표 매출</div>' +
@@ -88,6 +89,7 @@ function renderSettings() {
 
   // ── 계좌 설정 카드 ──
   var acctCard = div('background:#fff;margin-bottom:10px;padding:16px;border-radius:12px;border:1px solid #EEE6DC', []);
+  acctCard.id = 'sec-set-acct';
   acctCard.innerHTML = '<div style="font-size:12px;font-weight:700;color:#B0A99F;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">입금 계좌</div>' +
     '<div style="display:flex;align-items:center;border-bottom:1px solid #F5F2EE;padding-bottom:10px;margin-bottom:10px">' +
       '<div style="font-size:12px;font-weight:600;color:#282828;flex:1">계좌번호</div>' +
@@ -109,6 +111,7 @@ function renderSettings() {
     showToast('마스터 로그인 이메일이 저장됐습니다');
   });
   masterEmailCard.appendChild(masterEmailInput);
+  masterEmailCard.id = 'sec-set-email';
   wrap.appendChild(masterEmailCard);
 
   var pwCard = div('background:#fff;margin-bottom:10px;padding:16px', [
@@ -132,6 +135,7 @@ function renderSettings() {
     cur.value=''; nw.value=''; con.value='';
     showToast('비밀번호가 변경됐습니다');
   }));
+  pwCard.id = 'sec-set-pw';
   wrap.appendChild(pwCard);
 
   
@@ -177,6 +181,7 @@ function renderSettings() {
     renderSettings(); showToast(name + ' 담당자가 추가됐습니다 — 로그인하려면 이메일도 등록해주세요');
   }));
   staffCard.appendChild(addStaffWrap);
+  staffCard.id = 'sec-set-staff';
   wrap.appendChild(staffCard);
 
   
@@ -200,6 +205,7 @@ function renderSettings() {
     gRow.appendChild(gInput);
     goalCard.appendChild(gRow);
   });
+  goalCard.id = 'sec-set-staffgoal';
   wrap.appendChild(goalCard);
 
   
@@ -216,6 +222,7 @@ function renderSettings() {
     showToast('웹훅 URL이 저장됐습니다');
   });
   webhookCard.appendChild(webhookInput);
+  webhookCard.id = 'sec-set-webhook';
   wrap.appendChild(webhookCard);
 
   var saveAllCard = div('background:#fff;margin-bottom:10px;padding:16px', []);
@@ -237,6 +244,7 @@ function renderSettings() {
     }
     showToast('전체 설정이 저장되고 클라우드에 동기화됐습니다');
   }));
+  saveAllCard.id = 'sec-set-saveall';
   wrap.appendChild(saveAllCard);
 
 
@@ -273,11 +281,27 @@ function renderSettings() {
   });
   dataCard.appendChild(restoreInput);
   dataCard.appendChild(btn('width:100%;padding:11px;background:#fff;border:1px solid #EEE6DC;font-size:11px;font-family:inherit;cursor:pointer', '📂 복원 (JSON 업로드)', function() { document.getElementById('restore-input').click(); }));
+  dataCard.id = 'sec-set-data';
   wrap.appendChild(dataCard);
 
   var logoutCard = div('background:#fff;padding:16px', []);
   logoutCard.appendChild(btn('width:100%;padding:12px;background:#fff;color:#E4483A;border:1px solid #EEE6DC;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer', '🚪 로그아웃', function() {
     if (confirm('로그아웃 하시겠습니까?')) logout();
   }));
+  logoutCard.id = 'sec-set-logout';
   wrap.appendChild(logoutCard);
+
+  // 빠른이동 내비게이션 (PC 전용)
+  if (typeof renderQuickNav === 'function') {
+    renderQuickNav([
+      {id:'sec-set-goal', label:'매출목표'},
+      {id:'sec-set-acct', label:'계좌정보'},
+      {id:'sec-set-email', label:'로그인계정'},
+      {id:'sec-set-pw', label:'비밀번호'},
+      {id:'sec-set-staff', label:'담당자'},
+      {id:'sec-set-staffgoal', label:'담당자목표'},
+      {id:'sec-set-webhook', label:'웹훅연동'},
+      {id:'sec-set-data', label:'데이터관리'}
+    ]);
+  }
 }

@@ -20,6 +20,37 @@ function div(style, children) { return el('div', {style: style}, children); }
 function span(style, text) { return el('span', {style: style, text: text}); }
 function btn(style, text, onClick) { var b = el('button', {style: style, text: text}); b.addEventListener('click', onClick); return b; }
 
+// ── 빠른이동 내비게이션 (PC 전용, 섹션 많은 화면에서 우측 고정 목차) ──
+// 사용법: renderQuickNav([{id:'sec-goal', label:'목표'}, ...])
+// 화면(탭)을 벗어나면 반드시 hideQuickNav()로 제거해야 다른 화면에 남아있지 않음.
+function hideQuickNav() {
+  var existing = document.getElementById('quick-nav');
+  if (existing) existing.remove();
+  document.body.classList.remove('has-quicknav');
+}
+function renderQuickNav(items) {
+  hideQuickNav();
+  if (!items || items.length === 0) return;
+  if (window.innerWidth < 1024) return; // 모바일/태블릿은 섹션 자체가 짧아 생략
+
+  var nav = document.createElement('div');
+  nav.id = 'quick-nav';
+  nav.className = 'quick-nav';
+  items.forEach(function(item) {
+    var link = document.createElement('a');
+    link.href = '#' + item.id;
+    link.textContent = item.label;
+    link.onclick = function(e) {
+      e.preventDefault();
+      var target = document.getElementById(item.id);
+      if (target) target.scrollIntoView({behavior:'smooth', block:'start'});
+    };
+    nav.appendChild(link);
+  });
+  document.body.appendChild(nav);
+  document.body.classList.add('has-quicknav');
+}
+
 function checkDuplicate(name, phone) {
   try {
     var customers = loadCustomers();

@@ -25,6 +25,45 @@
   box-shadow: 0 4px 16px rgba(0,0,0,0.25);
 }
 
+/* ── 빠른이동 내비게이션 (섹션 많은 화면 우측 고정 목차, PC 전용) ── */
+.quick-nav {
+  position: fixed;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: #fff;
+  border: 1px solid #EEE6DC;
+  border-radius: 12px;
+  padding: 8px 4px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+}
+.quick-nav a {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9A9490;
+  text-decoration: none;
+  padding: 7px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+  text-align: center;
+  transition: background 0.15s, color 0.15s;
+}
+.quick-nav a:hover {
+  background: #FAF7F5;
+  color: #282828;
+}
+@media (max-width: 1023px) {
+  .quick-nav { display: none; }
+}
+/* quick-nav가 떠 있을 때는 본문 오른쪽에 여백을 줘서 콘텐츠와 겹치지 않게 함 */
+@media (min-width: 1024px) {
+  body.has-quicknav .wrap { padding-right: 108px; }
+}
+
 /* ── Pretendard 직접 내장 (CDN 불필요) ── */
 @font-face {
   font-family: 'Pretendard Variable';

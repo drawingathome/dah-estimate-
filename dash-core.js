@@ -14,6 +14,7 @@ function showToast(msg) {
 function goTab(t) {
   ['home','pipe','est-list','search','cal','chart','settings'].forEach(function(id) { var el2 = document.getElementById(id); if(el2) el2.style.display = id === t ? 'block' : 'none'; });
   document.querySelectorAll('.tab').forEach(function(b) { b.className = b.getAttribute('data-tab') === t ? 'tab on' : 'tab'; });
+  if (t !== 'home' && t !== 'settings' && typeof hideQuickNav === 'function') hideQuickNav();
   if (t === 'home') loadCustomersAsync(renderHome);
   if (t === 'pipe') loadCustomersAsync(renderPipe);
   if (t === 'est-list') renderEstList();
