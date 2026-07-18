@@ -254,6 +254,7 @@ function openDetail(name, id, forceTab) {
   if (!c) return;
   currentDetailName = c.clientName;
   currentDetailId = c.id || null;
+  if (typeof logEvent === 'function') logEvent('detail_open', { stage: c.stage, tab: forceTab || 'info' });
   var isMaster = currentUser && currentUser.role === 'master';
 
   // 이름
@@ -587,9 +588,11 @@ function changeStage(stage) {
     if ((target.staffName||'마스터') !== currentUser.name) { alert('본인 담당 고객만 단계를 변경할 수 있습니다.'); return; }
   }
   if (stage === '완료') { if (!confirm(currentDetailName + ' 고객을 "시공 완료"로 변경할까요?')) return; }
+  var fromStage = target.stage;
   target.stage = stage;
   saveCustomers(arr);
   saveCustomerToDb(target, null);
+  if (typeof logEvent === 'function') logEvent('stage_change', { from: fromStage, to: stage });
   renderHome(true); openDetail(currentDetailName, target.id);
   showToast('"' + stage + '"으로 변경됐습니다');
 }

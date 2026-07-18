@@ -12,6 +12,7 @@ function showToast(msg) {
 
 /** @param {string} t 탭ID (home|pipe|search|est-list|cal|chart|settings) */
 function goTab(t) {
+  if (typeof logEvent === 'function') logEvent('tab_view', { tab: t });
   ['home','pipe','est-list','search','cal','chart','settings'].forEach(function(id) { var el2 = document.getElementById(id); if(el2) el2.style.display = id === t ? 'block' : 'none'; });
   document.querySelectorAll('.tab').forEach(function(b) { b.className = b.getAttribute('data-tab') === t ? 'tab on' : 'tab'; });
   if (t !== 'home' && t !== 'settings' && typeof hideQuickNav === 'function') hideQuickNav();

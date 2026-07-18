@@ -71,6 +71,21 @@ function sbXHR(method, path, data, callback) {
   xhr.send(data ? JSON.stringify(data) : null);
 }
 
+// ── 사용 패턴 로깅 (탭 이동/상세보기/단계변경 등 핵심 지점만) ──
+// 실패해도 화면 동작에 영향 없어야 하므로 콜백 없이 그냥 보내고 무시함.
+// 개인정보 최소화: 고객 이름/전화번호 등은 기록하지 않고, 어떤 "행동"이 일어났는지만 남김.
+function logEvent(eventType, detail) {
+  try {
+    sbXHR('POST', 'analytics_events', {
+      event_type: eventType,
+      event_detail: detail || {},
+      staff_name: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.name : null
+    }, function(err) {
+      if (err) console.warn('로그 기록 실패(무시 가능):', err);
+    });
+  } catch (e) { /* 로깅 실패가 실제 기능에 영향 주면 안 되므로 조용히 무시 */ }
+}
+
 var _customerCache = [];
 
 // ── 앱 설정 동기화 (담당자목록/월목표매출/계좌정보/웹훅/마스터비번) ──
