@@ -7,19 +7,27 @@ var calCurrentYear = new Date().getFullYear();
 var calCurrentMonth = new Date().getMonth();
 var calSelectedDate = null;
 
+// 주소 문자열에서 앞 2개 토큰만 지역명으로 추출 (예: "서울 서초구 사평대로53길 64" -> "서울 서초구")
+function getRegionFromAddr(addr) {
+  if (!addr) return '';
+  var parts = addr.trim().split(/\s+/);
+  return parts.slice(0, 2).join(' ');
+}
+
 function getCalEvents(customers, year, month) {
   var monStr = year + '-' + pad2(month+1);
   var events = [];
   customers.forEach(function(c) {
+    var region = getRegionFromAddr(c.addr);
     // 실측일 - 메인 표시
     if ((c.measureDate||'').slice(0,7) === monStr)
-      events.push({date:c.measureDate, name:c.clientName, space:c.space||'—', type:'실측', stage:c.stage, price:c.price||0, cust:c});
+      events.push({date:c.measureDate, name:c.clientName, space:c.space||'—', region:region, type:'실측', stage:c.stage, price:c.price||0, cust:c});
     // 시공일 - 메인 표시
     if ((c.installDate||'').slice(0,7) === monStr)
-      events.push({date:c.installDate, name:c.clientName, space:c.space||'—', type:'시공', stage:c.stage, price:c.price||0, cust:c});
-    // 상담일 - dotOnly (점만, 목록에선 표시)
+      events.push({date:c.installDate, name:c.clientName, space:c.space||'—', region:region, type:'시공', stage:c.stage, price:c.price||0, cust:c});
+    // 상담일 - dotOnly (점만, 달력 격자에서만 표시. 하단 목록에는 표시 안 함)
     if ((c.date||'').slice(0,7) === monStr)
-      events.push({date:c.date, name:c.clientName, space:c.space||'—', type:'상담', stage:c.stage, price:c.price||0, cust:c, dotOnly:true});
+      events.push({date:c.date, name:c.clientName, space:c.space||'—', region:region, type:'상담', stage:c.stage, price:c.price||0, cust:c, dotOnly:true});
   });
   events.sort(function(a,b){ return a.date < b.date ? -1 : 1; });
   return events;
@@ -178,12 +186,12 @@ function renderCalList(customers, selectedDate) {
       getCalEvents(customers, yr, 5), getCalEvents(customers, yr, 6), getCalEvents(customers, yr, 7),
       getCalEvents(customers, yr, 8), getCalEvents(customers, yr, 9), getCalEvents(customers, yr, 10),
       getCalEvents(customers, yr, 11), getCalEvents(customers, yr+1, 0));
-    events = getCalEvents(customers, yr, mo).filter(function(ev){ return ev.date === selectedDate; });
+    events = getCalEvents(customers, yr, mo).filter(function(ev){ return ev.date === selectedDate && !ev.dotOnly; });
     var d = new Date(selectedDate);
     var DOW2 = ['일','월','화','수','목','금','토'];
     if (lblEl) lblEl.textContent = (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + DOW2[d.getDay()] + ') 일정';
   } else {
-    events = getCalEvents(customers, yr, mo);
+    events = getCalEvents(customers, yr, mo).filter(function(ev){ return !ev.dotOnly; });
     if (lblEl) lblEl.textContent = (mo+1) + '월 전체 일정';
   }
 
@@ -218,7 +226,7 @@ function renderCalList(customers, selectedDate) {
     info.className = 'cal-ev-info';
     info.innerHTML =
       '<div class="cal-ev-name" style="font-size:'+(isMain?'15px':'13px')+';font-weight:'+(isMain?'700':'500')+'">' + ev.name + '</div>' +
-      '<div class="cal-ev-sub">' + ev.space + '</div>';
+      '<div class="cal-ev-sub">' + (ev.region || '주소 미입력') + '</div>';
 
     var right = document.createElement('div');
     right.style.cssText = 'text-align:right;flex-shrink:0';
