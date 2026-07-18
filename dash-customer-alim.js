@@ -41,7 +41,7 @@ function renderAlimSection(c, alimBody) {
     row.appendChild(left);
 
     if (!sent) {
-      var sendBtn = el('span', {style:'font-size:12px;font-weight:700;color:'+(isRecommended?'#282828':'var(--light)')+';cursor:pointer;flex-shrink:0;padding:4px 8px;border:1px solid '+(isRecommended?'#282828':'#EEE6DC')+';border-radius:4px', text:'발송'});
+      var sendBtn = el('span', {style:'font-size:12px;font-weight:700;color:'+(isRecommended?'#282828':'var(--light)')+';cursor:pointer;flex-shrink:0;padding:4px 8px;border:1px solid '+(isRecommended?'#282828':'#EEE6DC')+';border-radius:10px', text:'발송'});
       (function(k){ sendBtn.addEventListener('click', function(){ sendAlimtalk(k); }); })(key);
       row.appendChild(sendBtn);
     } else {

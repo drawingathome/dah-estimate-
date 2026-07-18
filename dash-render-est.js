@@ -55,14 +55,14 @@ function renderEstList() {
     noSpan.textContent = e.no || '—';
 
     var typeTag = el('span', {style:
-      'font-size:12px;font-weight:700;padding:2px 6px;border-radius:4px;' +
+      'font-size:12px;font-weight:700;padding:2px 6px;border-radius:6px;' +
       'background:' + (isFinal?'#282828':'#F5F2EE') + ';' +
       'color:' + (isFinal?'#fff':'#9A9490')
     });
     typeTag.textContent = STATUS_KO[e.status] || '가견적서';
 
     var csBadge = el('span', {style:
-      'margin-left:auto;font-size:12px;font-weight:700;padding:2px 8px;border-radius:4px;' +
+      'margin-left:auto;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;' +
       'background:' + (cs==='contracted'?'#EEF5F2':cs==='rejected'?'#FDECEA':'#F5F2EE') + ';' +
       'color:' + CONTRACT_COLOR[cs]
     });

@@ -68,7 +68,7 @@ function _openAlimtalkPreview(meta, key, c, initialMsg) {
   overlay.id = 'alimtalk-preview-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99998;display:flex;align-items:center;justify-content:center';
   var box = document.createElement('div');
-  box.style.cssText = 'background:#fff;border-radius:16px;padding:20px;width:360px;max-width:90vw;max-height:85vh;overflow-y:auto';
+  box.style.cssText = 'background:#fff;border-radius:12px;padding:20px;width:360px;max-width:90vw;max-height:85vh;overflow-y:auto';
   box.innerHTML =
     '<div style="font-size:12px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:4px">' + escHtml(meta.tag) + ' · ' + escHtml(meta.desc) + '</div>' +
     '<div style="font-size:15px;font-weight:700;color:#282828;margin-bottom:12px">' + escHtml(meta.label) + '</div>' +
@@ -184,12 +184,12 @@ function renderDetailEstTab() {
     var topItems = [
       orderBadge,
       el('span', {style:'font-size:11px;font-weight:800;color:#282828', text: e.no||'—'}),
-      el('span', {style:'font-size:12px;font-weight:700;padding:2px 6px;border-radius:4px;background:'+(isFinal?'#282828':'#F5F2EE')+';color:'+(isFinal?'#fff':'#9A9490'), text: STATUS_KO[e.status]||'가견적서'})
+      el('span', {style:'font-size:12px;font-weight:700;padding:2px 6px;border-radius:6px;background:'+(isFinal?'#282828':'#F5F2EE')+';color:'+(isFinal?'#fff':'#9A9490'), text: STATUS_KO[e.status]||'가견적서'})
     ];
     if (e.confirmedAt) {
       topItems.push(el('span', {style:'font-size:11px;font-weight:700;color:#fff;background:#282828;padding:2px 8px;border-radius:20px', text:'✓ 확정'}));
     }
-    topItems.push(el('span', {style:'margin-left:auto;font-size:12px;font-weight:700;padding:3px 9px;border-radius:4px;background:'+CONTRACT_BG[cs]+';color:'+CONTRACT_COLOR[cs], text: CONTRACT_KO[cs]}));
+    topItems.push(el('span', {style:'margin-left:auto;font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px;background:'+CONTRACT_BG[cs]+';color:'+CONTRACT_COLOR[cs], text: CONTRACT_KO[cs]}));
     var top = div('display:flex;align-items:center;gap:6px;margin-bottom:10px', topItems);
 
     // 금액 크게
@@ -410,7 +410,7 @@ function openDetail(name, id, forceTab) {
     var pill = btn(
       'padding:5px 11px;border:1px solid '+(on?'#282828':'#EEE6DC')+';'+
       'background:'+(on?'#282828':'#fff')+';color:'+(on?'#fff':'#6B6B6B')+';'+
-      'font-size:11px;font-weight:'+(on?'700':'400')+';font-family:inherit;cursor:pointer;border-radius:4px',
+      'font-size:11px;font-weight:'+(on?'700':'400')+';font-family:inherit;cursor:pointer;border-radius:10px',
       num+'. '+s, function(){ changeStage(s); }
     );
     stageBar.appendChild(pill);
@@ -464,7 +464,7 @@ function openDetail(name, id, forceTab) {
       restWrap.id = 'todo-rest';
       manualKeys.slice(1).forEach(function(key) {
         var meta = ALIM_META[key]; if(!meta) return;
-        var row = div('display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#fff;border:1px solid #EEE6DC;border-radius:4px;margin-bottom:5px', [
+        var row = div('display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#fff;border:1px solid #EEE6DC;border-radius:10px;margin-bottom:5px', [
           div('', [
             el('span', {style:'font-size:12px;font-weight:700;color:#282828;display:block', text:meta.label}),
             el('span', {style:'font-size:11px;color:var(--sub)', text:meta.desc})
@@ -631,7 +631,7 @@ function openAdd(editName) {
       sb.setAttribute('data-staff', sn);
       sb.className = 'staff-btn';
       sb.textContent = sn;
-      sb.style.cssText = 'padding:6px 12px;border-radius:4px;border:1px solid '+(isActive?'#F06E2D':'#EEE6DC')+';font-size:11px;font-weight:'+(isActive?'700':'500')+';font-family:inherit;cursor:pointer;background:'+(isActive?'#F06E2D':'#fff')+';color:'+(isActive?'#fff':'#B0A99F');
+      sb.style.cssText = 'padding:6px 12px;border-radius:10px;border:1px solid '+(isActive?'#F06E2D':'#EEE6DC')+';font-size:11px;font-weight:'+(isActive?'700':'500')+';font-family:inherit;cursor:pointer;background:'+(isActive?'#F06E2D':'#fff')+';color:'+(isActive?'#fff':'#B0A99F');
       staffWrap.appendChild(sb);
     });
   }
@@ -794,7 +794,7 @@ function renderEstimateHistory(container, clientName) {
     
     var contractBadge = el('button', {style:
       'font-size:12px;font-weight:700;border:none;cursor:pointer;' +
-      'padding:3px 10px;border-radius:4px;font-family:inherit;' +
+      'padding:3px 10px;border-radius:6px;font-family:inherit;' +
       'background:' + (cs==='contracted'?'#282828':'#FAF7F5') + ';' +
       'color:' + (cs==='contracted'?'#fff':'#6B6B6B'),
       text: CONTRACT_LABELS[cs]||'가견적'
