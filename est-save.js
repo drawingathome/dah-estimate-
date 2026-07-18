@@ -70,13 +70,26 @@ function validateEstimate() {
   var name = document.getElementById('c-name')?.value?.trim();
   if (!name) { showFieldError('c-name', '고객명을 입력해주세요'); return false; }
   var hasProduct = false;
-  document.querySelectorAll('#curtain-body tr').forEach(function(r) {
-    if (getPriceVal(r.querySelector('.cprice')) > 0) hasProduct = true;
+  var missingPriceRows = []; // 가로/높이는 채웠는데 단가를 빼먹은 행 번호(사람이 세는 순서, 1부터)
+
+  document.querySelectorAll('#curtain-body tr').forEach(function(r, idx) {
+    var price = getPriceVal(r.querySelector('.cprice'));
+    var hasSize = (r.querySelector('.mw')?.value || '').trim() !== '' || (r.querySelector('.mh')?.value || '').trim() !== '';
+    if (price > 0) hasProduct = true;
+    else if (hasSize) missingPriceRows.push('커튼 ' + (idx + 1) + '번째');
   });
-  document.querySelectorAll('#blind-body tr').forEach(function(r) {
-    if (getPriceVal(r.querySelector('.blind-price')) > 0) hasProduct = true;
+  document.querySelectorAll('#blind-body tr').forEach(function(r, idx) {
+    var price = getPriceVal(r.querySelector('.blind-price'));
+    var hasSize = (r.querySelector('.mw')?.value || '').trim() !== '' || (r.querySelector('.mh')?.value || '').trim() !== '';
+    if (price > 0) hasProduct = true;
+    else if (hasSize) missingPriceRows.push('블라인드 ' + (idx + 1) + '번째');
   });
   if (!hasProduct) { showToast('제품 금액을 1개 이상 입력해주세요', 'error'); return false; }
+  // 가로/높이까지 입력해놓고 단가만 빼먹은 행이 있으면 — 조용히 0원으로 저장되는 걸 막고 알려줌
+  if (missingPriceRows.length > 0) {
+    showToast('⚠️ ' + missingPriceRows.join(', ') + ' 항목의 단가가 비어있어요. 확인 후 다시 저장해주세요', 'error');
+    return false;
+  }
 
   // 블라인드 옵션추가금(전동 등)이 있는데 지역(시공비 행)이 선택 안 된 경우 —
   // 이 금액이 견적 총액에 반영되지 못하고 그대로 저장되어 누락될 수 있으므로 저장 자체를 막음
