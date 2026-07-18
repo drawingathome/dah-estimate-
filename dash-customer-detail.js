@@ -637,10 +637,44 @@ function openAdd(editName) {
   }
   document.querySelectorAll('.staff-btn').forEach(function(b) {
     var isActive = b.getAttribute('data-staff') === defaultStaff;
-    b.classList.toggle('active', isActive); b.style.background = isActive ? 'var(--terra)' : '#fff'; b.style.color = isActive ? '#fff' : '#8E8078'; b.style.borderRadius = '4px'; b.style.border = '1.5px solid ' + (isActive ? 'var(--terra)' : 'var(--border)'); b.style.fontWeight = isActive ? '700' : '400';
+    b.classList.toggle('active', isActive); b.style.background = isActive ? 'var(--terra)' : '#fff'; b.style.color = isActive ? '#fff' : '#8E8078'; b.style.borderRadius = 'var(--r-btn)'; b.style.border = '1.5px solid ' + (isActive ? 'var(--terra)' : 'var(--border)'); b.style.fontWeight = isActive ? '700' : '400';
     if (isStaffUser) { b.style.pointerEvents = 'none'; b.style.opacity = isActive ? '1' : '0.3'; } else { b.style.pointerEvents = ''; b.style.opacity = ''; }
   });
   var _ov = document.getElementById('add-overlay');
+
+  // 최근 사용 주소 자동완성 — 카카오 주소검색(팝업 열기->검색->선택 3단계)을
+  // 반복 지역(같은 아파트 단지 등) 고객에 한해 원클릭으로 줄여줌
+  var recentWrap = document.getElementById('add-addr-recent');
+  if (recentWrap) {
+    recentWrap.innerHTML = '';
+    var allC = loadCustomers();
+    var seen = {};
+    var recentAddrs = [];
+    allC.slice().reverse().forEach(function(cust) {
+      var a = (cust.addr || '').trim();
+      if (a && !seen[a]) { seen[a] = true; recentAddrs.push(a); }
+    });
+    recentAddrs = recentAddrs.slice(0, 5);
+    if (recentAddrs.length > 0) {
+      recentWrap.style.display = 'flex';
+      recentAddrs.forEach(function(a) {
+        var chip = document.createElement('button');
+        chip.type = 'button';
+        chip.textContent = a.length > 16 ? a.slice(0, 16) + '…' : a;
+        chip.title = a;
+        chip.style.cssText = 'font-size:11px;color:var(--dark);background:var(--ivory1);border:1px solid var(--border);border-radius:var(--r-btn);padding:5px 10px;cursor:pointer;font-family:inherit;white-space:nowrap';
+        chip.addEventListener('click', function() {
+          var addrInput = document.getElementById('add-addr');
+          addrInput.value = a;
+          addrInput.dispatchEvent(new Event('change'));
+        });
+        recentWrap.appendChild(chip);
+      });
+    } else {
+      recentWrap.style.display = 'none';
+    }
+  }
+
   _ov.className = 'overlay open';
   _ov.style.display = 'flex';
   _ov.style.position = 'fixed';

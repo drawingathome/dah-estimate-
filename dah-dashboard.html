@@ -7,7 +7,7 @@
 // 과거에 등록된 서비스워커가 남아있으면 이후 모든 스크립트 요청을 가로채 낡은 버전을
 // 계속 보여줄 수 있어, 다른 태그보다 먼저 실행되도록 이 위치에 둠.
 (function(){
-  var BUILD = '202607190500'; // 배포마다 이 값을 갱신하면, 이전 빌드를 본 기기는 자동으로 1회 강제 새로고침됨
+  var BUILD = '202607190600'; // 배포마다 이 값을 갱신하면, 이전 빌드를 본 기기는 자동으로 1회 강제 새로고침됨
   try {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(regs){
@@ -27,30 +27,30 @@
 </script>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
-<link rel="stylesheet" href="/dash-styles.css?v=202607190500">
+<link rel="stylesheet" href="/dash-styles.css?v=202607190600">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script src="/dash-utils.js?v=202607190500"></script>
-<script src="/dash-api.js?v=202607190500"></script>
-<script src="/dash-supabase-auth.js?v=202607190500"></script>
-<script src="/dash-realtime.js?v=202607190500"></script>
+<script src="/dash-utils.js?v=202607190600"></script>
+<script src="/dash-api.js?v=202607190600"></script>
+<script src="/dash-supabase-auth.js?v=202607190600"></script>
+<script src="/dash-realtime.js?v=202607190600"></script>
 
-<script src="/dash-ui-helpers.js?v=202607190500"></script>
-<script src="/dash-core.js?v=202607190500"></script>
-<script src="/dash-render.js?v=202607190500"></script>
-<script src="/dash-render-est.js?v=202607190500"></script>
-<script src="/dash-render-search.js?v=202607190500"></script>
-<script src="/dash-memo.js?v=202607190500"></script>
-<script src="/dash-chart.js?v=202607190500"></script>
-<script src="/dash-calendar.js?v=202607190500"></script>
-<script src="/dash-kanban.js?v=202607190500"></script>
-<script src="/dash-customer-pay.js?v=202607190500"></script>
-<script src="/dash-customer-alim.js?v=202607190500"></script>
-<script src="/dash-customer-order.js?v=202607190500"></script>
-<script src="/dash-customer-detail.js?v=202607190500"></script>
-<script src="/dash-auth.js?v=202607190500"></script>
-<script src="/dash-settings.js?v=202607190500"></script>
-<script src="/dash-export.js?v=202607190500"></script>
-<script src="/dash-search.js?v=202607190500"></script>
+<script src="/dash-ui-helpers.js?v=202607190600"></script>
+<script src="/dash-core.js?v=202607190600"></script>
+<script src="/dash-render.js?v=202607190600"></script>
+<script src="/dash-render-est.js?v=202607190600"></script>
+<script src="/dash-render-search.js?v=202607190600"></script>
+<script src="/dash-memo.js?v=202607190600"></script>
+<script src="/dash-chart.js?v=202607190600"></script>
+<script src="/dash-calendar.js?v=202607190600"></script>
+<script src="/dash-kanban.js?v=202607190600"></script>
+<script src="/dash-customer-pay.js?v=202607190600"></script>
+<script src="/dash-customer-alim.js?v=202607190600"></script>
+<script src="/dash-customer-order.js?v=202607190600"></script>
+<script src="/dash-customer-detail.js?v=202607190600"></script>
+<script src="/dash-auth.js?v=202607190600"></script>
+<script src="/dash-settings.js?v=202607190600"></script>
+<script src="/dash-export.js?v=202607190600"></script>
+<script src="/dash-search.js?v=202607190600"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>드로잉엣홈 대시보드</title>
@@ -473,9 +473,10 @@
       <!-- 주소 (선택) -->
       <div style="margin-bottom:16px">
         <label style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:8px">주소 (선택)</label>
+        <div id="add-addr-recent" style="display:none;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
         <div style="display:flex;gap:6px">
-          <input class="form-input" id="add-addr" aria-label="주소" placeholder="주소 검색을 눌러주세요" readonly style="flex:1;background:#FAF7F5;cursor:pointer" onclick="openKakaoAddr('add-addr')">
-          <button type="button" onclick="openKakaoAddr('add-addr')" style="flex-shrink:0;padding:0 16px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer">주소 검색</button>
+          <input class="form-input" id="add-addr" aria-label="주소" placeholder="주소 검색을 눌러주세요" readonly style="flex:1;background:var(--ivory1);cursor:pointer" onclick="openKakaoAddr('add-addr')">
+          <button type="button" onclick="openKakaoAddr('add-addr')" style="flex-shrink:0;padding:0 16px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer">주소 검색</button>
         </div>
       </div>
       </div>
@@ -488,8 +489,8 @@
       <input type="hidden" id="add-install" value="">
 
       <!-- 저장 버튼 -->
-      <button id="add-save-btn" style="width:100%;padding:14px;background:#F06E2D;color:#fff;border:none;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:4px;margin-bottom:8px;letter-spacing:0.5px">저장 + 예약확인 알림톡 발송</button>
-      <button id="add-save-only-btn" style="width:100%;padding:12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:4px;margin-bottom:16px">저장만 하기</button>
+      <button id="add-save-btn" style="width:100%;padding:14px;background:var(--terra);color:#fff;border:none;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:8px;letter-spacing:0.5px">저장 + 예약확인 알림톡 발송</button>
+      <button id="add-save-only-btn" style="width:100%;padding:12px;background:var(--ivory1);color:var(--dark);border:1px solid var(--border);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:16px">저장만 하기</button>
     </div>
   </div>
 </div>
