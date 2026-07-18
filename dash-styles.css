@@ -1192,6 +1192,14 @@ button[onclick="exportExcel()"] {
   --blue:     #282828;
   --terra-dark:#D4601F;
   --kakao-dark:#F5D800;
+  /* ── 여백(4px 격자) — 새 코드부터 이 변수로 통일 예정, 기존 코드는 미변경 ── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 32px;
 }
 
 *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
