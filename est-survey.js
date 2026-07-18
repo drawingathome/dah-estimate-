@@ -112,7 +112,7 @@ function displaySurvey(s) {
   dataEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">'+
     fields.map(function(f){
       return '<div style="padding:10px 14px;background:#FAF7F5;border:1px solid #EEE6DC">'+
-        '<div style="font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:0.8px;margin-bottom:4px">'+f.label+'</div>'+
+        '<div style="font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:0.8px;margin-bottom:var(--sp-1)">'+f.label+'</div>'+
         '<div style="font-size:11px;font-weight:500">'+f.val+'</div></div>';
     }).join('')+'</div>';
   if(card) card.style.display='block';

@@ -57,8 +57,8 @@ function renderPaySection(c, payBody) {
 
   // 선금 섹션
   var depositDone = payData.depositAmount && payData.depositDate;
-  var depSec = div('margin-bottom:8px;padding:12px;background:'+(depositDone?'#F5FAF5':'var(--ivory1)')+';border-radius:12px;border:1px solid '+(depositDone?'#B0D4B0':'var(--border)'), []);
-  var depTitle = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:8px', [
+  var depSec = div('margin-bottom:var(--sp-2);padding:var(--sp-3);background:'+(depositDone?'#F5FAF5':'var(--ivory1)')+';border-radius:12px;border:1px solid '+(depositDone?'#B0D4B0':'var(--border)'), []);
+  var depTitle = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-2)', [
     el('div', {style:'font-size:12px;font-weight:700;color:var(--dark)', text:(depositDone?'✔ ':'')+'선금 (계약금)'}),
   ]);
   if (depositDone) {
@@ -83,10 +83,10 @@ function renderPaySection(c, payBody) {
     var depDate = el('input', {type:'date', style:'flex:2;min-width:110px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit'});
     if (payData.depositDate) depDate.value = payData.depositDate;
     else depDate.value = todayStr();
-    var depReceipt = el('label', {style:'display:flex;align-items:center;gap:4px;font-size:11px;color:#6B6B6B;cursor:pointer;width:100%'});
+    var depReceipt = el('label', {style:'display:flex;align-items:center;gap:var(--sp-1);font-size:11px;color:#6B6B6B;cursor:pointer;width:100%'});
     var depReceiptChk = el('input', {type:'checkbox'}); depReceiptChk.checked = payData.depositReceipt||false;
     depReceipt.appendChild(depReceiptChk); depReceipt.appendChild(document.createTextNode('현금영수증'));
-    var depSave = btn('width:100%;padding:9px;background:var(--dark);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px', '선금 저장', function(){
+    var depSave = btn('width:100%;padding:9px;background:var(--dark);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:var(--sp-1)', '선금 저장', function(){
       var inputAmt = Number(depAmt.value.replace(/[^0-9]/g,'')) || 0;
       if (inputAmt > 0 && !depDate.value) {
         alert('입금 날짜를 입력해주세요.');
@@ -117,8 +117,8 @@ function renderPaySection(c, payBody) {
 
   // 잔금 섹션
   var balanceDone = payData.balanceAmount && payData.balanceDate;
-  var balSec = div('padding:12px;background:'+(balanceDone?'#F5FAF5':'var(--ivory1)')+';border-radius:12px;border:1px solid '+(balanceDone?'#B0D4B0':'var(--border)'), []);
-  var balTitle = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:8px', [
+  var balSec = div('padding:var(--sp-3);background:'+(balanceDone?'#F5FAF5':'var(--ivory1)')+';border-radius:12px;border:1px solid '+(balanceDone?'#B0D4B0':'var(--border)'), []);
+  var balTitle = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-2)', [
     el('div', {style:'font-size:12px;font-weight:700;color:var(--dark)', text:(balanceDone?'✔ ':'')+'잔금'})
   ]);
   if (balanceDone) {
@@ -143,10 +143,10 @@ function renderPaySection(c, payBody) {
     var balDate = el('input', {type:'date', style:'flex:2;min-width:110px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit'});
     if (payData.balanceDate) balDate.value = payData.balanceDate;
     else balDate.value = todayStr();
-    var balReceipt = el('label', {style:'display:flex;align-items:center;gap:4px;font-size:11px;color:#6B6B6B;cursor:pointer;width:100%'});
+    var balReceipt = el('label', {style:'display:flex;align-items:center;gap:var(--sp-1);font-size:11px;color:#6B6B6B;cursor:pointer;width:100%'});
     var balReceiptChk = el('input', {type:'checkbox'}); balReceiptChk.checked = payData.balanceReceipt||false;
     balReceipt.appendChild(balReceiptChk); balReceipt.appendChild(document.createTextNode('현금영수증'));
-    var balSave = btn('width:100%;padding:9px;background:var(--dark);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px', '잔금 저장', function(){
+    var balSave = btn('width:100%;padding:9px;background:var(--dark);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:var(--sp-1)', '잔금 저장', function(){
       var inputAmt = Number(balAmt.value.replace(/[^0-9]/g,'')) || 0;
       if (inputAmt > 0 && !balDate.value) {
         alert('입금 날짜를 입력해주세요.');

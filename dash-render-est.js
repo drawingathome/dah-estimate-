@@ -71,7 +71,7 @@ function renderEstList() {
     top.appendChild(noSpan); top.appendChild(typeTag); top.appendChild(csBadge);
 
     // 중간 행: 고객명 + 금액
-    var mid = el('div', {style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:4px'});
+    var mid = el('div', {style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-1)'});
     var nameEl = el('span', {style:'font-size:12px;font-weight:700;color:var(--dark)'});
     nameEl.textContent = e.clientName || '—';
     var priceEl = el('span', {style:'font-size:11px;font-weight:800;color:var(--dark);letter-spacing:-0.5px'});
@@ -79,7 +79,7 @@ function renderEstList() {
     mid.appendChild(nameEl); mid.appendChild(priceEl);
 
     // 하단 행: 공간 + 원단 + 날짜
-    var bot = el('div', {style:'font-size:11px;color:var(--sub);display:flex;gap:8px;flex-wrap:wrap'});
+    var bot = el('div', {style:'font-size:11px;color:var(--sub);display:flex;gap:var(--sp-2);flex-wrap:wrap'});
     if (e.space) { var s1=el('span'); s1.textContent=e.space; bot.appendChild(s1); }
     if (e.fabric) { var s2=el('span',{style:'color:var(--light)'}); s2.textContent=e.fabric; bot.appendChild(s2); }
     var dateStr = e.savedAt ? e.savedAt.slice(0,10) : (e.date||'');

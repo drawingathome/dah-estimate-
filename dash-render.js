@@ -104,7 +104,7 @@ function renderHome(skipServerFetch) {
 
       // 1. 날짜 헤더
       '<div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);background:#fff">',
-        '<div style="font-size:11px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;letter-spacing:0.06em;margin-bottom:4px">',
+        '<div style="font-size:11px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;letter-spacing:0.06em;margin-bottom:var(--sp-1)">',
           _year + '. ' + _month + '. ' + _date + ' ' + _dowKo,
         '</div>',
         '<div style="display:flex;align-items:center;justify-content:space-between">',
@@ -179,7 +179,7 @@ function renderHome(skipServerFetch) {
               if (reasonStr.indexOf('계약금 처리') >= 0 || reasonStr.indexOf('잔금 처리') >= 0) targetTab = 'pay';
               else if (reasonStr.indexOf('발주 필요') >= 0) targetTab = 'order';
               return '<div data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-cid="' + escHtml(c.id||'') + '" data-tab="' + targetTab + '" onclick="openDetail(this.getAttribute(\'data-cname\'),this.getAttribute(\'data-cid\')||undefined,this.getAttribute(\'data-tab\'))" ' +
-                'style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:12px;cursor:pointer"><div style="width:6px;height:6px;border-radius:50%;background:' + stageColor + ';flex-shrink:0"></div>' +
+                'style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:var(--sp-3);cursor:pointer"><div style="width:6px;height:6px;border-radius:50%;background:' + stageColor + ';flex-shrink:0"></div>' +
                 '<div style="flex:1;min-width:0">' +
                   '<div style="font-size:12px;font-weight:700;color:var(--dark);overflow:hidden;white-space:nowrap;text-overflow:ellipsis">' + escHtml(c.clientName||'') + '</div>' +
                   '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(c.phone||'') + '</div>' +
@@ -195,7 +195,7 @@ function renderHome(skipServerFetch) {
           : [].concat(
               todaySchedule.map(function(c) {
                 var type = c.measureDate === todayStr ? '실측' : c.installDate === todayStr ? '시공' : '방문';
-                return '<div style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:12px">' +
+                return '<div style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:var(--sp-3)">' +
                   '<div style="width:34px;height:34px;border-radius:50%;background:var(--bg-org);display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
                     '<span style="font-size:12px;font-weight:700;color:var(--terra)">오늘</span>' +
                   '</div>' +
@@ -207,7 +207,7 @@ function renderHome(skipServerFetch) {
               }),
               tomorrowSchedule.map(function(c) {
                 var type = c.measureDate === tomorrowStr ? '실측' : c.installDate === tomorrowStr ? '시공' : '방문';
-                return '<div style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:12px">' +
+                return '<div style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:var(--sp-3)">' +
                   '<div style="width:34px;height:34px;border-radius:50%;background:var(--ivory2);display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
                     '<span style="font-size:11px;font-weight:700;color:var(--sub)">내일</span>' +
                   '</div>' +

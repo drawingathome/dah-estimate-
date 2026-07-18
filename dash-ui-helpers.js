@@ -142,7 +142,7 @@ function showFieldError(inputEl, msg) {
   if (!errEl) {
     errEl = document.createElement('div');
     errEl.className = 'field-err';
-    errEl.style.cssText = 'font-size:11px;color:var(--danger);margin-top:4px;font-weight:600';
+    errEl.style.cssText = 'font-size:11px;color:var(--danger);margin-top:var(--sp-1);font-weight:600';
     inputEl.parentNode.appendChild(errEl);
   }
   errEl.textContent = msg;

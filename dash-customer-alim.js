@@ -5,7 +5,7 @@
 
 function renderAlimSection(c, alimBody) {
   var alimSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
-  alimSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px', text:'알림톡 발송 현황'}));
+  alimSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:var(--sp-2)', text:'알림톡 발송 현황'}));
 
   var allKeys = ['t01_reservation','t02_reminder','t03_estimate','t31_deposit','t04_followup',
     't05_measure_confirm','t06_measure_dday','t07_final_estimate','t71_balance_request',

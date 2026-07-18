@@ -54,7 +54,7 @@ function renderSearch() {
 
     // 단계 뱃지 + 날짜
     var stageEl = el('div', {class:'ci-stage stage-pill '+c.stage}); stageEl.textContent = c.stage;
-    var dateEl  = el('div', {style:'font-size:11px;color:var(--sub);margin-top:4px;text-align:right'});
+    var dateEl  = el('div', {style:'font-size:11px;color:var(--sub);margin-top:var(--sp-1);text-align:right'});
     if (c.date) {
       var diff = daysDiff(c.date);
       dateEl.textContent = diff === 0 ? '오늘' : diff > 0 ? diff+'일 경과' : Math.abs(diff)+'일 후';

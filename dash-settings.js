@@ -99,7 +99,7 @@ function renderSettings() {
   // ── 월목표 설정 카드 ──
   var s = getSettings ? getSettings() : {};
   var goalCard = div('padding-top:4px', []);
-  goalCard.innerHTML = '<div style="display:flex;align-items:center;padding-bottom:12px;border-bottom:1px solid #F5F2EE;margin-bottom:12px">' +
+  goalCard.innerHTML = '<div style="display:flex;align-items:center;padding-bottom:12px;border-bottom:1px solid #F5F2EE;margin-bottom:var(--sp-3)">' +
       '<div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--dark)">월 목표 매출</div>' +
       '<div style="font-size:11px;color:var(--sub);margin-top:2px">홈 화면 목표 달성률 기준</div></div>' +
       '<input id="set-monthly-goal" type="text" value="' + (s.monthlyGoal || '5000') + '" placeholder="5000" onchange="saveSettings()" style="text-align:right;border:none;outline:none;font-size:11px;color:var(--dark);background:transparent;font-family:inherit;width:70px">' +
@@ -113,7 +113,7 @@ function renderSettings() {
     var goalKey = 'dah_goal_'+staff;
     var curGoal = Number(localStorage.getItem(goalKey)||0);
     var gRow = div('margin-bottom:10px', [
-      span('font-size:12px;font-weight:700;display:block;margin-bottom:4px', staff)
+      span('font-size:12px;font-weight:700;display:block;margin-bottom:var(--sp-1)', staff)
     ]);
     var gInput = el('input', {type:'number', 'data-staff-goal':staff, placeholder:'목표 금액 (원)', value:curGoal>0?String(curGoal):'', style:'width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:10px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box'});
     (function(k, s) {
@@ -160,8 +160,8 @@ function renderSettings() {
   masterEmailCard.appendChild(masterEmailInput);
 
   // ── 비밀번호 변경 ──
-  var pwCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:12px', [
-    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:4px', '비밀번호 변경'),
+  var pwCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:var(--sp-3)', [
+    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:var(--sp-1)', '비밀번호 변경'),
     span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '이제 비밀번호는 Supabase 대시보드(Authentication > Users)에서 변경합니다. 아래는 예전 방식의 흔적으로, 더 이상 로그인에 사용되지 않습니다.')
   ]);
   [['change-pw-current2','현재 비밀번호'],['change-pw-new2','새 비밀번호 (4자 이상)'],['change-pw-confirm2','새 비밀번호 확인']].forEach(function(row) {
@@ -184,13 +184,13 @@ function renderSettings() {
 
   
   // ── 담당자 관리 ──
-  var staffCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:12px', [
-    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:4px', '담당자 관리'),
+  var staffCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:var(--sp-3)', [
+    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:var(--sp-1)', '담당자 관리'),
     span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '로그인용 이메일과 비밀번호는 Supabase 대시보드(Authentication)에서 먼저 계정을 만든 뒤, 아래에 그 이메일을 연결해주세요.')
   ]);
   var staffList = getStaffList();
   staffList.forEach(function(name) {
-    var emailInput = el('input', {type:'email', placeholder:'로그인용 이메일', value: getStaffEmail(name), style:'width:100%;padding:6px 8px;border:1px solid var(--border);font-size:11px;font-family:inherit;outline:none;margin-top:4px;box-sizing:border-box'});
+    var emailInput = el('input', {type:'email', placeholder:'로그인용 이메일', value: getStaffEmail(name), style:'width:100%;padding:6px 8px;border:1px solid var(--border);font-size:11px;font-family:inherit;outline:none;margin-top:var(--sp-1);box-sizing:border-box'});
     emailInput.addEventListener('change', function(){
       setStaffEmail(name, emailInput.value.trim());
       showToast(name + '의 로그인 이메일이 저장됐습니다');
@@ -211,7 +211,7 @@ function renderSettings() {
     ]);
     staffCard.appendChild(row);
   });
-  var addStaffWrap = div('display:flex;gap:8px;margin-top:10px', []);
+  var addStaffWrap = div('display:flex;gap:var(--sp-2);margin-top:10px', []);
   var staffInput = el('input', {type:'text', placeholder:'새 담당자 이름', style:'flex:1;padding:9px 10px;border:1px solid var(--border);font-size:11px;font-family:inherit;outline:none'});
   addStaffWrap.appendChild(staffInput);
   addStaffWrap.appendChild(btn('padding:9px 14px;background:var(--dark);color:#fff;border:none;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '추가', function() {
@@ -243,8 +243,8 @@ function renderSettings() {
     '</div>';
 
   // ── Make.com 웹훅 ──
-  var webhookCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:12px', [
-    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:4px', 'Make.com 웹훅 URL'),
+  var webhookCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:var(--sp-3)', [
+    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:var(--sp-1)', 'Make.com 웹훅 URL'),
     span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '알림톡 자동 발송 연동 (검수 완료 후 입력) · 입력 후 다른 곳을 클릭하면 자동 저장됩니다')
   ]);
   var curWebhook = localStorage.getItem('dah_webhook_url') || '';
@@ -263,9 +263,9 @@ function renderSettings() {
   
   // ── 데이터 관리 ──
   var dataCard = div('padding-top:4px', []);
-  dataCard.appendChild(btn('width:100%;padding:11px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:8px', '고객목록 엑셀 내보내기', exportExcel));
-  dataCard.appendChild(btn('width:100%;padding:11px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:8px', '견적서목록 엑셀 내보내기', exportEstimatesExcel));
-  dataCard.appendChild(btn('width:100%;padding:11px;background:var(--ivory1);border:none;border-radius:10px;font-size:11px;font-family:inherit;cursor:pointer;margin-bottom:8px;color:var(--dark)', '백업 (JSON 다운로드)', backupData));
+  dataCard.appendChild(btn('width:100%;padding:11px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:var(--sp-2)', '고객목록 엑셀 내보내기', exportExcel));
+  dataCard.appendChild(btn('width:100%;padding:11px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:var(--sp-2)', '견적서목록 엑셀 내보내기', exportEstimatesExcel));
+  dataCard.appendChild(btn('width:100%;padding:11px;background:var(--ivory1);border:none;border-radius:10px;font-size:11px;font-family:inherit;cursor:pointer;margin-bottom:var(--sp-2);color:var(--dark)', '백업 (JSON 다운로드)', backupData));
   var lastBackupIso = null;
   try { lastBackupIso = localStorage.getItem('dah_last_backup'); } catch(e){}
   var lastBackupLabel = '마지막 백업: 없음';
@@ -293,7 +293,7 @@ function renderSettings() {
   dataCard.appendChild(restoreInput);
   dataCard.appendChild(btn('width:100%;padding:11px;background:var(--ivory1);border:none;border-radius:10px;font-size:11px;font-family:inherit;cursor:pointer;color:var(--dark)', '복원 (JSON 업로드)', function() { document.getElementById('restore-input').click(); }));
 
-  var logoutCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:12px', []);
+  var logoutCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:var(--sp-3)', []);
   logoutCard.appendChild(btn('width:100%;padding:11px;background:#fff;color:#E4483A;border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer', '로그아웃', function() {
     if (confirm('로그아웃 하시겠습니까?')) logout();
   }));
@@ -312,4 +312,4 @@ function renderSettings() {
   }
 }
 
-function labelDiv(text) { return span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:8px', text); }
+function labelDiv(text) { return span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:var(--sp-2)', text); }

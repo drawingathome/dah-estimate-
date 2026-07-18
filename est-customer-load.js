@@ -86,7 +86,7 @@ function renderCustLoadList(q) {
       ? savedAll.filter(function(s){ return s.clientId === c.id; }).slice(0,3)
       : savedAll.filter(function(s){ return s.clientName === (c.clientName||''); }).slice(0,3);
     var histHtml = history.length > 0
-      ? '<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">'
+      ? '<div style="margin-top:var(--sp-1);display:flex;gap:var(--sp-1);flex-wrap:wrap">'
         + history.map(function(h){
             var lbl = h.status==='final'?'최종':'가견적';
             var amt = h.price ? h.price.toLocaleString()+'원' : '';
@@ -124,8 +124,8 @@ function searchCustomer() {
   el.id='customer-search-overlay';
   el.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9998;display:flex;align-items:center;justify-content:center';
   var inner=document.createElement('div');
-  inner.style.cssText='background:#fff;border-radius:12px;padding:24px;width:480px;max-width:90vw';
-  inner.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span style="font-size:11px;font-weight:700">고객 검색</span><span id="cs-close" style="cursor:pointer;font-size:11px">&#x2715;</span></div><div style="display:flex;gap:8px;margin-bottom:12px"><input type="text" id="cs-query" placeholder="이름 또는 전화번호" style="flex:1;padding:9px 12px;border:1.5px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;outline:none"><button id="cs-btn" style="padding:8px 16px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">검색</button></div><div id="cs-results" style="color:#8E8078;font-size:11px;text-align:center;padding:20px">Supabase 연동 후 사용 가능합니다.</div>';
+  inner.style.cssText='background:#fff;border-radius:12px;padding:var(--sp-6);width:480px;max-width:90vw';
+  inner.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-4)"><span style="font-size:11px;font-weight:700">고객 검색</span><span id="cs-close" style="cursor:pointer;font-size:11px">&#x2715;</span></div><div style="display:flex;gap:var(--sp-2);margin-bottom:var(--sp-3)"><input type="text" id="cs-query" placeholder="이름 또는 전화번호" style="flex:1;padding:9px 12px;border:1.5px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;outline:none"><button id="cs-btn" style="padding:8px 16px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">검색</button></div><div id="cs-results" style="color:#8E8078;font-size:11px;text-align:center;padding:var(--sp-5)">Supabase 연동 후 사용 가능합니다.</div>';
   el.appendChild(inner);
   document.body.appendChild(el);
   document.getElementById('cs-close').onclick=function(){el.style.display='none';};

@@ -31,7 +31,7 @@ function renderOrderSection(c, orderBody) {
     ];
     var orderItems = allOrderItems.filter(function(item){ return item.relevant; });
 
-    var orderCard = div('background:#fff;margin-bottom:10px;padding:16px', [
+    var orderCard = div('background:#fff;margin-bottom:10px;padding:var(--sp-4)', [
       span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:10px', '발주 현황')
     ]);
     orderItems.forEach(function(item) {

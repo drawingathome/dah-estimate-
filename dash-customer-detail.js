@@ -68,12 +68,12 @@ function _openAlimtalkPreview(meta, key, c, initialMsg) {
   overlay.id = 'alimtalk-preview-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99998;display:flex;align-items:center;justify-content:center';
   var box = document.createElement('div');
-  box.style.cssText = 'background:#fff;border-radius:12px;padding:20px;width:360px;max-width:90vw;max-height:85vh;overflow-y:auto';
+  box.style.cssText = 'background:#fff;border-radius:12px;padding:var(--sp-5);width:360px;max-width:90vw;max-height:85vh;overflow-y:auto';
   box.innerHTML =
-    '<div style="font-size:12px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:4px">' + escHtml(meta.tag) + ' · ' + escHtml(meta.desc) + '</div>' +
-    '<div style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:12px">' + escHtml(meta.label) + '</div>' +
+    '<div style="font-size:12px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:var(--sp-1)">' + escHtml(meta.tag) + ' · ' + escHtml(meta.desc) + '</div>' +
+    '<div style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:var(--sp-3)">' + escHtml(meta.label) + '</div>' +
     '<textarea id="alimtalk-msg-textarea" style="width:100%;min-height:140px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:12px;font-family:inherit;box-sizing:border-box;resize:vertical;outline:none"></textarea>' +
-    '<div style="display:flex;gap:8px;margin-top:12px">' +
+    '<div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-3)">' +
       '<button id="alimtalk-cancel-btn" style="flex:1;padding:11px;background:#fff;border:1px solid var(--border);border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;color:var(--dark)">취소</button>' +
       '<button id="alimtalk-send-btn" style="flex:2;padding:11px;background:var(--dark);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">발송</button>' +
     '</div>';
@@ -160,7 +160,7 @@ function renderDetailEstTab() {
   // 재구매 여부 - 계약된 견적이 2개 이상이면 재구매
   var contractedCount = ests.filter(function(e){ return e.contractStatus === 'contracted'; }).length;
   if (contractedCount > 1) {
-    var rebuyBanner = div('background:#FFF3EE;border:1px solid var(--terra);border-radius:12px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:8px', [
+    var rebuyBanner = div('background:#FFF3EE;border:1px solid var(--terra);border-radius:12px;padding:10px 14px;margin-bottom:var(--sp-3);display:flex;align-items:center;gap:var(--sp-2)', [
       el('span', {style:'font-size:11px', text:'🔄'}),
       el('span', {style:'font-size:12px;font-weight:700;color:var(--terra)', text:'재구매 고객 — 계약 '+contractedCount+'회'})
     ]);
@@ -194,7 +194,7 @@ function renderDetailEstTab() {
     var top = div('display:flex;align-items:center;gap:6px;margin-bottom:10px', topItems);
 
     // 금액 크게
-    var priceRow = div('margin-bottom:8px', [
+    var priceRow = div('margin-bottom:var(--sp-2)', [
       el('div', {style:'font-size:22px;font-weight:900;color:var(--dark);letter-spacing:-1px', text: (Number(e.price)||0).toLocaleString()+'원'}),
     ]);
 
@@ -244,7 +244,7 @@ function renderDetailEstTab() {
   });
 
   // 새 견적 버튼
-  var newEstBtn = btn('width:100%;padding:12px;background:#F5F2EE;color:var(--dark);border:1px solid var(--border);border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px',
+  var newEstBtn = btn('width:100%;padding:var(--sp-3);background:#F5F2EE;color:var(--dark);border:1px solid var(--border);border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:var(--sp-1)',
     '+ 새 견적서 작성', function(){ openEstimate(currentDetailName); });
   estEl.appendChild(newEstBtn);
 }
@@ -387,7 +387,7 @@ function openDetail(name, id, forceTab) {
   }
 
   var stageTop = div('display:flex;justify-content:space-between;align-items:center;margin-bottom:10px', [
-    div('display:flex;align-items:center;gap:8px', [
+    div('display:flex;align-items:center;gap:var(--sp-2)', [
       el('span', {style:'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--dark);color:#fff;font-size:12px;font-weight:700;flex-shrink:0', text:stageNum}),
       el('span', {style:'font-size:12px;font-weight:700;color:var(--dark);letter-spacing:-0.3px', text:c.stage + ' 단계'})
     ]),
@@ -415,7 +415,7 @@ function openDetail(name, id, forceTab) {
   var curIdx = STAGES.indexOf(c.stage);
   var nextStage = (curIdx >= 0 && curIdx < STAGES.length - 1) ? STAGES[curIdx + 1] : null;
 
-  var stageActionRow = div('display:flex;gap:8px;align-items:center', []);
+  var stageActionRow = div('display:flex;gap:var(--sp-2);align-items:center', []);
   if (nextStage) {
     stageActionRow.appendChild(btn(
       'flex:1;padding:11px;border:none;background:var(--dark);color:#fff;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px',
@@ -457,8 +457,8 @@ function openDetail(name, id, forceTab) {
   var todoKeys = STAGE_ALIM[c.stage] || [];
   var manualKeys = todoKeys.filter(function(k){ return ALIM_META[k] && ALIM_META[k].tag === '수동'; });
   if (manualKeys.length > 0) {
-    var todoSec = div('margin-bottom:14px;padding:12px;background:var(--ivory1);border:1.5px solid var(--dark);border-radius:12px', []);
-    todoSec.appendChild(el('div', {style:'font-size:12px;font-weight:700;color:var(--dark);letter-spacing:1.5px;margin-bottom:8px', text:'지금 해야 할 일'}));
+    var todoSec = div('margin-bottom:14px;padding:var(--sp-3);background:var(--ivory1);border:1.5px solid var(--dark);border-radius:12px', []);
+    todoSec.appendChild(el('div', {style:'font-size:12px;font-weight:700;color:var(--dark);letter-spacing:1.5px;margin-bottom:var(--sp-2)', text:'지금 해야 할 일'}));
     // 가장 급한 것 1개만 크게 보여주고, 나머지는 "N건 더 남음" 뒤에 접어둠(눌러야만 펼쳐짐)
     var firstKey = manualKeys[0];
     var firstMeta = ALIM_META[firstKey];
@@ -473,7 +473,7 @@ function openDetail(name, id, forceTab) {
         })
       ]);
       todoSec.appendChild(moreRow);
-      var restWrap = div('display:none;margin-top:8px', []);
+      var restWrap = div('display:none;margin-top:var(--sp-2)', []);
       restWrap.id = 'todo-rest';
       manualKeys.slice(1).forEach(function(key) {
         var meta = ALIM_META[key]; if(!meta) return;
@@ -506,7 +506,7 @@ function openDetail(name, id, forceTab) {
 
   // 메모
   if (c.memo) {
-    var memoBlock = div('background:#FFFBF5;border:1px solid #FFE5CC;border-radius:12px;padding:10px 14px;margin-bottom:8px', [
+    var memoBlock = div('background:#FFFBF5;border:1px solid #FFE5CC;border-radius:12px;padding:10px 14px;margin-bottom:var(--sp-2)', [
       el('div', {style:'font-size:11px;color:var(--terra);letter-spacing:0.8px;margin-bottom:3px', text:'메모'}),
       el('div', {style:'font-size:11px;color:var(--dark);line-height:1.6', text:c.memo})
     ]);
@@ -523,7 +523,7 @@ function openDetail(name, id, forceTab) {
   ];
   dateFields.forEach(function(item){
     var box = div('background:var(--ivory1);border:1px solid var(--border);border-radius:12px;padding:10px 8px;text-align:center;position:relative'+(item.key?';cursor:pointer':''),[
-      el('div',{style:'font-size:11px;color:var(--sub);letter-spacing:0.8px;margin-bottom:4px',text:item.label}),
+      el('div',{style:'font-size:11px;color:var(--sub);letter-spacing:0.8px;margin-bottom:var(--sp-1)',text:item.label}),
       el('div',{style:'font-size:12px;font-weight:700;color:'+(item.value==='—'?'var(--light)':'var(--dark)'),text:item.value})
     ]);
     if (item.key) {
@@ -562,7 +562,7 @@ function openDetail(name, id, forceTab) {
   renderEstimateHistory(body, c.clientName);
 
   
-  body.appendChild(btn('width:100%;padding:12px;background:var(--ivory1);color:var(--dark);border:1px solid var(--border);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:6px', '견적서 앱에서 열기', function(){ openEstimate(currentDetailName); }));
+  body.appendChild(btn('width:100%;padding:var(--sp-3);background:var(--ivory1);color:var(--dark);border:1px solid var(--border);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:6px', '견적서 앱에서 열기', function(){ openEstimate(currentDetailName); }));
   renderOrderSection(c, orderBody);
 
   var bottomBtns = [btn('flex:2;padding:11px;background:var(--dark);color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:12px;letter-spacing:0.2px', '닫기', closeDetail)];
@@ -573,7 +573,7 @@ function openDetail(name, id, forceTab) {
       bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid var(--border);font-size:11px;font-family:inherit;cursor:pointer;color:var(--dark);border-radius:12px', '삭제', deleteCustomer));
     }
   }
-  body.appendChild(div('display:flex;gap:8px', bottomBtns));
+  body.appendChild(div('display:flex;gap:var(--sp-2)', bottomBtns));
 
   document.getElementById('detail-overlay').className = 'overlay open';
   renderKakaoLog();
@@ -826,7 +826,7 @@ function renderEstimateHistory(container, clientName) {
     });
 
     
-    var top = el('div', {style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px'});
+    var top = el('div', {style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-2)'});
     var noEl = el('div', {style:'display:flex;align-items:center;gap:6px'});
     var noSpan = el('span', {style:'font-size:12px;font-weight:700;color:var(--dark)', text:e.no||'—'});
     var typeSpan = el('span', {style:
@@ -879,7 +879,7 @@ function renderEstimateHistory(container, clientName) {
 
     
     if (e.fabric) {
-      var fabEl = el('div', {style:'font-size:11px;color:var(--sub);margin-bottom:4px', text:'원단: ' + e.fabric});
+      var fabEl = el('div', {style:'font-size:11px;color:var(--sub);margin-bottom:var(--sp-1)', text:'원단: ' + e.fabric});
       card.appendChild(fabEl);
     }
 

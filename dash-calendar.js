@@ -237,7 +237,7 @@ function renderCalList(customers, selectedDate) {
     right.appendChild(badge);
     if (isMain && ev.price > 0) {
       var priceEl = document.createElement('div');
-      priceEl.style.cssText = 'font-size:12px;font-weight:700;color:var(--dark);margin-top:4px';
+      priceEl.style.cssText = 'font-size:12px;font-weight:700;color:var(--dark);margin-top:var(--sp-1)';
       priceEl.textContent = Math.round(ev.price/10000).toLocaleString() + '만원';
       right.appendChild(priceEl);
     }

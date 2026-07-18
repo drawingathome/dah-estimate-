@@ -362,7 +362,7 @@ function printForCustomer() {
   navLabel.textContent = isFinal ? '최종 견적서 — 고객용 미리보기' : '가견적서 — 고객용 미리보기';
   navLabel.style.cssText = 'color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;letter-spacing:0.3px';
   var navBtns = document.createElement('div');
-  navBtns.style.cssText = 'display:flex;gap:8px';
+  navBtns.style.cssText = 'display:flex;gap:var(--sp-2)';
   var closeBtn = document.createElement('button');
   closeBtn.textContent = '✕ 닫기';
   closeBtn.onclick = function(){
@@ -403,7 +403,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
       +'<div style="font-size:11px;color:#B0A99F;letter-spacing:3px;margin-top:6px">발 주 서</div>'
       +'</div>';
 
-  out += '<div style="display:flex;gap:24px;margin-top:24px;padding-top:16px;border-top:1px solid #282828;font-size:13px">'
+  out += '<div style="display:flex;gap:var(--sp-6);margin-top:var(--sp-6);padding-top:16px;border-top:1px solid #282828;font-size:13px">'
       +'<div style="flex:1">'
         +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">요청일</span><strong>'+today+'</strong></div>'
         +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">업체명</span><strong>드로잉엣홈</strong></div>'
@@ -417,7 +417,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
 
   out += '<div style="margin-top:10px;font-size:11px;color:#B0A99F">*아래와 같이 발주 합니다.</div>';
 
-  out += '<div style="margin-top:20px;padding:8px 14px;background:#F5F2EE;font-size:13px;font-weight:700;color:#282828">거래처: '+escHtml(vendor)+'</div>';
+  out += '<div style="margin-top:var(--sp-5);padding:8px 14px;background:#F5F2EE;font-size:13px;font-weight:700;color:#282828">거래처: '+escHtml(vendor)+'</div>';
   out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
       +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
       +'<th style="text-align:left;padding:8px 6px">위치</th>'
@@ -442,7 +442,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   out += '</tbody></table>';
 
   if(extraNote) {
-    out += '<div style="margin-top:24px;text-align:center;font-size:13px;color:#E4483A;font-weight:600;line-height:1.7;white-space:pre-wrap">'+escHtml(extraNote)+'</div>';
+    out += '<div style="margin-top:var(--sp-6);text-align:center;font-size:13px;color:#E4483A;font-weight:600;line-height:1.7;white-space:pre-wrap">'+escHtml(extraNote)+'</div>';
   }
 
   out += '</div>';
@@ -563,7 +563,7 @@ function printForVendor() {
   navLabel.textContent = '발주서 — 거래처별 원단 발주 목록';
   navLabel.style.cssText = 'color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;letter-spacing:0.3px';
   var navBtns = document.createElement('div');
-  navBtns.style.cssText = 'display:flex;gap:8px';
+  navBtns.style.cssText = 'display:flex;gap:var(--sp-2)';
   var closeBtn = document.createElement('button');
   closeBtn.textContent = '✕ 닫기';
   closeBtn.onclick = function(){
@@ -628,7 +628,7 @@ function buildRequestHTML(kind, extraNote) {
       +'</div>';
 
   // 좌: 업체정보(설치기사) / 우: 고객·일정 정보
-  out += '<div style="display:flex;gap:24px;margin-top:24px;padding-top:16px;border-top:1px solid #282828;font-size:13px">'
+  out += '<div style="display:flex;gap:var(--sp-6);margin-top:var(--sp-6);padding-top:16px;border-top:1px solid #282828;font-size:13px">'
       +'<div style="flex:1">'
         +infoRow('업체정보', instName)
         +infoRow('연락처', instPhone)
@@ -732,7 +732,7 @@ function buildRequestHTML(kind, extraNote) {
   }
 
   if(extraNote) {
-    out += '<div style="margin-top:24px;text-align:center;font-size:13px;color:#E4483A;font-weight:600;line-height:1.7;white-space:pre-wrap">'+escHtml(extraNote)+'</div>';
+    out += '<div style="margin-top:var(--sp-6);text-align:center;font-size:13px;color:#E4483A;font-weight:600;line-height:1.7;white-space:pre-wrap">'+escHtml(extraNote)+'</div>';
   }
 
   out += '</div>';
@@ -784,7 +784,7 @@ function printRequest(kind) {
   navLabel.textContent = label+' 의뢰서 미리보기';
   navLabel.style.cssText = 'color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;letter-spacing:0.3px';
   var navBtns = document.createElement('div');
-  navBtns.style.cssText = 'display:flex;gap:8px';
+  navBtns.style.cssText = 'display:flex;gap:var(--sp-2)';
   var closeBtn = document.createElement('button');
   closeBtn.textContent = '✕ 닫기';
   closeBtn.onclick = function(){
