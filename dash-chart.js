@@ -181,7 +181,7 @@ function renderChart(period) {
     svg.appendChild(line);
     var lbl = document.createElementNS(svgNS,'text');
     lbl.setAttribute('x',PAD-4); lbl.setAttribute('y',y+4);
-    lbl.setAttribute('text-anchor','end'); lbl.setAttribute('font-size','9');
+    lbl.setAttribute('text-anchor','end'); lbl.setAttribute('font-size','11');
     lbl.setAttribute('fill','var(--light)');
     lbl.textContent = Math.round(maxRev*r/10000)+'만원';
     svg.appendChild(lbl);
@@ -217,7 +217,7 @@ function renderChart(period) {
     
     var lbl2 = document.createElementNS(svgNS,'text');
     lbl2.setAttribute('x',p.x); lbl2.setAttribute('y',H-8);
-    lbl2.setAttribute('text-anchor','middle'); lbl2.setAttribute('font-size','10');
+    lbl2.setAttribute('text-anchor','middle'); lbl2.setAttribute('font-size','11');
     lbl2.setAttribute('fill', p.isCurrent?'var(--dark)':'var(--light)');
     lbl2.setAttribute('font-weight', p.isCurrent?'700':'400');
     lbl2.textContent = p.label;
