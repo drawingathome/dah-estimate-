@@ -356,12 +356,43 @@ function openDetail(name, id, forceTab) {
   
   var stageNum = STAGE_NUM[c.stage] || 1;
   var stageSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
+
+  // 되돌릴 대상이 없는 상태(완료/취소/노쇼)에서는 케밥 메뉴 자체를 숨김
+  var canCancelOrNoshow = ['완료', '취소', '노쇼'].indexOf(c.stage) === -1;
+
+  var kebabWrap = div('position:relative', []);
+  if (canCancelOrNoshow) {
+    var kebabBtn = btn('font-size:15px;color:var(--sub);background:none;border:none;padding:5px 8px;cursor:pointer;line-height:1', '⋮', function(e){
+      var menu = document.getElementById('stage-kebab-menu');
+      if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    });
+    var kebabMenu = div('display:none;position:absolute;top:28px;right:0;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:20;min-width:120px;overflow:hidden', []);
+    kebabMenu.id = 'stage-kebab-menu';
+    var cancelBtn = btn('display:block;width:100%;padding:10px 14px;border:none;background:#fff;font-size:12px;color:var(--dark);font-family:inherit;cursor:pointer;text-align:left','취소 처리', function(){
+      if(confirm(c.clientName+'님을 취소 처리할까요? 자동 발송이 중단됩니다.')) {
+        changeStage('취소'); closeDetail();
+      }
+    });
+    var noshowBtn = btn('display:block;width:100%;padding:10px 14px;border:none;background:#fff;font-size:12px;color:var(--dark);font-family:inherit;cursor:pointer;text-align:left;border-top:1px solid var(--border)','노쇼 처리', function(){
+      if(confirm(c.clientName+'님을 노쇼 처리할까요?')) {
+        changeStage('노쇼'); closeDetail();
+      }
+    });
+    kebabMenu.appendChild(cancelBtn);
+    kebabMenu.appendChild(noshowBtn);
+    kebabWrap.appendChild(kebabBtn);
+    kebabWrap.appendChild(kebabMenu);
+  }
+
   var stageTop = div('display:flex;justify-content:space-between;align-items:center;margin-bottom:10px', [
     div('display:flex;align-items:center;gap:8px', [
       el('span', {style:'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--dark);color:#fff;font-size:12px;font-weight:700;flex-shrink:0', text:stageNum}),
       el('span', {style:'font-size:12px;font-weight:700;color:var(--dark);letter-spacing:-0.3px', text:c.stage + ' 단계'})
     ]),
-    isMaster ? btn('font-size:11px;color:var(--dark);background:var(--ivory1);border:1px solid var(--border);padding:5px 10px;cursor:pointer;font-family:inherit;border-radius:10px', '수정', function(){ closeDetail(); openAdd(c.clientName); }) : el('span',{})
+    div('display:flex;align-items:center;gap:2px', [
+      isMaster ? btn('font-size:11px;color:var(--dark);background:var(--ivory1);border:1px solid var(--border);padding:5px 10px;cursor:pointer;font-family:inherit;border-radius:10px', '수정', function(){ closeDetail(); openAdd(c.clientName); }) : el('span',{}),
+      kebabWrap
+    ])
   ]);
   stageSec.appendChild(stageTop);
 
@@ -417,27 +448,7 @@ function openDetail(name, id, forceTab) {
   });
 
   
-  var moreToggle = btn('width:100%;padding:7px;margin-top:6px;border:none;background:none;font-size:11px;color:var(--sub);font-family:inherit;cursor:pointer;text-align:center', '⋯ 더보기 (취소·노쇼 처리)', function(){
-    var wrap = document.getElementById('stage-more-actions');
-    if (wrap) wrap.style.display = wrap.style.display === 'none' ? '' : 'none';
-  });
-  var extraBtns = div('display:none;gap:6px;margin-top:4px', []);
-  extraBtns.id = 'stage-more-actions';
-  var cancelBtn = btn('flex:1;padding:9px;border:1px solid var(--border);background:#fff;font-size:11px;color:#6B6B6B;font-family:inherit;cursor:pointer;border-radius:10px','취소 처리', function(){
-    if(confirm(c.clientName+'님을 취소 처리할까요? 자동 발송이 중단됩니다.')) {
-      changeStage('취소'); closeDetail();
-    }
-  });
-  var noshowBtn = btn('flex:1;padding:9px;border:1px solid var(--border);background:#fff;font-size:11px;color:#6B6B6B;font-family:inherit;cursor:pointer;border-radius:10px','노쇼 처리', function(){
-    if(confirm(c.clientName+'님을 노쇼 처리할까요?')) {
-      changeStage('노쇼'); closeDetail();
-    }
-  });
-  extraBtns.appendChild(cancelBtn);
-  extraBtns.appendChild(noshowBtn);
   stageSec.appendChild(stageBar);
-  stageSec.appendChild(moreToggle);
-  stageSec.appendChild(extraBtns);
   body.appendChild(stageSec);
 
   
