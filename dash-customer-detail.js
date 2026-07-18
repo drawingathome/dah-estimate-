@@ -306,7 +306,7 @@ function openDetail(name, id, forceTab) {
       curEstBox.innerHTML =
         '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">' +
           '<span style="width:6px;height:6px;border-radius:50%;background:var(--terra);display:inline-block"></span>' +
-          '<span style="font-size:10px;font-weight:600;color:#B85A2E;letter-spacing:0.3px">진행중인 견적' + (itemLabel ? ' · '+itemLabel : '') + '</span>' +
+          '<span style="font-size:11px;font-weight:600;color:#B85A2E;letter-spacing:0.3px">진행중인 견적' + (itemLabel ? ' · '+itemLabel : '') + '</span>' +
         '</div>' +
         '<div style="font-size:22px;font-weight:700;color:var(--dark);letter-spacing:-0.5px">' + amt + '</div>';
       curEstBox.style.display = 'block';

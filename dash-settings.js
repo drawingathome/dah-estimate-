@@ -128,7 +128,7 @@ function renderSettings() {
 
 
   // ── 전체 저장 (항상 최상단 고정) ──
-  var saveAllBtn = btn('width:100%;padding:14px;background:var(--terra);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:10px', '전체 저장', function() {
+  var saveAllBtn = btn('width:100%;padding:14px;background:var(--terra);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:10px', '전체 저장', function() {
     saveSettings();
     document.querySelectorAll('[data-staff-goal]').forEach(function(inp) {
       var v = Number(inp.value.replace(/[^0-9]/g,''));

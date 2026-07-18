@@ -116,7 +116,7 @@ function _showRealtimeUpdateBanner(customer) {
   banner.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:99999;background:var(--dark);color:#fff;padding:10px 16px;border-radius:10px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 4px 16px rgba(0,0,0,0.25)';
   banner.innerHTML = '📡 이 고객 정보가 다른 곳에서 방금 업데이트됐어요' +
     '<button id="realtime-refresh-btn" style="background:#fff;color:var(--dark);border:none;border-radius:10px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">새로고침</button>' +
-    '<button id="realtime-dismiss-btn" style="background:none;color:var(--sub);border:none;font-size:14px;cursor:pointer;padding:0 2px">✕</button>';
+    '<button id="realtime-dismiss-btn" style="background:none;color:var(--sub);border:none;font-size:15px;cursor:pointer;padding:0 2px">✕</button>';
   document.body.appendChild(banner);
   document.getElementById('realtime-refresh-btn').addEventListener('click', function() {
     banner.remove();
