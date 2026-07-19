@@ -200,6 +200,61 @@ function openDetail(name, id, forceTab) {
   if (typeof logEvent === 'function') logEvent('detail_open', { stage: c.stage, tab: forceTab || 'info' });
   var isMaster = currentUser && currentUser.role === 'master';
 
+  renderDetailHeader(c);
+
+  var body = document.getElementById('detail-body');
+  body.innerHTML = '';
+  var payBody = document.getElementById('detail-pay-body'); if (payBody) payBody.innerHTML = '';
+  var alimBody = document.getElementById('detail-alim-body'); if (alimBody) alimBody.innerHTML = '';
+  var orderBody = document.getElementById('detail-order-body'); if (orderBody) orderBody.innerHTML = '';
+  // 탭 초기화
+  var estBodyEl = document.getElementById('detail-est-body');
+  if (estBodyEl) { estBodyEl.innerHTML = ''; }
+  var autoTab = forceTab;
+  if (!autoTab) {
+    if ((c.stage === '계약금' && !c.depositAmount) || (c.stage === '잔금' && !c.balanceAmount)) {
+      autoTab = 'pay'; // 입금 대기 중이면 결제탭부터
+    } else {
+      var os = c.orderStatus || {};
+      var orderNotStarted = !os.fabric && !os.production && !os.blind && !os.material && !os.install;
+      if (['계약금','실측','잔금','시공'].indexOf(c.stage) >= 0 && orderNotStarted) autoTab = 'order'; // 발주 전혀 안됐으면 발주탭부터
+    }
+  }
+  switchDetailTab(autoTab || 'info');
+  // 견적 건수 배지
+  var all = []; try { all = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
+  var estCnt = all.filter(function(e){ return e.clientName === c.clientName; }).length;
+  var cntEl = document.getElementById('dtab-est-cnt');
+  if (cntEl) cntEl.textContent = estCnt > 0 ? estCnt+'건' : '';
+
+  
+  renderDetailStageSection(c, body, isMaster);
+
+  
+  renderDetailTodoSection(c, body);
+
+  renderPaySection(c, payBody);
+
+  
+  renderAlimSection(c, alimBody);
+
+  // 고객 정보 섹션
+  renderDetailInfoSection(c, body);
+
+  renderEstimateHistory(body, c.clientName);
+
+  
+  body.appendChild(btn('width:100%;padding:var(--sp-3);background:var(--ivory1);color:var(--dark);border:1px solid var(--border);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:6px', '견적서 앱에서 열기', function(){ openEstimate(currentDetailName); }));
+  renderOrderSection(c, orderBody);
+
+  renderDetailBottomButtons(c, isMaster, body);
+
+  document.getElementById('detail-overlay').className = 'overlay open';
+  renderKakaoLog();
+}
+
+
+function renderDetailHeader(c) {
   // 이름
   var _dn=document.getElementById('detail-name'); if(_dn) _dn.textContent = c.clientName;
 
@@ -272,32 +327,9 @@ function openDetail(name, id, forceTab) {
     '<span style="color:var(--border)">|</span>' +
     '<span>' + (c.staffName || '마스터') + '</span>';
 
-  var body = document.getElementById('detail-body');
-  body.innerHTML = '';
-  var payBody = document.getElementById('detail-pay-body'); if (payBody) payBody.innerHTML = '';
-  var alimBody = document.getElementById('detail-alim-body'); if (alimBody) alimBody.innerHTML = '';
-  var orderBody = document.getElementById('detail-order-body'); if (orderBody) orderBody.innerHTML = '';
-  // 탭 초기화
-  var estBodyEl = document.getElementById('detail-est-body');
-  if (estBodyEl) { estBodyEl.innerHTML = ''; }
-  var autoTab = forceTab;
-  if (!autoTab) {
-    if ((c.stage === '계약금' && !c.depositAmount) || (c.stage === '잔금' && !c.balanceAmount)) {
-      autoTab = 'pay'; // 입금 대기 중이면 결제탭부터
-    } else {
-      var os = c.orderStatus || {};
-      var orderNotStarted = !os.fabric && !os.production && !os.blind && !os.material && !os.install;
-      if (['계약금','실측','잔금','시공'].indexOf(c.stage) >= 0 && orderNotStarted) autoTab = 'order'; // 발주 전혀 안됐으면 발주탭부터
-    }
-  }
-  switchDetailTab(autoTab || 'info');
-  // 견적 건수 배지
-  var all = []; try { all = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
-  var estCnt = all.filter(function(e){ return e.clientName === c.clientName; }).length;
-  var cntEl = document.getElementById('dtab-est-cnt');
-  if (cntEl) cntEl.textContent = estCnt > 0 ? estCnt+'건' : '';
+}
 
-  
+function renderDetailStageSection(c, body, isMaster) {
   var stageNum = STAGE_NUM[c.stage] || 1;
   var stageSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
 
@@ -395,7 +427,9 @@ function openDetail(name, id, forceTab) {
   stageSec.appendChild(stageBar);
   body.appendChild(stageSec);
 
-  
+}
+
+function renderDetailTodoSection(c, body) {
   var todoKeys = STAGE_ALIM[c.stage] || [];
   var manualKeys = todoKeys.filter(function(k){ return ALIM_META[k] && ALIM_META[k].tag === '수동'; });
   if (manualKeys.length > 0) {
@@ -434,12 +468,9 @@ function openDetail(name, id, forceTab) {
     body.appendChild(todoSec);
   }
 
-  renderPaySection(c, payBody);
+}
 
-  
-  renderAlimSection(c, alimBody);
-
-  // 고객 정보 섹션
+function renderDetailInfoSection(c, body) {
   var infoSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
   infoSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'고객 정보'}));
 
@@ -501,12 +532,9 @@ function openDetail(name, id, forceTab) {
   infoSec.appendChild(dateGrid);
   body.appendChild(infoSec);
 
-  renderEstimateHistory(body, c.clientName);
+}
 
-  
-  body.appendChild(btn('width:100%;padding:var(--sp-3);background:var(--ivory1);color:var(--dark);border:1px solid var(--border);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:6px', '견적서 앱에서 열기', function(){ openEstimate(currentDetailName); }));
-  renderOrderSection(c, orderBody);
-
+function renderDetailBottomButtons(c, isMaster, body) {
   var bottomBtns = [btn('flex:2;padding:11px;background:var(--dark);color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:12px;letter-spacing:0.2px', '닫기', closeDetail)];
   if (isMaster) {
     if (isSoftDeleted(c)) {
@@ -517,8 +545,6 @@ function openDetail(name, id, forceTab) {
   }
   body.appendChild(div('display:flex;gap:var(--sp-2)', bottomBtns));
 
-  document.getElementById('detail-overlay').className = 'overlay open';
-  renderKakaoLog();
 }
 
 function closeDetail() { document.getElementById('detail-overlay').className = 'overlay'; currentDetailName = null; currentDetailId = null; }
