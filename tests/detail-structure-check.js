@@ -39,6 +39,16 @@ async function run() {
   try {
     const page = await browser.newPage();
     page.on('dialog', async d => { try { await d.accept(); } catch (e) {} });
+
+    // 2026-07-19 추가: openDetail()을 5개 함수로 분리하다가 isMaster 파라미터를
+    // 새 함수에 안 넘겨서 "isMaster is not defined" 런타임 에러가 났던 사고가 있었음.
+    // 문법검사(node -c)는 이런 종류의 버그를 못 잡는다 — 실제로 함수를 실행해봐야
+    // 만 나온다. 그래서 고객상세보기를 열 때 JS 런타임 에러가 하나라도 발생하면
+    // 무조건 실패 처리한다 (마스터/스태프 권한별로 각각, 권한 분기 코드에서
+    // 특히 이런 종류의 "빠뜨린 변수" 버그가 나기 쉬움).
+    const pageErrors = [];
+    page.on('pageerror', (err) => { pageErrors.push(err.message); });
+
     await page.setViewport({ width: 1280, height: 1200 });
     await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await new Promise(r => setTimeout(r, 700));
@@ -94,6 +104,33 @@ async function run() {
     const tabIds = ['dtab-info', 'dtab-pay', 'dtab-alim', 'dtab-order', 'dtab-est'];
     const tabsExist = await page.evaluate((ids) => ids.every((id) => !!document.getElementById(id)), tabIds);
     check('5탭 구조(정보/결제/소통/발주/이력) 유지됨', tabsExist, '탭 버튼 중 일부가 사라짐 — 탭 구조를 임의로 바꾸지 않았는지 확인 필요');
+
+    check(
+      '마스터 권한으로 상세보기 열 때 JS 런타임 에러 없음',
+      pageErrors.length === 0,
+      `발생한 에러: ${JSON.stringify(pageErrors)}`
+    );
+
+    // 권한 분기 코드(isMaster 등)에서 변수 누락 버그가 나기 쉬우므로 스태프로도 열어봄
+    pageErrors.length = 0;
+    await page.evaluate(() => { closeDetail(); });
+    await new Promise(r => setTimeout(r, 200));
+    await loginAs(page, 'staff');
+    await page.evaluate(() => {
+      saveCustomers([{
+        clientName: '구조검사고객스태프', phone: '01099998888', addr: '서울시 강남구',
+        stage: '계약금', staffName: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.name : '담당자',
+        date: '2026-07-01', orderStatus: {}
+      }]);
+    });
+    await new Promise(r => setTimeout(r, 300));
+    await page.evaluate(() => { openDetail('구조검사고객스태프', null, '정보'); });
+    await new Promise(r => setTimeout(r, 500));
+    check(
+      '스태프 권한으로 상세보기 열 때 JS 런타임 에러 없음',
+      pageErrors.length === 0,
+      `발생한 에러: ${JSON.stringify(pageErrors)}`
+    );
 
     process.exitCode = failCount === 0 ? 0 : 1;
     await page.close();
