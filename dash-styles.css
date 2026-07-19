@@ -44,7 +44,7 @@
 .quick-nav a {
   font-size: 11px;
   font-weight: 600;
-  color: #9A9490;
+  color: #756E62;
   text-decoration: none;
   padding: 7px 12px;
   border-radius: 8px;
@@ -127,7 +127,7 @@ html, body, input, button, select, textarea {
 .kpi-num em, .kpi-num-unit, .kpi-unit {
   font-size: 13px !important;
   font-weight: 400 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   font-style: normal !important;
   letter-spacing: 0 !important;
   margin-left: 1px !important;
@@ -143,7 +143,7 @@ html, body, input, button, select, textarea {
 .tab, .tab-item, .tabs button {
   font-size: 12px !important;
   font-weight: 500 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
 }
 .tab.on, .tab-item.on, .tabs button.on, .tabs button.active {
   font-size: 12px !important;
@@ -155,7 +155,7 @@ html, body, input, button, select, textarea {
 .date-label, .home-date, #home .date {
   font-size: 11px !important;
   font-weight: 400 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
 }
 
 /* ⑪ 버튼 통일 */
@@ -225,7 +225,7 @@ input::placeholder, textarea::placeholder {
   border-radius: 6px !important;
   font-size: 12px !important;
   font-weight: 600 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   background: transparent !important;
   border: none !important;
   cursor: pointer !important;
@@ -259,7 +259,7 @@ input::placeholder, textarea::placeholder {
   padding: 0 14px !important;
   font-size: 12px !important;
   font-weight: 500 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   background: none !important;
   border: none !important;
   border-bottom: 2px solid transparent !important;
@@ -285,15 +285,15 @@ input::placeholder, textarea::placeholder {
 
    페이지 타이틀    22px / 700 / #282828
    KPI 숫자        36px / 700 / #282828
-   KPI 단위        13px / 400 / #B0A99F
-   KPI 라벨        11px / 700 / #B0A99F
-   섹션 타이틀      12px / 700 / #B0A99F (대문자)
+   KPI 단위        13px / 400 / #756E62
+   KPI 라벨        11px / 700 / #756E62
+   섹션 타이틀      12px / 700 / #756E62 (대문자)
    본문 텍스트      15px / 400 / #282828
-   서브 텍스트      12px / 400 / #B0A99F
+   서브 텍스트      12px / 400 / #756E62
    버튼 텍스트      13px / 700
    탭 라벨          12px / 500(off) 700(on)
    칸반 스테이지    12px / 700
-   날짜/보조        11px / 400 / #B0A99F
+   날짜/보조        11px / 400 / #756E62
    ════════════════════════════════════════════════ */
 
 /* ① 페이지 타이틀 — 위쪽 첫 번째 정의와 완전히 동일하여 중복 제거함 */
@@ -304,14 +304,14 @@ input::placeholder, textarea::placeholder {
    ════════════════════════════════════════════════════════
    페이지 타이틀  22px / 700 / #282828
    KPI 숫자      36px / 700 / #282828
-   KPI 단위      13px / 400 / #B0A99F
-   KPI 라벨      11px / 700 / #B0A99F (uppercase)
-   섹션 타이틀   12px / 700 / #B0A99F (uppercase)
+   KPI 단위      13px / 400 / #756E62
+   KPI 라벨      11px / 700 / #756E62 (uppercase)
+   섹션 타이틀   12px / 700 / #756E62 (uppercase)
    본문          15px / 400 / #282828
-   서브텍스트    12px / 400 / #B0A99F
+   서브텍스트    12px / 400 / #756E62
    버튼          13px / 700
    탭 라벨       12px / 500(off) 700(on)
-   날짜/보조     11px / 400 / #B0A99F
+   날짜/보조     11px / 400 / #756E62
    ════════════════════════════════════════════════════════ */
 
 /* ── 전역 기본 ── */
@@ -349,7 +349,7 @@ input::placeholder, textarea::placeholder {
 .date-label, .home-date {
   font-size: 11px !important;
   font-weight: 400 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
 }
 
 /* ── 서브텍스트 12px ── */
@@ -374,7 +374,7 @@ input::placeholder, textarea::placeholder {
   border-radius: 6px !important;
   font-size: 12px !important;
   font-weight: 600 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   background: transparent !important;
   border: none !important;
   transition: all 0.12s !important;
@@ -391,7 +391,7 @@ input::placeholder, textarea::placeholder {
 .chart-view-tabs button {
   font-size: 12px !important;
   font-weight: 500 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   border-bottom: 2px solid transparent !important;
   transition: all 0.12s !important;
 }
@@ -406,7 +406,7 @@ input::placeholder, textarea::placeholder {
 .est-table th {
   font-size: 11px !important;
   font-weight: 700 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   letter-spacing: 0.04em !important;
   text-transform: uppercase !important;
 }
@@ -464,7 +464,7 @@ input::placeholder, textarea::placeholder {
 .kanban-count {
   font-size: 11px;
   font-weight: 500;
-  color: #B0A99F;
+  color: #756E62;
   background: #F5F2EE;
   padding: 1px 7px;
   border-radius: 10px;
@@ -497,7 +497,7 @@ input::placeholder, textarea::placeholder {
 .kpi-num em, .kpi-num-unit {
   font-size: 13px !important;
   font-weight: 400 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   font-style: normal !important;
 }
 
@@ -506,7 +506,7 @@ input::placeholder, textarea::placeholder {
 #chart [class*=period] button,
 #chart [class*=tab] button {
   height: 30px; padding: 0 12px; border-radius: 6px;
-  font-size: 12px; font-weight: 600; color: #B0A99F;
+  font-size: 12px; font-weight: 600; color: #756E62;
   background: transparent; border: none; cursor: pointer;
   font-family: inherit; transition: all 0.12s;
 }
@@ -540,7 +540,7 @@ button[onclick*="excel"], button[onclick*="download"],
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: #B0A99F;
+  color: #756E62;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -559,7 +559,7 @@ button[onclick*="excel"], button[onclick*="download"],
   padding: 0 14px;
   font-size: 12px;
   font-weight: 500;
-  color: #B0A99F;
+  color: #756E62;
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
@@ -754,7 +754,7 @@ button[onclick="exportExcel()"] {
 @keyframes spin { to { transform: rotate(360deg); } }
 .loading-text {
   font-size: 13px;
-  color: #B0A99F;
+  color: #756E62;
   font-weight: 500;
 }
 
@@ -793,7 +793,7 @@ button[onclick="exportExcel()"] {
   border-radius: 4px !important;
   border: 1px solid #EEE6DC;
   background: #FAF7F5 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   cursor: pointer !important;
   font-family: inherit !important;
   transition: all 0.15s;
@@ -943,7 +943,7 @@ button[onclick="exportExcel()"] {
   gap: 10px;
   margin: 20px 0 14px;
   font-size: 12px;
-  color: #B0A99F;
+  color: #756E62;
 }
 .login-divider::before,
 .login-divider::after {
@@ -1042,10 +1042,10 @@ button[onclick="exportExcel()"] {
   flex-shrink: 0;
 }
 .cal-ev-day { color: #282828; }
-.cal-ev-dow { font-size: 11px; color: #B0A99F; }
+.cal-ev-dow { font-size: 11px; color: #756E62; }
 .cal-ev-info { flex: 1; min-width: 0; }
 .cal-ev-name { color: #282828; }
-.cal-ev-sub { font-size: 12px; color: #9A9490; margin-top: 2px; }
+.cal-ev-sub { font-size: 12px; color: #756E62; margin-top: 2px; }
 .cal-ev-badge {
   font-size: 11px;
   font-weight: 700;
@@ -1069,7 +1069,7 @@ button[onclick="exportExcel()"] {
 
 /* ══════════════ 칸반 카드 ══════════════ */
 .kanban-item-name { font-size: 13px; font-weight: 700; color: #282828; }
-.kanban-item-sub { font-size: 11px; color: #9A9490; margin-top: 2px; }
+.kanban-item-sub { font-size: 11px; color: #756E62; margin-top: 2px; }
 .kanban-item-price { font-size: 12px; font-weight: 700; color: #282828; margin-top: 4px; }
 
 /* ══════════════ KPI / 매출 진행바 ══════════════ */
@@ -1106,7 +1106,7 @@ button[onclick="exportExcel()"] {
 .stage-pill.실측 { background: #A67C52; }
 .stage-pill.잔금 { background: #2E7D6B; }
 .stage-pill.시공 { background: #C0392B; }
-.stage-pill.완료 { background: var(--light, #B0A99F); }
+.stage-pill.완료 { background: var(--light, #756E62); }
 .rebuy-tag {
   font-size: 11px;
   font-weight: 700;
@@ -1122,7 +1122,7 @@ button[onclick="exportExcel()"] {
 .date-filter-wrap { display: flex; gap: 6px; margin-bottom: 10px; }
 .field-err { font-size: 11px; color: var(--danger, #E4483A); margin-top: 4px; }
 .form-row { margin-bottom: 12px; }
-.login-footer { font-size: 11px; color: #B0A99F; text-align: center; margin-top: 16px; }
+.login-footer { font-size: 11px; color: #756E62; text-align: center; margin-top: 16px; }
 .memo-quick-btn {
   font-size: 11px;
   padding: 5px 10px;
@@ -1134,7 +1134,7 @@ button[onclick="exportExcel()"] {
   font-family: inherit;
 }
 .modal-top-bar { width: 36px; height: 4px; background: #EEE6DC; border-radius: 2px; margin: 8px auto 4px; }
-.archived-check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #9A9490; cursor: pointer; }
+.archived-check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #756E62; cursor: pointer; }
 .empty-state-emoji { font-size: 28px; display: block; margin-bottom: 8px; }
 .skeleton { background: linear-gradient(90deg, #F5F2EE 25%, #EEE6DC 50%, #F5F2EE 75%); background-size: 200% 100%; animation: skeleton-pulse 1.4s ease infinite; border-radius: 6px; }
 .skeleton-card { height: 64px; margin-bottom: 8px; }
@@ -1152,7 +1152,7 @@ button[onclick="exportExcel()"] {
 }
 .login-card-sub {
   font-size: 13px !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   line-height: 1.6 !important;
   margin-bottom: 4px !important;
 }
@@ -1172,7 +1172,7 @@ button[onclick="exportExcel()"] {
   --ivory1:   #FAF7F5;
   --ivory2:   #F5F2EE;
   --border:   #EEE6DC;
-  --sub:      #B0A99F;   /* 서브텍스트 */
+  --sub:      #756E62;   /* 서브텍스트 (2026-07-19: 대비 2.33->5.04로 개선, WCAG AA 충족) */
   --danger:   #C0392B;
   --bg-org:   #FFF3EE;   /* 오렌지 강조배경 */
   --bg-red:   #FDECEA;   /* 빨강 강조배경 */
@@ -1186,8 +1186,8 @@ button[onclick="exportExcel()"] {
   --r-icon:   14px;  /* 빠른액션 아이콘 */
   /* ── 하위호환 alias ── */
   --terra:    #F06E2D;
-  --mid:      #B0A99F;
-  --light:    #B0A99F;
+  --mid:      #756E62;
+  --light:    #756E62;
   --green:    #2E7D32;
   --blue:     #282828;
   --terra-dark:#D4601F;
@@ -1595,7 +1595,7 @@ button.btn-kakao {
 }
 .staff-btn {
   background: #fff !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   border: 1px solid #EEE6DC;
   border-radius: 4px;
   padding: 6px 14px;
@@ -2014,7 +2014,7 @@ button[onclick*="excel"], button[onclick*="download"] {
 }
 .kpi-unit {
   font-size: 12px !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   font-weight: 400 !important;
 }
 
@@ -2053,7 +2053,7 @@ button[onclick*="export"]:hover, button[onclick*="Excel"]:hover {
 .modal-section-label, [class*=modal-label] {
   font-size: 12px !important;
   font-weight: 700 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   margin-bottom: 8px;
@@ -2113,7 +2113,7 @@ button[onclick*="exportExcel"] {
 .tab, .tab-item {
   font-size: 12px !important;
   font-weight: 600 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   transition: color 0.15s;
 }
 .tab.on, .tab-item.on, .tab.active {
@@ -2137,7 +2137,7 @@ button[onclick*="exportExcel"] {
 /* ── 10. 빈 상태 텍스트 일관성 ── */
 .empty-msg, .empty-text, [class*=empty] p {
   font-size: 13px !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   text-align: center;
   line-height: 1.7;
 }
@@ -2151,7 +2151,7 @@ button[onclick*="exportExcel"] {
 }
 #settings .setting-desc {
   font-size: 12px !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
 }
 
 
@@ -2182,7 +2182,7 @@ button[onclick*="exportExcel"] {
   border-bottom: 1px solid #EEE6DC;
   padding: 12px 0;
 }
-#chart .summary-label { color: #B0A99F !important; }
+#chart .summary-label { color: #756E62 !important; }
 #chart .summary-value { font-weight: 700 !important; color: #282828 !important; }
 
 /* ── 15. 전체 카드 일관성 ── */
@@ -2201,7 +2201,7 @@ button[onclick*="exportExcel"] {
 /* ━━ 수정 3: 모달 입력창 플레이스홀더 색 ━━ */
 #add-overlay input::placeholder,
 #add-overlay textarea::placeholder {
-  color: #B0A99F !important;
+  color: #756E62 !important;
   font-size: 13px !important;
 }
 
@@ -2220,7 +2220,7 @@ button[onclick*="exportExcel"] {
 
 /* ━━ 수정 6: 진행현황 칩 완료 색상 ━━ */
 .stage-chip-done, [data-stage="완료"] {
-  color: #B0A99F !important;
+  color: #756E62 !important;
   border-color: #EEE6DC;
   background: #F5F2EE !important;
 }
@@ -2233,6 +2233,13 @@ button[onclick*="exportExcel"] {
 
 /* ━━ 수정 8: 전체 버튼 cursor 통일 ━━ */
 button { cursor: pointer; }
+
+/* ━━ 2026-07-19 추가: 전체 버튼 호버 피드백 ━━
+   개별 클래스 없이 동적 생성된 버튼(btn() 헬퍼)까지 전부 커버하기 위해
+   filter로 배경색 종류 상관없이 살짝 어둡게 처리. 이미 개별 :hover가
+   있는 버튼(.btn-primary 등)은 그쪽이 더 구체적이라 자연스럽게 우선 적용됨. */
+button:hover:not(:disabled) { filter: brightness(0.95); transition: filter 0.15s; }
+button:active:not(:disabled) { filter: brightness(0.9); }
 
 /* ━━ 수정 10: 헤더 로고 폰트 ━━ */
 .hd-logo {
@@ -2254,14 +2261,14 @@ button { cursor: pointer; }
 .kpi-num em, .kpi-num-unit {
   font-size: 13px !important;
   font-weight: 400 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   font-style: normal !important;
   margin-left: 2px;
 }
 .kpi-label {
   font-size: 11px !important;
   font-weight: 700 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   margin-bottom: 6px;

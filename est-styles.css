@@ -24,14 +24,14 @@ html, body, input, button, select, textarea {
    ════════════════════════════════════════════════════════
    페이지 타이틀  22px / 700 / #282828
    KPI 숫자      36px / 700 / #282828
-   KPI 단위      13px / 400 / #B0A99F
-   KPI 라벨      11px / 700 / #B0A99F (uppercase)
-   섹션 타이틀   12px / 700 / #B0A99F (uppercase)
+   KPI 단위      13px / 400 / #756E62
+   KPI 라벨      11px / 700 / #756E62 (uppercase)
+   섹션 타이틀   12px / 700 / #756E62 (uppercase)
    본문          15px / 400 / #282828
-   서브텍스트    12px / 400 / #B0A99F
+   서브텍스트    12px / 400 / #756E62
    버튼          13px / 700
    탭 라벨       12px / 500(off) 700(on)
-   날짜/보조     11px / 400 / #B0A99F
+   날짜/보조     11px / 400 / #756E62
    ════════════════════════════════════════════════════════ */
 
 /* ── 전역 기본 ── */
@@ -56,7 +56,7 @@ body {
 .kpi-num em, .kpi-unit, .kpi-num-unit {
   font-size: 13px !important;
   font-weight: 400 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   font-style: normal !important;
   letter-spacing: 0 !important;
 }
@@ -65,7 +65,7 @@ body {
 .kpi-label {
   font-size: 11px !important;
   font-weight: 700 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   letter-spacing: 0.05em !important;
   text-transform: uppercase !important;
 }
@@ -75,7 +75,7 @@ body {
 .section-header, .section-hd {
   font-size: 12px !important;
   font-weight: 700 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   letter-spacing: 0.06em !important;
   text-transform: uppercase !important;
 }
@@ -114,14 +114,14 @@ input::placeholder, textarea::placeholder {
 .date-label, .home-date {
   font-size: 11px !important;
   font-weight: 400 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
 }
 
 /* ── 서브텍스트 12px ── */
 .sub-text, .empty-desc, .desc-text,
 .kpi-sub-pct, .kpi-sub {
   font-size: 12px !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
 }
 
 /* ── 홈 칩 28px 높이 ── */
@@ -146,12 +146,12 @@ input::placeholder, textarea::placeholder {
 .pipe-col-count, .kanban-col-count {
   font-size: 11px !important;
   font-weight: 500 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
 }
 
 /* ── 카드 본문 ── */
 .pipe-card-name { font-size: 15px !important; font-weight: 600 !important; }
-.pipe-card-sub  { font-size: 12px !important; font-weight: 400 !important; color: #B0A99F !important; }
+.pipe-card-sub  { font-size: 12px !important; font-weight: 400 !important; color: #756E62 !important; }
 
 /* ── 모바일 진행현황 2열 ── */
 @media (max-width: 640px) {
@@ -185,7 +185,7 @@ input::placeholder, textarea::placeholder {
   border-radius: 6px !important;
   font-size: 12px !important;
   font-weight: 600 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   background: transparent !important;
   border: none !important;
   transition: all 0.12s !important;
@@ -202,7 +202,7 @@ input::placeholder, textarea::placeholder {
 .chart-view-tabs button {
   font-size: 12px !important;
   font-weight: 500 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   border-bottom: 2px solid transparent !important;
   transition: all 0.12s !important;
 }
@@ -217,7 +217,7 @@ input::placeholder, textarea::placeholder {
 .est-table th {
   font-size: 11px !important;
   font-weight: 700 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   letter-spacing: 0.04em !important;
   text-transform: uppercase !important;
 }
@@ -235,7 +235,7 @@ input::placeholder, textarea::placeholder {
   --ivory1:   #FAF7F5;
   --ivory2:   #F5F2EE;
   --border:   #EEE6DC;
-  --sub:      #B0A99F;
+  --sub:      #756E62;
   --danger:   #C0392B;
   --bg-org:   #FFF3EE;
   --bg-red:   #FDECEA;
@@ -243,7 +243,7 @@ input::placeholder, textarea::placeholder {
   /* ── 스테이지 컬러 ── */
   --stage-orange: #F06E2D;   /* 계약금·실측 */
   --stage-dark:   #282828;   /* 잔금·시공 */
-  --stage-sub:    #B0A99F;   /* 상담 */
+  --stage-sub:    #756E62;   /* 상담 */
   --stage-done:   #EEE6DC;   /* 완료 */
 
   /* ── Border Radius ── */
@@ -259,8 +259,8 @@ input::placeholder, textarea::placeholder {
 
   /* ── 하위 호환 ── */
   --terra:    #F06E2D;
-  --mid:      #B0A99F;
-  --light:    #B0A99F;
+  --mid:      #756E62;
+  --light:    #756E62;
   --green:    #2E7D32;
   --blue:     #282828;
   --terra-dark:#D4601F;
@@ -378,7 +378,7 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
 }
 .sec-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px}
 .sec-title{
-  font-size:11px;font-weight:800;color:#B0A99F;
+  font-size:11px;font-weight:800;color:#756E62;
   letter-spacing:2.5px;text-transform:uppercase;
   white-space:nowrap
 }
@@ -389,7 +389,7 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
 .sec-tip{
   width:18px;height:18px;border-radius:50%;
   border:1.5px solid #EEE6DC;font-size:11px;
-  font-weight:700;color:#B0A99F;cursor:help;
+  font-weight:700;color:#756E62;cursor:help;
   display:inline-flex;align-items:center;justify-content:center
 }
 
@@ -405,7 +405,7 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
 }
 .info-item:last-child{border-bottom:none}
 .info-item label{
-  font-size:11px;color:#B0A99F;font-weight:700;
+  font-size:11px;color:#756E62;font-weight:700;
   display:block;margin-bottom:4px;
   letter-spacing:1.5px;text-transform:uppercase
 }
@@ -415,8 +415,8 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
   color:#282828;font-family:inherit;outline:none;
   -webkit-appearance:none;appearance:none
 }
-.info-item input::placeholder{color:#B0A99F;font-weight:400;font-size:11px}
-.info-item input[readonly]{color:#B0A99F}
+.info-item input::placeholder{color:#756E62;font-weight:400;font-size:11px}
+.info-item input[readonly]{color:#756E62}
 
  
 .region-row{
@@ -424,7 +424,7 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
   margin-top:16px;padding-top:16px;border-top:1px dashed #EEE6DC
 }
 .region-row label{
-  font-size:11px;font-weight:700;color:#B0A99F;
+  font-size:11px;font-weight:700;color:#756E62;
   letter-spacing:0.8px;text-transform:uppercase;white-space:nowrap
 }
 .region-row select,.region-row input{
@@ -434,7 +434,7 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
   outline:none;background:transparent
 }
 .region-row select:focus,.region-row input:focus{border-bottom-color:#282828}
-.region-row .region-hint{font-size:11px;color:#B0A99F}
+.region-row .region-hint{font-size:11px;color:#756E62}
 
  
 .info-toggle{
@@ -443,10 +443,10 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
   cursor:pointer;user-select:none;border-top:1px dashed #EEE6DC
 }
 .info-toggle .toggle-label{
-  font-size:11px;font-weight:700;color:#B0A99F;
+  font-size:11px;font-weight:700;color:#756E62;
   letter-spacing:0.8px;text-transform:uppercase
 }
-.info-toggle .toggle-arrow{font-size:11px;color:#B0A99F;transition:transform 0.2s;margin-left:auto}
+.info-toggle .toggle-arrow{font-size:11px;color:#756E62;transition:transform 0.2s;margin-left:auto}
 .info-toggle.open .toggle-arrow{transform:rotate(180deg)}
 .info-internal{max-height:none!important;display:none!important}
 .info-internal.open{max-height:200px;display:block!important}
@@ -479,7 +479,7 @@ td select{
   outline:none;color:#282828;
   max-width:100%;cursor:pointer
 }
-td input::placeholder{color:#B0A99F;font-size:11px}
+td input::placeholder{color:#756E62;font-size:11px}
 td input:focus,td select:focus{outline:none}
 td.amt{
   text-align:right;white-space:nowrap;
@@ -516,7 +516,7 @@ td.amt{
   display:inline-flex;align-items:center;
   background:transparent;
   font-size:11px;font-weight:500;font-family:inherit;
-  color:#B0A99F;cursor:pointer;letter-spacing:0.2px
+  color:#756E62;cursor:pointer;letter-spacing:0.2px
 }
 .add-btn:hover{
   color:#282828
@@ -548,7 +548,7 @@ td.amt{
 .sum-row.perf{border-top:1px dashed #EEE6DC;display:none}
 .sum-row.perf 
 .sum-row.perf 
-.sum-sub{font-size:11px;font-weight:400;color:#B0A99F;margin-left:6px}
+.sum-sub{font-size:11px;font-weight:400;color:#756E62;margin-left:6px}
 .discount-wrap{
   display:inline-flex;align-items:center;gap:6px;
   background:#FAF7F5;border:1px solid #EEE6DC;
@@ -600,7 +600,7 @@ td.amt{
 .action-bar{background:#fff;border-top:2px solid #EEE6DC;padding:16px 16px 40px;display:flex;flex-direction:column;gap:8px}
 .action-bar button{font-size:11px;font-family:inherit;font-weight:700;border-radius:4px;cursor:pointer;transition:all 0.15s}
 .action-main{display:flex;flex-direction:column;gap:10px}
-.btn-new{background:transparent;color:#B0A99F;border:1.5px solid #EEE6DC}
+.btn-new{background:transparent;color:#756E62;border:1.5px solid #EEE6DC}
 .btn-new:hover{color:#282828;border-color:#282828}
 .btn-preview{background:#fff;color:#282828;border:1.5px solid #EEE6DC}
 .btn-preview:hover{border-color:#282828;color:#282828}
@@ -678,7 +678,7 @@ td.amt{
 .pv-party{padding:18px 28px}
 .pv-party:first-child{border-right:1px solid #EEE6DC}
 .pv-party-label{
-  font-size:11px;font-weight:700;color:#B0A99F;
+  font-size:11px;font-weight:700;color:#756E62;
   letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px
 }
 .pv-party-name{font-size:11px;font-weight:700;color:#282828;margin-bottom:8px}
@@ -711,7 +711,7 @@ td.amt{
   font-size:11px;color:#8E8078;white-space:nowrap;width:40px
 }
 .pv-prod-table tbody td.sz{
-  font-size:11px;color:#B0A99F;white-space:nowrap
+  font-size:11px;color:#756E62;white-space:nowrap
 }
 .pv-prod-table tbody td.name{font-weight:600;color:#282828;width:auto}
 .pv-prod-table tbody td.spec-col{font-size:11px;color:#8E8078}
@@ -734,7 +734,7 @@ td.amt{
   font-size:11px;color:#282828;line-height:1.9
 }
 .pv-notes-title{
-  font-size:11px;font-weight:800;color:#B0A99F;
+  font-size:11px;font-weight:800;color:#756E62;
   letter-spacing:1.5px;text-transform:uppercase;
   margin-bottom:8px
 }
@@ -749,14 +749,14 @@ td.amt{
 .pv-logo{height:32px;display:block;object-fit:contain;object-position:left}
 .pv-header-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
 .pv-doc-label{
-  font-size:11px;font-weight:700;color:#B0A99F;
+  font-size:11px;font-weight:700;color:#756E62;
   letter-spacing:3px;text-transform:uppercase
 }
 .pv-doc-title{
   font-size:22px;font-weight:900;color:#282828;
   letter-spacing:-0.5px;line-height:1
 }
-.pv-brand{font-size:11px;color:#B0A99F;letter-spacing:4px;text-transform:uppercase;font-weight:600}
+.pv-brand{font-size:11px;color:#756E62;letter-spacing:4px;text-transform:uppercase;font-weight:600}
 
  
 .pv-customer{padding:24px 28px;border-bottom:1px solid #EEE6DC}
@@ -767,7 +767,7 @@ td.amt{
   padding-top:16px;border-top:1px solid #EEE6DC
 }
 .pv-sch-label{
-  font-size:11px;font-weight:700;color:#B0A99F;
+  font-size:11px;font-weight:700;color:#756E62;
   letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px
 }
 .pv-sch-val{font-size:11px;font-weight:600;color:#282828}
@@ -842,13 +842,13 @@ td.amt{
   font-size:11px;font-weight:700;color:#8E8078;
   letter-spacing:0.5px;margin-bottom:4px
 }
-.pv-payment-sub{font-size:11px;color:#B0A99F;margin-bottom:8px}
+.pv-payment-sub{font-size:11px;color:#756E62;margin-bottom:8px}
 .pv-payment-amount{font-size:11px;font-weight:700;color:#282828}
 
  
 .pv-process{padding:20px 28px;border-bottom:1px solid #EEE6DC}
 .pv-process-title{
-  font-size:11px;font-weight:700;color:#B0A99F;
+  font-size:11px;font-weight:700;color:#756E62;
   letter-spacing:0.5px;margin-bottom:16px
 }
 .pv-process-step{
@@ -946,7 +946,7 @@ td.amt{
  
 #discount{width:60px!important}
 #svc-table td:first-child select{color:#282828}
-.inner-fields .inner-inp::placeholder{color:#B0A99F}
+.inner-fields .inner-inp::placeholder{color:#756E62}
 .deposit-inp-wrap{display:flex;align-items:center;gap:6px}
 .cprice{text-align:right}
 .over243-wrap{display:none;color:#F06E2D;font-size:11px;margin-top:4px}
@@ -957,7 +957,7 @@ td.amt{
 #pdf-size-modal.open{display:flex}
 #pdf-size-box{background:#fff;border-radius:16px;padding:28px 24px 24px;width:400px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.25)}
 .pdf-modal-title{font-size:11px;font-weight:800;color:#282828;margin-bottom:8px;letter-spacing:-0.3px}
-.pdf-modal-sub{font-size:11px;color:#B0A99F;margin-bottom:16px}
+.pdf-modal-sub{font-size:11px;color:#756E62;margin-bottom:16px}
 .pdf-modal-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
 .pdf-opt{border:2px solid #EEE6DC;border-radius:12px;padding:18px 14px;cursor:pointer;text-align:center;transition:all 0.15s;background:#fff}
 .pdf-opt:hover{border-color:#282828;background:#FAF7F5}
@@ -973,7 +973,7 @@ td.amt{
 .pdf-modal-confirm{padding:9px 22px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
 .pdf-modal-confirm:hover{background:#282828}
 .load-cust-btn{padding:5px 10px;background:#fff;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;letter-spacing:0.2px;white-space:nowrap;padding:5px 8px}
-.load-cust-btn:hover{background:#F5F2EE;border-color:#B0A99F}
+.load-cust-btn:hover{background:#F5F2EE;border-color:#756E62}
  
 #cust-load-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;display:none;align-items:center;justify-content:center}
 #cust-load-overlay.open{display:flex}
@@ -988,8 +988,8 @@ td.amt{
 .cust-load-item{padding:13px 20px;border-bottom:1px solid #EEE6DC;cursor:pointer;transition:background 0.1s}
 .cust-load-item:hover{background:#FAF7F5}
 .cust-load-name{font-size:11px;font-weight:700;color:#282828;margin-bottom:2px}
-.cust-load-info{font-size:11px;color:#B0A99F}
-.cust-load-empty{padding:32px 20px;text-align:center;font-size:11px;color:#B0A99F}
+.cust-load-info{font-size:11px;color:#756E62}
+.cust-load-empty{padding:32px 20px;text-align:center;font-size:11px;color:#756E62}
  
  
 @media(max-width:768px){
@@ -1018,17 +1018,17 @@ td.amt{
 
  
 .empty-state{
-  text-align:center;padding:40px 20px;color:#B0A99F
+  text-align:center;padding:40px 20px;color:#756E62
 }
 .empty-state-icon{font-size:32px;margin-bottom:12px}
-.empty-state-msg{font-size:11px;font-weight:500;color:#B0A99F;line-height:1.6}
+.empty-state-msg{font-size:11px;font-weight:500;color:#756E62;line-height:1.6}
 
  
 .t-title{font-size:11px;font-weight:700;color:#282828;letter-spacing:-0.3px}
 .t-sub{font-size:11px;font-weight:600;color:#282828}
 .t-body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;color:#282828;-webkit-text-size-adjust:100%}
 .t-caption{font-size:11px;font-weight:400;color:#8E8078}
-.t-label{font-size:11px;font-weight:600;color:#B0A99F;letter-spacing:1px;text-transform:uppercase}
+.t-label{font-size:11px;font-weight:600;color:#756E62;letter-spacing:1px;text-transform:uppercase}
 
  
 input:focus{border-bottom-color:#282828}
@@ -1062,7 +1062,7 @@ textarea:focus{border-color:#282828}
   padding:6px 0 10px;width:100%
 }
 .info-item label.info-label{
-  font-size:11px;font-weight:700;color:#B0A99F;
+  font-size:11px;font-weight:700;color:#756E62;
   letter-spacing:1.5px;text-transform:uppercase;
   margin-bottom:4px;display:block;padding-top:4px
 }
@@ -1079,7 +1079,7 @@ textarea:focus{border-color:#282828}
 
  
 .pv-photos{margin-top:16px;padding-top:16px;border-top:1px solid #EEE6DC}
-.pv-photos-title{font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.pv-photos-title{font-size:11px;font-weight:700;color:#756E62;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
 .pv-photos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .pv-photos-grid img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px}
 
@@ -1161,7 +1161,7 @@ input,select,textarea{transition:border-color 0.15s ease}
   font-weight: 700 !important;
 }
 .est-tab {
-  color: #B0A99F;
+  color: #756E62;
   border-bottom: 2px solid transparent;
   background: none;
   border-top: none;
@@ -1265,7 +1265,7 @@ input.error { border-color: #C0392B !important; box-shadow: 0 0 0 3px rgba(192,5
   padding: 3px 10px; border-radius: 4px;
   font-size: 12px; font-weight: 700;
 }
-#contract-status-badge.none { background:#F5F2EE; color:#B0A99F; border:1px solid #EEE6DC; }
+#contract-status-badge.none { background:#F5F2EE; color:#756E62; border:1px solid #EEE6DC; }
 #contract-status-badge.done { background:#FFF3EE; color:#F06E2D; border:1px solid #F06E2D; }
 
 
@@ -1336,7 +1336,7 @@ h1, h2, h3 { font-weight: 700; }
   border-bottom: 2px solid transparent !important;
   padding: 12px 16px !important;
   background: transparent !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   cursor: pointer;
   font-family: inherit;
   transition: color 0.15s, border-color 0.15s;
@@ -1364,7 +1364,7 @@ h1, h2, h3 { font-weight: 700; }
   transition: all 0.15s;
   border: 1px solid #EEE6DC !important;
   background: transparent !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
 }
 .cust-type-btn.on {
   background: #F06E2D !important;
@@ -1476,7 +1476,7 @@ button[onclick*="location"] {
 #svc-head th {
   font-size: 12px !important;
   font-weight: 700 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   letter-spacing: 0.03em;
 }
 #curtain-body td,
@@ -1501,7 +1501,7 @@ button[onclick*="location"] {
 /* 총 견적금액 */
 .grand-total-label {
   font-size: 12px !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -1525,7 +1525,7 @@ button[onclick*="location"] {
 .section-label, [class*=section-title] {
   font-size: 12px !important;
   font-weight: 700 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -1533,7 +1533,7 @@ button[onclick*="location"] {
 /* ── 11. 고객정보 필드 ── */
 .field-label {
   font-size: 12px !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
 }
 .field-value {
   font-size: 15px !important;
@@ -1582,7 +1582,7 @@ button[onclick*="search"][onclick*="addr"]:hover {
 #svc-head th {
   font-size: 11px !important;
   font-weight: 700 !important;
-  color: #B0A99F !important;
+  color: #756E62 !important;
   letter-spacing: 0.04em !important;
   text-transform: uppercase !important;
   padding: 10px 8px !important;
