@@ -535,7 +535,7 @@ button[onclick*="excel"], button[onclick*="download"],
 
 /* ④ 매출 탭 — 정확한 클래스명으로 */
 .date-filter-btn {
-  height: 30px;
+  height: 32px;
   padding: 0 12px;
   border-radius: 6px;
   font-size: 12px;
@@ -786,7 +786,7 @@ button[onclick="exportExcel()"] {
 .sort-btn, .filter-btn {
   flex-shrink: 0 !important;
   white-space: nowrap !important;
-  height: 30px !important;
+  height: 32px !important;
   padding: 0 12px !important;
   font-size: 12px !important;
   font-weight: 600 !important;
@@ -1453,7 +1453,7 @@ input,button,select,textarea { font-family:inherit; }
 /* ── 차트 탭 ── */
 .tab-bar { display:flex; background:#fff; border-bottom:1px solid var(--border); margin-bottom:8px; }
 .chart-tab {
-  flex:1; padding:12px 0;
+  flex:1; padding:12px 0; min-height:32px;
   font-size:11px; font-weight:600; font-family:inherit;
   text-align:center; color:var(--light);
   background:none; border:none; cursor:pointer;
