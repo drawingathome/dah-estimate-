@@ -1207,6 +1207,14 @@ html, body, input, button, select, textarea {
    ══════════════════════════════════════════ */
 button { transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease; cursor: pointer; }
 
+/* 2026-07-19 추가: 클래스 없이 id/onclick만으로 만들어진 버튼(확인/검색/임시저장
+   불러오기/엑셀다운로드/발주서출력/실측·시공의뢰서/닫기 등 29개 중 10개)은
+   위쪽 개별 :hover 규칙이 하나도 안 걸려서 호버 피드백이 없었음.
+   filter로 배경색 종류 상관없이 전부 커버. 개별 :hover가 있는 버튼은
+   그쪽이 더 구체적이라 자연스럽게 우선 적용됨. */
+button:hover:not(:disabled) { filter: brightness(0.95); }
+button:active:not(:disabled) { filter: brightness(0.9); }
+
 /* 탭 */
 
 /* 입력창 */
