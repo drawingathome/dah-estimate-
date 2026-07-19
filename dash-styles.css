@@ -1269,7 +1269,7 @@ input,button,select,textarea { font-family:inherit; }
 .tab.on svg,.tab.active svg { stroke:var(--terra); }
 
 /* ── wrap (콘텐츠 영역) ── */
-.wrap { padding:12px 16px 80px; background:var(--ivory2); }
+.wrap { padding:12px 16px 80px; background:var(--ivory2); max-width:1200px; margin:0 auto; }
 
 /* ── 카드 ── */
 .card {
