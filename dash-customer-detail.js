@@ -338,7 +338,7 @@ function renderDetailStageSection(c, body, isMaster) {
 
   var kebabWrap = div('position:relative', []);
   if (canCancelOrNoshow) {
-    var kebabBtn = btn('font-size:15px;color:var(--sub);background:none;border:none;padding:5px 8px;cursor:pointer;line-height:1', '⋮', function(e){
+    var kebabBtn = btn('font-size:15px;color:var(--sub);background:none;border:none;padding:5px 8px;cursor:pointer;line-height:1;min-width:32px;min-height:32px;display:inline-flex;align-items:center;justify-content:center', '⋮', function(e){
       var menu = document.getElementById('stage-kebab-menu');
       if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
     });
@@ -366,7 +366,7 @@ function renderDetailStageSection(c, body, isMaster) {
       el('span', {style:'font-size:12px;font-weight:700;color:var(--dark);letter-spacing:-0.3px', text:c.stage + ' 단계'})
     ]),
     div('display:flex;align-items:center;gap:2px', [
-      isMaster ? btn('font-size:11px;color:var(--dark);background:var(--ivory1);border:1px solid var(--border);padding:5px 10px;cursor:pointer;font-family:inherit;border-radius:10px', '수정', function(){ closeDetail(); openAdd(c.clientName); }) : el('span',{}),
+      isMaster ? btn('font-size:11px;color:var(--dark);background:var(--ivory1);border:1px solid var(--border);padding:5px 10px;cursor:pointer;font-family:inherit;border-radius:10px;min-height:32px', '수정', function(){ closeDetail(); openAdd(c.clientName); }) : el('span',{}),
       kebabWrap
     ])
   ]);
@@ -443,7 +443,7 @@ function renderDetailTodoSection(c, body) {
     if (manualKeys.length > 1) {
       var moreRow = div('display:flex;align-items:center;justify-content:space-between', [
         el('span', {style:'font-size:11px;color:var(--sub)', text:(manualKeys.length-1)+'건 더 남음'}),
-        btn('font-size:11px;color:var(--dark);background:none;border:1px solid var(--border);padding:4px 10px;border-radius:10px;cursor:pointer;font-family:inherit', '전체 보기', function(){
+        btn('font-size:11px;color:var(--dark);background:none;border:1px solid var(--border);padding:4px 10px;border-radius:10px;cursor:pointer;font-family:inherit;min-height:32px', '전체 보기', function(){
           var wrap = document.getElementById('todo-rest');
           if (wrap) wrap.style.display = wrap.style.display === 'none' ? '' : 'none';
         })
@@ -656,7 +656,7 @@ function renderEstimateHistory(container, clientName) {
     
     var contractBadge = el('button', {style:
       'font-size:12px;font-weight:700;border:none;cursor:pointer;' +
-      'padding:3px 10px;border-radius:6px;font-family:inherit;' +
+      'padding:3px 10px;border-radius:6px;font-family:inherit;min-height:32px;' +
       'background:' + (cs==='contracted'?'var(--dark)':'var(--ivory1)') + ';' +
       'color:' + (cs==='contracted'?'#fff':'#6B6B6B'),
       text: CONTRACT_LABELS[cs]||'가견적'
