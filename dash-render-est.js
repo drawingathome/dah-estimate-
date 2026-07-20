@@ -78,10 +78,10 @@ function renderEstList() {
     priceEl.textContent = (Number(e.price)||0).toLocaleString() + '원';
     mid.appendChild(nameEl); mid.appendChild(priceEl);
 
-    // 하단 행: 공간 + 원단 + 날짜
+    // 하단 행: 총 품목 개수 + 날짜 (공간/원단 상세는 대부분 집 전체 시공이라 나열해도 의미 없어서 제거)
     var bot = el('div', {style:'font-size:11px;color:var(--sub);display:flex;gap:var(--sp-2);flex-wrap:wrap'});
-    if (e.space) { var s1=el('span'); s1.textContent=e.space; bot.appendChild(s1); }
-    if (e.fabric) { var s2=el('span',{style:'color:var(--light)'}); s2.textContent=e.fabric; bot.appendChild(s2); }
+    var itemCount = Number(e.itemCount) || 0;
+    if (itemCount > 0) { var s1=el('span'); s1.textContent='총 '+itemCount+'개 품목'; bot.appendChild(s1); }
     var dateStr = e.savedAt ? e.savedAt.slice(0,10) : (e.date||'');
     if (dateStr) { var s3=el('span',{style:'margin-left:auto'}); s3.textContent=dateStr; bot.appendChild(s3); }
 
