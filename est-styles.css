@@ -500,7 +500,7 @@ td.amt{
 .inner-fields{display:none!important}
 .inner-row{display:flex;gap:6px;margin-top:4px}
 .inner-inp{
-  flex:1;padding:4px 6px!important;
+  flex:1;min-width:0;padding:4px 6px!important;
   border:none!important;
   border-bottom:1px solid #EEE6DC!important;
   font-size:11px!important;background:transparent!important;

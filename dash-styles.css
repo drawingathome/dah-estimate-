@@ -1321,7 +1321,7 @@ input,button,select,textarea { font-family:inherit; }
 }
 .search-icon { flex-shrink:0; }
 .search-input-clean {
-  flex:1; border:none; outline:none;
+  flex:1; min-width:0; border:none; outline:none;
   font-size:11px; color:var(--dark); background:transparent;
   font-family:inherit;
 }
