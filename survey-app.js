@@ -341,7 +341,7 @@ function App() {
         style:{ height:20, display:'block', objectFit:'contain', objectPosition:'left' }
       }),
       React.createElement('div', {
-        style:{ fontSize:10, color:T.mid, letterSpacing:'0.12em', fontWeight:600 }
+        style:{ fontSize:11, color:T.mid, letterSpacing:'0.12em', fontWeight:600 }
       }, 'SINCE 2012')
     ),
     // ── 이미지 프레임 (직각, 하단 리드밴드 기준) ──
@@ -389,17 +389,17 @@ function App() {
     },
       React.createElement('div', { style:{ flex:1 } },
         React.createElement('div', { style:{ fontSize:15, fontWeight:700, color:T.dark, lineHeight:1 } }, '2012'),
-        React.createElement('div', { style:{ fontSize:10, color:T.light, marginTop:5, letterSpacing:'0.08em' } }, 'SINCE')
+        React.createElement('div', { style:{ fontSize:11, color:T.light, marginTop:5, letterSpacing:'0.08em' } }, 'SINCE')
       ),
       React.createElement('div', { style:{ width:1, height:24, background:T.border } }),
       React.createElement('div', { style:{ flex:1, paddingLeft:T.md } },
         React.createElement('div', { style:{ fontSize:15, fontWeight:700, color:T.dark, lineHeight:1 } }, '15년'),
-        React.createElement('div', { style:{ fontSize:10, color:T.light, marginTop:5, letterSpacing:'0.08em' } }, '운영')
+        React.createElement('div', { style:{ fontSize:11, color:T.light, marginTop:5, letterSpacing:'0.08em' } }, '운영')
       ),
       React.createElement('div', { style:{ width:1, height:24, background:T.border } }),
       React.createElement('div', { style:{ flex:1, paddingLeft:T.md } },
         React.createElement('div', { style:{ fontSize:15, fontWeight:700, color:T.dark, lineHeight:1 } }, '반포동'),
-        React.createElement('div', { style:{ fontSize:10, color:T.light, marginTop:5, letterSpacing:'0.08em' } }, '쇼룸')
+        React.createElement('div', { style:{ fontSize:11, color:T.light, marginTop:5, letterSpacing:'0.08em' } }, '쇼룸')
       ),
     ),
     // ── 버튼 ──
