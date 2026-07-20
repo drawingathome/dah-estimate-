@@ -56,11 +56,11 @@
   background: #FAF7F5;
   color: #282828;
 }
-@media (max-width: 1023px) {
+@media (max-width: 1199px) {
   .quick-nav { display: none; }
 }
 /* quick-nav가 떠 있을 때는 본문 오른쪽에 여백을 줘서 콘텐츠와 겹치지 않게 함 */
-@media (min-width: 1024px) {
+@media (min-width: 1200px) {
   body.has-quicknav .wrap { padding-right: 108px; }
 }
 
