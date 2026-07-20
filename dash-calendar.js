@@ -42,14 +42,14 @@ function renderCal() {
 
   // 월 요약바
   var monStr = yr + '-' + pad2(mo+1);
-  var monC = customers.filter(function(c){ return (c.date||'').slice(0,7)===monStr && c.stage!=='상담'; });
+  var monMeasure = customers.filter(function(c){ return (c.measureDate||'').slice(0,7)===monStr; }).length;
   var monRev = getMonthRevenue(customers, monStr);
   var monInstall = customers.filter(function(c){ return (c.installDate||'').slice(0,7)===monStr; }).length;
   var sumBar = document.getElementById('cal-summary-bar');
   if (sumBar) {
     sumBar.innerHTML = [
       {label:'매출', value: Math.round(monRev/10000).toLocaleString()+'만원', color:'var(--dark)'},
-      {label:'계약', value: monC.length+'건', color:'#2E7D6B'},
+      {label:'실측', value: monMeasure+'건', color:'#2E7D6B'},
       {label:'시공', value: monInstall+'건', color:'var(--terra)'}
     ].map(function(item, i) {
       return '<div style="flex:1;text-align:center;' + (i>0?'':'') + '">' +

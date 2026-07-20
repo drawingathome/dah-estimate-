@@ -194,7 +194,10 @@ function renderDetailEstTab() {
 function openDetail(name, id, forceTab) {
   var customers = loadCustomers();
   var c = id ? customers.find(function(x) { return x.id === id; }) : customers.find(function(x) { return x.clientName === name; });
-  if (!c) return;
+  if (!c) {
+    showToast('"' + (name||'') + '" 고객 정보를 찾을 수 없어요 (삭제되었거나 이름이 변경된 것 같아요)');
+    return;
+  }
   currentDetailName = c.clientName;
   currentDetailId = c.id || null;
   if (typeof logEvent === 'function') logEvent('detail_open', { stage: c.stage, tab: forceTab || 'info' });
