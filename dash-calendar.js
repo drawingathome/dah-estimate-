@@ -132,7 +132,7 @@ function renderCal() {
       });
       if (mainItems.length > 2) {
         var moreEl = document.createElement('div');
-        moreEl.style.cssText = 'font-size:11px;color:var(--sub);margin-top:1px;text-align:center';
+        moreEl.style.cssText = 'font-size:11px;color:var(--sub);margin-top:1px;text-align:center;cursor:pointer;font-weight:600';
         moreEl.textContent = '+' + (mainItems.length - 2);
         cell.appendChild(moreEl);
       }
