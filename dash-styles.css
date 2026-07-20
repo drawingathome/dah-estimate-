@@ -896,8 +896,9 @@ button[onclick="exportExcel()"] {
   display: flex;
   gap: 8px;
 }
-#master-pw-input {
+#master-pw-input, #staff-pw-input {
   flex: 1;
+  min-width: 0;
   height: 44px;
   padding: 0 14px;
   border: 1.5px solid var(--border, #EEE6DC);
@@ -909,7 +910,7 @@ button[onclick="exportExcel()"] {
   outline: none;
   transition: border-color 0.15s;
 }
-#master-pw-input:focus {
+#master-pw-input:focus, #staff-pw-input:focus {
   border-color: #282828;
 }
 .login-confirm-btn {
