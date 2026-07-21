@@ -80,8 +80,10 @@ function renderHome(skipServerFetch) {
       var reasons = [];
       if (c.stage === '계약금' || c.stage === '잔금') reasons.push(c.stage + ' 처리');
       if (ORDER_STAGES_FOR_ACTION.indexOf(c.stage) >= 0) {
-        var os = c.orderStatus || {};
-        if (!os.fabric && !os.production && !os.blind && !os.material && !os.install) reasons.push('발주 필요');
+        // 2026-07-21 수정: 예전엔 "5개 항목 전부 미체크"일 때만 발주필요로 떴는데,
+        // 하나라도 체크하면 나머지를 깜빡해도 목록에서 사라지는 심각한 버그였음.
+        // 이제 "관련 있는 항목 중 하나라도 안 끝난 게 있으면" 정확히 감지함.
+        if (typeof hasIncompleteOrder === 'function' && hasIncompleteOrder(c)) reasons.push('발주 필요');
       }
       if (c.stage === '상담' && c.date) {
         var daysSince = Math.floor((_today - new Date(c.date)) / (1000*60*60*24));
