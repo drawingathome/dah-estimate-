@@ -611,7 +611,7 @@ td.amt{
 }
 .btn-pdf:hover{background:#282828}
 .btn-print{padding:14px 0;background:#fff;color:#282828;border:1.5px solid #282828;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px}
-.btn-print:hover{background:#FAF7F5}
+/* (.btn-print:hover는 뒤쪽에 이미 정의되어 중복 제거함) */
 .btn-save{padding:14px 0;background:#282828;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px}
 
  
@@ -1086,7 +1086,7 @@ textarea:focus{border-color:#282828}
  
 
  
-button{transition:transform 0.1s ease,opacity 0.1s ease,box-shadow 0.1s ease}
+/* (button transition은 뒤쪽에 이미 정의되어 중복 제거함) */
 button:active{opacity:0.85}
 
  

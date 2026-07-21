@@ -1763,7 +1763,7 @@ html, body { font-size: 15px; line-height: 1.5; }
 
 /* 15px — 본문 (기본) */
 .text-15 { font-size: 15px; font-weight: 400; }
-button   { font-size: 15px; }
+/* (button 폰트크기는 위쪽 ⑪번에 이미 정의되어 중복 제거함) */
 input, select, textarea { font-size: 15px !important; }
 
 /* 13px — 서브 본문 / 라벨 */
@@ -1788,10 +1788,7 @@ label { font-size: 13px; }
 
 
 /* ── Pretendard 폰트 적용 ── */
-html, body, input, button, select, textarea {
-  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
-    'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-}
+/* (font-family는 뒤쪽에 이미 강제지정 규칙으로 정의되어 중복 제거함) */
 
 
 /* ── 빈 상태 화면 ── */
@@ -1976,10 +1973,7 @@ button { font-size: 13px !important; font-family: inherit; }
 
 
 /* ━━ 엑셀 버튼 radius 4px 확정 ━━ */
-button[onclick*="export"], button[onclick*="Excel"],
-button[onclick*="excel"], button[onclick*="download"] {
-  border-radius: 4px;
-}
+/* (해당 버튼들은 전역 button 모서리 규칙(--r-btn)을 그대로 따라가므로 중복 규칙 제거함) */
 
 
 /* ═══════════════════════════════════════════════════
@@ -2214,7 +2208,7 @@ button[onclick*="exportExcel"] {
 }
 
 /* ━━ 수정 8: 전체 버튼 cursor 통일 ━━ */
-button { cursor: pointer; }
+/* (button cursor는 위쪽에 이미 정의되어 중복 제거함) */
 
 /* ━━ 2026-07-19 추가: 전체 버튼 호버 피드백 ━━
    개별 클래스 없이 동적 생성된 버튼(btn() 헬퍼)까지 전부 커버하기 위해
