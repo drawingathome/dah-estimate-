@@ -188,27 +188,9 @@ input, select, textarea {
 /* 기간 탭 (전체/이번달/지난달/3개월/6개월) */
 
 
-#chart .period-tabs button.on,
-#chart .period-tabs button.active,
-#chart [class*=period-btn].on,
-.chart-period-tabs button.on,
-.chart-period-tabs button.active {
-  background: #fff !important;
-  color: #282828 !important;
-  font-weight: 700 !important;
-  box-shadow: 0 1px 4px rgba(40,40,40,0.12) !important;
-}
+/* (매출탭 활성상태는 date-filter-btn.on / chart-tab.on 에 이미 정의되어 있어
+   여기 있던 period-tabs/view-tabs 관련 죽은 규칙 제거함 - 그 클래스 자체가 안 쓰임) */
 /* 일/주/월/연 탭 */
-
-
-#chart .view-tabs button.on,
-#chart .view-tabs button.active,
-#chart [class*=view-btn].on,
-.chart-view-tabs button.on {
-  color: #F06E2D !important;
-  font-weight: 700 !important;
-  border-bottom-color: #F06E2D !important;
-}
 
 
 
@@ -289,21 +271,7 @@ input::placeholder, textarea::placeholder {
 /* ── 매출 탭 active 강화 ── */
 
 
-#chart .period-tabs button.on,
-#chart .period-tabs button.active,
-.chart-period-tabs button.on {
-  background: #fff !important;
-  color: #282828 !important;
-  font-weight: 700 !important;
-  box-shadow: 0 1px 4px rgba(40,40,40,0.12) !important;
-}
-
-#chart .view-tabs button.on,
-.chart-view-tabs button.on {
-  color: #F06E2D !important;
-  font-weight: 700 !important;
-  border-bottom-color: #F06E2D !important;
-}
+/* (위와 동일한 죽은 규칙 중복 - 제거함) */
 
 /* ── 견적서 ── */
 
