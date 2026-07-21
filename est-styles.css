@@ -1479,14 +1479,7 @@ button[onclick*="location"] {
 }
 
 /* ── 8. 테이블 헤더/셀 폰트 ── */
-#curtain-head th,
-#blind-head th,
-#svc-head th {
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  color: #756E62 !important;
-  letter-spacing: 0.03em;
-}
+/* (헤더 폰트규칙은 아래쪽 "견적서 테이블 헤더 통일"에 이미 있어서 중복 제거함) */
 #curtain-body td,
 #blind-body td,
 #svc-body td {

@@ -177,10 +177,7 @@ input, select, textarea {
   font-size: 15px !important;
   font-family: inherit !important;
 }
-input::placeholder, textarea::placeholder {
-  font-size: 13px !important;
-  color: #C8C2BA !important;
-}
+/* (input::placeholder 규칙은 위쪽 ⑫번에 이미 정의되어 있어 중복 제거함) */
 
 /* ⑬ 설정 화면 라벨 */
 #settings .field-label,
@@ -494,13 +491,7 @@ input::placeholder, textarea::placeholder {
 /* ③ PC KPI 위계 강화 */
 
 
-.kpi-num em, .kpi-num-unit {
-  font-size: 13px !important;
-  font-weight: 400 !important;
-  color: #756E62 !important;
-  font-style: normal !important;
-}
-
+/* (.kpi-num em 규칙은 뒤쪽에 이미 정의되어 있어 중복 제거함) */
 
 /* 기간 탭 (전체/이번달 등) */
 #chart [class*=period] button,
@@ -1235,9 +1226,7 @@ input,button,select,textarea { font-family:inherit; }
   font-weight:600; cursor:pointer; border:none;
   display:inline-flex; align-items:center; gap:6px;
 }
-.hd-btn-primary {
-  background:var(--orange); color:#fff; font-weight:700;
-}
+/* (.hd-btn-primary는 뒤쪽에 이미 정의되어 있어 중복 제거함) */
 .hd-btn-est {
   background:var(--orange); color:#fff; font-weight:700; border:none;
 }
@@ -1374,7 +1363,7 @@ input,button,select,textarea { font-family:inherit; }
 
 /* ── 모달 오버레이 완전 확정 ── */
 /* ── 고객추가 모달 오버레이 ── */
-.modal-box { position: relative; z-index: 9999; }
+/* (.modal-box는 뒤쪽에 이미 완전히 정의되어 있어 중복 제거함) */
 
 .add-modal {
   background:#fff; border-radius:16px 16px 0 0;
@@ -1607,18 +1596,10 @@ button.btn-kakao {
 }
 
 /* ── + 고객 추가 버튼 ── */
-.hd-btn-primary {
-  background: var(--orange) !important;
-  color: #fff !important;
-  border: none;
-  border-radius: var(--r-btn);
-}
+/* (아래쪽 .hd-btn-primary 정의에서 이미 처리되어 중복 제거함) */
 
 /* ── 저장 버튼 ── */
-#add-save-btn {
-  background: var(--orange) !important;
-  border-radius: var(--r-btn);
-}
+/* (아래쪽 #add-save-btn 정의에서 이미 처리되어 중복 제거함) */
 
 /* ── FAB ── */
 
@@ -1679,7 +1660,7 @@ button.btn-kakao {
 
 /* ── 모달 오버레이 완전 수정 ── */
 
-.modal-box { z-index:9999 !important; }
+/* (.modal-box z-index는 뒤쪽에 이미 정의되어 있어 중복 제거함) */
 
 
 /* ── 고객추가 모달 버튼 완전 확정 ── */
