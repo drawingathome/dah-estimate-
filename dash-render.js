@@ -71,6 +71,9 @@ function renderHome(skipServerFetch) {
     // "계약금/잔금 단계" 조건과 "발주 시작 안 됨" 조건을 하나의 목록으로 통합.
     // (선혜님 피드백으로 별도 카드를 만들었다가, 두 조건이 겹치는 고객이 화면에
     // 중복으로 나타나는 문제를 발견해 하나로 병합함 — 각 항목에 이유를 표시)
+    // 2026-07-20 추가: "상담" 단계에서 오래 진행 없는 고객(놓친 리드)도 여기 포함.
+    // 기준은 7일로 우선 정함 — 필요하면 조정 가능.
+    var LEAD_STALE_DAYS = 7;
     var ORDER_STAGES_FOR_ACTION = ['계약금', '실측', '잔금', '시공'];
     var needActionMap = {};
     customers.forEach(function(c) {
@@ -79,6 +82,10 @@ function renderHome(skipServerFetch) {
       if (ORDER_STAGES_FOR_ACTION.indexOf(c.stage) >= 0) {
         var os = c.orderStatus || {};
         if (!os.fabric && !os.production && !os.blind && !os.material && !os.install) reasons.push('발주 필요');
+      }
+      if (c.stage === '상담' && c.date) {
+        var daysSince = Math.floor((_today - new Date(c.date)) / (1000*60*60*24));
+        if (daysSince >= LEAD_STALE_DAYS) reasons.push('상담 후 ' + daysSince + '일째 진행없음');
       }
       if (reasons.length > 0) needActionMap[c.clientName] = { customer: c, reasons: reasons };
     });

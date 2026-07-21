@@ -241,6 +241,19 @@ function renderCalList(customers, selectedDate) {
       priceEl.textContent = Math.round(ev.price/10000).toLocaleString() + '만원';
       right.appendChild(priceEl);
     }
+    // 실측/시공 일정 옆에 선금·잔금 입금 상태를 같이 표시 (2026-07-20 추가)
+    // — 예전엔 일정과 결제 여부를 따로따로 봐야 했어서 한눈에 확인이 안 됐음.
+    if (isMain && ev.cust) {
+      var dep = Number(ev.cust.depositAmount) || 0;
+      var bal = Number(ev.cust.balanceAmount) || 0;
+      if (dep > 0 || bal > 0) {
+        var payWrap = document.createElement('div');
+        payWrap.style.cssText = 'font-size:11px;margin-top:2px;display:flex;gap:4px;justify-content:flex-end';
+        if (dep > 0) payWrap.appendChild((function(){ var s=document.createElement('span'); s.style.cssText='color:#2E7D6B'; s.textContent='선금✅'; return s; })());
+        if (bal > 0) payWrap.appendChild((function(){ var s=document.createElement('span'); s.style.cssText='color:#2E7D6B'; s.textContent='잔금✅'; return s; })());
+        right.appendChild(payWrap);
+      }
+    }
 
     row.appendChild(dateCol);
     row.appendChild(bar);
