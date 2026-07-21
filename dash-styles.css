@@ -459,26 +459,8 @@ button[onclick="exportExcel()"] {
   color: var(--sub);
   line-height: 1.7;
 }
-.empty-state-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 48px 24px;
-  gap: 8px;
-  text-align: center;
-}
-.empty-state-icon {
-  width: 48px;
-  height: 48px;
-  background: var(--border);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 4px;
-  font-size: 20px;
-}
+
+
 .empty-state-title {
   font-size: 15px !important;
   font-weight: 700 !important;
@@ -895,8 +877,8 @@ button[onclick="exportExcel()"] {
 .kanban-item-price { font-size: 12px; font-weight: 700; color: #282828; margin-top: 4px; }
 
 /* ══════════════ KPI / 매출 진행바 ══════════════ */
-.rev-bar-wrap { width: 100%; height: 6px; background: #EEE6DC; border-radius: 3px; overflow: hidden; }
-.rev-bar-fill { height: 100%; background: var(--orange, #F06E2D); border-radius: 3px; transition: width 0.3s; }
+
+
 .goal-pct { font-size: 11px; font-weight: 700; color: var(--orange, #F06E2D); }
 
 /* ══════════════ 매출(차트) 탭 ══════════════ */
@@ -916,13 +898,7 @@ button[onclick="exportExcel()"] {
 .ci-left { flex: 1; min-width: 0; }
 .ci-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
 .ci-price { font-size: 12px; font-weight: 700; color: #282828; }
-.stage-pill {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 9px;
-  border-radius: 4px;
-  color: #fff;
-}
+
 .stage-pill.상담 { background: #282828; }
 .stage-pill.계약금 { background: #F06E2D; }
 .stage-pill.실측 { background: #A67C52; }
@@ -958,12 +934,12 @@ button[onclick="exportExcel()"] {
 .modal-top-bar { width: 36px; height: 4px; background: #EEE6DC; border-radius: 2px; margin: 8px auto 4px; }
 .archived-check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #756E62; cursor: pointer; }
 .empty-state-emoji { font-size: 28px; display: block; margin-bottom: 8px; }
-.skeleton { background: linear-gradient(90deg, #F5F2EE 25%, #EEE6DC 50%, #F5F2EE 75%); background-size: 200% 100%; animation: skeleton-pulse 1.4s ease infinite; border-radius: 6px; }
-.skeleton-card { height: 64px; margin-bottom: 8px; }
-.skeleton-line { height: 12px; margin-bottom: 6px; }
-.skeleton-line.long { width: 70%; }
-.skeleton-line.short { width: 40%; }
-.skeleton-avatar { width: 32px; height: 32px; border-radius: 50%; }
+
+
+
+
+
+
 @keyframes skeleton-pulse { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 /* 로그인 카드 내부 */
 .login-card-title {
@@ -1105,27 +1081,13 @@ input,button,select,textarea { font-family:inherit; }
 .card-count { font-size:11px; color:var(--sub); }
 
 /* ── 고객 행 ── */
-.customer-item {
-  padding:12px 16px; border-bottom:1px solid var(--ivory2);
-  cursor:pointer; transition:background 0.12s;
-  display:flex; align-items:center; gap:12px;
-  min-height:56px;
-}
-.customer-item:last-child { border-bottom:none; }
-.customer-item:hover { background:var(--ivory1); transform:none; background:var(--ivory1); }
-.ci-avatar {
-  width:34px; height:34px; border-radius:50%;
-  background:var(--dark); color:#fff;
-  display:flex; align-items:center; justify-content:center;
-  font-size:11px; font-weight:700; flex-shrink:0;
-}
+
+
+
+
 .ci-name { font-size:11px; font-weight:700; color:var(--dark); }
 .ci-sub { font-size:11px; color:var(--sub); margin-top:2px; }
-.ci-badge {
-  margin-left:auto; padding:3px 8px;
-  border-radius:var(--r-btn); font-size:11px; font-weight:700;
-  flex-shrink:0;
-}
+
 
 /* ── 검색 ── */
 .search-top {
@@ -1155,12 +1117,7 @@ input,button,select,textarea { font-family:inherit; }
 }
 .form-input:focus { border-color:var(--terra); }
 .form-input::placeholder { color:var(--light); }
-.form-select {
-  width:100%; height:40px;
-  border:1px solid var(--border); border-radius:var(--r-input);
-  padding:0 10px; font-size:11px; color:var(--dark);
-  background:#fff; outline:none; appearance:none; cursor:pointer;
-}
+
 .form-label { font-size:11px; font-weight:600; color:var(--mid); margin-bottom:5px; }
 .form-required { color:var(--terra); }
 
@@ -1176,22 +1133,12 @@ input,button,select,textarea { font-family:inherit; }
 /* ── 고객추가 모달 오버레이 ── */
 /* (.modal-box는 뒤쪽에 이미 완전히 정의되어 있어 중복 제거함) */
 
-.add-modal {
-  background:#fff; border-radius:16px 16px 0 0;
-  width:100%; max-width:480px;
-  max-height:90vh; overflow-y:auto;
-  padding:0 0 40px;
-}
-.add-modal-head {
-  position:sticky; top:0; background:#fff;
-  padding:16px 20px 12px;
-  display:flex; align-items:center; justify-content:space-between;
-  border-bottom:1px solid var(--border);
-}
+
+
 .add-modal-title { font-size:11px; font-weight:700; color:var(--dark); }
-.add-close { background:none; border:none; font-size:22px; color:var(--light); cursor:pointer; }
-.add-field { padding:12px 20px; border-bottom:1px solid var(--ivory2); }
-.add-field:last-child { border-bottom:none; }
+
+
+
 
 /* ── 로그인 화면 ── */
 .login-screen {
@@ -1212,17 +1159,12 @@ input,button,select,textarea { font-family:inherit; }
   border:1px solid var(--border);
   padding:24px 20px; width:100%; max-width:340px;
 }
-.login-sub { font-size:11px; color:var(--sub); text-align:center; }
-.user-btn {
-  width:100%; padding:14px 16px; margin-bottom:8px;
-  border-radius:var(--r-input); border:1.5px solid var(--border);
-  background:var(--ivory1); cursor:pointer;
-  display:flex; align-items:center; gap:12px; text-align:left;
-}
+
+
 .user-btn.master { border-color:var(--terra); background:var(--bg-org); }
-.user-btn-icon { font-size:22px; }
-.user-btn-name { font-size:11px; font-weight:700; color:var(--dark); display:block; }
-.user-btn-desc { font-size:11px; color:var(--sub); display:block; margin-top:1px; }
+
+
+
 .master-pw-wrap { margin-top:8px; }
 .master-pw-wrap input {
   width:100%; height:44px; border:1.5px solid var(--border);
@@ -1231,13 +1173,7 @@ input,button,select,textarea { font-family:inherit; }
   font-family:inherit;
 }
 .master-pw-wrap input:focus { border-color:var(--terra); }
-.master-pw-confirm {
-  width:100%; height:44px;
-  background:var(--dark); color:#fff;
-  border:none; border-radius:var(--r-btn);
-  font-size:11px; font-weight:700; cursor:pointer;
-  font-family:inherit;
-}
+
 .master-pw-error { font-size:11px; color:var(--danger); text-align:center; display:none; }
 
 /* ── 토스트 ── */
@@ -1262,10 +1198,10 @@ input,button,select,textarea { font-family:inherit; }
 }
 
 /* ── 매출 테이블 ── */
-.rev-table { width:100%; border-collapse:collapse; font-size:11px; }
-.rev-table th { padding:8px 12px; background:var(--ivory2); color:var(--mid); font-weight:700; font-size:11px; letter-spacing:0.06em; text-align:left; }
-.rev-table td { padding:10px 12px; border-bottom:1px solid var(--ivory2); }
-.rev-table tr:last-child td { border-bottom:none; }
+
+
+
+
 
 /* ── 모바일 대응 ── */
 .mob-app-header {
@@ -1281,8 +1217,8 @@ input,button,select,textarea { font-family:inherit; }
   box-sizing: border-box;
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
-.mob-app-logo { height:20px; display:block; object-fit:contain; ; }
-.mob-app-user { font-size:11px; color:rgba(255,255,255,0.45); font-weight:600; }
+
+
 .mob-bottom-nav {
   display:none; position:fixed; bottom:0; left:0; right:0; z-index:200;
   background:#FFFFFF; border-top:1px solid var(--border);
@@ -1317,10 +1253,7 @@ input,button,select,textarea { font-family:inherit; }
 }
 
 /* ── 기타 ── */
-.info-box {
-  background:var(--ivory1); border-radius:var(--r-card);
-  padding:12px 16px; font-size:11px; color:var(--sub); line-height:1.8;
-}
+
 
 
 /* ══════════════════════════════════════════
@@ -1395,12 +1328,7 @@ input,button,select,textarea { font-family:inherit; }
 
 
 /* ── 빈 상태 화면 ── */
-.empty-state-icon {
-  width: 48px;
-  height: 48px;
-  margin-bottom: 16px;
-  color: var(--border);
-}
+
 
 
 /* ── 헤더 + 고객 버튼 (.hd-btn-new) ── */
@@ -1511,16 +1439,16 @@ input[placeholder*="검색"],
 html, body { font-size: 15px; line-height: 1.5; }
 
 /* 36px — 대형 수치 */
-.text-36 { font-size: 36px; font-weight: 700; }
+
 
 /* 22px — 섹션 주요 수치/제목 */
-.text-22, .kpi-big { font-size: 22px; font-weight: 700; }
+
 
 /* 17px — 강조 본문 / 카드 제목 */
-.text-17 { font-size: 17px; font-weight: 600; }
+
 
 /* 15px — 본문 (기본) */
-.text-15 { font-size: 15px; font-weight: 400; }
+
 /* (button 폰트크기는 위쪽 ⑪번에 이미 정의되어 중복 제거함) */
 input, select, textarea { font-size: 15px !important; }
 
@@ -1529,10 +1457,10 @@ input, select, textarea { font-size: 15px !important; }
 label { font-size: 13px; }
 
 /* 12px — 보조 텍스트 / 뱃지 */
-.text-12 { font-size: 12px; }
+
 
 /* 10px — 최소 (UPPERCASE 태그 등) */
-.text-10 { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+
 
 
 /* ── 모바일 앱헤더 다크 확정 ── */
@@ -1560,10 +1488,7 @@ label { font-size: 13px; }
   gap: 8px;
 }
 /* 칸반 빈 상태 */
-.kanban-empty-text {
-  font-size: 13px;
-  color: var(--sub);
-}
+
 
 
 /* ── 여백 체계 (4px 기반) ── */
@@ -1579,12 +1504,12 @@ label { font-size: 13px; }
   --sp-12: 48px;
 }
 /* 섹션 간격 */
-.section-gap    { margin-bottom: var(--sp-6); }
-.section-gap-sm { margin-bottom: var(--sp-4); }
-.card-gap       { gap: var(--sp-3); }
+
+
+
 /* 카드 내부 패딩 */
-.card-pad    { padding: var(--sp-4) var(--sp-5); }
-.card-pad-sm { padding: var(--sp-3) var(--sp-4); }
+
+
 
 
 /* ── 콘텐츠 영역 ── */
@@ -1596,22 +1521,8 @@ label { font-size: 13px; }
   padding-bottom: var(--sp-8);
 }
 /* 홈 섹션 카드 */
-.home-section-card {
-  background: #fff;
-  border-radius: var(--r-card);
-  border: 1px solid var(--border);
-  margin: 0 0 12px;
-  overflow: hidden;
-}
-.home-section-head {
-  padding: 14px 16px 10px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--sub);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  border-bottom: 1px solid var(--ivory2);
-}
+
+
 
 
 /* ── 모바일 콘텐츠 하단 여백 (탭바 높이 + 여유) ── */
