@@ -5,52 +5,71 @@
 
 function renderAlimSection(c, alimBody) {
   var alimSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
-  alimSec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:var(--sp-2)', text:'알림톡 발송 현황'}));
-
-  var allKeys = ['t01_reservation','t02_reminder','t03_estimate','t31_deposit','t04_followup',
-    't05_measure_confirm','t06_measure_dday','t07_final_estimate','t71_balance_request',
-    't08_balance_remind','t09_order_confirm','t10_install_confirm','t11_install_dday',
-    't12_after_install','t13_cancel','t14_noshow'];
 
   var logs = [];
   try { logs = JSON.parse(localStorage.getItem('dah_kakao_log')||'[]'); } catch(e){}
   var sentMap = {};
   logs.forEach(function(l){ if(l.name===c.clientName) sentMap[l.type]=l; });
 
-  
-  var recommendedKeys = STAGE_ALIM[c.stage] || [];
-
-  allKeys.forEach(function(key) {
-    var meta = ALIM_META[key]; if(!meta) return;
+  function makeRow(key) {
+    var meta = ALIM_META[key]; if(!meta) return null;
     var sent = sentMap[key];
-    var isRecommended = recommendedKeys.indexOf(key) >= 0;
     var tagColor = meta.tag==='자동'?'#6B6B6B':(meta.tag==='선택'?'var(--light)':'var(--dark)');
-
-    var row = div(
-      'display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--ivory1)',
-      []
-    );
+    var row = div('display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--ivory1)', []);
     var left = div('flex:1;min-width:0', []);
     var labelRow = div('display:flex;align-items:center;gap:6px', []);
-    labelRow.appendChild(el('span', {style:'font-size:11px;font-weight:'+(isRecommended?'700':'500')+';color:'+(isRecommended?'var(--dark)':'#6B6B6B'), text:meta.label}));
+    labelRow.appendChild(el('span', {style:'font-size:11px;font-weight:600;color:var(--dark)', text:meta.label}));
     labelRow.appendChild(el('span', {style:'font-size:11px;color:'+tagColor+';background:var(--ivory1);padding:2px 5px;border-radius:var(--r-btn)', text:meta.tag}));
     left.appendChild(labelRow);
-    if (sent) {
-      left.appendChild(el('span', {style:'font-size:11px;color:var(--sub)', text:'✅ '+sent.date+' '+sent.time}));
-    }
+    if (sent) left.appendChild(el('span', {style:'font-size:11px;color:var(--sub)', text:'✅ '+sent.date+' '+sent.time}));
     row.appendChild(left);
-
     if (!sent) {
-      var sendBtn = el('span', {style:'font-size:12px;font-weight:700;color:'+(isRecommended?'var(--dark)':'var(--light)')+';cursor:pointer;flex-shrink:0;padding:4px 8px;border:1px solid '+(isRecommended?'var(--dark)':'var(--border)')+';border-radius:10px', text:'발송'});
+      var sendBtn = el('span', {style:'font-size:12px;font-weight:700;color:var(--dark);cursor:pointer;flex-shrink:0;padding:4px 8px;border:1px solid var(--dark);border-radius:10px;min-height:32px;display:flex;align-items:center', text:'발송'});
       (function(k){ sendBtn.addEventListener('click', function(){ sendAlimtalk(k); }); })(key);
       row.appendChild(sendBtn);
     } else {
-      var resendBtn = el('span', {style:'font-size:11px;color:var(--sub);cursor:pointer;flex-shrink:0;padding:4px 8px', text:'재발송'});
+      var resendBtn = el('span', {style:'font-size:11px;color:var(--sub);cursor:pointer;flex-shrink:0;padding:4px 8px;min-height:32px;display:flex;align-items:center', text:'재발송'});
       (function(k){ resendBtn.addEventListener('click', function(){ if(confirm('재발송할까요?')) sendAlimtalk(k); }); })(key);
       row.appendChild(resendBtn);
     }
-    alimSec.appendChild(row);
+    return row;
+  }
+
+  // ── "지금 할 일" — 현재 단계에 맞는 미발송 알림톡만 상단에 강조 표시 ──
+  var recommendedKeys = STAGE_ALIM[c.stage] || [];
+  var todoKeys = recommendedKeys.filter(function(k){ return !sentMap[k]; });
+  var todoWrap = div('background:var(--ivory1);border-radius:var(--r-card);padding:10px 12px;margin-bottom:12px', []);
+  todoWrap.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--terra);letter-spacing:0.05em;margin-bottom:4px', text:'📌 지금 보낼 알림톡'}));
+  if (todoKeys.length > 0) {
+    todoKeys.forEach(function(k){ var r = makeRow(k); if (r) { r.style.borderBottom = '1px solid var(--border)'; todoWrap.appendChild(r); } });
+  } else {
+    todoWrap.appendChild(el('div', {style:'font-size:11px;color:var(--sub);padding:4px 0', text:'이 단계에서 보낼 알림톡을 다 보냈어요'}));
+  }
+  alimSec.appendChild(todoWrap);
+
+  // ── 단계별 카테고리 아코디언 (전부 보기용, 현재 단계만 기본 펼침) ──
+  var categories = [
+    ['상담', STAGE_ALIM.상담], ['계약금', STAGE_ALIM.계약금], ['실측', STAGE_ALIM.실측],
+    ['잔금', STAGE_ALIM.잔금], ['시공', STAGE_ALIM.시공], ['완료/기타', STAGE_ALIM.완료]
+  ];
+  var catListWrap = div('', []);
+  catListWrap.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin:8px 0 4px', text:'단계별 전체 보기'}));
+  categories.forEach(function(cat) {
+    var stageName = cat[0], keys = cat[1] || [];
+    var isCurrentStage = (stageName === c.stage) || (stageName === '완료/기타' && c.stage === '완료');
+    var sentCount = keys.filter(function(k){ return sentMap[k]; }).length;
+    var header = div('display:flex;align-items:center;justify-content:space-between;padding:8px 0;cursor:pointer', [
+      span('font-size:12px;font-weight:700;color:var(--dark)', stageName + ' (' + sentCount + '/' + keys.length + ')'),
+      span('font-size:11px;color:var(--sub)', isCurrentStage ? '▾' : '▸')
+    ]);
+    header.onclick = function(){ toggleHomeAccordion(header); };
+    var body = div('display:' + (isCurrentStage ? 'block' : 'none'), []);
+    keys.forEach(function(k){ var r = makeRow(k); if (r) body.appendChild(r); });
+    catListWrap.appendChild(header);
+    catListWrap.appendChild(body);
   });
+  alimSec.appendChild(catListWrap);
+
   if (alimBody) alimBody.appendChild(alimSec);
 }
 
