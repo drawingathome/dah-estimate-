@@ -44,16 +44,12 @@ function renderHome(skipServerFetch) {
     customers = customers.filter(function(c){ return !isSoftDeleted(c); });
 
     // ── 이달 매출 계산 ──────────────────────────────
-    var thisMonthCustomers = customers.filter(function(c) {
-      var d = new Date(c.depositDate || c.createdAt || '');
-      return d.getFullYear() === _year && d.getMonth() === _today.getMonth();
-    });
-    var thisMonthRev = thisMonthCustomers.reduce(function(sum, c) {
-      // 목표 달성률은 순수 실적매출(제품가격만, 실측비/시공비/레일비 등 제외) 기준으로 계산.
-      // 입금액(depositAmount+balanceAmount)은 시공서비스 금액까지 포함된 전체 결제액이라
-      // 목표관리 용도로는 맞지 않음 (선혜님 피드백: 시공서비스 금액이 목표매출에 안 섞이게).
-      return sum + (Number(c.performanceRevenue) || 0);
-    }, 0);
+    // 목표 달성률은 순수 실적매출(제품가격만, 실측비/시공비/레일비 등 제외) 기준으로 계산.
+    // 선금/잔금이 서로 다른 달에 입금되면 각각의 입금월에 비율대로 반영됨(2026-07-20 통일).
+    var _thisMonthKey = _year + '-' + String(_today.getMonth()+1).padStart(2,'0');
+    var thisMonthRev = typeof getMonthPerformanceRevenue === 'function'
+      ? getMonthPerformanceRevenue(customers, _thisMonthKey)
+      : 0;
     var thisMonthContracts = customers.filter(function(c) {
       return c.stage === '계약금' || c.stage === '실측' || c.stage === '잔금' || c.stage === '시공';
     }).length;
@@ -221,15 +217,13 @@ function renderHome(skipServerFetch) {
       '</div>',
 
       // 5. 담당자별 성과 (마스터 전용, 기본 접힘 — 펼쳐진 섹션 개수에 안 잡히도록)
+      // 2026-07-20: 예전엔 월 구분 없이 전체 누적이라 인센티브 정산에 못 썼음.
+      // 이제 "이번달" 입금(선금/잔금) 기준으로 집계 — 매달 정산 가능하도록 수정.
       (function() {
         if (!currentUser || currentUser.role !== 'master') return '';
-        var byStaff = {};
-        customers.forEach(function(c) {
-          var s = c.staffName || '미지정';
-          if (!byStaff[s]) byStaff[s] = { count: 0, rev: 0 };
-          byStaff[s].count++;
-          byStaff[s].rev += (Number(c.performanceRevenue) || 0);
-        });
+        var byStaff = typeof getMonthStaffPerformance === 'function'
+          ? getMonthStaffPerformance(customers, _thisMonthKey)
+          : {};
         var rows = Object.keys(byStaff).map(function(s) {
           return '<div style="padding:10px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center">' +
             '<div style="width:28px;height:28px;border-radius:50%;background:var(--dark);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-right:10px">' + (s[0]||'?') + '</div>' +
@@ -243,7 +237,7 @@ function renderHome(skipServerFetch) {
         return rows ? (
           '<div id="sec-staff-perf" style="background:#fff;border-bottom:1px solid var(--border)">' +
             '<div style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleHomeAccordion(this)">' +
-              '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">담당자별 성과</span>' +
+              '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">이번달 담당자별 성과</span>' +
               '<span style="font-size:11px;color:var(--sub)">▸</span>' +
             '</div>' +
             '<div style="display:none">' + rows + '</div>' +

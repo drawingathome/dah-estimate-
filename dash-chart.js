@@ -3,6 +3,82 @@
    홈화면 미니차트, 매출탭 상세차트(일/주/월/년별) 관련 함수 모음.
    ══════════════════════════════════════════════════ */
 
+/* ══════════════════════════════════════════════════
+   DAH 대시보드 — 매출 계산 공용 함수 (2026-07-20 통일)
+   ──────────────────────────────────────────────────
+   배경: 매출 계산 방식이 화면마다 3가지로 제각각이었음
+   (일정화면=선금·잔금 정확분리 / 매출화면=등록일+전체금액 /
+   홈화면=선금일만+잔금누락). 아래 splitCustomerPayments()를
+   모든 화면이 공통으로 쓰도록 통일함.
+
+   규칙: 선금이 입금된 달엔 선금액만, 잔금이 입금된 달엔 잔금액만
+   반영. 성과매출(직원 인센티브 기준)도 선금:잔금 입금액 비율로
+   나눠서 각각의 입금월에 반영. 아직 입금 기록이 없는(예전) 고객은
+   계약일 기준으로 폴백(하위호환).
+   ══════════════════════════════════════════════════ */
+function splitCustomerPayments(c) {
+  var pd = (function(){
+    try { return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}'); } catch(e) { return {}; }
+  })();
+  var dep = Number(c.depositAmount) || Number(pd.depositAmount) || 0;
+  var depDate = c.depositDate || pd.depositDate || '';
+  var bal = Number(c.balanceAmount) || Number(pd.balanceAmount) || 0;
+  var balDate = c.balanceDate || pd.balanceDate || '';
+  var perf = Number(c.performanceRevenue) || 0;
+  var totalPaid = dep + bal;
+  var parts = [];
+  if (totalPaid > 0) {
+    if (dep > 0 && depDate) parts.push({ date: depDate, revenue: dep, perf: perf * (dep / totalPaid) });
+    if (bal > 0 && balDate) parts.push({ date: balDate, revenue: bal, perf: perf * (bal / totalPaid) });
+  } else if (c.date) {
+    // 입금 기록이 아직 없는 고객(선금/잔금 미기입) — 계약일 기준 전체금액으로 폴백
+    parts.push({ date: c.date, revenue: Number(c.price) || 0, perf: perf });
+  }
+  return parts;
+}
+
+// 특정 월(monthKey='YYYY-MM')의 실제 매출(입금액) 합계
+function getMonthRevenue(customers, monthKey) {
+  var total = 0;
+  customers.forEach(function(c) {
+    if (c.stage === '상담') return;
+    splitCustomerPayments(c).forEach(function(p) {
+      if ((p.date || '').slice(0, 7) === monthKey) total += p.revenue;
+    });
+  });
+  return total;
+}
+
+// 특정 월의 성과매출(인센티브 기준) 합계 — 선금:잔금 비율로 분배됨
+function getMonthPerformanceRevenue(customers, monthKey) {
+  var total = 0;
+  customers.forEach(function(c) {
+    if (c.stage === '상담') return;
+    splitCustomerPayments(c).forEach(function(p) {
+      if ((p.date || '').slice(0, 7) === monthKey) total += p.perf;
+    });
+  });
+  return total;
+}
+
+// 특정 월의 담당자별 성과매출 — {담당자명: {count, rev}}
+function getMonthStaffPerformance(customers, monthKey) {
+  var byStaff = {};
+  customers.forEach(function(c) {
+    if (c.stage === '상담') return;
+    var s = c.staffName || '미지정';
+    var counted = false;
+    splitCustomerPayments(c).forEach(function(p) {
+      if ((p.date || '').slice(0, 7) === monthKey) {
+        if (!byStaff[s]) byStaff[s] = { count: 0, rev: 0 };
+        byStaff[s].rev += p.perf;
+        if (!counted) { byStaff[s].count++; counted = true; }
+      }
+    });
+  });
+  return byStaff;
+}
+
 function buildRevenueChartData(customers, period) {
   var now = new Date();
   var data = [];
@@ -143,16 +219,21 @@ function renderChart(period) {
 
   
   var revenues = periods.map(function(p) {
-    return customers.filter(function(c) {
-      var cDate = c.date || (c.createdAt||'').slice(0,10);
-      if (!cDate) return false;
-      if (c.stage === '상담' || !c.price || c.price <= 0) return false;
-      var useDate = cDate;
-      if (currentChartPeriod === 'daily') return useDate === p.key;
-      if (currentChartPeriod === 'weekly') return useDate >= p.key && useDate <= p.endKey;
-      if (currentChartPeriod === 'monthly') return useDate.slice(0,7) === p.key;
-      if (currentChartPeriod === 'yearly') return useDate.slice(0,4) === p.key;
-    }).reduce(function(s,c) { return s+(Number(c.price)||0); }, 0);
+    var total = 0;
+    customers.forEach(function(c) {
+      if (c.stage === '상담') return;
+      splitCustomerPayments(c).forEach(function(part) {
+        var d = part.date;
+        if (!d) return;
+        var match = false;
+        if (currentChartPeriod === 'daily') match = (d === p.key);
+        else if (currentChartPeriod === 'weekly') match = (d >= p.key && d <= p.endKey);
+        else if (currentChartPeriod === 'monthly') match = (d.slice(0,7) === p.key);
+        else if (currentChartPeriod === 'yearly') match = (d.slice(0,4) === p.key);
+        if (match) total += part.revenue;
+      });
+    });
+    return total;
   });
 
   var maxRev = Math.max.apply(null, revenues) || 1;
@@ -234,8 +315,20 @@ function renderChart(period) {
     if (currentChartPeriod === 'monthly') return _cd.slice(0,7) === currentKey;
     if (currentChartPeriod === 'yearly') return _cd.slice(0,4) === currentKey;
   });
-  var curRev = currentCustomers.filter(function(c){return c.stage!=='상담';}).reduce(function(s,c){return s+(Number(c.price)||0);},0);
-  var curPerf = currentCustomers.filter(function(c){return c.stage!=='상담';}).reduce(function(s,c){return s+(Number(c.performanceRevenue)||0);},0);
+  var curRev = 0, curPerf = 0;
+  customers.forEach(function(c) {
+    if (c.stage === '상담') return;
+    splitCustomerPayments(c).forEach(function(part) {
+      var d = part.date;
+      if (!d) return;
+      var match = false;
+      if (currentChartPeriod === 'daily') match = (d === currentKey);
+      else if (currentChartPeriod === 'weekly') { var pw = periods[periods.length-1]; match = (d >= pw.key && d <= pw.endKey); }
+      else if (currentChartPeriod === 'monthly') match = (d.slice(0,7) === currentKey);
+      else if (currentChartPeriod === 'yearly') match = (d.slice(0,4) === currentKey);
+      if (match) { curRev += part.revenue; curPerf += part.perf; }
+    });
+  });
   var curCon = currentCustomers.filter(function(c){return c.stage!=='상담';}).length;
   var curCons = currentCustomers.length;
   var conv = curCons > 0 ? Math.round(curCon/curCons*100) : 0;
@@ -246,30 +339,7 @@ function renderChart(period) {
 }
 
 
-function getMonthRevenue(customers, monthKey) {
-  var total = 0;
-  customers.forEach(function(c) {
-    if (c.stage === '상담') return;
-    var pd = (function(){
-      try { return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}'); } catch(e) { return {}; }
-    })();
-    var dep = Number(c.depositAmount) || Number(pd.depositAmount) || 0;
-    var depDate = c.depositDate || pd.depositDate || '';
-    var bal = Number(c.balanceAmount) || Number(pd.balanceAmount) || 0;
-    var balDate = c.balanceDate || pd.balanceDate || '';
-
-    // 선금/잔금 모두 없으면 계약일 기준으로 전체 금액
-    if (!dep && !bal) {
-      if ((c.date||'').slice(0,7) === monthKey) total += Number(c.price)||0;
-      return;
-    }
-    // 선금이 해당 월이면 선금 금액 포함
-    if (dep > 0 && depDate.slice(0,7) === monthKey) total += dep;
-    // 잔금이 해당 월이면 잔금 금액 포함
-    if (bal > 0 && balDate.slice(0,7) === monthKey) total += bal;
-  });
-  return total;
-}
+/* (getMonthRevenue는 파일 상단 "매출 계산 공용 함수" 섹션에 이미 통합되어 정의됨) */
 
 // 선금+잔금 기준 월별 건수 (계약 기준)
 function getMonthContractCount(customers, monthKey) {
