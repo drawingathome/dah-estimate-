@@ -6,11 +6,17 @@
 function renderSearch() {
   var allLoaded = loadCustomers();
   var all = (currentUser && currentUser.role === 'staff') ? allLoaded.filter(function(c) { return (c.staffName||'마스터') === currentUser.name; }) : allLoaded;
+  // 정렬 적용 (2026-07-20: 예전엔 정렬버튼을 눌러도 반영이 안 되던 버그 수정)
+  all = (typeof sortCustomers === 'function' && typeof _currentSort !== 'undefined') ? sortCustomers(all, _currentSort) : all.slice().reverse();
+  // 단계 필터 적용 (2026-07-20 신규)
+  if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter !== 'all') {
+    all = all.filter(function(c){ return c.stage === _currentStageFilter; });
+  }
   var q = (document.getElementById('cust-search').value || '').trim();
   var showArchived = document.getElementById('show-archived')?.checked || false;
   var filtered = q
     ? all.filter(function(c) { return searchMatch(c, q); })
-    : all.slice().reverse();
+    : all;
   var customers = showArchived ? filtered : filtered.filter(function(c){ return !isArchived(c) && !isSoftDeleted(c); });
   var archivedCount = filtered.filter(function(c){ return isArchived(c) || isSoftDeleted(c); }).length;
   var countEl = document.getElementById('search-count'); if (countEl) countEl.textContent = q ? ('검색 결과 ' + customers.length + '건') : (showArchived ? '전체 ' + customers.length + '건 (보관 포함)' : '전체 ' + customers.length + '건')

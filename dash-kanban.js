@@ -122,12 +122,23 @@ function sortCustomers(customers, sortKey) {
 
 function setSort(key) {
   _currentSort = key;
-  document.querySelectorAll('.sort-btn').forEach(function(b) {
+  document.querySelectorAll('.sort-wrap .sort-btn').forEach(function(b) {
     b.classList.toggle('on', b.getAttribute('data-sort') === key);
   });
-  loadCustomersAsync(function(all) {
-    renderSearch(sortCustomers(all, _currentSort));
+  renderSearch();
+}
+
+/* ── 고객 목록 단계별 필터 (2026-07-20 추가) ──
+   배경: 상담이 매일 여러 건 들어오는데, 계약금/실측/시공 등 다른 단계
+   고객들과 다 섞여서 나오다 보니 "아직 처리 안 한 신규 상담"만 골라볼
+   방법이 없었음. 단계 필터를 추가해서 놓치지 않게 함. */
+var _currentStageFilter = 'all';
+function setStageFilter(stage) {
+  _currentStageFilter = stage;
+  document.querySelectorAll('.stage-filter-wrap .stage-filter-btn').forEach(function(b) {
+    b.classList.toggle('on', b.getAttribute('data-stage') === stage);
   });
+  renderSearch();
 }
 
 function renderPipeKanban(customers) {

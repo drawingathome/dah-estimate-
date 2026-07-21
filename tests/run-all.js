@@ -34,6 +34,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['race-condition-check.js', [target]]);
   scripts.push(['home-duplication-check.js', [target]]);
   scripts.push(['lead-followup-check.js', [target]]);
+  scripts.push(['customer-list-check.js', [target]]);
   scripts.push(['revenue-consistency-check.js', [target]]);
   scripts.push(['detail-structure-check.js', [target]]);
   scripts.push(['responsive-layout-check.js', [target]]);

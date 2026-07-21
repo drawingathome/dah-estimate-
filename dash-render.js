@@ -198,7 +198,9 @@ function renderHome(skipServerFetch) {
           : [].concat(
               todaySchedule.map(function(c) {
                 var type = c.measureDate === todayStr ? '실측' : c.installDate === todayStr ? '시공' : '방문';
-                return '<div style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:var(--sp-3)">' +
+                var targetTab2 = (type === '실측' || type === '시공') ? 'order' : 'info';
+                return '<div data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-cid="' + escHtml(c.id||'') + '" data-tab="' + targetTab2 + '" onclick="openDetail(this.getAttribute(\'data-cname\'),this.getAttribute(\'data-cid\')||undefined,this.getAttribute(\'data-tab\'))" ' +
+                  'style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:var(--sp-3);cursor:pointer">' +
                   '<div style="width:34px;height:34px;border-radius:50%;background:var(--bg-org);display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
                     '<span style="font-size:12px;font-weight:700;color:var(--terra)">오늘</span>' +
                   '</div>' +
@@ -210,7 +212,9 @@ function renderHome(skipServerFetch) {
               }),
               tomorrowSchedule.map(function(c) {
                 var type = c.measureDate === tomorrowStr ? '실측' : c.installDate === tomorrowStr ? '시공' : '방문';
-                return '<div style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:var(--sp-3)">' +
+                var targetTab3 = (type === '실측' || type === '시공') ? 'order' : 'info';
+                return '<div data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-cid="' + escHtml(c.id||'') + '" data-tab="' + targetTab3 + '" onclick="openDetail(this.getAttribute(\'data-cname\'),this.getAttribute(\'data-cid\')||undefined,this.getAttribute(\'data-tab\'))" ' +
+                  'style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:var(--sp-3);cursor:pointer">' +
                   '<div style="width:34px;height:34px;border-radius:50%;background:var(--ivory2);display:flex;align-items:center;justify-content:center;flex-shrink:0">' +
                     '<span style="font-size:11px;font-weight:700;color:var(--sub)">내일</span>' +
                   '</div>' +
