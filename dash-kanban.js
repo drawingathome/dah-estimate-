@@ -179,6 +179,27 @@ function renderKanbanCols(customers, kanbanWrap) {
       '<span class="kanban-count">' + stageCustomers.length + '</span>';
     col.appendChild(head);
 
+    // 드래그앤드롭 (2026-07-21 신규 — PC 마우스 드래그로 카드를 다른 단계 컬럼에 놓으면
+    // 그 단계로 변경됨. HTML5 드래그 API는 마우스 기반이라 모바일 터치에서는 지원 안 되므로,
+    // 모바일에서는 기존 케밥(⋮) 메뉴로 단계 변경)
+    col.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      col.style.background = 'var(--ivory1)';
+    });
+    col.addEventListener('dragleave', function() {
+      col.style.background = '';
+    });
+    col.addEventListener('drop', function(e) {
+      e.preventDefault();
+      col.style.background = '';
+      var draggedName = e.dataTransfer.getData('text/customer-name');
+      var draggedId = e.dataTransfer.getData('text/customer-id');
+      var draggedStage = e.dataTransfer.getData('text/customer-stage');
+      if (draggedName && draggedStage !== stage.key) {
+        changeStageByName(draggedName, stage.key, draggedId || undefined);
+      }
+    });
+
     if (stageCustomers.length === 0) {
       var empty = document.createElement('div');
       empty.className = 'kanban-empty';
@@ -189,6 +210,7 @@ function renderKanbanCols(customers, kanbanWrap) {
         var item = document.createElement('div');
         item.className = 'kanban-item';
         item.style.position = 'relative';
+        item.draggable = !('ontouchstart' in window || navigator.maxTouchPoints > 0);
         var stageChangeName = c.clientName;
         var stageChangeCurrent = stage.key;
         item.innerHTML =
@@ -201,6 +223,13 @@ function renderKanbanCols(customers, kanbanWrap) {
           '<div class="kanban-item-sub">' + escHtml(c.phone || '') + '</div>' +
           (c.price ? '<div class="kanban-item-price">' + Number(c.price).toLocaleString() + '원</div>' : '');
         item.addEventListener('click', function() { openDetail(c.clientName, c.id); });
+        item.addEventListener('dragstart', function(e) {
+          e.dataTransfer.setData('text/customer-name', c.clientName || '');
+          e.dataTransfer.setData('text/customer-id', c.id || '');
+          e.dataTransfer.setData('text/customer-stage', stage.key);
+          item.style.opacity = '0.4';
+        });
+        item.addEventListener('dragend', function() { item.style.opacity = '1'; });
         col.appendChild(item);
       });
     }

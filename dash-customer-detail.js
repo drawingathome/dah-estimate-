@@ -480,14 +480,50 @@ function renderDetailInfoSection(c, body) {
   // 연락처/주소는 헤더에 항상 고정 표시되므로 여기선 생략 (중복 방지).
   // 단, 전화 클릭 기능은 정보바의 연락처 칸에서 그대로 사용 가능.
 
-  // 메모
-  if (c.memo) {
-    var memoBlock = div('background:#FFFBF5;border:1px solid #FFE5CC;border-radius:12px;padding:10px 14px;margin-bottom:var(--sp-2)', [
-      el('div', {style:'font-size:11px;color:var(--terra);letter-spacing:0.8px;margin-bottom:3px', text:'메모'}),
-      el('div', {style:'font-size:11px;color:var(--dark);line-height:1.6', text:c.memo})
-    ]);
-    infoSec.appendChild(memoBlock);
+  // 메모 (2026-07-21: 읽기전용 표시 -> 탭하면 편집+빠른문구버튼 나오는 방식으로 개편.
+  // 예전엔 메모를 실제로 입력/수정할 방법이 앱 어디에도 없었음 — 표시만 되고 편집 UI가 없었음)
+  function renderMemoDisplay(memoBlock, val) {
+    memoBlock.innerHTML = '';
+    memoBlock.appendChild(el('div', {style:'font-size:11px;color:var(--terra);letter-spacing:0.8px;margin-bottom:3px', text:'메모 (탭해서 편집)'}));
+    memoBlock.appendChild(el('div', {style:'font-size:11px;color:'+(val?'var(--dark)':'var(--light)')+';line-height:1.6', text: val || '메모를 추가하려면 눌러주세요'}));
   }
+  var memoBlock = div('background:#FFFBF5;border:1px solid #FFE5CC;border-radius:12px;padding:10px 14px;margin-bottom:var(--sp-2);cursor:pointer', []);
+  renderMemoDisplay(memoBlock, c.memo || '');
+  memoBlock.addEventListener('click', function() {
+    if (memoBlock.querySelector('textarea')) return; // 이미 편집중이면 무시
+    memoBlock.innerHTML = '';
+    memoBlock.appendChild(el('div', {style:'font-size:11px;color:var(--terra);letter-spacing:0.8px;margin-bottom:4px', text:'메모'}));
+    var textarea = document.createElement('textarea');
+    textarea.value = c.memo || '';
+    textarea.style.cssText = 'width:100%;min-height:60px;border:1px solid var(--border);border-radius:8px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box';
+    memoBlock.appendChild(textarea);
+    var quickWrap = div('display:flex;flex-wrap:wrap;gap:4px;margin-top:6px', []);
+    (typeof getMempoPhrases === 'function' ? getMempoPhrases() : []).slice(0, 9).forEach(function(p) {
+      var qbtn = el('button', {type: 'button', style: 'font-size:11px;padding:6px 10px;min-height:32px;background:var(--ivory1);border:1px solid var(--border);border-radius:20px;cursor:pointer;font-family:inherit'});
+      qbtn.textContent = p;
+      qbtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        textarea.value = textarea.value ? textarea.value + ' / ' + p : p;
+        textarea.focus();
+      });
+      quickWrap.appendChild(qbtn);
+    });
+    memoBlock.appendChild(quickWrap);
+    textarea.focus();
+    textarea.addEventListener('blur', function() {
+      var newVal = textarea.value.trim();
+      var arr = loadCustomers();
+      var target = findCurrentDetailCustomer(arr);
+      if (target) {
+        target.memo = newVal;
+        saveCustomers(arr);
+        saveCustomerToDb(target, null);
+        showToast('메모가 저장됐습니다');
+      }
+      renderMemoDisplay(memoBlock, newVal);
+    });
+  });
+  infoSec.appendChild(memoBlock);
 
   // 날짜 3개 가로 배열 — 실측예정/시공예정은 클릭하면 바로 날짜를 고쳐 저장할 수 있음
   // (기존엔 전체 "수정" 모달을 열어야만 했음 — 선혜님 피드백으로 원클릭 편집 추가)
