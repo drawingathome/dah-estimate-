@@ -1,15 +1,7 @@
 #!/usr/bin/env node
 // tests/race-condition-check.js
 // 신규고객 등록 직후 발생하는 경쟁조건(race condition) 회귀 테스트
-//
-// 2026-07-16 실무 워크플로우 시뮬레이션 중 발견한 버그:
-// saveCustomer()가 새 고객을 localStorage에 저장한 직후 renderHome()을 호출하는데,
-// 예전 renderHome()은 항상 Supabase에 서버 재조회를 했다. 만약 그 조회 응답이
-// (네트워크 지연 등으로) 방금 등록한 고객을 아직 반영 못한 옛날 상태로 오면,
-// 그 응답이 그대로 로컬을 덮어써서 방금 등록한 고객이 사라지는 문제가 있었다.
-// 수정: 방금 로컬을 갱신한 직후 호출되는 renderHome(true)는 서버 재조회를 건너뛰고
-// 이미 최신인 로컬 데이터로만 그리도록 함.
-//
+// 2026-07-21: 모바일 케이스 추가 (예전엔 PC만 검사)
 // 사용법: node tests/race-condition-check.js dah-dashboard.html
 
 const path = require('path');
@@ -17,10 +9,7 @@ const { launchBrowser, startServer } = require('./_helpers');
 
 async function run() {
   const filePath = process.argv[2];
-  if (!filePath) {
-    console.error('사용법: node race-condition-check.js <dah-dashboard.html경로>');
-    process.exit(1);
-  }
+  if (!filePath) { console.error('사용법: node race-condition-check.js <dah-dashboard.html경로>'); process.exit(1); }
   const dir = path.dirname(path.resolve(filePath));
   const file = path.basename(filePath);
   const port = 9801 + Math.floor(Math.random() * 500);
@@ -32,12 +21,12 @@ async function run() {
     else { console.log(`  ❌ ${label} — ${detail}`); failCount++; }
   }
 
-  try {
+  console.log('\n[경쟁조건(신규등록 직후 서버덮어쓰기) 검사] ' + file);
+
+  async function testOnDevice(width, label) {
     const page = await browser.newPage();
     page.on('dialog', async d => { try { await d.accept(); } catch (e) {} });
 
-    // 최악의 조건을 흉내냄: Supabase의 모든 데이터 조회 요청이 "아직 아무것도
-    // 반영 안 된" 빈 배열을 반환하도록 함(실제로는 느린 서버 응답을 흉내내는 것).
     await page.setRequestInterception(true);
     page.on('request', (req) => {
       const url = req.url();
@@ -55,14 +44,13 @@ async function run() {
           }
           return;
         }
-        // 항상 성공(200)이지만 빈 배열 — "서버는 살아있지만 아직 반영 전" 상황을 흉내냄
         req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[]' });
         return;
       }
       req.continue();
     });
 
-    await page.setViewport({ width: 1280, height: 900 });
+    await page.setViewport({ width, height: 900, isMobile: width < 500, hasTouch: width < 500 });
     await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await new Promise(r => setTimeout(r, 700));
     await page.evaluate(() => { if (typeof setMasterEmail === 'function') setMasterEmail('test-master@dah-test.local'); });
@@ -72,50 +60,50 @@ async function run() {
     await page.evaluate(() => document.getElementById('btn-master-confirm') && document.getElementById('btn-master-confirm').click());
     await new Promise(r => setTimeout(r, 1000));
 
-    console.log('\n[경쟁조건(신규등록 직후 서버덮어쓰기) 검사] ' + file);
-
-    // 신규 고객 등록
     await page.evaluate(() => { openAdd(); });
     await new Promise(r => setTimeout(r, 300));
-    await page.evaluate(() => {
-      document.getElementById('add-name').value = '경쟁조건회귀테스트고객';
+    await page.evaluate((suffix) => {
+      document.getElementById('add-name').value = '경쟁조건회귀테스트고객' + suffix;
       document.getElementById('add-phone').value = '01077778888';
       document.getElementById('add-date').value = (typeof todayStr === 'function' ? todayStr() : '');
       saveCustomer();
-    });
+    }, label);
     await new Promise(r => setTimeout(r, 1000));
 
     const afterSave = await page.evaluate(() => JSON.parse(localStorage.getItem('dah_customers') || '[]').length);
-    check('서버가 빈 배열을 반환해도 방금 등록한 고객이 로컬에 유지됨', afterSave === 1, '실제 저장건수=' + afterSave + ' (예상: 1건, 0건이면 서버응답에 덮어써진 것)');
+    check(`[${label}] 서버가 빈 배열을 반환해도 방금 등록한 고객이 로컬에 유지됨`, afterSave === 1, '실제 저장건수=' + afterSave);
 
-    // 고객 상태 변경(계약금 등)도 같은 방식으로 안전한지 확인
-    await page.evaluate(() => { openDetail('경쟁조건회귀테스트고객'); });
+    await page.evaluate((suffix) => { openDetail('경쟁조건회귀테스트고객' + suffix); }, label);
     await new Promise(r => setTimeout(r, 300));
     await page.evaluate(() => { changeStage('계약금'); });
     await new Promise(r => setTimeout(r, 500));
-    const afterStageChange = await page.evaluate(() => {
+    const afterStageChange = await page.evaluate((suffix) => {
       const arr = JSON.parse(localStorage.getItem('dah_customers') || '[]');
-      const c = arr.find(x => x.clientName === '경쟁조건회귀테스트고객');
+      const c = arr.find(x => x.clientName === '경쟁조건회귀테스트고객' + suffix);
       return c ? c.stage : 'not-found';
-    });
-    check('단계변경 직후에도 서버응답으로 덮어써지지 않고 유지됨', afterStageChange === '계약금', '실제값=' + afterStageChange);
+    }, label);
+    check(`[${label}] 단계변경 직후에도 서버응답으로 덮어써지지 않고 유지됨`, afterStageChange === '계약금', '실제값=' + afterStageChange);
 
-    // 칸반(파이프라인) 화면에서 드래그로 단계를 바꿀 때 쓰이는 changeStageByName도 동일 위험이 있었음
-    await page.evaluate(() => {
-      saveCustomers([{ clientName: '경쟁조건칸반테스트고객', phone: '01088889999', stage: '상담', staffName: '마스터', price: 100000, date: (typeof todayStr === 'function' ? todayStr() : ''), createdAt: new Date().toISOString() }]);
-    });
+    await page.evaluate((suffix) => {
+      saveCustomers([{ clientName: '경쟁조건칸반테스트고객' + suffix, phone: '01088889999', stage: '상담', staffName: '마스터', price: 100000, date: (typeof todayStr === 'function' ? todayStr() : ''), createdAt: new Date().toISOString() }]);
+    }, label);
     await new Promise(r => setTimeout(r, 300));
-    await page.evaluate(() => { changeStageByName('경쟁조건칸반테스트고객', '계약금'); });
+    await page.evaluate((suffix) => { changeStageByName('경쟁조건칸반테스트고객' + suffix, '계약금'); }, label);
     await new Promise(r => setTimeout(r, 800));
-    const kanbanStageAfter = await page.evaluate(() => {
+    const kanbanStageAfter = await page.evaluate((suffix) => {
       const arr = JSON.parse(localStorage.getItem('dah_customers') || '[]');
-      const c = arr.find(x => x.clientName === '경쟁조건칸반테스트고객');
+      const c = arr.find(x => x.clientName === '경쟁조건칸반테스트고객' + suffix);
       return c ? c.stage : 'not-found';
-    });
-    check('칸반 드래그(changeStageByName) 이후에도 서버응답으로 덮어써지지 않고 유지됨', kanbanStageAfter === '계약금', '실제값=' + kanbanStageAfter);
+    }, label);
+    check(`[${label}] 칸반 단계변경 이후에도 서버응답으로 덮어써지지 않고 유지됨`, kanbanStageAfter === '계약금', '실제값=' + kanbanStageAfter);
 
-    process.exitCode = failCount === 0 ? 0 : 1;
     await page.close();
+  }
+
+  try {
+    await testOnDevice(390, '모바일');
+    await testOnDevice(1400, 'PC');
+    process.exitCode = failCount === 0 ? 0 : 1;
   } finally {
     await browser.close();
     server.kill();

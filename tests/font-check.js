@@ -36,7 +36,11 @@ async function run() {
       const results = [];
       document.querySelectorAll('*').forEach(el => {
         if (SKIP.includes(el.tagName)) return;
-        if (!el.textContent || !el.textContent.trim()) return;
+        // 이 요소 자신이 "직접" 텍스트를 렌더링하는지 확인(직계 자식 텍스트노드 기준).
+        // 자손 전체의 textContent를 합쳐서 가진 부모 wrapper까지 걸리면, 자식은
+        // 이미 올바른 크기여도 부모 자체에 fontSize가 없어서(상속/기본값) 오탐이 남.
+        const hasDirectText = Array.from(el.childNodes).some(n => n.nodeType === 3 && n.textContent.trim());
+        if (!hasDirectText) return;
         const size = parseFloat(getComputedStyle(el).fontSize);
         if (!size) return;
         if (!ALLOWED.includes(Math.round(size))) {

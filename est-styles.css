@@ -227,7 +227,7 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
 .doc-header-divider{
   grid-column:1/-1;grid-row:2;
   background:rgba(255,255,255,0.1);
-  margin:0 -32px;height:1px
+  margin:0;height:1px
 }
  
 .doc-header-bottom{
@@ -870,7 +870,7 @@ td.amt{
   
   .info-grid{grid-template-columns:1fr}
   
-  .doc-header-divider{margin:0 -16px}
+  .doc-header-divider{margin:0}
   .doc-title-ko{font-size:11px;letter-spacing:0}
   
   .doc-header-tabbar-left,.doc-header-tabbar-right{gap:2px}

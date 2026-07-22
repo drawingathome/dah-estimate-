@@ -22,7 +22,8 @@ const scripts = [
   ['font-check.js', [target, '390']],
   ['font-check.js', [target, '1280']],
   ['scroll-check.js', [target, '390']],
-  ['touch-target-check.js', [target]]
+  ['scroll-check.js', [target, '1400']],
+  ['touch-target-check.js', [target]] // 터치타겟은 개념 자체가 모바일 전용이라 의도적으로 390px만 검사
 ];
 
 if (/dah-dashboard/.test(target)) {

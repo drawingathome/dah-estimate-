@@ -2,10 +2,11 @@
 // tests/lead-followup-check.js
 // 2026-07-20 신규기능: ① 홈 "처리필요"에 상담단계 오래된 리드(놓친 리드) 표시
 // ② 달력 일정목록에 실측/시공과 함께 선금·잔금 입금여부 표시
+// 2026-07-21: 모바일 케이스 추가 (예전엔 PC만 검사)
 // 사용법: node tests/lead-followup-check.js dah-dashboard.html
 
 const path = require('path');
-const { launchBrowser, startServer, loginAs } = require('./_helpers');
+const { launchBrowser, startServer, loginAs, blockRealNetwork } = require('./_helpers');
 
 async function run() {
   const filePath = process.argv[2];
@@ -23,38 +24,48 @@ async function run() {
 
   console.log('\n[놓친리드/결제상태 표시 회귀 검사] ' + file);
 
-  try {
+  async function testOnDevice(width, label) {
     const page = await browser.newPage();
     page.on('dialog', async d => { try { await d.accept(); } catch (e) {} });
-    await page.setRequestInterception(true);
-    page.on('request', (req) => { if (req.url().includes('supabase.co')) { req.abort(); return; } req.continue(); });
-    await page.setViewport({ width: 1400, height: 1000 });
+    await blockRealNetwork(page);
+    await page.setViewport({ width, height: 1000, isMobile: width < 500, hasTouch: width < 500 });
     await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await new Promise(r => setTimeout(r, 700));
     await loginAs(page, 'master');
 
-    await page.evaluate(() => {
+    await page.evaluate((suffix) => {
       saveCustomers([
-        { clientName: '놓친리드테스트', phone: '01000000010', addr: '서울', stage: '상담', staffName: '마스터', date: '2026-07-05', price: 1000000 },
-        { clientName: '최근상담테스트', phone: '01000000011', addr: '서울', stage: '상담', staffName: '마스터', date: '2026-07-19', price: 1000000 },
-        { clientName: '결제상태테스트', phone: '01000000012', addr: '서울', stage: '시공', staffName: '마스터', date: '2026-07-01',
+        { clientName: '놓친리드테스트' + suffix, phone: '01000000010', addr: '서울', stage: '상담', staffName: '마스터', date: '2026-07-05', price: 1000000 },
+        { clientName: '최근상담테스트' + suffix, phone: '01000000011', addr: '서울', stage: '상담', staffName: '마스터', date: '2026-07-19', price: 1000000 },
+        { clientName: '결제상태테스트' + suffix, phone: '01000000012', addr: '서울', stage: '시공', staffName: '마스터', date: '2026-07-01',
           depositAmount: 1000000, depositDate: '2026-07-10', measureDate: '2026-07-18', installDate: '2026-07-25', price: 2000000 }
       ]);
+      goTab('home');
       renderHome(true);
-    });
+    }, label);
     await new Promise(r => setTimeout(r, 400));
 
     const home = await page.evaluate(() => document.getElementById('home').textContent);
-    check('상담 후 오래된 고객(놓친리드)이 처리필요에 표시됨', home.includes('놓친리드테스트'), '표시 안 됨');
-    check('최근 상담 고객은 처리필요에 안 뜸(오탐 없음)', !home.includes('최근상담테스트'), '잘못 표시됨');
+    check(`[${label}] 상담 후 오래된 고객(놓친리드)이 처리필요에 표시됨`, home.includes('놓친리드테스트' + label), '표시 안 됨');
+    check(`[${label}] 최근 상담 고객은 처리필요에 안 뜸(오탐 없음)`, !home.includes('최근상담테스트' + label), '잘못 표시됨');
+
+    const gotChk = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+    check(`[${label}] 홈 화면 가로스크롤 없음`, !gotChk, '가로스크롤 발생');
 
     await page.evaluate(() => goTab('cal'));
     await new Promise(r => setTimeout(r, 400));
     const cal = await page.evaluate(() => document.getElementById('cal').textContent);
-    check('달력 일정목록에 선금 입금 상태(✅)가 표시됨', cal.includes('선금✅'), '표시 안 됨');
+    check(`[${label}] 달력 일정목록에 선금 입금 상태(✅)가 표시됨`, cal.includes('선금✅'), '표시 안 됨');
+    const calScroll = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+    check(`[${label}] 달력 화면 가로스크롤 없음`, !calScroll, '가로스크롤 발생');
 
-    process.exitCode = failCount === 0 ? 0 : 1;
     await page.close();
+  }
+
+  try {
+    await testOnDevice(390, '모바일');
+    await testOnDevice(1400, 'PC');
+    process.exitCode = failCount === 0 ? 0 : 1;
   } finally {
     await browser.close();
     server.kill();

@@ -1,15 +1,9 @@
 #!/usr/bin/env node
 // tests/role-permission-check.js
 // 대시보드(dah-dashboard.html)에서 마스터/스태프 권한별로
-// 노출되면 안 되는 요소(고객상세 수정/삭제 버튼, 매출탭, 실적카드, 백업버튼)가
-// 실제로 숨겨지는지 검사
-//
-// 사용법:
-//   node tests/role-permission-check.js <dah-dashboard.html 경로> [마스터비번]
-//
-// 주의: 이 스크립트는 dah-dashboard.html의 현재 함수/DOM 구조
-// (loginAs, openDetail, getSettings/dah_settings, #btn-master-login 등)에 의존합니다.
-// 이 구조가 바뀌면 이 스크립트도 같이 업데이트해야 합니다.
+// 노출되면 안 되는 요소(고객상세 수정/삭제 버튼, 매출탭)가 실제로 숨겨지는지 검사
+// 2026-07-21: PC 케이스 추가 (예전엔 모바일만 검사)
+// 사용법: node tests/role-permission-check.js <dah-dashboard.html 경로> [마스터비번]
 
 const path = require('path');
 const { launchBrowser, blockRealNetwork, startServer } = require('./_helpers');
@@ -18,14 +12,11 @@ const TEST_STAFF_NAME = '_테스트실장';
 const TEST_CUSTOMER_NAME = '_테스트고객';
 
 async function setupTestData(page) {
-  // 스태프 로그인 버튼이 뜨려면 설정에 담당자가 최소 1명 있어야 함
   await page.evaluate((staffName, customerName) => {
     var staffList = [];
     try { staffList = JSON.parse(localStorage.getItem('dah_staff_list') || '[]'); } catch (e) {}
     if (staffList.indexOf(staffName) === -1) staffList.push(staffName);
     localStorage.setItem('dah_staff_list', JSON.stringify(staffList));
-
-    // Supabase Auth 도입 이후 로그인하려면 마스터/스태프 이메일이 등록돼 있어야 함
     try { localStorage.setItem('dah_master_email', 'test-master@dah-test.local'); } catch (e) {}
     try {
       var emailMap = {};
@@ -33,7 +24,6 @@ async function setupTestData(page) {
       emailMap[staffName] = 'test-staff@dah-test.local';
       localStorage.setItem('dah_staff_emails', JSON.stringify(emailMap));
     } catch (e) {}
-
     var customers = [];
     try { customers = JSON.parse(localStorage.getItem('dah_customers') || '[]'); } catch (e) {}
     if (!customers.some(c => c.clientName === customerName)) {
@@ -47,10 +37,10 @@ async function setupTestData(page) {
   }, TEST_STAFF_NAME, TEST_CUSTOMER_NAME);
 }
 
-async function checkAsMaster(browser, port, file, masterPw) {
+async function checkAsMaster(browser, port, file, masterPw, width) {
   const page = await browser.newPage();
   await blockRealNetwork(page);
-  await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  await page.setViewport({ width, height: 900, isMobile: width < 500, hasTouch: width < 500 });
   await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'networkidle0', timeout: 20000 });
   await new Promise(r => setTimeout(r, 500));
   await setupTestData(page);
@@ -63,15 +53,15 @@ async function checkAsMaster(browser, port, file, masterPw) {
   await page.evaluate(() => document.getElementById('btn-master-confirm').click());
   await new Promise(r => setTimeout(r, 1200));
 
-  const result = await evaluateChecks(page);
+  const result = await evaluateChecks(page, width);
   await page.close();
   return result;
 }
 
-async function checkAsStaff(browser, port, file) {
+async function checkAsStaff(browser, port, file, width) {
   const page = await browser.newPage();
   await blockRealNetwork(page);
-  await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+  await page.setViewport({ width, height: 900, isMobile: width < 500, hasTouch: width < 500 });
   await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'networkidle0', timeout: 20000 });
   await new Promise(r => setTimeout(r, 500));
   await setupTestData(page);
@@ -81,13 +71,13 @@ async function checkAsStaff(browser, port, file) {
   await page.evaluate((name) => { if (typeof loginAs === 'function') loginAs(name); }, TEST_STAFF_NAME);
   await new Promise(r => setTimeout(r, 1200));
 
-  const result = await evaluateChecks(page);
+  const result = await evaluateChecks(page, width);
   await page.close();
   return result;
 }
 
-async function evaluateChecks(page) {
-  return page.evaluate((customerName) => {
+async function evaluateChecks(page, width) {
+  return page.evaluate((customerName, isMobileWidth) => {
     const isVisible = (el) => {
       if (!el) return false;
       const style = getComputedStyle(el);
@@ -95,7 +85,6 @@ async function evaluateChecks(page) {
       return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
     };
 
-    // 고객상세 열기 시도
     if (typeof openDetail === 'function') {
       try { openDetail(customerName); } catch (e) {}
     }
@@ -105,57 +94,58 @@ async function evaluateChecks(page) {
     const hasDeleteBtn = detailButtons.some(b => /^삭제$/.test((b.textContent || '').trim()));
     const hasEditBtn = detailButtons.some(b => /수정/.test(b.textContent || ''));
 
-    const salesTab = document.querySelector('[data-mob-tab="chart"]');
-    const salesRect = salesTab ? salesTab.getBoundingClientRect() : null;
+    // 모바일은 하단 네비(data-mob-tab), PC는 상단 탭(data-tab)으로 매출탭 확인
+    const salesTab = isMobileWidth
+      ? document.querySelector('[data-mob-tab="chart"]')
+      : document.querySelector('[data-tab="chart"]');
 
     return {
       bodyRole: document.body.className,
       deleteBtnVisible: hasDeleteBtn,
       editBtnVisible: hasEditBtn,
-      salesTabDisplayed: isVisible(salesTab),
-      salesTabRectZero: salesRect ? (salesRect.width === 0 && salesRect.height === 0) : null
+      salesTabDisplayed: isVisible(salesTab)
     };
-  }, TEST_CUSTOMER_NAME);
+  }, TEST_CUSTOMER_NAME, width < 500);
 }
 
 async function run() {
   const filePath = process.argv[2];
   const masterPw = process.argv[3] || 'TEST_OK_PW';
-  if (!filePath) {
-    console.error('사용법: node role-permission-check.js <dah-dashboard.html 경로> [마스터비번]');
-    process.exit(1);
-  }
+  if (!filePath) { console.error('사용법: node role-permission-check.js <dah-dashboard.html 경로> [마스터비번]'); process.exit(1); }
 
   const dir = path.dirname(path.resolve(filePath));
   const file = path.basename(filePath);
   const port = 9101 + Math.floor(Math.random() * 500);
   const server = await startServer(dir, port);
-
   const browser = await launchBrowser();
+  let anyFailed = false;
+
   try {
     console.log(`\n[권한별 UI 검사] ${file}`);
     console.log('⚠️  참고: CSS/DOM 노출 여부만 확인합니다. Supabase 데이터 접근권한(RLS)은 별도 확인 필요.\n');
 
-    const master = await checkAsMaster(browser, port, file, masterPw);
-    const staff = await checkAsStaff(browser, port, file);
+    async function testOnDevice(width, label) {
+      const master = await checkAsMaster(browser, port, file, masterPw, width);
+      const staff = await checkAsStaff(browser, port, file, width);
+      const checks = [
+        ['고객상세 삭제 버튼', 'deleteBtnVisible'],
+        ['고객상세 수정 버튼', 'editBtnVisible'],
+        [width < 500 ? '모바일 하단네비 매출탭' : 'PC 상단 매출탭', 'salesTabDisplayed']
+      ];
+      console.log(`(참고,${label}) 로그인 후 body class — 마스터: "${master.bodyRole}" / 스태프: "${staff.bodyRole}"\n`);
+      checks.forEach(([desc, key]) => {
+        const m = master[key];
+        const s = staff[key];
+        const ok = m === true && s === false;
+        if (!ok) anyFailed = true;
+        console.log(`${ok ? '✅' : '❌'} [${label}] ${desc}: 마스터=${m ? '노출' : '숨김'} / 스태프=${s ? '노출' : '숨김'}`);
+      });
+    }
 
-    const checks = [
-      ['고객상세 삭제 버튼', 'deleteBtnVisible'],
-      ['고객상세 수정 버튼', 'editBtnVisible'],
-      ['모바일 하단네비 매출탭', 'salesTabDisplayed']
-    ];
+    await testOnDevice(390, '모바일');
+    await testOnDevice(1400, 'PC');
 
-    let failed = false;
-    console.log(`(참고) 로그인 후 body class — 마스터: "${master.bodyRole}" / 스태프: "${staff.bodyRole}"\n`);
-    checks.forEach(([desc, key]) => {
-      const m = master[key];
-      const s = staff[key];
-      const ok = m === true && s === false;
-      if (!ok) failed = true;
-      console.log(`${ok ? '✅' : '❌'} ${desc}: 마스터=${m ? '노출' : '숨김'} / 스태프=${s ? '노출' : '숨김'} (마스터에만 노출되어야 함)`);
-    });
-
-    process.exitCode = failed ? 1 : 0;
+    process.exitCode = anyFailed ? 1 : 0;
   } finally {
     await browser.close();
     server.kill();
