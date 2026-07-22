@@ -33,6 +33,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['data-safety-check.js', [target]]);
   scripts.push(['race-condition-check.js', [target]]);
   scripts.push(['home-duplication-check.js', [target]]);
+  scripts.push(['settings-memo-kanban-check.js', [target]]);
   scripts.push(['order-completeness-check.js', [target]]);
   scripts.push(['lead-followup-check.js', [target]]);
   scripts.push(['customer-list-check.js', [target]]);
