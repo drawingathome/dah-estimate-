@@ -235,6 +235,15 @@ function saveEstimate() {
       var blindCount = document.querySelectorAll('#blind-body tr').length;
       var itemCount = curtainCount + blindCount;
 
+      // 품목별 거래처 정보 수집 (2026-07-21 신규) — 대시보드 발주현황에서
+      // 자동으로 채워쓸 수 있도록, 커튼/블라인드 각각의 거래처를 중복없이 저장
+      var curtainVendors = Array.from(document.querySelectorAll('#curtain-body tr .c-vendor'))
+        .map(function(el){ return el.value.trim(); }).filter(Boolean);
+      var blindVendors = Array.from(document.querySelectorAll('#blind-body tr .c-vendor'))
+        .map(function(el){ return el.value.trim(); }).filter(Boolean);
+      var uniqCurtainVendors = curtainVendors.filter(function(v,i){ return curtainVendors.indexOf(v)===i; });
+      var uniqBlindVendors = blindVendors.filter(function(v,i){ return blindVendors.indexOf(v)===i; });
+
       var idx = saved.findIndex(function(e){ return e.no === noStr; });
       var entry = {
         id: noStr || ('local-'+Date.now()),
@@ -247,6 +256,8 @@ function saveEstimate() {
         itemCount: itemCount,
         curtainCount: curtainCount,
         blindCount: blindCount,
+        curtainVendors: uniqCurtainVendors,
+        blindVendors: uniqBlindVendors,
         price: grand,
         performanceRevenue: perf,
         staffName: staffName,

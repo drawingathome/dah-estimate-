@@ -7,7 +7,7 @@
 // 대시보드에서 등록된 서비스워커가 Service-Worker-Allowed:/ 설정으로 이 페이지도
 // 덮을 수 있어 동일하게 방어함.
 (function(){
-  var BUILD = '202607200500';
+  var BUILD = '202607210600';
   try {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(regs){
@@ -27,7 +27,7 @@
 </script>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
-<link rel="stylesheet" href="/est-styles.css?v=202607200500">
+<link rel="stylesheet" href="/est-styles.css?v=202607210600">
 </style>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -178,7 +178,7 @@
         <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
           <input type="text" id="c-addr" placeholder="서울 서초구 반포동" style="flex:1;min-width:0">
           <button type="button" onclick="openKakaoAddr('c-addr')"
-            style="padding:6px 12px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0">
+            style="padding:6px 12px;min-height:32px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0">
             🔍 검색
           </button>
         </div>
@@ -524,15 +524,15 @@
   <option value="허니콤 No.1">허니콤 No.1</option>
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
-<script src="/est-utils.js?v=202607200500"></script>
-<script src="/dash-supabase-auth.js?v=202607200500"></script>
-<script src="/est-form-controls.js?v=202607200500"></script>
-<script src="/est-product-calc.js?v=202607200500"></script>
-<script src="/est-survey.js?v=202607200500"></script>
-<script src="/est-save.js?v=202607200500"></script>
-<script src="/est-documents.js?v=202607200500"></script>
-<script src="/est-customer-load.js?v=202607200500"></script>
-<script src="/est-misc.js?v=202607200500"></script>
+<script src="/est-utils.js?v=202607210600"></script>
+<script src="/dash-supabase-auth.js?v=202607210600"></script>
+<script src="/est-form-controls.js?v=202607210600"></script>
+<script src="/est-product-calc.js?v=202607210600"></script>
+<script src="/est-survey.js?v=202607210600"></script>
+<script src="/est-save.js?v=202607210600"></script>
+<script src="/est-documents.js?v=202607210600"></script>
+<script src="/est-customer-load.js?v=202607210600"></script>
+<script src="/est-misc.js?v=202607210600"></script>
 <script>
 var currentTab = 'ga';
 
