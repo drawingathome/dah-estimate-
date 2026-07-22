@@ -41,7 +41,7 @@ function exportExcel() {
     var customers = loadCustomers().filter(function(c){ return !isSoftDeleted(c); });
     if (!customers || customers.length === 0) { showToast('내보낼 고객 데이터가 없습니다'); return; }
 
-    var headers = ['고객명','연락처','주소','공간','단계','금액','성과매출','담당자','계약일','실측일','시공일','방문횟수','메모'];
+    var headers = ['고객명','연락처','주소','공간','단계','금액','성과매출','담당자','계약일','실측일','시공일','선금액','선금일','잔금액','잔금일','방문횟수','메모'];
 
     var rows = customers.map(function(c) {
       return [
@@ -56,6 +56,10 @@ function exportExcel() {
         c.date         || '',
         c.measureDate  || '',
         c.installDate  || '',
+        c.depositAmount || 0,
+        c.depositDate  || '',
+        c.balanceAmount || 0,
+        c.balanceDate  || '',
         c.visitCount   || 1,
         c.memo         || ''
       ];
@@ -101,7 +105,7 @@ function exportEstimatesExcel() {
     var headers = [
       '견적번호','구분','계약상태','고객명','공간',
       '제품','원단','너비(cm)','높이(cm)',
-      '금액(원)','담당자','견적일','저장일','메모'
+      '금액(원)','원단거래처','블라인드거래처','담당자','견적일','저장일','메모'
     ];
 
     var rows = estimates.map(function(e) {
@@ -116,6 +120,8 @@ function exportEstimatesExcel() {
         e.width          || '',
         e.height         || '',
         Number(e.price)  || 0,
+        (e.curtainVendors || []).join(', '),
+        (e.blindVendors || []).join(', '),
         e.staffName      || '마스터',
         e.date           || '',
         e.savedAt ? e.savedAt.slice(0,10) : '',
