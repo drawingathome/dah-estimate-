@@ -36,7 +36,7 @@ async function run() {
     else { console.log(`  ❌ ${label} — ${detail}`); failCount++; }
   }
 
-  try {
+  async function testOnDevice(vw, label) {
     const page = await browser.newPage();
     page.on('dialog', async d => { try { await d.accept(''); } catch (e) {} });
     let postCount = 0, patchCount = 0;
@@ -64,11 +64,12 @@ async function run() {
       req.continue();
     });
 
-    await page.setViewport({ width: 1280, height: 900 });
+    await page.setViewport({ width: vw, height: 900, isMobile: vw < 500, hasTouch: vw < 500 });
     await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await page.evaluate(() => { localStorage.removeItem('dah_customers'); localStorage.removeItem('dah_saved'); });
     await new Promise(r => setTimeout(r, 700));
 
-    console.log('\n[견적서-고객 연결 검사] ' + file);
+    console.log('\n[견적서-고객 연결 검사] ' + file + ' @ ' + label);
 
     // 같은 고객으로 두 번 저장(가견적 → 확정견적으로 견적번호가 바뀌는 상황을 흉내냄)
     await page.evaluate(() => {
@@ -92,8 +93,8 @@ async function run() {
     await new Promise(r => setTimeout(r, 1000));
     const countAfterSecond = await page.evaluate(() => JSON.parse(localStorage.getItem('dah_customers') || '[]').length);
 
-    check('같은 고객을 다른 견적번호로 두 번 저장해도 로컬 고객 레코드가 중복 생성되지 않음', countAfterFirst === countAfterSecond, `1차저장 후=${countAfterFirst}건, 2차저장 후=${countAfterSecond}건 (같아야 정상)`);
-    check('두 번째 저장은 신규생성(POST)이 아니라 기존고객 업데이트(PATCH)로 처리됨', patchCount >= 1, `POST=${postCount}회, PATCH=${patchCount}회`);
+    check('[' + label + '] 같은 고객을 다른 견적번호로 두 번 저장해도 로컬 고객 레코드가 중복 생성되지 않음', countAfterFirst === countAfterSecond, `1차저장 후=${countAfterFirst}건, 2차저장 후=${countAfterSecond}건 (같아야 정상)`);
+    check('[' + label + '] 두 번째 저장은 신규생성(POST)이 아니라 기존고객 업데이트(PATCH)로 처리됨', patchCount >= 1, `POST=${postCount}회, PATCH=${patchCount}회`);
 
     // 동명이인(다른 id)의 견적이력이 서로 섞이지 않는지
     await page.evaluate(() => {
@@ -111,11 +112,16 @@ async function run() {
     const items = await page.evaluate(() => Array.from(document.querySelectorAll('.cust-load-item')).map(el => el.textContent));
     const itemA = items.find(t => t.includes('01011110000'));
     const itemB = items.find(t => t.includes('01022220000'));
-    check('동명이인 A의 견적이력에 본인 금액(1,000,000원)만 표시됨', !!itemA && itemA.includes('1,000,000') && !itemA.includes('2,000,000'), `실제=${itemA}`);
-    check('동명이인 B의 견적이력에 본인 금액(2,000,000원)만 표시됨', !!itemB && itemB.includes('2,000,000') && !itemB.includes('1,000,000'), `실제=${itemB}`);
+    check('[' + label + '] 동명이인 A의 견적이력에 본인 금액(1,000,000원)만 표시됨', !!itemA && itemA.includes('1,000,000') && !itemA.includes('2,000,000'), `실제=${itemA}`);
+    check('[' + label + '] 동명이인 B의 견적이력에 본인 금액(2,000,000원)만 표시됨', !!itemB && itemB.includes('2,000,000') && !itemB.includes('1,000,000'), `실제=${itemB}`);
 
-    process.exitCode = failCount === 0 ? 0 : 1;
     await page.close();
+  }
+
+  try {
+    await testOnDevice(1280, 'PC');
+    await testOnDevice(390, '모바일');
+    process.exitCode = failCount === 0 ? 0 : 1;
   } finally {
     await browser.close();
     server.kill();

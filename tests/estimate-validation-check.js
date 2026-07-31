@@ -11,7 +11,7 @@
 // 사용법: node tests/estimate-validation-check.js dah-estimate.html
 
 const path = require('path');
-const { launchBrowser, startServer } = require('./_helpers');
+const { launchBrowser, blockRealNetwork, startServer } = require('./_helpers');
 
 async function run() {
   const filePath = process.argv[2];
@@ -30,19 +30,16 @@ async function run() {
     else { console.log(`  ❌ ${label} — ${detail}`); failCount++; }
   }
 
-  try {
+  async function testOnDevice(vw, label) {
     const page = await browser.newPage();
     page.on('dialog', async d => { try { await d.accept(); } catch (e) {} });
-    await page.setRequestInterception(true);
-    page.on('request', (req) => {
-      if (req.url().includes('supabase.co') || req.url().includes('script.google.com')) { req.abort(); return; }
-      req.continue();
-    });
-    await page.setViewport({ width: 1280, height: 1200 });
+    await blockRealNetwork(page);
+    await page.setViewport({ width: vw, height: 1200, isMobile: vw < 500, hasTouch: vw < 500 });
     await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await page.evaluate(() => { localStorage.removeItem('dah_saved'); });
     await new Promise(r => setTimeout(r, 1000));
 
-    console.log('\n[견적서 다중행 검증 회귀 검사] ' + file);
+    console.log('\n[견적서 다중행 검증 회귀 검사] ' + file + ' @ ' + label);
 
     // ── 케이스 1: 커튼 3행 중 마지막 1행만 단가 누락 → 저장이 막혀야 함 ──
     await page.evaluate(() => { document.getElementById('c-name').value = '회귀검증고객'; });
@@ -70,12 +67,12 @@ async function run() {
       return { toast, savedCount };
     });
     check(
-      '일부 행 단가 누락시 저장이 차단됨(조용히 0원 저장 금지)',
+      '[' + label + '] 일부 행 단가 누락시 저장이 차단됨(조용히 0원 저장 금지)',
       blockedResult.savedCount === 0,
       `저장개수=${blockedResult.savedCount} (0이어야 함) / 토스트="${blockedResult.toast}"`
     );
     check(
-      '어느 행이 문제인지 메시지에 명시됨',
+      '[' + label + '] 어느 행이 문제인지 메시지에 명시됨',
       blockedResult.toast.includes('3번째'),
       `실제 토스트="${blockedResult.toast}" — "N번째" 형식으로 특정 안 됨`
     );
@@ -94,8 +91,13 @@ async function run() {
     });
     check('모든 행에 단가를 채우면 정상 저장됨(과잉차단 아님)', okResult === 1, `실제 저장개수=${okResult} (1이어야 함)`);
 
-    process.exitCode = failCount === 0 ? 0 : 1;
     await page.close();
+  }
+
+  try {
+    await testOnDevice(1280, 'PC');
+    await testOnDevice(390, '모바일');
+    process.exitCode = failCount === 0 ? 0 : 1;
   } finally {
     await browser.close();
     server.kill();

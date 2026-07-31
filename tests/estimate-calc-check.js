@@ -38,13 +38,13 @@ async function run() {
     }
   }
 
-  try {
+  async function testOnDevice(vw, label) {
     const page = await browser.newPage();
     await blockRealNetwork(page);
     page.on('dialog', async d => { try { await d.accept(''); } catch (e) {} });
 
     // ── 테스트 1+4: 레일시공비 + 할인 음수방어 (같은 커튼행으로 함께 확인) ──
-    await page.setViewport({ width: 1280, height: 900 });
+    await page.setViewport({ width: vw, height: 900, isMobile: vw < 500, hasTouch: vw < 500 });
     await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await new Promise(r => setTimeout(r, 700));
 
@@ -71,11 +71,11 @@ async function run() {
       });
       return railCostRow ? railCostRow.querySelectorAll('td')[3]?.querySelector('input')?.value : 'not-found';
     });
-    console.log('\n[견적서 핵심계산 검사] ' + file);
-    check('레일시공비 수량이 1개 고정 (레일자수를 곱하지 않음)', railInfo === '1', '실제값=' + railInfo + ' (예상: 1)');
+    console.log('\n[견적서 핵심계산 검사] ' + file + ' @ ' + label);
+    check('[' + label + '] 레일시공비 수량이 1개 고정 (레일자수를 곱하지 않음)', railInfo === '1', '실제값=' + railInfo + ' (예상: 1)');
 
     const totalBefore = await page.evaluate(() => document.getElementById('sum-total').textContent);
-    check('커튼 300cm·나비주름·단가5만원 손계산 일치', totalBefore === '381,000원', '실제값=' + totalBefore + ' (예상: 381,000원 = 커튼250,000+레일16,000+레일시공25,000+서울실측40,000+서울시공50,000)');
+    check('[' + label + '] 커튼 300cm·나비주름·단가5만원 손계산 일치', totalBefore === '381,000원', '실제값=' + totalBefore + ' (예상: 381,000원 = 커튼250,000+레일16,000+레일시공25,000+서울실측40,000+서울시공50,000)');
 
     // 할인 음수 방어
     const negDiscTotal = await page.evaluate(() => {
@@ -84,7 +84,7 @@ async function run() {
       calcTotal();
       return document.getElementById('sum-total').textContent;
     });
-    check('할인에 음수 입력시 총액이 오르지 않고 방어됨', negDiscTotal === '381,000원', '실제값=' + negDiscTotal + ' (음수할인 전과 동일해야 함, 381,000원)');
+    check('[' + label + '] 할인에 음수 입력시 총액이 오르지 않고 방어됨', negDiscTotal === '381,000원', '실제값=' + negDiscTotal + ' (음수할인 전과 동일해야 함, 381,000원)');
 
     // ── 테스트 2: 실적매출 = 제품가격 100% (95% 아님) ──
     const perfInfo = await page.evaluate(() => {
@@ -92,11 +92,12 @@ async function run() {
       var perf = document.getElementById('sum-perf').textContent;
       return { curtain: curtain, perf: perf };
     });
-    check('실적매출이 커튼값과 정확히 동일(95%로 축소 안 됨)', perfInfo.curtain === perfInfo.perf, 'curtain=' + perfInfo.curtain + ', perf=' + perfInfo.perf);
+    check('[' + label + '] 실적매출이 커튼값과 정확히 동일(95%로 축소 안 됨)', perfInfo.curtain === perfInfo.perf, 'curtain=' + perfInfo.curtain + ', perf=' + perfInfo.perf);
 
     // ── 테스트 3: 블라인드 옵션추가금 있는데 지역 미선택시 저장 차단 ──
     const page2 = await browser.newPage();
     await blockRealNetwork(page2);
+    await page2.setViewport({ width: vw, height: 900, isMobile: vw < 500, hasTouch: vw < 500 });
     page2.on('dialog', async d => { try { await d.accept(''); } catch (e) {} });
     await page2.goto(`http://localhost:${port}/${file}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await new Promise(r => setTimeout(r, 700));
@@ -120,12 +121,13 @@ async function run() {
     await page2.evaluate(() => { localStorage.removeItem('dah_saved'); saveEstimate(); });
     await new Promise(r => setTimeout(r, 500));
     const savedCountNoRegion = await page2.evaluate(() => JSON.parse(localStorage.getItem('dah_saved') || '[]').length);
-    check('지역 미선택+옵션추가금 있을때 저장이 차단됨(금액유실 방지)', savedCountNoRegion === 0, '실제 저장건수=' + savedCountNoRegion + ' (예상: 0건, 차단되어야 함)');
+    check('[' + label + '] 지역 미선택+옵션추가금 있을때 저장이 차단됨(금액유실 방지)', savedCountNoRegion === 0, '실제 저장건수=' + savedCountNoRegion + ' (예상: 0건, 차단되어야 함)');
     await page2.close();
 
     // ── 테스트 6: 시공 지역 "시공 안함(배송)" 선택시 레일/블라인드 시공비가 자동추가되면 안 됨 ──
     const page3 = await browser.newPage();
     await blockRealNetwork(page3);
+    await page3.setViewport({ width: vw, height: 900, isMobile: vw < 500, hasTouch: vw < 500 });
     page3.on('dialog', async d => { try { await d.accept(''); } catch (e) {} });
     await page3.goto(`http://localhost:${port}/${file}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await new Promise(r => setTimeout(r, 700));
@@ -139,7 +141,7 @@ async function run() {
     });
     await new Promise(r => setTimeout(r, 300));
     const svcRowsShipping = await page3.evaluate(() => document.getElementById('svc-body').querySelectorAll('tr').length);
-    check('배송(시공안함) 선택시 레일/레일시공비가 자동추가되지 않음', svcRowsShipping === 0, '실제 시공비목록 행수=' + svcRowsShipping + ' (예상: 0건)');
+    check('[' + label + '] 배송(시공안함) 선택시 레일/레일시공비가 자동추가되지 않음', svcRowsShipping === 0, '실제 시공비목록 행수=' + svcRowsShipping + ' (예상: 0건)');
 
     await page3.evaluate(() => { addBlindRow(); });
     await new Promise(r => setTimeout(r, 300));
@@ -151,7 +153,7 @@ async function run() {
     });
     await new Promise(r => setTimeout(r, 300));
     const svcRowsShippingBlind = await page3.evaluate(() => document.getElementById('svc-body').querySelectorAll('tr').length);
-    check('배송(시공안함) 선택시 블라인드 시공비도 자동추가되지 않음', svcRowsShippingBlind === 0, '실제 시공비목록 행수=' + svcRowsShippingBlind + ' (예상: 0건)');
+    check('[' + label + '] 배송(시공안함) 선택시 블라인드 시공비도 자동추가되지 않음', svcRowsShippingBlind === 0, '실제 시공비목록 행수=' + svcRowsShippingBlind + ' (예상: 0건)');
 
     await page3.evaluate(() => {
       document.getElementById('c-region').value = '서울';
@@ -162,9 +164,15 @@ async function run() {
     });
     await new Promise(r => setTimeout(r, 300));
     const svcRowsAfterRegionSelect = await page3.evaluate(() => document.getElementById('svc-body').querySelectorAll('tr').length);
-    check('지역 선택하면 정상적으로 시공비 행이 자동추가됨(회귀없음)', svcRowsAfterRegionSelect > 0, '실제 시공비목록 행수=' + svcRowsAfterRegionSelect + ' (예상: 0보다 커야 함)');
+    check('[' + label + '] 지역 선택하면 정상적으로 시공비 행이 자동추가됨(회귀없음)', svcRowsAfterRegionSelect > 0, '실제 시공비목록 행수=' + svcRowsAfterRegionSelect + ' (예상: 0보다 커야 함)');
     await page3.close();
 
+    await page.close();
+  }
+
+  try {
+    await testOnDevice(1280, 'PC');
+    await testOnDevice(390, '모바일');
     process.exitCode = failCount === 0 ? 0 : 1;
   } finally {
     await browser.close();
