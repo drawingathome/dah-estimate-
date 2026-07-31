@@ -73,7 +73,7 @@ function renderHome(skipServerFetch) {
     // 중복으로 나타나는 문제를 발견해 하나로 병합함 — 각 항목에 이유를 표시)
     // 2026-07-20 추가: "상담" 단계에서 오래 진행 없는 고객(놓친 리드)도 여기 포함.
     // 기준은 7일로 우선 정함 — 필요하면 조정 가능.
-    var LEAD_STALE_DAYS = 7;
+    var LEAD_STALE_DAYS = (typeof getLeadStaleDays === 'function') ? getLeadStaleDays() : 7;
     var ORDER_STAGES_FOR_ACTION = ['계약금', '실측', '잔금', '시공'];
     var needActionMap = {};
     customers.forEach(function(c) {

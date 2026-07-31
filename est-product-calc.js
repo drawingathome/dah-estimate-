@@ -315,9 +315,10 @@ function autoAddSvcFee() {
   var customInp = document.getElementById('c-region-price');
   customInp.style.display = region==='기타' ? 'inline-block' : 'none';
   var customBase = parseFloat(document.getElementById('c-region-price').value)||0;
+  var regionFees = (typeof getRegionFees === 'function') ? getRegionFees() : { '서울': {'실측비':40000, '시공비':50000}, '경기': {'실측비':60000, '시공비':80000} };
   var priceMap = {
-    '서울': {'실측비':40000, '시공비':50000},
-    '경기': {'실측비':60000, '시공비':80000},
+    '서울': regionFees['서울'] || {'실측비':40000, '시공비':50000},
+    '경기': regionFees['경기'] || {'실측비':60000, '시공비':80000},
     '기타': {'실측비':customBase, '시공비':customBase}
   };
   var prices = priceMap[region];

@@ -15,12 +15,18 @@ function getMempoPhrases() {
   } catch(e) { return DEFAULT_MEMO_PHRASES; }
 }
 
+// 설정탭에서 전체 목록을 교체할 때 사용 (클라우드 동기화 포함)
+function setMemoPhrasesList(phrases) {
+  try { localStorage.setItem('dah_memo_phrases', JSON.stringify(phrases)); } catch(e){}
+  if (typeof sbSyncSetting === 'function') sbSyncSetting('memo_phrases', phrases);
+}
+
 function saveMemoPhrase(phrase) {
   var phrases = getMempoPhrases();
   if (!phrases.includes(phrase)) {
     phrases.unshift(phrase);
     if (phrases.length > 20) phrases = phrases.slice(0, 20);
-    localStorage.setItem('dah_memo_phrases', JSON.stringify(phrases));
+    setMemoPhrasesList(phrases);
   }
 }
 

@@ -26,6 +26,31 @@ function setVendorList(list) {
   sbSyncSetting('vendor_list', list);
 }
 
+// 놓친 리드 기준일수 (2026-07-31 신규) — 예전엔 코드에 7일로 고정. 설정탭에서 조정 가능.
+function getLeadStaleDays() {
+  try {
+    var v = Number(localStorage.getItem('dah_lead_stale_days'));
+    return (v && v > 0) ? v : 7;
+  } catch(e) { return 7; }
+}
+function setLeadStaleDays(days) {
+  try { localStorage.setItem('dah_lead_stale_days', String(days)); } catch(e){}
+  sbSyncSetting('lead_stale_days', days);
+}
+
+// 지역별 실측비/시공비 (2026-07-31 신규) — 견적서 앱과 공유하는 설정값
+var DEFAULT_REGION_FEES_DASH = { '서울': {'실측비':40000, '시공비':50000}, '경기': {'실측비':60000, '시공비':80000} };
+function getRegionFees() {
+  try {
+    var cached = JSON.parse(localStorage.getItem('dah_region_fees') || 'null');
+    return cached || DEFAULT_REGION_FEES_DASH;
+  } catch(e) { return DEFAULT_REGION_FEES_DASH; }
+}
+function setRegionFees(fees) {
+  try { localStorage.setItem('dah_region_fees', JSON.stringify(fees)); } catch(e){}
+  sbSyncSetting('region_fees', fees);
+}
+
 // 담당자 이름 -> 로그인용 이메일 매핑 (Supabase Auth 연동용, 별도 저장)
 function getStaffEmailMap() {
   try { return JSON.parse(localStorage.getItem('dah_staff_emails') || '{}'); } catch(e) { return {}; }
@@ -142,6 +167,9 @@ function loadAppSettingsAsync(callback) {
       else if (row.key === 'master_email') { try { localStorage.setItem('dah_master_email', row.value); } catch(e){} }
       else if (row.key === 'staff_emails') { try { localStorage.setItem('dah_staff_emails', JSON.stringify(row.value||{})); } catch(e){} }
       else if (row.key === 'vendor_list') { try { localStorage.setItem('dah_vendor_list', JSON.stringify(row.value||[])); } catch(e){} }
+      else if (row.key === 'memo_phrases') { try { localStorage.setItem('dah_memo_phrases', JSON.stringify(row.value||[])); } catch(e){} }
+      else if (row.key === 'lead_stale_days') { try { localStorage.setItem('dah_lead_stale_days', String(row.value)); } catch(e){} }
+      else if (row.key === 'region_fees') { try { localStorage.setItem('dah_region_fees', JSON.stringify(row.value||{})); } catch(e){} }
     });
     // Supabase에 아직 없는 값은 이 컴퓨터에 있는 값으로 최초 1회 올려줌 (첫 동기화)
     if (!found.staff_list) { try { var sl = JSON.parse(localStorage.getItem('dah_staff_list')||'[]'); if (sl.length) sbSyncSetting('staff_list', sl); } catch(e){} }
@@ -152,6 +180,9 @@ function loadAppSettingsAsync(callback) {
     if (!found.staff_emails) { try { var se = JSON.parse(localStorage.getItem('dah_staff_emails')||'{}'); if (Object.keys(se).length) sbSyncSetting('staff_emails', se); } catch(e){} }
     if (!found.staff_goals) { syncStaffGoalsToCloud(); }
     if (!found.vendor_list) { try { var vl = getVendorList(); if (vl.length) sbSyncSetting('vendor_list', vl); } catch(e){} }
+    if (!found.memo_phrases) { try { var mp2 = getMempoPhrases(); if (mp2.length) sbSyncSetting('memo_phrases', mp2); } catch(e){} }
+    if (!found.lead_stale_days) { try { sbSyncSetting('lead_stale_days', getLeadStaleDays()); } catch(e){} }
+    if (!found.region_fees) { try { sbSyncSetting('region_fees', getRegionFees()); } catch(e){} }
     if (callback) callback();
   });
 }

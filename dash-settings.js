@@ -141,6 +141,19 @@ function renderSettings() {
       try { localStorage.setItem('dah_webhook_url', url); } catch(e){}
       sbSyncSetting('webhook_url', url);
     }
+    var leadDaysInput = document.getElementById('set-lead-stale-days');
+    if (leadDaysInput) {
+      var days = Number(leadDaysInput.value);
+      if (days > 0) setLeadStaleDays(days);
+    }
+    var newRegionFees = {};
+    document.querySelectorAll('[data-region][data-field]').forEach(function(inp) {
+      var region = inp.getAttribute('data-region');
+      var field = inp.getAttribute('data-field');
+      if (!newRegionFees[region]) newRegionFees[region] = {};
+      newRegionFees[region][field] = Number(inp.value) || 0;
+    });
+    if (Object.keys(newRegionFees).length > 0) setRegionFees(newRegionFees);
     showToast('전체 설정이 저장되고 클라우드에 동기화됐습니다');
   });
   wrap.appendChild(saveAllBtn);
@@ -265,6 +278,75 @@ function renderSettings() {
 
   var groupVendor = makeGroup('sec-set-vendor', '거래처 관리', [vendorCard], false);
   wrap.appendChild(groupVendor);
+
+  // ── 빠른 메모 문구 관리 (2026-07-31 신규) ──
+  var memoPhraseCard = div('padding-top:4px', [
+    span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '고객 메모 입력할 때 탭 한 번으로 넣을 수 있는 문구 버튼입니다.')
+  ]);
+  var memoPhrases = (typeof getMempoPhrases === 'function') ? getMempoPhrases() : [];
+  memoPhrases.forEach(function(phrase) {
+    var row = div('padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center', [
+      span('font-size:12px;font-weight:700', phrase),
+      btn('font-size:11px;color:#E4483A;background:none;border:none;cursor:pointer;font-family:inherit', '삭제', function() {
+        if (!confirm('"' + phrase + '" 문구를 삭제할까요?')) return;
+        var list = getMempoPhrases().filter(function(p){ return p !== phrase; });
+        setMemoPhrasesList(list);
+        renderSettings(); showToast('문구가 삭제됐습니다');
+      })
+    ]);
+    memoPhraseCard.appendChild(row);
+  });
+  var addPhraseWrap = div('display:flex;gap:var(--sp-2);margin-top:10px', []);
+  var phraseInput = el('input', {type:'text', placeholder:'새 문구', style:'flex:1;padding:9px 10px;border:1px solid var(--border);font-size:11px;font-family:inherit;outline:none'});
+  addPhraseWrap.appendChild(phraseInput);
+  addPhraseWrap.appendChild(btn('padding:9px 14px;background:var(--dark);color:#fff;border:none;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:32px', '추가', function() {
+    var phrase = phraseInput.value.trim();
+    if (!phrase) return;
+    var list = getMempoPhrases();
+    if (list.indexOf(phrase) >= 0) { showToast('이미 있는 문구입니다'); return; }
+    list.push(phrase);
+    setMemoPhrasesList(list);
+    phraseInput.value = '';
+    renderSettings(); showToast('문구가 추가됐습니다');
+  }));
+  memoPhraseCard.appendChild(addPhraseWrap);
+
+  // ── 놓친 리드 기준일수 ──
+  var leadDaysCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:var(--sp-3)', []);
+  leadDaysCard.innerHTML = '<div style="display:flex;align-items:center">' +
+      '<div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--dark)">놓친 리드 기준일수</div>' +
+      '<div style="font-size:11px;color:var(--sub);margin-top:2px">상담 후 이 기간 이상 진행없으면 홈화면에 알림</div></div>' +
+      '<input id="set-lead-stale-days" type="number" value="' + ((typeof getLeadStaleDays === 'function') ? getLeadStaleDays() : 7) + '" style="text-align:right;border:none;outline:none;font-size:11px;color:var(--dark);background:transparent;font-family:inherit;width:50px">' +
+      '<span style="font-size:11px;color:#8E8078;margin-left:4px">일</span>' +
+    '</div>';
+
+  var groupMemo = makeGroup('sec-set-memo', '빠른문구 · 리드알림', [memoPhraseCard, leadDaysCard], false);
+  wrap.appendChild(groupMemo);
+
+  // ── 지역별 실측비·시공비 (2026-07-31 신규) — 견적서 앱과 공유 ──
+  var regionFeesCard = div('padding-top:4px', [
+    span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '견적서 작성시 지역 선택하면 자동으로 붙는 실측비·시공비입니다. 여기서 바꾸면 견적서 앱에도 바로 반영돼요.')
+  ]);
+  var curRegionFees = getRegionFees();
+  ['서울', '경기'].forEach(function(region) {
+    var rf = curRegionFees[region] || { '실측비': 0, '시공비': 0 };
+    var row = div('padding:10px 0;border-bottom:1px solid var(--border)', [
+      span('font-size:12px;font-weight:700;display:block;margin-bottom:6px', region)
+    ]);
+    var inputRow = div('display:flex;gap:8px', []);
+    var measureWrap = div('flex:1', [ span('font-size:11px;color:var(--sub);display:block;margin-bottom:2px', '실측비') ]);
+    var measureInput = el('input', { type: 'number', 'data-region': region, 'data-field': '실측비', value: rf['실측비'] || 0, style: 'width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:10px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box' });
+    measureWrap.appendChild(measureInput);
+    var installWrap = div('flex:1', [ span('font-size:11px;color:var(--sub);display:block;margin-bottom:2px', '시공비') ]);
+    var installInput = el('input', { type: 'number', 'data-region': region, 'data-field': '시공비', value: rf['시공비'] || 0, style: 'width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:10px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box' });
+    installWrap.appendChild(installInput);
+    inputRow.appendChild(measureWrap);
+    inputRow.appendChild(installWrap);
+    row.appendChild(inputRow);
+    regionFeesCard.appendChild(row);
+  });
+  var groupRegionFees = makeGroup('sec-set-regionfees', '지역별 출장비', [regionFeesCard], false);
+  wrap.appendChild(groupRegionFees);
 
   
   // ── 계좌 정보 ──
