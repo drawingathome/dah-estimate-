@@ -230,6 +230,42 @@ function renderSettings() {
   var groupAccount = makeGroup('sec-set-account', '계정 · 보안', [masterEmailCard, pwCard, staffCard], false);
   wrap.appendChild(groupAccount);
 
+  // ── 거래처 관리 (2026-07-31 신규) ──
+  // 발주탭 자동완성 목록을 여기서 직접 관리. 새 업체 생기면 여기서 바로 추가.
+  var vendorCard = div('padding-top:4px', [
+    span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '발주탭에서 업체명을 고를 때 자동완성으로 뜨는 목록입니다. 새 업체가 생기면 여기서 바로 추가해주세요.')
+  ]);
+  var vendorList = getVendorList();
+  vendorList.forEach(function(name) {
+    var row = div('padding:8px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center', [
+      span('font-size:12px;font-weight:700', name),
+      btn('font-size:11px;color:#E4483A;background:none;border:none;cursor:pointer;font-family:inherit', '삭제', function() {
+        if (!confirm(name + ' 거래처를 목록에서 삭제할까요? (이미 저장된 견적서/발주기록엔 영향 없어요)')) return;
+        var list = getVendorList().filter(function(v){ return v !== name; });
+        setVendorList(list);
+        renderSettings(); showToast(name + ' 거래처가 삭제됐습니다');
+      })
+    ]);
+    vendorCard.appendChild(row);
+  });
+  var addVendorWrap = div('display:flex;gap:var(--sp-2);margin-top:10px', []);
+  var vendorInput = el('input', {type:'text', placeholder:'새 거래처 이름', style:'flex:1;padding:9px 10px;border:1px solid var(--border);font-size:11px;font-family:inherit;outline:none'});
+  addVendorWrap.appendChild(vendorInput);
+  addVendorWrap.appendChild(btn('padding:9px 14px;background:var(--dark);color:#fff;border:none;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:32px', '추가', function() {
+    var name = vendorInput.value.trim();
+    if (!name) return;
+    var list = getVendorList();
+    if (list.indexOf(name) >= 0) { showToast('이미 있는 거래처입니다'); return; }
+    list.push(name);
+    setVendorList(list);
+    vendorInput.value = '';
+    renderSettings(); showToast(name + ' 거래처가 추가됐습니다');
+  }));
+  vendorCard.appendChild(addVendorWrap);
+
+  var groupVendor = makeGroup('sec-set-vendor', '거래처 관리', [vendorCard], false);
+  wrap.appendChild(groupVendor);
+
   
   // ── 계좌 정보 ──
   var acctCard = div('padding-top:4px', []);

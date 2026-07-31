@@ -60,6 +60,14 @@ function renderOrderSection(c, orderBody) {
     function getVendorSuggestions(key) {
       return key === 'blind' ? savedBlindVendors : savedCurtainVendors;
     }
+    // 자동완성 드롭다운엔 이 고객 전용 거래처 + 설정탭에서 관리하는 전역 거래처 목록을 합침
+    // (자동채움 판단은 고객전용 목록만 써야 정확하므로 getVendorSuggestions와 분리)
+    function getVendorDropdownOptions(key) {
+      var own = getVendorSuggestions(key);
+      var global = (typeof getVendorList === 'function') ? getVendorList() : [];
+      var merged = own.concat(global);
+      return merged.filter(function(v, i){ return merged.indexOf(v) === i; });
+    }
 
     var orderCard = div('background:#fff;margin-bottom:10px;padding:var(--sp-4)', [
       span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:10px', '발주 현황')
@@ -87,7 +95,7 @@ function renderOrderSection(c, orderBody) {
       var vendorInput = el('input', { type: 'text', placeholder: '업체명 (선택)', list: vendorListId });
       vendorInput.style.cssText = 'width:100%;height:32px;padding:0 8px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;box-sizing:border-box';
       var vendorDatalist = el('datalist', { id: vendorListId });
-      vendorSuggestions.forEach(function(v) {
+      getVendorDropdownOptions(item.key).forEach(function(v) {
         var opt = document.createElement('option');
         opt.value = v;
         vendorDatalist.appendChild(opt);

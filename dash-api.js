@@ -9,6 +9,23 @@ function getStaffList() {
   try { var list = JSON.parse(localStorage.getItem('dah_staff_list') || '[]'); return list.length > 0 ? list : []; } catch(e) { return []; }
 }
 
+// 거래처 목록 관리 (2026-07-31 신규) — 발주탭 자동완성용. 예전엔 견적서 앱
+// 코드에 14개가 고정 박혀있어서 새 업체 추가시마다 개발자에게 요청해야 했는데,
+// 이제 설정탭에서 선혜님이 직접 추가/삭제 가능. 최초 1회는 그 14개를 기본값으로 넣어줌.
+var DEFAULT_VENDOR_LIST = ['캔가공소','디테라','아이엔티','예원','크바드라트','이지패브릭','리더스','유니밋','지오데코','윈텍','덱스터','헌터더글라스','솜피','목성'];
+function getVendorList() {
+  try {
+    var raw = localStorage.getItem('dah_vendor_list');
+    if (raw === null) return DEFAULT_VENDOR_LIST.slice();
+    var list = JSON.parse(raw);
+    return Array.isArray(list) ? list : DEFAULT_VENDOR_LIST.slice();
+  } catch(e) { return DEFAULT_VENDOR_LIST.slice(); }
+}
+function setVendorList(list) {
+  try { localStorage.setItem('dah_vendor_list', JSON.stringify(list)); } catch(e){}
+  sbSyncSetting('vendor_list', list);
+}
+
 // 담당자 이름 -> 로그인용 이메일 매핑 (Supabase Auth 연동용, 별도 저장)
 function getStaffEmailMap() {
   try { return JSON.parse(localStorage.getItem('dah_staff_emails') || '{}'); } catch(e) { return {}; }
@@ -124,6 +141,7 @@ function loadAppSettingsAsync(callback) {
       else if (row.key === 'staff_goals') { try { Object.keys(row.value||{}).forEach(function(staff){ localStorage.setItem('dah_goal_'+staff, String(row.value[staff])); }); } catch(e){} }
       else if (row.key === 'master_email') { try { localStorage.setItem('dah_master_email', row.value); } catch(e){} }
       else if (row.key === 'staff_emails') { try { localStorage.setItem('dah_staff_emails', JSON.stringify(row.value||{})); } catch(e){} }
+      else if (row.key === 'vendor_list') { try { localStorage.setItem('dah_vendor_list', JSON.stringify(row.value||[])); } catch(e){} }
     });
     // Supabase에 아직 없는 값은 이 컴퓨터에 있는 값으로 최초 1회 올려줌 (첫 동기화)
     if (!found.staff_list) { try { var sl = JSON.parse(localStorage.getItem('dah_staff_list')||'[]'); if (sl.length) sbSyncSetting('staff_list', sl); } catch(e){} }
@@ -133,6 +151,7 @@ function loadAppSettingsAsync(callback) {
     if (!found.master_email) { try { var me = localStorage.getItem('dah_master_email'); if (me) sbSyncSetting('master_email', me); } catch(e){} }
     if (!found.staff_emails) { try { var se = JSON.parse(localStorage.getItem('dah_staff_emails')||'{}'); if (Object.keys(se).length) sbSyncSetting('staff_emails', se); } catch(e){} }
     if (!found.staff_goals) { syncStaffGoalsToCloud(); }
+    if (!found.vendor_list) { try { var vl = getVendorList(); if (vl.length) sbSyncSetting('vendor_list', vl); } catch(e){} }
     if (callback) callback();
   });
 }
