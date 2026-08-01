@@ -173,9 +173,30 @@ function renderSettings() {
   masterEmailCard.appendChild(masterEmailInput);
 
   // ── 비밀번호 변경 ──
-  var pwCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:var(--sp-3)', [
+  // 2026-08-01 수정: 예전엔 이메일 등록 후에도 "비밀번호 변경" 입력창+버튼이
+  // 그대로 남아있어서, 눌러도 "변경됐습니다" 토스트가 떠서 실제로 바뀐 줄
+  // 착각하기 쉬웠음(실제로는 로그인에 안 쓰이는 예전 필드만 바뀜). 이제
+  // 이메일이 등록된 상태면 그 UI 자체를 숨기고, 진짜 비밀번호를 바꾸는
+  // 정확한 방법(재설정 이메일)으로 교체함.
+  var pwCard;
+  var _masterEmailNow = (typeof getMasterEmail === 'function') ? getMasterEmail() : '';
+  if (_masterEmailNow) {
+    pwCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:var(--sp-3)', [
+      span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:var(--sp-1)', '비밀번호 변경'),
+      span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '실제 로그인 비밀번호는 "' + _masterEmailNow + '" 계정의 비밀번호입니다. 아래 버튼을 누르면 그 이메일로 재설정 링크가 발송돼요.')
+    ]);
+    pwCard.appendChild(btn('width:100%;padding:11px;background:var(--dark);color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px', '비밀번호 재설정 이메일 받기', function() {
+      if (typeof sendPasswordResetEmail !== 'function') { showToast('재설정 기능을 불러오지 못했어요'); return; }
+      showToast('발송 중...');
+      sendPasswordResetEmail(_masterEmailNow, function(err) {
+        if (err) { showToast('발송 실패: ' + (err.message || '잠시 후 다시 시도해주세요')); return; }
+        showToast(_masterEmailNow + '로 재설정 이메일을 보냈어요. 메일함을 확인해주세요');
+      });
+    }));
+  } else {
+  pwCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:var(--sp-3)', [
     span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:var(--sp-1)', '비밀번호 변경'),
-    span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '이제 비밀번호는 Supabase 대시보드(Authentication > Users)에서 변경합니다. 아래는 예전 방식의 흔적으로, 더 이상 로그인에 사용되지 않습니다.')
+    span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '마스터 이메일을 등록하면 더 안전한 로그인 방식으로 전환돼요.')
   ]);
   [['change-pw-current2','현재 비밀번호'],['change-pw-new2','새 비밀번호 (4자 이상)'],['change-pw-confirm2','새 비밀번호 확인']].forEach(function(row) {
     var inp = el('input', {type:'password', id:row[0], placeholder:row[1], style:'width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:10px;font-size:11px;font-family:inherit;outline:none;margin-bottom:6px;box-sizing:border-box'});
@@ -194,6 +215,7 @@ function renderSettings() {
     cur.value=''; nw.value=''; con.value='';
     showToast('비밀번호가 변경됐습니다');
   }));
+  }
 
   
   // ── 담당자 관리 ──

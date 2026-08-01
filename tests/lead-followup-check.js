@@ -39,11 +39,12 @@ async function run() {
         d.setDate(d.getDate() - n);
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
       }
+      var todayTs = daysAgo(0);
       saveCustomers([
         { clientName: '놓친리드테스트' + suffix, phone: '01000000010', addr: '서울', stage: '상담', staffName: '마스터', date: daysAgo(16), price: 1000000 },
         { clientName: '최근상담테스트' + suffix, phone: '01000000011', addr: '서울', stage: '상담', staffName: '마스터', date: daysAgo(2), price: 1000000 },
-        { clientName: '결제상태테스트' + suffix, phone: '01000000012', addr: '서울', stage: '시공', staffName: '마스터', date: '2026-07-01',
-          depositAmount: 1000000, depositDate: '2026-07-10', measureDate: '2026-07-18', installDate: '2026-07-25', price: 2000000 }
+        { clientName: '결제상태테스트' + suffix, phone: '01000000012', addr: '서울', stage: '시공', staffName: '마스터', date: daysAgo(30),
+          depositAmount: 1000000, depositDate: daysAgo(20), measureDate: todayTs, installDate: todayTs, price: 2000000 }
       ]);
       goTab('home');
       renderHome(true);

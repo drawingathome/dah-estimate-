@@ -65,6 +65,30 @@ function supabaseAuthLogin(email, password, callback) {
   xhr.send(JSON.stringify({ email: email, password: password }));
 }
 
+// 비밀번호 재설정 이메일 발송 (2026-08-01 신규) — 설정탭 "비밀번호 재설정
+// 이메일 받기" 버튼에서 사용. 예전엔 마스터 이메일 등록 후에도 로컬 비밀번호
+// 변경 UI가 남아있어서, 눌러도 실제 로그인 비밀번호는 안 바뀌는 혼란이 있었음.
+function sendPasswordResetEmail(email, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', SUPABASE_URL + '/auth/v1/recover', true);
+  xhr.setRequestHeader('apikey', SUPABASE_KEY);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function () {
+    if (xhr.status >= 200 && xhr.status < 300) {
+      callback(null);
+    } else {
+      try {
+        var data = JSON.parse(xhr.responseText);
+        callback({ message: data.error_description || data.msg || '발송 실패' });
+      } catch (e) {
+        callback({ message: '발송 실패' });
+      }
+    }
+  };
+  xhr.onerror = function () { callback({ message: '네트워크 오류' }); };
+  xhr.send(JSON.stringify({ email: email }));
+}
+
 // 세션 저장 (localStorage)
 function saveAuthSession(session) {
   try {

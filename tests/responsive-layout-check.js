@@ -101,10 +101,12 @@ async function run() {
       await new Promise(r => setTimeout(r, 700));
       await loginAs(page, 'master');
       await page.evaluate(() => {
+        var d = new Date();
+        var ts = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-15';
         saveCustomers([
-          { clientName: '박서준', phone: '01000000003', addr: '서울', stage: '실측', staffName: '마스터', measureDate: '2026-07-19', date: '2026-07-06' },
-          { clientName: '최유리', phone: '01000000004', addr: '인천', stage: '시공', staffName: '마스터', installDate: '2026-07-19', date: '2026-07-08' },
-          { clientName: '정하늘', phone: '01000000005', addr: '부산', stage: '시공', staffName: '마스터', installDate: '2026-07-19', date: '2026-07-10' }
+          { clientName: '박서준', phone: '01000000003', addr: '서울', stage: '실측', staffName: '마스터', measureDate: ts, date: '2026-07-06' },
+          { clientName: '최유리', phone: '01000000004', addr: '인천', stage: '시공', staffName: '마스터', installDate: ts, date: '2026-07-08' },
+          { clientName: '정하늘', phone: '01000000005', addr: '부산', stage: '시공', staffName: '마스터', installDate: ts, date: '2026-07-10' }
         ]);
       });
       await new Promise(r => setTimeout(r, 400));
@@ -113,7 +115,7 @@ async function run() {
 
       const moreInfo = await page.evaluate(() => {
         var cells = Array.from(document.querySelectorAll('.cal-day-cell, [class*=day]'));
-        var target = cells.find(c => c.textContent.trim().startsWith('19'));
+        var target = cells.find(c => c.textContent.trim().startsWith('15'));
         if (!target) return { found: false };
         var more = Array.from(target.querySelectorAll('*')).find(e => e.textContent.trim() === '+1');
         if (!more) return { found: false };
@@ -126,7 +128,7 @@ async function run() {
 
       const clickReveal = await page.evaluate(() => {
         var cells = Array.from(document.querySelectorAll('.cal-day-cell, [class*=day]'));
-        var target = cells.find(c => c.textContent.trim().startsWith('19'));
+        var target = cells.find(c => c.textContent.trim().startsWith('15'));
         var more = Array.from(target.querySelectorAll('*')).find(e => e.textContent.trim() === '+1');
         if (!more) return false;
         more.click();
