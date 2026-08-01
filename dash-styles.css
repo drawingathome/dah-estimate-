@@ -1450,7 +1450,7 @@ html, body { font-size: 15px; line-height: 1.5; }
 /* 15px — 본문 (기본) */
 
 /* (button 폰트크기는 위쪽 ⑪번에 이미 정의되어 중복 제거함) */
-input, select, textarea { font-size: 15px !important; }
+/* (input,select,textarea 폰트크기는 위쪽 ⑫번에 이미 정의되어 있어 중복 제거함) */
 
 /* 13px — 서브 본문 / 라벨 */
 .text-13, .tab { font-size: 13px; }
@@ -1602,9 +1602,7 @@ body, input, button, select, textarea {
 
 
 /* ━━ 버튼 폰트 강제 ━━ */
-button { font-size: 13px !important; font-family: inherit; }
 .hd-btn-new, #btn-add-customer { font-size: 13px !important; font-weight: 700 !important; }
-.tab { font-size: 12px !important; }
 
 #add-save-btn, #add-save-only-btn { font-size: 13px !important; }
 
