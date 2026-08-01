@@ -69,7 +69,27 @@ function renderSettings() {
   wrap.innerHTML = '';
   var isMaster = currentUser && currentUser.role === 'master';
   if (!isMaster) {
-    wrap.appendChild(span('font-size:11px;color:var(--sub);display:block;text-align:center;padding:40px 0', '마스터만 접근할 수 있습니다'));
+    // 2026-08-01: 예전엔 스태프가 설정탭에 아예 접근 못 해서, 비밀번호를
+    // 바꾸고 싶어도 방법이 전혀 없었음(로그아웃밖에 못 함). 사업설정
+    // 전체는 마스터 전용으로 유지하되, 본인 계정 비밀번호 재설정만은 열어줌.
+    var myEmail = (typeof getStaffEmail === 'function' && currentUser) ? getStaffEmail(currentUser.name) : '';
+    var staffAcctCard = div('padding:24px 16px', [
+      span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:10px', '내 계정'),
+      span('font-size:11px;color:var(--sub);display:block;margin-bottom:14px', myEmail ? myEmail + ' 계정으로 로그인 중이에요.' : '계정 정보를 불러오는 중이에요.')
+    ]);
+    if (myEmail) {
+      staffAcctCard.appendChild(btn('width:100%;padding:11px;background:var(--dark);color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px', '비밀번호 재설정 이메일 받기', function() {
+        if (typeof sendPasswordResetEmail !== 'function') { showToast('재설정 기능을 불러오지 못했어요'); return; }
+        showToast('발송 중...');
+        sendPasswordResetEmail(myEmail, function(err) {
+          if (err) { showToast('발송 실패: ' + (err.message || '잠시 후 다시 시도해주세요')); return; }
+          showToast(myEmail + '로 재설정 이메일을 보냈어요. 메일함을 확인해주세요');
+        });
+      }));
+    }
+    var staffAcctWrap = div('', [staffAcctCard]);
+    staffAcctWrap.appendChild(span('font-size:11px;color:var(--sub);display:block;text-align:center;padding:16px 0', '그 외 설정은 마스터만 접근할 수 있습니다'));
+    wrap.appendChild(staffAcctWrap);
     return;
   }
 
