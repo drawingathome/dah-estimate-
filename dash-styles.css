@@ -152,10 +152,7 @@ button {
   font-family: inherit !important;
   cursor: pointer !important;
 }
-/* 예외: 탭 버튼은 위 ⑦ 적용 */
-.tab, .tab-item, .tabs button {
-  font-size: 12px !important;
-}
+/* 예외: 탭 버튼은 위 ⑦ 적용 (font-size:12px는 위쪽에 이미 정의되어 있어 중복 제거함) */
 /* 예외: 작은 버튼 */
 
 
@@ -1602,7 +1599,7 @@ body, input, button, select, textarea {
 
 
 /* ━━ 버튼 폰트 강제 ━━ */
-.hd-btn-new, #btn-add-customer { font-size: 13px !important; font-weight: 700 !important; }
+.hd-btn-new, #btn-add-customer { font-size: 13px !important; }
 
 #add-save-btn, #add-save-only-btn { font-size: 13px !important; }
 
