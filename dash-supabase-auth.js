@@ -89,6 +89,42 @@ function sendPasswordResetEmail(email, callback) {
   xhr.send(JSON.stringify({ email: email }));
 }
 
+// 비밀번호 재설정 이메일의 링크를 눌러서 돌아왔을 때, 그 링크에 담긴 access_token으로
+// 실제 새 비밀번호를 저장하는 함수 (2026-08-01 신규 — 예전엔 재설정 이메일만
+// 보내고, 링크를 눌러도 새 비밀번호를 입력할 화면 자체가 없어서 비밀번호가
+// 실제로는 한 번도 안 바뀌고 있었음)
+function updatePasswordWithRecoveryToken(recoveryToken, newPassword, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('PUT', SUPABASE_URL + '/auth/v1/user', true);
+  xhr.setRequestHeader('apikey', SUPABASE_KEY);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + recoveryToken);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function () {
+    if (xhr.status >= 200 && xhr.status < 300) {
+      callback(null);
+    } else {
+      try {
+        var data = JSON.parse(xhr.responseText);
+        callback({ message: data.error_description || data.msg || '변경 실패' });
+      } catch (e) {
+        callback({ message: '변경 실패' });
+      }
+    }
+  };
+  xhr.onerror = function () { callback({ message: '네트워크 오류' }); };
+  xhr.send(JSON.stringify({ password: newPassword }));
+}
+
+// URL의 #access_token=...&type=recovery 를 파싱 — 비밀번호 재설정 이메일의
+// 링크를 누르면 Supabase가 이 형태로 리다이렉트시켜줌
+function parseRecoveryTokenFromUrl() {
+  var hash = window.location.hash;
+  if (!hash || hash.indexOf('type=recovery') === -1) return null;
+  var params = new URLSearchParams(hash.slice(1));
+  var token = params.get('access_token');
+  return token || null;
+}
+
 // 세션 저장 (localStorage)
 function saveAuthSession(session) {
   try {
