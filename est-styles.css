@@ -1052,11 +1052,7 @@ html, body { font-size: 15px; }
 label, th, td { font-size: 13px; }
 
 
-/* ── Pretendard 폰트 적용 ── */
-html, body, input, button, select, textarea {
-  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
-    'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif !important;
-}
+/* (Pretendard 폰트 지정은 파일 상단에 이미 정의되어 있어 중복 제거함) */
 
 
 /* ══════════════════════════════════════════
@@ -1354,8 +1350,7 @@ button[onclick*="location"] {
 /* ── 12. 모든 버튼 기본 transition ── */
 button {
   transition: background 0.15s, box-shadow 0.15s, transform 0.1s !important;
-  cursor: pointer !important;
-  font-family: inherit !important;
+  /* cursor, font-family는 위쪽 button 규칙에 이미 동일값으로 정의되어 있어 중복 제거함 */
 }
 button:active { transform: scale(0.97) !important; }
 
