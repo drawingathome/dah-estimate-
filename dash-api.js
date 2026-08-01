@@ -9,16 +9,27 @@ function getStaffList() {
   try { var list = JSON.parse(localStorage.getItem('dah_staff_list') || '[]'); return list.length > 0 ? list : []; } catch(e) { return []; }
 }
 
-// 거래처 목록 관리 (2026-07-31 신규) — 발주탭 자동완성용. 예전엔 견적서 앱
-// 코드에 14개가 고정 박혀있어서 새 업체 추가시마다 개발자에게 요청해야 했는데,
-// 이제 설정탭에서 선혜님이 직접 추가/삭제 가능. 최초 1회는 그 14개를 기본값으로 넣어줌.
-var DEFAULT_VENDOR_LIST = ['캔가공소','디테라','아이엔티','예원','크바드라트','이지패브릭','리더스','유니밋','지오데코','윈텍','덱스터','헌터더글라스','솜피','목성'];
+// 거래처 목록 관리 (2026-07-31 신규, 2026-08-01 카테고리 추가) — 발주탭 자동완성용.
+// 카테고리: 'fabric'(원단)/'production'(제작)/'blind'(블라인드)/'material'(자재)/
+// 'install'(실측·시공)/''(미분류 — 모든 항목에 다 보임, 안전한 기본값)
+var VENDOR_CATEGORIES = [
+  { key: '', label: '미분류' },
+  { key: 'fabric', label: '원단' },
+  { key: 'production', label: '제작' },
+  { key: 'blind', label: '블라인드' },
+  { key: 'material', label: '자재' },
+  { key: 'install', label: '실측·시공' }
+];
+var DEFAULT_VENDOR_LIST = ['캔가공소','디테라','아이엔티','예원','크바드라트','이지패브릭','리더스','유니밋','지오데코','윈텍','덱스터','헌터더글라스','솜피','목성']
+  .map(function(name) { return { name: name, category: '' }; });
 function getVendorList() {
   try {
     var raw = localStorage.getItem('dah_vendor_list');
     if (raw === null) return DEFAULT_VENDOR_LIST.slice();
     var list = JSON.parse(raw);
-    return Array.isArray(list) ? list : DEFAULT_VENDOR_LIST.slice();
+    if (!Array.isArray(list)) return DEFAULT_VENDOR_LIST.slice();
+    // 예전 버전(문자열 배열)에서 새 구조({name,category})로 자동 마이그레이션 — 카테고리는 미분류로
+    return list.map(function(v) { return (typeof v === 'string') ? { name: v, category: '' } : v; });
   } catch(e) { return DEFAULT_VENDOR_LIST.slice(); }
 }
 function setVendorList(list) {

@@ -62,10 +62,15 @@ function renderOrderSection(c, orderBody) {
     }
     // 자동완성 드롭다운엔 이 고객 전용 거래처 + 설정탭에서 관리하는 전역 거래처 목록을 합침
     // (자동채움 판단은 고객전용 목록만 써야 정확하므로 getVendorSuggestions와 분리)
+    // 2026-08-01: 거래처에 카테고리(원단/제작/블라인드/자재/실측시공)가 생겨서,
+    // 이 발주항목(key)과 카테고리가 일치하거나 미분류인 거래처만 자동완성에 노출
     function getVendorDropdownOptions(key) {
       var own = getVendorSuggestions(key);
-      var global = (typeof getVendorList === 'function') ? getVendorList() : [];
-      var merged = own.concat(global);
+      var globalList = (typeof getVendorList === 'function') ? getVendorList() : [];
+      var globalNames = globalList
+        .filter(function(v) { return !v.category || v.category === key; })
+        .map(function(v) { return v.name; });
+      var merged = own.concat(globalNames);
       return merged.filter(function(v, i){ return merged.indexOf(v) === i; });
     }
 
