@@ -7,7 +7,7 @@
 // 대시보드에서 등록된 서비스워커가 Service-Worker-Allowed:/ 설정으로 이 페이지도
 // 덮을 수 있어 동일하게 방어함.
 (function(){
-  var BUILD = '202607311000';
+  var BUILD = '202608010500';
   try {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(regs){
@@ -27,7 +27,7 @@
 </script>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
-<link rel="stylesheet" href="/est-styles.css?v=202607311000">
+<link rel="stylesheet" href="/est-styles.css?v=202608010500">
 </style>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -43,7 +43,9 @@
 <div id="est-auth-gate" style="display:none;position:fixed;inset:0;z-index:999999;background:#282828;align-items:center;justify-content:center;flex-direction:column;padding:20px;box-sizing:border-box;font-family:'Pretendard Variable',-apple-system,sans-serif;">
   <div style="width:100%;max-width:320px;background:#fff;border-radius:16px;padding:32px 24px;text-align:center;">
     <div style="font-size:15px;font-weight:700;color:#282828;margin-bottom:6px;">드로잉엣홈 견적서</div>
-    <div style="font-size:12px;color:#8E8078;margin-bottom:20px;">비밀번호를 입력해주세요</div>
+    <div style="font-size:12px;color:#8E8078;margin-bottom:20px;">이메일과 비밀번호를 입력해주세요</div>
+    <input type="email" id="est-auth-email" placeholder="이메일" autocomplete="username"
+      style="width:100%;height:44px;border:1px solid #EEE6DC;border-radius:8px;padding:0 14px;font-size:13px;box-sizing:border-box;margin-bottom:10px;font-family:inherit;">
     <input type="password" id="est-auth-pw" placeholder="비밀번호" maxlength="20" autocomplete="current-password"
       style="width:100%;height:44px;border:1px solid #EEE6DC;border-radius:8px;padding:0 14px;font-size:13px;box-sizing:border-box;margin-bottom:10px;font-family:inherit;">
     <button id="est-auth-btn" type="button"
@@ -67,31 +69,33 @@
   if (!hasValidDashboardSession()) {
     var gate = document.getElementById('est-auth-gate');
     gate.style.display = 'flex';
+    var emailInput = document.getElementById('est-auth-email');
     var pwInput = document.getElementById('est-auth-pw');
     var errEl = document.getElementById('est-auth-error');
     var authBtn = document.getElementById('est-auth-btn');
+    // 편의상 이 기기에 이미 캐시된 이메일이 있으면 기본값으로 채워두되, 항상 직접 확인/수정 가능
+    // (2026-08-01: 예전엔 이메일 입력창 자체가 없어서, 캐시가 없는 새 기기에서는
+    // 로그인 자체가 불가능했음. 자동 클라우드조회는 RLS 때문에 항상 실패해서 무의미했으므로 제거함)
+    // dash-supabase-auth.js가 이 스크립트보다 나중에 로드되므로, getMasterEmail이
+    // 정의될 때까지 짧게 재시도함
+    (function fillCachedEmail(retries) {
+      if (typeof getMasterEmail === 'function') {
+        emailInput.value = getMasterEmail() || '';
+      } else if (retries > 0) {
+        setTimeout(function() { fillCachedEmail(retries - 1); }, 100);
+      }
+    })(20);
     function tryAuth() {
-      if (typeof supabaseAuthLogin !== 'function' || typeof getMasterEmail !== 'function') {
+      if (typeof supabaseAuthLogin !== 'function') {
         errEl.textContent = '페이지를 아직 불러오는 중입니다. 잠시 후 다시 시도해주세요';
         errEl.style.display = 'block';
         return;
       }
-      var email = getMasterEmail();
+      var email = emailInput ? emailInput.value.trim() : '';
       if (!email) {
-        // 이 기기(브라우저)엔 아직 마스터 이메일이 캐시 안 되어 있을 수 있음 —
-        // 다른 기기(예: 컴퓨터 대시보드)에서 이미 등록했을 수 있으니 Supabase에서 직접 조회 시도
-        authBtn.disabled = true;
-        authBtn.textContent = '확인 중...';
-        fetchAndCacheMasterEmail(function(fetchedEmail) {
-          if (!fetchedEmail) {
-            authBtn.disabled = false;
-            authBtn.textContent = '확인';
-            errEl.textContent = '마스터 이메일이 아직 등록되지 않았습니다 (대시보드 설정탭에서 등록해주세요)';
-            errEl.style.display = 'block';
-            return;
-          }
-          doAuthLogin(fetchedEmail);
-        });
+        errEl.textContent = '이메일을 입력해주세요';
+        errEl.style.display = 'block';
+        emailInput.focus();
         return;
       }
       doAuthLogin(email);
@@ -105,6 +109,8 @@
         if (result.ok) {
           gate.style.display = 'none';
           errEl.style.display = 'none';
+          // 로그인 성공한 이메일을 다음번 편의를 위해 이 기기에 캐시
+          if (typeof setMasterEmail === 'function') setMasterEmail(email);
           // 확인 성공 시 이 창에서도 세션 갱신 (같은 브라우저에서 계속 쓸 수 있도록)
           try { localStorage.setItem('dah_session', JSON.stringify({name:'견적서', role:'master', loginAt: Date.now()})); } catch(e) {}
         } else {
@@ -524,15 +530,15 @@
   <option value="허니콤 No.1">허니콤 No.1</option>
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
-<script src="/est-utils.js?v=202607311000"></script>
-<script src="/dash-supabase-auth.js?v=202607311000"></script>
-<script src="/est-form-controls.js?v=202607311000"></script>
-<script src="/est-product-calc.js?v=202607311000"></script>
-<script src="/est-survey.js?v=202607311000"></script>
-<script src="/est-save.js?v=202607311000"></script>
-<script src="/est-documents.js?v=202607311000"></script>
-<script src="/est-customer-load.js?v=202607311000"></script>
-<script src="/est-misc.js?v=202607311000"></script>
+<script src="/est-utils.js?v=202608010500"></script>
+<script src="/dash-supabase-auth.js?v=202608010500"></script>
+<script src="/est-form-controls.js?v=202608010500"></script>
+<script src="/est-product-calc.js?v=202608010500"></script>
+<script src="/est-survey.js?v=202608010500"></script>
+<script src="/est-save.js?v=202608010500"></script>
+<script src="/est-documents.js?v=202608010500"></script>
+<script src="/est-customer-load.js?v=202608010500"></script>
+<script src="/est-misc.js?v=202608010500"></script>
 <script>
 var currentTab = 'ga';
 

@@ -108,7 +108,19 @@ async function run() {
       const gateVisibleBefore = await page.evaluate(() => document.getElementById('est-auth-gate')?.style.display);
       check('세션 없을 때 게이트가 표시됨', gateVisibleBefore === 'flex', '실제값=' + gateVisibleBefore);
 
+      // 2026-08-01: 자동조회는 RLS상 항상 실패했던 죽은 기능이라 제거함(선혜님 결정: 보안우선).
+      // 이제 새 기기에서는 이메일 없이 비밀번호만 넣으면 "이메일을 입력해주세요"로 명확히 막혀야 하고,
+      // 이메일+비밀번호를 직접 입력해야만 로그인 성공해야 함.
       await page.evaluate(() => { document.getElementById('est-auth-pw').value = 'TEST_OK_PW'; });
+      await page.evaluate(() => document.getElementById('est-auth-btn').click());
+      await new Promise(r => setTimeout(r, 400));
+      const noEmailResult = await page.evaluate(() => ({
+        gateVisible: document.getElementById('est-auth-gate')?.style.display,
+        errorText: document.getElementById('est-auth-error')?.textContent
+      }));
+      check('이메일 없이 비밀번호만 넣으면 로그인이 차단되고 안내됨', noEmailResult.gateVisible === 'flex' && noEmailResult.errorText.includes('이메일'), '실제값=' + JSON.stringify(noEmailResult));
+
+      await page.evaluate(() => { document.getElementById('est-auth-email').value = 'other-device@dah-test.local'; });
       await page.evaluate(() => document.getElementById('est-auth-btn').click());
       await new Promise(r => setTimeout(r, 800));
 
@@ -116,8 +128,8 @@ async function run() {
         gateVisible: document.getElementById('est-auth-gate')?.style.display,
         cachedEmail: localStorage.getItem('dah_master_email')
       }));
-      check('로컬에 이메일 없어도 Supabase에서 자동조회해 로그인 성공(게이트 닫힘)', result.gateVisible === 'none', '실제값=' + JSON.stringify(result));
-      check('조회된 이메일이 이 기기 로컬에도 캐싱됨', result.cachedEmail === 'other-device@dah-test.local', '실제값=' + result.cachedEmail);
+      check('이메일+비밀번호 직접 입력하면 로그인 성공(게이트 닫힘)', result.gateVisible === 'none', '실제값=' + JSON.stringify(result));
+      check('로그인 성공한 이메일이 이 기기 로컬에 캐싱됨(다음번 편의용)', result.cachedEmail === 'other-device@dah-test.local', '실제값=' + result.cachedEmail);
 
       process.exitCode = failCount === 0 ? 0 : 1;
       await page.close();
