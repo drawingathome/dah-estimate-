@@ -1727,12 +1727,9 @@ button[onclick*="exportExcel"] {
 }
 
 /* ── 6. 탭 네비게이션 폰트 위계 ── */
-.tab, .tab-item {
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  color: #756E62 !important;
-  transition: color 0.15s;
-}
+/* (.tab, .tab-item 규칙 — 위쪽 ⑦번 .tabs button 조합의 특이성이 항상 더 높아서
+   여기 정의된 값(600)이 절대 적용되지 않고, .tab-item 클래스는 실사용 요소가 없어
+   완전히 죽은 코드였음. 2026-08-01 확인 후 제거함) */
 .tab.on, .tab-item.on, .tab.active {
   font-size: 12px !important;
   font-weight: 700 !important;
