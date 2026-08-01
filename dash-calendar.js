@@ -225,8 +225,8 @@ function renderCalList(customers, selectedDate) {
     var info = document.createElement('div');
     info.className = 'cal-ev-info';
     info.innerHTML =
-      '<div class="cal-ev-name" style="font-size:'+(isMain?'15px':'13px')+';font-weight:'+(isMain?'700':'500')+'">' + ev.name + '</div>' +
-      '<div class="cal-ev-sub">' + (ev.region || '주소 미입력') + '</div>';
+      '<div class="cal-ev-name" style="font-size:'+(isMain?'15px':'13px')+';font-weight:'+(isMain?'700':'500')+'">' + escHtml(ev.name || '') + '</div>' +
+      '<div class="cal-ev-sub">' + escHtml(ev.region || '주소 미입력') + '</div>';
 
     var right = document.createElement('div');
     right.style.cssText = 'text-align:right;flex-shrink:0';

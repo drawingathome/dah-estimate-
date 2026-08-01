@@ -323,12 +323,12 @@ function renderDetailHeader(c) {
   var infoBar = document.getElementById('detail-info-bar');
   infoBar.innerHTML = '';
   var phoneHtml = c.phone
-    ? '<a href="tel:' + c.phone.replace(/[^0-9]/g,'') + '" style="color:var(--dark);text-decoration:none;font-weight:500">' + c.phone + '</a>'
+    ? '<a href="tel:' + c.phone.replace(/[^0-9]/g,'') + '" style="color:var(--dark);text-decoration:none;font-weight:500">' + escHtml(c.phone) + '</a>'
     : '<span style="color:var(--sub)">연락처 없음</span>';
   infoBar.innerHTML =
     '<span>' + phoneHtml + '</span>' +
     '<span style="color:var(--border)">|</span>' +
-    '<span>' + (c.staffName || '마스터') + '</span>';
+    '<span>' + escHtml(c.staffName || '마스터') + '</span>';
 
 }
 

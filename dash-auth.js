@@ -71,7 +71,7 @@ function renderStaffLoginList() {
     var btn = document.createElement('button');
     btn.className = 'staff-grid-btn';
     btn.type = 'button';
-    btn.innerHTML = '<div class="staff-avatar-sm">'+name.charAt(0)+'</div><span>'+name+'</span>';
+    btn.innerHTML = '<div class="staff-avatar-sm">'+escHtml(name.charAt(0))+'</div><span>'+escHtml(name)+'</span>';
     (function(n){ btn.onclick = function(){
       if (typeof window.selectStaffForLogin === 'function') window.selectStaffForLogin(n);
     }; })(name);

@@ -102,7 +102,7 @@ function renderSettings() {
   goalCard.innerHTML = '<div style="display:flex;align-items:center;padding-bottom:12px;border-bottom:1px solid #F5F2EE;margin-bottom:var(--sp-3)">' +
       '<div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--dark)">월 목표 매출</div>' +
       '<div style="font-size:11px;color:var(--sub);margin-top:2px">홈 화면 목표 달성률 기준</div></div>' +
-      '<input id="set-monthly-goal" type="text" value="' + (s.monthlyGoal || '5000') + '" placeholder="5000" onchange="saveSettings()" style="text-align:right;border:none;outline:none;font-size:11px;color:var(--dark);background:transparent;font-family:inherit;width:70px">' +
+      '<input id="set-monthly-goal" type="text" value="' + escHtml(String(s.monthlyGoal || '5000')) + '" placeholder="5000" onchange="saveSettings()" style="text-align:right;border:none;outline:none;font-size:11px;color:var(--dark);background:transparent;font-family:inherit;width:70px">' +
       '<span style="font-size:11px;color:#8E8078;margin-left:4px">만원</span>' +
     '</div>';
 
@@ -375,11 +375,11 @@ function renderSettings() {
   var acctCard = div('padding-top:4px', []);
   acctCard.innerHTML = '<div style="display:flex;align-items:center;border-bottom:1px solid #F5F2EE;padding-bottom:10px;margin-bottom:10px">' +
       '<div style="font-size:12px;font-weight:600;color:var(--dark);flex:1">계좌번호</div>' +
-      '<input id="set-account" type="text" value="' + (s.account || '015401-04-258798') + '" onchange="saveSettings()" style="text-align:right;border:none;outline:none;font-size:11px;color:var(--dark);background:transparent;font-family:inherit">' +
+      '<input id="set-account" type="text" value="' + escHtml(s.account || '015401-04-258798') + '" onchange="saveSettings()" style="text-align:right;border:none;outline:none;font-size:11px;color:var(--dark);background:transparent;font-family:inherit">' +
     '</div>' +
     '<div style="display:flex;align-items:center">' +
       '<div style="font-size:12px;font-weight:600;color:var(--dark);flex:1">예금주</div>' +
-      '<input id="set-holder" type="text" value="' + (s.holder || '장선혜') + '" onchange="saveSettings()" style="text-align:right;border:none;outline:none;font-size:11px;color:var(--dark);background:transparent;font-family:inherit">' +
+      '<input id="set-holder" type="text" value="' + escHtml(s.holder || '장선혜') + '" onchange="saveSettings()" style="text-align:right;border:none;outline:none;font-size:11px;color:var(--dark);background:transparent;font-family:inherit">' +
     '</div>';
 
   // ── Make.com 웹훅 ──
