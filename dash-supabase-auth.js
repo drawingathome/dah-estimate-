@@ -70,7 +70,9 @@ function supabaseAuthLogin(email, password, callback) {
 // 변경 UI가 남아있어서, 눌러도 실제 로그인 비밀번호는 안 바뀌는 혼란이 있었음.
 function sendPasswordResetEmail(email, callback) {
   var xhr = new XMLHttpRequest();
-  xhr.open('POST', SUPABASE_URL + '/auth/v1/recover', true);
+  // redirect_to를 명시하지 않으면 Supabase 프로젝트의 기본 Site URL로 가버림
+  var redirectTo = window.location.origin + '/dah-dashboard';
+  xhr.open('POST', SUPABASE_URL + '/auth/v1/recover?redirect_to=' + encodeURIComponent(redirectTo), true);
   xhr.setRequestHeader('apikey', SUPABASE_KEY);
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.onload = function () {
