@@ -379,10 +379,12 @@ function renderSettings() {
   vendorCard.appendChild(vendorChipWrap);
   var addVendorWrap = div('display:flex;gap:var(--sp-2)', []);
   var vendorInput = el('input', {type:'text', placeholder:'새 거래처 이름', style:'flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box'});
-  var vendorCategorySelect = el('select', {style:'padding:9px 8px;border:1px solid var(--border);border-radius:10px;font-size:12px;font-family:inherit;outline:none;background:#fff;min-height:32px'});
+  var vendorCategorySelect = el('select', {style:'padding:9px 8px;border:1px solid var(--border);border-radius:10px;font-size:12px;font-family:inherit;outline:none;background:#fff;color:#282828;min-height:32px'});
   VENDOR_CATEGORIES.forEach(function(c) {
     var opt = document.createElement('option');
     opt.value = c.key; opt.textContent = c.label;
+    opt.style.color = '#282828';
+    opt.style.background = '#fff';
     vendorCategorySelect.appendChild(opt);
   });
   addVendorWrap.appendChild(vendorInput);
