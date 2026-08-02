@@ -1242,7 +1242,7 @@ input,button,select,textarea { font-family:inherit; }
   .tabs { display:none !important; }
   .mob-app-header { display:flex; }
   .mob-bottom-nav { display:block; }
-  .wrap { padding:0 0 72px; }
+  .wrap { padding:0 0 calc(56px + env(safe-area-inset-bottom) + 24px); }
   
   .search-input-clean { font-size:11px !important; }
   .login-screen { padding:40px 20px 32px; }
@@ -1524,8 +1524,12 @@ label { font-size: 13px; }
 
 /* ── 모바일 콘텐츠 하단 여백 (탭바 높이 + 여유) ── */
 @media (max-width: 640px) {
-  .wrap { padding-bottom: 80px; }
-  #home, #pipe, #search, #est-list, #cal, #chart, #settings {
+  .wrap { padding-bottom: calc(56px + env(safe-area-inset-bottom) + 24px); }
+  /* (2026-08-02 버그수정: #settings가 이 목록에 있으면 id선택자 특이성 때문에
+     .wrap의 하단여백이 강제로 0으로 덮어써져서, 설정화면 맨 아래 로그아웃
+     버튼이 하단 고정 네비게이션바 뒤에 가려져 있었음 — 실제로 스크롤을
+     끝까지 내려도 안 보였던 원인. #settings는 자체 여백이 필요하므로 제외) */
+  #home, #pipe, #search, #est-list, #cal, #chart {
     padding-bottom: 0;
   }
 }
