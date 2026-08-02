@@ -227,7 +227,7 @@ input, select, textarea {
    ════════════════════════════════════════════════════════ */
 
 /* ── 전역 기본 ── */
-html { font-size: 15px; }
+html { font-size: 15px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 body {
   color: #282828;
   -moz-osx-font-smoothing: grayscale;
