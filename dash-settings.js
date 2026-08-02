@@ -4,6 +4,67 @@
    설정탭 전체 렌더링.
    ══════════════════════════════════════════════════ */
 
+// 비밀번호 재설정 흐름 공용 헬퍼 (2026-08-02 신규) — 마스터/스태프 둘 다 재사용.
+// 이메일 발송 버튼 누르면 바로 아래에 "인증코드+새비밀번호" 입력창이 나타남.
+// 링크를 눌러야 하는 방식이 아니라 코드를 직접 타이핑하는 방식이라, 메일
+// 앱이 링크를 미리 스캔해서 토큰을 조기 소진시키는 문제가 아예 발생 안 함.
+function appendPasswordResetFlow(card, email) {
+  var codeSection = div('display:none;margin-top:12px;padding-top:12px;border-top:1px solid #F5F2EE', [
+    span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', email + '로 6자리 인증코드를 보냈어요. 코드와 새 비밀번호를 입력해주세요.')
+  ]);
+  var codeInput = el('input', {type:'text', inputmode:'numeric', placeholder:'인증코드 6자리', style:'width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;outline:none;margin-bottom:8px;box-sizing:border-box'});
+  var newPwInput = el('input', {type:'password', placeholder:'새 비밀번호 (6자 이상)', autocomplete:'new-password', style:'width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;outline:none;margin-bottom:8px;box-sizing:border-box'});
+  var confirmPwInput = el('input', {type:'password', placeholder:'새 비밀번호 확인', autocomplete:'new-password', style:'width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;outline:none;margin-bottom:8px;box-sizing:border-box'});
+  var codeError = span('font-size:11px;color:#E4483A;display:none;margin-bottom:8px', '');
+  var confirmBtn = btn('width:100%;padding:11px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '비밀번호 변경 확인', function() {
+    var code = codeInput.value.trim();
+    var pw1 = newPwInput.value;
+    var pw2 = confirmPwInput.value;
+    codeError.style.display = 'none';
+    if (!code) { codeError.textContent = '인증코드를 입력해주세요'; codeError.style.display = 'block'; return; }
+    if (pw1.length < 6) { codeError.textContent = '새 비밀번호는 6자 이상이어야 합니다'; codeError.style.display = 'block'; return; }
+    if (pw1 !== pw2) { codeError.textContent = '새 비밀번호가 일치하지 않습니다'; codeError.style.display = 'block'; return; }
+    confirmBtn.disabled = true; confirmBtn.textContent = '확인 중...';
+    verifyRecoveryCode(email, code, function(err, accessToken) {
+      if (err) {
+        confirmBtn.disabled = false; confirmBtn.textContent = '비밀번호 변경 확인';
+        codeError.textContent = err.message || '코드가 올바르지 않습니다';
+        codeError.style.display = 'block';
+        return;
+      }
+      updatePasswordWithRecoveryToken(accessToken, pw1, function(err2) {
+        confirmBtn.disabled = false; confirmBtn.textContent = '비밀번호 변경 확인';
+        if (err2) {
+          codeError.textContent = err2.message || '변경에 실패했습니다';
+          codeError.style.display = 'block';
+          return;
+        }
+        codeSection.style.display = 'none';
+        codeInput.value = ''; newPwInput.value = ''; confirmPwInput.value = '';
+        showToast('비밀번호가 변경됐습니다. 새 비밀번호로 로그인해주세요');
+      });
+    });
+  });
+  codeSection.appendChild(codeInput);
+  codeSection.appendChild(newPwInput);
+  codeSection.appendChild(confirmPwInput);
+  codeSection.appendChild(codeError);
+  codeSection.appendChild(confirmBtn);
+
+  var sendBtn = btn('width:100%;padding:11px;background:var(--dark);color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px', '비밀번호 재설정 이메일 받기', function() {
+    if (typeof sendPasswordResetEmail !== 'function') { showToast('재설정 기능을 불러오지 못했어요'); return; }
+    sendBtn.disabled = true; sendBtn.textContent = '발송 중...';
+    sendPasswordResetEmail(email, function(err) {
+      sendBtn.disabled = false; sendBtn.textContent = '비밀번호 재설정 이메일 받기';
+      if (err) { showToast('발송 실패: ' + (err.message || '잠시 후 다시 시도해주세요')); return; }
+      showToast(email + '로 인증코드를 보냈어요. 메일함을 확인해주세요');
+      codeSection.style.display = 'block';
+    });
+  });
+  card.appendChild(sendBtn);
+  card.appendChild(codeSection);
+}
+
 function loadSettings() {
   try {
     var s = JSON.parse(localStorage.getItem('dah_settings') || '{}');
@@ -78,14 +139,7 @@ function renderSettings() {
       span('font-size:11px;color:var(--sub);display:block;margin-bottom:14px', myEmail ? myEmail + ' 계정으로 로그인 중이에요.' : '계정 정보를 불러오는 중이에요.')
     ]);
     if (myEmail) {
-      staffAcctCard.appendChild(btn('width:100%;padding:11px;background:var(--dark);color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px', '비밀번호 재설정 이메일 받기', function() {
-        if (typeof sendPasswordResetEmail !== 'function') { showToast('재설정 기능을 불러오지 못했어요'); return; }
-        showToast('발송 중...');
-        sendPasswordResetEmail(myEmail, function(err) {
-          if (err) { showToast('발송 실패: ' + (err.message || '잠시 후 다시 시도해주세요')); return; }
-          showToast(myEmail + '로 재설정 이메일을 보냈어요. 메일함을 확인해주세요');
-        });
-      }));
+      appendPasswordResetFlow(staffAcctCard, myEmail);
     }
     var staffAcctWrap = div('', [staffAcctCard]);
     staffAcctWrap.appendChild(span('font-size:11px;color:var(--sub);display:block;text-align:center;padding:16px 0', '그 외 설정은 마스터만 접근할 수 있습니다'));
@@ -205,14 +259,7 @@ function renderSettings() {
       span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:var(--sp-1)', '비밀번호 변경'),
       span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '실제 로그인 비밀번호는 "' + _masterEmailNow + '" 계정의 비밀번호입니다. 아래 버튼을 누르면 그 이메일로 재설정 링크가 발송돼요.')
     ]);
-    pwCard.appendChild(btn('width:100%;padding:11px;background:var(--dark);color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px', '비밀번호 재설정 이메일 받기', function() {
-      if (typeof sendPasswordResetEmail !== 'function') { showToast('재설정 기능을 불러오지 못했어요'); return; }
-      showToast('발송 중...');
-      sendPasswordResetEmail(_masterEmailNow, function(err) {
-        if (err) { showToast('발송 실패: ' + (err.message || '잠시 후 다시 시도해주세요')); return; }
-        showToast(_masterEmailNow + '로 재설정 이메일을 보냈어요. 메일함을 확인해주세요');
-      });
-    }));
+    appendPasswordResetFlow(pwCard, _masterEmailNow);
   } else {
   pwCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:var(--sp-3)', [
     span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:var(--sp-1)', '비밀번호 변경'),

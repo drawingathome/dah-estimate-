@@ -92,6 +92,33 @@ function sendPasswordResetEmail(email, callback) {
 }
 
 // 비밀번호 재설정 이메일의 링크를 눌러서 돌아왔을 때, 그 링크에 담긴 access_token으로
+// 재설정 이메일에 담긴 6자리 인증코드를 직접 입력받아 검증하는 함수
+// (2026-08-02 신규) — 링크 클릭 방식은 메일 앱이 보안상 링크를 미리
+// 스캔/방문해서 토큰을 조기 소진시키는 문제가 있었음(실제로 겪음). 코드
+// 직접입력 방식은 "클릭"이라는 동작 자체가 없어서 이 문제가 원천적으로
+// 발생 안 함. 성공하면 access_token을 반환하고, 그걸로
+// updatePasswordWithRecoveryToken을 그대로 이어서 호출하면 됨.
+function verifyRecoveryCode(email, code, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', SUPABASE_URL + '/auth/v1/verify', true);
+  xhr.setRequestHeader('apikey', SUPABASE_KEY);
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.onload = function () {
+    try {
+      var data = JSON.parse(xhr.responseText);
+      if (xhr.status >= 200 && xhr.status < 300 && data.access_token) {
+        callback(null, data.access_token);
+      } else {
+        callback({ message: data.error_description || data.msg || '코드가 올바르지 않거나 만료됐습니다' });
+      }
+    } catch (e) {
+      callback({ message: '처리 중 오류가 발생했습니다' });
+    }
+  };
+  xhr.onerror = function () { callback({ message: '네트워크 오류' }); };
+  xhr.send(JSON.stringify({ type: 'recovery', email: email, token: code }));
+}
+
 // 실제 새 비밀번호를 저장하는 함수 (2026-08-01 신규 — 예전엔 재설정 이메일만
 // 보내고, 링크를 눌러도 새 비밀번호를 입력할 화면 자체가 없어서 비밀번호가
 // 실제로는 한 번도 안 바뀌고 있었음)
