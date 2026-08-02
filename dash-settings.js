@@ -125,6 +125,13 @@ function initAddModalChips() {
   });
 }
 
+// 설정화면 아코디언 중 현재 열려있는 섹션 id를 기억 (2026-08-02 버그수정) —
+// 예전엔 renderSettings()가 재호출될 때마다(거래처 카테고리 배지 클릭 등으로
+// 화면 전체가 다시 그려질 때) 모든 아코디언이 코드에 박힌 초기값으로 리셋돼서,
+// 사용자가 방금 열어둔 "거래처 관리"가 갑자기 닫히고 엉뚱하게 "매출·목표"가
+// 열리는 매우 혼란스러운 버그가 있었음. 이 변수로 마지막 상태를 기억해둠.
+var _openSettingsGroupId = null;
+
 function renderSettings() {
   var wrap = document.getElementById('settings');
   wrap.innerHTML = '';
@@ -155,20 +162,24 @@ function renderSettings() {
 
   // 아코디언 그룹 컨테이너 생성 헬퍼 — 헤더 클릭시 펼침/접힘, 기본은 접힌 상태
   function makeGroup(id, title, cards, openByDefault) {
+    // 이 화면을 처음 그릴 때(_openSettingsGroupId가 아직 아무것도 안 정해졌을 때)만
+    // openByDefault를 기준으로 삼고, 그 이후엔 사용자가 마지막으로 연 섹션을 기억해서 그대로 유지
+    var isOpen = (_openSettingsGroupId === null) ? !!openByDefault : (_openSettingsGroupId === id);
     var group = div('background:#fff;margin-bottom:10px;border-radius:12px;border:1px solid var(--border);overflow:hidden', []);
     group.id = id;
     var body = div('padding:0 16px 16px', []);
-    body.style.display = openByDefault ? 'block' : 'none';
+    body.style.display = isOpen ? 'block' : 'none';
     cards.forEach(function(c){ body.appendChild(c); });
-    var chevron = span('font-size:11px;color:var(--sub);transition:transform 0.15s', openByDefault ? '▾' : '▸');
+    var chevron = span('font-size:11px;color:var(--sub);transition:transform 0.15s', isOpen ? '▾' : '▸');
     var header = div('display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer', [
       span('font-size:12px;font-weight:700;color:var(--dark);letter-spacing:0.02em', title),
       chevron
     ]);
     header.addEventListener('click', function(){
-      var isOpen = body.style.display !== 'none';
-      body.style.display = isOpen ? 'none' : 'block';
-      chevron.textContent = isOpen ? '▸' : '▾';
+      var nowOpen = body.style.display !== 'none';
+      body.style.display = nowOpen ? 'none' : 'block';
+      chevron.textContent = nowOpen ? '▸' : '▾';
+      _openSettingsGroupId = nowOpen ? null : id;
     });
     group.appendChild(header);
     group.appendChild(body);
