@@ -7,7 +7,7 @@
 // 대시보드에서 등록된 서비스워커가 Service-Worker-Allowed:/ 설정으로 이 페이지도
 // 덮을 수 있어 동일하게 방어함.
 (function(){
-  var BUILD = '202608011600';
+  var BUILD = '202608020100';
   try {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(regs){
@@ -27,7 +27,7 @@
 </script>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
-<link rel="stylesheet" href="/est-styles.css?v=202608011600">
+<link rel="stylesheet" href="/est-styles.css?v=202608020100">
 </style>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -40,6 +40,13 @@
 <body>
 
 <!-- 비밀번호 재설정 화면 (재설정 이메일 링크를 눌러서 돌아왔을 때만 표시) -->
+<div id="recovery-error-screen" style="display:none;position:fixed;inset:0;z-index:9999999;background:#282828;align-items:center;justify-content:center;flex-direction:column;padding:20px;box-sizing:border-box;font-family:'Pretendard Variable',-apple-system,sans-serif;">
+  <div style="width:100%;max-width:340px;background:#fff;border-radius:16px;padding:28px 24px;box-sizing:border-box;">
+    <div style="font-size:15px;font-weight:700;color:#282828;margin-bottom:10px;">링크를 사용할 수 없어요</div>
+    <div id="recovery-error-msg" style="font-size:12px;color:#8E8078;line-height:1.6;margin-bottom:20px;"></div>
+    <button id="recovery-error-retry-btn" type="button" style="width:100%;height:44px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">확인</button>
+  </div>
+</div>
 <div id="recovery-screen" style="display:none;position:fixed;inset:0;z-index:9999999;background:#282828;align-items:center;justify-content:center;flex-direction:column;padding:20px;box-sizing:border-box;font-family:'Pretendard Variable',-apple-system,sans-serif;">
   <div style="width:100%;max-width:340px;background:#fff;border-radius:16px;padding:28px 24px;box-sizing:border-box;">
     <div style="font-size:15px;font-weight:700;color:#282828;margin-bottom:6px;">새 비밀번호 설정</div>
@@ -54,6 +61,20 @@
 </div>
 <script>
 (function() {
+  var urlHash = window.location.hash;
+  if (urlHash && urlHash.indexOf('error=') !== -1) {
+    var errParams = new URLSearchParams(urlHash.slice(1));
+    var errCode = errParams.get('error_code') || '';
+    var errMsg = errCode === 'otp_expired'
+      ? '이 링크는 이미 사용됐거나 만료됐어요. 메일 앱이 링크를 미리 열어봐서 그럴 수 있어요 — 대시보드 설정에서 새 링크를 다시 받아보세요.'
+      : '링크 처리 중 문제가 발생했어요. 새 링크를 다시 받아보세요.';
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+    document.getElementById('recovery-error-msg').textContent = errMsg;
+    document.getElementById('recovery-error-screen').style.display = 'flex';
+    document.getElementById('recovery-error-retry-btn').addEventListener('click', function() {
+      document.getElementById('recovery-error-screen').style.display = 'none';
+    });
+  }
   var recoveryToken = (function() {
     var hash = window.location.hash;
     if (!hash || hash.indexOf('type=recovery') === -1) return null;
@@ -585,15 +606,15 @@
   <option value="허니콤 No.1">허니콤 No.1</option>
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
-<script src="/est-utils.js?v=202608011600"></script>
-<script src="/dash-supabase-auth.js?v=202608011600"></script>
-<script src="/est-form-controls.js?v=202608011600"></script>
-<script src="/est-product-calc.js?v=202608011600"></script>
-<script src="/est-survey.js?v=202608011600"></script>
-<script src="/est-save.js?v=202608011600"></script>
-<script src="/est-documents.js?v=202608011600"></script>
-<script src="/est-customer-load.js?v=202608011600"></script>
-<script src="/est-misc.js?v=202608011600"></script>
+<script src="/est-utils.js?v=202608020100"></script>
+<script src="/dash-supabase-auth.js?v=202608020100"></script>
+<script src="/est-form-controls.js?v=202608020100"></script>
+<script src="/est-product-calc.js?v=202608020100"></script>
+<script src="/est-survey.js?v=202608020100"></script>
+<script src="/est-save.js?v=202608020100"></script>
+<script src="/est-documents.js?v=202608020100"></script>
+<script src="/est-customer-load.js?v=202608020100"></script>
+<script src="/est-misc.js?v=202608020100"></script>
 <script>
 var currentTab = 'ga';
 
