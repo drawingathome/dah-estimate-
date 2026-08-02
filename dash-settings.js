@@ -72,6 +72,10 @@ function loadSettings() {
       var el = document.getElementById('set-monthly-goal');
       if (el) el.value = s.monthlyGoal;
     }
+    if (s.bank) {
+      var el = document.getElementById('set-bank');
+      if (el) el.value = s.bank;
+    }
     if (s.account) {
       var el = document.getElementById('set-account');
       if (el) el.value = s.account;
@@ -87,6 +91,7 @@ function saveSettings() {
   try {
     var s = {
       monthlyGoal: document.getElementById('set-monthly-goal')?.value || '5,000만원',
+      bank:        document.getElementById('set-bank')?.value || '',
       account:     document.getElementById('set-account')?.value || '015401-04-258798',
       holder:      document.getElementById('set-holder')?.value || '장선혜',
       savedAt:     new Date().toISOString(),
@@ -498,6 +503,10 @@ function renderSettings() {
   // ── 계좌 정보 ──
   var acctCard = div('padding-top:4px', []);
   acctCard.innerHTML = '<div style="display:flex;align-items:center;border-bottom:1px solid #F5F2EE;padding-bottom:10px;margin-bottom:10px">' +
+      '<div style="font-size:12px;font-weight:600;color:var(--dark);flex:1">은행명</div>' +
+      '<input id="set-bank" type="text" value="' + escHtml(s.bank || '') + '" placeholder="예: 국민은행" onchange="saveSettings()" style="text-align:right;border:none;outline:none;font-size:11px;color:var(--dark);background:transparent;font-family:inherit">' +
+    '</div>' +
+    '<div style="display:flex;align-items:center;border-bottom:1px solid #F5F2EE;padding-bottom:10px;margin-bottom:10px">' +
       '<div style="font-size:12px;font-weight:600;color:var(--dark);flex:1">계좌번호</div>' +
       '<input id="set-account" type="text" value="' + escHtml(s.account || '015401-04-258798') + '" onchange="saveSettings()" style="text-align:right;border:none;outline:none;font-size:11px;color:var(--dark);background:transparent;font-family:inherit">' +
     '</div>' +

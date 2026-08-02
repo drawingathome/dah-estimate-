@@ -325,8 +325,16 @@ function buildCustomerHTML() {
     }
   } catch(e){}
 
+  // 계좌정보는 설정탭에 저장된 값을 사용 — 예전엔 여기 문구가 코드에 고정되어 있어서
+  // 설정탭에서 계좌번호/은행명을 바꿔도 견적서에는 전혀 반영이 안 되고 있었음
+  var _acctSettings = {};
+  try { _acctSettings = JSON.parse(localStorage.getItem('dah_settings') || '{}'); } catch(e){}
+  var _bankName = _acctSettings.bank || '국민은행';
+  var _acctNum = _acctSettings.account || '015401-04-258798';
+  var _holderName = _acctSettings.holder || '장선혜';
+
   out += '<div class="pv-footer">'
-      +'<div style="margin-bottom:6px"><strong>결제 계좌</strong>&nbsp;&nbsp;국민은행 015401-04-258798&nbsp;&nbsp;예금주: 장선혜(드로잉엣홈)</div>'
+      +'<div style="margin-bottom:6px"><strong>결제 계좌</strong>&nbsp;&nbsp;' + _bankName + ' ' + _acctNum + '&nbsp;&nbsp;예금주: ' + _holderName + '(드로잉엣홈)</div>'
       +'<div style="color:rgba(255,255,255,0.4);font-size:11px">맞춤제작 특성상 제작 시작 후 취소·변경은 불가합니다. 문의사항은 언제든지 연락주세요.</div>'
       +'</div>';
 
