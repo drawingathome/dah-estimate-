@@ -68,7 +68,7 @@ function renderOrderSection(c, orderBody) {
       var own = getVendorSuggestions(key);
       var globalList = (typeof getVendorList === 'function') ? getVendorList() : [];
       var globalNames = globalList
-        .filter(function(v) { return !v.category || v.category === key; })
+        .filter(function(v) { return !Array.isArray(v.categories) || v.categories.length === 0 || v.categories.indexOf(key) >= 0; })
         .map(function(v) { return v.name; });
       var merged = own.concat(globalNames);
       return merged.filter(function(v, i){ return merged.indexOf(v) === i; });

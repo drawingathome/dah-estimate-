@@ -349,67 +349,68 @@ function renderSettings() {
   var groupAccount = makeGroup('sec-set-account', '계정 · 보안', [masterEmailCard, pwCard, staffCard], false);
   wrap.appendChild(groupAccount);
 
-  // ── 거래처 관리 (2026-07-31 신규, 2026-08-01 디자인개선+카테고리추가) ──
-  // 발주탭 자동완성 목록을 여기서 직접 관리. 카테고리를 지정하면 그 항목
-  // 발주할 때만 우선 뜨고, "미분류"는 모든 항목에 계속 뜸(안전한 기본값).
+  // ── 거래처 관리 (2026-07-31 신규, 2026-08-01 카테고리 추가, 2026-08-02 다중분류 지원) ──
+  // 발주탭 자동완성 목록을 여기서 직접 관리. 카테고리는 여러 개 겸할 수 있음(예:
+  // 제작도 하고 시공도 하는 업체는 둘 다 켜두면 됨). 아무 카테고리도 안 켜면
+  // "미분류"로 취급되어 모든 항목에 다 나옴(안전한 기본값).
   var vendorCard = div('padding-top:4px', [
-    span('font-size:11px;color:var(--sub);display:block;margin-bottom:12px', '발주탭에서 업체명을 고를 때 자동완성으로 뜨는 목록입니다. 카테고리 배지를 탭하면 원단/제작/블라인드/자재/실측·시공 중 하나로 지정할 수 있어요(미분류면 전체 항목에 다 나와요).')
+    span('font-size:11px;color:var(--sub);display:block;margin-bottom:12px', '발주탭에서 업체명을 고를 때 자동완성으로 뜨는 목록입니다. 아래 태그를 탭해서 이 업체가 담당하는 분야를 켜고 끌 수 있어요(여러 개 겸해도 되고, 하나도 안 켜면 모든 항목에 다 나와요).')
   ]);
-  var vendorChipWrap = div('display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px', []);
+  var vendorListWrap = div('display:flex;flex-direction:column;gap:10px;margin-bottom:14px', []);
   var vendorList = getVendorList();
-  function categoryLabel(catKey) {
-    var found = VENDOR_CATEGORIES.find(function(c){ return c.key === catKey; });
-    return found ? found.label : '미분류';
-  }
   vendorList.forEach(function(v) {
-    var chip = div('display:inline-flex;align-items:center;gap:10px;background:var(--ivory1);border:1px solid var(--border);border-radius:20px;padding:6px 8px 6px 14px', [
-      span('font-size:12px;font-weight:600;color:var(--dark)', v.name)
+    if (!Array.isArray(v.categories)) v.categories = [];
+    var row = div('background:var(--ivory1);border:1px solid var(--border);border-radius:14px;padding:10px 12px', []);
+    var topLine = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:8px', [
+      span('font-size:13px;font-weight:700;color:var(--dark)', v.name)
     ]);
-    var catBadge = btn('font-size:10px;font-weight:700;color:var(--terra);background:#FFF3EC;border:none;border-radius:10px;padding:5px 10px;cursor:pointer;font-family:inherit;min-height:32px;min-width:44px;text-align:center', categoryLabel(v.category), function() {
-      var curIdx = VENDOR_CATEGORIES.findIndex(function(c){ return c.key === (v.category || ''); });
-      var nextIdx = (curIdx + 1) % VENDOR_CATEGORIES.length;
-      var list = getVendorList();
-      var target = list.find(function(x){ return x.name === v.name; });
-      if (target) target.category = VENDOR_CATEGORIES[nextIdx].key;
-      setVendorList(list);
-      renderSettings();
-    });
-    chip.appendChild(catBadge);
     var removeBtn = btn('width:32px;height:32px;min-width:32px;border-radius:50%;background:transparent;color:var(--sub);border:none;cursor:pointer;font-size:16px;line-height:1;display:flex;align-items:center;justify-content:center;padding:0', '\u00D7', function() {
       if (!confirm(v.name + ' 거래처를 목록에서 삭제할까요? (이미 저장된 견적서/발주기록엔 영향 없어요)')) return;
       var list = getVendorList().filter(function(x){ return x.name !== v.name; });
       setVendorList(list);
       renderSettings(); showToast(v.name + ' 거래처가 삭제됐습니다');
     });
-    chip.appendChild(removeBtn);
-    vendorChipWrap.appendChild(chip);
+    topLine.appendChild(removeBtn);
+    row.appendChild(topLine);
+    var tagWrap = div('display:flex;flex-wrap:wrap;gap:6px', []);
+    VENDOR_CATEGORIES.forEach(function(c) {
+      var isOn = v.categories.indexOf(c.key) >= 0;
+      var tag = btn(
+        'font-size:11px;font-weight:700;border-radius:20px;padding:6px 12px;cursor:pointer;font-family:inherit;min-height:32px;border:1px solid ' +
+        (isOn ? 'var(--terra)' : 'var(--border)') + ';background:' + (isOn ? 'var(--terra)' : '#fff') + ';color:' + (isOn ? '#fff' : 'var(--sub)'),
+        c.label,
+        function() {
+          var list = getVendorList();
+          var target = list.find(function(x){ return x.name === v.name; });
+          if (!target) return;
+          if (!Array.isArray(target.categories)) target.categories = [];
+          var idx = target.categories.indexOf(c.key);
+          if (idx >= 0) target.categories.splice(idx, 1); else target.categories.push(c.key);
+          setVendorList(list);
+          renderSettings();
+        }
+      );
+      tagWrap.appendChild(tag);
+    });
+    row.appendChild(tagWrap);
+    vendorListWrap.appendChild(row);
   });
   if (vendorList.length === 0) {
-    vendorChipWrap.appendChild(span('font-size:12px;color:var(--sub)', '등록된 거래처가 없어요'));
+    vendorListWrap.appendChild(span('font-size:12px;color:var(--sub)', '등록된 거래처가 없어요'));
   }
-  vendorCard.appendChild(vendorChipWrap);
+  vendorCard.appendChild(vendorListWrap);
   var addVendorWrap = div('display:flex;gap:var(--sp-2)', []);
   var vendorInput = el('input', {type:'text', placeholder:'새 거래처 이름', style:'flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box'});
-  var vendorCategorySelect = el('select', {style:'padding:9px 8px;border:1px solid var(--border);border-radius:10px;font-size:12px;font-family:inherit;outline:none;background:#fff;color:#282828;min-height:32px'});
-  VENDOR_CATEGORIES.forEach(function(c) {
-    var opt = document.createElement('option');
-    opt.value = c.key; opt.textContent = c.label;
-    opt.style.color = '#282828';
-    opt.style.background = '#fff';
-    vendorCategorySelect.appendChild(opt);
-  });
   addVendorWrap.appendChild(vendorInput);
-  addVendorWrap.appendChild(vendorCategorySelect);
   addVendorWrap.appendChild(btn('padding:9px 16px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:32px', '추가', function() {
     var name = vendorInput.value.trim();
     if (!name) return;
     var list = getVendorList();
     if (list.some(function(v){ return v.name === name; })) { showToast('이미 있는 거래처입니다'); return; }
-    list.push({ name: name, category: vendorCategorySelect.value });
+    list.push({ name: name, categories: [] });
     setVendorList(list);
     vendorInput.value = '';
-    vendorCategorySelect.value = '';
-    renderSettings(); showToast(name + ' 거래처가 추가됐습니다');
+    renderSettings(); showToast(name + ' 거래처가 추가됐습니다 — 아래에서 담당 분야를 켜주세요');
   }));
   vendorCard.appendChild(addVendorWrap);
 

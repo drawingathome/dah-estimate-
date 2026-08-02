@@ -13,7 +13,6 @@ function getStaffList() {
 // 카테고리: 'fabric'(원단)/'production'(제작)/'blind'(블라인드)/'material'(자재)/
 // 'install'(실측·시공)/''(미분류 — 모든 항목에 다 보임, 안전한 기본값)
 var VENDOR_CATEGORIES = [
-  { key: '', label: '미분류' },
   { key: 'fabric', label: '원단' },
   { key: 'production', label: '제작' },
   { key: 'blind', label: '블라인드' },
@@ -21,15 +20,21 @@ var VENDOR_CATEGORIES = [
   { key: 'install', label: '실측·시공' }
 ];
 var DEFAULT_VENDOR_LIST = ['캔가공소','디테라','아이엔티','예원','크바드라트','이지패브릭','리더스','유니밋','지오데코','윈텍','덱스터','헌터더글라스','솜피','목성']
-  .map(function(name) { return { name: name, category: '' }; });
+  .map(function(name) { return { name: name, categories: [] }; });
 function getVendorList() {
   try {
     var raw = localStorage.getItem('dah_vendor_list');
     if (raw === null) return DEFAULT_VENDOR_LIST.slice();
     var list = JSON.parse(raw);
     if (!Array.isArray(list)) return DEFAULT_VENDOR_LIST.slice();
-    // 예전 버전(문자열 배열)에서 새 구조({name,category})로 자동 마이그레이션 — 카테고리는 미분류로
-    return list.map(function(v) { return (typeof v === 'string') ? { name: v, category: '' } : v; });
+    // 마이그레이션: 문자열배열(가장 예전) -> {name,category}(예전) -> {name,categories}(현재, 2026-08-02
+    // 한 거래처가 여러 카테고리를 겸할 수 있도록(예: 제작+시공을 같이 하는 업체) 배열로 변경함
+    return list.map(function(v) {
+      if (typeof v === 'string') return { name: v, categories: [] };
+      if (Array.isArray(v.categories)) return v;
+      // 예전 category(단일 문자열) 필드가 있으면 배열로 변환, 빈 문자열(미분류)이면 빈 배열
+      return { name: v.name, categories: v.category ? [v.category] : [] };
+    });
   } catch(e) { return DEFAULT_VENDOR_LIST.slice(); }
 }
 function setVendorList(list) {
