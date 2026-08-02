@@ -351,10 +351,10 @@ function renderSettings() {
     return found ? found.label : '미분류';
   }
   vendorList.forEach(function(v) {
-    var chip = div('display:inline-flex;align-items:center;gap:6px;background:var(--ivory1);border:1px solid var(--border);border-radius:20px;padding:6px 8px 6px 14px', [
+    var chip = div('display:inline-flex;align-items:center;gap:10px;background:var(--ivory1);border:1px solid var(--border);border-radius:20px;padding:6px 8px 6px 14px', [
       span('font-size:12px;font-weight:600;color:var(--dark)', v.name)
     ]);
-    var catBadge = btn('font-size:10px;font-weight:700;color:var(--terra);background:#FFF3EC;border:none;border-radius:10px;padding:5px 8px;cursor:pointer;font-family:inherit;min-height:32px', categoryLabel(v.category), function() {
+    var catBadge = btn('font-size:10px;font-weight:700;color:var(--terra);background:#FFF3EC;border:none;border-radius:10px;padding:5px 10px;cursor:pointer;font-family:inherit;min-height:32px;min-width:44px;text-align:center', categoryLabel(v.category), function() {
       var curIdx = VENDOR_CATEGORIES.findIndex(function(c){ return c.key === (v.category || ''); });
       var nextIdx = (curIdx + 1) % VENDOR_CATEGORIES.length;
       var list = getVendorList();
