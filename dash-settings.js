@@ -144,6 +144,12 @@ function renderSettings() {
     var staffAcctWrap = div('', [staffAcctCard]);
     staffAcctWrap.appendChild(span('font-size:11px;color:var(--sub);display:block;text-align:center;padding:16px 0', '그 외 설정은 마스터만 접근할 수 있습니다'));
     wrap.appendChild(staffAcctWrap);
+    var staffLogoutCard = div('background:#fff;margin-bottom:10px;border-radius:12px;border:1px solid var(--border);padding:16px', [
+      btn('width:100%;padding:12px;background:#fff;color:#E4483A;border:1px solid #F3D9D5;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer', '로그아웃', function() {
+        if (confirm('로그아웃 하시겠습니까?')) logout();
+      })
+    ]);
+    wrap.appendChild(staffLogoutCard);
     return;
   }
 
@@ -537,13 +543,18 @@ function renderSettings() {
   dataCard.appendChild(restoreInput);
   dataCard.appendChild(btn('width:100%;padding:11px;background:var(--ivory1);border:none;border-radius:10px;font-size:11px;font-family:inherit;cursor:pointer;color:var(--dark)', '복원 (JSON 업로드)', function() { document.getElementById('restore-input').click(); }));
 
-  var logoutCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:var(--sp-3)', []);
-  logoutCard.appendChild(btn('width:100%;padding:11px;background:#fff;color:#E4483A;border:1px solid var(--border);border-radius:10px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer', '로그아웃', function() {
-    if (confirm('로그아웃 하시겠습니까?')) logout();
-  }));
-
-  var groupData = makeGroup('sec-set-data', '데이터 관리', [dataCard, logoutCard], false);
+  var groupData = makeGroup('sec-set-data', '데이터 관리', [dataCard], false);
   wrap.appendChild(groupData);
+
+  // 로그아웃 — 2026-08-02: 접힌 그룹 안에 숨어있어서 찾기 불편하다는 피드백으로,
+  // 어떤 아코디언에도 속하지 않는 독립 카드로 분리해서 설정 화면 맨 아래에
+  // 항상(접지 않고) 보이게 함
+  var logoutStandalone = div('background:#fff;margin-bottom:10px;border-radius:12px;border:1px solid var(--border);padding:16px', [
+    btn('width:100%;padding:12px;background:#fff;color:#E4483A;border:1px solid #F3D9D5;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer', '로그아웃', function() {
+      if (confirm('로그아웃 하시겠습니까?')) logout();
+    })
+  ]);
+  wrap.appendChild(logoutStandalone);
 
   // 빠른이동 내비게이션 (PC 전용) — 그룹 단위로 축소
   if (typeof renderQuickNav === 'function') {
