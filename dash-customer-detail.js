@@ -79,7 +79,7 @@ function renderDetailEstTab() {
 
   var all = [];
   try { all = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
-  var ests = all.filter(function(e){ return e.clientName === currentDetailName; });
+  var ests = all.filter(function(e){ return (currentDetailId && e.clientId) ? e.clientId === currentDetailId : e.clientName === currentDetailName; });
   // 날짜 최신순 정렬
   ests.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
 
@@ -442,7 +442,11 @@ function renderDetailStageSection(c, body, isMaster) {
 
 function renderDetailTodoSection(c, body) {
   var todoKeys = STAGE_ALIM[c.stage] || [];
-  var manualKeys = todoKeys.filter(function(k){ return ALIM_META[k] && ALIM_META[k].tag === '수동'; });
+  // 2026-08-04: Make.com 웹훅이 실제로 연결 안 되어 있어서(webhook_url 빈값),
+  // '자동'/'알림' 태그 알림들이 실제로는 아무도 발송하고 있지 않았음
+  // (몇 달간 리마인더/안부 메시지가 안 나갔을 가능성). 진짜 자동화 연결
+  // 전까지는, 놓치지 않도록 '지금 해야 할 일'에 같이 포함시킴 ('선택' 태그만 제외)
+  var manualKeys = todoKeys.filter(function(k){ return ALIM_META[k] && ALIM_META[k].tag !== '선택'; });
   if (manualKeys.length > 0) {
     var todoSec = div('margin-bottom:14px;padding:var(--sp-3);background:var(--ivory1);border:1.5px solid var(--dark);border-radius:12px', []);
     todoSec.appendChild(el('div', {style:'font-size:12px;font-weight:700;color:var(--dark);letter-spacing:1.5px;margin-bottom:var(--sp-2)', text:'지금 해야 할 일'}));
