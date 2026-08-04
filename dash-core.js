@@ -18,7 +18,7 @@ function goTab(t) {
   if (t !== 'home' && t !== 'settings' && typeof hideQuickNav === 'function') hideQuickNav();
   if (t === 'home') loadCustomersAsync(renderHome);
   if (t === 'pipe') loadCustomersAsync(renderPipe);
-  if (t === 'est-list') renderEstList();
+  if (t === 'est-list') loadEstimatesAsync(renderEstList);
   if (t === 'search') loadCustomersAsync(renderSearch);
   if (t === 'cal') loadCustomersAsync(renderCal);
   if (t === 'settings') renderSettings();

@@ -270,6 +270,49 @@ function loadCustomers() {
   try { return JSON.parse(localStorage.getItem('dah_customers') || '[]'); } catch(e) { return []; }
 }
 
+// 클라우드(estimates 테이블)에서 견적서를 가져와 로컬(dah_saved) 형식으로 변환 후
+// 병합 (2026-08-04 신규) — 예전엔 견적서 목록 화면이 로컬저장소만 보고 있어서,
+// 다른 기기에서 저장했거나 관리자가 직접 넣은 견적서가 전혀 안 보이는 문제가 있었음
+function estimateDbRowToLocal(row) {
+  return {
+    id: row.id,
+    no: row.id ? String(row.id).slice(0,8) : '',
+    clientName: row.customer_name || '',
+    phone: row.phone || '',
+    addr: '',
+    space: row.space || '',
+    fabric: row.product || '',
+    itemCount: 0, curtainCount: 0, blindCount: 0,
+    curtainVendors: [], blindVendors: [],
+    price: Number(row.price) || 0,
+    performanceRevenue: Number(row.performance_revenue) || 0,
+    staffName: row.staff_name || '',
+    status: row.estimate_status || 'ga',
+    contractStatus: 'pending',
+    savedAt: row.created_at || '',
+    date: row.date || '',
+    installDate: '',
+    memo: row.memo || '',
+    confirmedAt: row.confirmed_at || null,
+    branch: row.branch || '반포점',
+    clientId: row.client_id || null,
+    _fromCloud: true
+  };
+}
+
+function loadEstimatesAsync(callback) {
+  sbXHR('GET', 'estimates?select=*&order=created_at.desc', null, function(err, data) {
+    var local = [];
+    try { local = JSON.parse(localStorage.getItem('dah_saved') || '[]'); } catch(e) {}
+    if (err) { if (callback) callback(local); return; }
+    var cloudLocalFormat = (data || []).map(estimateDbRowToLocal);
+    var localIds = local.map(function(e){ return e.id; });
+    var merged = local.concat(cloudLocalFormat.filter(function(e){ return localIds.indexOf(e.id) === -1; }));
+    try { localStorage.setItem('dah_saved', JSON.stringify(merged)); } catch(e) {}
+    if (callback) callback(merged);
+  });
+}
+
 function loadCustomersAsync(callback) {
   sbXHR('GET', 'customers?select=*&is_archived=eq.false&order=created_at.desc', null, function(err, data) {
     hideLoading();
