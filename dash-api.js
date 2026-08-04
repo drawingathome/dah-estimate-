@@ -224,6 +224,7 @@ function dbRowToCustomer(row) {
     measureDate:        row.measure_date||'',
     installDate:        row.install_date||'',
     createdAt:          row.created_at||new Date().toISOString(),
+    is_archived:        row.is_archived === true,
     // 결제 필드
     depositAmount:      Number(row.deposit_amount)||0,
     depositDate:        row.deposit_date||'',
@@ -336,7 +337,12 @@ function loadCustomersAsync(callback, force) {
     if (callback) callback(_customerCache);
     return;
   }
-  sbXHR('GET', 'customers?select=*&is_archived=eq.false&order=created_at.desc', null, function(err, data) {
+  // 2026-08-04: is_archived 서버필터 제거 — 삭제된(보관) 고객까지 가져와야
+  // "보관 고객 포함" 체크박스로 복구할 수 있음. 예전엔 서버에서부터 삭제된
+  // 고객을 걸러서 안 가져오니, 화면에서 "보관 고객 포함"을 켜도 실수로
+  // 삭제한 고객이 영영 안 보이는(사실상 복구 불가능한) 심각한 문제였음.
+  // 화면단에서는 isSoftDeleted()로 여전히 기본은 숨김 처리됨.
+  sbXHR('GET', 'customers?select=*&order=created_at.desc', null, function(err, data) {
     hideLoading();
     if (err) { try { _customerCache = JSON.parse(localStorage.getItem('dah_customers') || '[]'); } catch(e) {} }
     else { _customerCache = (data || []).map(dbRowToCustomer); _customerCacheTime = Date.now(); try { localStorage.setItem('dah_customers', JSON.stringify(_customerCache)); } catch(e) {} }
