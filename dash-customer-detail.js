@@ -660,7 +660,7 @@ function confirmEstimateToFinal(estId, clientName, price, clientId) {
     try {
       var saved = JSON.parse(localStorage.getItem('dah_saved') || '[]');
       var idx = saved.findIndex(function(s){ return s.id === estId; });
-      if (idx >= 0) { saved[idx].status = 'final'; saved[idx].performanceRevenue = price; }
+      if (idx >= 0) { saved[idx].status = 'final'; saved[idx].performanceRevenue = price; saved[idx].contractStatus = 'contracted'; }
       localStorage.setItem('dah_saved', JSON.stringify(saved));
     } catch(e) {}
     // 연결된 고객의 실적도 동기화 (2026-08-04 신규) — 견적만 확정되고

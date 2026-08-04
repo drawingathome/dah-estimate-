@@ -305,7 +305,7 @@ function saveEstimate() {
         performanceRevenue: perf,
         staffName: staffName,
         status: isFinal ? 'final' : 'ga',   
-        contractStatus: 'pending',            
+        contractStatus: isFinal ? 'contracted' : 'pending', // 2026-08-04: 최종견적서로 저장하면 계약상태도 자동 동기화(예전엔 별개로 남아 "최종견적서"인데 "가견적"으로 모순되게 보이던 문제)
         savedAt: new Date().toISOString(),
         expiryAt: new Date(Date.now()+7*24*60*60*1000).toISOString(),
         date: document.getElementById('c-measure')?.value || '',
