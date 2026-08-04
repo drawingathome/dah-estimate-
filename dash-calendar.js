@@ -187,12 +187,12 @@ function renderCalList(customers, selectedDate) {
       getCalEvents(customers, yr, 5), getCalEvents(customers, yr, 6), getCalEvents(customers, yr, 7),
       getCalEvents(customers, yr, 8), getCalEvents(customers, yr, 9), getCalEvents(customers, yr, 10),
       getCalEvents(customers, yr, 11), getCalEvents(customers, yr+1, 0));
-    events = getCalEvents(customers, yr, mo).filter(function(ev){ return ev.date === selectedDate && !ev.dotOnly; });
+    events = getCalEvents(customers, yr, mo).filter(function(ev){ return ev.date === selectedDate; });
     var d = new Date(selectedDate);
     var DOW2 = ['일','월','화','수','목','금','토'];
     if (lblEl) lblEl.textContent = (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + DOW2[d.getDay()] + ') 일정';
   } else {
-    events = getCalEvents(customers, yr, mo).filter(function(ev){ return !ev.dotOnly; });
+    events = getCalEvents(customers, yr, mo);
     if (lblEl) lblEl.textContent = (mo+1) + '월 전체 일정';
   }
 
