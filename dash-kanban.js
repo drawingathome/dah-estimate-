@@ -25,12 +25,15 @@ function changeStageByName(customerName, newStage, id) {
     customers[idx].updatedAt = new Date().toISOString();
     saveCustomers(customers);
 
-    // Supabase 동기화
+    // Supabase 동기화 (2026-08-04 버그수정: 예전엔 path 앞에 불필요한 슬래시가
+    // 붙어있고(SUPABASE_URL+'/rest/v1/'+path 조합에서 이중슬래시가 됨), 콜백도
+    // sbXHR가 기대하는 (err,data) 단일콜백 방식과 안 맞게 두 개로 나눠 넘겨서
+    // 실제로는 클라우드 저장이 조용히 실패하고 있었음 — 화면엔 "이동됨" 토스트가
+    // 떠서 성공한 것처럼 보였지만 새로고침하면 원래대로 돌아가 있었음)
     if (customers[idx].id) {
-      sbXHR('PATCH', '/customers?id=eq.' + customers[idx].id,
+      sbXHR('PATCH', 'customers?id=eq.' + customers[idx].id,
         { stage: newStage },
-        function() {},
-        function(e) { console.warn('스테이지 동기화 실패:', e); }
+        function(err) { if (err) console.warn('스테이지 동기화 실패:', err); }
       );
     }
     showToast(customerName + ' → ' + newStage);
