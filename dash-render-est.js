@@ -43,7 +43,9 @@ function renderEstList() {
 
   list.forEach(function(e, i) {
     var isLast = i === list.length - 1;
-    var cs = e.contractStatus || 'pending';
+    // contractStatus가 비어있으면(예전 이관데이터 등) status 기준으로 유추
+    // — "최종견적서"인데 "가견적" 배지가 붙는 모순을 방지 (2026-08-04)
+    var cs = e.contractStatus || (e.status === 'final' ? 'contracted' : 'pending');
     var isFinal = e.status === 'final';
 
     var row = el('div', {style:
