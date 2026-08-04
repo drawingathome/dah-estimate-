@@ -16,6 +16,13 @@
    나눠서 각각의 입금월에 반영. 아직 입금 기록이 없는(예전) 고객은
    계약일 기준으로 폴백(하위호환).
    ══════════════════════════════════════════════════ */
+function isLegacyNoPaymentRecord(c) {
+  if (/플러그|Pluuug/.test(c.memo || '')) return true;
+  if (!c.date) return false;
+  var daysSince = Math.floor((new Date() - new Date(c.date)) / 86400000);
+  return daysSince >= 7; // 등록일로부터 일주일 넘게 지났는데 입금기록이 없으면 예전 방식 데이터로 간주
+}
+
 function splitCustomerPayments(c) {
   var pd = (function(){
     try { return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}'); } catch(e) { return {}; }
@@ -30,8 +37,13 @@ function splitCustomerPayments(c) {
   if (totalPaid > 0) {
     if (dep > 0 && depDate) parts.push({ date: depDate, revenue: dep, perf: perf * (dep / totalPaid) });
     if (bal > 0 && balDate) parts.push({ date: balDate, revenue: bal, perf: perf * (bal / totalPaid) });
-  } else if (c.date) {
-    // 입금 기록이 아직 없는 고객(선금/잔금 미기입) — 계약일 기준 전체금액으로 폴백
+  } else if (c.date && isLegacyNoPaymentRecord(c)) {
+    // 입금 기록이 아직 없는 "예전 방식 고객"만 계약일 기준 전체금액으로 폴백
+    // (2026-08-04 조건 추가) — 예전엔 이 폴백이 모든 고객에게 걸려서, 신규로
+    // 만든 고객도 실제 입금 기록 없이 "계약금 단계"로 상태만 바꾸면 그 순간
+    // 전체 견적금액이 매출로 잡혀버리는 심각한 문제가 있었음(실제 입금 여부와
+    // 무관하게 매출이 표시됨). 이관 데이터(memo로 식별) 또는 등록일로부터
+    // 7일 넘게 지났는데도 입금기록이 없는 예전 방식 고객만 하위호환 허용.
     parts.push({ date: c.date, revenue: Number(c.price) || 0, perf: perf });
   }
   return parts;
