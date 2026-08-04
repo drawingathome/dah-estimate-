@@ -5,6 +5,7 @@
 
 var calCurrentYear = new Date().getFullYear();
 var calCurrentMonth = new Date().getMonth();
+
 var calSelectedDate = null;
 
 // 주소 문자열에서 앞 2개 토큰만 지역명으로 추출 (예: "서울 서초구 사평대로53길 64" -> "서울 서초구")
