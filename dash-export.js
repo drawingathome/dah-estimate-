@@ -104,7 +104,7 @@ function exportEstimatesExcel() {
 
     var headers = [
       '견적번호','구분','계약상태','고객명','공간',
-      '제품','원단','너비(cm)','높이(cm)',
+      '제품','품목수',
       '금액(원)','원단거래처','블라인드거래처','담당자','견적일','저장일','메모'
     ];
 
@@ -115,10 +115,8 @@ function exportEstimatesExcel() {
         CONTRACT_KO[e.contractStatus] || '가견적',
         e.clientName     || '',
         e.space          || '',
-        e.product        || '',
         e.fabric         || '',
-        e.width          || '',
-        e.height         || '',
+        e.itemCount      || '',
         Number(e.price)  || 0,
         (e.curtainVendors || []).join(', '),
         (e.blindVendors || []).join(', '),
