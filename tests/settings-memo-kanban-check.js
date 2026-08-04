@@ -75,18 +75,18 @@ async function run() {
       var textarea = document.querySelector('#detail-body textarea');
       if (!textarea) return 'NO_TEXTAREA';
       var btns = Array.from(textarea.parentElement.querySelectorAll('button'));
-      var quickBtn = btns.find(b => b.textContent === '네이버 예약');
+      var quickBtn = btns.find(b => b.textContent === '가견적서 발송');
       if (!quickBtn) return 'NO_QUICKBTN';
       quickBtn.click();
       return textarea.value;
     });
     let memoSaved = null;
-    if (memoResult === '네이버 예약') {
+    if (memoResult === '가견적서 발송') {
       await page.evaluate(() => { document.querySelector('#detail-body textarea').dispatchEvent(new Event('blur')); });
       await new Promise(r => setTimeout(r, 300));
       memoSaved = await page.evaluate((name) => loadCustomers().find(c => c.clientName === name)?.memo, '메모검사_' + label);
     }
-    check(`[${label}] 메모 탭 → 빠른문구 삽입 → 저장까지 전체 흐름 정상`, memoSaved === '네이버 예약', `중간결과=${memoResult}, 저장값=${memoSaved}`);
+    check(`[${label}] 메모 탭 → 빠른문구 삽입 → 저장까지 전체 흐름 정상`, memoSaved === '가견적서 발송', `중간결과=${memoResult}, 저장값=${memoSaved}`);
 
     // ── 3. 칸반: PC는 드래그로 단계변경, 모바일은 케밥메뉴 여전히 동작 ──
     await page.evaluate((name) => {
