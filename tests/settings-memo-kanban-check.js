@@ -98,11 +98,11 @@ async function run() {
     if (width >= 500) {
       const dragResult = await page.evaluate((name) => {
         var cols = document.querySelectorAll('.kanban-col');
-        var item = Array.from(cols[0].querySelectorAll('.kanban-item')).find(i => i.textContent.includes(name));
+        var item = Array.from(cols[1].querySelectorAll('.kanban-item')).find(i => i.textContent.includes(name));
         if (!item) return 'ITEM_NOT_FOUND';
         var dt = new DataTransfer();
         item.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: dt }));
-        cols[1].dispatchEvent(new DragEvent('drop', { bubbles: true, dataTransfer: dt }));
+        cols[2].dispatchEvent(new DragEvent('drop', { bubbles: true, dataTransfer: dt }));
         return 'dispatched';
       }, '칸반검사_' + label);
       await new Promise(r => setTimeout(r, 400));

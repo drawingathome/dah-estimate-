@@ -5,6 +5,7 @@
    ══════════════════════════════════════════════════ */
 
 var PIPE_STAGES = [
+  { key:'상담',   dot:'var(--dark)' },
   { key:'계약금', dot:'var(--terra)' },
   { key:'실측',   dot:'var(--terra)' },
   { key:'잔금',   dot:'var(--dark)' },
