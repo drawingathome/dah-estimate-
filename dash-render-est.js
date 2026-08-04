@@ -88,7 +88,7 @@ function renderEstList() {
     row.appendChild(top); row.appendChild(mid); row.appendChild(bot);
 
     // 클릭 시 고객 상세 (이력 탭에 카카오복사/견적서앱 액션이 이미 있어 여기선 중복 버튼 생략)
-    (function(name){ row.addEventListener('click', function(){ if(name) openDetail(name, null, 'est'); }); })(e.clientName);
+    (function(name, cid){ row.addEventListener('click', function(){ if(name) openDetail(name, cid || null, 'est'); }); })(e.clientName, e.clientId);
 
     card.appendChild(row);
   });
