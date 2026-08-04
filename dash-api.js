@@ -92,7 +92,7 @@ var SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
 var SUPABASE_KEY = 'sb_publishable_9nYjQBzwiyausr7-Cd-elw_S9inJlge';
 
 // 구글드라이브 자동화 허브 웹훅 (배포 후 URL 채워넣을 예정) — 견적서 앱과 공유
-var DRIVE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyPGuFy8etPQUb3R8AnHFUtTRGnB2gnCc98m9JXCt1o8Sjbfj4wlEQb3MGpYEXDJ4sKGw/exec';
+var DRIVE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyyNG-Y6sABngKqk2ttfXUK_LIrQtyqiLLaaEvUnhWs3Yn4YqFtsGTVoug7EQAbig6OgQ/exec';
 function syncCustomerToSheet(customer) {
   if (!DRIVE_WEBHOOK_URL) return;
   try {
