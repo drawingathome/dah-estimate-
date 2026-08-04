@@ -8,10 +8,13 @@ function renderSearch() {
   var all = (currentUser && currentUser.role === 'staff') ? allLoaded.filter(function(c) { return (c.staffName||'마스터') === currentUser.name; }) : allLoaded;
   // 정렬 적용 (2026-07-20: 예전엔 정렬버튼을 눌러도 반영이 안 되던 버그 수정)
   all = (typeof sortCustomers === 'function' && typeof _currentSort !== 'undefined') ? sortCustomers(all, _currentSort) : all.slice().reverse();
-  // 단계 필터 적용 (2026-07-20 신규) — "대기 리드"(parked)는 단계와 무관하게
-  // leadParked로 필터링하는 특수 케이스 (2026-08-02 추가)
+  // 단계 필터 적용 (2026-07-20 신규) — "대기 리드"(parked)는 상담단계에서
+  // 오래 진행없는 경우, "완료 보관함"(completed_archive)은 시공완료 후
+  // 오래된 경우(2026-08-04 신규, 두 보관함을 명확히 분리)
   if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter === 'parked') {
     all = all.filter(function(c){ return c.leadParked === true; });
+  } else if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter === 'completed_archive') {
+    all = all.filter(function(c){ return isArchived(c) === true; });
   } else if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter !== 'all') {
     all = all.filter(function(c){ return c.stage === _currentStageFilter; });
   } else {
@@ -23,7 +26,8 @@ function renderSearch() {
   var filtered = q
     ? all.filter(function(c) { return searchMatch(c, q); })
     : all;
-  var customers = showArchived ? filtered : filtered.filter(function(c){ return !isArchived(c) && !isSoftDeleted(c); });
+  var isArchiveTab = _currentStageFilter === 'completed_archive';
+  var customers = (showArchived || isArchiveTab) ? filtered : filtered.filter(function(c){ return !isArchived(c) && !isSoftDeleted(c); });
   var archivedCount = filtered.filter(function(c){ return isArchived(c) || isSoftDeleted(c); }).length;
   var countEl = document.getElementById('search-count'); if (countEl) countEl.textContent = q ? ('검색 결과 ' + customers.length + '건') : (showArchived ? '전체 ' + customers.length + '건 (보관 포함)' : '전체 ' + customers.length + '건')
   var listEl = document.getElementById('search-list'); listEl.innerHTML = '';
