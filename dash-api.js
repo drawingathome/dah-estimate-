@@ -289,7 +289,7 @@ function estimateDbRowToLocal(row) {
     staffName: row.staff_name || '',
     status: row.estimate_status || 'ga',
     contractStatus: 'pending',
-    savedAt: row.created_at || '',
+    savedAt: row.date || row.created_at || '',
     date: row.date || '',
     installDate: '',
     memo: row.memo || '',
@@ -301,13 +301,18 @@ function estimateDbRowToLocal(row) {
 }
 
 function loadEstimatesAsync(callback) {
-  sbXHR('GET', 'estimates?select=*&order=created_at.desc', null, function(err, data) {
+  sbXHR('GET', 'estimates?select=*&order=date.desc.nullslast', null, function(err, data) {
     var local = [];
     try { local = JSON.parse(localStorage.getItem('dah_saved') || '[]'); } catch(e) {}
     if (err) { if (callback) callback(local); return; }
     var cloudLocalFormat = (data || []).map(estimateDbRowToLocal);
-    var localIds = local.map(function(e){ return e.id; });
-    var merged = local.concat(cloudLocalFormat.filter(function(e){ return localIds.indexOf(e.id) === -1; }));
+    var cloudIds = cloudLocalFormat.map(function(e){ return e.id; });
+    // 클라우드에서 온 항목은 매번 최신값으로 덮어씀(예전엔 이미 로컬에 캐시된
+    // id가 있으면 무시해서, 클라우드에서 나중에 수정해도 브라우저엔 예전 캐시가
+    // 계속 남아있는 버그가 있었음). 이 브라우저에서 직접 만든(클라우드기원이
+    // 아닌) 로컬전용 항목만 그대로 유지.
+    var localOnly = local.filter(function(e){ return !e._fromCloud && cloudIds.indexOf(e.id) === -1; });
+    var merged = localOnly.concat(cloudLocalFormat);
     try { localStorage.setItem('dah_saved', JSON.stringify(merged)); } catch(e) {}
     if (callback) callback(merged);
   });
