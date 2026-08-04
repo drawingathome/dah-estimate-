@@ -145,6 +145,9 @@ function logEvent(eventType, detail) {
 }
 
 var _customerCache = [];
+var _customerCacheTime = 0;
+var _estimateCacheTime = 0;
+var CACHE_FRESH_MS = 8000; // 8초 이내 재요청은 재조회 생략(2026-08-04, 탭 빠르게 전환할때 불필요한 중복조회 방지)
 
 // ── 앱 설정 동기화 (담당자목록/월목표매출/계좌정보/웹훅/마스터비번) ──
 // 여러 컴퓨터·휴대폰에서 동일한 설정값이 보이도록 Supabase app_settings 테이블과 동기화
@@ -300,7 +303,14 @@ function estimateDbRowToLocal(row) {
   };
 }
 
-function loadEstimatesAsync(callback) {
+function loadEstimatesAsync(callback, force) {
+  var now = Date.now();
+  if (!force && _estimateCacheTime > 0 && (now - _estimateCacheTime) < CACHE_FRESH_MS) {
+    var cached = [];
+    try { cached = JSON.parse(localStorage.getItem('dah_saved') || '[]'); } catch(e) {}
+    if (callback) callback(cached);
+    return;
+  }
   sbXHR('GET', 'estimates?select=*&order=date.desc.nullslast', null, function(err, data) {
     var local = [];
     try { local = JSON.parse(localStorage.getItem('dah_saved') || '[]'); } catch(e) {}
@@ -313,16 +323,22 @@ function loadEstimatesAsync(callback) {
     // 아닌) 로컬전용 항목만 그대로 유지.
     var localOnly = local.filter(function(e){ return !e._fromCloud && cloudIds.indexOf(e.id) === -1; });
     var merged = localOnly.concat(cloudLocalFormat);
+    _estimateCacheTime = Date.now();
     try { localStorage.setItem('dah_saved', JSON.stringify(merged)); } catch(e) {}
     if (callback) callback(merged);
   });
 }
 
-function loadCustomersAsync(callback) {
+function loadCustomersAsync(callback, force) {
+  var now = Date.now();
+  if (!force && _customerCache.length > 0 && (now - _customerCacheTime) < CACHE_FRESH_MS) {
+    if (callback) callback(_customerCache);
+    return;
+  }
   sbXHR('GET', 'customers?select=*&is_archived=eq.false&order=created_at.desc', null, function(err, data) {
     hideLoading();
     if (err) { try { _customerCache = JSON.parse(localStorage.getItem('dah_customers') || '[]'); } catch(e) {} }
-    else { _customerCache = (data || []).map(dbRowToCustomer); try { localStorage.setItem('dah_customers', JSON.stringify(_customerCache)); } catch(e) {} }
+    else { _customerCache = (data || []).map(dbRowToCustomer); _customerCacheTime = Date.now(); try { localStorage.setItem('dah_customers', JSON.stringify(_customerCache)); } catch(e) {} }
     if (callback) callback(_customerCache);
   });
 }
