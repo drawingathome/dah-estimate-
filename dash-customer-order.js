@@ -10,7 +10,13 @@
 function getRelevantOrderItems(c) {
   var savedEsts = [];
   try { savedEsts = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
-  var myEsts = savedEsts.filter(function(e){ return e.clientName === c.clientName; });
+  // 동명이인 안전 매칭 (2026-08-04 수정) — 예전엔 이름만으로 매칭해서, 동명이인이
+  // 있으면 서로 다른 사람의 견적(커튼/블라인드 구성)이 섞여 최신순 정렬되고,
+  // 그 중 아무거나 최신인 게 뽑혀서 엉뚱한 발주항목(예: 커튼만 있는 고객에게
+  // 블라인드 발주가 뜨는 등)이 나오는 실제 버그가 있었음
+  var myEsts = savedEsts.filter(function(e){
+    return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName;
+  });
   myEsts.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
   var latestEst = myEsts[0];
   var hasCurtain = latestEst ? (Number(latestEst.curtainCount)||0) > 0 : true;
