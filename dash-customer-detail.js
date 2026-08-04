@@ -655,29 +655,54 @@ function showEstimateDetailPopup(e) {
   if (existing) existing.remove();
 
   var items = parseEstimateItems(e.fabric);
-  var itemsHtml = items.length > 0
+  var rowsHtml = items.length > 0
     ? items.map(function(it) {
-        return '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #F5F2EE;gap:10px">' +
-          '<span style="font-size:12px;color:var(--dark);flex:1">' + escHtml(it.name) + '</span>' +
-          '<span style="font-size:12px;font-weight:700;color:var(--dark);flex-shrink:0">' + (it.amount ? it.amount + '원' : '—') + '</span>' +
-          '</div>';
+        return '<tr>' +
+          '<td style="padding:10px 12px;border-bottom:1px solid #EEE6DC;font-size:12px;color:#282828">' + escHtml(it.name) + '</td>' +
+          '<td style="padding:10px 12px;border-bottom:1px solid #EEE6DC;font-size:12px;color:#282828;text-align:right;white-space:nowrap">' + (it.amount ? it.amount + '원' : '—') + '</td>' +
+          '</tr>';
       }).join('')
-    : '<div style="padding:20px 0;text-align:center;color:var(--sub);font-size:12px">세부 항목 정보가 없어요</div>';
+    : '<tr><td colspan="2" style="padding:30px 0;text-align:center;color:#B0A99F;font-size:12px">세부 항목 정보가 없어요</td></tr>';
+
+  var statusLabel = e.status === 'final' ? '최종 견적서' : '가견적서';
+  var dateLabel = e.date ? e.date.replace(/-/g, '.') : '—';
 
   var overlay = document.createElement('div');
   overlay.id = 'est-detail-popup';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px';
   overlay.innerHTML =
-    '<div style="background:#fff;border-radius:16px;max-width:420px;width:100%;max-height:80vh;overflow-y:auto;padding:20px">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
-        '<div style="font-size:14px;font-weight:800;color:var(--dark)">' + escHtml(e.clientName||'') + ' 견적 세부내용</div>' +
-        '<button onclick="document.getElementById(\'est-detail-popup\').remove()" style="border:none;background:transparent;font-size:18px;cursor:pointer;color:var(--sub)">×</button>' +
+    '<div id="est-detail-doc" style="background:#fff;border-radius:12px;max-width:480px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.2)">' +
+      // 문서 헤더 — 실제 견적서와 같은 톤(로고/문서유형/닫기)
+      '<div style="padding:24px 28px 16px;border-bottom:2px solid #282828;display:flex;justify-content:space-between;align-items:flex-start">' +
+        '<div>' +
+          '<div style="font-size:11px;letter-spacing:2px;color:#B0A99F;margin-bottom:4px">DRAWING at HOME</div>' +
+          '<div style="font-size:17px;font-weight:800;color:#282828">' + statusLabel + '</div>' +
+        '</div>' +
+        '<button onclick="document.getElementById(\'est-detail-popup\').remove()" style="border:none;background:transparent;font-size:20px;cursor:pointer;color:#B0A99F;line-height:1;padding:4px">×</button>' +
       '</div>' +
-      '<div style="font-size:11px;color:var(--sub);margin-bottom:10px">' + escHtml(e.date||'') + (e.staffName ? ' · ' + escHtml(e.staffName) : '') + '</div>' +
-      itemsHtml +
-      '<div style="display:flex;justify-content:space-between;padding-top:12px;margin-top:6px;border-top:2px solid var(--dark)">' +
-        '<span style="font-size:13px;font-weight:800;color:var(--dark)">합계</span>' +
-        '<span style="font-size:15px;font-weight:900;color:var(--dark)">' + (Number(e.price)||0).toLocaleString() + '원</span>' +
+      // 고객/견적 정보
+      '<div style="padding:16px 28px;background:#FAF7F5;display:grid;grid-template-columns:1fr 1fr;gap:10px 16px">' +
+        '<div><div style="font-size:10px;color:#B0A99F;margin-bottom:2px">고객명</div><div style="font-size:13px;font-weight:700;color:#282828">' + escHtml(e.clientName||'—') + '</div></div>' +
+        '<div><div style="font-size:10px;color:#B0A99F;margin-bottom:2px">견적일자</div><div style="font-size:13px;font-weight:700;color:#282828">' + dateLabel + '</div></div>' +
+        '<div><div style="font-size:10px;color:#B0A99F;margin-bottom:2px">담당자</div><div style="font-size:13px;font-weight:700;color:#282828">' + escHtml(e.staffName||'—') + '</div></div>' +
+        '<div><div style="font-size:10px;color:#B0A99F;margin-bottom:2px">공간</div><div style="font-size:13px;font-weight:700;color:#282828">' + escHtml(e.space||'—') + '</div></div>' +
+      '</div>' +
+      // 품목 표
+      '<div style="padding:20px 28px 0">' +
+        '<table style="width:100%;border-collapse:collapse">' +
+          '<thead><tr>' +
+            '<th style="text-align:left;padding:8px 12px;font-size:11px;color:#B0A99F;border-bottom:1.5px solid #282828">품목</th>' +
+            '<th style="text-align:right;padding:8px 12px;font-size:11px;color:#B0A99F;border-bottom:1.5px solid #282828">금액</th>' +
+          '</tr></thead>' +
+          '<tbody>' + rowsHtml + '</tbody>' +
+        '</table>' +
+      '</div>' +
+      // 합계
+      '<div style="padding:16px 28px 24px">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:2px solid #282828">' +
+          '<span style="font-size:13px;font-weight:700;color:#282828">합계</span>' +
+          '<span style="font-size:19px;font-weight:900;color:#282828">' + (Number(e.price)||0).toLocaleString() + '원</span>' +
+        '</div>' +
       '</div>' +
     '</div>';
   overlay.addEventListener('click', function(ev){ if (ev.target === overlay) overlay.remove(); });
