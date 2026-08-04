@@ -1310,12 +1310,10 @@ input,button,select,textarea { font-family:inherit; }
   stroke: var(--orange) !important;
 }
 
-/* ── 스테이지 칩 홈화면 ── */
-/* 계약금·실측 */
-[data-stage="계약금"], [data-stage="실측"] {
-  color: var(--orange) !important;
-  border-color: var(--orange);
-}
+/* ── 스테이지 칩 홈화면 (2026-08-04 삭제) ── */
+/* 계약금·실측 색상은 홈화면에서 인라인 스타일로 이미 처리되어 이 규칙은
+   원래 대상엔 적용조차 안 됐고, data-stage 속성을 실제로 쓰는 유일한 곳인
+   고객목록 필터버튼에만 의도치 않게 주황 테두리가 새어들어가고 있었음 */
 
 
 /* ── 헤더 버튼 확정 ── */
