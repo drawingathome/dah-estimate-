@@ -344,7 +344,14 @@ function buildCustomerHTML() {
 function printForCustomer() {
   calcTotal();
   var html = buildCustomerHTML();
-  
+
+  // 구글드라이브에 저장 (2026-08-02 추가) — 예전엔 거래처발주서/실측시공의뢰서는
+  // 이미 자동 저장되고 있었는데, 정작 고객용 견적서(가장 중요한 문서)는
+  // 저장이 안 되고 있던 걸 발견해서 같은 방식으로 맞춤
+  var isFinalForDrive = (document.getElementById('status-final')?.classList.contains('on'));
+  var cNameForDrive2 = document.getElementById('c-name')?.value || '미지정고객';
+  saveDocumentToDrive(isFinalForDrive ? '확정견적서' : '가견적서', cNameForDrive2, '', html);
+
   var existing = document.getElementById('pv-overlay');
   if(existing) existing.remove();
 
