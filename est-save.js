@@ -134,6 +134,40 @@ function saveEstimate() {
     var f=tr.querySelector('.c-display-name')?.value||''; if(f) fabricArr.push(f);
   });
   var spaceStr=spaceArr.join(', '), fabricStr=fabricArr.join(', ');
+  // 커튼/블라인드 각 행의 전체 세부정보 수집 (2026-08-04 신규) — 예전엔 요약
+  // 문자열(spaceStr/fabricStr)만 저장돼서, 저장 후엔 발주서/실측의뢰서를
+  // 다시 만들 방법이 전혀 없었음(사이즈/원단/거래처/색상 등이 다 사라짐).
+  // 이제 각 행 전체를 그대로 배열로 저장해서, 나중에 이 데이터로 문서를
+  // 다시 만들 수 있게 함.
+  var lineItems = [];
+  document.querySelectorAll('#curtain-body tr').forEach(function(tr){
+    var space = tr.querySelector('.space-inp')?.value||'';
+    var displayName = tr.querySelector('.c-display-name')?.value||'';
+    var fabric = tr.querySelector('.c-fabric')?.value||'';
+    if (!space && !displayName && !fabric) return; // 완전히 빈 행은 제외
+    lineItems.push({
+      type: 'curtain', space: space, displayName: displayName, fabric: fabric,
+      vendor: tr.querySelector('.c-vendor')?.value||'', color: tr.querySelector('.c-color')?.value||'',
+      pleatType: tr.querySelector('.pleat-type')?.value||'', openType: tr.querySelector('.open-type')?.value||'',
+      hemType: tr.querySelector('.hem-type')?.value||'', mw: tr.querySelector('.mw')?.value||'',
+      mh: tr.querySelector('.mh')?.value||'', pnum: tr.querySelector('.pnum')?.value||'',
+      price: getPriceVal(tr.querySelector('.cprice')), amt: tr.querySelector('.camt')?.textContent||''
+    });
+  });
+  document.querySelectorAll('#blind-body tr').forEach(function(tr){
+    var space = tr.querySelector('.space-inp')?.value||'';
+    var innerInps = tr.querySelectorAll('.inner-row .inner-inp');
+    var fabric = innerInps[0]?.value||'';
+    if (!space && !fabric) return;
+    lineItems.push({
+      type: 'blind', space: space, fabric: fabric,
+      vendor: innerInps[1]?.value||'', color: innerInps[2]?.value||'',
+      kind: tr.querySelector('.blind-kind')?.value||'', handle: tr.querySelector('.handle-dir')?.value||'',
+      bmw: tr.querySelector('.bmw')?.value||'', bmh: tr.querySelector('.bmh')?.value||'',
+      opt: tr.querySelector('.blind-opt')?.value||'',
+      price: getPriceVal(tr.querySelector('.blind-price')), amt: tr.querySelector('.bamt')?.textContent||''
+    });
+  });
   function saveToCustomers() {
     
     saveToLocalStorage();
@@ -230,7 +264,8 @@ function saveEstimate() {
         memo: custMemo,
         confirmed_at: window._estimateConfirmedAt || null,
         branch: '반포점',
-        client_id: window._estSaveCustomerId || null
+        client_id: window._estSaveCustomerId || null,
+        line_items: lineItems
       }));
     } catch(e) { console.warn('Supabase 연결 오류:', e); showToast('✅ 저장 완료 (로컬) — DB 동기화는 실패했어요'); }
   }
@@ -277,7 +312,8 @@ function saveEstimate() {
         installDate: document.getElementById('c-install')?.value || '',
         memo: custMemo,
         confirmedAt: window._estimateConfirmedAt || null,
-        branch: '반포점'
+        branch: '반포점',
+        lineItems: lineItems
       };
       if (idx >= 0) saved[idx] = entry;
       else saved.unshift(entry);

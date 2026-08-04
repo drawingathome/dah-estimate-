@@ -710,6 +710,11 @@ function showEstimateDetailPopup(e) {
       '</div>'
     : '';
 
+  var hasVendorItems = (e.lineItems || []).some(function(it){ return it.vendor; });
+  var vendorBtnHtml = hasVendorItems
+    ? '<div style="padding:0 28px 20px"><button id="est-vendor-btn" style="width:100%;padding:11px;background:#fff;color:#282828;border:1px solid #E5DDD5;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">📋 발주서 다시 보기</button></div>'
+    : '';
+
   var overlay = document.createElement('div');
   overlay.id = 'est-detail-popup';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px';
@@ -748,6 +753,7 @@ function showEstimateDetailPopup(e) {
         '</div>' +
       '</div>' +
       confirmBtnHtml +
+      vendorBtnHtml +
     '</div>';
   overlay.addEventListener('click', function(ev){ if (ev.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
@@ -758,6 +764,62 @@ function showEstimateDetailPopup(e) {
       confirmEstimateToFinal(confirmBtnEl.getAttribute('data-est-id'), e.clientName || '', Number(confirmBtnEl.getAttribute('data-est-price')) || 0, confirmBtnEl.getAttribute('data-est-client-id') || null);
     });
   }
+  var vendorBtnEl = document.getElementById('est-vendor-btn');
+  if (vendorBtnEl) {
+    vendorBtnEl.addEventListener('click', function() { showVendorOrderFromEstimate(e); });
+  }
+}
+
+// 저장된 견적 세부데이터(lineItems)로 발주서를 다시 만드는 기능 (2026-08-04 신규)
+// — 예전엔 견적서 저장 후엔 사이즈/원단/거래처 정보가 사라져서 발주서를
+// 다시 만들 방법이 전혀 없었음. 지금부터 저장되는 견적서는 lineItems에
+// 이 정보가 남아있으므로, 그걸로 발주서를 재구성할 수 있음.
+function buildVendorOrderFromLineItems(lineItems, clientName, staffName) {
+  var withVendor = (lineItems || []).filter(function(it){ return it.vendor; });
+  if (withVendor.length === 0) return null;
+  var groups = {};
+  withVendor.forEach(function(it) {
+    var key = it.vendor;
+    if (!groups[key]) groups[key] = [];
+    var size = it.type === 'curtain' ? (it.mw && it.mh ? it.mw+'×'+it.mh : '—') : (it.bmw && it.bmh ? it.bmw+'×'+it.bmh : '—');
+    var content = it.type === 'curtain'
+      ? [(it.pleatType||'').replace('형',''), (it.openType||'').replace('형','')].filter(Boolean).join(' ')
+      : (it.handle ? it.handle+'잡이' : '—');
+    groups[key].push({ space: it.space||'—', product: it.fabric||it.displayName||'—', color: it.color||'—', size: size, content: content||'—' });
+  });
+  var today = new Date();
+  var todayStr = today.getFullYear()+'년 '+(today.getMonth()+1)+'월 '+today.getDate()+'일';
+  var out = '';
+  Object.keys(groups).forEach(function(vendor, i) {
+    out += '<div style="' + (i>0 ? 'page-break-before:always;margin-top:40px;' : '') + 'max-width:720px;margin:0 auto;background:#fff;padding:36px 32px;font-family:inherit">';
+    out += '<div style="text-align:center;margin-bottom:6px"><div style="font-size:22px;font-weight:700;letter-spacing:1.5px;color:#282828">DRAWING at HOME</div><div style="font-size:11px;color:#B0A99F;letter-spacing:3px;margin-top:6px">발 주 서</div></div>';
+    out += '<div style="display:flex;gap:24px;margin-top:24px;padding-top:16px;border-top:1px solid #282828;font-size:13px">' +
+      '<div style="flex:1"><div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">요청일</span><strong>'+todayStr+'</strong></div>' +
+      '<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">업체명</span><strong>드로잉엣홈</strong></div>' +
+      '<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">담당자</span><strong>'+escHtml(staffName||'—')+'</strong></div></div>' +
+      '<div style="flex:1"><div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">받는곳</span><strong>'+escHtml(vendor)+'</strong></div></div></div>';
+    out += '<div style="margin-top:20px;padding:8px 14px;background:#F5F2EE;font-size:13px;font-weight:700;color:#282828">거래처: '+escHtml(vendor)+'</div>';
+    out += '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">' +
+      '<th style="text-align:left;padding:8px 6px">위치</th><th style="text-align:left;padding:8px 6px">품명</th>' +
+      '<th style="text-align:left;padding:8px 6px">컬러</th><th style="text-align:center;padding:8px 6px">사이즈</th>' +
+      '<th style="text-align:left;padding:8px 6px">내용</th><th style="text-align:left;padding:8px 6px">고객명</th></tr></thead><tbody>';
+    groups[vendor].forEach(function(it){
+      out += '<tr style="border-bottom:1px solid #EEE6DC"><td style="padding:8px 6px">'+escHtml(it.space)+'</td>' +
+        '<td style="padding:8px 6px">'+escHtml(it.product)+'</td><td style="padding:8px 6px">'+escHtml(it.color)+'</td>' +
+        '<td style="padding:8px 6px;text-align:center">'+escHtml(it.size)+'</td><td style="padding:8px 6px">'+escHtml(it.content)+'</td>' +
+        '<td style="padding:8px 6px;font-weight:700;color:#E4483A">'+escHtml(clientName||'—')+'</td></tr>';
+    });
+    out += '</tbody></table></div>';
+  });
+  return out;
+}
+
+function showVendorOrderFromEstimate(e) {
+  var html = buildVendorOrderFromLineItems(e.lineItems, e.clientName, e.staffName);
+  if (!html) { showToast('이 견적엔 거래처가 입력된 항목이 없어요'); return; }
+  var w = window.open('', '_blank');
+  w.document.write('<html><head><title>발주서 - ' + escHtml(e.clientName||'') + '</title></head><body style="margin:0;background:#f5f5f5;padding:20px">' + html + '</body></html>');
+  w.document.close();
 }
 
 function openEstimate(name) {
