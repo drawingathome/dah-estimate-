@@ -650,6 +650,26 @@ function parseEstimateItems(fabricStr) {
   }).filter(Boolean);
 }
 
+function confirmEstimateToFinal(estId, clientName, price) {
+  if (!confirm(clientName + '님의 이 견적을 "확정견적"으로 전환할까요?\n(계약이 성사된 게 맞을 때만 눌러주세요)')) return;
+  var btn = document.getElementById('est-confirm-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
+  sbXHR('PATCH', 'estimates?id=eq.' + estId, { estimate_status: 'final', performance_revenue: price, confirmed_at: new Date().toISOString() }, function(err) {
+    if (err) { showToast('전환 실패 — 다시 시도해주세요'); if (btn) { btn.disabled = false; btn.textContent = '확정견적으로 전환'; } return; }
+    // 로컬 캐시도 즉시 반영
+    try {
+      var saved = JSON.parse(localStorage.getItem('dah_saved') || '[]');
+      var idx = saved.findIndex(function(s){ return s.id === estId; });
+      if (idx >= 0) { saved[idx].status = 'final'; saved[idx].performanceRevenue = price; }
+      localStorage.setItem('dah_saved', JSON.stringify(saved));
+    } catch(e) {}
+    showToast('확정견적으로 전환됐습니다 ✅');
+    document.getElementById('est-detail-popup')?.remove();
+    if (typeof loadEstimatesAsync === 'function') loadEstimatesAsync(renderEstList, true);
+    if (typeof openDetail === 'function' && currentDetailName) openDetail(currentDetailName, currentDetailId, 'est');
+  });
+}
+
 function showEstimateDetailPopup(e) {
   var existing = document.getElementById('est-detail-popup');
   if (existing) existing.remove();
@@ -666,6 +686,17 @@ function showEstimateDetailPopup(e) {
 
   var statusLabel = e.status === 'final' ? '최종 견적서' : '가견적서';
   var dateLabel = e.date ? e.date.replace(/-/g, '.') : '—';
+  // 가견적 → 확정견적 전환 (2026-08-04 신규) — 이관된 가견적은 세부 항목을
+  // 다시 편집할 방법이 없으므로(원본에 커튼/블라인드 낱개 입력데이터가 없음),
+  // "계약 성사됨"만 표시할 수 있게 상태 전환만 지원. 진짜 내용을 고쳐야 하면
+  // 새 견적서를 작성해야 함(하단 "새 견적서 작성" 버튼).
+  var confirmBtnHtml = (e.status !== 'final' && e.id)
+    ? '<div style="padding:0 28px 20px">' +
+        '<button id="est-confirm-btn" data-est-id="' + escHtml(String(e.id)) + '" data-est-price="' + (Number(e.price)||0) + '" ' +
+        'style="width:100%;padding:12px;background:#282828;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">확정견적으로 전환</button>' +
+        '<div style="font-size:10px;color:#B0A99F;text-align:center;margin-top:6px">세부 품목을 고치려면 새 견적서를 작성해야 해요</div>' +
+      '</div>'
+    : '';
 
   var overlay = document.createElement('div');
   overlay.id = 'est-detail-popup';
@@ -704,9 +735,17 @@ function showEstimateDetailPopup(e) {
           '<span style="font-size:19px;font-weight:900;color:#282828">' + (Number(e.price)||0).toLocaleString() + '원</span>' +
         '</div>' +
       '</div>' +
+      confirmBtnHtml +
     '</div>';
   overlay.addEventListener('click', function(ev){ if (ev.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
+
+  var confirmBtnEl = document.getElementById('est-confirm-btn');
+  if (confirmBtnEl) {
+    confirmBtnEl.addEventListener('click', function() {
+      confirmEstimateToFinal(confirmBtnEl.getAttribute('data-est-id'), e.clientName || '', Number(confirmBtnEl.getAttribute('data-est-price')) || 0);
+    });
+  }
 }
 
 function openEstimate(name) {
