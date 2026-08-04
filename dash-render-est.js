@@ -11,6 +11,11 @@ function renderEstList() {
 
   var all = [];
   try { all = JSON.parse(localStorage.getItem('dah_saved') || '[]'); } catch(e) {}
+  // 스태프 권한 필터 (2026-08-04 추가) — 다른 화면엔 있는데 견적서 목록만
+  // 빠져있어서, 스태프 계정에도 다른 담당자 견적서까지 다 보이던 권한 누락
+  if (currentUser && currentUser.role === 'staff') {
+    all = all.filter(function(e){ return (e.staffName||'마스터') === currentUser.name; });
+  }
 
   var q = (document.getElementById('est-search')?.value || '').trim();
   var list = q

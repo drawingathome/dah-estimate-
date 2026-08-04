@@ -250,6 +250,12 @@ function filterPipe(q) {
 
 
 function renderPipe(customers) {
-  renderPipeKanban(customers);
+  // 스태프 권한 필터 (2026-08-04 추가) — 고객목록/매출탭엔 이미 있는데
+  // 진행현황(칸반)만 빠져있어서, 스태프 계정으로도 다른 담당자 고객이
+  // 전부 보이던 권한 누락이었음
+  var filtered = (currentUser && currentUser.role === 'staff')
+    ? (customers || []).filter(function(c) { return (c.staffName||'마스터') === currentUser.name; })
+    : customers;
+  renderPipeKanban(filtered);
 }
 

@@ -58,6 +58,11 @@ function renderHome(skipServerFetch) {
   // 로컬을 덮어써버리는 경쟁조건이 생길 수 있어 방지함. 이미 로컬이 최신이므로 그대로 사용.
   var doRender = function(customers) {
     if (!customers) customers = [];
+    // 스태프 권한 필터 (2026-08-04 추가) — 고객목록/매출탭엔 있는데 홈 화면만
+    // 빠져있어서, 스태프 계정에도 전체(다른 담당자 포함) 통계가 보이던 권한 누락
+    if (currentUser && currentUser.role === 'staff') {
+      customers = customers.filter(function(c) { return (c.staffName||'마스터') === currentUser.name; });
+    }
     customers = customers.filter(function(c){ return !isSoftDeleted(c); });
 
     // ── 이달 매출 계산 ──────────────────────────────
