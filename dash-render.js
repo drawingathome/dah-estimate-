@@ -24,6 +24,23 @@ function renderGoalProgress(currentAmount) {
 }
 
 
+// 홈 화면 "처리 필요" 목록에서 오래된 리드를 "대기 중인 리드"로 보관 처리
+// (2026-08-02 신규) — 삭제가 아니라, 목록만 정리하고 고객목록에서는 계속 찾을 수 있음.
+function parkLeadFromHome(btnEl) {
+  var cname = btnEl.getAttribute('data-cname');
+  var cid = btnEl.getAttribute('data-cid');
+  var all = loadCustomers();
+  var target = cid ? all.find(function(c){ return String(c.id) === cid; }) : all.find(function(c){ return c.clientName === cname; });
+  if (!target) return;
+  if (!confirm(cname + ' 고객을 "대기 중인 리드"로 보관할까요? (고객목록에서는 계속 찾아볼 수 있어요)')) return;
+  target.leadParked = true;
+  saveCustomers(all);
+  parkLead(target, function() {
+    renderHome();
+    showToast(cname + ' 님을 대기 중인 리드로 보관했어요');
+  });
+}
+
 /** 홈 화면 렌더링 — 오늘 배너, 처리 필요, 일정 */
 function renderHome(skipServerFetch) {
   var wrap = document.getElementById('home');
@@ -85,7 +102,7 @@ function renderHome(skipServerFetch) {
         // 이제 "관련 있는 항목 중 하나라도 안 끝난 게 있으면" 정확히 감지함.
         if (typeof hasIncompleteOrder === 'function' && hasIncompleteOrder(c)) reasons.push('발주 필요');
       }
-      if (c.stage === '상담' && c.date) {
+      if (c.stage === '상담' && c.date && !c.leadParked) {
         var daysSince = Math.floor((_today - new Date(c.date)) / (1000*60*60*24));
         if (daysSince >= LEAD_STALE_DAYS) reasons.push('상담 후 ' + daysSince + '일째 진행없음');
       }
@@ -183,6 +200,10 @@ function renderHome(skipServerFetch) {
               var reasonStr = item.reasons.join(' ');
               if (reasonStr.indexOf('계약금 처리') >= 0 || reasonStr.indexOf('잔금 처리') >= 0) targetTab = 'pay';
               else if (reasonStr.indexOf('발주 필요') >= 0) targetTab = 'order';
+              var isStaleLead = reasonStr.indexOf('진행없음') >= 0;
+              var parkBtnHtml = isStaleLead
+                ? '<button class="park-lead-btn" data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-cid="' + escHtml(c.id||'') + '" onclick="event.stopPropagation(); parkLeadFromHome(this)" style="flex-shrink:0;padding:0 10px;min-height:32px;background:#fff;border:1px solid var(--border);border-radius:8px;font-size:10px;font-weight:700;color:var(--sub);cursor:pointer;font-family:inherit">보관</button>'
+                : '';
               return '<div data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-cid="' + escHtml(c.id||'') + '" data-tab="' + targetTab + '" onclick="openDetail(this.getAttribute(\'data-cname\'),this.getAttribute(\'data-cid\')||undefined,this.getAttribute(\'data-tab\'))" ' +
                 'style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:var(--sp-3);cursor:pointer"><div style="width:6px;height:6px;border-radius:50%;background:' + stageColor + ';flex-shrink:0"></div>' +
                 '<div style="flex:1;min-width:0">' +
@@ -190,6 +211,7 @@ function renderHome(skipServerFetch) {
                   '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(c.phone||'') + '</div>' +
                 '</div>' +
                 '<span style="font-size:11px;font-weight:700;color:' + stageColor + ';flex-shrink:0;text-align:right">' + item.reasons.map(escHtml).join('<br>') + '</span>' +
+                parkBtnHtml +
               '</div>';
             }).join(''),
         '<div style="padding:12px 20px 10px;border-top:1px solid var(--border);margin-top:2px">',

@@ -231,7 +231,8 @@ function dbRowToCustomer(row) {
     balanceMethod:      row.balance_method||'',
     balanceReceipt:     row.balance_receipt||false,
     orderStatus:        row.order_status||{},
-    branch:             row.branch||'반포점'
+    branch:             row.branch||'반포점',
+    leadParked:         row.lead_parked||false
   };
 }
 
@@ -306,5 +307,23 @@ function restoreCustomerFromDb(customer, callback) {
     ? 'id=eq.' + customer.id
     : 'client_name=eq.' + encodeURIComponent(typeof customer === 'string' ? customer : (customer && customer.clientName) || '');
   sbXHR('PATCH', 'customers?' + filter, { is_archived: false }, function(err, data) { if(err) console.error('복구 오류:', err.text); if(callback) callback(err, data); });
+}
+
+// 놓친 리드(상담 후 오래 진행없음)를 "대기 중인 리드"로 보관 처리 (2026-08-02 신규)
+// — is_archived(고객목록에서 삭제)와는 완전히 다른 개념. 삭제가 아니라, 홈 화면
+// "처리 필요" 목록에서만 안 보이게 하되 고객목록에서는 계속 찾아볼 수 있게 함.
+function parkLead(customer, callback) {
+  var filter = customer && customer.id
+    ? 'id=eq.' + customer.id
+    : 'client_name=eq.' + encodeURIComponent(typeof customer === 'string' ? customer : (customer && customer.clientName) || '');
+  sbXHR('PATCH', 'customers?' + filter, { lead_parked: true }, function(err, data) { if(err) console.error('리드 보관 오류:', err.text); if(callback) callback(err, data); });
+}
+
+// 대기 중이던 리드가 다시 연락이 와서 활성 상태로 복귀
+function unparkLead(customer, callback) {
+  var filter = customer && customer.id
+    ? 'id=eq.' + customer.id
+    : 'client_name=eq.' + encodeURIComponent(typeof customer === 'string' ? customer : (customer && customer.clientName) || '');
+  sbXHR('PATCH', 'customers?' + filter, { lead_parked: false }, function(err, data) { if(err) console.error('리드 복귀 오류:', err.text); if(callback) callback(err, data); });
 }
 

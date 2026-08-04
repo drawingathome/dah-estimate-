@@ -8,9 +8,15 @@ function renderSearch() {
   var all = (currentUser && currentUser.role === 'staff') ? allLoaded.filter(function(c) { return (c.staffName||'마스터') === currentUser.name; }) : allLoaded;
   // 정렬 적용 (2026-07-20: 예전엔 정렬버튼을 눌러도 반영이 안 되던 버그 수정)
   all = (typeof sortCustomers === 'function' && typeof _currentSort !== 'undefined') ? sortCustomers(all, _currentSort) : all.slice().reverse();
-  // 단계 필터 적용 (2026-07-20 신규)
-  if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter !== 'all') {
+  // 단계 필터 적용 (2026-07-20 신규) — "대기 리드"(parked)는 단계와 무관하게
+  // leadParked로 필터링하는 특수 케이스 (2026-08-02 추가)
+  if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter === 'parked') {
+    all = all.filter(function(c){ return c.leadParked === true; });
+  } else if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter !== 'all') {
     all = all.filter(function(c){ return c.stage === _currentStageFilter; });
+  } else {
+    // 전체/일반 단계 필터에서는 대기 중인 리드는 기본적으로 숨김(따로 눌러야 보임)
+    all = all.filter(function(c){ return !c.leadParked; });
   }
   var q = (document.getElementById('cust-search').value || '').trim();
   var showArchived = document.getElementById('show-archived')?.checked || false;
@@ -67,6 +73,24 @@ function renderSearch() {
     }
 
     right.appendChild(priceEl); right.appendChild(stageEl); right.appendChild(dateEl);
+    if (c.leadParked) {
+      var unparkBtn = el('button', {style:'margin-top:4px;padding:0 10px;min-height:32px;background:var(--dark);color:#fff;border:none;border-radius:8px;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer'});
+      unparkBtn.textContent = '복귀';
+      unparkBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (!confirm(c.clientName + ' 님을 다시 연락 온 것으로 표시하고 목록으로 복귀시킬까요?')) return;
+        c.leadParked = false;
+        var all2 = loadCustomers();
+        var t = all2.find(function(x){ return x.id === c.id; }) || all2.find(function(x){ return x.clientName === c.clientName; });
+        if (t) t.leadParked = false;
+        saveCustomers(all2);
+        unparkLead(c, function() {
+          renderSearch();
+          showToast(c.clientName + ' 님을 목록으로 복귀시켰어요');
+        });
+      });
+      right.appendChild(unparkBtn);
+    }
     row.appendChild(left); row.appendChild(right);
     (function(name, id) { row.addEventListener('click', function() { openDetail(name, id); }); })(c.clientName, c.id);
     listEl.appendChild(row);
