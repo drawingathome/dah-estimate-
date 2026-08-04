@@ -3,34 +3,32 @@
  * DAH 자동화 허브 — 구글드라이브 문서저장 + 고객명단 시트 동기화
  * ══════════════════════════════════════════════════
  *
- * 이 스크립트 하나로 두 가지를 처리합니다:
+ * 1) 문서 자동저장 (발주서/실측시공/확정견적서)
+ *    2026-08-02 구조 변경: [연월]/[고객명]/[문서종류].html
+ *    (예전엔 [카테고리]/[연월]/파일 이었는데, 한 고객 관련 서류를
+ *    찾으려면 여러 카테고리 폴더를 다 뒤져야 해서 불편했음.
+ *    이제 고객 폴더 하나만 열면 그 고객 서류가 전부 모여있음.)
+ *    같은 [연월]/[고객명]/[문서종류] 조합이면 덮어쓰기(최신본 유지).
  *
- * 1) 문서 자동저장 (발주서/실측시공/견적서 등)
- *    DAH_문서보관/{카테고리}/{연-월}/{견적번호 또는 날짜}_{고객명}_{거래처}.html
- *    견적번호(c-no)가 있으면 그걸 기준으로 덮어씁니다 — 며칠 뒤에
- *    같은 건(같은 견적번호)을 수정해서 다시 저장해도 새 파일이 안 생기고
- *    같은 파일이 갱신됩니다. 완전히 새 견적(새 견적번호)이면 새 파일이 됩니다.
- *    카테고리: 견적서 / 제작 / 원단 / 블라인드 / 레일외 부자재 / 전동 / 실측시공
- *
- * 2) 고객명단 시트 동기화 (현황판 방식 — 전화번호 기준으로
- *    같은 고객이면 그 줄만 갱신, 새 고객이면 새 줄 추가. 중복 없음)
- *    첫 실행 시 "DAH_고객명단" 스프레드시트를 자동 생성합니다.
+ * 2) 고객명단 시트 동기화 — 예전과 동일
  *
  * ══════════════════════════════════════════════════
- * 설치 방법
+ * 설치 방법 (공용드라이브 사용 시 — 2026-08-02 업데이트)
  * ══════════════════════════════════════════════════
- * 1. script.google.com → 새 프로젝트
- * 2. 이 코드 전체 붙여넣기, 저장 (이름: "DAH 자동화 허브" 등)
- * 3. 우측 상단 "배포" → "새 배포"
- * 4. 유형: 웹 앱
- *    실행할 사용자: 나
- *    액세스 권한이 있는 사용자: 모든 사용자  ← 중요!
- * 5. 배포 → 권한 승인
+ * 1. 구글드라이브에서 공용드라이브(팀 드라이브) 안에 "DAH_문서보관" 폴더를
+ *    직접 만들기 (이 스크립트가 자동으로 최상위 공용드라이브 폴더를
+ *    만들 수는 없어서, 이 폴더 하나는 미리 만들어둬야 함)
+ * 2. 그 폴더를 열어서 주소창 URL에서 폴더ID 복사
+ *    (예: drive.google.com/drive/folders/여기가폴더ID)
+ * 3. 아래 ROOT_FOLDER_ID 에 그 값 붙여넣기
+ * 4. script.google.com → 새 프로젝트 → 이 코드 전체 붙여넣기 → 저장
+ * 5. 우측상단 "배포" → "새 배포" → 유형: 웹앱, 실행할 사용자: 나,
+ *    액세스 권한: 모든 사용자 → 배포 → 권한 승인
  * 6. 나오는 "웹 앱 URL"을 개발자(Claude)에게 전달
  * ══════════════════════════════════════════════════
  */
 
-var ROOT_FOLDER_NAME = 'DAH_문서보관';
+var ROOT_FOLDER_ID = '여기에_공용드라이브_DAH_문서보관_폴더ID_붙여넣기';
 var CUSTOMER_SHEET_NAME = 'DAH_고객명단';
 
 function doPost(e) {
@@ -54,43 +52,37 @@ function doPost(e) {
 
 function saveDocumentFile(data) {
   var customerName = (data.customerName || '미지정고객').replace(/[\\\/:*?"<>|]/g, '_');
-  var category = (data.category || '기타').replace(/[\\\/:*?"<>|]/g, '_');
-  var vendor = data.vendor ? '_' + data.vendor.replace(/[\\\/:*?"<>|]/g, '_') : '';
+  var docType = (data.category || '기타').replace(/[\\\/:*?"<>|]/g, '_');
+  var vendorSuffix = data.vendor ? '_' + data.vendor.replace(/[\\\/:*?"<>|]/g, '_') : '';
   var htmlContent = data.htmlContent || '<p>내용 없음</p>';
 
-  var rootFolders = DriveApp.getFoldersByName(ROOT_FOLDER_NAME);
-  var rootFolder = rootFolders.hasNext() ? rootFolders.next() : DriveApp.createFolder(ROOT_FOLDER_NAME);
-
-  var catFolders = rootFolder.getFoldersByName(category);
-  var catFolder = catFolders.hasNext() ? catFolders.next() : rootFolder.createFolder(category);
+  // 공용드라이브 안의 폴더는 이름검색보다 ID로 직접 여는 게 확실함
+  var rootFolder = DriveApp.getFolderById(ROOT_FOLDER_ID);
 
   var monthStr = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM');
-  var monthFolders = catFolder.getFoldersByName(monthStr);
-  var monthFolder = monthFolders.hasNext() ? monthFolders.next() : catFolder.createFolder(monthStr);
+  var monthFolders = rootFolder.getFoldersByName(monthStr);
+  var monthFolder = monthFolders.hasNext() ? monthFolders.next() : rootFolder.createFolder(monthStr);
 
-  var today = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
-  var estimateNo = data.estimateNo ? data.estimateNo.replace(/[\\\/:*?"<>|]/g, '_') : '';
-  // 견적번호가 있으면 그걸 기준키로 사용 (며칠 뒤 같은 건을 재저장해도 덮어써짐)
-  // 없으면 날짜를 기준키로 사용 (기존 방식)
-  var fileKey = estimateNo || today;
-  var fileName = fileKey + '_' + customerName + vendor + '.html';
+  var custFolders = monthFolder.getFoldersByName(customerName);
+  var custFolder = custFolders.hasNext() ? custFolders.next() : monthFolder.createFolder(customerName);
+
+  var fileName = docType + vendorSuffix + '.html';
 
   var fullHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    + '<title>' + category + ' - ' + customerName + '</title></head><body>'
+    + '<title>' + docType + ' - ' + customerName + '</title></head><body>'
     + htmlContent + '</body></html>';
 
-  // 같은 날 같은 이름의 파일이 이미 있으면 덮어쓰기 (기존 파일 삭제 후 새로 생성)
-  // — 하루 안에서는 최종본만 남고, 날짜가 바뀌면 새 파일로 이력이 남음
-  var existingFiles = monthFolder.getFilesByName(fileName);
+  // 같은 [연월]/[고객명]/[문서종류] 파일이 이미 있으면 덮어쓰기(최신본만 유지)
+  var existingFiles = custFolder.getFilesByName(fileName);
   while (existingFiles.hasNext()) {
     existingFiles.next().setTrashed(true);
   }
 
-  var file = monthFolder.createFile(fileName, fullHtml, MimeType.HTML);
+  var file = custFolder.createFile(fileName, fullHtml, MimeType.HTML);
 
   return ContentService.createTextOutput(JSON.stringify({
     success: true, fileUrl: file.getUrl(), fileName: fileName,
-    path: ROOT_FOLDER_NAME + '/' + category + '/' + monthStr
+    path: monthStr + '/' + customerName
   })).setMimeType(ContentService.MimeType.JSON);
 }
 
