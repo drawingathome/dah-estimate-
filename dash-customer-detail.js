@@ -714,6 +714,13 @@ function showEstimateDetailPopup(e) {
   var vendorBtnHtml = hasVendorItems
     ? '<div style="padding:0 28px 20px"><button id="est-vendor-btn" style="width:100%;padding:11px;background:#fff;color:#282828;border:1px solid #E5DDD5;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">📋 발주서 다시 보기</button></div>'
     : '';
+  var hasLineItems = (e.lineItems || []).length > 0;
+  var requestBtnHtml = hasLineItems
+    ? '<div style="padding:0 28px 20px;display:flex;gap:8px">' +
+        '<button id="est-measure-req-btn" style="flex:1;padding:11px;background:#fff;color:#282828;border:1px solid #E5DDD5;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">📐 실측의뢰서</button>' +
+        '<button id="est-install-req-btn" style="flex:1;padding:11px;background:#fff;color:#282828;border:1px solid #E5DDD5;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer">🔧 시공의뢰서</button>' +
+      '</div>'
+    : '';
 
   var overlay = document.createElement('div');
   overlay.id = 'est-detail-popup';
@@ -754,6 +761,7 @@ function showEstimateDetailPopup(e) {
       '</div>' +
       confirmBtnHtml +
       vendorBtnHtml +
+      requestBtnHtml +
     '</div>';
   overlay.addEventListener('click', function(ev){ if (ev.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
@@ -767,6 +775,14 @@ function showEstimateDetailPopup(e) {
   var vendorBtnEl = document.getElementById('est-vendor-btn');
   if (vendorBtnEl) {
     vendorBtnEl.addEventListener('click', function() { showVendorOrderFromEstimate(e); });
+  }
+  var measureReqBtnEl = document.getElementById('est-measure-req-btn');
+  if (measureReqBtnEl) {
+    measureReqBtnEl.addEventListener('click', function() { showRequestFromEstimate('measure', e); });
+  }
+  var installReqBtnEl = document.getElementById('est-install-req-btn');
+  if (installReqBtnEl) {
+    installReqBtnEl.addEventListener('click', function() { showRequestFromEstimate('install', e); });
   }
 }
 
@@ -812,6 +828,55 @@ function buildVendorOrderFromLineItems(lineItems, clientName, staffName) {
     out += '</tbody></table></div>';
   });
   return out;
+}
+
+// 저장된 lineItems로 실측/시공 의뢰서를 재생성 (2026-08-04 신규, 발주서와 같은 원리)
+function buildRequestFromLineItems(kind, e) {
+  var label = kind === 'measure' ? '실측' : '시공';
+  var dateVal = kind === 'measure' ? e.date : e.installDate;
+  function infoRow(l, v) {
+    return '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px">' +
+      '<span style="color:#8E8078">' + l + '</span><strong style="color:#282828;text-align:right">' + escHtml(v||'—') + '</strong></div>';
+  }
+  var out = '<div style="max-width:720px;margin:0 auto;background:#fff;padding:36px 32px;font-family:inherit">';
+  out += '<div style="text-align:center;margin-bottom:6px"><div style="font-size:22px;font-weight:700;letter-spacing:1.5px;color:#282828">DRAWING at HOME</div>' +
+    '<div style="font-size:11px;color:#B0A99F;letter-spacing:3px;margin-top:6px">' + label + ' 의 뢰 서</div></div>';
+  out += '<div style="margin-top:24px;padding-top:16px;border-top:1px solid #282828;font-size:13px">' +
+    infoRow(label+'일', dateVal||'미정') + infoRow('고객명', e.clientName) + infoRow('연락처', e.phone) + infoRow('담당자', e.staffName) + '</div>';
+  out += '<div style="margin-top:14px;padding:8px 0;background:#F5F2EE;text-align:center;font-size:12px;font-weight:700;color:#282828">내 용</div>';
+
+  var items = e.lineItems || [];
+  if (kind === 'measure') {
+    var lines = items.map(function(it) {
+      return (it.space||'—') + ' : ' + (it.type === 'curtain' ? '커튼 1조' : (it.kind||'블라인드'));
+    });
+    out += lines.length
+      ? '<div style="padding:20px 10px;text-align:center">' + lines.map(function(t,i){ return '<div style="font-size:13px;color:#282828;padding:8px 0">'+(i+1)+'. '+escHtml(t)+'</div>'; }).join('') + '</div>'
+      : '<div style="padding:30px 0;text-align:center;color:#B0A99F;font-size:12px">저장된 세부 항목이 없어요</div>';
+  } else {
+    out += '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">' +
+      '<th style="text-align:left;padding:8px 6px">위치</th><th style="text-align:center;padding:8px 6px">사이즈</th>' +
+      '<th style="text-align:left;padding:8px 6px">내용</th><th style="text-align:left;padding:8px 6px">거래처</th></tr></thead><tbody>';
+    items.forEach(function(it) {
+      var size = it.type === 'curtain' ? (it.mw && it.mh ? it.mw+'×'+it.mh : '—') : (it.bmw && it.bmh ? it.bmw+'×'+it.bmh : '—');
+      var content = it.type === 'curtain' ? [(it.pleatType||'').replace('형',''),(it.openType||'').replace('형','')].filter(Boolean).join(' ') : (it.handle ? it.handle+'잡이' : '—');
+      out += '<tr style="border-bottom:1px solid #EEE6DC"><td style="padding:8px 6px">'+escHtml(it.space||'—')+'</td>' +
+        '<td style="padding:8px 6px;text-align:center">'+escHtml(size)+'</td><td style="padding:8px 6px">'+escHtml(content||'—')+'</td>' +
+        '<td style="padding:8px 6px">'+escHtml(it.vendor||'—')+'</td></tr>';
+    });
+    out += '</tbody></table>';
+  }
+  out += '</div>';
+  return out;
+}
+
+function showRequestFromEstimate(kind, e) {
+  if (!e.lineItems || e.lineItems.length === 0) { showToast('이 견적엔 저장된 세부 항목이 없어요'); return; }
+  var html = buildRequestFromLineItems(kind, e);
+  var w = window.open('', '_blank');
+  var label = kind === 'measure' ? '실측의뢰서' : '시공의뢰서';
+  w.document.write('<html><head><title>' + label + ' - ' + escHtml(e.clientName||'') + '</title></head><body style="margin:0;background:#f5f5f5;padding:20px">' + html + '</body></html>');
+  w.document.close();
 }
 
 function showVendorOrderFromEstimate(e) {
