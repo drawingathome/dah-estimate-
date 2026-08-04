@@ -113,7 +113,7 @@ function buildRevenueChartData(customers, period) {
 }
 
 
-var currentChartPeriod = 'daily';
+var currentChartPeriod = 'monthly';
 
 
 /* ── SVG 차트 헬퍼 ── */
