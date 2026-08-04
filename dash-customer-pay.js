@@ -7,16 +7,27 @@
    openDetail()이 renderPaySection(c, payBody)를 호출함. */
 
 function renderPaySection(c, payBody) {
+  // 2026-08-04: id기반 키를 우선 시도하고, 없으면 이름기반(예전 데이터)으로 폴백
+  function getLocalPay() {
+    try {
+      if (c.id) {
+        var byId = localStorage.getItem('dah_pay_id_'+c.id);
+        if (byId) return JSON.parse(byId);
+      }
+      return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}');
+    } catch(e) { return {}; }
+  }
+  var _localPay = getLocalPay();
   // 결제 관리 섹션 - customers 객체 직접 사용 (localStorage 병행)
   var payData = {
-    depositAmount:  c.depositAmount  || (function(){ try{ return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}').depositAmount||0; }catch(e){return 0;} })(),
-    depositDate:    c.depositDate    || (function(){ try{ return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}').depositDate||''; }catch(e){return '';} })(),
-    depositMethod:  c.depositMethod  || (function(){ try{ return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}').depositMethod||''; }catch(e){return '';} })(),
-    depositReceipt: c.depositReceipt || (function(){ try{ return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}').depositReceipt||false; }catch(e){return false;} })(),
-    balanceAmount:  c.balanceAmount  || (function(){ try{ return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}').balanceAmount||0; }catch(e){return 0;} })(),
-    balanceDate:    c.balanceDate    || (function(){ try{ return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}').balanceDate||''; }catch(e){return '';} })(),
-    balanceMethod:  c.balanceMethod  || (function(){ try{ return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}').balanceMethod||''; }catch(e){return '';} })(),
-    balanceReceipt: c.balanceReceipt || (function(){ try{ return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}').balanceReceipt||false; }catch(e){return false;} })()
+    depositAmount:  c.depositAmount  || _localPay.depositAmount  || 0,
+    depositDate:    c.depositDate    || _localPay.depositDate    || '',
+    depositMethod:  c.depositMethod  || _localPay.depositMethod  || '',
+    depositReceipt: c.depositReceipt || _localPay.depositReceipt || false,
+    balanceAmount:  c.balanceAmount  || _localPay.balanceAmount  || 0,
+    balanceDate:    c.balanceDate    || _localPay.balanceDate    || '',
+    balanceMethod:  c.balanceMethod  || _localPay.balanceMethod  || '',
+    balanceReceipt: c.balanceReceipt || _localPay.balanceReceipt || false
   };
 
   var paySec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
@@ -25,7 +36,12 @@ function renderPaySection(c, payBody) {
   function savePayData(pd) {
     if (typeof logEvent === 'function') logEvent('payment_save', { hasDeposit: Number(pd.depositAmount) > 0, hasBalance: Number(pd.balanceAmount) > 0 });
     // 1) localStorage 백업
+    // 2026-08-04: 이름 기반 키만 쓰면 동명이인일 때 결제정보가 섞일 이론적
+    // 위험이 있어(실제 최우선 소스는 customers.depositAmount라 id기반으로
+    // 안전하지만, 서버값이 비어 이 폴백에 의존하는 드문 경우 대비) id 기반
+    // 키로도 함께 저장해서 이중 안전장치를 둠
     localStorage.setItem('dah_pay_'+c.clientName, JSON.stringify(pd));
+    if (c.id) localStorage.setItem('dah_pay_id_'+c.id, JSON.stringify(pd));
     // 2) customers 캐시 업데이트
     var arr = loadCustomers();
     var idx = c.id ? arr.findIndex(function(x){ return x.id === c.id; }) : arr.findIndex(function(x){ return x.clientName === c.clientName; });
