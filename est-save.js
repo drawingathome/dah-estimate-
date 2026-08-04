@@ -189,11 +189,19 @@ function saveEstimate() {
         saveToEstimates();
       };
       xhr.onerror=function(){ console.warn('Supabase 고객 저장 실패 (localStorage는 완료)'); saveToEstimates(); };
-      xhr.send(JSON.stringify({
+      var custPayload = {
         client_name:name, phone:phone, addr:addr+(addr2?' '+addr2:''),
         memo:custMemo+' | 커튼:'+grand+'원',
         staff_name:staffName
-      }));
+      };
+      // 확정견적일 때만 고객 실적에 금액 동기화 (2026-08-04 신규) — 예전엔
+      // 견적서를 아무리 저장해도 customers.price/performance_revenue가
+      // 영구히 0으로 남아서, 신규로 발생하는 모든 고객이 매출탭 계산에
+      // 절대 안 잡히는 구조적 결함이었음(이관 데이터만 수동으로 채워놔서
+      // 우연히 정상으로 보였을 뿐). 가견적 단계에선 그대로 0으로 둬서,
+      // 혹시 오래 방치돼도 하위호환 폴백에 잘못 걸리지 않도록 안전하게 둠.
+      if (isFinalForDrive) { custPayload.price = grand; custPayload.performance_revenue = perf; }
+      xhr.send(JSON.stringify(custPayload));
     } catch(e) { console.warn('Supabase 연결 오류:', e); saveToEstimates(); }
   }
   function saveToEstimates() {
