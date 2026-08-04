@@ -177,11 +177,19 @@ function renderDetailEstTab() {
     actions.appendChild(kakaoBtn);
     actions.appendChild(openBtn);
 
+    // 세부내용 보기 (2026-08-04 신규) — 저장된 품목 문자열("이름(금액원), 이름(금액원)...")을
+    // 실제로 읽을 수 있는 목록으로 펼쳐서 보여줌. 예전엔 "공간"/"원단" 칸에 요약(또는
+    // 지나치게 긴 원문)만 보이고 실제 항목별 내역을 확인할 방법이 없었음.
+    var detailBtn = btn('width:100%;margin-top:6px;padding:9px 0;background:#fff;color:var(--dark);border:1px solid var(--border);border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '🔍 세부내용 보기', function(){
+      showEstimateDetailPopup(e);
+    });
+
     card.appendChild(top);
     card.appendChild(priceRow);
     card.appendChild(infoGrid);
     card.appendChild(dateRow);
     card.appendChild(actions);
+    card.appendChild(detailBtn);
     estEl.appendChild(card);
   });
 
@@ -630,6 +638,51 @@ function restoreCustomer(clientName, id) {
 var editingCustomerName = null;
 var editingCustomerId = null; // 동명이인 구분용
 /** @param {string} [editName] 편집 시 기존 고객명 */
+
+// 견적서 품목 문자열("이름(금액원), 이름(금액원)...")을 파싱해서 항목별
+// 목록으로 보여주는 팝업 (2026-08-04 신규)
+function parseEstimateItems(fabricStr) {
+  if (!fabricStr) return [];
+  return fabricStr.split(/,\s*(?=[^)]*(?:\(|$))/).map(function(part) {
+    var m = part.trim().match(/^(.*)\(([\d,]+)원\)$/);
+    if (m) return { name: m[1].trim() || '(이름없음)', amount: m[2] };
+    return part.trim() ? { name: part.trim(), amount: null } : null;
+  }).filter(Boolean);
+}
+
+function showEstimateDetailPopup(e) {
+  var existing = document.getElementById('est-detail-popup');
+  if (existing) existing.remove();
+
+  var items = parseEstimateItems(e.fabric);
+  var itemsHtml = items.length > 0
+    ? items.map(function(it) {
+        return '<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #F5F2EE;gap:10px">' +
+          '<span style="font-size:12px;color:var(--dark);flex:1">' + escHtml(it.name) + '</span>' +
+          '<span style="font-size:12px;font-weight:700;color:var(--dark);flex-shrink:0">' + (it.amount ? it.amount + '원' : '—') + '</span>' +
+          '</div>';
+      }).join('')
+    : '<div style="padding:20px 0;text-align:center;color:var(--sub);font-size:12px">세부 항목 정보가 없어요</div>';
+
+  var overlay = document.createElement('div');
+  overlay.id = 'est-detail-popup';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML =
+    '<div style="background:#fff;border-radius:16px;max-width:420px;width:100%;max-height:80vh;overflow-y:auto;padding:20px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">' +
+        '<div style="font-size:14px;font-weight:800;color:var(--dark)">' + escHtml(e.clientName||'') + ' 견적 세부내용</div>' +
+        '<button onclick="document.getElementById(\'est-detail-popup\').remove()" style="border:none;background:transparent;font-size:18px;cursor:pointer;color:var(--sub)">×</button>' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--sub);margin-bottom:10px">' + escHtml(e.date||'') + (e.staffName ? ' · ' + escHtml(e.staffName) : '') + '</div>' +
+      itemsHtml +
+      '<div style="display:flex;justify-content:space-between;padding-top:12px;margin-top:6px;border-top:2px solid var(--dark)">' +
+        '<span style="font-size:13px;font-weight:800;color:var(--dark)">합계</span>' +
+        '<span style="font-size:15px;font-weight:900;color:var(--dark)">' + (Number(e.price)||0).toLocaleString() + '원</span>' +
+      '</div>' +
+    '</div>';
+  overlay.addEventListener('click', function(ev){ if (ev.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
 
 function openEstimate(name) {
   if (name) { try { var arr = loadCustomers(); var c = arr.find(function(x) { return x.clientName === name; }); if (c) localStorage.setItem('dah_open_customer', JSON.stringify({
