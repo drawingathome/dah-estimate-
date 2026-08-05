@@ -87,6 +87,7 @@ function renderCal() {
   // 이벤트 타입 색상
   var TYPE_DOT_COLOR = {상담:'var(--dark)', 실측:'#A67C52', 시공:'var(--terra)'};
   var TYPE_TEXT_COLOR = {상담:'var(--dark)', 실측:'#A67C52', 시공:'var(--terra)'};
+  var TYPE_BG_COLOR = {실측:'#F3EFF8', 시공:'#FFF3EE', 상담:'#F5F5F5'};
 
   for (var i = 0; i < totalCells; i++) {
     var cell = document.createElement('div');
@@ -122,11 +123,15 @@ function renderCal() {
 
       mainItems.slice(0,2).forEach(function(item) {
         var evLabel = document.createElement('div');
+        // 2026-08-05: background:var(--dark)+'22' 처럼 CSS변수 뒤에 투명도
+        // 숫자를 그냥 이어붙이면 무효한 CSS라 배경이 아예 안 먹혔음(실측만
+        // 하드코딩된 헥스값(#A67C52)이라 우연히 정상 작동, 상담/시공은 안 됨)
+        // — 하단 목록에 이미 있던 정확한 배경색 맵으로 통일
         evLabel.style.cssText =
           'width:100%;font-size:12px;font-weight:700;line-height:1.3;' +
           'padding:1px 3px;border-radius:var(--r-btn);margin-top:1px;' +
           'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' +
-          'background:' + (TYPE_DOT_COLOR[item.type]||'var(--dark)') + '22;' +
+          'background:' + (TYPE_BG_COLOR[item.type]||'#F5F2EE') + ';' +
           'color:' + (TYPE_TEXT_COLOR[item.type]||'var(--dark)');
         evLabel.textContent = item.type + ' ' + item.name;
         cell.appendChild(evLabel);
