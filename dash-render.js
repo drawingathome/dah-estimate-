@@ -174,8 +174,7 @@ function renderHome(skipServerFetch) {
       // 3. 스테이지 현황 칩
       '<div id="sec-stage" style="background:#fff;padding:14px 20px 12px;border-bottom:1px solid var(--border)">',
         '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:10px;text-transform:uppercase">진행 현황</div>',
-        '<div style="position:relative">',
-        '<div style="display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px">',
+        '<div style="display:flex;gap:6px;flex-wrap:wrap">',
           ['방문예약','상담','가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'].map(function(stage) {
             var cnt = stageCounts[stage] || 0;
             var isGreen  = stage === '방문예약' || stage === '상담' || stage === '시공완료';
@@ -190,8 +189,6 @@ function renderHome(skipServerFetch) {
               '<span style="font-size:12px;font-weight:600;color:' + color + '">' + stage + '</span>' +
             '</div>';
           }).join(''),
-        '</div>',
-        '<div style="position:absolute;top:0;right:0;bottom:4px;width:20px;background:linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.95));pointer-events:none"></div>',
         '</div>',
       '</div>',
 
