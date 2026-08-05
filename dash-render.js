@@ -306,7 +306,11 @@ function renderHome(skipServerFetch) {
     }
   };
 
-  if (skipServerFetch) {
+  // 2026-08-04: loadCustomersAsync(renderHome)처럼 콜백으로 호출되면 첫 인자에
+  // 고객배열이 들어오는데, 예전엔 이게 skipServerFetch 자리에서 항상 truthy로
+  // 오판되어 의도와 다른 분기를 타고 있었음(결과값은 우연히 같아서 안 보였지만
+  // 설계상 위험한 패턴). 진짜 boolean true일 때만 스킵하도록 엄격비교로 수정.
+  if (skipServerFetch === true) {
     doRender(loadCustomers());
   } else {
     loadCustomersAsync(doRender);
