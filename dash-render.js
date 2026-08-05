@@ -73,7 +73,7 @@ function renderHome(skipServerFetch) {
       ? getMonthPerformanceRevenue(customers, _thisMonthKey)
       : 0;
     var thisMonthContracts = customers.filter(function(c) {
-      return c.stage === '계약금' || c.stage === '실측' || c.stage === '잔금' || c.stage === '시공';
+      return ['선금결제','실측준비중','확정견적','잔금결제','시공준비중'].indexOf(c.stage) >= 0;
     }).length;
 
     // ── 목표 설정 ────────────────────────────────────
@@ -96,11 +96,11 @@ function renderHome(skipServerFetch) {
     // 2026-07-20 추가: "상담" 단계에서 오래 진행 없는 고객(놓친 리드)도 여기 포함.
     // 기준은 7일로 우선 정함 — 필요하면 조정 가능.
     var LEAD_STALE_DAYS = (typeof getLeadStaleDays === 'function') ? getLeadStaleDays() : 7;
-    var ORDER_STAGES_FOR_ACTION = ['계약금', '실측', '잔금', '시공'];
+    var ORDER_STAGES_FOR_ACTION = ['선금결제', '실측준비중', '확정견적', '잔금결제', '시공준비중'];
     var needActionMap = {};
     customers.forEach(function(c) {
       var reasons = [];
-      if (c.stage === '계약금' || c.stage === '잔금') reasons.push(c.stage + ' 처리');
+      if (c.stage === '선금결제' || c.stage === '잔금결제') reasons.push(c.stage + ' 처리');
       if (ORDER_STAGES_FOR_ACTION.indexOf(c.stage) >= 0) {
         // 2026-07-21 수정: 예전엔 "5개 항목 전부 미체크"일 때만 발주필요로 떴는데,
         // 하나라도 체크하면 나머지를 깜빡해도 목록에서 사라지는 심각한 버그였음.
@@ -205,10 +205,10 @@ function renderHome(skipServerFetch) {
           ? '<div class="empty-inline">처리 필요한 항목이 없습니다 ✅</div>'
           : needAction.slice(0,8).map(function(item) {
               var c = item.customer;
-              var stageColor = (c.stage === '계약금' || c.stage === '실측') ? 'var(--terra)' : 'var(--dark)';
+              var stageColor = (c.stage === '선금결제' || c.stage === '실측준비중') ? 'var(--terra)' : (c.stage === '방문예약' || c.stage === '상담' || c.stage === '시공완료') ? '#2E7D6B' : (c.stage === '가견적' || c.stage === '확정견적') ? '#C0392B' : 'var(--dark)';
               var targetTab = 'info';
               var reasonStr = item.reasons.join(' ');
-              if (reasonStr.indexOf('계약금 처리') >= 0 || reasonStr.indexOf('잔금 처리') >= 0) targetTab = 'pay';
+              if (reasonStr.indexOf('선금결제 처리') >= 0 || reasonStr.indexOf('잔금결제 처리') >= 0) targetTab = 'pay';
               else if (reasonStr.indexOf('발주 필요') >= 0) targetTab = 'order';
               var isStaleLead = reasonStr.indexOf('진행없음') >= 0;
               return '<div data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-cid="' + escHtml(c.id||'') + '" data-tab="' + targetTab + '" onclick="openDetail(this.getAttribute(\'data-cname\'),this.getAttribute(\'data-cid\')||undefined,this.getAttribute(\'data-tab\'))" ' +

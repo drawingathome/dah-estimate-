@@ -46,9 +46,9 @@ function hasIncompleteOrder(c) {
 }
 
 function renderOrderSection(c, orderBody) {
-  // 발주 현황: 계약 이후(계약금 단계 이후)에만 표시 —
-  // 가견적/상담 단계에서는 아직 발주할 게 없으므로 불필요한 정보 노출 방지
-  var ORDER_STAGES = ['계약금', '실측', '잔금', '시공', '완료'];
+  // 발주 현황: 계약 이후(선금결제 단계 이후)에만 표시 —
+  // 방문예약/상담/가견적 단계에서는 아직 발주할 게 없으므로 불필요한 정보 노출 방지
+  var ORDER_STAGES = ['선금결제', '실측준비중', '확정견적', '잔금결제', '시공준비중', '시공완료'];
   if (ORDER_STAGES.indexOf(c.stage) >= 0) {
     var orderStatus = c.orderStatus || {};
     var orderItems = getRelevantOrderItems(c);

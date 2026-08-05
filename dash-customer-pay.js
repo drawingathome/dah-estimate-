@@ -123,7 +123,7 @@ function renderPaySection(c, payBody) {
       newPd.depositDate    = depDate.value;
       newPd.depositReceipt = depReceiptChk.checked;
       savePayData(newPd);
-      if (c.stage === '상담') changeStage('계약금');
+      if (['방문예약','상담','가견적'].indexOf(c.stage) >= 0) changeStage('선금결제');
       closeDetail(); openDetail(c.clientName, c.id);
     });
     depForm.appendChild(depMethod); depForm.appendChild(depAmt); depForm.appendChild(depDate); depForm.appendChild(depReceipt);
@@ -183,7 +183,7 @@ function renderPaySection(c, payBody) {
       newPd.balanceDate    = balDate.value;
       newPd.balanceReceipt = balReceiptChk.checked;
       savePayData(newPd);
-      if (c.stage === '실측' || c.stage === '잔금') changeStage('시공');
+      if (['실측준비중','확정견적','잔금결제'].indexOf(c.stage) >= 0) changeStage('시공준비중');
       closeDetail(); openDetail(c.clientName, c.id);
     });
     balForm.appendChild(balMethod); balForm.appendChild(balAmt); balForm.appendChild(balDate); balForm.appendChild(balReceipt);

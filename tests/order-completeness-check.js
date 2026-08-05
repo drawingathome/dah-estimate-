@@ -36,7 +36,7 @@ async function run() {
 
     await page.evaluate((suffix) => {
       saveCustomers([{
-        clientName: '발주누락검증' + suffix, phone: '01000000020', addr: '서울', stage: '시공', staffName: '마스터', date: '2026-07-01',
+        clientName: '발주누락검증' + suffix, phone: '01000000020', addr: '서울', stage: '시공준비중', staffName: '마스터', date: '2026-07-01',
         orderStatus: { fabric: true, production: false, blind: false, material: false, install: false }
       }]);
       localStorage.setItem('dah_saved', JSON.stringify([{ clientName: '발주누락검증' + suffix, no: 'A-1', curtainCount: 2, blindCount: 0, savedAt: '2026-07-01' }]));
@@ -49,7 +49,7 @@ async function run() {
 
     await page.evaluate((suffix) => {
       saveCustomers([{
-        clientName: '발주완료검증' + suffix, phone: '01000000021', addr: '서울', stage: '시공', staffName: '마스터', date: '2026-07-01',
+        clientName: '발주완료검증' + suffix, phone: '01000000021', addr: '서울', stage: '시공준비중', staffName: '마스터', date: '2026-07-01',
         orderStatus: { fabric: true, production: true, blind: false, material: true, install: true }
       }]);
       localStorage.setItem('dah_saved', JSON.stringify([{ clientName: '발주완료검증' + suffix, no: 'B-1', curtainCount: 2, blindCount: 0, savedAt: '2026-07-01' }]));

@@ -8,12 +8,15 @@ var STAGES = ['방문예약','상담','가견적','선금결제','실측준비�
 var STAGES_ALL = ['상담','계약금','실측','잔금','시공','완료','취소','노쇼'];
 
 var STAGE_ALIM = {
+  방문예약: ['t01_reservation','t02_reminder'],
   상담:   ['t01_reservation','t02_reminder','t03_estimate','t04_followup'],
-  계약금: ['t03_estimate','t31_deposit','t05_measure_confirm'],
-  실측:   ['t05_measure_confirm','t06_measure_dday','t07_final_estimate','t71_balance_request'],
-  잔금:   ['t71_balance_request','t08_balance_remind','t09_order_confirm'],
-  시공:   ['t09_order_confirm','t10_install_confirm','t11_install_dday'],
-  완료:   ['t12_after_install','t13_cancel','t14_noshow']
+  가견적: ['t03_estimate','t04_followup'],
+  선금결제: ['t03_estimate','t31_deposit','t05_measure_confirm'],
+  실측준비중:   ['t05_measure_confirm','t06_measure_dday','t07_final_estimate','t71_balance_request'],
+  확정견적: ['t07_final_estimate','t71_balance_request'],
+  잔금결제:   ['t71_balance_request','t08_balance_remind','t09_order_confirm'],
+  시공준비중:   ['t09_order_confirm','t10_install_confirm','t11_install_dday'],
+  시공완료:   ['t12_after_install','t13_cancel','t14_noshow']
 };
 var ALIM_META = {
   t01_reservation:    {label:'1. 예약확인',           desc:'수동 · 예약 즉시',         tag:'수동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n상담 예약이 확인됐습니다. 편하신 시간에 뵙겠습니다!'},
@@ -238,7 +241,7 @@ function openDetail(name, id, forceTab) {
   if (estBodyEl) { estBodyEl.innerHTML = ''; }
   var autoTab = forceTab;
   if (!autoTab) {
-    if ((c.stage === '계약금' && !c.depositAmount) || (c.stage === '잔금' && !c.balanceAmount)) {
+    if ((c.stage === '선금결제' && !c.depositAmount) || (c.stage === '잔금결제' && !c.balanceAmount)) {
       autoTab = 'pay'; // 입금 대기 중이면 결제탭부터
     } else {
       var os = c.orderStatus || {};
@@ -419,7 +422,7 @@ function renderDetailStageSection(c, body, isMaster) {
     });
     kebabMenu.appendChild(cancelBtn);
     kebabMenu.appendChild(noshowBtn);
-    if (c.stage === '상담') {
+    if (['방문예약','상담','가견적'].indexOf(c.stage) >= 0) {
       var parkBtn = btn('display:block;width:100%;padding:10px 14px;border:none;background:#fff;font-size:12px;color:var(--dark);font-family:inherit;cursor:pointer;text-align:left;border-top:1px solid var(--border)','리드 보관', function(){
         if(confirm(c.clientName+'님을 대기 리드로 보관할까요? (고객목록에서는 계속 찾아볼 수 있어요)')) {
           var all = loadCustomers();
