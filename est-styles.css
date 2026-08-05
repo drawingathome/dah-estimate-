@@ -251,8 +251,19 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
   font-weight:600
 }
  
-.doc-header-tabbar{
+.doc-header-tabbar-wrap{
   grid-column:1/-1;grid-row:4;
+  position:relative;
+}
+/* 2026-08-05: 가로스크롤해야 보이는 탭(AS·수선 등)이 있다는 걸 알려주는
+   힌트가 전혀 없어서, 좁은 화면에서 탭 존재 자체를 못 알아채던 문제.
+   오른쪽 끝에 은은한 그림자로 "더 있다"는 걸 시각적으로 알려줌 */
+.doc-header-tabbar-wrap::after{
+  content:'';position:absolute;top:0;right:0;bottom:1px;width:24px;
+  background:linear-gradient(to right, rgba(40,40,40,0), rgba(40,40,40,0.85));
+  pointer-events:none;
+}
+.doc-header-tabbar{
   display:flex;flex-wrap:nowrap;align-items:flex-end;
   gap:2px;padding-top:4px;
   overflow-x:auto;overflow-y:visible;

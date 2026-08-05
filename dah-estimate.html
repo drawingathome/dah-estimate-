@@ -7,7 +7,7 @@
 // 대시보드에서 등록된 서비스워커가 Service-Worker-Allowed:/ 설정으로 이 페이지도
 // 덮을 수 있어 동일하게 방어함.
 (function(){
-  var BUILD = '202608041900';
+  var BUILD = '202608050900';
   try {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(regs){
@@ -27,7 +27,7 @@
 </script>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
-<link rel="stylesheet" href="/est-styles.css?v=202608041900">
+<link rel="stylesheet" href="/est-styles.css?v=202608050900">
 </style>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -229,7 +229,8 @@
       </div>
     </div>
     <!-- 탭바 -->
-    <div class="doc-header-tabbar print-hide">
+    <div class="doc-header-tabbar-wrap print-hide">
+    <div class="doc-header-tabbar">
       <div class="doc-header-tabbar-left">
         <button class="est-status-btn on" id="status-ga" onclick="setStatus('ga')">가견적서</button>
         <button class="est-status-btn" id="status-final" onclick="setStatus('final')">최종 견적서</button>
@@ -240,6 +241,7 @@
         <button class="cust-type-btn" id="type-rebuy" onclick="setCustType('rebuy')">재구매</button>
         <button class="cust-type-btn" id="type-as" onclick="setCustType('as')">AS · 수선</button>
       </div>
+    </div>
     </div>
   </div>
 
@@ -608,15 +610,15 @@
   <option value="허니콤 No.1">허니콤 No.1</option>
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
-<script src="/est-utils.js?v=202608041900"></script>
-<script src="/dash-supabase-auth.js?v=202608041900"></script>
-<script src="/est-form-controls.js?v=202608041900"></script>
-<script src="/est-product-calc.js?v=202608041900"></script>
-<script src="/est-survey.js?v=202608041900"></script>
-<script src="/est-save.js?v=202608041900"></script>
-<script src="/est-documents.js?v=202608041900"></script>
-<script src="/est-customer-load.js?v=202608041900"></script>
-<script src="/est-misc.js?v=202608041900"></script>
+<script src="/est-utils.js?v=202608050900"></script>
+<script src="/dash-supabase-auth.js?v=202608050900"></script>
+<script src="/est-form-controls.js?v=202608050900"></script>
+<script src="/est-product-calc.js?v=202608050900"></script>
+<script src="/est-survey.js?v=202608050900"></script>
+<script src="/est-save.js?v=202608050900"></script>
+<script src="/est-documents.js?v=202608050900"></script>
+<script src="/est-customer-load.js?v=202608050900"></script>
+<script src="/est-misc.js?v=202608050900"></script>
 <script>
 var currentTab = 'ga';
 
