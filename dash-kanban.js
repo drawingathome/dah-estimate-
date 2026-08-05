@@ -18,7 +18,7 @@ var STAGE_ORDER = ['상담','계약금','실측','잔금','시공','완료'];
 function changeStageByName(customerName, newStage, id) {
   try {
     var customers = loadCustomers();
-    var idx = id ? customers.findIndex(function(c) { return c.id === id; }) : customers.findIndex(function(c) { return c.clientName === customerName; });
+    var idx = id ? customers.findIndex(function(c) { return String(c.id) === String(id); }) : customers.findIndex(function(c) { return c.clientName === customerName; });
     if (idx < 0) { showToast('고객을 찾을 수 없습니다'); return; }
 
     var oldStage = customers[idx].stage;

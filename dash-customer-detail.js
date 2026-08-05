@@ -201,7 +201,11 @@ function renderDetailEstTab() {
 
 function openDetail(name, id, forceTab) {
   var customers = loadCustomers();
-  var c = id ? customers.find(function(x) { return x.id === id; }) : customers.find(function(x) { return x.clientName === name; });
+  // 2026-08-05: HTML data-cid 속성에서 넘어오는 id는 항상 문자열인데, customer.id는
+  // 숫자라서 엄격비교(===)가 항상 실패해 "고객을 찾을 수 없습니다" 오류가 나던 버그.
+  // 실제 화면 클릭(문자열 id)에서만 재현되고, 함수를 코드로 직접 호출(숫자 id)하면
+  // 재현이 안 돼서 오늘 검증에서 계속 놓쳤음 — 앞으로 클릭 경로까지 실제로 재현해서 검증할 것.
+  var c = id ? customers.find(function(x) { return String(x.id) === String(id); }) : customers.find(function(x) { return x.clientName === name; });
   if (!c) {
     showToast('"' + (name||'') + '" 고객 정보를 찾을 수 없어요 (삭제되었거나 이름이 변경된 것 같아요)');
     return;
@@ -630,7 +634,7 @@ function deleteCustomer() {
 function restoreCustomer(clientName, id) {
   if (!confirm((clientName||'고객') + ' 정보를 복구할까요?')) return;
   var arr = loadCustomers();
-  var target = id ? arr.find(function(c) { return c.id === id; }) : arr.find(function(c) { return c.clientName === clientName; });
+  var target = id ? arr.find(function(c) { return String(c.id) === String(id); }) : arr.find(function(c) { return c.clientName === clientName; });
   restoreCustomerFromDb(target || clientName, null);
   if (target) target.is_archived = false;
   saveCustomers(arr);
