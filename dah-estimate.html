@@ -7,7 +7,7 @@
 // 대시보드에서 등록된 서비스워커가 Service-Worker-Allowed:/ 설정으로 이 페이지도
 // 덮을 수 있어 동일하게 방어함.
 (function(){
-  var BUILD = '202608051100';
+  var BUILD = '202608051200';
   try {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(regs){
@@ -27,7 +27,7 @@
 </script>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
-<link rel="stylesheet" href="/est-styles.css?v=202608051100">
+<link rel="stylesheet" href="/est-styles.css?v=202608051200">
 </style>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -610,15 +610,15 @@
   <option value="허니콤 No.1">허니콤 No.1</option>
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
-<script src="/est-utils.js?v=202608051100"></script>
-<script src="/dash-supabase-auth.js?v=202608051100"></script>
-<script src="/est-form-controls.js?v=202608051100"></script>
-<script src="/est-product-calc.js?v=202608051100"></script>
-<script src="/est-survey.js?v=202608051100"></script>
-<script src="/est-save.js?v=202608051100"></script>
-<script src="/est-documents.js?v=202608051100"></script>
-<script src="/est-customer-load.js?v=202608051100"></script>
-<script src="/est-misc.js?v=202608051100"></script>
+<script src="/est-utils.js?v=202608051200"></script>
+<script src="/dash-supabase-auth.js?v=202608051200"></script>
+<script src="/est-form-controls.js?v=202608051200"></script>
+<script src="/est-product-calc.js?v=202608051200"></script>
+<script src="/est-survey.js?v=202608051200"></script>
+<script src="/est-save.js?v=202608051200"></script>
+<script src="/est-documents.js?v=202608051200"></script>
+<script src="/est-customer-load.js?v=202608051200"></script>
+<script src="/est-misc.js?v=202608051200"></script>
 <script>
 var currentTab = 'ga';
 
@@ -658,8 +658,9 @@ var currentTab = 'ga';
       if(c.memo)  document.getElementById('c-memo').value = c.memo;
       if(c.type)  document.getElementById('c-type').value = c.type;
       if(c.survey) displaySurvey(c.survey);
+      var loadedItems = (typeof restoreLineItemsToForm === 'function') && restoreLineItemsToForm(c.lineItems);
       localStorage.removeItem('dah_open_customer');
-      showToast('✅ '+c.name+' 고객 정보 불러옴');
+      showToast('✅ '+c.name+' 고객 정보 불러옴'+(loadedItems ? ' (이전 견적 품목 포함)' : ''));
     }
   } catch(e) {}
 })();

@@ -104,6 +104,47 @@ function renderCustLoadList(q) {
 function filterCustLoad() {
   renderCustLoadList(document.getElementById('cust-load-query')?.value||'');
 }
+// 2026-08-05: 저장된 견적의 lineItems로 커튼/블라인드 표를 채우는 공용 함수.
+// "고객 불러오기" 팝업과 "견적서 앱에서 열기"(대시보드 진입) 두 경로 모두
+// 품목 복원이 안 되던 문제라 공용화해서 두 곳에서 재사용.
+function restoreLineItemsToForm(lineItems) {
+  if (!lineItems || lineItems.length === 0) return false;
+  document.getElementById('curtain-body').innerHTML = '';
+  document.getElementById('blind-body').innerHTML = '';
+  lineItems.forEach(function(it) {
+    if (it.type === 'blind') {
+      addBlindRow();
+      var tr = document.getElementById('blind-body').lastElementChild;
+      var sp = tr.querySelector('.space-inp'); if (sp) sp.value = it.space || '';
+      var inns = tr.querySelectorAll('.inner-row .inner-inp');
+      if (inns[0]) inns[0].value = it.fabric || '';
+      if (inns[1]) inns[1].value = it.vendor || '';
+      if (inns[2]) inns[2].value = it.color || '';
+      var kindEl = tr.querySelector('.blind-kind'); if (kindEl) kindEl.value = it.kind || kindEl.value;
+      var bmw = tr.querySelector('.bmw'); if (bmw) bmw.value = it.bmw || '';
+      var bmh = tr.querySelector('.bmh'); if (bmh) bmh.value = it.bmh || '';
+      var priceEl = tr.querySelector('.blind-price'); if (priceEl && it.price) { priceEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(priceEl); }
+    } else {
+      addCurtainRow();
+      var ctr = document.getElementById('curtain-body').lastElementChild;
+      var csp = ctr.querySelector('.space-inp'); if (csp) csp.value = it.space || '';
+      var dn = ctr.querySelector('.c-display-name'); if (dn) dn.value = it.displayName || '';
+      var fb = ctr.querySelector('.c-fabric'); if (fb) fb.value = it.fabric || '';
+      var vd = ctr.querySelector('.c-vendor'); if (vd) vd.value = it.vendor || '';
+      var cl = ctr.querySelector('.c-color'); if (cl) cl.value = it.color || '';
+      var pt = ctr.querySelector('.pleat-type'); if (pt && it.pleatType) pt.value = it.pleatType;
+      var ot = ctr.querySelector('.open-type'); if (ot && it.openType) ot.value = it.openType;
+      var mw = ctr.querySelector('.mw'); if (mw) mw.value = it.mw || '';
+      var mh = ctr.querySelector('.mh'); if (mh) mh.value = it.mh || '';
+      var pn = ctr.querySelector('.pnum'); if (pn && it.pnum) pn.value = it.pnum;
+      var cp = ctr.querySelector('.cprice'); if (cp && it.price) { cp.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(cp); }
+      if (typeof calcCurtainRow === 'function') calcCurtainRow(mw);
+    }
+  });
+  if (typeof calcTotal === 'function') calcTotal();
+  return true;
+}
+
 function loadCustByIdx(el) {
   var idx = parseInt(el.getAttribute('data-idx'));
   var customers = [];
@@ -113,52 +154,13 @@ function loadCustByIdx(el) {
   if(c.clientName && document.getElementById('c-name')) document.getElementById('c-name').value=c.clientName;
   if(c.phone && document.getElementById('c-phone')) document.getElementById('c-phone').value=c.phone;
   if(c.addr && document.getElementById('c-addr')) document.getElementById('c-addr').value=c.addr;
-  // 2026-08-05: 이름/전화/주소만 채우고 기존 가견적 품목(커튼/블라인드 내용)은
-  // 전혀 안 불러와서, "불러오기"를 눌러도 매번 빈 화면부터 다시 입력해야
-  // 했던 문제 — 최신 저장 견적의 line_items가 있으면 표에도 그대로 복원
   var loadedItems = false;
   try {
     var saved = JSON.parse(localStorage.getItem('dah_saved')||'[]');
     var mine = saved.filter(function(e){ return c.id && e.clientId === c.id; })
       .sort(function(a,b){ return (b.savedAt||'') > (a.savedAt||'') ? 1 : -1; });
     var latest = mine[0];
-    if (latest && latest.lineItems && latest.lineItems.length > 0) {
-      // 기존 빈 행 제거 후 저장된 품목으로 표 채움
-      document.getElementById('curtain-body').innerHTML = '';
-      document.getElementById('blind-body').innerHTML = '';
-      latest.lineItems.forEach(function(it) {
-        if (it.type === 'blind') {
-          addBlindRow();
-          var tr = document.getElementById('blind-body').lastElementChild;
-          var sp = tr.querySelector('.space-inp'); if (sp) sp.value = it.space || '';
-          var inns = tr.querySelectorAll('.inner-row .inner-inp');
-          if (inns[0]) inns[0].value = it.fabric || '';
-          if (inns[1]) inns[1].value = it.vendor || '';
-          if (inns[2]) inns[2].value = it.color || '';
-          var kindEl = tr.querySelector('.blind-kind'); if (kindEl) kindEl.value = it.kind || kindEl.value;
-          var bmw = tr.querySelector('.bmw'); if (bmw) bmw.value = it.bmw || '';
-          var bmh = tr.querySelector('.bmh'); if (bmh) bmh.value = it.bmh || '';
-          var priceEl = tr.querySelector('.blind-price'); if (priceEl && it.price) { priceEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(priceEl); }
-        } else {
-          addCurtainRow();
-          var ctr = document.getElementById('curtain-body').lastElementChild;
-          var csp = ctr.querySelector('.space-inp'); if (csp) csp.value = it.space || '';
-          var dn = ctr.querySelector('.c-display-name'); if (dn) dn.value = it.displayName || '';
-          var fb = ctr.querySelector('.c-fabric'); if (fb) fb.value = it.fabric || '';
-          var vd = ctr.querySelector('.c-vendor'); if (vd) vd.value = it.vendor || '';
-          var cl = ctr.querySelector('.c-color'); if (cl) cl.value = it.color || '';
-          var pt = ctr.querySelector('.pleat-type'); if (pt && it.pleatType) pt.value = it.pleatType;
-          var ot = ctr.querySelector('.open-type'); if (ot && it.openType) ot.value = it.openType;
-          var mw = ctr.querySelector('.mw'); if (mw) mw.value = it.mw || '';
-          var mh = ctr.querySelector('.mh'); if (mh) mh.value = it.mh || '';
-          var pn = ctr.querySelector('.pnum'); if (pn && it.pnum) pn.value = it.pnum;
-          var cp = ctr.querySelector('.cprice'); if (cp && it.price) { cp.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(cp); }
-          if (typeof calcCurtainRow === 'function') calcCurtainRow(mw);
-        }
-      });
-      if (typeof calcTotal === 'function') calcTotal();
-      loadedItems = true;
-    }
+    if (latest) loadedItems = restoreLineItemsToForm(latest.lineItems);
   } catch(e) { console.warn('기존 견적 품목 불러오기 실패:', e); }
   closeCustLoad();
   showToast('고객 정보를 불러왔습니다 — '+(c.clientName||'')+(loadedItems ? ' (이전 견적 품목 포함)' : ''));

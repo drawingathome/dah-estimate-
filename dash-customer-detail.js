@@ -982,14 +982,22 @@ function showVendorOrderFromEstimate(e) {
 }
 
 function openEstimate(name) {
-  if (name) { try { var arr = loadCustomers(); var c = arr.find(function(x) { return x.clientName === name; }); if (c) localStorage.setItem('dah_open_customer', JSON.stringify({
+  if (name) { try {
+    var arr = loadCustomers(); var c = arr.find(function(x) { return x.clientName === name; });
+    // 2026-08-05: 이름/전화/주소만 넘기고 기존 견적 품목은 전혀 안 넘겨서,
+    // "견적서 앱에서 열기"로 들어가도 매번 빈 화면부터 시작해야 했던 문제.
+    // 최신 저장 견적의 lineItems도 함께 넘김.
+    var saved = []; try { saved = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e2) {}
+    var mine = c ? saved.filter(function(e){ return c.id && e.clientId === c.id; }).sort(function(a,b){ return (b.savedAt||'') > (a.savedAt||'') ? 1 : -1; }) : [];
+    if (c) localStorage.setItem('dah_open_customer', JSON.stringify({
           name: c.clientName,
           phone: c.phone,
           addr: c.addr,
           staff: c.staffName || '',
           type: c.visitCount > 1 ? '재구매' : (c.stage === 'AS' ? 'AS' : '신규'),
           stage: c.stage || '상담',
-          memo: c.memo || ''
+          memo: c.memo || '',
+          lineItems: mine[0] ? mine[0].lineItems : null
         })); } catch(e) {} }
   window.location.href = 'dah-estimate.html';
 }
