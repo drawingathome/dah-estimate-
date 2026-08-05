@@ -1220,10 +1220,11 @@ h1, h2, h3 { font-weight: 700; }
   font-weight: 700 !important;
 }
 
-/* ── 3. 고객 불러오기 / 설문 불러오기 ── */
-button[onclick*="openCustSearch"],
-button[onclick*="loadSurvey"],
-[class*="cust-load"], [class*="survey-load"] {
+/* ── 3. 고객 불러오기 / 설문 불러오기 버튼 ── */
+/* 2026-08-05: 예전엔 [class*="cust-load"]로 너무 넓게 잡아서, 팝업 안의
+   목록 항목(.cust-load-item/-name/-info)까지 전부 32px로 눌려 텍스트가
+   겹쳐 보이던 심각한 버그였음. 실제 버튼 클래스(load-cust-btn)만 정확히 지정. */
+.load-cust-btn {
   font-size: 13px !important;
   height: 32px !important;
   padding: 0 12px !important;
