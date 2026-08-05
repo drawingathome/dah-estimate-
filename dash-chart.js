@@ -33,10 +33,16 @@ function splitCustomerPayments(c) {
   var balDate = c.balanceDate || pd.balanceDate || '';
   var perf = Number(c.performanceRevenue) || 0;
   var totalPaid = dep + bal;
+  // 2026-08-04: 성과매출 배분 비율의 분모가 잘못됐던 버그 수정 — 예전엔
+  // totalPaid(지금까지 실제 입금된 금액)로 나눠서, 계약금만 들어온 시점엔
+  // totalPaid가 곧 계약금 자체와 같아지므로 비율이 항상 100%로 계산됨(아직
+  // 잔금도 안 들어왔는데 성과매출 전액이 잡히는 문제). 전체 계약금액(price)을
+  // 분모로 써야 "계약금 비율만큼만" 정확히 배분됨.
+  var totalPrice = Number(c.price) || totalPaid || 1;
   var parts = [];
   if (totalPaid > 0) {
-    if (dep > 0 && depDate) parts.push({ date: depDate, revenue: dep, perf: perf * (dep / totalPaid) });
-    if (bal > 0 && balDate) parts.push({ date: balDate, revenue: bal, perf: perf * (bal / totalPaid) });
+    if (dep > 0 && depDate) parts.push({ date: depDate, revenue: dep, perf: perf * (dep / totalPrice) });
+    if (bal > 0 && balDate) parts.push({ date: balDate, revenue: bal, perf: perf * (bal / totalPrice) });
   } else if (c.date && isLegacyNoPaymentRecord(c)) {
     // 입금 기록이 아직 없는 "예전 방식 고객"만 계약일 기준 전체금액으로 폴백
     // (2026-08-04 조건 추가) — 예전엔 이 폴백이 모든 고객에게 걸려서, 신규로
