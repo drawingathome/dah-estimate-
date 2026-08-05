@@ -908,14 +908,14 @@ button[onclick="exportExcel()"] {
   text-align: center;
   white-space: nowrap;
 }
-.stage-pill.방문예약 { background: #2E7D6B; }
-.stage-pill.상담 { background: #2E7D6B; }
-.stage-pill.가견적 { background: #C0392B; }
+.stage-pill.방문예약 { background: #8A8378; }
+.stage-pill.상담 { background: #8A8378; }
+.stage-pill.가견적 { background: #8A8378; }
 .stage-pill.선금결제 { background: #F06E2D; }
 .stage-pill.실측준비중 { background: #F06E2D; }
-.stage-pill.확정견적 { background: #C0392B; }
-.stage-pill.잔금결제 { background: #282828; }
-.stage-pill.시공준비중 { background: #282828; }
+.stage-pill.확정견적 { background: #F06E2D; }
+.stage-pill.잔금결제 { background: #F06E2D; }
+.stage-pill.시공준비중 { background: #F06E2D; }
 .stage-pill.시공완료 { background: #2E7D6B; }
 .rebuy-tag {
   font-size: 11px;

@@ -177,13 +177,11 @@ function renderHome(skipServerFetch) {
         '<div style="display:flex;gap:6px;flex-wrap:wrap">',
           ['방문예약','상담','가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'].map(function(stage) {
             var cnt = stageCounts[stage] || 0;
-            var isGreen  = stage === '방문예약' || stage === '상담' || stage === '시공완료';
-            var isRed    = stage === '가견적' || stage === '확정견적';
-            var isOrange = stage === '선금결제' || stage === '실측준비중';
-            var isDark   = stage === '잔금결제' || stage === '시공준비중';
-            var bg    = isGreen ? '#EAF3F0' : isRed ? '#FBECEA' : isOrange ? 'var(--bg-org)' : isDark ? '#F0F0F0' : 'var(--ivory2)';
-            var color = isGreen ? '#2E7D6B' : isRed ? '#C0392B' : isOrange ? 'var(--terra)' : isDark ? 'var(--dark)' : 'var(--mid)';
-            var bdr   = isGreen ? '#2E7D6B' : isRed ? '#C0392B' : isOrange ? 'var(--terra)' : isDark ? 'var(--dark)' : 'var(--border)';
+            var isGray = ['방문예약','상담','가견적'].indexOf(stage) >= 0;
+            var isGreen = stage === '시공완료';
+            var bg    = isGray ? '#F0EFEC' : isGreen ? '#EAF3F0' : 'var(--bg-org)';
+            var color = isGray ? '#8A8378' : isGreen ? '#2E7D6B' : 'var(--terra)';
+            var bdr   = isGray ? '#8A8378' : isGreen ? '#2E7D6B' : 'var(--terra)';
             return '<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--r-btn);border:1.5px solid ' + bdr + ';background:' + bg + '">' +
               '<span style="font-size:11px;font-weight:800;color:' + color + ';line-height:1">' + cnt + '</span>' +
               '<span style="font-size:12px;font-weight:600;color:' + color + '">' + stage + '</span>' +
