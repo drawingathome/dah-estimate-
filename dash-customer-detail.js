@@ -371,6 +371,18 @@ function renderDetailStageSection(c, body, isMaster) {
     });
     kebabMenu.appendChild(cancelBtn);
     kebabMenu.appendChild(noshowBtn);
+    if (c.stage === '상담') {
+      var parkBtn = btn('display:block;width:100%;padding:10px 14px;border:none;background:#fff;font-size:12px;color:var(--dark);font-family:inherit;cursor:pointer;text-align:left;border-top:1px solid var(--border)','리드 보관', function(){
+        if(confirm(c.clientName+'님을 대기 리드로 보관할까요? (고객목록에서는 계속 찾아볼 수 있어요)')) {
+          var all = loadCustomers();
+          var target = all.find(function(x){ return String(x.id) === String(c.id); });
+          if (target) target.leadParked = true;
+          saveCustomers(all);
+          parkLead(c, function(){ closeDetail(); renderHome(true); });
+        }
+      });
+      kebabMenu.appendChild(parkBtn);
+    }
     kebabWrap.appendChild(kebabBtn);
     kebabWrap.appendChild(kebabMenu);
   }

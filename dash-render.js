@@ -206,9 +206,6 @@ function renderHome(skipServerFetch) {
               if (reasonStr.indexOf('계약금 처리') >= 0 || reasonStr.indexOf('잔금 처리') >= 0) targetTab = 'pay';
               else if (reasonStr.indexOf('발주 필요') >= 0) targetTab = 'order';
               var isStaleLead = reasonStr.indexOf('진행없음') >= 0;
-              var parkBtnHtml = isStaleLead
-                ? '<button class="park-lead-btn" data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-cid="' + escHtml(c.id||'') + '" onclick="event.stopPropagation(); parkLeadFromHome(this)" style="flex-shrink:0;padding:0 10px;min-height:32px;background:#fff;border:1px solid var(--border);border-radius:8px;font-size:10px;font-weight:700;color:var(--sub);cursor:pointer;font-family:inherit">보관</button>'
-                : '';
               return '<div data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-cid="' + escHtml(c.id||'') + '" data-tab="' + targetTab + '" onclick="openDetail(this.getAttribute(\'data-cname\'),this.getAttribute(\'data-cid\')||undefined,this.getAttribute(\'data-tab\'))" ' +
                 'style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:var(--sp-3);cursor:pointer"><div style="width:6px;height:6px;border-radius:50%;background:' + stageColor + ';flex-shrink:0"></div>' +
                 '<div style="flex:1;min-width:0">' +
@@ -220,7 +217,6 @@ function renderHome(skipServerFetch) {
                 '</div>' +
                 '<span style="font-size:11px;font-weight:700;color:' + stageColor + ';flex-shrink:0;text-align:right">' + item.reasons.map(escHtml).join('<br>') + '</span>' +
                 '<span style="color:var(--sub);font-size:14px;flex-shrink:0">›</span>' +
-                parkBtnHtml +
               '</div>';
             }).join(''),
         '<div style="padding:12px 20px 10px;border-top:1px solid var(--border);margin-top:2px">',
