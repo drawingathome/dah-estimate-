@@ -107,7 +107,33 @@ function filterCustLoad() {
 // 2026-08-05: 저장된 견적의 lineItems로 커튼/블라인드 표를 채우는 공용 함수.
 // "고객 불러오기" 팝업과 "견적서 앱에서 열기"(대시보드 진입) 두 경로 모두
 // 품목 복원이 안 되던 문제라 공용화해서 두 곳에서 재사용.
-function restoreLineItemsToForm(lineItems) {
+// 2026-08-05: 이관된 예전 데이터(문혜자 등)는 line_items 자체가 원본에
+// 없어서 비어있음 — 텍스트 요약(fabric, "품목명(1,000원), ...")을 파싱해서
+// 최소한 품목명+금액이라도 채우는 폴백
+function parseProductString(str) {
+  if (!str) return [];
+  return str.split(/,\s*(?=[^)]*(?:\(|$))/).map(function(part) {
+    var m = part.trim().match(/^(.*)\(([\d,]+)원\)$/);
+    if (m) return { name: m[1].trim() || '(이름없음)', amount: m[2].replace(/,/g,'') };
+    return part.trim() ? { name: part.trim(), amount: null } : null;
+  }).filter(Boolean);
+}
+
+function restoreLineItemsToForm(lineItems, fallbackProductStr) {
+  if ((!lineItems || lineItems.length === 0) && fallbackProductStr) {
+    var parsed = parseProductString(fallbackProductStr);
+    if (parsed.length === 0) return false;
+    document.getElementById('curtain-body').innerHTML = '';
+    document.getElementById('blind-body').innerHTML = '';
+    parsed.forEach(function(p) {
+      addCurtainRow();
+      var ctr = document.getElementById('curtain-body').lastElementChild;
+      var dn = ctr.querySelector('.c-display-name'); if (dn) dn.value = p.name || '';
+      var cp = ctr.querySelector('.cprice'); if (cp && p.amount) { cp.value = p.amount; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(cp); }
+    });
+    if (typeof calcTotal === 'function') calcTotal();
+    return true;
+  }
   if (!lineItems || lineItems.length === 0) return false;
   document.getElementById('curtain-body').innerHTML = '';
   document.getElementById('blind-body').innerHTML = '';
@@ -160,7 +186,7 @@ function loadCustByIdx(el) {
     var mine = saved.filter(function(e){ return c.id && e.clientId === c.id; })
       .sort(function(a,b){ return (b.savedAt||'') > (a.savedAt||'') ? 1 : -1; });
     var latest = mine[0];
-    if (latest) loadedItems = restoreLineItemsToForm(latest.lineItems);
+    if (latest) loadedItems = restoreLineItemsToForm(latest.lineItems, latest.fabric);
   } catch(e) { console.warn('기존 견적 품목 불러오기 실패:', e); }
   closeCustLoad();
   showToast('고객 정보를 불러왔습니다 — '+(c.clientName||'')+(loadedItems ? ' (이전 견적 품목 포함)' : ''));

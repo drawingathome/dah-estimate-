@@ -997,7 +997,8 @@ function openEstimate(name) {
           type: c.visitCount > 1 ? '재구매' : (c.stage === 'AS' ? 'AS' : '신규'),
           stage: c.stage || '상담',
           memo: c.memo || '',
-          lineItems: mine[0] ? mine[0].lineItems : null
+          lineItems: mine[0] ? mine[0].lineItems : null,
+          fabricFallback: mine[0] ? mine[0].fabric : null
         })); } catch(e) {} }
   window.location.href = 'dah-estimate.html';
 }
