@@ -704,7 +704,14 @@ function showEstimateDetailPopup(e) {
       }).join('')
     : '<tr><td colspan="2" style="padding:30px 0;text-align:center;color:#B0A99F;font-size:12px">세부 항목 정보가 없어요</td></tr>';
 
-  var statusLabel = e.status === 'final' ? '최종 견적서' : '가견적서';
+  var statusLabel = (e.clientName ? e.clientName + '님 ' : '') + (e.status === 'final' ? '최종 견적서' : '가견적서');
+  // 2026-08-05: 제품가/시공비가 뒤섞여 있어 전체 시공비가 얼마인지 한눈에
+  // 안 보이던 문제 — 항목명에 "시공"이 포함된 것만 시공비로 분류해 별도 합계 표시
+  var installSum = 0, productSum = 0;
+  items.forEach(function(it) {
+    var amt = Number((it.amount || '0').toString().replace(/,/g, '')) || 0;
+    if (/시공/.test(it.name)) installSum += amt; else productSum += amt;
+  });
   var dateLabel = e.date ? e.date.replace(/-/g, '.') : '—';
   // 가견적 → 확정견적 전환 (2026-08-04 신규) — 이관된 가견적은 세부 항목을
   // 다시 편집할 방법이 없으므로(원본에 커튼/블라인드 낱개 입력데이터가 없음),
@@ -762,6 +769,10 @@ function showEstimateDetailPopup(e) {
       '</div>' +
       // 합계
       '<div style="padding:16px 28px 24px">' +
+        (installSum > 0 && productSum > 0
+          ? '<div style="display:flex;justify-content:space-between;padding-bottom:8px;font-size:12px;color:#8E8078"><span>제품가 합계</span><span>' + productSum.toLocaleString() + '원</span></div>' +
+            '<div style="display:flex;justify-content:space-between;padding-bottom:12px;font-size:12px;color:#8E8078"><span>시공비 합계</span><span>' + installSum.toLocaleString() + '원</span></div>'
+          : '') +
         '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:2px solid #282828">' +
           '<span style="font-size:13px;font-weight:700;color:#282828">합계</span>' +
           '<span style="font-size:19px;font-weight:900;color:#282828">' + (Number(e.price)||0).toLocaleString() + '원</span>' +
