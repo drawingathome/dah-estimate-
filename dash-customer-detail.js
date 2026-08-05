@@ -329,6 +329,43 @@ function renderDetailHeader(c) {
         '<div style="font-size:12px;color:var(--sub)">아직 저장된 견적서가 없어요</div>';
       curEstBox.style.display = 'block';
     }
+    // 2026-08-05: 위 "진행중인 견적"은 최신 견적서 금액(참고용)이고, 매출/성과
+    // 계산에는 이 값이 아니라 customer.price가 실제로 쓰임 — 둘이 다른 소스라
+    // 서로 어긋날 수 있어서(예: 견적을 여러개 받은 뒤 더 작은 금액으로 확정한
+    // 경우), 실무자가 직접 확인·수정할 수 있게 별도로 명확히 표시
+    var priceEditRow = document.getElementById('detail-price-edit-row');
+    if (!priceEditRow) {
+      priceEditRow = document.createElement('div');
+      priceEditRow.id = 'detail-price-edit-row';
+      priceEditRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)';
+      curEstBox.parentNode.insertBefore(priceEditRow, curEstBox.nextSibling);
+    }
+    function renderPriceRow() {
+      priceEditRow.innerHTML =
+        '<span style="font-size:11px;color:var(--sub)">매출 계산 기준금액</span>' +
+        '<span style="font-size:12px;font-weight:700;color:var(--dark);cursor:pointer;text-decoration:underline;text-decoration-style:dotted" id="price-edit-trigger">' + (Number(c.price)||0).toLocaleString() + '원 (수정)</span>';
+      document.getElementById('price-edit-trigger').onclick = function() {
+        var input = document.createElement('input');
+        input.type = 'number'; input.value = c.price || 0;
+        input.style.cssText = 'width:120px;padding:4px 8px;border:1px solid var(--terra);border-radius:6px;font-size:12px;text-align:right';
+        priceEditRow.innerHTML = '<span style="font-size:11px;color:var(--sub)">매출 계산 기준금액</span>';
+        priceEditRow.appendChild(input);
+        input.focus(); input.select();
+        function commit() {
+          var v = Math.max(0, Number(input.value) || 0);
+          var arr = loadCustomers();
+          var target = arr.find(function(x){ return String(x.id) === String(c.id); });
+          if (target) { target.price = v; target.performanceRevenue = v; }
+          saveCustomers(arr);
+          sbXHR('PATCH', 'customers?id=eq.' + c.id, { price: v, performance_revenue: v }, function(){});
+          c.price = v; c.performanceRevenue = v;
+          renderPriceRow();
+        }
+        input.addEventListener('blur', commit);
+        input.addEventListener('keydown', function(e){ if(e.key==='Enter') input.blur(); });
+      };
+    }
+    renderPriceRow();
   }
 
   // 핵심 정보 (연락처/담당자 — 아이콘형 인라인, 박스 없이)
