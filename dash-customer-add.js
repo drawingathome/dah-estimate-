@@ -3,6 +3,13 @@
 // dash-customer-detail.js에서 분리됨 (2026-07-19, 책임 분리)
 // ══════════════════════════════════════════════════
 
+// 주소(도로명) + 상세주소(동/호수 등)를 하나로 합침 — 저장은 항상 합쳐서 한 필드(addr)로
+function getCombinedAddr() {
+  var base = (document.getElementById('add-addr').value || '').trim();
+  var detail = (document.getElementById('add-addr-detail').value || '').trim();
+  return detail ? (base + ' ' + detail) : base;
+}
+
 function openAdd(editName) {
   editingCustomerName = editName || null;
   editingCustomerId = editName ? currentDetailId : null; // 상세화면에서 열렸다면 그 정확한 id를 이어받음
@@ -10,9 +17,9 @@ function openAdd(editName) {
   if (editName) {
     
     document.getElementById('add-modal-title').textContent = '고객 정보 수정';
-    var arr = loadCustomers(); var c = editingCustomerId ? arr.find(function(x) { return x.id === editingCustomerId; }) : arr.find(function(x) { return x.clientName === editName; });
-    if (c) { document.getElementById('add-name').value = c.clientName; document.getElementById('add-phone').value = c.phone || ''; document.getElementById('add-addr').value = c.addr || ''; document.getElementById('add-space').value = c.space || ''; document.getElementById('add-stage').value = c.stage || '상담'; document.getElementById('add-date').value = c.date || todayStr(); document.getElementById('add-memo').value = c.memo || ''; document.getElementById('add-measure').value = c.measureDate || ''; document.getElementById('add-install').value = c.installDate || ''; }
-  } else { document.getElementById('add-name').value = ''; document.getElementById('add-phone').value = ''; document.getElementById('add-addr').value = ''; document.getElementById('add-space').value = ''; document.getElementById('add-stage').value = '상담'; document.getElementById('add-date').value = todayStr(); document.getElementById('add-memo').value = ''; document.getElementById('add-measure').value = ''; document.getElementById('add-install').value = ''; }
+    var arr = loadCustomers(); var c = editingCustomerId ? arr.find(function(x) { return String(x.id) === String(editingCustomerId); }) : arr.find(function(x) { return x.clientName === editName; });
+    if (c) { document.getElementById('add-name').value = c.clientName; document.getElementById('add-phone').value = c.phone || ''; document.getElementById('add-addr').value = c.addr || ''; document.getElementById('add-addr-detail').value = ''; document.getElementById('add-space').value = c.space || ''; document.getElementById('add-stage').value = c.stage || '상담'; document.getElementById('add-date').value = c.date || todayStr(); document.getElementById('add-memo').value = c.memo || ''; document.getElementById('add-measure').value = c.measureDate || ''; document.getElementById('add-install').value = c.installDate || ''; }
+  } else { document.getElementById('add-name').value = ''; document.getElementById('add-phone').value = ''; document.getElementById('add-addr').value = ''; document.getElementById('add-addr-detail').value = ''; document.getElementById('add-space').value = ''; document.getElementById('add-stage').value = '상담'; document.getElementById('add-date').value = todayStr(); document.getElementById('add-memo').value = ''; document.getElementById('add-measure').value = ''; document.getElementById('add-install').value = ''; }
   var defaultStaff = editName ? (function() { var arr = loadCustomers(); var c = editingCustomerId ? arr.find(function(x) { return x.id === editingCustomerId; }) : arr.find(function(x) { return x.clientName === editName; }); return c ? (c.staffName || '마스터') : '마스터'; })() : (currentUser ? currentUser.name : '마스터');
   var isStaffUser = currentUser && currentUser.role === 'staff';
   
@@ -101,7 +108,7 @@ function saveCustomer() {
       if (isTarget) {
         matched = true;
         var staffName2; if (currentUser && currentUser.role === 'staff') { staffName2 = currentUser.name; } else { var asb2 = document.querySelector('.staff-btn.active'); staffName2 = asb2 ? asb2.getAttribute('data-staff') : (c.staffName||'마스터'); }
-        return Object.assign({}, c, { clientName:name, phone:phone, addr:document.getElementById('add-addr').value.trim(), space:document.getElementById('add-space').value.trim(), staffName:staffName2, stage:document.getElementById('add-stage').value, date:document.getElementById('add-date').value, measureDate:document.getElementById('add-measure').value, installDate:document.getElementById('add-install').value, memo:document.getElementById('add-memo').value.trim() });
+        return Object.assign({}, c, { clientName:name, phone:phone, addr:getCombinedAddr(), space:document.getElementById('add-space').value.trim(), staffName:staffName2, stage:document.getElementById('add-stage').value, date:document.getElementById('add-date').value, measureDate:document.getElementById('add-measure').value, installDate:document.getElementById('add-install').value, memo:document.getElementById('add-memo').value.trim() });
       } return c;
     });
     saveCustomers(arr);
@@ -123,7 +130,7 @@ function saveCustomer() {
     var visitCount = existing ? (existing.visitCount||1)+1 : 1;
     if (existing) arr = arr.filter(function(c) { return !(c.clientName === name && (c.phone||'').replace(/\D/g,'') === (phone||'').replace(/\D/g,'')); });
     var staffName; if (currentUser && currentUser.role === 'staff') { staffName = currentUser.name; } else { var asb = document.querySelector('.staff-btn.active'); staffName = asb ? asb.getAttribute('data-staff') : '마스터'; }
-    var newCustomer = { clientName:name, phone:phone, addr:document.getElementById('add-addr').value.trim(), space:document.getElementById('add-space').value.trim(), price:0, performanceRevenue:0, staffName:staffName, stage:document.getElementById('add-stage').value, date:document.getElementById('add-date').value, measureDate:document.getElementById('add-measure').value, installDate:document.getElementById('add-install').value, memo:document.getElementById('add-memo').value.trim(), visitCount:visitCount, createdAt:new Date().toISOString(), branch:'반포점' };
+    var newCustomer = { clientName:name, phone:phone, addr:getCombinedAddr(), space:document.getElementById('add-space').value.trim(), price:0, performanceRevenue:0, staffName:staffName, stage:document.getElementById('add-stage').value, date:document.getElementById('add-date').value, measureDate:document.getElementById('add-measure').value, installDate:document.getElementById('add-install').value, memo:document.getElementById('add-memo').value.trim(), visitCount:visitCount, createdAt:new Date().toISOString(), branch:'반포점' };
     arr.unshift(newCustomer); saveCustomers(arr);
     saveCustomerToDb(newCustomer, function(err, data) { if(!err && data && data[0]) { newCustomer.id = data[0].id; saveCustomers(arr); } });
     closeAdd(); renderHome(true); openDetail(name, newCustomer.id);

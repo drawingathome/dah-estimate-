@@ -594,6 +594,7 @@ function renderDetailBottomButtons(c, isMaster, body) {
   if (isMaster) {
     if (isSoftDeleted(c)) {
       bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid var(--dark);font-size:11px;font-family:inherit;cursor:pointer;color:var(--dark);font-weight:700;border-radius:12px', '↩ 복구', function(){ restoreCustomer(c.clientName, c.id); }));
+      bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid #C0392B;font-size:11px;font-family:inherit;cursor:pointer;color:#C0392B;font-weight:700;border-radius:12px', '완전 삭제', function(){ permanentlyDeleteCustomer(c); }));
     } else {
       bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid var(--border);font-size:11px;font-family:inherit;cursor:pointer;color:var(--dark);border-radius:12px', '삭제', deleteCustomer));
     }
@@ -629,6 +630,22 @@ function deleteCustomer() {
   if (target) target.is_archived = true;
   saveCustomers(arr);
   closeDetail(); renderHome(true);
+}
+
+// 2026-08-05: 진짜 완전 삭제 — 이중 확인(경고 문구 + 이름 재확인)을 거쳐야
+// 실행됨. 되돌릴 방법이 전혀 없으므로 소프트삭제(deleteCustomer)와 완전히 분리.
+function permanentlyDeleteCustomer(c) {
+  var name = c.clientName || '고객';
+  if (!confirm('⚠️ ' + name + '님 정보를 영구 삭제할까요?\n\n이 작업은 절대 되돌릴 수 없어요. 견적서·결제기록 등 모든 정보가 완전히 사라져요.')) return;
+  var typed = prompt('정말 삭제하려면 고객명을 정확히 입력해주세요: "' + name + '"');
+  if (typed !== name) { showToast('입력한 이름이 정확하지 않아 취소됐어요'); return; }
+  permanentlyDeleteCustomerFromDb(c, function(err) {
+    if (err) { showToast('완전 삭제 실패 — 다시 시도해주세요'); return; }
+    var arr = loadCustomers().filter(function(x){ return String(x.id) !== String(c.id); });
+    saveCustomers(arr);
+    showToast(name + '님 정보가 완전히 삭제됐습니다');
+    closeDetail(); renderHome(true);
+  });
 }
 
 function restoreCustomer(clientName, id) {

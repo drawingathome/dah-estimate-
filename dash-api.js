@@ -370,8 +370,18 @@ function deleteCustomerFromDb(customer, callback) {
   var filter = customer && customer.id
     ? 'id=eq.' + customer.id
     : 'client_name=eq.' + encodeURIComponent(typeof customer === 'string' ? customer : (customer && customer.clientName) || '');
-  // 실제 DELETE는 RLS에서 막혀있음(데이터 보호) → 소프트 삭제(is_archived=true)로 처리
+  // 실제 DELETE는 RLS에서 master 역할만 허용됨(customers_delete 정책) → 여기선 안전하게 소프트 삭제(is_archived=true)만 함
   sbXHR('PATCH', 'customers?' + filter, { is_archived: true }, function(err, data) { if(err) console.error('삭제 오류:', err.text); if(callback) callback(err, data); });
+}
+
+// 2026-08-05: 진짜 완전 삭제(되돌릴 수 없음) — 이미 보관(소프트삭제) 처리된
+// 고객에게만 노출됨(2단계 안전장치). RLS의 customers_delete 정책상 master
+// 역할만 실제로 성공함.
+function permanentlyDeleteCustomerFromDb(customer, callback) {
+  var filter = customer && customer.id
+    ? 'id=eq.' + customer.id
+    : 'client_name=eq.' + encodeURIComponent(typeof customer === 'string' ? customer : (customer && customer.clientName) || '');
+  sbXHR('DELETE', 'customers?' + filter, null, function(err, data) { if(err) console.error('완전삭제 오류:', err.text); if(callback) callback(err, data); });
 }
 
 // 소프트 삭제(보관 처리)된 고객을 다시 되돌림 (동일하게 id 우선, 없으면 이름 폴백)
