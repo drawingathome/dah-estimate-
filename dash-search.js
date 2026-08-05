@@ -39,7 +39,7 @@ function setDateFilter(period) {
   document.querySelectorAll('.date-filter-btn').forEach(function(b) {
     b.classList.toggle('on', b.getAttribute('data-period') === period);
   });
-  loadCustomersAsync(renderChart);
+  loadCustomersAsync(function(){ renderChart(); });
 }
 
 function getDateFilterRange() {

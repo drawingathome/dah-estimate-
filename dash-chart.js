@@ -319,6 +319,30 @@ function renderChart(period) {
   barsEl.appendChild(svg);
 
   
+  var curRev = 0, curPerf = 0, curCon = 0, curCons = 0;
+  // 2026-08-04: 상단 "전체/이번달/지난달/3개월/6개월" 버튼을 실제 요약 계산에
+  // 연결 — 예전엔 클릭은 되고 스타일도 바뀌는데 실제 데이터는 항상 "일/주/월/연"
+  // 탭 기준(오늘/이번주 등)으로만 나와서, 눌러도 아무 변화가 없던 죽은 버튼이었음.
+  var dateFilterRange = (typeof getDateFilterRange === 'function') ? getDateFilterRange() : null;
+  if (dateFilterRange) {
+    var rangeCustomers = customers.filter(function(c) {
+      if (!c.date) return false;
+      var d = new Date(c.date);
+      return d >= dateFilterRange.start && d <= dateFilterRange.end;
+    });
+    customers.forEach(function(c) {
+      if (c.stage === '상담') return;
+      splitCustomerPayments(c).forEach(function(part) {
+        if (!part.date) return;
+        var pd = new Date(part.date);
+        if (pd >= dateFilterRange.start && pd <= dateFilterRange.end) { curRev += part.revenue; curPerf += part.perf; }
+      });
+    });
+    curCon = rangeCustomers.filter(function(c){return c.stage!=='상담';}).length;
+    curCons = rangeCustomers.length;
+    var filterLabels = {this_month:'이번달', last_month:'지난달', '3months':'최근 3개월', '6months':'최근 6개월'};
+    if (summaryLabel && filterLabels[_currentDateFilter]) summaryLabel.textContent = filterLabels[_currentDateFilter] + ' 요약';
+  } else {
   var currentCustomers = customers.filter(function(c) {
     if (!c.date) return false;
     var _cd = c.date || (c.createdAt||'').slice(0,10);
@@ -327,7 +351,6 @@ function renderChart(period) {
     if (currentChartPeriod === 'monthly') return _cd.slice(0,7) === currentKey;
     if (currentChartPeriod === 'yearly') return _cd.slice(0,4) === currentKey;
   });
-  var curRev = 0, curPerf = 0;
   customers.forEach(function(c) {
     if (c.stage === '상담') return;
     splitCustomerPayments(c).forEach(function(part) {
@@ -341,8 +364,9 @@ function renderChart(period) {
       if (match) { curRev += part.revenue; curPerf += part.perf; }
     });
   });
-  var curCon = currentCustomers.filter(function(c){return c.stage!=='상담';}).length;
-  var curCons = currentCustomers.length;
+  curCon = currentCustomers.filter(function(c){return c.stage!=='상담';}).length;
+  curCons = currentCustomers.length;
+  }
   var conv = curCons > 0 ? Math.round(curCon/curCons*100) : 0;
 
   [['전체 매출',fmt(curRev),'var(--dark)'],['성과매출',fmt(curPerf),'var(--dark)'],['상담 건수',curCons+'건','var(--dark)'],['계약 건수',curCon+'건','var(--dark)'],['전환율',conv+'%','var(--dark)']].forEach(function(row) {
