@@ -79,7 +79,10 @@ function renderDetailEstTab() {
 
   var all = [];
   try { all = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
-  var ests = all.filter(function(e){ return (currentDetailId && e.clientId) ? e.clientId === currentDetailId : e.clientName === currentDetailName; });
+  var ests = all.filter(function(e){
+    var mine = (currentDetailId && e.clientId) ? e.clientId === currentDetailId : e.clientName === currentDetailName;
+    return mine && !e.isArchived;
+  });
   // 날짜 최신순 정렬
   ests.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
 
@@ -184,12 +187,18 @@ function renderDetailEstTab() {
       showEstimateDetailPopup(e);
     });
 
+    var deleteEstBtn = btn('width:100%;margin-top:6px;padding:9px 0;background:#fff;color:#C0392B;border:1px solid #F5D6D0;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '삭제', function(){
+      if (!confirm('이 견적서를 삭제할까요? (완전히 지워지지 않고 보관되며, 필요하면 나중에 복구할 수 있어요)')) return;
+      archiveEstimate(e, function(){ renderDetailEstTab(); });
+    });
+
     card.appendChild(top);
     card.appendChild(priceRow);
     card.appendChild(infoGrid);
     card.appendChild(dateRow);
     card.appendChild(actions);
     card.appendChild(detailBtn);
+    card.appendChild(deleteEstBtn);
     estEl.appendChild(card);
   });
 

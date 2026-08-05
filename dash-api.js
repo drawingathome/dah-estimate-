@@ -364,6 +364,19 @@ function saveCustomerToDb(customer, callback) {
   }
 }
 
+// 견적서 보관(소프트 삭제) — 2026-08-05: 예전엔 견적서를 삭제/숨길 방법이
+// 앱 어디에도 없었음(estimates.is_archived 컬럼은 있는데 쓰는 코드가 없었음)
+function archiveEstimate(est, callback) {
+  var all = [];
+  try { all = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
+  var target = all.find(function(x){ return x.id === est.id; });
+  if (target) target.isArchived = true;
+  localStorage.setItem('dah_saved', JSON.stringify(all));
+  if (typeof est.id === 'string' && est.id.length > 20) { // UUID면 서버(client_id 있는 정식 견적서)에도 반영
+    sbXHR('PATCH', 'estimates?id=eq.' + est.id, { is_archived: true }, function(err){ if(callback) callback(err); });
+  } else if (callback) callback(null);
+}
+
 // customer 객체(id 포함 가능)를 받아 삭제. id가 있으면 id로 정확히 지정,
 // 없는 예전 데이터는 부득이 이름으로 폴백(이 경우에만 동명이인 위험이 남음).
 function deleteCustomerFromDb(customer, callback) {
