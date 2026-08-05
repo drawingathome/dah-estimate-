@@ -84,7 +84,13 @@ function validateEstimate() {
     if (price > 0) hasProduct = true;
     else if (hasSize) missingPriceRows.push('블라인드 ' + (idx + 1) + '번째');
   });
-  if (!hasProduct) { showToast('제품 금액을 1개 이상 입력해주세요', 'error'); return false; }
+  if (!hasProduct) {
+    // 2026-08-05: AS·수선 접수는 무상 하자처리처럼 제품금액이 없을 수 있음.
+    // 증상이 기재되어 있으면 금액 없이도 저장 가능하게 예외 처리 —
+    // 예전엔 이 조건이 없어서 무상 AS건은 저장 자체가 막혔었음.
+    var asSymptomFilled = (currentCustType === 'as') && (document.getElementById('as-symptom')?.value || '').trim() !== '';
+    if (!asSymptomFilled) { showToast('제품 금액을 1개 이상 입력해주세요', 'error'); return false; }
+  }
   // 가로/높이까지 입력해놓고 단가만 빼먹은 행이 있으면 — 조용히 0원으로 저장되는 걸 막고 알려줌
   if (missingPriceRows.length > 0) {
     showToast('⚠️ ' + missingPriceRows.join(', ') + ' 항목의 단가가 비어있어요. 확인 후 다시 저장해주세요', 'error');
@@ -255,7 +261,7 @@ function saveEstimate() {
         }
       };
       xhr2.onerror=function(){ console.warn('Supabase 견적서 저장 실패 (localStorage는 완료)'); showToast('✅ 저장 완료 (로컬) — DB 동기화는 실패했어요'); };
-      xhr2.send(JSON.stringify({
+      xhr2.send(JSON.stringify(Object.assign({
         customer_name:name, price:grand,
         performance_revenue:perf, staff_name:staffName,
         estimate_status:currentTab||'ga',
@@ -266,7 +272,16 @@ function saveEstimate() {
         branch: '반포점',
         client_id: window._estSaveCustomerId || null,
         line_items: lineItems
-      }));
+      }, currentCustType === 'as' ? {
+        // 2026-08-05: AS 접수 폼(시공일자/AS유형/증상/사진메모/비용)이 화면엔
+        // 있는데 저장 로직에 전혀 연결이 안 돼있어서, 입력해도 저장 시 통째로
+        // 사라지던 문제 — DB 컬럼 신규 추가 후 여기서 함께 저장
+        as_install_date: document.getElementById('as-install-date')?.value || null,
+        as_type: document.getElementById('as-type-sel')?.value || null,
+        as_symptom: document.getElementById('as-symptom')?.value || null,
+        as_photo_memo: document.getElementById('as-photo-memo')?.value || null,
+        as_fee_type: (document.querySelector('input[name="as-fee"]:checked')?.value) || 'free'
+      } : {})));
     } catch(e) { console.warn('Supabase 연결 오류:', e); showToast('✅ 저장 완료 (로컬) — DB 동기화는 실패했어요'); }
   }
   function saveToLocalStorage() {
@@ -315,6 +330,13 @@ function saveEstimate() {
         branch: '반포점',
         lineItems: lineItems
       };
+      if (currentCustType === 'as') {
+        entry.asInstallDate = document.getElementById('as-install-date')?.value || null;
+        entry.asType = document.getElementById('as-type-sel')?.value || null;
+        entry.asSymptom = document.getElementById('as-symptom')?.value || null;
+        entry.asPhotoMemo = document.getElementById('as-photo-memo')?.value || null;
+        entry.asFeeType = (document.querySelector('input[name="as-fee"]:checked')?.value) || 'free';
+      }
       if (idx >= 0) saved[idx] = entry;
       else saved.unshift(entry);
       
