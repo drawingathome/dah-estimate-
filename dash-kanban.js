@@ -5,15 +5,22 @@
    ══════════════════════════════════════════════════ */
 
 var PIPE_STAGES = [
-  { key:'상담',   dot:'var(--dark)' },
-  { key:'계약금', dot:'var(--terra)' },
-  { key:'실측',   dot:'var(--terra)' },
-  { key:'잔금',   dot:'var(--dark)' },
-  { key:'시공',   dot:'var(--dark)' },
-  { key:'완료',   dot:'var(--border)' },
+  { key:'방문예약', dot:'#2E7D6B' },
+  { key:'상담',   dot:'#2E7D6B' },
+  { key:'가견적', dot:'#C0392B' },
+  { key:'선금결제', dot:'var(--terra)' },
+  { key:'실측준비중', dot:'var(--terra)' },
+  { key:'확정견적', dot:'#C0392B' },
+  { key:'잔금결제', dot:'var(--dark)' },
+  { key:'시공준비중', dot:'var(--dark)' },
+  { key:'시공완료', dot:'#2E7D6B' },
 ];
 
-var STAGE_ORDER = ['상담','계약금','실측','잔금','시공','완료'];
+// 2026-08-05: 6단계→9단계 세분화(선혜님 요청). 기존 6단계 데이터는
+// 자동 매핑됨: 상담(그대로) / 계약금→선금결제 / 실측→실측준비중 /
+// 잔금→잔금결제 / 시공→시공준비중 / 완료→시공완료.
+// "방문예약/가견적/확정견적"은 신규 고객부터 실제로 거치는 새 단계.
+var STAGE_ORDER = ['방문예약','상담','가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'];
 
 function changeStageByName(customerName, newStage, id) {
   try {

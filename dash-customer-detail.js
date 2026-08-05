@@ -4,7 +4,7 @@
    고객 추가/수정, 견적서 이력 표시.
    ══════════════════════════════════════════════════ */
 
-var STAGES = ['상담','계약금','실측','잔금','시공','완료'];
+var STAGES = ['방문예약','상담','가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'];
 var STAGES_ALL = ['상담','계약금','실측','잔금','시공','완료','취소','노쇼'];
 
 var STAGE_ALIM = {
@@ -34,9 +34,11 @@ var ALIM_META = {
   t14_noshow:         {label:'14. 노쇼 재예약 안내',   desc:'선택 · 노쇼 처리 후',      tag:'선택', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n지난 방문 일정에 연락이 닿지 않아 안내드려요. 편하실 때 다시 예약 부탁드립니다!'}
 };
 
-var STAGE_COLORS = {상담:'var(--dark)',계약금:'var(--terra)',실측:'#A67C52',잔금:'#2E7D6B',시공:'#C0392B',완료:'var(--light)'};
+// 2026-08-05: 9단계 신규 체계, dash-kanban.js의 PIPE_STAGES와 동일한
+// 색상그룹으로 통일(예전엔 이 파일과 kanban 색상표가 서로 달랐음)
+var STAGE_COLORS = {방문예약:'#2E7D6B',상담:'#2E7D6B',가견적:'#C0392B',선금결제:'var(--terra)',실측준비중:'var(--terra)',확정견적:'#C0392B',잔금결제:'var(--dark)',시공준비중:'var(--dark)',시공완료:'#2E7D6B'};
 var STAGE_BG = {상담:'#EEF2F7',계약금:'#FFF3EE',실측:'#F3EFF8',잔금:'#EEF5F2',시공:'#FDECEA',완료:'#F5F2EE'};
-var STAGE_NUM = {상담:1,계약금:2,실측:3,잔금:4,시공:5,완료:6};
+var STAGE_NUM = {방문예약:1,상담:2,가견적:3,선금결제:4,실측준비중:5,확정견적:6,잔금결제:7,시공준비중:8,시공완료:9};
 var STAGE_ACTIVE = {상담:true,계약금:true,실측:true,잔금:true,시공:true,완료:false};
 var currentDetailName = null;
 var currentDetailId = null; // 동명이인 구분용 — 상세를 열 때의 정확한 레코드 id를 기억해둠

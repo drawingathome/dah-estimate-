@@ -23,6 +23,9 @@ function isLegacyNoPaymentRecord(c) {
   return daysSince >= 7; // 등록일로부터 일주일 넘게 지났는데 입금기록이 없으면 예전 방식 데이터로 간주
 }
 
+// 2026-08-05: 9단계 체계 - 계약(선금결제) 이전 3단계는 매출/전환 계산에서 제외
+var PRE_CONTRACT_STAGES = ['방문예약','상담','가견적'];
+
 function splitCustomerPayments(c) {
   var pd = (function(){
     try { return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}'); } catch(e) { return {}; }
@@ -59,7 +62,7 @@ function splitCustomerPayments(c) {
 function getMonthRevenue(customers, monthKey) {
   var total = 0;
   customers.forEach(function(c) {
-    if (c.stage === '상담') return;
+    if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return;
     splitCustomerPayments(c).forEach(function(p) {
       if ((p.date || '').slice(0, 7) === monthKey) total += p.revenue;
     });
@@ -71,7 +74,7 @@ function getMonthRevenue(customers, monthKey) {
 function getMonthPerformanceRevenue(customers, monthKey) {
   var total = 0;
   customers.forEach(function(c) {
-    if (c.stage === '상담') return;
+    if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return;
     splitCustomerPayments(c).forEach(function(p) {
       if ((p.date || '').slice(0, 7) === monthKey) total += p.perf;
     });
@@ -83,7 +86,7 @@ function getMonthPerformanceRevenue(customers, monthKey) {
 function getMonthStaffPerformance(customers, monthKey) {
   var byStaff = {};
   customers.forEach(function(c) {
-    if (c.stage === '상담') return;
+    if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return;
     var s = c.staffName || '미지정';
     var counted = false;
     splitCustomerPayments(c).forEach(function(p) {
@@ -239,7 +242,7 @@ function renderChart(period) {
   var revenues = periods.map(function(p) {
     var total = 0;
     customers.forEach(function(c) {
-      if (c.stage === '상담') return;
+      if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return;
       splitCustomerPayments(c).forEach(function(part) {
         var d = part.date;
         if (!d) return;
@@ -337,14 +340,14 @@ function renderChart(period) {
       return d >= dateFilterRange.start && d <= dateFilterRange.end;
     });
     customers.forEach(function(c) {
-      if (c.stage === '상담') return;
+      if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return;
       splitCustomerPayments(c).forEach(function(part) {
         if (!part.date) return;
         var pd = new Date(part.date);
         if (pd >= dateFilterRange.start && pd <= dateFilterRange.end) { curRev += part.revenue; curPerf += part.perf; }
       });
     });
-    curCon = rangeCustomers.filter(function(c){return c.stage!=='상담';}).length;
+    curCon = rangeCustomers.filter(function(c){return PRE_CONTRACT_STAGES.indexOf(c.stage) < 0;}).length;
     curCons = rangeCustomers.length;
     var filterLabels = {this_month:'이번달', last_month:'지난달', '3months':'최근 3개월', '6months':'최근 6개월'};
     if (summaryLabel && filterLabels[_currentDateFilter]) summaryLabel.textContent = filterLabels[_currentDateFilter] + ' 요약';
@@ -358,7 +361,7 @@ function renderChart(period) {
     if (currentChartPeriod === 'yearly') return _cd.slice(0,4) === currentKey;
   });
   customers.forEach(function(c) {
-    if (c.stage === '상담') return;
+    if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return;
     splitCustomerPayments(c).forEach(function(part) {
       var d = part.date;
       if (!d) return;
@@ -370,7 +373,7 @@ function renderChart(period) {
       if (match) { curRev += part.revenue; curPerf += part.perf; }
     });
   });
-  curCon = currentCustomers.filter(function(c){return c.stage!=='상담';}).length;
+  curCon = currentCustomers.filter(function(c){return PRE_CONTRACT_STAGES.indexOf(c.stage) < 0;}).length;
   curCons = currentCustomers.length;
   }
   var conv = curCons > 0 ? Math.round(curCon/curCons*100) : 0;
@@ -386,7 +389,7 @@ function renderChart(period) {
 // 선금+잔금 기준 월별 건수 (계약 기준)
 function getMonthContractCount(customers, monthKey) {
   return customers.filter(function(c) {
-    if (c.stage === '상담') return false;
+    if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return false;
     return (c.date||'').slice(0,7) === monthKey;
   }).length;
 }

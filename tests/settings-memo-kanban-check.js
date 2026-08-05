@@ -90,7 +90,7 @@ async function run() {
 
     // ── 3. 칸반: PC는 드래그로 단계변경, 모바일은 케밥메뉴 여전히 동작 ──
     await page.evaluate((name) => {
-      saveCustomers([{ clientName: name, phone: '01099990001', addr: '서울', stage: '계약금', staffName: '마스터' }]);
+      saveCustomers([{ clientName: name, phone: '01099990001', addr: '서울', stage: '선금결제', staffName: '마스터' }]);
     }, '칸반검사_' + label);
     await new Promise(r => setTimeout(r, 300));
     await page.evaluate(() => goTab('pipe'));
@@ -98,16 +98,16 @@ async function run() {
     if (width >= 500) {
       const dragResult = await page.evaluate((name) => {
         var cols = document.querySelectorAll('.kanban-col');
-        var item = Array.from(cols[1].querySelectorAll('.kanban-item')).find(i => i.textContent.includes(name));
+        var item = Array.from(cols[3].querySelectorAll('.kanban-item')).find(i => i.textContent.includes(name));
         if (!item) return 'ITEM_NOT_FOUND';
         var dt = new DataTransfer();
         item.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: dt }));
-        cols[2].dispatchEvent(new DragEvent('drop', { bubbles: true, dataTransfer: dt }));
+        cols[4].dispatchEvent(new DragEvent('drop', { bubbles: true, dataTransfer: dt }));
         return 'dispatched';
       }, '칸반검사_' + label);
       await new Promise(r => setTimeout(r, 400));
       const stageAfter = await page.evaluate((name) => loadCustomers().find(c => c.clientName === name)?.stage, '칸반검사_' + label);
-      check(`[${label}] PC 드래그로 카드를 다른 컬럼에 놓으면 단계 변경됨`, dragResult === 'dispatched' && stageAfter === '실측', `드래그결과=${dragResult}, 변경후단계=${stageAfter}`);
+      check(`[${label}] PC 드래그로 카드를 다른 컬럼에 놓으면 단계 변경됨`, dragResult === 'dispatched' && stageAfter === '실측준비중', `드래그결과=${dragResult}, 변경후단계=${stageAfter}`);
     } else {
       const kebabResult = await page.evaluate((name) => {
         var btn = Array.from(document.querySelectorAll('.ksb')).find(b => b.closest('.kanban-item')?.textContent.includes(name));

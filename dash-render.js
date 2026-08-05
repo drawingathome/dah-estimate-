@@ -86,7 +86,7 @@ function renderHome(skipServerFetch) {
 
     // ── 스테이지별 카운트 ────────────────────────────
     var stageCounts = {};
-    ['상담','계약금','실측','잔금','시공','완료'].forEach(function(s) { stageCounts[s] = 0; });
+    ['방문예약','상담','가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'].forEach(function(s) { stageCounts[s] = 0; });
     customers.forEach(function(c) { if (stageCounts[c.stage] !== undefined) stageCounts[c.stage]++; });
 
     // ── 처리 필요 항목 ───────────────────────────────
@@ -107,9 +107,9 @@ function renderHome(skipServerFetch) {
         // 이제 "관련 있는 항목 중 하나라도 안 끝난 게 있으면" 정확히 감지함.
         if (typeof hasIncompleteOrder === 'function' && hasIncompleteOrder(c)) reasons.push('발주 필요');
       }
-      if (c.stage === '상담' && c.date && !c.leadParked) {
+      if (['방문예약','상담','가견적'].indexOf(c.stage) >= 0 && c.date && !c.leadParked) {
         var daysSince = Math.floor((_today - new Date(c.date)) / (1000*60*60*24));
-        if (daysSince >= LEAD_STALE_DAYS) reasons.push('상담 후 ' + daysSince + '일째 진행없음');
+        if (daysSince >= LEAD_STALE_DAYS) reasons.push(c.stage + ' 후 ' + daysSince + '일째 진행없음');
       }
       if (reasons.length > 0) needActionMap[c.clientName] = { customer: c, reasons: reasons };
     });
@@ -174,19 +174,24 @@ function renderHome(skipServerFetch) {
       // 3. 스테이지 현황 칩
       '<div id="sec-stage" style="background:#fff;padding:14px 20px 12px;border-bottom:1px solid var(--border)">',
         '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:10px;text-transform:uppercase">진행 현황</div>',
+        '<div style="position:relative">',
         '<div style="display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:4px">',
-          ['상담','계약금','실측','잔금','시공','완료'].map(function(stage) {
+          ['방문예약','상담','가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'].map(function(stage) {
             var cnt = stageCounts[stage] || 0;
-            var isOrange = stage === '계약금' || stage === '실측';
-            var isDark   = stage === '잔금'   || stage === '시공';
-            var bg    = isOrange ? 'var(--bg-org)'  : isDark ? '#F0F0F0' : 'var(--ivory2)';
-            var color = isOrange ? 'var(--terra)'   : isDark ? 'var(--dark)' : 'var(--mid)';
-            var bdr   = isOrange ? 'var(--terra)'   : isDark ? 'var(--dark)' : 'var(--border)';
+            var isGreen  = stage === '방문예약' || stage === '상담' || stage === '시공완료';
+            var isRed    = stage === '가견적' || stage === '확정견적';
+            var isOrange = stage === '선금결제' || stage === '실측준비중';
+            var isDark   = stage === '잔금결제' || stage === '시공준비중';
+            var bg    = isGreen ? '#EAF3F0' : isRed ? '#FBECEA' : isOrange ? 'var(--bg-org)' : isDark ? '#F0F0F0' : 'var(--ivory2)';
+            var color = isGreen ? '#2E7D6B' : isRed ? '#C0392B' : isOrange ? 'var(--terra)' : isDark ? 'var(--dark)' : 'var(--mid)';
+            var bdr   = isGreen ? '#2E7D6B' : isRed ? '#C0392B' : isOrange ? 'var(--terra)' : isDark ? 'var(--dark)' : 'var(--border)';
             return '<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--r-btn);border:1.5px solid ' + bdr + ';background:' + bg + '">' +
               '<span style="font-size:11px;font-weight:800;color:' + color + ';line-height:1">' + cnt + '</span>' +
               '<span style="font-size:12px;font-weight:600;color:' + color + '">' + stage + '</span>' +
             '</div>';
           }).join(''),
+        '</div>',
+        '<div style="position:absolute;top:0;right:0;bottom:4px;width:20px;background:linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.95));pointer-events:none"></div>',
         '</div>',
       '</div>',
 

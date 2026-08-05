@@ -6,7 +6,7 @@
    ══════════════════════════════════════════════════ */
 
 function isArchived(c) {
-  if (c.stage !== '완료') return false;
+  if (c.stage !== '시공완료') return false;
   var refDate = c.installDate || c.date || c.createdAt;
   if (!refDate) return false;
   return Math.floor((new Date() - new Date(refDate)) / 86400000) >= 14;
