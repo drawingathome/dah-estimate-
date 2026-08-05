@@ -216,6 +216,7 @@ function renderHome(skipServerFetch) {
                   '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(c.phone||'') + '</div>' +
                 '</div>' +
                 '<span style="font-size:11px;font-weight:700;color:' + stageColor + ';flex-shrink:0;text-align:right">' + item.reasons.map(escHtml).join('<br>') + '</span>' +
+                '<span style="color:var(--sub);font-size:14px;flex-shrink:0">›</span>' +
                 parkBtnHtml +
               '</div>';
             }).join(''),
