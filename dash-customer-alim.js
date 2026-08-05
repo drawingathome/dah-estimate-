@@ -49,14 +49,15 @@ function renderAlimSection(c, alimBody) {
 
   // ── 단계별 카테고리 아코디언 (전부 보기용, 현재 단계만 기본 펼침) ──
   var categories = [
-    ['상담', STAGE_ALIM.상담], ['계약금', STAGE_ALIM.계약금], ['실측', STAGE_ALIM.실측],
-    ['잔금', STAGE_ALIM.잔금], ['시공', STAGE_ALIM.시공], ['완료/기타', STAGE_ALIM.완료]
+    ['방문예약', STAGE_ALIM.방문예약], ['상담', STAGE_ALIM.상담], ['가견적', STAGE_ALIM.가견적],
+    ['선금결제', STAGE_ALIM.선금결제], ['실측준비중', STAGE_ALIM.실측준비중], ['확정견적', STAGE_ALIM.확정견적],
+    ['잔금결제', STAGE_ALIM.잔금결제], ['시공준비중', STAGE_ALIM.시공준비중], ['시공완료/기타', STAGE_ALIM.시공완료]
   ];
   var catListWrap = div('', []);
   catListWrap.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin:8px 0 4px', text:'단계별 전체 보기'}));
   categories.forEach(function(cat) {
     var stageName = cat[0], keys = cat[1] || [];
-    var isCurrentStage = (stageName === c.stage) || (stageName === '완료/기타' && c.stage === '완료');
+    var isCurrentStage = (stageName === c.stage) || (stageName === '시공완료/기타' && c.stage === '시공완료');
     var sentCount = keys.filter(function(k){ return sentMap[k]; }).length;
     var header = div('display:flex;align-items:center;justify-content:space-between;padding:8px 0;cursor:pointer', [
       span('font-size:12px;font-weight:700;color:var(--dark)', stageName + ' (' + sentCount + '/' + keys.length + ')'),
