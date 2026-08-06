@@ -106,6 +106,11 @@ function renderHome(skipServerFetch) {
         // 하나라도 체크하면 나머지를 깜빡해도 목록에서 사라지는 심각한 버그였음.
         // 이제 "관련 있는 항목 중 하나라도 안 끝난 게 있으면" 정확히 감지함.
         if (typeof hasIncompleteOrder === 'function' && hasIncompleteOrder(c)) reasons.push('발주 필요');
+        // 2026-08-06: 견적서는 있는데 품목데이터가 비어서(우사랑님 케이스) 조용히
+        // "발주할 거 없음"으로 판단돼 처리필요에서 사라지던 문제 — 선혜님이 실제로
+        // 발견함("처리필요가 다시 입력해야 뜬다는 게 이상하다"). 데이터가 없어서
+        // 판단 자체가 불가능한 경우는 별도 이유로 계속 표시해서 놓치지 않게 함.
+        else if (typeof hasOrderDataGap === 'function' && hasOrderDataGap(c)) reasons.push('발주정보 확인 필요(견적서 재입력 필요)');
       }
       if (['방문예약','상담','가견적'].indexOf(c.stage) >= 0 && c.date && !c.leadParked) {
         var daysSince = Math.floor((_today - new Date(c.date)) / (1000*60*60*24));
@@ -207,7 +212,7 @@ function renderHome(skipServerFetch) {
               var targetTab = 'info';
               var reasonStr = item.reasons.join(' ');
               if (reasonStr.indexOf('선금결제 처리') >= 0 || reasonStr.indexOf('잔금결제 처리') >= 0) targetTab = 'pay';
-              else if (reasonStr.indexOf('발주 필요') >= 0) targetTab = 'order';
+              else if (reasonStr.indexOf('발주 필요') >= 0 || reasonStr.indexOf('발주정보 확인 필요') >= 0) targetTab = 'order';
               var isStaleLead = reasonStr.indexOf('진행없음') >= 0;
               return '<div data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-cid="' + escHtml(c.id||'') + '" data-tab="' + targetTab + '" onclick="openDetail(this.getAttribute(\'data-cname\'),this.getAttribute(\'data-cid\')||undefined,this.getAttribute(\'data-tab\'))" ' +
                 'style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:var(--sp-3);cursor:pointer"><div style="width:6px;height:6px;border-radius:50%;background:' + stageColor + ';flex-shrink:0"></div>' +

@@ -37,7 +37,7 @@
 
 <script src="/dash-ui-helpers.js?v=202608044600"></script>
 <script src="/dash-core.js?v=202608060900"></script>
-<script src="/dash-render.js?v=202608060900"></script>
+<script src="/dash-render.js?v=202608061200"></script>
 <script src="/dash-render-est.js?v=202608061100"></script>
 <script src="/dash-render-search.js?v=202608061100"></script>
 <script src="/dash-memo.js?v=202608044600"></script>
@@ -46,7 +46,7 @@
 <script src="/dash-kanban.js?v=202608044600"></script>
 <script src="/dash-customer-pay.js?v=202608060900"></script>
 <script src="/dash-customer-alim.js?v=202608060900"></script>
-<script src="/dash-customer-order.js?v=202608060900"></script>
+<script src="/dash-customer-order.js?v=202608061200"></script>
 <script src="/dash-customer-detail.js?v=202608060900"></script>
 <script src="/dash-customer-add.js?v=202608060900"></script>
 <script src="/dash-auth.js?v=202608060900"></script>
@@ -444,18 +444,12 @@
       <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="search" id="cust-search" aria-label="고객 검색" class="search-input-clean" placeholder="고객명 · 연락처 · 주소 검색">
     </div>
-    <!-- 단계별 필터 (2026-07-20 신규 — 상담만/실측만 등 골라보기) -->
+    <!-- 2026-08-06: 업무단계별(방문예약~시공완료) 필터 제거 — 고객목록은 회원정보
+         자체(마케팅 등에 활용 가능한 연락처/주소 등) 조회용이라 단계와 무관하게
+         항상 전원 보여야 함(선혜님 지시). 단계별로 보고 싶으면 "진행현황"(칸반) 탭
+         이용. "대기 리드"는 업무단계가 아니라 팔로업 필요 여부 플래그라 남겨둠. -->
     <div class="stage-filter-wrap" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
       <button class="sort-btn stage-filter-btn on" data-stage="all" onclick="setStageFilter('all')">전체</button>
-      <button class="sort-btn stage-filter-btn" data-stage="방문예약" onclick="setStageFilter('방문예약')">방문예약</button>
-      <button class="sort-btn stage-filter-btn" data-stage="상담" onclick="setStageFilter('상담')">상담</button>
-      <button class="sort-btn stage-filter-btn" data-stage="가견적" onclick="setStageFilter('가견적')">가견적</button>
-      <button class="sort-btn stage-filter-btn" data-stage="선금결제" onclick="setStageFilter('선금결제')">선금결제</button>
-      <button class="sort-btn stage-filter-btn" data-stage="실측준비중" onclick="setStageFilter('실측준비중')">실측준비중</button>
-      <button class="sort-btn stage-filter-btn" data-stage="확정견적" onclick="setStageFilter('확정견적')">확정견적</button>
-      <button class="sort-btn stage-filter-btn" data-stage="잔금결제" onclick="setStageFilter('잔금결제')">잔금결제</button>
-      <button class="sort-btn stage-filter-btn" data-stage="시공준비중" onclick="setStageFilter('시공준비중')">시공준비중</button>
-      <button class="sort-btn stage-filter-btn" data-stage="시공완료" onclick="setStageFilter('시공완료')">시공완료</button>
       <button class="sort-btn stage-filter-btn" data-stage="parked" onclick="setStageFilter('parked')">대기 리드</button>
     </div>
     <!-- 정렬 버튼 -->

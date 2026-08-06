@@ -31,6 +31,26 @@ function getRelevantOrderItems(c) {
   return allOrderItems.filter(function(item){ return item.relevant; });
 }
 
+// 2026-08-06 신규: 견적서는 있는데(latestEst 존재) 정작 line_items/제품개수가
+// 하나도 없어서 "발주할 게 없다"고 조용히 판단되던 케이스(우사랑님 실제 사례)를
+// 구분. 이 경우 hasIncompleteOrder()는 false를 반환해서 처리필요 목록에서
+// 아예 사라졌었는데, "발주할 게 정말 없음"과 "데이터가 비어서 판단 불가"는
+// 전혀 다른 상황이라 구분해서 다르게 알려줘야 함.
+function hasOrderDataGap(c) {
+  var savedEsts = [];
+  try { savedEsts = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
+  var myEsts = savedEsts.filter(function(e){
+    return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName;
+  });
+  if (myEsts.length === 0) return false; // 견적서 자체가 없으면 이건 별개 문제(발주 판단은 정상 동작)
+  myEsts.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
+  var latestEst = myEsts[0];
+  var curtainCount = Number(latestEst.curtainCount)||0;
+  var blindCount = Number(latestEst.blindCount)||0;
+  var lineItemsCount = Array.isArray(latestEst.lineItems) ? latestEst.lineItems.length : 0;
+  return curtainCount === 0 && blindCount === 0 && lineItemsCount === 0;
+}
+
 // 발주 항목이 완료됐는지 (기존 boolean true 형식과 신규 {done,vendor,date} 객체 형식 둘 다 지원)
 function isOrderItemDone(orderStatus, key) {
   var v = orderStatus[key];
