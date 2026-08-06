@@ -27,7 +27,7 @@
 </script>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
-<link rel="stylesheet" href="/dash-styles.css?v=202608061800">
+<link rel="stylesheet" href="/dash-styles.css?v=202608061900">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="/dash-utils.js?v=202608044600"></script>
 <script src="/dash-api.js?v=202608061600"></script>
@@ -966,7 +966,9 @@ setTimeout(function(){
 </nav>
 
 <!-- 모바일 FAB 버튼 -->
-<button class="mob-fab" id="mob-fab" onclick="openAdd()" aria-label="고객 추가">+</button>
+<!-- 2026-08-06: 플로팅 + 버튼(mob-fab) 제거 — 헤더의 "+ 고객" 버튼과 완전히 동일한
+     openAdd() 함수를 호출하는 100% 중복 진입점이었음(둘 다 모든 화면에 항상 떠있음).
+     디자인 감사에서 "고객추가 진입점이 화면 하나에 3개"로 지적된 부분 중 하나 정리. -->
 
 
 <input type="file" id="restore-input" accept=".json" style="display:none">
