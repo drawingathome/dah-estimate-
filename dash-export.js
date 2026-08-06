@@ -4,29 +4,21 @@
    (doBackup과 backupData는 기능이 겹치는 것으로 보임 — 추후 정리 후보)
    ══════════════════════════════════════════════════ */
 
-function doBackup() {
-  try {
-    var customers = loadCustomers();
-    var data = {
-      customers:  customers,
-      exportedAt: new Date().toISOString(),
-      version:    '1.0',
-    };
-    var blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'DAH_백업_' + new Date().toISOString().slice(0,10) + '.json';
-    a.click();
-    URL.revokeObjectURL(a.href);
-    
-    // 마지막 백업 시간 저장
-    localStorage.setItem('dah_last_backup', new Date().toISOString());
-    var el = document.getElementById('last-backup');
-    if (el) el.textContent = '마지막 백업: 방금 전';
-    showToast('백업 파일이 다운로드됩니다');
-  } catch(e) {
-    showToast('백업 실패: ' + e.message);
+// 2026-08-05: 여기 있던 doBackup()은 어디서도 호출되지 않는 죽은 코드였음(감사 중 발견, 제거함).
+// 설정탭의 "백업 (JSON 다운로드)" 버튼은 실제로 backupData()에 연결되어 있음 — 그게 정본.
+
+/* ── CSV 수식 인젝션 방어 (2026-08-05 신규) ──
+   셀 값이 =, +, -, @ 로 시작하면 엑셀/구글시트가 수식으로 해석할 수 있음.
+   고객명·메모는 사람이 자유롭게 입력하는 텍스트라, 실수로(혹은 악의적으로)
+   그런 문자로 시작하는 값이 들어갈 가능성을 원천 차단 — 앞에 작은따옴표를
+   붙여 "이건 텍스트"라고 명시(엑셀에서 열면 따옴표는 안 보이고 텍스트로만 표시됨). */
+function csvSafeCell(cell) {
+  var s = String(cell);
+  if (/^[=+\-@]/.test(s)) s = "'" + s;
+  if (s.indexOf(',') >= 0 || s.indexOf('\n') >= 0 || s.indexOf('"') >= 0) {
+    s = '"' + s.replace(/"/g, '""') + '"';
   }
+  return s;
 }
 
 function backupData() {
@@ -67,13 +59,7 @@ function exportExcel() {
 
     var BOM = '\uFEFF';
     var csv = BOM + [headers].concat(rows).map(function(row) {
-      return row.map(function(cell) {
-        var s = String(cell);
-        if (s.indexOf(',') >= 0 || s.indexOf('\n') >= 0 || s.indexOf('"') >= 0) {
-          s = '"' + s.replace(/"/g, '""') + '"';
-        }
-        return s;
-      }).join(',');
+      return row.map(csvSafeCell).join(',');
     }).join('\r\n');
 
     var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
@@ -129,13 +115,7 @@ function exportEstimatesExcel() {
 
     var BOM = '\uFEFF';
     var csv = BOM + [headers].concat(rows).map(function(row) {
-      return row.map(function(cell) {
-        var s = String(cell);
-        if (s.indexOf(',') >= 0 || s.indexOf('\n') >= 0 || s.indexOf('"') >= 0) {
-          s = '"' + s.replace(/"/g, '""') + '"';
-        }
-        return s;
-      }).join(',');
+      return row.map(csvSafeCell).join(',');
     }).join('\r\n');
 
     var blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});

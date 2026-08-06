@@ -154,7 +154,9 @@ function saveEstimate() {
     lineItems.push({
       type: 'curtain', space: space, displayName: displayName, fabric: fabric,
       vendor: tr.querySelector('.c-vendor')?.value||'', color: tr.querySelector('.c-color')?.value||'',
+      vendorIsWorkshop: tr.querySelector('.vendor-is-workshop')?.checked || false,
       pleatType: tr.querySelector('.pleat-type')?.value||'', openType: tr.querySelector('.open-type')?.value||'',
+      heightAdjust: tr.querySelector('.height-adjust')?.value||'-3',
       hemType: tr.querySelector('.hem-type')?.value||'', mw: tr.querySelector('.mw')?.value||'',
       mh: tr.querySelector('.mh')?.value||'', pnum: tr.querySelector('.pnum')?.value||'',
       price: getPriceVal(tr.querySelector('.cprice')), amt: tr.querySelector('.camt')?.textContent||''
@@ -230,10 +232,16 @@ function saveEstimate() {
       };
       xhr.onerror=function(){ console.warn('Supabase 고객 저장 실패 (localStorage는 완료)'); saveToEstimates(); };
       var custPayload = {
-        client_name:name, phone:phone, addr:addr+(addr2?' '+addr2:''),
+        client_name:name, phone:phone,
         memo:custMemo+' | 커튼:'+grand+'원',
         staff_name:staffName
       };
+      // 2026-08-05: 기존 고객을 PATCH(업데이트)할 때, 이번 화면에 주소를 안 채웠다고 해서
+      // 서버에 저장돼있던 기존 주소까지 빈 값으로 덮어써지면 안 됨. PATCH는 payload에 있는
+      // 필드만 갱신하므로, 주소가 비어있을 땐 아예 payload에서 빼서 기존 값이 유지되게 함.
+      // (신규 고객이면 addr가 비어있어도 그냥 빈 값으로 시작하는 게 맞아서 그대로 포함)
+      var addrCombined = addr+(addr2?' '+addr2:'');
+      if (addrCombined || !isUpdate) custPayload.addr = addrCombined;
       // 확정견적일 때만 고객 실적에 금액 동기화 (2026-08-04 신규) — 예전엔
       // 견적서를 아무리 저장해도 customers.price/performance_revenue가
       // 영구히 0으로 남아서, 신규로 발생하는 모든 고객이 매출탭 계산에
@@ -245,6 +253,30 @@ function saveEstimate() {
     } catch(e) { console.warn('Supabase 연결 오류:', e); saveToEstimates(); }
   }
   function saveToEstimates() {
+    // 2026-08-05: 재시도 큐에서도 그대로 재사용할 수 있도록 payload를 변수로 분리
+    // 2026-08-05: 중복행 방지용 idempotency key — 이 저장 시도(재시도 포함) 전체에서
+    // 동일한 값을 유지. "서버는 실제로 성공했는데 응답을 못 받아 실패로 오판"해서
+    // 재시도했을 때, DB의 유니크 제약(estimates_idempotency_key_uniq)이 중복 삽입을
+    // 막아주고, 그 409 응답을 "이미 저장됨"으로 해석해서 정상 처리함.
+    var estPayloadForRetry = Object.assign({
+      client_idempotency_key: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('est-' + Date.now() + '-' + Math.random().toString(36).slice(2)),
+      customer_name:name, price:grand,
+      performance_revenue:perf, staff_name:staffName,
+      estimate_status:currentTab||'ga',
+      phone:phone, space:spaceStr, product:fabricStr,
+      date: document.getElementById('c-measure')?.value || '',
+      memo: custMemo,
+      confirmed_at: window._estimateConfirmedAt || null,
+      branch: '반포점',
+      client_id: window._estSaveCustomerId || null,
+      line_items: lineItems
+    }, currentCustType === 'as' ? {
+      as_install_date: document.getElementById('as-install-date')?.value || null,
+      as_type: document.getElementById('as-type-sel')?.value || null,
+      as_symptom: document.getElementById('as-symptom')?.value || null,
+      as_photo_memo: document.getElementById('as-photo-memo')?.value || null,
+      as_fee_type: (document.querySelector('input[name="as-fee"]:checked')?.value) || 'free'
+    } : {});
     try {
       var xhr2=new XMLHttpRequest();
       xhr2.open('POST',SUPABASE_URL+'/rest/v1/estimates',true);
@@ -255,34 +287,30 @@ function saveEstimate() {
       xhr2.onload=function(){
         if (xhr2.status >= 200 && xhr2.status < 300) {
           showToast('✅ 저장 완료! (DB+로컬)');
+        } else if (xhr2.status === 409) {
+          // 2026-08-05: idempotency key 중복 = 이전 시도가 실제로는 이미 성공했었다는 뜻
+          // (응답만 유실됐던 것) — 실패가 아니라 정상 처리
+          console.log('견적서 이미 저장됨(idempotency key 중복, 정상):', xhr2.responseText);
+          showToast('✅ 저장 완료! (DB+로컬)');
         } else {
           console.warn('Supabase 견적서 저장 실패 (status='+xhr2.status+'):', xhr2.responseText);
           showToast('✅ 저장 완료 (로컬) — DB 동기화는 실패했어요');
+          // 2026-08-05: 실패하면 그걸로 끝이라 나중에 수동으로 다시 저장해야 했음 —
+          // 재시도 큐에 등록해서 네트워크 복구시 자동으로 다시 시도되도록 함
+          if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry);
         }
       };
-      xhr2.onerror=function(){ console.warn('Supabase 견적서 저장 실패 (localStorage는 완료)'); showToast('✅ 저장 완료 (로컬) — DB 동기화는 실패했어요'); };
-      xhr2.send(JSON.stringify(Object.assign({
-        customer_name:name, price:grand,
-        performance_revenue:perf, staff_name:staffName,
-        estimate_status:currentTab||'ga',
-        phone:phone, space:spaceStr, product:fabricStr,
-        date: document.getElementById('c-measure')?.value || '',
-        memo: custMemo,
-        confirmed_at: window._estimateConfirmedAt || null,
-        branch: '반포점',
-        client_id: window._estSaveCustomerId || null,
-        line_items: lineItems
-      }, currentCustType === 'as' ? {
-        // 2026-08-05: AS 접수 폼(시공일자/AS유형/증상/사진메모/비용)이 화면엔
-        // 있는데 저장 로직에 전혀 연결이 안 돼있어서, 입력해도 저장 시 통째로
-        // 사라지던 문제 — DB 컬럼 신규 추가 후 여기서 함께 저장
-        as_install_date: document.getElementById('as-install-date')?.value || null,
-        as_type: document.getElementById('as-type-sel')?.value || null,
-        as_symptom: document.getElementById('as-symptom')?.value || null,
-        as_photo_memo: document.getElementById('as-photo-memo')?.value || null,
-        as_fee_type: (document.querySelector('input[name="as-fee"]:checked')?.value) || 'free'
-      } : {})));
-    } catch(e) { console.warn('Supabase 연결 오류:', e); showToast('✅ 저장 완료 (로컬) — DB 동기화는 실패했어요'); }
+      xhr2.onerror=function(){
+        console.warn('Supabase 견적서 저장 실패 (localStorage는 완료)');
+        showToast('✅ 저장 완료 (로컬) — DB 동기화는 실패했어요');
+        if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry);
+      };
+      xhr2.send(JSON.stringify(estPayloadForRetry));
+    } catch(e) {
+      console.warn('Supabase 연결 오류:', e);
+      showToast('✅ 저장 완료 (로컬) — DB 동기화는 실패했어요');
+      if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry);
+    }
   }
   function saveToLocalStorage() {
     try {
@@ -377,9 +405,16 @@ function saveEstimate() {
           createdAt: entry.savedAt
         };
         if (cidx >= 0) {
-          
+          // 2026-08-05: stage/visitCount는 이미 "새 값이 없으면 기존값 유지"로 안전하게
+          // 처리돼 있었는데, addr/space/memo는 이 보호가 빠져있었음 — 그래서 예전에
+          // 주소를 입력해뒀어도, 나중에 주소칸이 빈 상태로 다른 견적서를 저장하면
+          // (예: 빠른 가격 확인용으로 새 견적서 폼을 열었을 때) 조용히 지워지는 버그가
+          // 있었음. 같은 방식으로 보호.
           custEntry.stage = customers[cidx].stage || custEntry.stage;
           custEntry.visitCount = customers[cidx].visitCount || 1;
+          custEntry.addr = custEntry.addr || customers[cidx].addr;
+          custEntry.space = custEntry.space || customers[cidx].space;
+          custEntry.memo = custEntry.memo || customers[cidx].memo;
           customers[cidx] = Object.assign(customers[cidx], custEntry);
         } else {
           customers.unshift(custEntry);

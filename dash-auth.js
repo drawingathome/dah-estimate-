@@ -25,14 +25,21 @@ function loginAs(who) {
   var _mobFab = document.querySelector('.mob-fab');
   if (_mobFab) { _mobFab.style.display = (window.innerWidth <= 640) ? 'flex' : 'none'; }
   applyPermissions();
-  loadCustomersAsync(renderHome);
+  // 2026-08-05: loadCustomersAsync(renderHome) 직접 전달 금지 — 콜백 인자(고객배열)가
+  // renderHome의 skipServerFetch 자리로 들어가는 시그니처 불일치 패턴(7-2 규칙 위반).
+  // 지금까진 엄격비교(=== true)로 오작동은 막았지만, 내부에서 loadCustomersAsync를
+  // 한 번 더 호출하는 redundant 구조였음. 여기서 이미 최신 데이터를 받았으니
+  // skipServerFetch=true로 명시 호출해 재요청 없이 바로 렌더링.
+  loadCustomersAsync(function(){ renderHome(true); });
 }
 
 function applyPermissions() {
   var isMaster = currentUser && currentUser.role === 'master';
   
   setTimeout(function(){
-    ['매출','chart'].forEach(function(t){
+    // 2026-08-05: 매출 탭의 실제 data-tab/data-mob-tab 값은 'chart'뿐이라
+    // '매출' 문자열로도 조회하던 건 존재하지 않는 셀렉터라 항상 no-op이었음(죽은 코드) — 제거
+    ['chart'].forEach(function(t){
       var salesTab = document.querySelector('[data-tab="'+t+'"]');
       if (salesTab) salesTab.style.display = isMaster ? '' : 'none';
       var mobSalesTab = document.querySelector('[data-mob-tab="'+t+'"]');

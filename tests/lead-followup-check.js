@@ -58,6 +58,27 @@ async function run() {
     const gotChk = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
     check(`[${label}] 홈 화면 가로스크롤 없음`, !gotChk, '가로스크롤 발생');
 
+    // 2026-08-05 신규: "처리 필요" 리스트 스테이지 컬러가 확정된 3색 체계를 따르는지 검증.
+    // (실제로 이 부분만 폐기된 4색 체계(그린/레드/다크)가 남아있던 버그가 있었음 — 재발 방지용)
+    const preContractDotColor = await page.evaluate(() => {
+      var el = Array.from(document.querySelectorAll('#sec-todo [data-cname]'))
+        .find(function(e){ return e.getAttribute('data-cname').indexOf('놓친리드테스트') >= 0; });
+      if (!el) return null;
+      var dot = el.querySelector('div[style*="border-radius:50%"]');
+      return dot ? getComputedStyle(dot).backgroundColor : null;
+    });
+    check(`[${label}] 처리필요 리스트에서 상담단계 고객 dot이 회색(#8A8378)`, preContractDotColor === 'rgb(138, 131, 120)', '실제값=' + preContractDotColor);
+    const noOldSchemeColors = await page.evaluate(() => {
+      // 레드(#C0392B)나 다크(#282828 계열)가 스테이지 dot에 남아있으면 폐기된 4색 체계 잔존
+      var bad = false;
+      document.querySelectorAll('#sec-todo [data-cname] div[style*="border-radius:50%"]').forEach(function(dot){
+        var c = getComputedStyle(dot).backgroundColor;
+        if (c === 'rgb(192, 57, 43)') bad = true; // #C0392B
+      });
+      return !bad;
+    });
+    check(`[${label}] 처리필요 리스트에 경고색(레드) 스테이지 dot 없음`, noOldSchemeColors, '레드 계열 dot 발견됨(4색 체계 잔존 의심)');
+
     await page.evaluate(() => goTab('cal'));
     await new Promise(r => setTimeout(r, 400));
     const cal = await page.evaluate(() => document.getElementById('cal').textContent);

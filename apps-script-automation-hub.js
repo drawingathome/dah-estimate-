@@ -120,10 +120,21 @@ function syncCustomerRow(data) {
   var lastRow = sheet.getLastRow();
   var foundRowIndex = -1;
 
-  if (phone && lastRow > 1) {
-    var phoneColumn = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
-    for (var i = 0; i < phoneColumn.length; i++) {
-      if (phoneColumn[i][0] === phone) { foundRowIndex = i + 2; break; }
+  // 2026-08-05: 전화번호로만 기존 행을 찾다 보니, 전화번호가 없는 고객(실제 프로덕션에
+  // 10명 있음 — 플러그 이관 시 원본에 번호가 없던 케이스)은 단계가 바뀔 때마다
+  // 매번 새 행으로 추가되어 시트에 같은 고객이 여러 번 중복 등록되던 버그.
+  // 전화번호가 있으면 전화로, 없으면 이름으로 폴백해서 찾도록 수정.
+  if (lastRow > 1) {
+    if (phone) {
+      var phoneColumn = sheet.getRange(2, 2, lastRow - 1, 1).getValues();
+      for (var i = 0; i < phoneColumn.length; i++) {
+        if (phoneColumn[i][0] === phone) { foundRowIndex = i + 2; break; }
+      }
+    } else {
+      var nameColumn = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+      for (var j = 0; j < nameColumn.length; j++) {
+        if (nameColumn[j][0] === (data.clientName || '')) { foundRowIndex = j + 2; break; }
+      }
     }
   }
 

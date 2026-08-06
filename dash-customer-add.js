@@ -113,8 +113,14 @@ function saveCustomer() {
     });
     saveCustomers(arr);
     var savedTarget = editingCustomerId ? arr.find(function(c){ return c.id === editingCustomerId; }) : arr.find(function(c){ return c.clientName === name; });
-    if (savedTarget) saveCustomerToDb(savedTarget, null);
-    closeAdd(); renderHome(true); openDetail(name, savedTarget && savedTarget.id); showToast('고객 정보가 수정됐습니다');
+    closeAdd(); renderHome(true); openDetail(name, savedTarget && savedTarget.id);
+    if (savedTarget) {
+      saveCustomerToDb(savedTarget, function(err){
+        showToast(err ? '⚠️ 고객정보: 로컬엔 저장됨(서버 재시도 대기)' : '고객 정보가 수정됐습니다');
+      });
+    } else {
+      showToast('고객 정보가 수정됐습니다');
+    }
   } else {
     // 재구매 판단은 이름만으로 하지 않고 전화번호까지 같아야 "같은 사람"으로 봄.
     // 이름만 같고 전화번호가 다르면 동명이인일 가능성이 높으므로, 기존 사람을

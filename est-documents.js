@@ -281,8 +281,6 @@ function buildCustomerHTML() {
   }
 
   
-  var totalNum = parseInt(sumTotal.replace(/[^0-9]/g,''))||0;
-  var depNum   = sumDeposit!=='—'?parseInt(sumDeposit.replace(/[^0-9]/g,'')):0;
   out += '<table class="pv-sum-table" style="border-top:1px solid #EEE6DC;margin-top:0">';
   out += '<tr><td class="sum-lbl">제품 소계</td><td class="sum-val">'+sumCurtain+'</td></tr>';
   if(svcRows.length) out += '<tr><td class="sum-lbl">시공 서비스</td><td class="sum-val">'+sumSvc+'</td></tr>';
@@ -450,7 +448,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         +'<td style="padding:8px 6px">'+escHtml(it.space)+'</td>'
         +'<td style="padding:8px 6px">'+escHtml(it.product)+'</td>'
         +'<td style="padding:8px 6px">'+escHtml(it.color)+'</td>'
-        +'<td style="padding:8px 6px;text-align:center">'+escHtml(it.size)+'</td>'
+        +'<td style="padding:8px 6px;text-align:center">'+escHtml(it.size)+(it.fabSize?('<br><span style="font-size:11px;color:#F06E2D;font-weight:700">제작 '+escHtml(it.fabSize)+'</span>'):'')+'</td>'
         +'<td style="padding:8px 6px">'+escHtml(it.content)+'</td>'
         +'<td style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
         +'<td style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
@@ -482,9 +480,17 @@ function collectVendorGroups() {
     var pnum   = tr.querySelector('.pnum')?.value || '';
     var pleat  = (tr.querySelector('.pleat-type')?.value || '').replace('형','');
     var open   = (tr.querySelector('.open-type')?.value || '').replace('형','');
+    var isWorkshop = tr.querySelector('.vendor-is-workshop')?.checked || false;
+    var heightAdjust = parseFloat(tr.querySelector('.height-adjust')?.value);
+    if (isNaN(heightAdjust)) heightAdjust = -3;
+    var fh = (mh && parseFloat(mh) > 0) ? (parseFloat(mh) + heightAdjust) : null;
     items.push({
       space: space||'—', product: fabric||'—', color: color||'—',
-      size:(mw&&mh)?(mw+'×'+mh):'—',
+      // 2026-08-05: 원단(커튼) 거래처는 야드 단위로 구매하는 거라 사이즈 자체가 불필요.
+      // 가공소로 체크된 경우에만 실측+제작사이즈를 보여줌. (블라인드는 업체가 직접
+      // 사이즈에 맞춰 재단해서 나오는 제품이라 아래 블라인드 쪽은 별도로 계속 표시함)
+      size: isWorkshop ? ((mw&&mh)?(mw+'×'+mh):'—') : '—',
+      fabSize: (isWorkshop && mw && fh!==null) ? (mw+'×'+fh.toFixed(1).replace(/\.0$/,'')) : null,
       content:[pleat, open].filter(Boolean).join(' ')||'—',
       qty: pnum?(pnum+'폭'):'—',
       vendor: vendor
@@ -690,7 +696,9 @@ function buildRequestHTML(kind, extraNote) {
       out += '</div>';
     }
   } else {
-    // ── 시공 의뢰서: 위치/제작사이즈/내용/기타 표 ──
+    // ── 시공 의뢰서: 위치/실측사이즈/내용/기타 표 (2026-08-05: "제작사이즈"는 오해 소지가
+    // 있어 "실측사이즈"로 정정 — 제작사이즈(보정값 반영)는 가공소 발주할 때만 필요하고,
+    // 그건 collectVendorGroups()의 fabSize로 별도 처리됨) ──
     var rows = [];
     document.querySelectorAll('#curtain-body tr').forEach(function(tr){
       var space  = tr.querySelector('.space-inp')?.value || '';
@@ -729,7 +737,7 @@ function buildRequestHTML(kind, extraNote) {
       out += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:2px">'
           +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
           +'<th style="text-align:left;padding:8px 6px">위치</th>'
-          +'<th style="text-align:center;padding:8px 6px">제작사이즈</th>'
+          +'<th style="text-align:center;padding:8px 6px">실측사이즈</th>'
           +'<th style="text-align:left;padding:8px 6px">내용</th>'
           +'<th style="text-align:left;padding:8px 6px">기타</th>'
           +'</tr></thead><tbody>';

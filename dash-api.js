@@ -347,7 +347,26 @@ function loadCustomersAsync(callback, force) {
   sbXHR('GET', 'customers?select=*&order=created_at.desc', null, function(err, data) {
     hideLoading();
     if (err) { try { _customerCache = JSON.parse(localStorage.getItem('dah_customers') || '[]'); } catch(e) {} }
-    else { _customerCache = (data || []).map(dbRowToCustomer); _customerCacheTime = Date.now(); try { localStorage.setItem('dah_customers', JSON.stringify(_customerCache)); } catch(e) {} }
+    else {
+      var fresh = (data || []).map(dbRowToCustomer);
+      // 2026-08-05: 오프라인 동기화 큐 — 서버 저장이 아직 안 된(대기중인) 고객은
+      // 서버의 옛날 데이터로 덮어쓰지 않고 로컬 버전을 그대로 유지.
+      // 이게 없으면 오프라인에서 바꾼 내용이 네트워크 복구 후 재조회 한 번에
+      // 조용히 사라지는 문제가 있었음(실제로 발견된 버그).
+      if (typeof getPendingSyncQueue === 'function') {
+        var pendingKeys = getPendingSyncQueue().map(function(p){ return p.customerKey; });
+        if (pendingKeys.length > 0) {
+          var localMap = {};
+          _customerCache.forEach(function(c){ localMap[c.id || c.clientName] = c; });
+          fresh = fresh.map(function(c) {
+            var key = c.id || c.clientName;
+            return (pendingKeys.indexOf(key) >= 0 && localMap[key]) ? localMap[key] : c;
+          });
+        }
+      }
+      _customerCache = fresh; _customerCacheTime = Date.now();
+      try { localStorage.setItem('dah_customers', JSON.stringify(_customerCache)); } catch(e) {}
+    }
     if (callback) callback(_customerCache);
   });
 }
@@ -357,11 +376,20 @@ function saveCustomers(arr) { _customerCache = arr; try { localStorage.setItem('
 function saveCustomerToDb(customer, callback) {
   var row = customerToDbRow(customer);
   syncCustomerToSheet(customer);
-  if (customer.id) {
-    sbXHR('PATCH', 'customers?id=eq.' + customer.id, row, function(err, data) { if(err) console.error('수정 오류:', err.text); if(callback) callback(err, data); });
-  } else {
-    sbXHR('POST', 'customers', row, function(err, data) { if(err) console.error('추가 오류:', err.text); if(callback) callback(err, data); });
-  }
+  var key = customer.id || customer.clientName;
+  var method = customer.id ? 'PATCH' : 'POST';
+  var path = customer.id ? ('customers?id=eq.' + customer.id) : 'customers';
+  sbXHR(method, path, row, function(err, data) {
+    if (err) {
+      console.error((customer.id?'수정':'추가') + ' 오류:', err.text);
+      // 2026-08-05: 실패를 콘솔에만 남기고 조용히 무시하던 것 수정 —
+      // 대기 큐에 기록해서 화면에 경고 배너가 뜨고, 네트워크 복구시 자동 재시도됨
+      if (typeof addToPendingSyncQueue === 'function') addToPendingSyncQueue(key, method, path, row);
+    } else if (typeof removeFromPendingSyncQueue === 'function') {
+      removeFromPendingSyncQueue(key);
+    }
+    if (callback) callback(err, data);
+  });
 }
 
 // 견적서 보관(소프트 삭제) — 2026-08-05: 예전엔 견적서를 삭제/숨길 방법이

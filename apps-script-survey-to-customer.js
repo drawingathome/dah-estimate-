@@ -59,6 +59,17 @@ function processNewSurveys() {
           return;
         }
 
+        // 2026-08-05: 중복 등록 방지 — 이 스크립트는 사람 확인 없이 10분마다 자동
+        // 실행되는데, 기존엔 같은 사람이 설문을 두 번 내거나 이미 등록된 고객이
+        // 다시 작성해도 무조건 새 고객으로 만들었음. 등록 전에 같은 전화번호 고객이
+        // 이미 있는지 먼저 확인해서, 있으면 새로 안 만들고 스킵(+메모만 남김).
+        var existing = findExistingCustomerByPhone(survey.phone);
+        if (existing) {
+          Logger.log('이미 등록된 고객(전화번호 일치) — 신규생성 스킵: ' + survey.client_name + ' / id=' + existing.id);
+          markSurveyProcessed(survey.id);
+          return;
+        }
+
         var customer = {
           client_name: survey.client_name,
           phone: survey.phone,
@@ -102,6 +113,24 @@ function fetchNewSurveys() {
     return [];
   }
   return JSON.parse(response.getContentText());
+}
+
+// 2026-08-05 신규: 전화번호로 기존 고객이 이미 있는지 확인 (중복등록 방지용)
+function findExistingCustomerByPhone(phone) {
+  if (!phone) return null;
+  var url = SUPABASE_URL + '/rest/v1/customers?phone=eq.' + encodeURIComponent(phone) + '&select=id,client_name&limit=1';
+  var options = {
+    method: 'get',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY },
+    muteHttpExceptions: true
+  };
+  var response = UrlFetchApp.fetch(url, options);
+  if (response.getResponseCode() !== 200) {
+    Logger.log('기존고객 조회 실패(중복체크 스킵하고 그냥 등록 진행): ' + response.getContentText());
+    return null;
+  }
+  var rows = JSON.parse(response.getContentText());
+  return rows && rows.length > 0 ? rows[0] : null;
 }
 
 // customers 테이블에 등록

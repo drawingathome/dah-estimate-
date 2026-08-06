@@ -123,7 +123,9 @@ function renderPaySection(c, payBody) {
       newPd.depositDate    = depDate.value;
       newPd.depositReceipt = depReceiptChk.checked;
       savePayData(newPd);
-      if (['방문예약','상담','가견적'].indexOf(c.stage) >= 0) changeStage('선금결제');
+      // 2026-08-05: 0원인데도 무조건 다음 단계로 넘어가던 버그 수정 —
+      // 실제로 입금액이 0보다 클 때만 "선금결제 완료"로 간주해 단계 전환
+      if (inputAmt > 0 && ['방문예약','상담','가견적'].indexOf(c.stage) >= 0) changeStage('선금결제');
       closeDetail(); openDetail(c.clientName, c.id);
     });
     depForm.appendChild(depMethod); depForm.appendChild(depAmt); depForm.appendChild(depDate); depForm.appendChild(depReceipt);
@@ -183,7 +185,15 @@ function renderPaySection(c, payBody) {
       newPd.balanceDate    = balDate.value;
       newPd.balanceReceipt = balReceiptChk.checked;
       savePayData(newPd);
-      if (['실측준비중','확정견적','잔금결제'].indexOf(c.stage) >= 0) changeStage('시공준비중');
+      // 2026-08-05: 0원인데도 무조건 다음 단계로 넘어가던 버그 수정 —
+      // 실제로 입금액이 0보다 클 때만 "잔금결제 완료"로 간주해 단계 전환
+      // 2026-08-05: 자동전환 조건이 '실측준비중/확정견적/잔금결제' 딱 3개 단계에서만
+      // 작동해서, 아직 '선금결제'에 머문 채로 바로 잔금부터 받으면(중간 단계를
+      // 하나씩 안 거치는 실제 업무 흐름) 전환이 안 걸리는 버그가 있었음(선혜님이
+      // 실제 화면에서 발견). 특정 단계 목록이 아니라 "시공준비중보다 앞선 단계면
+      // 전부" 전환되도록 STAGE_NUM 순서 비교로 일반화.
+      var stageIsBeforeInstallPrep = (typeof STAGE_NUM !== 'undefined') && STAGE_NUM[c.stage] && STAGE_NUM[c.stage] < STAGE_NUM['시공준비중'];
+      if (inputAmt > 0 && stageIsBeforeInstallPrep) changeStage('시공준비중');
       closeDetail(); openDetail(c.clientName, c.id);
     });
     balForm.appendChild(balMethod); balForm.appendChild(balAmt); balForm.appendChild(balDate); balForm.appendChild(balReceipt);

@@ -58,7 +58,11 @@ function renderOrderSection(c, orderBody) {
     // 자동으로 채워지도록. 여러 곳을 썼으면 자동완성 목록으로 골라잡게 함.
     var savedEsts3 = [];
     try { savedEsts3 = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
-    var myEsts3 = savedEsts3.filter(function(e){ return e.clientName === c.clientName; });
+    // 2026-08-05: 이름으로만 매칭하던 버그 수정 — 위 getRelevantOrderItems()와 동일하게
+    // id가 있으면 id 우선 매칭(동명이인이면 서로 다른 사람의 거래처가 자동완성되는 걸 방지)
+    var myEsts3 = savedEsts3.filter(function(e){
+      return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName;
+    });
     myEsts3.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
     var latestEst3 = myEsts3[0];
     var savedCurtainVendors = (latestEst3 && latestEst3.curtainVendors) || [];

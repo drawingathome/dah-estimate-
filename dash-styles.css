@@ -315,7 +315,7 @@ input::placeholder, textarea::placeholder {
   color: #756E62;
   background: #F5F2EE;
   padding: 1px 7px;
-  border-radius: 10px;
+  border-radius: 4px;
 }
 .kanban-item {
   padding: 12px 14px;
@@ -720,7 +720,7 @@ button[onclick="exportExcel()"] {
   color: #fff;
   border: none;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;

@@ -9,7 +9,11 @@ function renderAlimSection(c, alimBody) {
   var logs = [];
   try { logs = JSON.parse(localStorage.getItem('dah_kakao_log')||'[]'); } catch(e){}
   var sentMap = {};
-  logs.forEach(function(l){ if(l.name===c.clientName) sentMap[l.type]=l; });
+  // 2026-08-05: 이름으로만 매칭하던 버그 수정 — 동명이인이면 서로 다른 사람의
+  // 발송이력이 섞여서 "이미 보냈음" 체크가 잘못 뜰 위험이 있었음. 로그에 custId가
+  // 있으면(신규 발송분) id로 정확히 매칭, 없으면(기존 발송이력) 이름으로 폴백해서
+  // 과거 발송이력이 안 사라지게 함.
+  logs.forEach(function(l){ var match = l.custId ? (l.custId === c.id) : (l.name===c.clientName); if (match) sentMap[l.type]=l; });
 
   function makeRow(key) {
     var meta = ALIM_META[key]; if(!meta) return null;
@@ -115,6 +119,7 @@ function _openAlimtalkPreview(meta, key, c, initialMsg) {
       var now = new Date();
       logs.unshift({
         name: c.clientName,
+        custId: c.id || null,
         type: key,
         label: meta.label,
         date: (now.getMonth()+1)+'월 '+now.getDate()+'일',
@@ -134,26 +139,16 @@ function _openAlimtalkPreview(meta, key, c, initialMsg) {
   });
 }
 
-var KAKAO_LABELS = {followup:'팔로업', contract:'계약금 안내', measure:'실측 안내', balance:'잔금 안내'};
-function copyKakao(type) {
-  var arr = loadCustomers(); var c = findCurrentDetailCustomer(arr);
-  if (!c) return; var n = c.clientName;
-  var msgs = {
-    followup: '안녕하세요, ' + n + '님 🙂\n드로잉엣홈입니다.\n상담 후 궁금하신 점은 없으셨나요?\n편하게 말씀해 주세요!',
-    contract: '안녕하세요, ' + n + '님 🙂\n드로잉엣홈입니다.\n계약금(50%)이 확인되면 실측 일정을 잡아드리겠습니다.',
-    measure: '안녕하세요, ' + n + '님 🙂\n드로잉엣홈입니다.\n실측 방문 일정을 조율하고 싶습니다.\n편하신 날짜와 시간을 알려주세요!',
-    balance: '안녕하세요, ' + n + '님 🙂\n드로잉엣홈입니다.\n잔금 납부가 완료되면 시공 일정이 확정됩니다. 감사합니다!'
-  };
-  var msg = msgs[type] || '';
-  if (!confirm('발송할 메시지:\n\n' + msg + '\n\n복사하시겠습니까?')) return;
-  try { var logs = JSON.parse(localStorage.getItem('dah_kakao_log') || '[]'); logs.unshift({ name: n, type: KAKAO_LABELS[type]||type, date: todayStr(), time: new Date().toLocaleTimeString() }); localStorage.setItem('dah_kakao_log', JSON.stringify(logs.slice(0,100))); } catch(e) {}
-  try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(msg).then(function() { showToast('복사됐습니다 — 카카오톡에 붙여넣기 하세요'); renderKakaoLog(); }); } else { var ta = document.createElement('textarea'); ta.value = msg; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); showToast('복사됐습니다 — 카카오톡에 붙여넣기 하세요'); renderKakaoLog(); } } catch(e) { showToast('복사 실패'); }
-}
+// 2026-08-05: 여기 있던 copyKakao()/KAKAO_LABELS는 어디서도 호출되지 않는
+// 죽은 코드였음(감사 중 발견, 제거함) — sendAlimtalk()/ALIM_META 체계로 이미 대체됨.
 
 function renderKakaoLog() {
   var logEl = document.getElementById('kakao-log'); if (!logEl) return;
   try {
-    var logs = JSON.parse(localStorage.getItem('dah_kakao_log') || '[]').filter(function(l) { return l.name === currentDetailName; });
+    // 2026-08-05: 이름으로만 매칭하던 버그 수정 — sentMap과 동일한 방식(id우선, 레거시는 이름폴백)
+    var logs = JSON.parse(localStorage.getItem('dah_kakao_log') || '[]').filter(function(l) {
+      return l.custId ? (l.custId === currentDetailId) : (l.name === currentDetailName);
+    });
     if (logs.length === 0) { logEl.textContent = '발송 이력 없음'; return; }
     logEl.innerHTML = '';
     logs.slice(0,3).forEach(function(l) {

@@ -157,9 +157,11 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       var dn = ctr.querySelector('.c-display-name'); if (dn) dn.value = it.displayName || '';
       var fb = ctr.querySelector('.c-fabric'); if (fb) fb.value = it.fabric || '';
       var vd = ctr.querySelector('.c-vendor'); if (vd) vd.value = it.vendor || '';
+      var vw = ctr.querySelector('.vendor-is-workshop'); if (vw) vw.checked = !!it.vendorIsWorkshop;
       var cl = ctr.querySelector('.c-color'); if (cl) cl.value = it.color || '';
       var pt = ctr.querySelector('.pleat-type'); if (pt && it.pleatType) pt.value = it.pleatType;
       var ot = ctr.querySelector('.open-type'); if (ot && it.openType) ot.value = it.openType;
+      var ha = ctr.querySelector('.height-adjust'); if (ha) ha.value = (it.heightAdjust !== undefined && it.heightAdjust !== null) ? it.heightAdjust : -3;
       var mw = ctr.querySelector('.mw'); if (mw) mw.value = it.mw || '';
       var mh = ctr.querySelector('.mh'); if (mh) mh.value = it.mh || '';
       var pn = ctr.querySelector('.pnum'); if (pn && it.pnum) pn.value = it.pnum;
@@ -183,8 +185,15 @@ function loadCustByIdx(el) {
   var loadedItems = false;
   try {
     var saved = JSON.parse(localStorage.getItem('dah_saved')||'[]');
-    var mine = saved.filter(function(e){ return c.id && e.clientId === c.id; })
-      .sort(function(a,b){ return (b.savedAt||'') > (a.savedAt||'') ? 1 : -1; });
+    // 2026-08-05: id가 없는 고객(서버 동기화 전 로컬전용 레코드 등)이면
+    // 'c.id && ...' 조건이 전부 false가 되어 mine이 항상 빈 배열이었음 —
+    // 미리보기 목록(renderCustLoadList)엔 이름기반 폴백이 있는데 여기만 빠져서,
+    // 미리보기엔 "이전 견적 있음" 뱃지가 뜨는데 정작 불러오기를 누르면 품목이
+    // 하나도 안 채워지는 불일치가 있었음. 동일한 폴백으로 통일.
+    var mine = (c.id
+      ? saved.filter(function(e){ return e.clientId === c.id; })
+      : saved.filter(function(e){ return e.clientName === (c.clientName||''); })
+    ).sort(function(a,b){ return (b.savedAt||'') > (a.savedAt||'') ? 1 : -1; });
     var latest = mine[0];
     if (latest) loadedItems = restoreLineItemsToForm(latest.lineItems, latest.fabric);
   } catch(e) { console.warn('기존 견적 품목 불러오기 실패:', e); }

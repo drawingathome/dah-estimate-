@@ -200,7 +200,10 @@ function renderHome(skipServerFetch) {
           ? '<div class="empty-inline">처리 필요한 항목이 없습니다 ✅</div>'
           : needAction.slice(0,8).map(function(item) {
               var c = item.customer;
-              var stageColor = (c.stage === '선금결제' || c.stage === '실측준비중') ? 'var(--terra)' : (c.stage === '방문예약' || c.stage === '상담' || c.stage === '시공완료') ? '#2E7D6B' : (c.stage === '가견적' || c.stage === '확정견적') ? '#C0392B' : 'var(--dark)';
+              // 2026-08-05: 이 줄만 폐기된 4색 체계(그린/레드/다크)가 그대로 남아있던 놓친 참조였음(7-12 규칙).
+              // 위 "진행 현황" 섹션(라인 180-182)과 동일한 3색 체계로 통일: 방문예약/상담/가견적=회색,
+              // 선금결제~시공준비중=오렌지, 시공완료=그린. 레드(#C0392B)는 경고색 전용이라 스테이지에 쓰면 안 됨.
+              var stageColor = (['방문예약','상담','가견적'].indexOf(c.stage) >= 0) ? '#8A8378' : (c.stage === '시공완료') ? '#2E7D6B' : 'var(--terra)';
               var targetTab = 'info';
               var reasonStr = item.reasons.join(' ');
               if (reasonStr.indexOf('선금결제 처리') >= 0 || reasonStr.indexOf('잔금결제 처리') >= 0) targetTab = 'pay';

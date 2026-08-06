@@ -76,6 +76,12 @@ function dahDailyBackup() {
   var today = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
   var fileName = 'DAH_백업_' + today + '.json';
   var content = JSON.stringify(backup, null, 2);
+  // 2026-08-05: 구글드라이브는 같은 이름의 파일이 여러 개 있어도 허용해서,
+  // 같은 날 두 번 실행되면(수동 실행 + 자동 트리거가 겹치는 경우 등) 완전히
+  // 똑같은 이름의 백업 파일이 중복 생성될 수 있었음. 기존 파일이 있으면
+  // 지우고 새로 만들어서 항상 "그날의 최신 백업 1개"만 남도록 함.
+  var existingBackups = folder.getFilesByName(fileName);
+  while (existingBackups.hasNext()) { existingBackups.next().setTrashed(true); }
   folder.createFile(fileName, content, MimeType.PLAIN_TEXT);
 
   // 결과 요약 (실행 로그에서 확인 가능: 보기 > 실행 로그)
@@ -467,7 +473,12 @@ function dahPeekRawName(phone) {
  * key는 아무나 이 주소로 실행하지 못하게 막는 간단한 비밀번호.
  */
 function doGet(e) {
-  var SECRET_KEY = 'dah-bridge-2026';
+  // 2026-08-05: 이 시크릿 키가 코드에 그대로 하드코딩되어 있었음 — 이 저장소는
+  // 공개(public) 저장소라서, SUPABASE_SERVICE_ROLE_KEY와 똑같은 이유로 문제였음.
+  // Script Properties에 DAH_BRIDGE_SECRET_KEY로 등록해서 읽어오도록 변경.
+  // (등록 안 해뒀으면 기존 값으로 자동 대체되니 당장 깨지진 않음 — 다음에 컴퓨터
+  // 있을 때 Script Properties에 새 값으로 등록하고 이 기본값은 지우는 걸 권장)
+  var SECRET_KEY = PropertiesService.getScriptProperties().getProperty('DAH_BRIDGE_SECRET_KEY') || 'dah-bridge-2026';
   if (!e || !e.parameter || e.parameter.key !== SECRET_KEY) {
     return ContentService.createTextOutput('❌ 인증 실패 — key 파라미터가 올바르지 않습니다').setMimeType(ContentService.MimeType.TEXT);
   }

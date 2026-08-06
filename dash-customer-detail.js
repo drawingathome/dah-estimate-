@@ -5,7 +5,8 @@
    ══════════════════════════════════════════════════ */
 
 var STAGES = ['방문예약','상담','가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'];
-var STAGES_ALL = ['상담','계약금','실측','잔금','시공','완료','취소','노쇼'];
+// 2026-08-05: STAGES_ALL(옛 6단계 이름 배열)은 코드베이스 어디서도 참조되지 않는
+// 죽은 코드였고 이름까지 옛것이라 혼동 소지가 있어 제거함
 
 var STAGE_ALIM = {
   방문예약: ['t01_reservation','t02_reminder'],
@@ -38,7 +39,10 @@ var ALIM_META = {
 };
 
 // 2026-08-05: 색상 3그룹으로 단순화(제안1 확정) - 방문예약~가견적=회색, 선금결제~시공준비중=오렌지, 시공완료=그린
-var STAGE_COLORS = {방문예약:'#8A8378',상담:'#8A8378',가견적:'#8A8378',선금결제:'var(--terra)',실측준비중:'var(--terra)',확정견적:'var(--terra)',잔금결제:'var(--terra)',시공준비중:'var(--terra)',시공완료:'#2E7D6B'};
+// 2026-08-05: 여기 있던 STAGE_COLORS 변수는 정의만 되고 실제로 어디서도
+// 참조되지 않는 죽은 코드였음(감사 중 발견, 제거함). 스테이지 컬러가
+// 필요하면 dash-kanban.js의 PIPE_STAGES 또는 dash-styles.css의
+// .stage-pill 클래스를 참조할 것 — 이 두 곳이 실제 적용되는 정본임.
 var STAGE_BG = {상담:'#EEF2F7',계약금:'#FFF3EE',실측:'#F3EFF8',잔금:'#EEF5F2',시공:'#FDECEA',완료:'#F5F2EE'};
 var STAGE_NUM = {방문예약:1,상담:2,가견적:3,선금결제:4,실측준비중:5,확정견적:6,잔금결제:7,시공준비중:8,시공완료:9};
 var STAGE_ACTIVE = {상담:true,계약금:true,실측:true,잔금:true,시공:true,완료:false};
@@ -245,7 +249,11 @@ function openDetail(name, id, forceTab) {
     } else {
       var os = c.orderStatus || {};
       var orderNotStarted = !os.fabric && !os.production && !os.blind && !os.material && !os.install;
-      if (['계약금','실측','잔금','시공'].indexOf(c.stage) >= 0 && orderNotStarted) autoTab = 'order'; // 발주 전혀 안됐으면 발주탭부터
+      // 2026-08-05: 옛 6단계 이름 잔여참조 버그 수정 — 매핑표(계약금→선금결제/실측→실측준비중/
+      // 잔금→잔금결제/시공→시공준비중) 그대로 적용. 바로 위 라인(243)은 이미 신규 이름으로
+      // 고쳐져 있었는데 이 라인만 누락돼서, 실측준비중~시공준비중 단계에서 발주가 전혀 안
+      // 시작됐어도 발주탭이 자동으로 안 열리고 있었음(정보탭에 머무름)
+      if (['선금결제','실측준비중','잔금결제','시공준비중'].indexOf(c.stage) >= 0 && orderNotStarted) autoTab = 'order'; // 발주 전혀 안됐으면 발주탭부터
     }
   }
   switchDetailTab(autoTab || 'info');
@@ -398,8 +406,11 @@ function renderDetailStageSection(c, body, isMaster) {
   var stageNum = STAGE_NUM[c.stage] || 1;
   var stageSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
 
-  // 되돌릴 대상이 없는 상태(완료/취소/노쇼)에서는 케밥 메뉴 자체를 숨김
-  var canCancelOrNoshow = ['완료', '취소', '노쇼'].indexOf(c.stage) === -1;
+  // 되돌릴 대상이 없는 상태(시공완료/취소/노쇼)에서는 케밥 메뉴 자체를 숨김
+  // 2026-08-05: 9단계 전환 후 옛 이름 '완료'로 체크하던 잔여참조 버그 수정 —
+  // 실제 stage값은 '시공완료'라 이 조건이 항상 true가 되어, 시공완료된 고객도
+  // 계속 취소/노쇼 처리가 가능한 상태였음(7-12 규칙 위반 사례)
+  var canCancelOrNoshow = ['시공완료', '취소', '노쇼'].indexOf(c.stage) === -1;
 
   var kebabWrap = div('position:relative', []);
   if (canCancelOrNoshow) {
@@ -595,8 +606,9 @@ function renderDetailInfoSection(c, body) {
       if (target) {
         target.memo = newVal;
         saveCustomers(arr);
-        saveCustomerToDb(target, null);
-        showToast('메모가 저장됐습니다');
+        saveCustomerToDb(target, function(err){
+          showToast(err ? '⚠️ 메모: 로컬엔 저장됨(서버 재시도 대기)' : '메모가 저장됐습니다');
+        });
       }
       renderMemoDisplay(memoBlock, newVal);
     });
@@ -634,11 +646,14 @@ function renderDetailInfoSection(c, body) {
           if (target) {
             target[item.key] = newVal;
             saveCustomers(arr);
-            saveCustomerToDb(target, null);
+            saveCustomerToDb(target, function(err){
+              showToast(err ? '⚠️ ' + item.label + ': 로컬엔 저장됨(서버 재시도 대기)' : item.label + '이 저장됐습니다');
+            });
+          } else {
+            showToast(item.label + '이 저장됐습니다');
           }
           valueDiv.textContent = newVal || '—';
           valueDiv.style.color = newVal ? 'var(--dark)' : 'var(--light)';
-          showToast(item.label + '이 저장됐습니다');
         }
         dateInp.addEventListener('change', commit);
         dateInp.addEventListener('blur', function(){ if(!dateInp.value) { valueDiv.textContent = originalText; } });
@@ -674,14 +689,16 @@ function changeStage(stage) {
   if (currentUser && currentUser.role === 'staff') {
     if ((target.staffName||'마스터') !== currentUser.name) { alert('본인 담당 고객만 단계를 변경할 수 있습니다.'); return; }
   }
-  if (stage === '완료') { if (!confirm(currentDetailName + ' 고객을 "시공 완료"로 변경할까요?')) return; }
+  // 2026-08-05: 옛 이름 '완료' 잔여참조 수정 — 실제 값은 '시공완료'라 이 확인창이 영원히 안 뜨고 있었음
+  if (stage === '시공완료') { if (!confirm(currentDetailName + ' 고객을 "시공 완료"로 변경할까요?')) return; }
   var fromStage = target.stage;
   target.stage = stage;
   saveCustomers(arr);
-  saveCustomerToDb(target, null);
   if (typeof logEvent === 'function') logEvent('stage_change', { from: fromStage, to: stage });
   renderHome(true); openDetail(currentDetailName, target.id);
-  showToast('"' + stage + '"으로 변경됐습니다');
+  saveCustomerToDb(target, function(err){
+    showToast(err ? ('⚠️ "' + stage + '"으로 변경(로컬만) — 서버 재시도 대기중') : ('"' + stage + '"으로 변경됐습니다'));
+  });
 }
 
 function deleteCustomer() {
@@ -985,14 +1002,24 @@ function showVendorOrderFromEstimate(e) {
   w.document.close();
 }
 
-function openEstimate(name) {
+function openEstimate(name, id) {
   if (name) { try {
-    var arr = loadCustomers(); var c = arr.find(function(x) { return x.clientName === name; });
+    var arr = loadCustomers();
+    // 2026-08-05: 이름만으로 고객을 찾던 버그 수정 — 동명이인이면 엉뚱한 사람의
+    // 정보(전화/주소/견적품목)가 넘어갈 위험이 있었음. currentDetailId가 있으면 그걸
+    // 우선 사용(상세화면에서 호출된 경우 항상 정확한 레코드를 가리킴).
+    var useId = id || (typeof currentDetailId !== 'undefined' ? currentDetailId : null);
+    var c = useId ? arr.find(function(x) { return x.id === useId; }) : arr.find(function(x) { return x.clientName === name; });
     // 2026-08-05: 이름/전화/주소만 넘기고 기존 견적 품목은 전혀 안 넘겨서,
     // "견적서 앱에서 열기"로 들어가도 매번 빈 화면부터 시작해야 했던 문제.
     // 최신 저장 견적의 lineItems도 함께 넘김.
+    // (같은 날 발견: c.id가 없는 로컬전용 고객은 이름기반으로 폴백해야
+    // 하는데 그 폴백이 빠져서 "품목 있음"인데도 안 채워지던 버그도 함께 수정)
     var saved = []; try { saved = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e2) {}
-    var mine = c ? saved.filter(function(e){ return c.id && e.clientId === c.id; }).sort(function(a,b){ return (b.savedAt||'') > (a.savedAt||'') ? 1 : -1; }) : [];
+    var mine = c ? (c.id
+      ? saved.filter(function(e){ return e.clientId === c.id; })
+      : saved.filter(function(e){ return e.clientName === (c.clientName||''); })
+    ).sort(function(a,b){ return (b.savedAt||'') > (a.savedAt||'') ? 1 : -1; }) : [];
     if (c) localStorage.setItem('dah_open_customer', JSON.stringify({
           name: c.clientName,
           phone: c.phone,

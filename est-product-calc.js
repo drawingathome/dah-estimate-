@@ -17,6 +17,9 @@ function addCurtainRow() {
         '<div class="inner-row">'+
           '<input type="text" list="fabric-list" placeholder="원단명" class="c-fabric inner-inp">'+
           '<input type="text" list="vendor-list" placeholder="거래처" class="c-vendor inner-inp" style="width:72px">'+
+          '<label style="display:flex;align-items:center;gap:2px;font-size:10px;color:var(--sub);white-space:nowrap;cursor:pointer" title="체크하면 이 거래처 발주서에 보정된 제작사이즈(실측±보정값)가 함께 표시됩니다">'+
+            '<input type="checkbox" class="vendor-is-workshop" style="margin:0;width:12px;height:12px">가공소'+
+          '</label>'+
           '<input type="text" placeholder="컬러" class="c-color inner-inp" style="width:60px">'+
           '<span class="c-yardage">원단량: —</span>'+
         '</div>'+
@@ -30,20 +33,26 @@ function addCurtainRow() {
       '<option>리드</option><option>5cm</option><option>8cm</option></select></td>'+
     '<td>'+
       '<input type="number" placeholder="cm" class="mw" oninput="calcCurtainRow(this)" style="'+INP+'">'+
-      '<span class="sub-size fw-display"></span>'+
     '</td>'+
     '<td>'+
       '<input type="number" placeholder="cm" class="mh" oninput="calcCurtainRow(this)" style="'+INP+'">'+
-      '<span class="sub-size fh-display"></span>'+
+      '<div style="display:flex;gap:2px;margin-top:2px">'+
+        '<input type="number" placeholder="-3" class="height-adjust" value="-3" oninput="calcCurtainRow(this)" style="width:38px;font-size:10px;padding:1px 2px;border:1px solid var(--border);border-radius:4px;text-align:center" title="제작높이 보정값(cm). 일반레일 -3, 전동레일은 브랜드마다 달라서(솜피 등) -5 근처로 직접 조정하세요">'+
+        '<button type="button" onclick="var i=this.parentNode.querySelector(\'.height-adjust\'); i.value=-3; calcCurtainRow(i);" style="font-size:9px;padding:1px 4px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer">일반</button>'+
+        '<button type="button" onclick="var i=this.parentNode.querySelector(\'.height-adjust\'); i.value=-5; calcCurtainRow(i);" style="font-size:9px;padding:1px 4px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer">전동</button>'+
+      '</div>'+
     '</td>'+
     '<td><input type="number" class="pnum" value="2" oninput="calcCurtainRow(this)" style="'+INP+'"></td>'+
     '<td><input type="text" inputmode="numeric" placeholder="단가" class="cprice" oninput="fmtPrice(this);calcCurtainRow(this)" onfocus="fmtPriceFocus(this)" onblur="fmtPriceBlur(this);calcCurtainRow(this)" style="'+INP+'"></td>'+
     '<td class="amt camt">—</td>'+
     '<td style="white-space:nowrap">'+
+      '<span class="row-drag-handle print-hide" title="드래그해서 순서 바꾸기" style="cursor:grab;padding:4px 6px;color:var(--sub);user-select:none;display:inline-block">⠿</span>'+
       '<button class="copy-btn print-hide" onclick="copyCurtainRow(this)" title="복사">⧉</button>'+
       '<button class="del-btn print-hide" onclick="delRow(this)">✕</button>'+
     '</td>';
   tbody.appendChild(tr);
+  makeRowDraggable(tr);
+  setupRowDragReorder('curtain-body');
   renderEmptyState();
 
   // 레일 / 레일 시공비는 가로(mw) 입력 시 autoUpdateRail()에서 자동 생성/계산됨
@@ -53,13 +62,19 @@ function calcCurtainRow(el) {
   var tr = el.closest('tr');
   var mw = Math.max(0, parseFloat(tr.querySelector('.mw')?.value)||0);
   var mh = Math.max(0, parseFloat(tr.querySelector('.mh')?.value)||0);
-  var fw = mw, fh = mh>0 ? mh-3 : 0;
+  // 2026-08-05: 제작높이 힌트만 레일타입에 따라 다르게 계산 — 일반레일 -3cm / 전동레일 -5cm.
+  // 실측/시공 의뢰서 문서(est-documents.js)는 이 보정 없이 원래 실측값 그대로 출력하는 게 맞음(선혜님 확인).
+  // 2026-08-05: '일반/전동' 2択 자동판정 대신, 보정값(cm)을 직접 입력받는 방식으로 변경.
+  // 이유: 전동레일도 브랜드마다(솜피 등) 실제 보정값이 다르고, 고객이 일부러 길게
+  // (푸들스타일) 만들고 싶을 때도 있어서 -3/-5 중 하나로 무작정 고정하면 오히려 방해됨.
+  // "일반"/"전동" 버튼은 빠른 기본값 세팅용이고, 언제든 숫자를 직접 고칠 수 있음.
+  var heightAdjust = parseFloat(tr.querySelector('.height-adjust')?.value);
+  if (isNaN(heightAdjust)) heightAdjust = -3;
+  var fw = mw, fh = mh>0 ? mh+heightAdjust : 0;
+  // 2026-08-05: 화면에 뜨던 "제작 XXcm" 힌트 제거 — 실측 옆에 계속 떠 있으니
+  // 오히려 헷갈린다는 피드백. fw/fh 값 자체는 가공소 발주서(collectVendorGroups)
+  // 계산에 계속 쓰이므로 로직은 그대로 두고 화면 표시만 없앰.
   var pleat = tr.querySelector('.pleat-type')?.value||'민자형';
-  var fwDisp = tr.querySelector('.fw-display');
-  var fhDisp = tr.querySelector('.fh-display');
-  if(fwDisp) fwDisp.textContent = mw?'제작 '+fw+'cm':'';
-  if(fhDisp) fhDisp.textContent = mh?'제작 '+fh+'cm':'';
-  
   var ratio = pleat==='나비주름형' ? 2.0 : 1.5;
   var sugP = Math.max(0, Math.ceil((mw*ratio)/130));
   var pnumEl = tr.querySelector('.pnum');
@@ -109,12 +124,16 @@ function autoUpdateRail(curtainTr) {
   var ja = mw/30, jaR = Math.ceil(ja);
   if(jaR%2!==0) jaR++;
 
+  // 2026-08-05: 레일단가(1,600원)를 변수로 추출 — 예전엔 아래 두 분기(기존행 수정/신규행 생성)에
+  // 리터럴 '1600'이 각각 따로 있어서, 나중에 단가가 바뀌면 한쪽만 고치고 다른쪽을 놓칠 위험이 있었음.
+  var RAIL_UNIT_PRICE = 1600;
+
   // 레일 (자재) 행: 단가 1,600원 × 레일수
   var existing = svcBody.querySelector('[data-rail-src="'+rowIdx+'"]');
   if(existing) {
     var tds = existing.querySelectorAll('td');
     if(tds[1]) { var inp=tds[1].querySelector('input'); if(inp) inp.value=(space?space+' ':' ')+'레일 '+jaR+'자'; }
-    if(tds[2]) { var inp=tds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw','1600'); inp.value=(1600).toLocaleString(); } }
+    if(tds[2]) { var inp=tds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw',String(RAIL_UNIT_PRICE)); inp.value=(RAIL_UNIT_PRICE).toLocaleString(); } }
     if(tds[3]) { var inp=tds[3].querySelector('input'); if(inp) inp.value=jaR; }
     calcSvcRow(tds[2]?.querySelector('input'));
   } else {
@@ -124,17 +143,20 @@ function autoUpdateRail(curtainTr) {
     var tds = newRow.querySelectorAll('td');
     if(tds[0]) { var sel=tds[0].querySelector('select'); if(sel) sel.value='레일'; }
     if(tds[1]) { var inp=tds[1].querySelector('input'); if(inp) inp.value=(space?space+' ':' ')+'레일 '+jaR+'자'; }
-    if(tds[2]) { var inp=tds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw','1600'); inp.value=(1600).toLocaleString(); } }
+    if(tds[2]) { var inp=tds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw',String(RAIL_UNIT_PRICE)); inp.value=(RAIL_UNIT_PRICE).toLocaleString(); } }
     if(tds[3]) { var inp=tds[3].querySelector('input'); if(inp) inp.value=jaR; }
     calcSvcRow(tds[2]?.querySelector('input'));
   }
+
+  // 2026-08-05: 레일시공비(25,000원)도 동일한 이유로 변수 추출
+  var RAIL_INSTALL_FEE = 25000;
 
   // 레일 시공비 행: 단가 25,000원 × 1개 (레일수와 무관, 창문 1개 시공당 고정)
   var existingCost = svcBody.querySelector('[data-railcost-src="'+rowIdx+'"]');
   if(existingCost) {
     var ctds = existingCost.querySelectorAll('td');
     if(ctds[1]) { var inp=ctds[1].querySelector('input'); if(inp) inp.value=(space?space+' ':' ')+'레일 시공비'; }
-    if(ctds[2]) { var inp=ctds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw','25000'); inp.value=(25000).toLocaleString(); } }
+    if(ctds[2]) { var inp=ctds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw',String(RAIL_INSTALL_FEE)); inp.value=(RAIL_INSTALL_FEE).toLocaleString(); } }
     if(ctds[3]) { var inp=ctds[3].querySelector('input'); if(inp) inp.value=1; }
     calcSvcRow(ctds[2]?.querySelector('input'));
   } else {
@@ -144,7 +166,7 @@ function autoUpdateRail(curtainTr) {
     var ctds = newCostRow.querySelectorAll('td');
     if(ctds[0]) { var sel=ctds[0].querySelector('select'); if(sel) sel.value='시공비'; }
     if(ctds[1]) { var inp=ctds[1].querySelector('input'); if(inp) inp.value=(space?space+' ':' ')+'레일 시공비'; }
-    if(ctds[2]) { var inp=ctds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw','25000'); inp.value=(25000).toLocaleString(); } }
+    if(ctds[2]) { var inp=ctds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw',String(RAIL_INSTALL_FEE)); inp.value=(RAIL_INSTALL_FEE).toLocaleString(); } }
     if(ctds[3]) { var inp=ctds[3].querySelector('input'); if(inp) inp.value=1; }
     calcSvcRow(ctds[2]?.querySelector('input'));
   }
@@ -185,10 +207,13 @@ function addBlindRow() {
     '</td>'+
     '<td class="amt bamt">—</td>'+
     '<td style="white-space:nowrap">'+
+      '<span class="row-drag-handle print-hide" title="드래그해서 순서 바꾸기" style="cursor:grab;padding:4px 6px;color:var(--sub);user-select:none;display:inline-block">⠿</span>'+
       '<button class="copy-btn print-hide" onclick="copyBlindRow(this)">⧉</button>'+
       '<button class="del-btn print-hide" onclick="delRow(this)">✕</button>'+
     '</td>';
   tbody.appendChild(tr);
+  makeRowDraggable(tr);
+  setupRowDragReorder('blind-body');
   autoAddBlindSvc();
   renderEmptyState();
 }
@@ -404,7 +429,9 @@ function calcTotal() {
   }
   var deposit=depRaw>0 ? depRaw : 0;
   var balance=grand-deposit;
-  var perf=curtainTotal;
+  // 2026-08-05: 성과매출이 할인을 반영 안 하고 있었음(할인 전 curtainTotal 그대로) —
+  // 할인해준 만큼은 실제로 못 받은 돈이니 성과에서도 빠져야 함
+  var perf=Math.max(0, curtainTotal-discount);
   document.getElementById('sum-curtain').textContent=curtainTotal.toLocaleString()+'원';
   
   var totalEl = document.getElementById('sum-total');
@@ -464,6 +491,7 @@ function copyCurtainRow(btn) {
     inp.setAttribute('data-raw',inp.getAttribute('data-raw'));
   });
   tr.parentNode.insertBefore(clone,tr.nextSibling);
+  makeRowDraggable(clone);
   calcTotal();
 }
 function copyBlindRow(btn) {
@@ -474,6 +502,7 @@ function copyBlindRow(btn) {
     inp.setAttribute('data-raw',inp.getAttribute('data-raw'));
   });
   tr.parentNode.insertBefore(clone,tr.nextSibling);
+  makeRowDraggable(clone);
   autoAddBlindSvc();
   calcTotal();
 }
@@ -573,4 +602,44 @@ function toggleSvcDetail() {
   var isHidden = wrap.style.display === 'none';
   wrap.style.display = isHidden ? '' : 'none';
   btn.textContent = isHidden ? '상세 항목 접기 ▴' : '상세 항목 펼치기 ▾';
+}
+
+/* ══════════════════════════════════════════════════
+   커튼/블라인드 행 드래그 순서변경 (2026-08-05 신규)
+   행 오른쪽 끝 ⠿ 핸들을 마우스로 드래그해서 위/아래로 옮길 수 있음.
+   ══════════════════════════════════════════════════ */
+function makeRowDraggable(tr) {
+  tr.draggable = true;
+  tr.addEventListener('dragstart', function(e) {
+    // 핸들이 아닌 입력창/버튼을 클릭+드래그한 경우엔(텍스트 선택 등) 행 이동을 시작하지 않음
+    if (!e.target.closest('.row-drag-handle')) { e.preventDefault(); return; }
+    tr.classList.add('dragging-row');
+    try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', ''); } catch(err) {}
+  });
+  tr.addEventListener('dragend', function() { tr.classList.remove('dragging-row'); });
+}
+
+function setupRowDragReorder(tbodyId) {
+  var tbody = document.getElementById(tbodyId);
+  if (!tbody || tbody.dataset.dragSetup) return;
+  tbody.dataset.dragSetup = '1';
+  tbody.addEventListener('dragover', function(e) {
+    var dragging = tbody.querySelector('.dragging-row');
+    if (!dragging) return;
+    e.preventDefault();
+    var after = _getDragAfterRow(tbody, e.clientY);
+    if (after == null) tbody.appendChild(dragging);
+    else tbody.insertBefore(dragging, after);
+  });
+}
+
+function _getDragAfterRow(tbody, y) {
+  var rows = Array.from(tbody.querySelectorAll('tr:not(.dragging-row)'));
+  var closest = { offset: -Infinity, element: null };
+  rows.forEach(function(row) {
+    var box = row.getBoundingClientRect();
+    var offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) closest = { offset: offset, element: row };
+  });
+  return closest.element;
 }
