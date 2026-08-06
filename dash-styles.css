@@ -1640,6 +1640,13 @@ body, input, button, select, textarea {
 #detail-overlay { display: none; position: fixed; inset: 0 !important; z-index: 9998 !important; background: rgba(0,0,0,0.65) !important; align-items: flex-end; justify-content: center; }
 #detail-overlay.open { display: flex !important; }
 #detail-overlay .modal-box { width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+/* 2026-08-05: PC(1024px 이상)에서는 모바일 바텀시트 스타일(항상 화면 맨 아래 붙음)
+   대신 화면 중앙에 뜨도록 수정 — 세로로 긴 PC 창에서 위에 큰 빈 여백이 생기고
+   모달이 아래로 밀려 잘려 보이던 문제(선혜님이 실제로 발견) */
+@media (min-width: 1024px) {
+  #detail-overlay { align-items: center; }
+  #detail-overlay .modal-box { max-height: 85vh; border-radius: 16px; }
+}
 
 #add-overlay .modal-box {
   background: #fff !important;
@@ -1813,6 +1820,13 @@ button[onclick*="exportExcel"] {
     max-height: 95vh;
     border-radius: 20px 20px 0 0;
   }
+}
+
+/* 2026-08-05: PC에서도 고객추가 모달이 항상 화면 맨 아래에 붙는 바텀시트
+   스타일이었음 — detail-overlay와 동일한 문제라 같은 방식으로 수정 */
+@media (min-width: 1024px) {
+  #add-overlay { align-items: center; }
+  #add-overlay .modal-box { max-height: 85vh; border-radius: 16px; }
 }
 
 /* ━━ 수정 5: 홈 하단 빈 공간 ━━ */

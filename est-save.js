@@ -150,7 +150,16 @@ function saveEstimate() {
     var space = tr.querySelector('.space-inp')?.value||'';
     var displayName = tr.querySelector('.c-display-name')?.value||'';
     var fabric = tr.querySelector('.c-fabric')?.value||'';
-    if (!space && !displayName && !fabric) return; // 완전히 빈 행은 제외
+    var mwVal = tr.querySelector('.mw')?.value||'';
+    var mhVal = tr.querySelector('.mh')?.value||'';
+    var priceVal = getPriceVal(tr.querySelector('.cprice'));
+    // 2026-08-05: 심각한 버그 수정 — 예전엔 공간/제품명/원단명 셋 다 비어있으면
+    // 행 전체를 저장에서 제외했음. 근데 실제 업무에선 가로/높이/단가만 채우고
+    // 저 세 칸은 안 채우는 경우가 흔해서, 견적금액은 정상 계산되는데 정작
+    // 발주에 필요한 상세정보(사이즈/원단/거래처)가 통째로 저장 안 되고 있었음
+    // (실제로 DB의 견적서 115건 전부 line_items가 비어있는 걸 발견해서 확인함).
+    // 이제 사이즈나 단가 중 하나라도 있으면 저장함 — 진짜 완전히 빈 행만 제외.
+    if (!space && !displayName && !fabric && !mwVal && !mhVal && !priceVal) return;
     lineItems.push({
       type: 'curtain', space: space, displayName: displayName, fabric: fabric,
       vendor: tr.querySelector('.c-vendor')?.value||'', color: tr.querySelector('.c-color')?.value||'',
@@ -166,7 +175,9 @@ function saveEstimate() {
     var space = tr.querySelector('.space-inp')?.value||'';
     var innerInps = tr.querySelectorAll('.inner-row .inner-inp');
     var fabric = innerInps[0]?.value||'';
-    if (!space && !fabric) return;
+    var bmwVal = tr.querySelector('.bmw')?.value||'';
+    var bmhVal = tr.querySelector('.bmh')?.value||'';
+    if (!space && !fabric && !bmwVal && !bmhVal) return;
     lineItems.push({
       type: 'blind', space: space, fabric: fabric,
       vendor: innerInps[1]?.value||'', color: innerInps[2]?.value||'',

@@ -79,15 +79,11 @@ function openAdd(editName) {
 
   _ov.className = 'overlay open';
   _ov.style.display = 'flex';
-  _ov.style.position = 'fixed';
-  _ov.style.top = '0';
-  _ov.style.left = '0';
-  _ov.style.width = '100%';
-  _ov.style.height = '100%';
-  _ov.style.zIndex = '99999';
-  _ov.style.background = 'rgba(0,0,0,0.55)';
-  _ov.style.alignItems = 'flex-end';
-  _ov.style.justifyContent = 'center';
+  // 2026-08-05: 여기서 style.alignItems='flex-end'를 인라인으로 강제하고 있어서,
+  // CSS의 PC 반응형 규칙(1024px 이상에서 화면 중앙정렬)이 전혀 먹히지 않던 버그
+  // 발견(선혜님이 실제 화면에서 모달이 잘려보인다고 알려주심). 인라인 스타일은
+  // CSS보다 항상 우선하기 때문. 이 속성들은 전부 CSS #add-overlay 기본규칙에
+  // 이미 정의돼 있어 중복이었어서, 전체 제거하고 CSS가 담당하도록 함.
 }
 function closeAdd() {
   var _ov = document.getElementById('add-overlay');

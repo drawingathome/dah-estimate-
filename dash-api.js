@@ -278,6 +278,15 @@ function loadCustomers() {
 // 병합 (2026-08-04 신규) — 예전엔 견적서 목록 화면이 로컬저장소만 보고 있어서,
 // 다른 기기에서 저장했거나 관리자가 직접 넣은 견적서가 전혀 안 보이는 문제가 있었음
 function estimateDbRowToLocal(row) {
+  // 2026-08-05: itemCount/curtainCount/blindCount/거래처목록이 전부 하드코딩(0, [])
+  // 되어 있어서, 다른 기기에서 저장돼 클라우드로 동기화된 견적서는 발주현황이
+  // "저장된 견적서 없음"으로 뜨고 거래처 자동완성도 안 되던 버그 — line_items가
+  // 있으면 실제로 세서 정확한 값을 넣도록 수정
+  var liArr = row.line_items || [];
+  var curtainItems = liArr.filter(function(li){ return li && li.type === 'curtain'; });
+  var blindItems = liArr.filter(function(li){ return li && li.type === 'blind'; });
+  var curtainVendors = curtainItems.map(function(li){ return li.vendor; }).filter(Boolean);
+  var blindVendors = blindItems.map(function(li){ return li.vendor; }).filter(Boolean);
   return {
     id: row.id,
     no: row.id ? String(row.id).slice(0,8) : '',
@@ -286,8 +295,8 @@ function estimateDbRowToLocal(row) {
     addr: '',
     space: row.space || '',
     fabric: row.product || '',
-    itemCount: 0, curtainCount: 0, blindCount: 0,
-    curtainVendors: [], blindVendors: [],
+    itemCount: liArr.length, curtainCount: curtainItems.length, blindCount: blindItems.length,
+    curtainVendors: curtainVendors, blindVendors: blindVendors,
     price: Number(row.price) || 0,
     performanceRevenue: Number(row.performance_revenue) || 0,
     staffName: row.staff_name || '',
