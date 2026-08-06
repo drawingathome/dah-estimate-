@@ -928,7 +928,7 @@ button[onclick="exportExcel()"] {
 }
 
 /* ══════════════ 기타 ══════════════ */
-.card-head-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.card-head-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%; }
 .date-filter-wrap { display: flex; gap: 6px; margin-bottom: 10px; }
 .field-err { font-size: 11px; color: var(--danger, #E4483A); margin-top: 4px; }
 .form-row { margin-bottom: 12px; }

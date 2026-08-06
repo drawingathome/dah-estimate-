@@ -36,12 +36,12 @@ function renderSearch() {
     if (q) {
       countEl.textContent = '검색 결과 ' + customers.length + '건';
     } else if (showDeleted) {
-      countEl.textContent = '전체 ' + filtered.length + '명';
+      countEl.textContent = filtered.length + '명';
     } else {
       var totalCount = customers.length + deletedCount;
       countEl.textContent = deletedCount > 0
-        ? ('전체 ' + totalCount + '명 (활성 ' + customers.length + ' · 삭제보관 ' + deletedCount + ')')
-        : ('전체 ' + totalCount + '명');
+        ? (totalCount + '명 (활성 ' + customers.length + ' · 삭제보관 ' + deletedCount + ')')
+        : (totalCount + '명');
     }
   }
   var listEl = document.getElementById('search-list'); listEl.innerHTML = '';
