@@ -203,30 +203,42 @@ function renderHome(skipServerFetch) {
         '</div>',
         needAction.length === 0
           ? '<div class="empty-inline">처리 필요한 항목이 없습니다 ✅</div>'
-          : needAction.slice(0,8).map(function(item) {
-              var c = item.customer;
-              // 2026-08-05: 이 줄만 폐기된 4색 체계(그린/레드/다크)가 그대로 남아있던 놓친 참조였음(7-12 규칙).
-              // 위 "진행 현황" 섹션(라인 180-182)과 동일한 3색 체계로 통일: 방문예약/상담/가견적=회색,
-              // 선금결제~시공준비중=오렌지, 시공완료=그린. 레드(#C0392B)는 경고색 전용이라 스테이지에 쓰면 안 됨.
-              var stageColor = (['방문예약','상담','가견적'].indexOf(c.stage) >= 0) ? '#8A8378' : (c.stage === '시공완료') ? '#2E7D6B' : 'var(--terra)';
-              var targetTab = 'info';
-              var reasonStr = item.reasons.join(' ');
-              if (reasonStr.indexOf('선금결제 처리') >= 0 || reasonStr.indexOf('잔금결제 처리') >= 0) targetTab = 'pay';
-              else if (reasonStr.indexOf('발주 필요') >= 0 || reasonStr.indexOf('발주정보 확인 필요') >= 0) targetTab = 'order';
-              var isStaleLead = reasonStr.indexOf('진행없음') >= 0;
-              return '<div data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-cid="' + escHtml(c.id||'') + '" data-tab="' + targetTab + '" onclick="openDetail(this.getAttribute(\'data-cname\'),this.getAttribute(\'data-cid\')||undefined,this.getAttribute(\'data-tab\'))" ' +
-                'style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:var(--sp-3);cursor:pointer"><div style="width:6px;height:6px;border-radius:50%;background:' + stageColor + ';flex-shrink:0"></div>' +
-                '<div style="flex:1;min-width:0">' +
-                  '<div style="display:flex;align-items:center;gap:6px">' +
-                    '<span style="font-size:12px;font-weight:700;color:var(--dark);overflow:hidden;white-space:nowrap;text-overflow:ellipsis">' + escHtml(c.clientName||'') + '</span>' +
-                    '<span style="font-size:10px;font-weight:700;color:' + stageColor + ';background:' + (stageColor==='var(--terra)'?'var(--bg-org)':'#F0F0F0') + ';padding:1px 6px;border-radius:6px;flex-shrink:0">' + escHtml(c.stage||'') + '</span>' +
+          : (function(){
+              // 2026-08-06: 사유별로 그룹화(결제처리/발주필요/리드팔로업) — 선혜님 요청.
+              // 예전엔 다 섞인 flat 목록이라 "지금 결제처리부터 몰아서 하고 싶다" 같은
+              // 작업이 어려웠음. 한 고객이 여러 사유에 해당하면(예: 선금결제 처리 +
+              // 발주 필요 둘 다) 해당하는 그룹에 각각 나타남 — 그룹별로 그 사유만 표시.
+              function renderRow(c, reasonText, targetTab) {
+                var stageColor = (['방문예약','상담','가견적'].indexOf(c.stage) >= 0) ? '#8A8378' : (c.stage === '시공완료') ? '#2E7D6B' : 'var(--terra)';
+                return '<div data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-cid="' + escHtml(c.id||'') + '" data-tab="' + targetTab + '" onclick="openDetail(this.getAttribute(\'data-cname\'),this.getAttribute(\'data-cid\')||undefined,this.getAttribute(\'data-tab\'))" ' +
+                  'style="padding:10px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:var(--sp-3);cursor:pointer"><div style="width:6px;height:6px;border-radius:50%;background:' + stageColor + ';flex-shrink:0"></div>' +
+                  '<div style="flex:1;min-width:0">' +
+                    '<div style="display:flex;align-items:center;gap:6px">' +
+                      '<span style="font-size:12px;font-weight:700;color:var(--dark);overflow:hidden;white-space:nowrap;text-overflow:ellipsis">' + escHtml(c.clientName||'') + '</span>' +
+                      '<span style="font-size:10px;font-weight:700;color:' + stageColor + ';background:' + (stageColor==='var(--terra)'?'var(--bg-org)':'#F0F0F0') + ';padding:1px 6px;border-radius:6px;flex-shrink:0">' + escHtml(c.stage||'') + '</span>' +
+                    '</div>' +
+                    '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(c.phone||'') + '</div>' +
                   '</div>' +
-                  '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(c.phone||'') + '</div>' +
-                '</div>' +
-                '<span style="font-size:11px;font-weight:700;color:' + stageColor + ';flex-shrink:0;text-align:right">' + item.reasons.map(escHtml).join('<br>') + '</span>' +
-                '<span style="color:var(--sub);font-size:14px;flex-shrink:0">›</span>' +
-              '</div>';
-            }).join(''),
+                  '<span style="font-size:11px;font-weight:700;color:' + stageColor + ';flex-shrink:0;text-align:right">' + escHtml(reasonText) + '</span>' +
+                  '<span style="color:var(--sub);font-size:14px;flex-shrink:0">›</span>' +
+                '</div>';
+              }
+              var groups = [
+                { title: '결제 처리', test: function(r){ return r.indexOf('선금결제 처리')>=0 || r.indexOf('잔금결제 처리')>=0; }, tab: 'pay' },
+                { title: '발주 필요', test: function(r){ return r.indexOf('발주 필요')>=0 || r.indexOf('발주정보 확인 필요')>=0; }, tab: 'order' },
+                { title: '리드 팔로업', test: function(r){ return r.indexOf('진행없음')>=0; }, tab: 'info' }
+              ];
+              return groups.map(function(g){
+                var rows = [];
+                needAction.forEach(function(item){
+                  item.reasons.forEach(function(r){
+                    if (g.test(r)) rows.push(renderRow(item.customer, r, g.tab));
+                  });
+                });
+                if (rows.length === 0) return '';
+                return '<div style="padding:8px 20px 2px;background:var(--ivory1)"><span style="font-size:11px;font-weight:700;color:var(--sub)">' + g.title + ' ' + rows.length + '건</span></div>' + rows.join('');
+              }).join('');
+            })(),
         '<div style="padding:12px 20px 10px;border-top:1px solid var(--border);margin-top:2px">',
           '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">오늘/내일 일정</span>',
         '</div>',
