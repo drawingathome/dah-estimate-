@@ -1,7 +1,20 @@
 /* ══════════════════════════════════════════════════
    견적서 탭(가견적/확정견적 목록) 렌더링
    ══════════════════════════════════════════════════
-   dash-render.js에서 분리됨 (2026-07-17). */
+   dash-render.js에서 분리됨 (2026-07-17).
+   2026-08-06: "보관함" 개념을 고객목록에서 이쪽(견적서)으로 이동함.
+   고객목록은 항상 전원 표시하고, 대신 견적서 목록을 진행중/시공완료 보관함/
+   계약 안한 보관함/전체로 나눠서 볼 수 있게 함(선혜님 지시). */
+
+var _estArchiveFilter = 'active'; // 'active' | 'completed_archive' | 'rejected_archive' | 'all'
+
+function setEstArchiveFilter(f) {
+  _estArchiveFilter = f;
+  document.querySelectorAll('.est-archive-filter-btn').forEach(function(b){
+    b.classList.toggle('on', b.getAttribute('data-filter') === f);
+  });
+  renderEstList();
+}
 
 function renderEstList() {
   var body = document.getElementById('est-list-body');
@@ -16,6 +29,23 @@ function renderEstList() {
   if (currentUser && currentUser.role === 'staff') {
     all = all.filter(function(e){ return (e.staffName||'마스터') === currentUser.name; });
   }
+
+  // 2026-08-06: 이 견적서와 연결된 고객의 실제 단계(시공완료 여부)를 알아야
+  // "시공완료 보관함"을 판단할 수 있어서, 고객 배열과 매칭해둠(id 우선, 이름 폴백)
+  var customersArr = (typeof loadCustomers === 'function') ? loadCustomers() : [];
+  var custById = {}; var custByName = {};
+  customersArr.forEach(function(c){ if (c.id) custById[c.id] = c; if (c.clientName) custByName[c.clientName] = c; });
+  function linkedCustomer(e) { return (e.clientId && custById[e.clientId]) || custByName[e.clientName] || null; }
+  function isInstallDone(e) { var c = linkedCustomer(e); return !!(c && c.stage === '시공완료'); }
+  function isRejected(e) {
+    var cs = e.contractStatus || (e.status === 'final' ? 'contracted' : 'pending');
+    return cs !== 'contracted' && !isInstallDone(e);
+  }
+
+  if (_estArchiveFilter === 'completed_archive') all = all.filter(isInstallDone);
+  else if (_estArchiveFilter === 'rejected_archive') all = all.filter(isRejected);
+  else if (_estArchiveFilter === 'active') all = all.filter(function(e){ return !isInstallDone(e) && !isRejected(e); });
+  // 'all'이면 필터 없음
 
   var q = (document.getElementById('est-search')?.value || '').trim();
   var list = q

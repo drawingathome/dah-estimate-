@@ -38,8 +38,8 @@
 <script src="/dash-ui-helpers.js?v=202608044600"></script>
 <script src="/dash-core.js?v=202608060900"></script>
 <script src="/dash-render.js?v=202608060900"></script>
-<script src="/dash-render-est.js?v=202608044600"></script>
-<script src="/dash-render-search.js?v=202608061000"></script>
+<script src="/dash-render-est.js?v=202608061100"></script>
+<script src="/dash-render-search.js?v=202608061100"></script>
 <script src="/dash-memo.js?v=202608044600"></script>
 <script src="/dash-chart.js?v=202608044600"></script>
 <script src="/dash-calendar.js?v=202608044600"></script>
@@ -422,6 +422,12 @@
       <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="search" id="est-search" aria-label="견적서 검색" class="search-input-clean" placeholder="고객명 · 견적번호 검색" oninput="renderEstList()">
     </div>
+    <div class="sort-wrap" style="margin-top:8px">
+      <button class="sort-btn est-archive-filter-btn on" data-filter="active" onclick="setEstArchiveFilter('active')">진행중</button>
+      <button class="sort-btn est-archive-filter-btn" data-filter="completed_archive" onclick="setEstArchiveFilter('completed_archive')">시공완료 보관함</button>
+      <button class="sort-btn est-archive-filter-btn" data-filter="rejected_archive" onclick="setEstArchiveFilter('rejected_archive')">계약 안한 보관함</button>
+      <button class="sort-btn est-archive-filter-btn" data-filter="all" onclick="setEstArchiveFilter('all')">전체</button>
+    </div>
     <div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">
       <span id="est-list-count" style="font-size:11px;color:var(--sub)"></span>
       <button onclick="exportEstimatesExcel()" style="height:30px;padding:0 12px;background:#282828;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px">
@@ -450,7 +456,6 @@
       <button class="sort-btn stage-filter-btn" data-stage="잔금결제" onclick="setStageFilter('잔금결제')">잔금결제</button>
       <button class="sort-btn stage-filter-btn" data-stage="시공준비중" onclick="setStageFilter('시공준비중')">시공준비중</button>
       <button class="sort-btn stage-filter-btn" data-stage="시공완료" onclick="setStageFilter('시공완료')">시공완료</button>
-      <button class="sort-btn stage-filter-btn" data-stage="completed_archive" onclick="setStageFilter('completed_archive')">완료 보관함</button>
       <button class="sort-btn stage-filter-btn" data-stage="parked" onclick="setStageFilter('parked')">대기 리드</button>
     </div>
     <!-- 정렬 버튼 -->
@@ -464,7 +469,7 @@
     <div style="display:flex;align-items:center;gap:16px;margin-top:8px;flex-wrap:wrap">
       <label class="archived-check">
         <input type="checkbox" id="show-archived" onchange="renderSearch()">
-        <span>보관 고객 포함</span>
+        <span>삭제된 고객 포함</span>
       </label>
       <button onclick="exportExcel()" style="height:28px;padding:0 12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;border-radius:6px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>

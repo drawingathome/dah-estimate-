@@ -8,13 +8,12 @@ function renderSearch() {
   var all = (currentUser && currentUser.role === 'staff') ? allLoaded.filter(function(c) { return (c.staffName||'마스터') === currentUser.name; }) : allLoaded;
   // 정렬 적용 (2026-07-20: 예전엔 정렬버튼을 눌러도 반영이 안 되던 버그 수정)
   all = (typeof sortCustomers === 'function' && typeof _currentSort !== 'undefined') ? sortCustomers(all, _currentSort) : all.slice().reverse();
-  // 단계 필터 적용 (2026-07-20 신규) — "대기 리드"(parked)는 상담단계에서
-  // 오래 진행없는 경우, "완료 보관함"(completed_archive)은 시공완료 후
-  // 오래된 경우(2026-08-04 신규, 두 보관함을 명확히 분리)
+  // 2026-08-06 중요 수정: "완료 후 14일 지나면 고객목록에서 자동으로 숨김"은
+  // 잘못된 설계였음 — 선혜님이 명확히 "고객 정보는 그냥 다 보이게 해야지, 보관함은
+  // 견적서 쪽(시공완료 보관함/계약 안한 보관함)에 있어야 하는 거였다"고 정정함.
+  // 그래서 이 화면(고객목록)에선 isArchived 관련 필터/숨김을 전부 제거함.
   if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter === 'parked') {
     all = all.filter(function(c){ return c.leadParked === true; });
-  } else if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter === 'completed_archive') {
-    all = all.filter(function(c){ return isArchived(c) === true; });
   } else if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter !== 'all') {
     all = all.filter(function(c){ return c.stage === _currentStageFilter; });
   } else {
@@ -22,27 +21,26 @@ function renderSearch() {
     all = all.filter(function(c){ return !c.leadParked; });
   }
   var q = (document.getElementById('cust-search').value || '').trim();
-  var showArchived = document.getElementById('show-archived')?.checked || false;
+  // "보관 고객 포함" 체크박스는 이제 완전삭제 전 소프트삭제된 고객만 담당
+  // (isArchived 관련 로직은 위에서 이미 전부 제거됨 — 고객목록은 항상 전원 표시)
+  var showDeleted = document.getElementById('show-archived')?.checked || false;
   var filtered = q
     ? all.filter(function(c) { return searchMatch(c, q); })
     : all;
-  var isArchiveTab = _currentStageFilter === 'completed_archive';
-  var customers = (showArchived || isArchiveTab) ? filtered : filtered.filter(function(c){ return !isArchived(c) && !isSoftDeleted(c); });
-  var archivedCount = filtered.filter(function(c){ return isArchived(c) || isSoftDeleted(c); }).length;
-  // 2026-08-06: "전체 N건"이라고 라벨을 붙이면서 실제로는 보관고객을 뺀 숫자만 세고 있었음 —
-  // "전체"라는 말과 실제 숫자가 안 맞아서, 회원수가 갑자기 줄어든 것처럼 오해를 준 문제
-  // (선혜님이 실제로 이 문제를 발견함). 이제 진짜 전체 인원(활성+보관)을 항상 보여주고,
-  // 보관 고객을 숨기고 있을 땐 몇 명이 보관중이라 안 보이는지도 같이 표시.
+  var customers = showDeleted ? filtered : filtered.filter(function(c){ return !isSoftDeleted(c); });
+  var deletedCount = filtered.filter(function(c){ return isSoftDeleted(c); }).length;
+  // 2026-08-06: "전체 N건"이라고 라벨을 붙이면서 실제로는 삭제고객 뺀 숫자만
+  // 세고 있으면 오해를 줄 수 있어서, 소프트삭제 고객이 있을 땐 같이 표시.
   var countEl = document.getElementById('search-count');
   if (countEl) {
     if (q) {
       countEl.textContent = '검색 결과 ' + customers.length + '건';
-    } else if (showArchived || isArchiveTab) {
+    } else if (showDeleted) {
       countEl.textContent = '전체 ' + filtered.length + '명';
     } else {
-      var totalCount = customers.length + archivedCount;
-      countEl.textContent = archivedCount > 0
-        ? ('전체 ' + totalCount + '명 (활성 ' + customers.length + ' · 보관 ' + archivedCount + ')')
+      var totalCount = customers.length + deletedCount;
+      countEl.textContent = deletedCount > 0
+        ? ('전체 ' + totalCount + '명 (활성 ' + customers.length + ' · 삭제보관 ' + deletedCount + ')')
         : ('전체 ' + totalCount + '명');
     }
   }
