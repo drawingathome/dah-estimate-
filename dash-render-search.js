@@ -29,7 +29,23 @@ function renderSearch() {
   var isArchiveTab = _currentStageFilter === 'completed_archive';
   var customers = (showArchived || isArchiveTab) ? filtered : filtered.filter(function(c){ return !isArchived(c) && !isSoftDeleted(c); });
   var archivedCount = filtered.filter(function(c){ return isArchived(c) || isSoftDeleted(c); }).length;
-  var countEl = document.getElementById('search-count'); if (countEl) countEl.textContent = q ? ('검색 결과 ' + customers.length + '건') : (showArchived ? '전체 ' + customers.length + '건 (보관 포함)' : '전체 ' + customers.length + '건')
+  // 2026-08-06: "전체 N건"이라고 라벨을 붙이면서 실제로는 보관고객을 뺀 숫자만 세고 있었음 —
+  // "전체"라는 말과 실제 숫자가 안 맞아서, 회원수가 갑자기 줄어든 것처럼 오해를 준 문제
+  // (선혜님이 실제로 이 문제를 발견함). 이제 진짜 전체 인원(활성+보관)을 항상 보여주고,
+  // 보관 고객을 숨기고 있을 땐 몇 명이 보관중이라 안 보이는지도 같이 표시.
+  var countEl = document.getElementById('search-count');
+  if (countEl) {
+    if (q) {
+      countEl.textContent = '검색 결과 ' + customers.length + '건';
+    } else if (showArchived || isArchiveTab) {
+      countEl.textContent = '전체 ' + filtered.length + '명';
+    } else {
+      var totalCount = customers.length + archivedCount;
+      countEl.textContent = archivedCount > 0
+        ? ('전체 ' + totalCount + '명 (활성 ' + customers.length + ' · 보관 ' + archivedCount + ')')
+        : ('전체 ' + totalCount + '명');
+    }
+  }
   var listEl = document.getElementById('search-list'); listEl.innerHTML = '';
   if (customers.length === 0) { (function(){
     var _emp = document.createElement('div');
