@@ -1,9 +1,13 @@
 const path = require('path');
 const { launchBrowser, startServer, loginAs, blockRealNetwork } = require('./_helpers');
 
+const VP_WIDTH = parseInt(process.argv[2]) || 390;
+const VP_HEIGHT = VP_WIDTH >= 1024 ? 1000 : 900;
+const VP_LABEL = VP_WIDTH >= 1024 ? 'PC' : '모바일';
+
 async function run() {
   const dir = path.resolve(__dirname, '..');
-  const port = 9857;
+  const port = 9860 + (VP_WIDTH >= 1024 ? 1 : 0);
   const server = await startServer(dir, port);
   const browser = await launchBrowser();
   const page = await browser.newPage();
@@ -11,7 +15,7 @@ async function run() {
   page.on('pageerror', e => jsErrors.push(e.message));
   page.on('dialog', async d => { try { await d.accept(); } catch (e) {} });
   await blockRealNetwork(page);
-  await page.setViewport({ width: 390, height: 900 });
+  await page.setViewport({ width: VP_WIDTH, height: VP_HEIGHT });
   await page.goto(`http://localhost:${port}/dah-dashboard.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });
   await new Promise(r => setTimeout(r, 700));
   await loginAs(page, 'master');
@@ -51,6 +55,20 @@ async function run() {
     return loadCustomers().find(x=>x.id===5000).stage;
   });
   ok('3. 선금입금(50%) 후 선금결제 자동전환', r === '선금결제', r);
+
+  await wait();
+  r = await page.evaluate(() => {
+    var arr = loadCustomers(); var c = arr.find(x=>x.id===5000);
+    c.stage = '실측준비중'; c.measureDate = todayStr(); saveCustomers(arr);
+    goTab('home'); renderHome(true);
+    var homeTodaySchedule = document.getElementById('sec-todo') ? document.getElementById('sec-todo').parentElement.textContent : '';
+    goTab('cal'); renderCal();
+    var calText = document.getElementById('cal') ? document.getElementById('cal').textContent : '';
+    return { stage: loadCustomers().find(x=>x.id===5000).stage, inHomeSchedule: homeTodaySchedule.includes('생애주기A'), inCalendar: calText.includes('생애주기A') };
+  });
+  ok('3-1. 실측준비중 단계 전환 + measureDate 설정', r.stage === '실측준비중', r.stage);
+  ok('3-2. 실측일정이 홈 오늘일정에 반영', r.inHomeSchedule === true);
+  ok('3-3. 실측일정이 캘린더에 반영', r.inCalendar === true);
 
   await wait();
   r = await page.evaluate(() => {
@@ -155,7 +173,7 @@ async function run() {
   });
   ok('13. 시공완료→시공준비중 되돌리기 정상 작동', r === '시공준비중', r);
 
-  console.log('=== 전체 생애주기 시뮬레이션 결과 ===');
+  console.log('=== 전체 생애주기 시뮬레이션 결과 [' + VP_LABEL + ' ' + VP_WIDTH + 'px] ===');
   log.forEach(l => console.log(l));
   console.log('\n=== JS 에러 ===');
   console.log(jsErrors.length ? jsErrors.join('\n') : '없음 ✅');
