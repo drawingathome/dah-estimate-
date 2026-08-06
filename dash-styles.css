@@ -88,17 +88,18 @@ html, body, input, button, select, textarea {
 .kanban-col,
 [class*=pipe-col],
 [class*=kanban-col] {
-  min-height: 240px !important;
+  min-height: 140px !important;
 }
-/* 칸반 빈 상태 */
+/* 칸반 빈 상태 — 2026-08-06: 240px/140px로 채워진 컬럼만큼 크게 차지하던 것을
+   축소(디자인 감사에서 "빈 여백 리듬이 불균일하다"고 지적된 부분) */
 .kanban-empty {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  min-height: 140px !important;
+  min-height: 80px !important;
   gap: 6px !important;
-  padding: 32px 16px;
+  padding: 20px 16px;
   font-size: 12px;
   color: #C8C2BA;
   font-weight: 500;

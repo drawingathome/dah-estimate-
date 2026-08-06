@@ -550,10 +550,16 @@
     <div class="action-main">
       <div class="btn-row" style="display:flex;gap:10px;width:100%"><button class="btn-print" style="flex:1" onclick="printForCustomer()">🖨 고객용 출력</button>
       <button class="btn-save" style="flex:1" onclick="saveEstimate()">저장</button></div>
-      <button onclick="exportAllEstimatesExcel()" style="width:100%;margin-top:8px;padding:12px 0;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📊 전체 견적서 엑셀 다운로드</button>
-      <button onclick="printForVendor()" style="width:100%;margin-top:8px;padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📦 발주서 출력 (거래처별)</button>
-      <button onclick="printRequest('measure')" style="width:100%;margin-top:8px;padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📋 실측 의뢰서</button>
-      <button onclick="printRequest('install')" style="width:100%;margin-top:8px;padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">🔧 시공 의뢰서</button>
+      <!-- 2026-08-06: 아래 4개 버튼(엑셀/발주서/실측/시공)이 세로로 4줄 쌓여있어서
+           위계 없이 "일단 다 넣은" 느낌이었음(디자인 감사로 발견). "문서 자료" 라는
+           작은 그룹 라벨을 붙이고 2x2 격자로 묶어서 하나의 유틸리티 묶음으로 보이게 함. -->
+      <div style="margin-top:14px;font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.04em">문서 자료</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+        <button onclick="exportAllEstimatesExcel()" style="padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📊 엑셀 다운로드</button>
+        <button onclick="printForVendor()" style="padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📦 발주서 (거래처별)</button>
+        <button onclick="printRequest('measure')" style="padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📋 실측 의뢰서</button>
+        <button onclick="printRequest('install')" style="padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">🔧 시공 의뢰서</button>
+      </div>
     </div>
   </div>
 
