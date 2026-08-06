@@ -118,6 +118,13 @@ function sbXHR(method, path, data, callback) {
   xhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.setRequestHeader('Prefer', method === 'POST' ? 'return=representation' : 'return=minimal');
+  // 2026-08-06: 타임아웃이 아예 없어서, 모바일 네트워크가 느리거나 불안정하면
+  // 요청이 무한정 걸릴 수 있었음 — 그동안 화면이 데이터를 못 받아 완전히
+  // 그려지지 않은 채로 멈춰있을 수 있었음(선혜님이 겪은 "스크롤이 끝까지 안
+  // 된다" 문제의 유력한 원인 — 콘텐츠 자체가 덜 그려진 상태였을 가능성).
+  // 15초 후엔 실패로 처리해서 로컬 캐시로 폴백되도록 함.
+  xhr.timeout = 15000;
+  xhr.ontimeout = function() { callback({status: 0, text: 'timeout'}, null); };
   xhr.onload = function() {
     if (xhr.status >= 200 && xhr.status < 300) {
       var result = null;
