@@ -19,8 +19,15 @@ function getRelevantOrderItems(c) {
   });
   myEsts.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
   var latestEst = myEsts[0];
-  var hasCurtain = latestEst ? (Number(latestEst.curtainCount)||0) > 0 : true;
-  var hasBlind   = latestEst ? (Number(latestEst.blindCount)||0) > 0 : true;
+  // 2026-08-06: 견적서는 있는데 품목데이터(curtainCount/blindCount/lineItems)가
+  // 전부 비어있는 경우(예전 버그로 저장된 115건짜리 견적서들), "판단할 근거가
+  // 없다"고 전부 숨기는 대신 "견적서 자체가 없는 경우"와 똑같이 취급해서 5개
+  // 항목을 정상적으로 다 보여줌. 스태프가 견적서를 다시 입력할 필요 없이,
+  // 발주 탭에서 바로 수동으로 체크하면서 관리할 수 있게 하려는 것
+  // (재입력을 요구하는 건 너무 번거롭다는 선혜님 피드백으로 변경).
+  var estHasData = latestEst && ((Number(latestEst.curtainCount)||0) > 0 || (Number(latestEst.blindCount)||0) > 0 || (Array.isArray(latestEst.lineItems) && latestEst.lineItems.length > 0));
+  var hasCurtain = estHasData ? (Number(latestEst.curtainCount)||0) > 0 : true;
+  var hasBlind   = estHasData ? (Number(latestEst.blindCount)||0) > 0 : true;
   var allOrderItems = [
     { key: 'fabric', label: '원단 발주', relevant: hasCurtain },
     { key: 'production', label: '제작 발주', relevant: hasCurtain },
