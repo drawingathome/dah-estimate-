@@ -27,7 +27,7 @@
 </script>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
-<link rel="stylesheet" href="/dash-styles.css?v=202608060900">
+<link rel="stylesheet" href="/dash-styles.css?v=202608061700">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="/dash-utils.js?v=202608044600"></script>
 <script src="/dash-api.js?v=202608061600"></script>
@@ -559,11 +559,11 @@
       <div id="detail-current-est" style="display:none;margin:0 0 12px;padding:14px 16px;background:linear-gradient(180deg,#FFF9F4,#FFFFFF);border:1px solid #F5DDC8;border-radius:12px"></div>
       <div id="detail-info-bar" style="display:flex;align-items:center;gap:16px;padding:0 0 12px;font-size:12px;color:#6B6560"></div>
       <div style="display:flex;margin-top:0;overflow-x:auto">
-        <button id="dtab-info" onclick="switchDetailTab('info')" style="flex:1;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid #282828;color:#282828;font-weight:700;white-space:nowrap">정보</button>
-        <button id="dtab-pay" onclick="switchDetailTab('pay')" style="flex:1;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--light);font-weight:600;white-space:nowrap">결제</button>
-        <button id="dtab-alim" onclick="switchDetailTab('alim')" style="flex:1;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--light);font-weight:600;white-space:nowrap">소통</button>
-        <button id="dtab-order" onclick="switchDetailTab('order')" style="flex:1;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--light);font-weight:600;white-space:nowrap">발주</button>
-        <button id="dtab-est" onclick="switchDetailTab('est')" style="flex:1;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--light);font-weight:600;white-space:nowrap">이력 <span id="dtab-est-cnt" style="color:#F06E2D;font-weight:700"></span></button>
+        <button id="dtab-info" onclick="switchDetailTab('info')" style="flex:1;min-width:0;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid #282828;color:#282828;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">정보</button>
+        <button id="dtab-pay" onclick="switchDetailTab('pay')" style="flex:1;min-width:0;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--light);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">결제</button>
+        <button id="dtab-alim" onclick="switchDetailTab('alim')" style="flex:1;min-width:0;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--light);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">소통</button>
+        <button id="dtab-order" onclick="switchDetailTab('order')" style="flex:1;min-width:0;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--light);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">발주</button>
+        <button id="dtab-est" onclick="switchDetailTab('est')" style="flex:1;min-width:0;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--light);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">이력 <span id="dtab-est-cnt" style="color:#F06E2D;font-weight:700"></span></button>
       </div>
     </div>
     <div style="max-height:65vh;overflow-y:auto">

@@ -1639,7 +1639,7 @@ body, input, button, select, textarea {
 /* ── detail-overlay 표시 규칙 ── */
 #detail-overlay { display: none; position: fixed; inset: 0 !important; z-index: 9998 !important; background: rgba(0,0,0,0.65) !important; align-items: flex-end; justify-content: center; }
 #detail-overlay.open { display: flex !important; }
-#detail-overlay .modal-box { width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+#detail-overlay .modal-box { width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; overflow-x: hidden; }
 /* 2026-08-05: PC(1024px 이상)에서는 모바일 바텀시트 스타일(항상 화면 맨 아래 붙음)
    대신 화면 중앙에 뜨도록 수정 — 세로로 긴 PC 창에서 위에 큰 빈 여백이 생기고
    모달이 아래로 밀려 잘려 보이던 문제(선혜님이 실제로 발견) */
