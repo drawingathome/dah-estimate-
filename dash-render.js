@@ -96,11 +96,19 @@ function renderHome(skipServerFetch) {
     // 2026-07-20 추가: "상담" 단계에서 오래 진행 없는 고객(놓친 리드)도 여기 포함.
     // 기준은 7일로 우선 정함 — 필요하면 조정 가능.
     var LEAD_STALE_DAYS = (typeof getLeadStaleDays === 'function') ? getLeadStaleDays() : 7;
-    var ORDER_STAGES_FOR_ACTION = ['선금결제', '실측준비중', '확정견적', '잔금결제', '시공준비중'];
+    // 2026-08-06 수정: 발주는 실측이 끝나고 사이즈가 확정된 뒤(확정견적~)에나 의미가
+    // 있음 — 선금결제/실측준비중 단계는 아직 실측 전이라 뭘 발주할지 알 수도 없는데
+    // "발주 필요"가 뜨던 버그(선혜님이 실제로 발견: "실측만 해야 하는데 발주만 뜬다").
+    var ORDER_STAGES_FOR_ACTION = ['확정견적', '잔금결제', '시공준비중'];
     var needActionMap = {};
     customers.forEach(function(c) {
       var reasons = [];
-      if (c.stage === '선금결제' || c.stage === '잔금결제') reasons.push(c.stage + ' 처리');
+      // 2026-08-06 수정: "선금결제 단계에 있으면 무조건 결제처리 필요"가 아니라
+      // "실제로 입금이 안 됐을 때만" 뜨도록 변경 — 이미 입금 다 받고 실측 일정까지
+      // 잡아놨는데도(선혜님 실데이터로 확인: 구정화/현은지/문혜자 전부 입금액 있음)
+      // 계속 "결제처리 필요"로 잘못 뜨던 버그.
+      if (c.stage === '선금결제' && !(Number(c.depositAmount) > 0)) reasons.push('선금결제 처리');
+      if (c.stage === '잔금결제' && !(Number(c.balanceAmount) > 0)) reasons.push('잔금결제 처리');
       if (ORDER_STAGES_FOR_ACTION.indexOf(c.stage) >= 0) {
         // 2026-07-21 수정: 예전엔 "5개 항목 전부 미체크"일 때만 발주필요로 떴는데,
         // 하나라도 체크하면 나머지를 깜빡해도 목록에서 사라지는 심각한 버그였음.

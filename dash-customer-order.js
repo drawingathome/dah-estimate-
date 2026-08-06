@@ -73,9 +73,11 @@ function hasIncompleteOrder(c) {
 }
 
 function renderOrderSection(c, orderBody) {
-  // 발주 현황: 계약 이후(선금결제 단계 이후)에만 표시 —
-  // 방문예약/상담/가견적 단계에서는 아직 발주할 게 없으므로 불필요한 정보 노출 방지
-  var ORDER_STAGES = ['선금결제', '실측준비중', '확정견적', '잔금결제', '시공준비중', '시공완료'];
+  // 2026-08-06 수정: "선금결제 단계부터" 발주현황을 보여주고 있었는데, 그 시점엔
+  // 아직 실측 전이라 뭘 발주할지 알 수도 없는 상태 — 홈화면 처리필요 판단 기준과
+  // 다르게 따로 관리되고 있던 게 불일치의 원인이었음(선혜님 실제 사례로 발견).
+  // 실측이 끝나고 사이즈가 확정된 뒤(확정견적~)부터 보이도록 통일.
+  var ORDER_STAGES = ['확정견적', '잔금결제', '시공준비중', '시공완료'];
   if (ORDER_STAGES.indexOf(c.stage) >= 0) {
     var orderStatus = c.orderStatus || {};
     var orderItems = getRelevantOrderItems(c);
@@ -198,6 +200,11 @@ function renderOrderSection(c, orderBody) {
       orderCard.appendChild(span('font-size:12px;color:var(--sub)', '저장된 견적서가 없어 발주 항목을 표시할 수 없습니다'));
     }
     if (orderBody) orderBody.appendChild(orderCard);
+  } else if (orderBody) {
+    orderBody.innerHTML = '';
+    var msg = el('div', {style:'padding:24px 16px;text-align:center;color:var(--sub);font-size:12px'});
+    msg.textContent = '실측 후 사이즈가 확정되면(확정견적 단계부터) 발주현황이 표시됩니다.';
+    orderBody.appendChild(msg);
   }
 
 }
