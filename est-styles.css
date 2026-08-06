@@ -520,7 +520,7 @@ td.amt{
 .summary-sub-amount.orange{color:#fff;font-size:22px;font-weight:800}
 .action-bar{background:#fff;border-top:2px solid #EEE6DC;padding:16px 16px 40px;display:flex;flex-direction:column;gap:8px}
 .action-bar button{font-size:11px;font-family:inherit;font-weight:700;border-radius:4px;cursor:pointer;transition:all 0.15s}
-.action-main{display:flex;flex-direction:column;gap:10px}
+.action-main{display:flex;flex-direction:column;gap:10px;max-width:520px;margin:0 auto;width:100%}
 .btn-new{background:transparent;color:#756E62;border:1.5px solid #EEE6DC}
 .btn-new:hover{color:#282828;border-color:#282828}
 
