@@ -384,6 +384,30 @@ function renderChart(period) {
   [['전체 매출',fmt(curRev),'var(--dark)'],['성과매출',fmt(curPerf),'var(--dark)'],['상담 건수',curCons+'건','var(--dark)'],['계약 건수',curCon+'건','var(--dark)'],['전환율',conv+'%','var(--dark)']].forEach(function(row) {
     sumEl.appendChild(div('display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)', [span('font-size:11px;color:var(--dark)', row[0]), span('font-size:12px;font-weight:700;color:'+row[2], row[1])]));
   });
+
+  // 2026-08-06 신규: PC에서 매출 탭 오른쪽 여백을 채우기 위해 담당자별 매출
+  // 순위 카드 추가 (디자인 개선 1단계 — 화면 재사용성 목적)
+  if (typeof renderChartStaffRank === 'function') renderChartStaffRank(customers);
+}
+
+function renderChartStaffRank(customers) {
+  var wrap = document.getElementById('chart-staffrank');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  if (typeof getMonthStaffPerformance !== 'function') return;
+  var byStaff = getMonthStaffPerformance(customers, thisMonthStr().slice(0,7));
+  var names = Object.keys(byStaff).sort(function(a,b){ return byStaff[b].rev - byStaff[a].rev; });
+  if (names.length === 0) {
+    wrap.appendChild(div('font-size:11px;color:var(--sub);text-align:center;padding:16px 0', ['이번달 매출 데이터가 없습니다']));
+    return;
+  }
+  names.forEach(function(name, i) {
+    var row = div('display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)', [
+      span('font-size:12px;font-weight:700;color:var(--dark)', (i+1)+'. '+name),
+      span('font-size:12px;font-weight:700;color:var(--terra)', fmt(byStaff[name].rev) + ' (' + byStaff[name].count + '건)')
+    ]);
+    wrap.appendChild(row);
+  });
 }
 
 
