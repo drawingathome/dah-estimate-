@@ -857,6 +857,7 @@ button[onclick="exportExcel()"] {
 .cal-ev-name { color: #282828; }
 .cal-ev-sub { font-size: 12px; color: #756E62; margin-top: 2px; }
 .cal-ev-badge {
+  display: inline-block;
   font-size: 11px;
   font-weight: 700;
   padding: 3px 9px;
