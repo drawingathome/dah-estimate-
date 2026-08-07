@@ -338,6 +338,10 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
 }
 .info-item input::placeholder{color:#756E62;font-weight:400;font-size:11px}
 .info-item input[readonly]{color:#756E62}
+@media (min-width: 1024px) {
+  .info-item input[type="date"] { max-width: 180px; }
+  #c-name, #c-phone { max-width: 320px; }
+}
 
  
 .region-row{
