@@ -1938,7 +1938,7 @@ button:active:not(:disabled) { filter: brightness(0.9); }
    왼쪽엔 차트(넓게), 오른쪽엔 요약+담당자별매출을 세로로 쌓아서
    예전에 그래프 하나만 덩그러니 있고 아래는 텅 비던 문제 해결. */
 @media (min-width: 1024px) {
-  #chart {
+  #chart[style*="display: block"] {
     display: grid !important;
     grid-template-columns: 1fr 360px;
     grid-template-rows: auto auto auto;
