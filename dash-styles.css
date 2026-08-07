@@ -901,7 +901,9 @@ button[onclick="exportExcel()"] {
   padding: 12px 4px;
   border-bottom: 1px solid #EEE6DC;
   cursor: pointer;
+  transition: background 0.12s;
 }
+.cust-item:hover { background: #FAF7F5; }
 .ci-left { flex: 1; min-width: 0; }
 .ci-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
 .ci-price { font-size: 12px; font-weight: 700; color: #282828; }
@@ -1943,3 +1945,12 @@ button:active:not(:disabled) { filter: brightness(0.9); }
   #chart-card-summary { grid-column: 2; grid-row: 3; margin-top: 0; }
   #chart-card-staffrank { grid-column: 2; grid-row: 4; }
 }
+
+/* 2026-08-06 디자인 개선 1단계: 모달 등장 애니메이션 — 예전엔 배경/박스
+   둘 다 아무 애니메이션 없이 즉시 팝업돼서 정적으로 느껴졌음.
+   display:none↔flex 전환과 함께 써도 안전하도록 @keyframes 방식 사용
+   (opacity transition은 display:none에서 안 먹혀서 keyframes가 필요함). */
+@keyframes dahModalBgFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dahModalSlideUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+#detail-overlay.open, #add-overlay.open { animation: dahModalBgFade 0.18s ease; }
+#detail-overlay.open .modal-box, #add-overlay.open .modal-box { animation: dahModalSlideUp 0.22s cubic-bezier(0.2,0.8,0.3,1); }
