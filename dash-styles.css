@@ -1960,3 +1960,9 @@ button:active:not(:disabled) { filter: brightness(0.9); }
 @keyframes dahModalSlideUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 #detail-overlay.open, #add-overlay.open { animation: dahModalBgFade 0.18s ease; }
 #detail-overlay.open .modal-box, #add-overlay.open .modal-box { animation: dahModalSlideUp 0.22s cubic-bezier(0.2,0.8,0.3,1); }
+
+/* 2026-08-06 디자인 개선 2단계: 숫자 포인트 폰트(Fraunces) — "프리미엄
+   쇼룸" 톤에 맞춰 돈/통계 관련 숫자에 세리프 포인트를 줌. 단, 한글 문장
+   안에 숫자가 섞이는 곳(헤드라인 등)은 획 대비가 안 맞아서 제외하고,
+   숫자만 단독으로 뜨는 자리에만 좁게 적용함(선혜님 확인 후 결정). */
+.font-accent-num { font-family: 'Fraunces', serif; font-feature-settings: 'ss01' on; }
