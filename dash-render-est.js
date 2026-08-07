@@ -78,7 +78,7 @@ function renderEstList() {
     var cs = e.contractStatus || (e.status === 'final' ? 'contracted' : 'pending');
     var isFinal = e.status === 'final';
 
-    var row = el('div', {style:
+    var row = el('div', {class: 'est-list-item', style:
       'padding:12px 16px;border-bottom:' + (isLast?'none':'1px solid var(--border)') + ';' +
       'cursor:pointer;transition:background 0.12s'
     });

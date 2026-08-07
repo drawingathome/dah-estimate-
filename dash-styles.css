@@ -1959,3 +1959,24 @@ button:active:not(:disabled) { filter: brightness(0.9); }
 @keyframes dahModalSlideUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 #detail-overlay.open, #add-overlay.open { animation: dahModalBgFade 0.18s ease; }
 #detail-overlay.open .modal-box, #add-overlay.open .modal-box { animation: dahModalSlideUp 0.22s cubic-bezier(0.2,0.8,0.3,1); }
+
+/* 2026-08-06 디자인개선 3단계: PC(1024px+) 견적서목록도 고객목록과 동일하게
+   카드 그리드로 재배치 — 한 줄에 하나씩만 넓게 늘어나서 오른쪽 여백이
+   크게 남던 문제 해결. */
+@media (min-width: 1024px) {
+  #est-list-body .card {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 10px;
+    padding: 12px;
+  }
+  #est-list-body .card-head {
+    grid-column: 1 / -1;
+    padding: 0 0 8px;
+  }
+  #est-list-body .est-list-item {
+    border: 1px solid var(--border);
+    border-radius: var(--r-card);
+    padding: 14px 16px;
+  }
+}
