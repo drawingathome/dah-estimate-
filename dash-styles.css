@@ -880,7 +880,7 @@ button[onclick="exportExcel()"] {
 /* ══════════════ 칸반 카드 ══════════════ */
 .kanban-item-name { font-size: 13px; font-weight: 700; color: #282828; }
 .kanban-item-sub { font-size: 11px; color: #756E62; margin-top: 2px; }
-.kanban-item-price { font-size: 12px; font-weight: 700; color: #282828; margin-top: 4px; font-family: 'Fraunces', serif; }
+.kanban-item-price { font-size: 12px; font-weight: 700; color: #282828; margin-top: 4px; }
 
 /* ══════════════ KPI / 매출 진행바 ══════════════ */
 
@@ -905,7 +905,7 @@ button[onclick="exportExcel()"] {
 .cust-item:hover { background: #FAF7F5; }
 .ci-left { flex: 1; min-width: 0; }
 .ci-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
-.ci-price { font-size: 12px; font-weight: 700; color: #282828; font-family: 'Fraunces', serif; }
+.ci-price { font-size: 12px; font-weight: 700; color: #282828; }
 
 /* 2026-08-05: 기본 스타일(글자색 등)이 아예 없어서, 배경이 진한 상담(#282828)
    단계에서 텍스트가 배경에 묻혀 안 보이던 문제 — 흰 글자로 명확히 표시 */
@@ -1959,9 +1959,3 @@ button:active:not(:disabled) { filter: brightness(0.9); }
 @keyframes dahModalSlideUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 #detail-overlay.open, #add-overlay.open { animation: dahModalBgFade 0.18s ease; }
 #detail-overlay.open .modal-box, #add-overlay.open .modal-box { animation: dahModalSlideUp 0.22s cubic-bezier(0.2,0.8,0.3,1); }
-
-/* 2026-08-06 디자인 개선 2단계: 숫자 포인트 폰트(Fraunces) — "프리미엄
-   쇼룸" 톤에 맞춰 돈/통계 관련 숫자에 세리프 포인트를 줌. 단, 한글 문장
-   안에 숫자가 섞이는 곳(헤드라인 등)은 획 대비가 안 맞아서 제외하고,
-   숫자만 단독으로 뜨는 자리에만 좁게 적용함(선혜님 확인 후 결정). */
-.font-accent-num { font-family: 'Fraunces', serif; font-feature-settings: 'ss01' on; }

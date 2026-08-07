@@ -83,7 +83,7 @@ function renderPaySection(c, payBody) {
     });
     depTitle.appendChild(depEditBtn);
     depSec.appendChild(depTitle);
-    depSec.appendChild(el('div', {style:"font-size:11px;font-weight:800;color:var(--dark);letter-spacing:-0.5px;margin-bottom:2px;font-family:'Fraunces',serif", text: Number(payData.depositAmount).toLocaleString()+'원'}));
+    depSec.appendChild(el('div', {style:'font-size:11px;font-weight:800;color:var(--dark);letter-spacing:-0.5px;margin-bottom:2px', text: Number(payData.depositAmount).toLocaleString()+'원'}));
     depSec.appendChild(el('div', {style:'font-size:11px;color:#6B6B6B', text: (payData.depositMethod||'') + ' · ' + (payData.depositDate||'') + (payData.depositReceipt?' · 현금영수증 ✔':'')}));
   } else {
     depSec.appendChild(depTitle);
@@ -145,7 +145,7 @@ function renderPaySection(c, payBody) {
     });
     balTitle.appendChild(balEditBtn);
     balSec.appendChild(balTitle);
-    balSec.appendChild(el('div', {style:"font-size:11px;font-weight:800;color:var(--dark);letter-spacing:-0.5px;margin-bottom:2px;font-family:'Fraunces',serif", text: Number(payData.balanceAmount).toLocaleString()+'원'}));
+    balSec.appendChild(el('div', {style:'font-size:11px;font-weight:800;color:var(--dark);letter-spacing:-0.5px;margin-bottom:2px', text: Number(payData.balanceAmount).toLocaleString()+'원'}));
     balSec.appendChild(el('div', {style:'font-size:11px;color:#6B6B6B', text: (payData.balanceMethod||'') + ' · ' + (payData.balanceDate||'') + (payData.balanceReceipt?' · 현금영수증 ✔':'')}));
   } else {
     balSec.appendChild(balTitle);

@@ -382,7 +382,7 @@ function renderChart(period) {
   var conv = curCons > 0 ? Math.round(curCon/curCons*100) : 0;
 
   [['전체 매출',fmt(curRev),'var(--dark)'],['성과매출',fmt(curPerf),'var(--dark)'],['상담 건수',curCons+'건','var(--dark)'],['계약 건수',curCon+'건','var(--dark)'],['전환율',conv+'%','var(--dark)']].forEach(function(row) {
-    sumEl.appendChild(div('display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)', [span('font-size:11px;color:var(--dark)', row[0]), span('font-size:12px;font-weight:700;color:'+row[2]+";font-family:'Fraunces',serif", row[1])]));
+    sumEl.appendChild(div('display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)', [span('font-size:11px;color:var(--dark)', row[0]), span('font-size:12px;font-weight:700;color:'+row[2], row[1])]));
   });
 
   // 2026-08-06 신규: PC에서 매출 탭 오른쪽 여백을 채우기 위해 담당자별 매출
@@ -404,7 +404,7 @@ function renderChartStaffRank(customers) {
   names.forEach(function(name, i) {
     var row = div('display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)', [
       span('font-size:12px;font-weight:700;color:var(--dark)', (i+1)+'. '+name),
-      span("font-size:12px;font-weight:700;color:var(--terra);font-family:'Fraunces',serif", fmt(byStaff[name].rev) + ' (' + byStaff[name].count + '건)')
+      span('font-size:12px;font-weight:700;color:var(--terra)', fmt(byStaff[name].rev) + ' (' + byStaff[name].count + '건)')
     ]);
     wrap.appendChild(row);
   });

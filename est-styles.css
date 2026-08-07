@@ -405,8 +405,7 @@ td input:focus,td select:focus{outline:none}
 td.amt{
   text-align:right;white-space:nowrap;
   font-size:11px;font-weight:700;
-  color:#282828;letter-spacing:-0.3px;
-  font-family:'Fraunces',serif
+  color:#282828;letter-spacing:-0.3px
 }
 .c-display-name{font-weight:600!important}
 .sub-size{display:block;font-size:11px;color:#F06E2D;font-weight:600;margin-top:2px;white-space:nowrap}
@@ -460,7 +459,7 @@ td.amt{
 }
 .sum-row:last-child{border-bottom:none}
 .sum-row .lbl{font-size:11px;color:#8E8078;font-weight:500}
-.sum-row .val{font-size:11px;font-weight:600;color:#282828;font-family:'Fraunces',serif}
+.sum-row .val{font-size:11px;font-weight:600;color:#282828}
 
 .sum-row.total{margin-top:8px}
 .sum-row.total 
@@ -506,8 +505,7 @@ td.amt{
 .summary-total-amount{
   font-size:36px;font-weight:900;color:#fff;
   letter-spacing:-2px;line-height:1;
-  margin-top:2px;
-  font-family:'Fraunces',serif
+  margin-top:2px
 }
 .summary-total-sub{
   display:flex;justify-content:space-between;align-items:center;
