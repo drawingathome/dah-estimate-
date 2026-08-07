@@ -258,7 +258,10 @@ function renderChart(period) {
   });
 
   var maxRev = Math.max.apply(null, revenues) || 1;
-  var W = barsEl.clientWidth || 340, H = 120, PAD = 16;
+  // 2026-08-06: Y축 라벨("100만원" 등)이 SVG 왼쪽 경계에 잘려서 "ㅏ원"처럼
+  // 보이던 버그 — text-anchor:end 라벨이 텍스트 폭만큼 왼쪽으로 확장되는데
+  // 왼쪽 여백(PAD)이 16px뿐이라 여러 자리 숫자는 항상 잘렸음. 40px로 확대.
+  var W = barsEl.clientWidth || 340, H = 120, PAD = 40;
   var chartW = W - PAD*2, chartH = H - 28;
   var n = periods.length;
   
