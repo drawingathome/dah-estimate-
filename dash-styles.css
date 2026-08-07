@@ -1907,3 +1907,21 @@ button:active:not(:disabled) { filter: brightness(0.9); }
   #sec-staff-perf { grid-column: 2; grid-row: 4; border-radius: var(--r-card); overflow: hidden; margin-top: 16px; }
   #sec-todo, #sec-staff-perf { border: 1px solid var(--border); }
 }
+
+/* 2026-08-06: PC(1024px+) 고객목록을 카드 그리드로 재배치 — 예전엔 모바일
+   리스트를 그냥 늘린 것뿐이라 오른쪽 절반이 텅 빈 여백이었음(디자인 감사에서
+   발견). auto-fill로 화면 폭에 맞춰 2~3열이 자동으로 잡힘. */
+@media (min-width: 1024px) {
+  #search-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 10px;
+    padding: 12px;
+  }
+  #search-list .cust-item {
+    border: 1px solid var(--border);
+    border-radius: var(--r-card);
+    padding: 14px 16px;
+    align-items: flex-start;
+  }
+}
