@@ -36,9 +36,8 @@ html, body { overflow-x: hidden; max-width: 100vw; }
 /* ── 빠른이동 내비게이션 (섹션 많은 화면 우측 고정 목차, PC 전용) ── */
 .quick-nav {
   position: fixed;
-  top: 50%;
+  top: 140px;
   right: 14px;
-  transform: translateY(-50%);
   z-index: 150;
   display: flex;
   flex-direction: column;
@@ -47,7 +46,7 @@ html, body { overflow-x: hidden; max-width: 100vw; }
   border: 1px solid #EEE6DC;
   border-radius: 12px;
   padding: 8px 4px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 .quick-nav a {
   font-size: 11px;
