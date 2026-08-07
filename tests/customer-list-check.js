@@ -39,7 +39,8 @@ async function run() {
       saveCustomers([
         { clientName: '가나다고객' + suffix, phone: '01000000001', addr: '서울', stage: '상담', staffName: '마스터', price: 3000000, date: '2026-07-01' },
         { clientName: '마바사고객' + suffix, phone: '01000000002', addr: '서울', stage: '계약금', staffName: '마스터', price: 1000000, date: '2026-07-10' },
-        { clientName: '자차카고객' + suffix, phone: '01000000003', addr: '서울', stage: '상담', staffName: '마스터', price: 2000000, date: '2026-07-15' }
+        { clientName: '자차카고객' + suffix, phone: '01000000003', addr: '서울', stage: '상담', staffName: '마스터', price: 2000000, date: '2026-07-15' },
+        { clientName: '파타하고객' + suffix, phone: '01000000004', addr: '서울', stage: '상담', staffName: '마스터', price: 500000, date: '2026-07-20', leadParked: true }
       ]);
     }, label);
     await new Promise(r => setTimeout(r, 300));
@@ -64,18 +65,18 @@ async function run() {
     const sorted = await page.evaluate((suffix) => Array.from(document.querySelectorAll('.ci-name span')).map(s => s.textContent).filter(t => t.includes(suffix)), label);
     check(`[${label}] 금액높은순 정렬버튼 클릭시 실제로 순서가 바뀜`, JSON.stringify(sorted) === JSON.stringify(['가나다고객' + label, '자차카고객' + label, '마바사고객' + label]), `실제순서=${JSON.stringify(sorted)}`);
 
-    const filterTapped = await tapOrClick('[data-stage="상담"]');
+    const filterTapped = await tapOrClick('[data-stage="parked"]');
     await new Promise(r => setTimeout(r, 300));
     const filtered = await page.evaluate((suffix) => Array.from(document.querySelectorAll('.ci-name span')).map(s => s.textContent).filter(t => t.includes(suffix)), label);
-    check(`[${label}] "상담" 단계 필터 탭/클릭시 상담단계 고객만 표시됨`, filterTapped && filtered.length === 2 && !filtered.includes('마바사고객' + label), `탭됨=${filterTapped}, 실제=${JSON.stringify(filtered)}`);
+    check(`[${label}] "대기 리드" 필터 탭/클릭시 대기리드 고객만 표시됨`, filterTapped && filtered.length === 1 && filtered.includes('파타하고객' + label), `탭됨=${filterTapped}, 실제=${JSON.stringify(filtered)}`);
 
     await page.evaluate(() => setSort('name_asc'));
     await new Promise(r => setTimeout(r, 300));
     const combined = await page.evaluate((suffix) => ({
       list: Array.from(document.querySelectorAll('.ci-name span')).map(s => s.textContent).filter(t => t.includes(suffix)),
-      filterStillOn: document.querySelector('[data-stage="상담"]').classList.contains('on')
+      filterStillOn: document.querySelector('[data-stage="parked"]').classList.contains('on')
     }), label);
-    check(`[${label}] 정렬을 바꿔도 단계필터가 안 풀림`, combined.filterStillOn && combined.list.length === 2, JSON.stringify(combined));
+    check(`[${label}] 정렬을 바꿔도 대기리드필터가 안 풀림`, combined.filterStillOn && combined.list.length === 1, JSON.stringify(combined));
 
     await page.evaluate(() => { if (typeof closeDetail === 'function') closeDetail(); });
     await page.evaluate(() => setStageFilter('all'));

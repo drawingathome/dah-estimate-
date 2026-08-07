@@ -36,7 +36,7 @@ async function run() {
       saveCustomers([
         { clientName: '중복검사고객계약금' + suffix, phone: '01011112222', stage: '선금결제', staffName: '마스터', price: 800000, date: pastDate, createdAt: new Date().toISOString(), orderStatus: {} },
         { clientName: '중복검사고객시공' + suffix, phone: '01033334444', stage: '시공준비중', staffName: '마스터', price: 500000, date: pastDate, createdAt: new Date().toISOString(), orderStatus: {} },
-        { clientName: '중복검사고객잔금' + suffix, phone: '01055556666', stage: '잔금결제', staffName: '마스터', price: 700000, date: pastDate, createdAt: new Date().toISOString(), orderStatus: { fabric: true } }
+        { clientName: '중복검사고객잔금' + suffix, phone: '01055556666', stage: '잔금결제', staffName: '마스터', price: 700000, date: pastDate, createdAt: new Date().toISOString(), orderStatus: { fabric: true, production: true, blind: true, material: true, install: true } }
       ]);
       renderHome(true);
     }, label);

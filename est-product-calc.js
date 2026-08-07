@@ -17,7 +17,7 @@ function addCurtainRow() {
         '<div class="inner-row">'+
           '<input type="text" list="fabric-list" placeholder="원단명" class="c-fabric inner-inp">'+
           '<input type="text" list="vendor-list" placeholder="거래처" class="c-vendor inner-inp" style="width:72px">'+
-          '<label style="display:flex;align-items:center;gap:2px;font-size:10px;color:var(--sub);white-space:nowrap;cursor:pointer" title="체크하면 이 거래처 발주서에 보정된 제작사이즈(실측±보정값)가 함께 표시됩니다">'+
+          '<label style="display:flex;align-items:center;gap:2px;font-size:11px;color:var(--sub);white-space:nowrap;cursor:pointer" title="체크하면 이 거래처 발주서에 보정된 제작사이즈(실측±보정값)가 함께 표시됩니다">'+
             '<input type="checkbox" class="vendor-is-workshop" style="margin:0;width:12px;height:12px">가공소'+
           '</label>'+
           '<input type="text" placeholder="컬러" class="c-color inner-inp" style="width:60px">'+
@@ -37,9 +37,9 @@ function addCurtainRow() {
     '<td>'+
       '<input type="number" placeholder="cm" class="mh" oninput="calcCurtainRow(this)" style="'+INP+'">'+
       '<div style="display:flex;gap:2px;margin-top:2px">'+
-        '<input type="number" placeholder="-3" class="height-adjust" value="-3" oninput="calcCurtainRow(this)" style="width:38px;font-size:10px;padding:1px 2px;border:1px solid var(--border);border-radius:4px;text-align:center" title="제작높이 보정값(cm). 일반레일 -3, 전동레일은 브랜드마다 달라서(솜피 등) -5 근처로 직접 조정하세요">'+
-        '<button type="button" onclick="var i=this.parentNode.querySelector(\'.height-adjust\'); i.value=-3; calcCurtainRow(i);" style="font-size:9px;padding:1px 4px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer">일반</button>'+
-        '<button type="button" onclick="var i=this.parentNode.querySelector(\'.height-adjust\'); i.value=-5; calcCurtainRow(i);" style="font-size:9px;padding:1px 4px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer">전동</button>'+
+        '<input type="number" placeholder="-3" class="height-adjust" value="-3" oninput="calcCurtainRow(this)" style="width:38px;font-size:11px;padding:1px 2px;border:1px solid var(--border);border-radius:4px;text-align:center" title="제작높이 보정값(cm). 일반레일 -3, 전동레일은 브랜드마다 달라서(솜피 등) -5 근처로 직접 조정하세요">'+
+        '<button type="button" onclick="var i=this.parentNode.querySelector(\'.height-adjust\'); i.value=-3; calcCurtainRow(i);" style="font-size:11px;padding:4px 9px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;min-width:32px">일반</button>'+
+        '<button type="button" onclick="var i=this.parentNode.querySelector(\'.height-adjust\'); i.value=-5; calcCurtainRow(i);" style="font-size:11px;padding:4px 9px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;min-width:32px">전동</button>'+
       '</div>'+
     '</td>'+
     '<td><input type="number" class="pnum" value="2" oninput="calcCurtainRow(this)" style="'+INP+'"></td>'+
