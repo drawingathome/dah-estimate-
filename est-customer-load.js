@@ -89,7 +89,7 @@ function renderCustLoadList(q) {
       ? '<div style="margin-top:var(--sp-1);display:flex;gap:var(--sp-1);flex-wrap:wrap">'
         + history.map(function(h){
             var lbl = h.status==='final'?'최종':'가견적';
-            var amt = h.price ? h.price.toLocaleString()+'원' : '';
+            var amt = h.price ? '<span class="font-accent-num">' + h.price.toLocaleString() + '</span>원' : '';
             return '<span style="font-size:11px;background:#F5F2EE;color:#8E8078;padding:2px 6px;border-radius:4px">'+lbl+(amt?' · '+amt:'')+'</span>';
           }).join('')
         + '</div>'

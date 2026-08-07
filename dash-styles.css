@@ -881,7 +881,7 @@ button[onclick="exportExcel()"] {
 /* ══════════════ 칸반 카드 ══════════════ */
 .kanban-item-name { font-size: 13px; font-weight: 700; color: #282828; }
 .kanban-item-sub { font-size: 11px; color: #756E62; margin-top: 2px; }
-.kanban-item-price { font-size: 12px; font-weight: 700; color: #282828; margin-top: 4px; }
+.kanban-item-price { font-size: 12px; font-weight: 700; color: #282828; margin-top: 4px; font-family: 'Fraunces', serif; }
 
 /* ══════════════ KPI / 매출 진행바 ══════════════ */
 
@@ -906,7 +906,7 @@ button[onclick="exportExcel()"] {
 .cust-item:hover { background: #FAF7F5; }
 .ci-left { flex: 1; min-width: 0; }
 .ci-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
-.ci-price { font-size: 12px; font-weight: 700; color: #282828; }
+.ci-price { font-size: 12px; font-weight: 700; color: #282828; font-family: 'Fraunces', serif; }
 
 /* 2026-08-05: 기본 스타일(글자색 등)이 아예 없어서, 배경이 진한 상담(#282828)
    단계에서 텍스트가 배경에 묻혀 안 보이던 문제 — 흰 글자로 명확히 표시 */

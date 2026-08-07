@@ -29,6 +29,10 @@ function escHtml(s) {
 
 function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 function fmt(n) { return (Number(n) || 0).toLocaleString() + '원'; }
+// 2026-08-06: 숫자 포인트 폰트(Fraunces)용 - innerHTML 컨텍스트에서만 사용할 것.
+// fmt()를 직접 바꾸면 textContent로 쓰는 곳(예: dash-render-search.js)에서
+// <span> 태그가 그대로 글자로 노출되는 위험이 있어서 별도 함수로 분리함.
+function fmtA(n) { return '<span class="font-accent-num">' + (Number(n) || 0).toLocaleString() + '</span>원'; }
 function fmtMan(n) { return Math.round((Number(n)||0)/10000).toLocaleString() + '만원'; }
 function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
 function thisMonthStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1); }

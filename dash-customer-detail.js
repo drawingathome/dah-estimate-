@@ -148,7 +148,7 @@ function renderDetailEstTab() {
 
     // 금액 크게
     var priceRow = div('margin-bottom:var(--sp-2)', [
-      el('div', {style:'font-size:22px;font-weight:900;color:var(--dark);letter-spacing:-1px', text: (Number(e.price)||0).toLocaleString()+'원'}),
+      el('div', {style:"font-size:22px;font-weight:900;color:var(--dark);letter-spacing:-1px;font-family:'Fraunces',serif", text: (Number(e.price)||0).toLocaleString()+'원'}),
     ]);
 
     // 상세 정보 그리드
@@ -336,7 +336,7 @@ function renderDetailHeader(c) {
   var latestEst = myEsts[0];
   if (curEstBox) {
     if (latestEst) {
-      var amt = (Number(latestEst.price)||0).toLocaleString()+'원';
+      var amt = '<span class="font-accent-num">' + (Number(latestEst.price)||0).toLocaleString() + '</span>원';
       var itemLabel = latestEst.itemCount ? ('총 '+latestEst.itemCount+'개 품목') : '';
       curEstBox.innerHTML =
         '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">' +
@@ -364,7 +364,7 @@ function renderDetailHeader(c) {
     function renderPriceRow() {
       priceEditRow.innerHTML =
         '<span style="font-size:11px;color:var(--sub)">매출 계산 기준금액</span>' +
-        '<span style="font-size:12px;font-weight:700;color:var(--dark);cursor:pointer;text-decoration:underline;text-decoration-style:dotted" id="price-edit-trigger">' + (Number(c.price)||0).toLocaleString() + '원 (수정)</span>';
+        '<span style="font-size:12px;font-weight:700;color:var(--dark);cursor:pointer;text-decoration:underline;text-decoration-style:dotted" id="price-edit-trigger"><span class="font-accent-num">' + (Number(c.price)||0).toLocaleString() + '</span>원 (수정)</span>';
       document.getElementById('price-edit-trigger').onclick = function() {
         var input = document.createElement('input');
         input.type = 'number'; input.value = c.price || 0;
@@ -866,12 +866,12 @@ function showEstimateDetailPopup(e) {
       // 합계
       '<div style="padding:16px 28px 24px">' +
         (installSum > 0 && productSum > 0
-          ? '<div style="display:flex;justify-content:space-between;padding-bottom:8px;font-size:12px;color:#8E8078"><span>제품가 합계</span><span>' + productSum.toLocaleString() + '원</span></div>' +
-            '<div style="display:flex;justify-content:space-between;padding-bottom:12px;font-size:12px;color:#8E8078"><span>시공비 합계</span><span>' + installSum.toLocaleString() + '원</span></div>'
+          ? '<div style="display:flex;justify-content:space-between;padding-bottom:8px;font-size:12px;color:#8E8078"><span>제품가 합계</span><span class="font-accent-num">' + productSum.toLocaleString() + '원</span></div>' +
+            '<div style="display:flex;justify-content:space-between;padding-bottom:12px;font-size:12px;color:#8E8078"><span>시공비 합계</span><span class="font-accent-num">' + installSum.toLocaleString() + '원</span></div>'
           : '') +
         '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:2px solid #282828">' +
           '<span style="font-size:13px;font-weight:700;color:#282828">합계</span>' +
-          '<span style="font-size:19px;font-weight:900;color:#282828">' + (Number(e.price)||0).toLocaleString() + '원</span>' +
+          '<span class="font-accent-num" style="font-size:19px;font-weight:900;color:#282828">' + (Number(e.price)||0).toLocaleString() + '원</span>' +
         '</div>' +
       '</div>' +
       confirmBtnHtml +
@@ -1115,7 +1115,7 @@ function renderEstimateHistory(container, clientName) {
     
     var mid = el('div', {style:'display:flex;justify-content:space-between;align-items:center;margin-bottom:6px'});
     var spaceEl = el('span', {style:'font-size:11px;color:var(--dark)', text:e.space||'—'});
-    var priceEl = el('span', {style:'font-size:12px;font-weight:700;color:var(--dark)', text:(Number(e.price)||0).toLocaleString()+'원'});
+    var priceEl = el('span', {style:"font-size:12px;font-weight:700;color:var(--dark);font-family:'Fraunces',serif", text:(Number(e.price)||0).toLocaleString()+'원'});
     mid.appendChild(spaceEl); mid.appendChild(priceEl);
     card.appendChild(mid);
 

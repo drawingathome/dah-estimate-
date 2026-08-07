@@ -55,7 +55,7 @@ function renderCal() {
     ].map(function(item, i) {
       return '<div style="flex:1;text-align:center;' + (i>0?'':'') + '">' +
         '<div style="font-size:11px;color:var(--sub);letter-spacing:0.5px;margin-bottom:3px">' + item.label + '</div>' +
-        '<div style="font-size:11px;font-weight:800;color:' + item.color + ';letter-spacing:-0.5px">' + item.value + '</div>' +
+        '<div class="font-accent-num" style="font-size:11px;font-weight:800;color:' + item.color + ';letter-spacing:-0.5px">' + item.value + '</div>' +
         '</div>';
     }).join('');
   }
@@ -243,7 +243,7 @@ function renderCalList(customers, selectedDate) {
     right.appendChild(badge);
     if (isMain && ev.price > 0) {
       var priceEl = document.createElement('div');
-      priceEl.style.cssText = 'font-size:12px;font-weight:700;color:var(--dark);margin-top:var(--sp-1)';
+      priceEl.style.cssText = "font-size:12px;font-weight:700;color:var(--dark);margin-top:var(--sp-1);font-family:'Fraunces',serif";
       priceEl.textContent = Math.round(ev.price/10000).toLocaleString() + '만원';
       right.appendChild(priceEl);
     }

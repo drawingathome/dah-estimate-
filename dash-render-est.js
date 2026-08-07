@@ -111,7 +111,7 @@ function renderEstList() {
     var mid = el('div', {style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-1)'});
     var nameEl = el('span', {style:'font-size:12px;font-weight:700;color:var(--dark)'});
     nameEl.textContent = e.clientName || '—';
-    var priceEl = el('span', {style:'font-size:11px;font-weight:800;color:var(--dark);letter-spacing:-0.5px'});
+    var priceEl = el('span', {style:"font-size:11px;font-weight:800;color:var(--dark);letter-spacing:-0.5px;font-family:'Fraunces',serif"});
     priceEl.textContent = (Number(e.price)||0).toLocaleString() + '원';
     mid.appendChild(nameEl); mid.appendChild(priceEl);
 
