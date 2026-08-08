@@ -11,6 +11,13 @@
    overflow-x:auto가 있어 영향 없음), 원인을 정확히 특정하지 않고도 body
    레벨에서 가로스크롤 자체를 원천 차단. */
 html, body { overflow-x: hidden; max-width: 100vw; }
+/* 2026-08-08: 사파리(WebKit) 전용 폭 계산 차이를 제 크롬 테스트환경에서
+   재현 못하는 경우를 대비한 이중 안전장치 - 주요 카드/섹션 컨테이너가
+   부모를 넘지 못하도록 명시적으로 고정 */
+.card, .kanban-col, #sec-hero, #sec-goal, #sec-stage, #sec-todo, #sec-kpi > div {
+  max-width: 100%;
+  box-sizing: border-box;
+}
 
 /* ── 토스트 알림 (기존엔 스타일이 아예 없어서 저장확인 등이 화면에 안 보였음) ── */
 #toast {
