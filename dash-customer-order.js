@@ -160,6 +160,14 @@ function renderOrderSection(c, orderBody) {
         if (vendorSuggestions.length === 1) vendorInput.value = vendorSuggestions[0];
         dueDateInput.value = defaultDueDate;
       }
+      // 2026-08-08: date input은 ::placeholder가 안 먹혀서 빈 상태일 때 다른
+      // 플레이스홀더(#C8C2BA)와 다르게 진하게 보이던 문제 - 값 유무로 직접 판단
+      [orderDateInput, dueDateInput].forEach(function(dInput) {
+        function syncEmpty() { dInput.style.color = dInput.value ? '' : '#C8C2BA'; }
+        syncEmpty();
+        dInput.addEventListener('input', syncEmpty);
+        dInput.addEventListener('change', syncEmpty);
+      });
 
       function saveOrderState() {
         var arr = loadCustomers();

@@ -16,7 +16,7 @@ var PIPE_STAGES = [
   { key:'확정견적', dot:'var(--terra)' },
   { key:'잔금결제', dot:'var(--terra)' },
   { key:'시공준비중', dot:'var(--terra)' },
-  { key:'시공완료', dot:'#2E7D6B' },
+  { key:'시공완료', dot:'#2F6690' },
 ];
 
 // 2026-08-05: 6단계→9단계 세분화(선혜님 요청). 기존 6단계 데이터는

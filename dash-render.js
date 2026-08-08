@@ -162,10 +162,10 @@ function renderHome(skipServerFetch) {
         '<div style="padding:12px 20px">',
           '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">',
             '<span style="font-size:12px;font-weight:600;color:var(--sub)">이달 목표 달성률</span>',
-            '<span style="font-size:12px;font-weight:700;color:' + (isOver ? '#2E7D32' : 'var(--terra)') + '">' + pct + '% <span style="font-size:12px;font-weight:400;color:var(--sub)">/ ' + goalWan.toLocaleString() + '만원</span></span>',
+            '<span style="font-size:12px;font-weight:700;color:' + (isOver ? '#2F6690' : 'var(--terra)') + '">' + pct + '% <span style="font-size:12px;font-weight:400;color:var(--sub)">/ ' + goalWan.toLocaleString() + '만원</span></span>',
           '</div>',
           '<div style="background:var(--ivory2);border-radius:6px;height:8px;overflow:hidden">',
-            '<div style="height:100%;border-radius:6px;width:' + pct + '%;background:' + (isOver ? 'linear-gradient(90deg,#2E7D32,#43A047)' : 'linear-gradient(90deg,var(--terra),var(--orange))') + ';transition:width 0.8s cubic-bezier(0.4,0,0.2,1)"></div>',
+            '<div style="height:100%;border-radius:6px;width:' + pct + '%;background:' + (isOver ? 'linear-gradient(90deg,#2F6690,#4A85AC)' : 'linear-gradient(90deg,var(--terra),var(--orange))') + ';transition:width 0.8s cubic-bezier(0.4,0,0.2,1)"></div>',
           '</div>',
         '</div>',
         '<div id="sec-kpi" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-top:1px solid var(--border)">',
@@ -193,8 +193,8 @@ function renderHome(skipServerFetch) {
             var isGray = ['방문예약','상담','가견적'].indexOf(stage) >= 0;
             var isGreen = stage === '시공완료';
             var bg    = isGray ? '#F0EFEC' : isGreen ? '#EAF3F0' : 'var(--bg-org)';
-            var color = isGray ? '#8A8378' : isGreen ? '#2E7D6B' : 'var(--terra)';
-            var bdr   = isGray ? '#8A8378' : isGreen ? '#2E7D6B' : 'var(--terra)';
+            var color = isGray ? '#8A8378' : isGreen ? '#2F6690' : 'var(--terra)';
+            var bdr   = isGray ? '#8A8378' : isGreen ? '#2F6690' : 'var(--terra)';
             return '<div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:var(--r-btn);border:1.5px solid ' + bdr + ';background:' + bg + '">' +
               '<span style="font-size:11px;font-weight:800;color:' + color + ';line-height:1">' + cnt + '</span>' +
               '<span style="font-size:12px;font-weight:600;color:' + color + '">' + stage + '</span>' +
@@ -217,7 +217,7 @@ function renderHome(skipServerFetch) {
               // 작업이 어려웠음. 한 고객이 여러 사유에 해당하면(예: 선금결제 처리 +
               // 발주 필요 둘 다) 해당하는 그룹에 각각 나타남 — 그룹별로 그 사유만 표시.
               function renderRow(c, reasonText, targetTab) {
-                var stageColor = (['방문예약','상담','가견적'].indexOf(c.stage) >= 0) ? '#8A8378' : (c.stage === '시공완료') ? '#2E7D6B' : 'var(--terra)';
+                var stageColor = (['방문예약','상담','가견적'].indexOf(c.stage) >= 0) ? '#8A8378' : (c.stage === '시공완료') ? '#2F6690' : 'var(--terra)';
                 return '<div data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-cid="' + escHtml(c.id||'') + '" data-tab="' + targetTab + '" onclick="openDetail(this.getAttribute(\'data-cname\'),this.getAttribute(\'data-cid\')||undefined,this.getAttribute(\'data-tab\'))" ' +
                   'style="padding:10px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:var(--sp-3);cursor:pointer"><div style="width:6px;height:6px;border-radius:50%;background:' + stageColor + ';flex-shrink:0"></div>' +
                   '<div style="flex:1;min-width:0">' +

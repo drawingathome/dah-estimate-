@@ -55,7 +55,7 @@ function renderEstList() {
   if (cntEl) cntEl.textContent = '총 ' + list.length + '건';
 
   var CONTRACT_KO = {pending:'가견적', contracted:'계약됨', rejected:'미계약'};
-  var CONTRACT_COLOR = {pending:'var(--sub)', contracted:'#2E7D6B', rejected:'#C0392B'};
+  var CONTRACT_COLOR = {pending:'var(--sub)', contracted:'#2F6690', rejected:'#C0392B'};
   var STATUS_KO = {ga:'가견적서', final:'최종견적서'};
 
   if (list.length === 0) {

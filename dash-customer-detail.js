@@ -107,7 +107,7 @@ function renderDetailEstTab() {
 
   var CONTRACT_KO    = {pending:'가견적', contracted:'✅ 계약됨', rejected:'미계약'};
   var CONTRACT_BG    = {pending:'#F5F2EE', contracted:'#EEF5F2', rejected:'#FDECEA'};
-  var CONTRACT_COLOR = {pending:'var(--sub)', contracted:'#2E7D6B', rejected:'#C0392B'};
+  var CONTRACT_COLOR = {pending:'var(--sub)', contracted:'#2F6690', rejected:'#C0392B'};
   var STATUS_KO      = {ga:'가견적서', final:'최종견적서'};
 
   // 재구매 여부 - 계약된 견적이 2개 이상이면 재구매

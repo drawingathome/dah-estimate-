@@ -928,7 +928,7 @@ button[onclick="exportExcel()"] {
 .stage-pill.확정견적 { background: #F06E2D; }
 .stage-pill.잔금결제 { background: #F06E2D; }
 .stage-pill.시공준비중 { background: #F06E2D; }
-.stage-pill.시공완료 { background: #2E7D6B; }
+.stage-pill.시공완료 { background: #2F6690; }
 .rebuy-tag {
   font-size: 11px;
   font-weight: 700;
@@ -1010,7 +1010,7 @@ button[onclick="exportExcel()"] {
   --terra:    #F06E2D;
   --mid:      #756E62;
   --light:    #756E62;
-  --green:    #2E7D32;
+  --green:    #2F6690;
   --blue:     #282828;
   --terra-dark:#D4601F;
   --kakao-dark:#F5D800;
@@ -1830,9 +1830,11 @@ button[onclick*="exportExcel"] {
 /* (견적서에서 처리) */
 
 /* ━━ 수정 3: 모달 입력창 플레이스홀더 색 ━━ */
+/* 2026-08-08: #756E62는 앱 전체 플레이스홀더(#C8C2BA)와 다른 진하기라
+   모달만 유독 진해 보이던 불일치였음 - 통일함 */
 #add-overlay input::placeholder,
 #add-overlay textarea::placeholder {
-  color: #756E62 !important;
+  color: #C8C2BA !important;
   font-size: 13px !important;
 }
 

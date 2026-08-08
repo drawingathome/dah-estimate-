@@ -50,7 +50,7 @@ function renderCal() {
   if (sumBar) {
     sumBar.innerHTML = [
       {label:'매출', value: Math.round(monRev/10000).toLocaleString()+'만원', color:'var(--dark)'},
-      {label:'실측', value: monMeasure+'건', color:'#2E7D6B'},
+      {label:'실측', value: monMeasure+'건', color:'#2F6690'},
       {label:'시공', value: monInstall+'건', color:'var(--terra)'}
     ].map(function(item, i) {
       return '<div style="flex:1;text-align:center;' + (i>0?'':'') + '">' +
@@ -255,8 +255,8 @@ function renderCalList(customers, selectedDate) {
       if (dep > 0 || bal > 0) {
         var payWrap = document.createElement('div');
         payWrap.style.cssText = 'font-size:11px;margin-top:2px;display:flex;gap:4px;justify-content:flex-end';
-        if (dep > 0) payWrap.appendChild((function(){ var s=document.createElement('span'); s.style.cssText='color:#2E7D6B'; s.textContent='선금✅'; return s; })());
-        if (bal > 0) payWrap.appendChild((function(){ var s=document.createElement('span'); s.style.cssText='color:#2E7D6B'; s.textContent='잔금✅'; return s; })());
+        if (dep > 0) payWrap.appendChild((function(){ var s=document.createElement('span'); s.style.cssText='color:#2F6690'; s.textContent='선금✅'; return s; })());
+        if (bal > 0) payWrap.appendChild((function(){ var s=document.createElement('span'); s.style.cssText='color:#2F6690'; s.textContent='잔금✅'; return s; })());
         right.appendChild(payWrap);
       }
     }

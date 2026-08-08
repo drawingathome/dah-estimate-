@@ -176,7 +176,7 @@ input::placeholder, textarea::placeholder {
   --terra:    #F06E2D;
   --mid:      #756E62;
   --light:    #756E62;
-  --green:    #2E7D32;
+  --green:    #2F6690;
   --blue:     #282828;
   --terra-dark:#D4601F;
 }
@@ -345,7 +345,7 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
    "년-월-일" 빈 상태 텍스트를 placeholder 색이 아니라 입력값 색으로 렌더링함)
    다른 플레이스홀더(연한 회색)와 색/굵기가 달라 보이던 문제 - JS로 값 유무 판단해
    .is-empty 클래스 토글하는 방식으로 통일 */
-.info-item input[type="date"].is-empty{color:#756E62!important;font-weight:400!important}
+.info-item input[type="date"].is-empty{color:#C8C2BA!important;font-weight:400!important}
 @media (min-width: 1024px) {
   .info-item input[type="date"] { max-width: 180px; }
   #c-name, #c-phone { max-width: 320px; }
@@ -967,7 +967,7 @@ textarea:focus{border-color:#282828}
   font-size:11px;font-weight:700;padding:3px 8px;
   border-radius:12px;margin-left:8px
 }
-.expiry-badge.ok{background:#F5F2EE;color:#2E7D32}
+.expiry-badge.ok{background:#F5F2EE;color:#2F6690}
 .expiry-badge.warn{background:#FFF3EE;color:#F06E2D}
 .expiry-badge.over{background:#FDECEA;color:#C0392B}
 
@@ -1132,7 +1132,7 @@ input.error { border-color: #C0392B !important; box-shadow: 0 0 0 3px rgba(192,5
   transition: all 0.25s ease; white-space: nowrap;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-.toast.success { background: #2E7D32; }
+.toast.success { background: #2F6690; }
 .toast.error   { background: #C0392B; }
 
 
@@ -1282,11 +1282,13 @@ button[onclick*="addSvc"], button[onclick*="addRow"] {
 }
 
 /* ── 7. 하단 버튼 3종 완전 확정 ── */
+/* 2026-08-08: 예전엔 button[onclick*="printCustomer"]처럼 onclick 텍스트를
+   부분매칭하는 방식이었는데, 실제 onclick은 printForCustomer()라 매칭이
+   실패해서 "고객용 출력"만 스타일이 안 먹혔음(저장 버튼과 폰트크기 15px vs
+   13px로 달라 보이던 원인). 클래스 기반으로 바꿔서 둘 다 정확히 동일하게 적용. */
 /* 고객용 출력 — Primary Dark */
 #btn-print-customer,
-button[onclick*="printCustomer"],
-button[onclick*="openPreview"],
-button[onclick*="preview"] {
+.btn-print {
   font-size: 15px !important;
   font-weight: 700 !important;
   height: 52px !important;
@@ -1299,8 +1301,7 @@ button[onclick*="preview"] {
 
 /* 저장 — Primary Orange */
 #btn-save,
-button[onclick*="saveEst"],
-button[onclick*="saveCur"] {
+.btn-save {
   font-size: 15px !important;
   font-weight: 700 !important;
   height: 52px !important;
