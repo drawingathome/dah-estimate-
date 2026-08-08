@@ -1983,3 +1983,62 @@ button:active:not(:disabled) { filter: brightness(0.9); }
     padding: 14px 16px;
   }
 }
+
+/* ══════════════════════════════════════════════════
+   2026-08-08 디자인개선 5단계: 홈화면 카드 입체감(elevation)
+   예전엔 흰 배경 섹션들이 서로 붙어서 얇은 선으로만 구분되던
+   "평면 리스트" 느낌이었음. 아이보리 배경 위에 살짝 띄운
+   카드 스택으로 전환 — 대기업 프로덕트 UI에서 흔히 쓰는
+   soft-elevation 패턴. 기능/구조는 그대로, 시각적 표현만 개선.
+   ══════════════════════════════════════════════════ */
+:root {
+  --shadow-card: 0 1px 2px rgba(40,32,24,0.04), 0 4px 16px rgba(40,32,24,0.06);
+  --shadow-card-hover: 0 2px 4px rgba(40,32,24,0.06), 0 8px 24px rgba(40,32,24,0.09);
+}
+
+#home #sec-hero,
+#home #sec-goal,
+#home #sec-stage,
+#home #sec-todo {
+  border-radius: var(--r-card) !important;
+  box-shadow: var(--shadow-card);
+  border-bottom: none !important;
+  margin: 0 0 10px;
+  overflow: hidden;
+}
+
+/* 헤드라인 카드 — 시그니처 패턴을 우상단 모서리에 아주 은은하게 */
+#home #sec-hero {
+  position: relative;
+  background-image: url("/assets/brand-pattern.webp") !important;
+  background-size: 480px !important;
+  background-position: top right !important;
+  background-repeat: no-repeat !important;
+}
+#home #sec-hero::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(115deg, #fff 38%, rgba(255,255,255,0.75) 62%, rgba(255,255,255,0.55) 100%);
+  pointer-events: none;
+}
+#home #sec-hero > * { position: relative; z-index: 1; }
+
+/* KPI 3분할 — 하나의 회색 grid-gap 대신 각자 독립된 카드로 */
+#home #sec-kpi {
+  background: transparent !important;
+  border-top: none !important;
+  gap: 8px !important;
+  padding: 0 12px 12px;
+}
+#home #sec-kpi > div {
+  border-radius: 10px !important;
+  box-shadow: var(--shadow-card);
+}
+
+/* 스테이지 칩 섹션도 카드 처리 */
+#home #sec-stage { padding-top: 14px; }
+
+/* 처리필요/일정 카드 내부 행에는 상단 구분선 유지(카드 안에서는 여전히 필요) */
+#home #sec-todo [style*="border-top:1px solid var(--ivory2)"] {
+  border-top: 1px solid var(--ivory2) !important;
+}

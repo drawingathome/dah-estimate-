@@ -143,7 +143,7 @@ function renderHome(skipServerFetch) {
     wrap.innerHTML = [
 
       // 1. 날짜 헤더
-      '<div style="padding:16px 20px 12px;border-bottom:1px solid var(--border);background:#fff">',
+      '<div id="sec-hero" style="padding:16px 20px 12px;border-bottom:1px solid var(--border);background:#fff">',
         '<div style="font-size:11px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:0.04em;letter-spacing:0.06em;margin-bottom:var(--sp-1)">',
           _year + '. ' + _month + '. ' + _date + ' ' + _dowKo,
         '</div>',
