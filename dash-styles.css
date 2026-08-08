@@ -1037,9 +1037,6 @@ input,button,select,textarea { font-family:inherit; }
 .hd {
   position:sticky; top:0; z-index:100;
   background:var(--dark);
-  background-image: url("/assets/brand-pattern-dark.webp");
-  background-size: 220px;
-  background-repeat: repeat;
   height:52px;
   display:flex; align-items:center;
   justify-content:space-between;
@@ -1581,9 +1578,6 @@ body, input, button, select, textarea {
   height: 48px;
   min-height: 48px;
   background: #282828 !important;
-  background-image: url("/assets/brand-pattern-dark.webp") !important;
-  background-size: 220px !important;
-  background-repeat: repeat !important;
   color: #fff !important;
   z-index: 200 !important;
   padding: 0 16px;
@@ -1943,22 +1937,6 @@ button:active:not(:disabled) { filter: brightness(0.9); }
   margin: 0 0 10px;
   overflow: hidden;
 }
-
-/* 헤드라인 카드 — 시그니처 패턴을 우상단 모서리에 아주 은은하게 */
-#home #sec-hero {
-  position: relative;
-  background-image: url("/assets/brand-pattern.webp") !important;
-  background-size: 480px !important;
-  background-position: top right !important;
-  background-repeat: no-repeat !important;
-}
-#home #sec-hero::after {
-  content: '';
-  position: absolute; inset: 0;
-  background: linear-gradient(115deg, #fff 38%, rgba(255,255,255,0.75) 62%, rgba(255,255,255,0.55) 100%);
-  pointer-events: none;
-}
-#home #sec-hero > * { position: relative; z-index: 1; }
 
 /* KPI 3분할 — 하나의 회색 grid-gap 대신 각자 독립된 카드로 */
 #home #sec-kpi {
