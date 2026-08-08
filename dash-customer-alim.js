@@ -25,7 +25,7 @@ function renderAlimSection(c, alimBody) {
     labelRow.appendChild(el('span', {style:'font-size:11px;font-weight:600;color:var(--dark)', text:meta.label}));
     labelRow.appendChild(el('span', {style:'font-size:11px;color:'+tagColor+';background:var(--ivory1);padding:2px 5px;border-radius:var(--r-btn)', text:meta.tag}));
     left.appendChild(labelRow);
-    if (sent) left.appendChild(el('span', {style:'font-size:11px;color:var(--sub)', text:'✅ '+sent.date+' '+sent.time}));
+    if (sent) left.appendChild(el('span', {style:'font-size:11px;color:var(--sub)', text:sent.date+' '+sent.time+' 발송됨'}));
     row.appendChild(left);
     if (!sent) {
       var sendBtn = el('span', {style:'font-size:12px;font-weight:700;color:var(--dark);cursor:pointer;flex-shrink:0;padding:4px 8px;border:1px solid var(--dark);border-radius:10px;min-height:32px;display:flex;align-items:center', text:'발송'});

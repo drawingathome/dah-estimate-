@@ -1247,7 +1247,7 @@ input,button,select,textarea { font-family:inherit; }
   .tabs { display:none !important; }
   .mob-app-header { display:flex; }
   .mob-bottom-nav { display:block; }
-  .wrap { padding:0 0 calc(56px + env(safe-area-inset-bottom) + 24px); }
+  .wrap { padding:0 0 calc(56px + env(safe-area-inset-bottom) + 40px); }
   
   .search-input-clean { font-size:11px !important; }
   .login-screen { padding:40px 20px 32px; }
@@ -1505,12 +1505,20 @@ label { font-size: 13px; }
 
 
 /* ── 콘텐츠 영역 ── */
-#home {
-  min-height: auto;
-  padding-bottom: 24px;
+@media (min-width: 641px) {
+  #home {
+    min-height: auto;
+    padding-bottom: 24px;
+  }
 }
-#pipe, #search, #est-list, #cal, #chart, #settings {
-  padding-bottom: var(--sp-8);
+/* 2026-08-08: 이 규칙에 media query가 없어서 항상 적용됐는데, ID선택자
+   조합이라 특이성이 높아 모바일 전용 하단여백(.wrap의 calc(...) 규칙)을
+   항상 이기고 있었음 — 그래서 모바일에서 리스트 마지막 항목이 계속
+   하단 네비게이션에 가려졌던 진짜 원인. PC 전용으로 한정함. */
+@media (min-width: 641px) {
+  #pipe, #search, #est-list, #cal, #chart, #settings {
+    padding-bottom: var(--sp-8);
+  }
 }
 /* 홈 섹션 카드 */
 
@@ -1519,14 +1527,14 @@ label { font-size: 13px; }
 
 /* ── 모바일 콘텐츠 하단 여백 (탭바 높이 + 여유) ── */
 @media (max-width: 640px) {
-  .wrap { padding-bottom: calc(56px + env(safe-area-inset-bottom) + 24px); }
-  /* (2026-08-02 버그수정: #settings가 이 목록에 있으면 id선택자 특이성 때문에
-     .wrap의 하단여백이 강제로 0으로 덮어써져서, 설정화면 맨 아래 로그아웃
-     버튼이 하단 고정 네비게이션바 뒤에 가려져 있었음 — 실제로 스크롤을
-     끝까지 내려도 안 보였던 원인. #settings는 자체 여백이 필요하므로 제외) */
-  #home, #pipe, #search, #est-list, #cal, #chart {
-    padding-bottom: 0;
-  }
+  .wrap { padding-bottom: calc(56px + env(safe-area-inset-bottom) + 40px); }
+  /* 2026-08-08: 예전(2026-08-02)엔 #settings 로그아웃 버튼이 하단 네비에
+     가려지는 문제 때문에 #home,#pipe,#search,#est-list,#cal,#chart의
+     padding-bottom을 전부 0으로 강제하는 규칙이 있었음. 근데 #settings만
+     빼고 나머지 화면은 그대로 남아서, 캘린더 등에서 마지막 항목이 계속
+     하단 네비에 가려지는 문제가 반복됐음(부분적으로만 고쳐졌던 버그).
+     .wrap의 원래 padding-bottom을 그대로 두는 게 맞아서 이 강제 규칙 자체를
+     제거함 — 어느 화면도 예외 없이 정상 하단여백을 받음. */
 }
 
 

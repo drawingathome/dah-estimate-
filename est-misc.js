@@ -71,7 +71,7 @@ function shareEstimate() {
   var text = '[드로잉엣홈] '+name+'님 견적서\n총 금액: '+total+'\n\n견적서 확인 후 계약금(50%)을 입금해주시면 실측 일정을 잡아드리겠습니다 🙂';
   if(navigator.share){
     navigator.share({ title:'드로잉엣홈 견적서', text: text })
-      .then(function(){ showToast('공유 완료 ✅'); })
+      .then(function(){ showToast('공유 완료'); })
       .catch(function(){});
   } else {
     navigator.clipboard?.writeText(text)

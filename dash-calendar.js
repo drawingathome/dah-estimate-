@@ -255,8 +255,9 @@ function renderCalList(customers, selectedDate) {
       if (dep > 0 || bal > 0) {
         var payWrap = document.createElement('div');
         payWrap.style.cssText = 'font-size:11px;margin-top:2px;display:flex;gap:4px;justify-content:flex-end';
-        if (dep > 0) payWrap.appendChild((function(){ var s=document.createElement('span'); s.style.cssText='color:#2F6690'; s.textContent='선금✅'; return s; })());
-        if (bal > 0) payWrap.appendChild((function(){ var s=document.createElement('span'); s.style.cssText='color:#2F6690'; s.textContent='잔금✅'; return s; })());
+        var checkSvg = '<svg width="11" height="11" viewBox="0 0 20 20" style="vertical-align:-1px;margin-left:2px"><circle cx="10" cy="10" r="10" fill="#2F6690"/><path d="M6 10l3 3 5-6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        if (dep > 0) payWrap.appendChild((function(){ var s=document.createElement('span'); s.style.cssText='color:#2F6690'; s.innerHTML='선금' + checkSvg; return s; })());
+        if (bal > 0) payWrap.appendChild((function(){ var s=document.createElement('span'); s.style.cssText='color:#2F6690'; s.innerHTML='잔금' + checkSvg; return s; })());
         right.appendChild(payWrap);
       }
     }

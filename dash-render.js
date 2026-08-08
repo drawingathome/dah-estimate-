@@ -210,7 +210,7 @@ function renderHome(skipServerFetch) {
           needAction.length > 0 ? '<span style="font-size:12px;font-weight:700;color:var(--terra);background:var(--bg-org);padding:2px 8px;border-radius:10px">' + needAction.length + '건</span>' : '',
         '</div>',
         needAction.length === 0
-          ? '<div class="empty-inline">처리 필요한 항목이 없습니다 ✅</div>'
+          ? '<div class="empty-inline">처리 필요한 항목이 없습니다 <svg width="13" height="13" viewBox="0 0 20 20" style="vertical-align:-2px"><circle cx="10" cy="10" r="10" fill="#2F6690"/><path d="M6 10l3 3 5-6" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'
           : (function(){
               // 2026-08-06: 사유별로 그룹화(결제처리/발주필요/리드팔로업) — 선혜님 요청.
               // 예전엔 다 섞인 flat 목록이라 "지금 결제처리부터 몰아서 하고 싶다" 같은

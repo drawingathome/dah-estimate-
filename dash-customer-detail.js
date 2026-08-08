@@ -105,7 +105,7 @@ function renderDetailEstTab() {
     return;
   }
 
-  var CONTRACT_KO    = {pending:'가견적', contracted:'✅ 계약됨', rejected:'미계약'};
+  var CONTRACT_KO    = {pending:'가견적', contracted:'계약됨', rejected:'미계약'};
   var CONTRACT_BG    = {pending:'#F5F2EE', contracted:'#EEF5F2', rejected:'#FDECEA'};
   var CONTRACT_COLOR = {pending:'var(--sub)', contracted:'#2F6690', rejected:'#C0392B'};
   var STATUS_KO      = {ga:'가견적서', final:'최종견적서'};
@@ -779,7 +779,7 @@ function confirmEstimateToFinal(estId, clientName, price, clientId) {
         localStorage.setItem('dah_customers', JSON.stringify(custs));
       } catch(e) {}
     }
-    showToast('확정견적으로 전환됐습니다 ✅');
+    showToast('확정견적으로 전환됐습니다');
     document.getElementById('est-detail-popup')?.remove();
     if (typeof loadEstimatesAsync === 'function') loadEstimatesAsync(renderEstList, true);
     if (typeof openDetail === 'function' && currentDetailName) openDetail(currentDetailName, currentDetailId, 'est');
@@ -1036,7 +1036,7 @@ function openEstimate(name, id) {
 
 
 
-var CONTRACT_LABELS = {pending:'가견적', contracted:'✅ 계약됨', rejected:'미계약'};
+var CONTRACT_LABELS = {pending:'가견적', contracted:'계약됨', rejected:'미계약'};
 var STATUS_LABELS = {ga:'가견적서', final:'최종견적서'};
 
 function renderEstimateHistory(container, clientName) {

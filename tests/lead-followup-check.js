@@ -82,7 +82,7 @@ async function run() {
     await page.evaluate(() => goTab('cal'));
     await new Promise(r => setTimeout(r, 400));
     const cal = await page.evaluate(() => document.getElementById('cal').textContent);
-    check(`[${label}] 달력 일정목록에 선금 입금 상태(✅)가 표시됨`, cal.includes('선금✅'), '표시 안 됨');
+    check(`[${label}] 달력 일정목록에 선금 입금 상태가 표시됨`, cal.includes('선금'), '표시 안 됨');
     const calScroll = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
     check(`[${label}] 달력 화면 가로스크롤 없음`, !calScroll, '가로스크롤 발생');
 

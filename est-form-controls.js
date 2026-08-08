@@ -154,7 +154,7 @@ function toggleConfirmEstimate() {
   } else {
     if (!confirm('이 견적 내용(사이즈·금액)을 확정할까요?\n확정 후에도 수정할 수 있지만, 수정하면 확정이 자동으로 취소됩니다.')) return;
     window._estimateConfirmedAt = new Date().toISOString();
-    showToast('✅ 견적이 확정됐습니다');
+    showToast('견적이 확정됐습니다');
   }
   renderConfirmBadge();
   if (typeof calcTotal === 'function') calcTotal(); // 저장 전이라도 상태를 즉시 반영

@@ -619,13 +619,13 @@
 <script src="/est-utils.js?v=202608051400"></script>
 <script src="/est-sync-queue.js?v=202608050001"></script>
 <script src="/dash-supabase-auth.js?v=202608051400"></script>
-<script src="/est-form-controls.js?v=202608051400"></script>
+<script src="/est-form-controls.js?v=202608065400"></script>
 <script src="/est-product-calc.js?v=202608064100"></script>
-<script src="/est-survey.js?v=202608051400"></script>
-<script src="/est-save.js?v=202608060900"></script>
+<script src="/est-survey.js?v=202608065400"></script>
+<script src="/est-save.js?v=202608065400"></script>
 <script src="/est-documents.js?v=202608060900"></script>
 <script src="/est-customer-load.js?v=202608063500"></script>
-<script src="/est-misc.js?v=202608051400"></script>
+<script src="/est-misc.js?v=202608065400"></script>
 <script>
 var currentTab = 'ga';
 
@@ -667,7 +667,7 @@ var currentTab = 'ga';
       if(c.survey) displaySurvey(c.survey);
       var loadedItems = (typeof restoreLineItemsToForm === 'function') && restoreLineItemsToForm(c.lineItems, c.fabricFallback);
       localStorage.removeItem('dah_open_customer');
-      showToast('✅ '+c.name+' 고객 정보 불러옴'+(loadedItems ? ' (이전 견적 품목 포함)' : ''));
+      showToast(''+c.name+' 고객 정보 불러옴'+(loadedItems ? ' (이전 견적 품목 포함)' : ''));
     }
   } catch(e) {}
 })();
@@ -723,7 +723,7 @@ window.addEventListener('offline', function(){
   showToast('⚠️ 인터넷 연결이 끊겼습니다. 저장한 데이터는 기기에 보존됩니다.', 'error');
 });
 window.addEventListener('online', function(){
-  showToast('✅ 인터넷에 다시 연결됐습니다.');
+  showToast('인터넷에 다시 연결됐습니다.');
 });
 
 

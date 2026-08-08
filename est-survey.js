@@ -22,7 +22,7 @@ function loadSurveyFromSheet() {
         var data = JSON.parse(xhr.responseText);
         if(data.result === 'success') {
           applySurveyData(data);
-          showToast('✅ 설문 데이터를 불러왔습니다 (구글시트)');
+          showToast('설문 데이터를 불러왔습니다 (구글시트)');
         } else if(data.result === 'notfound') {
           showToast('⚠️ 해당 고객 설문이 없습니다');
         } else if(data.result === 'empty') {
@@ -77,7 +77,7 @@ function loadSurveyFromSheet() {
           moods: a.moods || [], functions: a.functions || [],
           budget: a.budget, memo: r.memo
         });
-        showToast('✅ 설문 데이터를 불러왔습니다 (Supabase)');
+        showToast('설문 데이터를 불러왔습니다 (Supabase)');
       } else {
         // Supabase에 없으면 구글시트로 폴백 (surveys 테이블 생성 전 또는 이전 데이터)
         fromSheet();
