@@ -277,8 +277,14 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
 .doc-header-tabbar-left{
   display:flex;gap:2px;align-items:flex-end;order:1
 }
+/* 2026-08-08: 문서상태(가견적서/최종견적서/확정)와 작업유형(신규/재구매/
+   AS수선)은 서로 다른 성격의 선택 UI라 의도적으로 다른 패턴(밑줄 vs
+   버튼)을 씀. 근데 둘이 바로 붙어있어서 하나의 뒤섞인 툴바처럼 보이던
+   문제 - 구분선+간격으로 "의도적으로 다른 그룹"임을 명확히 함 */
 .doc-header-tabbar-right{
-  display:flex;gap:1px;align-items:flex-end;order:2
+  display:flex;gap:1px;align-items:flex-end;order:2;
+  margin-left:14px;padding-left:14px;
+  border-left:1px solid rgba(255,255,255,0.15);
 }
 
 .section{
@@ -873,7 +879,7 @@ td.amt{
 }
 @media(max-width:480px){
   
-  .doc-header-tabbar-right{margin-top:2px}
+  .doc-header-tabbar-right{margin-top:2px;margin-left:8px;padding-left:8px}
 }
  
 .row-curtain td{padding:6px 4px;vertical-align:middle}
