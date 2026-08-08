@@ -280,23 +280,7 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
 .doc-header-tabbar-right{
   display:flex;gap:1px;align-items:flex-end;order:2
 }
- 
-.est-status-btn{
-  padding:12px 14px;border:none;
-  border-radius:8px 6px 0 0;
-  font-size:11px;font-weight:600;font-family:inherit;
-  cursor:pointer;
-  background:rgba(255,255,255,0.08);
-  color:rgba(255,255,255,0.4);
-  letter-spacing:0.3px;transition:all 0.15s;white-space:nowrap;
-  min-height:44px
-}
-.cust-type-btn{
-  letter-spacing:0.3px;white-space:nowrap;
-  min-height:44px
-}
 
- 
 .section{
   background:#fff;
   border-radius:0;
@@ -573,17 +557,6 @@ td.amt{
 }
 .space-inp:not(:placeholder-shown){background:#282828;color:#FAF7F5;border-color:#282828}
 
- 
-.toast{
-  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
-  background:#282828;color:#FAF7F5;
-  padding:12px 24px;border-radius:8px;
-  font-size:11px;font-family:inherit;z-index:999;
-  opacity:0;transition:opacity 0.25s;pointer-events:none;
-  white-space:nowrap;letter-spacing:0.2px
-}
-
- 
 .pv-wrap{
   word-break:keep-all;
   font-family:var(--font-base)var(--font-base);
@@ -868,7 +841,6 @@ td.amt{
 .pdf-modal-cancel{padding:9px 18px;background:#FAF7F5;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;color:var(--sub)}
 .pdf-modal-confirm{padding:9px 22px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
 .pdf-modal-confirm:hover{background:#282828}
-.load-cust-btn{padding:5px 10px;background:#fff;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;letter-spacing:0.2px;white-space:nowrap;padding:5px 8px}
 .load-cust-btn:hover{background:#F5F2EE;border-color:#756E62}
  
 #cust-load-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;display:none;align-items:center;justify-content:center}
@@ -1147,37 +1119,6 @@ input.error { border-color: #C0392B !important; box-shadow: 0 0 0 3px rgba(192,5
 #contract-status-badge.done { background:#FFF3EE; color:#F06E2D; border:1px solid #F06E2D; }
 
 
-/* ── 견적서 하단 버튼 통일 ── */
-
-
-/* 고객용 출력 — Primary */
-#btn-print-customer, [onclick*="printCustomer"], [onclick*="openPreview"] {
-  background: #282828 !important;
-  color: #fff !important;
-  border-radius: 4px !important;
-}
-/* 저장 — Primary 오렌지 */
-#btn-save, [onclick*="saveEst"] {
-  background: #F06E2D !important;
-  color: #fff !important;
-  border-radius: 4px !important;
-}
-/* 엑셀 다운로드 — Secondary */
-[onclick*="exportAll"], [onclick*="Excel"] {
-  background: #FAF7F5 !important;
-  color: #282828 !important;
-  border: 1px solid #EEE6DC !important;
-  border-radius: 4px !important;
-}
-/* 대시보드로 / 새 견적서 */
-[onclick*="dashboard"], [onclick*="newEst"] {
-  background: #FAF7F5 !important;
-  color: #282828 !important;
-  border: 1px solid #EEE6DC !important;
-  border-radius: 4px !important;
-}
-
-
 /* ── 폰트 통일 ── */
 body, input, button, select, textarea {
   font-family: 'Pretendard Variable', Pretendard, -apple-system,
@@ -1263,7 +1204,7 @@ h1, h2, h3 { font-weight: 700; }
 
 /* ── 5. 복제(⧉) / 삭제(✕) 버튼 ── */
 button[onclick*="copy"], button[onclick*="remove"],
-button[onclick*="del"], button[onclick*="dup"] {
+button[onclick*="del"] {
   border-radius: 4px !important;
   width: 28px !important;
   height: 28px !important;
@@ -1272,7 +1213,7 @@ button[onclick*="del"], button[onclick*="dup"] {
 
 /* ── 6. + 커튼 추가 / + 블라인드 추가 / + 항목 추가 ── */
 button[onclick*="addCurtain"], button[onclick*="addBlind"],
-button[onclick*="addSvc"], button[onclick*="addRow"] {
+button[onclick*="addSvc"] {
   font-size: 13px !important;
   font-weight: 600 !important;
   color: #F06E2D !important;
@@ -1313,8 +1254,7 @@ button[onclick*="addSvc"], button[onclick*="addRow"] {
 
 /* 엑셀 다운로드 — Secondary */
 button[onclick*="exportAll"],
-button[onclick*="Excel"],
-button[onclick*="excel"] {
+button[onclick*="Excel"] {
   font-size: 13px !important;
   font-weight: 700 !important;
   height: 40px !important;
@@ -1381,7 +1321,6 @@ button:active { transform: scale(0.97) !important; }
 
 
 /* ── 남은 버튼 radius 확정 ── */
-button[onclick*="openCustSearch"],
 button[onclick*="loadSurvey"] {
   border-radius: 4px !important;
 }

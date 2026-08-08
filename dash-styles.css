@@ -458,14 +458,6 @@ button[onclick="exportExcel()"] {
 
 
 /* ── 빈 상태 화면 확정 ── */
-.empty-inline {
-  padding: 24px 16px;
-  text-align: center;
-  font-size: 12px;
-  color: var(--sub);
-  line-height: 1.7;
-}
-
 
 .empty-state-title {
   font-size: 15px !important;
@@ -541,6 +533,7 @@ button[onclick="exportExcel()"] {
   font-size: 12px !important;
   color: var(--sub) !important;
   text-align: center !important;
+  line-height: 1.7;
 }
 
 
@@ -1544,7 +1537,7 @@ label { font-size: 13px; }
 /* ── 콘텐츠 영역 ── */
 #home {
   min-height: auto;
-  padding-bottom: var(--sp-8);
+  padding-bottom: 24px;
 }
 #pipe, #search, #est-list, #cal, #chart, #settings {
   padding-bottom: var(--sp-8);
@@ -1734,32 +1727,11 @@ button[onclick*="export"]:hover, button[onclick*="Excel"]:hover {
   outline: none;
 }
 
-/* ── 5. 견적서 하단 버튼 3종 높이 통일 ── */
-/* 고객용 출력 */
-#btn-print-customer,
-button[onclick*="printCustomer"],
-button[onclick*="openPreview"] {
-  height: 52px;
-  font-size: 15px !important;
-  font-weight: 700 !important;
-  border-radius: 4px;
-  background: #282828 !important;
-  color: #fff !important;
-  border: none;
-  flex: 1 !important;
-}
-/* 저장 */
-#btn-save, button[onclick*="saveEst"] {
-  height: 52px;
-  font-size: 15px !important;
-  font-weight: 700 !important;
-  border-radius: 4px;
-  background: #F06E2D !important;
-  color: #fff !important;
-  border: none;
-  flex: 1 !important;
-}
-/* 엑셀 다운로드 */
+/* ── 5. 엑셀 다운로드 버튼 크기 통일 ── */
+/* 2026-08-08: 같은 블록에 있던 "고객용출력"/"저장" 버튼 규칙은 대시보드
+   앱에 해당 버튼(#btn-print-customer, #btn-save) 자체가 없는 완전히 죽은
+   코드였음(견적서 앱 스타일이 잘못 복사돼 있었던 것) - 삭제함.
+   exportExcel만 실제 고객목록 엑셀버튼에 적용되고 있어 유지. */
 button[onclick*="exportAll"],
 button[onclick*="exportExcel"] {
   height: 52px;
@@ -1854,10 +1826,6 @@ button[onclick*="exportExcel"] {
 }
 
 /* ━━ 수정 5: 홈 하단 빈 공간 ━━ */
-#home {
-  padding-bottom: 24px;
-}
-
 /* ━━ 수정 6: 진행현황 칩 완료 색상 ━━ */
 
 
