@@ -241,6 +241,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 * { -webkit-font-smoothing: antialiased; }
+/* 2026-08-08: box-sizing:border-box 전역 리셋이 없어서, 패딩 있는 요소들이
+   지정된 폭보다 (좌우패딩만큼) 더 넓게 렌더링되고 있었음 - 실기기에서
+   카드 오른쪽이 잘려보이던 근본 원인으로 추정. 모든 요소에 적용 */
+*, *::before, *::after { box-sizing: border-box; }
 
 
 /* ── 버튼 13px ── */
@@ -1159,9 +1163,6 @@ input,button,select,textarea { font-family:inherit; }
 /* ── 로그인 화면 ── */
 .login-screen {
   min-height:100vh; background:var(--ivory2);
-  background-image: url("/assets/brand-pattern.webp");
-  background-size: 300px;
-  background-repeat: repeat;
   display:flex; flex-direction:column;
   align-items:center; justify-content:center;
   padding:40px 24px;
