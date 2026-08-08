@@ -40,6 +40,7 @@ body {
   font-size: 15px;
   line-height: 1.5;
   color: #282828;
+  background: var(--ivory2);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -289,11 +290,10 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
 
 .section{
   background:#fff;
-  border-radius:0;
+  border-radius:12px;
   padding:16px;
-  margin-bottom:12px;
-  border-top:1px solid #EEE6DC;
-  border-bottom:1px solid #EEE6DC
+  margin:0 12px 10px;
+  box-shadow: 0 1px 2px rgba(40,32,24,0.04), 0 4px 16px rgba(40,32,24,0.06);
 }
 .sec-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px}
 .sec-title{
@@ -1303,6 +1303,11 @@ button[onclick*="location"] {
 /* ── 9. 합계 섹션 ── */
 .summary-section {
   font-size: 13px;
+  background:#fff;
+  border-radius:12px;
+  padding:16px;
+  margin:0 12px 10px;
+  box-shadow: 0 1px 2px rgba(40,32,24,0.04), 0 4px 16px rgba(40,32,24,0.06);
 }
 /* 총 견적금액 */
 
