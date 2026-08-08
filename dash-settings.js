@@ -161,6 +161,7 @@ function renderSettings() {
         if (confirm('로그아웃 하시겠습니까?')) logout();
       })
     ]);
+    staffLogoutCard.className = 'settings-acc-group';
     wrap.appendChild(staffLogoutCard);
     return;
   }
@@ -171,6 +172,7 @@ function renderSettings() {
     // openByDefault를 기준으로 삼고, 그 이후엔 사용자가 마지막으로 연 섹션을 기억해서 그대로 유지
     var isOpen = (_openSettingsGroupId === null) ? !!openByDefault : (_openSettingsGroupId === id);
     var group = div('background:#fff;margin-bottom:10px;border-radius:12px;border:1px solid var(--border);overflow:hidden', []);
+    group.className = 'settings-acc-group';
     group.id = id;
     var body = div('padding:0 16px 16px', []);
     body.style.display = isOpen ? 'block' : 'none';

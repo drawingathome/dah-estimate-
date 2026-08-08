@@ -1389,6 +1389,7 @@ input,button,select,textarea { font-family:inherit; }
   border-radius: 16px 16px 0 0;
   position: relative;
   z-index: 9999 !important;
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.18);
 }
 
 
@@ -1956,4 +1957,10 @@ button:active:not(:disabled) { filter: brightness(0.9); }
 /* 처리필요/일정 카드 내부 행에는 상단 구분선 유지(카드 안에서는 여전히 필요) */
 #home #sec-todo [style*="border-top:1px solid var(--ivory2)"] {
   border-top: 1px solid var(--ivory2) !important;
+}
+
+/* 2026-08-08 디자인개선 6단계: 설정 화면 아코디언 그룹 elevation */
+#settings .settings-acc-group {
+  box-shadow: var(--shadow-card);
+  border: none !important;
 }
