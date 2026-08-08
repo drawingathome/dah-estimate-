@@ -393,6 +393,7 @@ input::placeholder, textarea::placeholder {
 }
 /* 일/주/월/연 탭 */
 .chart-tab {
+  flex: 1;
   height: 32px;
   padding: 0 14px;
   font-size: 12px;
@@ -403,7 +404,13 @@ input::placeholder, textarea::placeholder {
   border-bottom: 2px solid transparent;
   cursor: pointer;
   font-family: inherit;
+  text-align: center;
   transition: all 0.12s;
+}
+.chart-tab.on, .chart-tab.active {
+  border-bottom: 2px solid #F06E2D;
+  color: #F06E2D;
+  font-weight: 700;
 }
 
 /* ⑤ 엑셀 버튼 — onclick="exportExcel()" */
@@ -569,17 +576,6 @@ button[onclick="exportExcel()"] {
 
 
 /* ── 개선점 수정 ── */
-
-/* ① 매출 일/주/월/연 탭 언더라인 */
-.chart-tab {
-  border-bottom: 2px solid transparent !important;
-  padding-bottom: 0 !important;
-}
-.chart-tab.on, .chart-tab.active {
-  border-bottom: 2px solid #F06E2D !important;
-  color: #F06E2D !important;
-  font-weight: 700 !important;
-}
 
 /* ② 모바일 정렬버튼 한줄 가로스크롤 */
 .sort-wrap {
@@ -1047,12 +1043,11 @@ input,button,select,textarea { font-family:inherit; }
 .hd-right { display:flex; align-items:center; gap:8px; }
 .hd-badge { font-size:11px; color:rgba(255,255,255,0.45); font-weight:600; letter-spacing:0.04em; display:inline-flex; align-items:center; min-height:32px; padding:0 4px; flex-shrink:0; }
 .hd-btn {
-  height:32px; padding:0 12px;
-  border-radius:var(--r-btn); font-size:11px;
-  font-weight:600; cursor:pointer; border:none;
+  height:32px; padding:0 14px;
+  border-radius:4px; font-size:13px;
+  font-weight:700; cursor:pointer; border:none;
   display:inline-flex; align-items:center; gap:6px;
 }
-/* (.hd-btn-primary는 뒤쪽에 이미 정의되어 있어 중복 제거함) */
 .hd-btn-est {
   background:var(--orange); color:#fff; font-weight:700; border:none;
 }
@@ -1213,13 +1208,6 @@ input,button,select,textarea { font-family:inherit; }
 
 /* ── 차트 탭 ── */
 .tab-bar { display:flex; background:#fff; border-bottom:1px solid var(--border); margin-bottom:8px; }
-.chart-tab {
-  flex:1; padding:12px 0; min-height:32px;
-  font-size:11px; font-weight:600; font-family:inherit;
-  text-align:center; color:var(--light);
-  background:none; border:none; cursor:pointer;
-  border-bottom:2px solid transparent;
-}
 
 /* ── 매출 테이블 ── */
 
@@ -1228,21 +1216,6 @@ input,button,select,textarea { font-family:inherit; }
 
 
 /* ── 모바일 대응 ── */
-.mob-app-header {
-  display: none;
-  position: sticky;
-  top: 0;
-  z-index: 150;
-  background: #282828;
-  padding: 0 16px;
-  height: 52px;
-  align-items: center;
-  justify-content: space-between;
-  box-sizing: border-box;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-
-
 .mob-bottom-nav {
   display:none; position:fixed; bottom:0; left:0; right:0; z-index:200;
   background:#FFFFFF; border-top:1px solid var(--border);
@@ -1400,19 +1373,10 @@ input,button,select,textarea { font-family:inherit; }
 
 
 /* ── 모바일 앱 헤더 ── */
-.mob-app-header {
-  display: none;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: #282828;
-  padding: 10px 16px;
-  align-items: center;
-  justify-content: space-between;
-  height: 52px;
-  box-sizing: border-box;
-}
-
+/* 2026-08-08: 실제 요소(#mob-app-header)에 인라인 스타일로 display/height/
+   z-index/padding 등 핵심속성이 이미 다 강제되어 있어서, 여기 두 벌의
+   중복정의는 전부 무력화된 죽은 코드였음 - 삭제. background/color만
+   !important로 실제 적용되고 있어 그 규칙만 유지. */
 
 /* ── 모달 박스 배경 강제 ── */
 .modal-box {
@@ -1767,14 +1731,7 @@ button[onclick*="exportExcel"] {
 
 
 
-/* ── 13. 헤더 버튼 크기 통일 ── */
-.hd-btn {
-  height: 32px;
-  padding: 0 14px;
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  border-radius: 4px;
-}
+/* ── 13. 헤더 버튼 크기 통일 (위쪽 .hd-btn에 통합됨) ── */
 .hd-btn-sub {
   background: transparent !important;
   color: rgba(255,255,255,0.75) !important;
