@@ -341,6 +341,11 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
 }
 .info-item input::placeholder{color:#756E62;font-weight:400;font-size:11px}
 .info-item input[readonly]{color:#756E62}
+/* 2026-08-08: date input은 ::placeholder가 네이티브 특성상 안 먹혀서(브라우저가
+   "년-월-일" 빈 상태 텍스트를 placeholder 색이 아니라 입력값 색으로 렌더링함)
+   다른 플레이스홀더(연한 회색)와 색/굵기가 달라 보이던 문제 - JS로 값 유무 판단해
+   .is-empty 클래스 토글하는 방식으로 통일 */
+.info-item input[type="date"].is-empty{color:#756E62!important;font-weight:400!important}
 @media (min-width: 1024px) {
   .info-item input[type="date"] { max-width: 180px; }
   #c-name, #c-phone { max-width: 320px; }

@@ -27,7 +27,7 @@
 </script>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
-<link rel="stylesheet" href="/est-styles.css?v=202608064100">
+<link rel="stylesheet" href="/est-styles.css?v=202608064500">
 </style>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -754,6 +754,13 @@ document.addEventListener('DOMContentLoaded', function() {
     dateInput.addEventListener('click', function() {
       try { this.showPicker(); } catch (e) { /* showPicker 미지원 브라우저는 기본 동작(직접 아이콘 클릭)으로 폴백 */ }
     });
+    // 2026-08-08: date input은 ::placeholder가 안 먹혀서 빈 상태("년-월-일")가
+    // 다른 입력창 플레이스홀더보다 진하고 굵게 보이던 문제 — 값 유무로 직접 판단해
+    // is-empty 클래스를 토글해서 색/굵기를 통일함
+    function syncEmptyState() { dateInput.classList.toggle('is-empty', !dateInput.value); }
+    syncEmptyState();
+    dateInput.addEventListener('input', syncEmptyState);
+    dateInput.addEventListener('change', syncEmptyState);
   });
 });
 </script>
