@@ -38,8 +38,8 @@ function addCurtainRow() {
       '<input type="number" placeholder="cm" class="mh" oninput="calcCurtainRow(this)" style="'+INP+'">'+
       '<div style="display:flex;gap:2px;margin-top:2px">'+
         '<input type="number" placeholder="-3" class="height-adjust" value="-3" oninput="calcCurtainRow(this)" style="width:38px;font-size:11px;padding:1px 2px;border:1px solid var(--border);border-radius:4px;text-align:center" title="제작높이 보정값(cm). 일반레일 -3, 전동레일은 브랜드마다 달라서(솜피 등) -5 근처로 직접 조정하세요">'+
-        '<button type="button" onclick="var i=this.parentNode.querySelector(\'.height-adjust\'); i.value=-3; calcCurtainRow(i);" style="font-size:11px;padding:4px 9px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;min-width:32px">일반</button>'+
-        '<button type="button" onclick="var i=this.parentNode.querySelector(\'.height-adjust\'); i.value=-5; calcCurtainRow(i);" style="font-size:11px;padding:4px 9px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;min-width:32px">전동</button>'+
+        '<button type="button" onclick="var i=this.parentNode.querySelector(\'.height-adjust\'); i.value=-3; calcCurtainRow(i);" style="font-size:11px;padding:8px 9px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;min-width:32px;white-space:nowrap">일반</button>'+
+        '<button type="button" onclick="var i=this.parentNode.querySelector(\'.height-adjust\'); i.value=-5; calcCurtainRow(i);" style="font-size:11px;padding:8px 9px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;min-width:32px;white-space:nowrap">전동</button>'+
       '</div>'+
     '</td>'+
     '<td><input type="number" class="pnum" value="2" oninput="calcCurtainRow(this)" style="'+INP+'"></td>'+

@@ -189,6 +189,9 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
 
  
 .container{max-width:100%;padding:0 0 32px}
+@media (min-width: 1024px) {
+  .container{max-width:900px;margin:0 auto}
+}
 
  
 .doc-header{
@@ -377,7 +380,7 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
 .info-internal.open{max-height:200px;display:block!important}
 
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0;border-radius:8px}
-.tbl-wrap table{min-width:520px}
+.tbl-wrap table{min-width:1100px!important}
 table{width:100%;border-collapse:collapse;font-size:11px;min-width:0!important}
 
 thead th{
