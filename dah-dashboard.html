@@ -890,7 +890,7 @@ document.getElementById('add-overlay').addEventListener('click', function(e) { i
         if (mobNav) { mobNav.style.display = isMobileWidth ? 'flex' : 'none'; }
         var mobFab = document.querySelector('.mob-fab');
         if (mobFab) { mobFab.style.display = isMobileWidth ? 'flex' : 'none'; }
-        applyPermissions(); loadCustomersAsync(renderHome);
+        applyPermissions(); loadCustomersAsync(function(){ renderHome(true); });
         loadAppSettingsAsync();
         return;
       }
