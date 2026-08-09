@@ -359,7 +359,7 @@ function printForCustomer() {
   ov.id = 'pv-overlay';
   ov.style.cssText = [
     'position:fixed;top:0;left:0;width:100%;height:100%',
-    'background:#F5F2EE;z-index:9999;overflow-y:auto',
+    'background:#F5F2EE;z-index:9999;overflow-y:auto;overflow-x:auto',
     'display:flex;flex-direction:column'
   ].join(';');
 
@@ -570,7 +570,7 @@ function printForVendor() {
   ov.id = 'pv-overlay';
   ov.style.cssText = [
     'position:fixed;top:0;left:0;width:100%;height:100%',
-    'background:#F5F2EE;z-index:9999;overflow-y:auto',
+    'background:#F5F2EE;z-index:9999;overflow-y:auto;overflow-x:auto',
     'display:flex;flex-direction:column'
   ].join(';');
 
@@ -793,7 +793,7 @@ function printRequest(kind) {
   ov.id = 'pv-overlay';
   ov.style.cssText = [
     'position:fixed;top:0;left:0;width:100%;height:100%',
-    'background:#F5F2EE;z-index:9999;overflow-y:auto',
+    'background:#F5F2EE;z-index:9999;overflow-y:auto;overflow-x:auto',
     'display:flex;flex-direction:column'
   ].join(';');
 
