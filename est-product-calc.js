@@ -220,13 +220,13 @@ function addBlindRow() {
 
 // 2026-08-09: 블라인드 최소면적 규칙 — 원래 calcBlindRow/calcTotal 두 곳에
 // 각각 따로 정의돼있어서, 규칙이 바뀔 때 한쪽만 고치면 값이 어긋날 위험이
-// 있었음. 공용 함수로 통합. 롤스크린 최소면적(2㎡)이 누락돼있던 것도
-// 이번에 같이 발견해서 추가함 (선혜님 확인).
+// 있었음. 공용 함수로 통합.
+// 전체 규칙(선혜님 확인, 2026-08-09): 모든 블라인드 종류에 최소면적이 있음
+// - 로만쉐이드, 롤스크린: 2.0㎡
+// - 우드, 허니콤, 알루미늄, 기타: 1.5㎡
 function getBlindMinSqm(kind) {
-  if (kind === '우드') return 1.5;
-  if (kind === '로만쉐이드') return 2.0;
-  if (kind === '롤스크린') return 2.0;
-  return 0;
+  if (kind === '로만쉐이드' || kind === '롤스크린') return 2.0;
+  return 1.5;
 }
 
 function calcBlindRow(el) {
