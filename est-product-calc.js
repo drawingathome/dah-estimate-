@@ -218,6 +218,17 @@ function addBlindRow() {
   renderEmptyState();
 }
 
+// 2026-08-09: 블라인드 최소면적 규칙 — 원래 calcBlindRow/calcTotal 두 곳에
+// 각각 따로 정의돼있어서, 규칙이 바뀔 때 한쪽만 고치면 값이 어긋날 위험이
+// 있었음. 공용 함수로 통합. 롤스크린 최소면적(2㎡)이 누락돼있던 것도
+// 이번에 같이 발견해서 추가함 (선혜님 확인).
+function getBlindMinSqm(kind) {
+  if (kind === '우드') return 1.5;
+  if (kind === '로만쉐이드') return 2.0;
+  if (kind === '롤스크린') return 2.0;
+  return 0;
+}
+
 function calcBlindRow(el) {
   var tr = el.closest('tr');
   var bw = Math.max(0, parseFloat(tr.querySelector('.bmw')?.value)||0);
@@ -226,7 +237,7 @@ function calcBlindRow(el) {
   var price = Math.max(0, getPriceVal(tr.querySelector('.blind-price'))||0);
   var extra = parseFloat(tr.querySelector('.blind-extra')?.value)||0;
   var sqmRaw = (bw*bh)/10000;
-  var minSqm = kind==='우드'?1.5:(kind==='로만쉐이드'?2.0:0);
+  var minSqm = getBlindMinSqm(kind);
   if(sqmRaw<minSqm && sqmRaw>0) sqmRaw=minSqm;
   
   var sqm = Math.ceil(sqmRaw*10)/10;
@@ -402,7 +413,7 @@ function calcTotal() {
     var price=Math.max(0, getPriceVal(tr.querySelector('.blind-price'))||0);
     var extra=parseFloat(tr.querySelector('.blind-extra')?.value)||0;
     var sqmRaw=(bw*bh)/10000;
-    var minSqm=kind==='우드'?1.5:(kind==='로만쉐이드'?2.0:0);
+    var minSqm=getBlindMinSqm(kind);
     if(sqmRaw<minSqm&&sqmRaw>0) sqmRaw=minSqm;
     var sqm=Math.ceil(sqmRaw*10)/10;
     curtainTotal+=Math.round(price*sqm);
