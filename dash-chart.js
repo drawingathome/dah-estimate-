@@ -261,7 +261,7 @@ function renderChart(period) {
   // 2026-08-06: Y축 라벨("100만원" 등)이 SVG 왼쪽 경계에 잘려서 "ㅏ원"처럼
   // 보이던 버그 — text-anchor:end 라벨이 텍스트 폭만큼 왼쪽으로 확장되는데
   // 왼쪽 여백(PAD)이 16px뿐이라 여러 자리 숫자는 항상 잘렸음. 40px로 확대.
-  var W = barsEl.clientWidth || 340, H = 120, PAD = 40, TOP_PAD = 10;
+  var W = barsEl.clientWidth || 340, H = 120, PAD = 52, TOP_PAD = 10;
   var chartW = W - PAD*2, chartH = H - 28 - TOP_PAD;
   var n = periods.length;
   
@@ -285,7 +285,7 @@ function renderChart(period) {
     line.setAttribute('stroke','var(--border)'); line.setAttribute('stroke-width','1');
     svg.appendChild(line);
     var lbl = document.createElementNS(svgNS,'text');
-    lbl.setAttribute('x',PAD-4); lbl.setAttribute('y',y+4);
+    lbl.setAttribute('x',PAD-8); lbl.setAttribute('y',y+4);
     lbl.setAttribute('text-anchor','end'); lbl.setAttribute('font-size','11');
     lbl.setAttribute('fill','var(--light)');
     lbl.textContent = Math.round(maxRev*r/10000)+'만원';
