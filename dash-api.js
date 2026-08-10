@@ -319,6 +319,7 @@ function estimateDbRowToLocal(row) {
     branch: row.branch || '반포점',
     clientId: row.client_id || null,
     lineItems: row.line_items || [],
+    custType: row.cust_type || 'new',
     _fromCloud: true
   };
 }

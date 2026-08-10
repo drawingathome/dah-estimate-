@@ -105,7 +105,16 @@ function renderEstList() {
     });
     csBadge.textContent = CONTRACT_KO[cs] || '가견적';
 
-    top.appendChild(noSpan); top.appendChild(typeTag); top.appendChild(csBadge);
+    top.appendChild(noSpan); top.appendChild(typeTag);
+    if (e.custType === 'rebuy') {
+      var rebuyTag = el('span', {style:
+        'font-size:12px;font-weight:700;padding:2px 6px;border-radius:6px;' +
+        'background:#FFF3EE;color:var(--orange)'
+      });
+      rebuyTag.textContent = '재구매';
+      top.appendChild(rebuyTag);
+    }
+    top.appendChild(csBadge);
 
     // 중간 행: 고객명 + 금액
     var mid = el('div', {style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-1)'});
