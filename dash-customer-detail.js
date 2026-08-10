@@ -576,6 +576,13 @@ function renderDetailInfoSection(c, body) {
     memoBlock.appendChild(el('div', {style:'font-size:11px;color:var(--terra);letter-spacing:0.8px;margin-bottom:3px', text:'메모 (탭해서 편집)'}));
     memoBlock.appendChild(el('div', {style:'font-size:11px;color:'+(val?'var(--dark)':'var(--light)')+';line-height:1.6', text: val || '메모를 추가하려면 눌러주세요'}));
   }
+  // 2026-08-10: 메모도 blur(포커스 아웃) 전에 새로고침 등으로 중단되면
+  // 타이핑 내용이 날아가던 문제 - 고객ID별 임시저장 키로 해결.
+  var memoDraftKey = 'dah_memo_draft_' + c.id;
+  function getMemoDraft() { try { return localStorage.getItem(memoDraftKey) || ''; } catch(e) { return ''; } }
+  function saveMemoDraft(v) { try { localStorage.setItem(memoDraftKey, v); } catch(e) {} }
+  function clearMemoDraft() { try { localStorage.removeItem(memoDraftKey); } catch(e) {} }
+
   var memoBlock = div('background:#FFFBF5;border:1px solid #FFE5CC;border-radius:12px;padding:10px 14px;margin-bottom:var(--sp-2);cursor:pointer', []);
   renderMemoDisplay(memoBlock, c.memo || '');
   memoBlock.addEventListener('click', function() {
@@ -583,8 +590,10 @@ function renderDetailInfoSection(c, body) {
     memoBlock.innerHTML = '';
     memoBlock.appendChild(el('div', {style:'font-size:11px;color:var(--terra);letter-spacing:0.8px;margin-bottom:4px', text:'메모'}));
     var textarea = document.createElement('textarea');
-    textarea.value = c.memo || '';
+    var draftVal = getMemoDraft();
+    textarea.value = draftVal || c.memo || '';
     textarea.style.cssText = 'width:100%;min-height:60px;border:1px solid var(--border);border-radius:8px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;box-sizing:border-box';
+    textarea.addEventListener('input', function() { saveMemoDraft(textarea.value); });
     memoBlock.appendChild(textarea);
     var quickWrap = div('display:flex;flex-wrap:wrap;gap:4px;margin-top:6px', []);
     (typeof getMempoPhrases === 'function' ? getMempoPhrases() : []).slice(0, 9).forEach(function(p) {
@@ -593,6 +602,7 @@ function renderDetailInfoSection(c, body) {
       qbtn.addEventListener('click', function(e) {
         e.stopPropagation();
         textarea.value = textarea.value ? textarea.value + ' / ' + p : p;
+        saveMemoDraft(textarea.value);
         textarea.focus();
       });
       quickWrap.appendChild(qbtn);
@@ -606,6 +616,7 @@ function renderDetailInfoSection(c, body) {
       if (target) {
         target.memo = newVal;
         saveCustomers(arr);
+        clearMemoDraft();
         saveCustomerToDb(target, function(err){
           showToast(err ? '⚠️ 메모: 로컬엔 저장됨(서버 재시도 대기)' : '메모가 저장됐습니다');
         });
