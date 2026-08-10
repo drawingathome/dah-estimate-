@@ -154,6 +154,16 @@ function collectFormData() {
   form.region      = document.getElementById('c-region')?.value || '';
   form.memo        = document.getElementById('c-memo')?.value || '';
   form.lineItems   = collectLineItems();
+  // 2026-08-10: AS 접수 필드도 임시저장 대상에 포함 - 커튼/블라인드와 같은
+  // 종류의 누락(선혜님이 발견)이 AS 폼에도 그대로 있었음.
+  form.custType    = (typeof currentCustType !== 'undefined' ? currentCustType : 'new');
+  if (form.custType === 'as') {
+    form.asInstallDate = document.getElementById('as-install-date')?.value || '';
+    form.asType         = document.getElementById('as-type-sel')?.value || '';
+    form.asSymptom      = document.getElementById('as-symptom')?.value || '';
+    form.asPhotoMemo    = document.getElementById('as-photo-memo')?.value || '';
+    form.asFeeType       = document.querySelector('input[name="as-fee"]:checked')?.value || 'free';
+  }
   return form;
 }
 
@@ -187,6 +197,21 @@ function loadDraft() {
 
       // 2026-08-10: 커튼/블라인드 행 복원 — 예전엔 고객정보만 복원되고
       // 사이즈/단가 등은 임시저장 자체가 안 됐던 문제 수정.
+      // 2026-08-10: 고객유형(신규/재구매/AS) 및 AS 상세필드 복원
+      if (d.custType && typeof setCustType === 'function') {
+        setCustType(d.custType);
+        if (d.custType === 'as') {
+          if (d.asInstallDate && document.getElementById('as-install-date')) document.getElementById('as-install-date').value = d.asInstallDate;
+          if (d.asType && document.getElementById('as-type-sel')) document.getElementById('as-type-sel').value = d.asType;
+          if (d.asSymptom && document.getElementById('as-symptom')) document.getElementById('as-symptom').value = d.asSymptom;
+          if (d.asPhotoMemo && document.getElementById('as-photo-memo')) document.getElementById('as-photo-memo').value = d.asPhotoMemo;
+          if (d.asFeeType) {
+            var feeRadio = document.querySelector('input[name="as-fee"][value="' + d.asFeeType + '"]');
+            if (feeRadio) feeRadio.checked = true;
+          }
+        }
+      }
+
       if (Array.isArray(d.lineItems) && d.lineItems.length > 0) {
         var curtainBody = document.getElementById('curtain-body');
         var blindBody = document.getElementById('blind-body');
