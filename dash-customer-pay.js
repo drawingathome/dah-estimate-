@@ -72,6 +72,22 @@ function renderPaySection(c, payBody) {
   }
 
   // 선금 섹션
+  // 2026-08-10: 선금/잔금 입력폼도 "저장" 버튼 누르기 전에 중단(모달 닫힘,
+  // 새로고침 등)되면 입력값이 날아가던 문제 - 고객ID별 임시저장 키로 해결.
+  // (반드시 depositDone 체크/buildDepForm 최초호출보다 먼저 정의할 것 —
+  // 처음엔 아래쪽에 뒀다가 payDraftKey가 undefined인 채로 buildDepForm이
+  // 먼저 호출되는 버그가 있었음)
+  var payDraftKey = 'dah_pay_draft_' + c.id;
+  function getPayDraft() { try { return JSON.parse(localStorage.getItem(payDraftKey) || '{}'); } catch(e) { return {}; } }
+  function savePayDraft(section, data) {
+    var d = getPayDraft(); d[section] = data;
+    try { localStorage.setItem(payDraftKey, JSON.stringify(d)); } catch(e) {}
+  }
+  function clearPayDraft(section) {
+    var d = getPayDraft(); delete d[section];
+    try { localStorage.setItem(payDraftKey, JSON.stringify(d)); } catch(e) {}
+  }
+
   var depositDone = payData.depositAmount && payData.depositDate;
   var depSec = div('margin-bottom:var(--sp-2);padding:var(--sp-3);background:'+(depositDone?'#F5FAF5':'var(--ivory1)')+';border-radius:12px;border:1px solid '+(depositDone?'#B0D4B0':'var(--border)'), []);
   var depTitle = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-2)', [
@@ -89,19 +105,31 @@ function renderPaySection(c, payBody) {
     depSec.appendChild(depTitle);
     buildDepForm();
   }
+
   function buildDepForm() {
+    var depDraft = (!payData.depositAmount) ? (getPayDraft().dep || {}) : {};
     var depForm = div('display:flex;flex-wrap:wrap;gap:6px', []);
     var depMethod = el('select', {style:'flex:1;min-width:80px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit;background:#fff'});
     ['카드','현금'].forEach(function(m){ var o=el('option',{}); o.value=m; o.textContent=m; depMethod.appendChild(o); });
     if (payData.depositMethod) depMethod.value = payData.depositMethod;
+    else if (depDraft.method) depMethod.value = depDraft.method;
     var depAmt = el('input', {type:'text', placeholder:'선금 금액', style:'flex:2;min-width:90px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit'});
     if (payData.depositAmount) depAmt.value = Number(payData.depositAmount).toLocaleString();
+    else if (depDraft.amount) depAmt.value = depDraft.amount;
     var depDate = el('input', {type:'date', style:'flex:2;min-width:110px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit'});
     if (payData.depositDate) depDate.value = payData.depositDate;
+    else if (depDraft.date) depDate.value = depDraft.date;
     else depDate.value = todayStr();
     var depReceipt = el('label', {style:'display:flex;align-items:center;gap:var(--sp-1);font-size:11px;color:#6B6B6B;cursor:pointer;width:100%'});
-    var depReceiptChk = el('input', {type:'checkbox'}); depReceiptChk.checked = payData.depositReceipt||false;
+    var depReceiptChk = el('input', {type:'checkbox'}); depReceiptChk.checked = payData.depositReceipt || depDraft.receipt || false;
     depReceipt.appendChild(depReceiptChk); depReceipt.appendChild(document.createTextNode('현금영수증'));
+    function saveDepDraft() {
+      savePayDraft('dep', { method: depMethod.value, amount: depAmt.value, date: depDate.value, receipt: depReceiptChk.checked });
+    }
+    depMethod.addEventListener('change', saveDepDraft);
+    depAmt.addEventListener('input', saveDepDraft);
+    depDate.addEventListener('change', saveDepDraft);
+    depReceiptChk.addEventListener('change', saveDepDraft);
     var depSave = btn('width:100%;padding:9px;background:var(--dark);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:var(--sp-1)', '선금 저장', function(){
       var inputAmt = Number(depAmt.value.replace(/[^0-9]/g,'')) || 0;
       if (inputAmt > 0 && !depDate.value) {
@@ -123,6 +151,7 @@ function renderPaySection(c, payBody) {
       newPd.depositDate    = depDate.value;
       newPd.depositReceipt = depReceiptChk.checked;
       savePayData(newPd);
+      clearPayDraft('dep');
       // 2026-08-05: 0원인데도 무조건 다음 단계로 넘어가던 버그 수정 —
       // 실제로 입금액이 0보다 클 때만 "선금결제 완료"로 간주해 단계 전환
       if (inputAmt > 0 && ['방문예약','상담','가견적'].indexOf(c.stage) >= 0) changeStage('선금결제');
@@ -152,18 +181,29 @@ function renderPaySection(c, payBody) {
     buildBalForm();
   }
   function buildBalForm() {
+    var balDraft = (!payData.balanceAmount) ? (getPayDraft().bal || {}) : {};
     var balForm = div('display:flex;flex-wrap:wrap;gap:6px', []);
     var balMethod = el('select', {style:'flex:1;min-width:80px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit;background:#fff'});
     ['카드','현금'].forEach(function(m){ var o=el('option',{}); o.value=m; o.textContent=m; balMethod.appendChild(o); });
     if (payData.balanceMethod) balMethod.value = payData.balanceMethod;
+    else if (balDraft.method) balMethod.value = balDraft.method;
     var balAmt = el('input', {type:'text', placeholder:'잔금 금액', style:'flex:2;min-width:90px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit'});
     if (payData.balanceAmount) balAmt.value = Number(payData.balanceAmount).toLocaleString();
+    else if (balDraft.amount) balAmt.value = balDraft.amount;
     var balDate = el('input', {type:'date', style:'flex:2;min-width:110px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit'});
     if (payData.balanceDate) balDate.value = payData.balanceDate;
+    else if (balDraft.date) balDate.value = balDraft.date;
     else balDate.value = todayStr();
     var balReceipt = el('label', {style:'display:flex;align-items:center;gap:var(--sp-1);font-size:11px;color:#6B6B6B;cursor:pointer;width:100%'});
-    var balReceiptChk = el('input', {type:'checkbox'}); balReceiptChk.checked = payData.balanceReceipt||false;
+    var balReceiptChk = el('input', {type:'checkbox'}); balReceiptChk.checked = payData.balanceReceipt || balDraft.receipt || false;
     balReceipt.appendChild(balReceiptChk); balReceipt.appendChild(document.createTextNode('현금영수증'));
+    function saveBalDraft() {
+      savePayDraft('bal', { method: balMethod.value, amount: balAmt.value, date: balDate.value, receipt: balReceiptChk.checked });
+    }
+    balMethod.addEventListener('change', saveBalDraft);
+    balAmt.addEventListener('input', saveBalDraft);
+    balDate.addEventListener('change', saveBalDraft);
+    balReceiptChk.addEventListener('change', saveBalDraft);
     var balSave = btn('width:100%;padding:9px;background:var(--dark);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:var(--sp-1)', '잔금 저장', function(){
       var inputAmt = Number(balAmt.value.replace(/[^0-9]/g,'')) || 0;
       if (inputAmt > 0 && !balDate.value) {
@@ -185,6 +225,7 @@ function renderPaySection(c, payBody) {
       newPd.balanceDate    = balDate.value;
       newPd.balanceReceipt = balReceiptChk.checked;
       savePayData(newPd);
+      clearPayDraft('bal');
       // 2026-08-05: 0원인데도 무조건 다음 단계로 넘어가던 버그 수정 —
       // 실제로 입금액이 0보다 클 때만 "잔금결제 완료"로 간주해 단계 전환
       // 2026-08-05: 자동전환 조건이 '실측준비중/확정견적/잔금결제' 딱 3개 단계에서만
