@@ -83,6 +83,50 @@ function shareEstimate() {
 /* ── 자동 저장 (localStorage) ────────────────────── */
 var _autoSaveTimer = null;
 
+// 2026-08-10: 커튼/블라인드 행 데이터를 수집하는 로직 — 원래 saveEstimate()
+// 안에만 있어서 임시저장(draft)에서는 재사용을 못 했음(임시저장이 고객정보만
+// 저장하고 정작 중요한 사이즈/단가/원단 등은 저장 안 되던 진짜 원인).
+// saveEstimate()와 autoSave() 양쪽에서 재사용하도록 공용함수로 분리.
+function collectLineItems() {
+  var lineItems = [];
+  document.querySelectorAll('#curtain-body tr').forEach(function(tr){
+    var space = tr.querySelector('.space-inp')?.value||'';
+    var displayName = tr.querySelector('.c-display-name')?.value||'';
+    var fabric = tr.querySelector('.c-fabric')?.value||'';
+    var mwVal = tr.querySelector('.mw')?.value||'';
+    var mhVal = tr.querySelector('.mh')?.value||'';
+    var priceVal = getPriceVal(tr.querySelector('.cprice'));
+    if (!space && !displayName && !fabric && !mwVal && !mhVal && !priceVal) return;
+    lineItems.push({
+      type: 'curtain', space: space, displayName: displayName, fabric: fabric,
+      vendor: tr.querySelector('.c-vendor')?.value||'', color: tr.querySelector('.c-color')?.value||'',
+      vendorIsWorkshop: tr.querySelector('.vendor-is-workshop')?.checked || false,
+      pleatType: tr.querySelector('.pleat-type')?.value||'', openType: tr.querySelector('.open-type')?.value||'',
+      heightAdjust: tr.querySelector('.height-adjust')?.value||'-3',
+      hemType: tr.querySelector('.hem-type')?.value||'', mw: tr.querySelector('.mw')?.value||'',
+      mh: tr.querySelector('.mh')?.value||'', pnum: tr.querySelector('.pnum')?.value||'',
+      price: getPriceVal(tr.querySelector('.cprice')), amt: tr.querySelector('.camt')?.textContent||''
+    });
+  });
+  document.querySelectorAll('#blind-body tr').forEach(function(tr){
+    var space = tr.querySelector('.space-inp')?.value||'';
+    var innerInps = tr.querySelectorAll('.inner-row .inner-inp');
+    var fabric = innerInps[0]?.value||'';
+    var bmwVal = tr.querySelector('.bmw')?.value||'';
+    var bmhVal = tr.querySelector('.bmh')?.value||'';
+    if (!space && !fabric && !bmwVal && !bmhVal) return;
+    lineItems.push({
+      type: 'blind', space: space, fabric: fabric,
+      vendor: innerInps[1]?.value||'', color: innerInps[2]?.value||'',
+      kind: tr.querySelector('.blind-kind')?.value||'', handle: tr.querySelector('.handle-dir')?.value||'',
+      bmw: tr.querySelector('.bmw')?.value||'', bmh: tr.querySelector('.bmh')?.value||'',
+      opt: tr.querySelector('.blind-opt')?.value||'',
+      price: getPriceVal(tr.querySelector('.blind-price')), amt: tr.querySelector('.bamt')?.textContent||''
+    });
+  });
+  return lineItems;
+}
+
 function autoSave() {
   clearTimeout(_autoSaveTimer);
   _autoSaveTimer = setTimeout(function() {
@@ -109,6 +153,7 @@ function collectFormData() {
   form.installDate = document.getElementById('c-install')?.value || '';
   form.region      = document.getElementById('c-region')?.value || '';
   form.memo        = document.getElementById('c-memo')?.value || '';
+  form.lineItems   = collectLineItems();
   return form;
 }
 
@@ -139,6 +184,55 @@ function loadDraft() {
       if (d.installDate) document.getElementById('c-install').value = d.installDate;
       if (d.region)      document.getElementById('c-region').value = d.region;
       if (d.memo)        document.getElementById('c-memo').value = d.memo;
+
+      // 2026-08-10: 커튼/블라인드 행 복원 — 예전엔 고객정보만 복원되고
+      // 사이즈/단가 등은 임시저장 자체가 안 됐던 문제 수정.
+      if (Array.isArray(d.lineItems) && d.lineItems.length > 0) {
+        var curtainBody = document.getElementById('curtain-body');
+        var blindBody = document.getElementById('blind-body');
+        if (curtainBody) curtainBody.innerHTML = '';
+        if (blindBody) blindBody.innerHTML = '';
+        d.lineItems.forEach(function(item) {
+          if (item.type === 'curtain') {
+            addCurtainRow();
+            var tr = curtainBody.lastElementChild;
+            if (!tr) return;
+            if (tr.querySelector('.space-inp')) tr.querySelector('.space-inp').value = item.space || '';
+            if (tr.querySelector('.c-display-name')) tr.querySelector('.c-display-name').value = item.displayName || '';
+            if (tr.querySelector('.c-fabric')) tr.querySelector('.c-fabric').value = item.fabric || '';
+            if (tr.querySelector('.c-vendor')) tr.querySelector('.c-vendor').value = item.vendor || '';
+            if (tr.querySelector('.c-color')) tr.querySelector('.c-color').value = item.color || '';
+            if (tr.querySelector('.vendor-is-workshop')) tr.querySelector('.vendor-is-workshop').checked = !!item.vendorIsWorkshop;
+            if (tr.querySelector('.pleat-type')) tr.querySelector('.pleat-type').value = item.pleatType || '';
+            if (tr.querySelector('.open-type')) tr.querySelector('.open-type').value = item.openType || '';
+            if (tr.querySelector('.height-adjust')) tr.querySelector('.height-adjust').value = item.heightAdjust || '-3';
+            if (tr.querySelector('.hem-type')) tr.querySelector('.hem-type').value = item.hemType || '';
+            if (tr.querySelector('.mw')) tr.querySelector('.mw').value = item.mw || '';
+            if (tr.querySelector('.mh')) tr.querySelector('.mh').value = item.mh || '';
+            if (tr.querySelector('.cprice')) tr.querySelector('.cprice').value = item.price || '';
+            var mwEl = tr.querySelector('.mw');
+            if (mwEl && typeof calcCurtainRow === 'function') calcCurtainRow(mwEl);
+          } else if (item.type === 'blind') {
+            addBlindRow();
+            var btr = blindBody.lastElementChild;
+            if (!btr) return;
+            if (btr.querySelector('.space-inp')) btr.querySelector('.space-inp').value = item.space || '';
+            var innerInps = btr.querySelectorAll('.inner-row .inner-inp');
+            if (innerInps[0]) innerInps[0].value = item.fabric || '';
+            if (innerInps[1]) innerInps[1].value = item.vendor || '';
+            if (innerInps[2]) innerInps[2].value = item.color || '';
+            if (btr.querySelector('.blind-kind')) btr.querySelector('.blind-kind').value = item.kind || '';
+            if (btr.querySelector('.handle-dir')) btr.querySelector('.handle-dir').value = item.handle || '';
+            if (btr.querySelector('.bmw')) btr.querySelector('.bmw').value = item.bmw || '';
+            if (btr.querySelector('.bmh')) btr.querySelector('.bmh').value = item.bmh || '';
+            if (btr.querySelector('.blind-opt')) btr.querySelector('.blind-opt').value = item.opt || '';
+            if (btr.querySelector('.blind-price')) btr.querySelector('.blind-price').value = item.price || '';
+            var bmwEl = btr.querySelector('.bmw');
+            if (bmwEl && typeof calcBlindRow === 'function') calcBlindRow(bmwEl);
+          }
+        });
+        if (typeof calcTotal === 'function') calcTotal();
+      }
     }
   } catch(e) {}
 }

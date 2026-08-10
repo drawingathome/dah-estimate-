@@ -140,53 +140,9 @@ function saveEstimate() {
     var f=tr.querySelector('.c-display-name')?.value||''; if(f) fabricArr.push(f);
   });
   var spaceStr=spaceArr.join(', '), fabricStr=fabricArr.join(', ');
-  // 커튼/블라인드 각 행의 전체 세부정보 수집 (2026-08-04 신규) — 예전엔 요약
-  // 문자열(spaceStr/fabricStr)만 저장돼서, 저장 후엔 발주서/실측의뢰서를
-  // 다시 만들 방법이 전혀 없었음(사이즈/원단/거래처/색상 등이 다 사라짐).
-  // 이제 각 행 전체를 그대로 배열로 저장해서, 나중에 이 데이터로 문서를
-  // 다시 만들 수 있게 함.
-  var lineItems = [];
-  document.querySelectorAll('#curtain-body tr').forEach(function(tr){
-    var space = tr.querySelector('.space-inp')?.value||'';
-    var displayName = tr.querySelector('.c-display-name')?.value||'';
-    var fabric = tr.querySelector('.c-fabric')?.value||'';
-    var mwVal = tr.querySelector('.mw')?.value||'';
-    var mhVal = tr.querySelector('.mh')?.value||'';
-    var priceVal = getPriceVal(tr.querySelector('.cprice'));
-    // 2026-08-05: 심각한 버그 수정 — 예전엔 공간/제품명/원단명 셋 다 비어있으면
-    // 행 전체를 저장에서 제외했음. 근데 실제 업무에선 가로/높이/단가만 채우고
-    // 저 세 칸은 안 채우는 경우가 흔해서, 견적금액은 정상 계산되는데 정작
-    // 발주에 필요한 상세정보(사이즈/원단/거래처)가 통째로 저장 안 되고 있었음
-    // (실제로 DB의 견적서 115건 전부 line_items가 비어있는 걸 발견해서 확인함).
-    // 이제 사이즈나 단가 중 하나라도 있으면 저장함 — 진짜 완전히 빈 행만 제외.
-    if (!space && !displayName && !fabric && !mwVal && !mhVal && !priceVal) return;
-    lineItems.push({
-      type: 'curtain', space: space, displayName: displayName, fabric: fabric,
-      vendor: tr.querySelector('.c-vendor')?.value||'', color: tr.querySelector('.c-color')?.value||'',
-      vendorIsWorkshop: tr.querySelector('.vendor-is-workshop')?.checked || false,
-      pleatType: tr.querySelector('.pleat-type')?.value||'', openType: tr.querySelector('.open-type')?.value||'',
-      heightAdjust: tr.querySelector('.height-adjust')?.value||'-3',
-      hemType: tr.querySelector('.hem-type')?.value||'', mw: tr.querySelector('.mw')?.value||'',
-      mh: tr.querySelector('.mh')?.value||'', pnum: tr.querySelector('.pnum')?.value||'',
-      price: getPriceVal(tr.querySelector('.cprice')), amt: tr.querySelector('.camt')?.textContent||''
-    });
-  });
-  document.querySelectorAll('#blind-body tr').forEach(function(tr){
-    var space = tr.querySelector('.space-inp')?.value||'';
-    var innerInps = tr.querySelectorAll('.inner-row .inner-inp');
-    var fabric = innerInps[0]?.value||'';
-    var bmwVal = tr.querySelector('.bmw')?.value||'';
-    var bmhVal = tr.querySelector('.bmh')?.value||'';
-    if (!space && !fabric && !bmwVal && !bmhVal) return;
-    lineItems.push({
-      type: 'blind', space: space, fabric: fabric,
-      vendor: innerInps[1]?.value||'', color: innerInps[2]?.value||'',
-      kind: tr.querySelector('.blind-kind')?.value||'', handle: tr.querySelector('.handle-dir')?.value||'',
-      bmw: tr.querySelector('.bmw')?.value||'', bmh: tr.querySelector('.bmh')?.value||'',
-      opt: tr.querySelector('.blind-opt')?.value||'',
-      price: getPriceVal(tr.querySelector('.blind-price')), amt: tr.querySelector('.bamt')?.textContent||''
-    });
-  });
+  // 커튼/블라인드 각 행의 전체 세부정보 수집 (2026-08-04 신규, 2026-08-10에
+  // collectLineItems() 공용함수로 분리 — 임시저장에서도 재사용하기 위함)
+  var lineItems = collectLineItems();
   function saveToCustomers() {
     
     saveToLocalStorage();

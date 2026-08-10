@@ -622,10 +622,10 @@
 <script src="/est-form-controls.js?v=202608065400"></script>
 <script src="/est-product-calc.js?v=202608065900"></script>
 <script src="/est-survey.js?v=202608065400"></script>
-<script src="/est-save.js?v=202608066000"></script>
+<script src="/est-save.js?v=202608066100"></script>
 <script src="/est-documents.js?v=202608065700"></script>
 <script src="/est-customer-load.js?v=202608063500"></script>
-<script src="/est-misc.js?v=202608065400"></script>
+<script src="/est-misc.js?v=202608066100"></script>
 <script>
 var currentTab = 'ga';
 
@@ -744,6 +744,15 @@ document.addEventListener('DOMContentLoaded', function() {
     var el = document.getElementById(id);
     if (el) el.addEventListener('input', autoSave);
   });
+
+  // 2026-08-10: 커튼/블라인드 표는 행이 동적으로 추가/삭제되므로, 개별
+  // input에 리스너를 매번 붙이는 대신 표 전체(이벤트 위임)에 걸어서
+  // 새로 추가된 행에도 자동으로 적용되게 함 — 임시저장이 고객정보만
+  // 저장되고 실제 견적 내용은 저장 안 되던 문제의 핵심 수정.
+  var curtainTable = document.getElementById('curtain-table');
+  var blindTable = document.getElementById('blind-table');
+  if (curtainTable) curtainTable.addEventListener('input', autoSave);
+  if (blindTable) blindTable.addEventListener('input', autoSave);
   
   // 페이지 로드 시 초안 불러오기
   setTimeout(loadDraft, 500);
