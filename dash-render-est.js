@@ -133,6 +133,17 @@ function renderEstList() {
 
     row.appendChild(top); row.appendChild(mid); row.appendChild(bot);
 
+    // 2026-08-10: 견적서의 "내부 메모"(현장 참고용, 예: 이사 날짜)가 저장은
+    // 되는데 목록 어디에서도 다시 안 보이던 문제 - 선혜님 요청으로 추가.
+    if (e.memo && e.memo.trim()) {
+      var memoRow = el('div', {style:
+        'font-size:11px;color:var(--terra);background:#FFF8F3;border-radius:6px;' +
+        'padding:5px 8px;margin-top:6px;line-height:1.4'
+      });
+      memoRow.textContent = '📝 ' + e.memo.trim();
+      row.appendChild(memoRow);
+    }
+
     // 클릭 시 고객 상세 (이력 탭에 카카오복사/견적서앱 액션이 이미 있어 여기선 중복 버튼 생략)
     (function(name, cid){ row.addEventListener('click', function(){ if(name) openDetail(name, cid || null, 'est'); }); })(e.clientName, e.clientId);
 
