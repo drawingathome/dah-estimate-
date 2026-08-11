@@ -704,6 +704,12 @@ function changeStage(stage) {
   if (stage === '시공완료') { if (!confirm(currentDetailName + ' 고객을 "시공 완료"로 변경할까요?')) return; }
   var fromStage = target.stage;
   target.stage = stage;
+  // 2026-08-10: 확정일 기록 - "확정견적" 단계로 처음 전환될 때만 기록(이미
+  // confirmDate가 있으면 덮어쓰지 않음 - 나중에 단계를 왔다갔다해도 최초
+  // 확정일 유지). 엑셀 다운로드에 확정일 컬럼 추가하면서 필요해진 필드.
+  if (stage === '확정견적' && !target.confirmDate) {
+    target.confirmDate = todayStr();
+  }
   saveCustomers(arr);
   if (typeof logEvent === 'function') logEvent('stage_change', { from: fromStage, to: stage });
   renderHome(true); openDetail(currentDetailName, target.id);

@@ -33,7 +33,15 @@ function exportExcel() {
     var customers = loadCustomers().filter(function(c){ return !isSoftDeleted(c); });
     if (!customers || customers.length === 0) { showToast('내보낼 고객 데이터가 없습니다'); return; }
 
-    var headers = ['고객명','연락처','주소','공간','단계','금액','성과매출','담당자','계약일','실측일','시공일','선금액','선금일','잔금액','잔금일','방문횟수','메모'];
+    var headers = ['고객명','연락처','주소','공간','단계','금액','성과매출','담당자','계약일','실측일','시공일','확정일','선금액','선금일','잔금액','잔금일','방문횟수','대기리드','발주현황','메모'];
+
+    var ORDER_KEYS = ['fabric','production','blind','material','install'];
+    function orderStatusSummary(c) {
+      var os = c.orderStatus || {};
+      var done = ORDER_KEYS.filter(function(k){ return !!os[k]; }).length;
+      if (done === 0) return '';
+      return done + '/' + ORDER_KEYS.length + (done === ORDER_KEYS.length ? ' (완료)' : '');
+    }
 
     var rows = customers.map(function(c) {
       return [
@@ -48,11 +56,14 @@ function exportExcel() {
         c.date         || '',
         c.measureDate  || '',
         c.installDate  || '',
+        c.confirmDate  || '',
         c.depositAmount || 0,
         c.depositDate  || '',
         c.balanceAmount || 0,
         c.balanceDate  || '',
         c.visitCount   || 1,
+        c.leadParked ? 'Y' : '',
+        orderStatusSummary(c),
         c.memo         || ''
       ];
     });

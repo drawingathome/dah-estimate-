@@ -34,6 +34,10 @@ function changeStageByName(customerName, newStage, id) {
     var oldStage = customers[idx].stage;
     customers[idx].stage = newStage;
     customers[idx].updatedAt = new Date().toISOString();
+    // 2026-08-10: 칸반 드래그로 전환할 때도 확정일 기록 (changeStage와 동일 로직)
+    if (newStage === '확정견적' && !customers[idx].confirmDate) {
+      customers[idx].confirmDate = todayStr();
+    }
     saveCustomers(customers);
 
     // Supabase 동기화 (2026-08-04 버그수정: 예전엔 path 앞에 불필요한 슬래시가
@@ -42,8 +46,10 @@ function changeStageByName(customerName, newStage, id) {
     // 실제로는 클라우드 저장이 조용히 실패하고 있었음 — 화면엔 "이동됨" 토스트가
     // 떠서 성공한 것처럼 보였지만 새로고침하면 원래대로 돌아가 있었음)
     if (customers[idx].id) {
+      var patchBody = { stage: newStage };
+      if (newStage === '확정견적' && customers[idx].confirmDate) patchBody.confirm_date = customers[idx].confirmDate;
       sbXHR('PATCH', 'customers?id=eq.' + customers[idx].id,
-        { stage: newStage },
+        patchBody,
         function(err) { if (err) console.warn('스테이지 동기화 실패:', err); }
       );
     }

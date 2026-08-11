@@ -243,7 +243,8 @@ function dbRowToCustomer(row) {
     balanceReceipt:     row.balance_receipt||false,
     orderStatus:        row.order_status||{},
     branch:             row.branch||'반포점',
-    leadParked:         row.lead_parked||false
+    leadParked:         row.lead_parked||false,
+    confirmDate:        row.confirm_date||''
   };
 }
 
@@ -272,7 +273,8 @@ function customerToDbRow(c) {
     balance_method:      c.balanceMethod||'',
     balance_receipt:     c.balanceReceipt||false,
     order_status:        c.orderStatus||{},
-    branch:              c.branch||'반포점'
+    branch:              c.branch||'반포점',
+    confirm_date:        c.confirmDate||null
   };
 }
 
