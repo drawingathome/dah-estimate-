@@ -1020,35 +1020,20 @@ function showVendorOrderFromEstimate(e) {
 }
 
 function openEstimate(name, id) {
-  if (name) { try {
-    var arr = loadCustomers();
-    // 2026-08-05: 이름만으로 고객을 찾던 버그 수정 — 동명이인이면 엉뚱한 사람의
-    // 정보(전화/주소/견적품목)가 넘어갈 위험이 있었음. currentDetailId가 있으면 그걸
-    // 우선 사용(상세화면에서 호출된 경우 항상 정확한 레코드를 가리킴).
-    var useId = id || (typeof currentDetailId !== 'undefined' ? currentDetailId : null);
-    var c = useId ? arr.find(function(x) { return x.id === useId; }) : arr.find(function(x) { return x.clientName === name; });
-    // 2026-08-05: 이름/전화/주소만 넘기고 기존 견적 품목은 전혀 안 넘겨서,
-    // "견적서 앱에서 열기"로 들어가도 매번 빈 화면부터 시작해야 했던 문제.
-    // 최신 저장 견적의 lineItems도 함께 넘김.
-    // (같은 날 발견: c.id가 없는 로컬전용 고객은 이름기반으로 폴백해야
-    // 하는데 그 폴백이 빠져서 "품목 있음"인데도 안 채워지던 버그도 함께 수정)
-    var saved = []; try { saved = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e2) {}
-    var mine = c ? (c.id
-      ? saved.filter(function(e){ return e.clientId === c.id; })
-      : saved.filter(function(e){ return e.clientName === (c.clientName||''); })
-    ).sort(function(a,b){ return (b.savedAt||'') > (a.savedAt||'') ? 1 : -1; }) : [];
-    if (c) localStorage.setItem('dah_open_customer', JSON.stringify({
-          name: c.clientName,
-          phone: c.phone,
-          addr: c.addr,
-          staff: c.staffName || '',
-          type: c.visitCount > 1 ? '재구매' : (c.stage === 'AS' ? 'AS' : '신규'),
-          stage: c.stage || '상담',
-          memo: c.memo || '',
-          lineItems: mine[0] ? mine[0].lineItems : null,
-          fabricFallback: mine[0] ? mine[0].fabric : null
-        })); } catch(e) {} }
-  window.location.href = 'dah-estimate.html';
+  var useId = id || (typeof currentDetailId !== 'undefined' ? currentDetailId : null);
+  // 2026-08-12: 예전엔 localStorage(dah_open_customer)로 고객정보를 넘기고
+  // 페이지 이동했는데, 대시보드(dah-dashboard.vercel.app)와 견적서 앱
+  // (dah-estimate.vercel.app)이 서로 다른 도메인이라 localStorage가 전혀
+  // 공유되지 않아 "빈 화면"이 뜨는 버그였음(선혜님 실사용에서 확인됨).
+  // URL 쿼리파라미터로 고객ID만 넘기고, 견적서 앱이 그 ID로 Supabase에서
+  // 직접 조회하도록 변경 - 지역출장비/거래처목록과 동일한 해결 패턴.
+  if (useId) {
+    window.location.href = 'dah-estimate.html?loadCustId=' + encodeURIComponent(useId);
+  } else if (name) {
+    window.location.href = 'dah-estimate.html?loadCustName=' + encodeURIComponent(name);
+  } else {
+    window.location.href = 'dah-estimate.html';
+  }
 }
 
 

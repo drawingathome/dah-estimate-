@@ -655,19 +655,56 @@ var currentTab = 'ga';
   addCurtainRow();
   
   try {
-    var oc = localStorage.getItem('dah_open_customer');
-    if(oc) {
-      var c = JSON.parse(oc);
-      if(c.name)  document.getElementById('c-name').value = c.name;
-      if(c.phone) document.getElementById('c-phone').value = c.phone;
-      if(c.addr)  document.getElementById('c-addr').value = c.addr;
-      if(c.staff) document.getElementById('c-staff').value = c.staff;
-      if(c.memo)  document.getElementById('c-memo').value = c.memo;
-      if(c.type)  document.getElementById('c-type').value = c.type;
-      if(c.survey) displaySurvey(c.survey);
-      var loadedItems = (typeof restoreLineItemsToForm === 'function') && restoreLineItemsToForm(c.lineItems, c.fabricFallback);
-      localStorage.removeItem('dah_open_customer');
-      showToast(''+c.name+' 고객 정보 불러옴'+(loadedItems ? ' (이전 견적 품목 포함)' : ''));
+    var urlParams = new URLSearchParams(window.location.search);
+    var loadCustId = urlParams.get('loadCustId');
+    var loadCustName = urlParams.get('loadCustName');
+    if (loadCustId || loadCustName) {
+      // 히스토리에서 쿼리스트링 제거(새로고침해도 중복 조회 안 되도록)
+      window.history.replaceState({}, '', window.location.pathname);
+      var custUrl = loadCustId
+        ? SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(loadCustId) + '&select=*'
+        : SUPABASE_URL + '/rest/v1/customers?client_name=eq.' + encodeURIComponent(loadCustName) + '&select=*&limit=1';
+      var cxhr = new XMLHttpRequest();
+      cxhr.open('GET', custUrl, true);
+      cxhr.setRequestHeader('apikey', SUPABASE_KEY);
+      cxhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+      cxhr.onload = function() {
+        try {
+          var rows = JSON.parse(cxhr.responseText);
+          var c = rows && rows[0];
+          if (!c) return;
+          if (c.client_name) document.getElementById('c-name').value = c.client_name;
+          if (c.phone) document.getElementById('c-phone').value = c.phone;
+          if (c.addr) document.getElementById('c-addr').value = c.addr;
+          if (c.staff_name) document.getElementById('c-staff').value = c.staff_name;
+          if (c.memo) document.getElementById('c-memo').value = c.memo;
+          // 최신 견적서도 같이 조회해서 lineItems/지역 복원
+          var estUrl = SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(c.id) + '&order=created_at.desc&limit=1&select=*';
+          var exhr = new XMLHttpRequest();
+          exhr.open('GET', estUrl, true);
+          exhr.setRequestHeader('apikey', SUPABASE_KEY);
+          exhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+          exhr.onload = function() {
+            try {
+              var erows = JSON.parse(exhr.responseText);
+              var e = erows && erows[0];
+              var loadedItems = false;
+              if (e && e.line_items && typeof restoreLineItemsToForm === 'function') {
+                loadedItems = restoreLineItemsToForm(e.line_items, e.product);
+              }
+              if (e && e.region && document.getElementById('c-region')) {
+                document.getElementById('c-region').value = e.region;
+                document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
+              }
+              showToast(''+(c.client_name||'')+' 고객 정보 불러옴'+(loadedItems ? ' (이전 견적 품목 포함)' : ''));
+            } catch(e3) {}
+          };
+          exhr.onerror = function() { showToast(''+(c.client_name||'')+' 고객 정보 불러옴 (이전 견적 조회 실패)'); };
+          exhr.send();
+        } catch(e2) {}
+      };
+      cxhr.onerror = function() { showToast('⚠️ 고객 정보를 불러오지 못했어요 — 네트워크를 확인해주세요'); };
+      cxhr.send();
     }
   } catch(e) {}
 })();
