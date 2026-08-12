@@ -23,6 +23,9 @@ function addCurtainRow() {
           '<input type="text" placeholder="컬러" class="c-color inner-inp" style="width:60px">'+
           '<span class="c-yardage">원단량: —</span>'+
         '</div>'+
+        '<div class="inner-row" style="margin-top:2px">'+
+          '<input type="text" list="vendor-list" placeholder="레일 거래처 (전동 등)" class="c-rail-vendor inner-inp" style="width:140px">'+
+        '</div>'+
       '</div>'+
     '</td>'+
     '<td><select class="pleat-type" onchange="calcCurtainRow(this)" style="'+SEL+'">'+

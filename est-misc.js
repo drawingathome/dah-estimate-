@@ -100,6 +100,7 @@ function collectLineItems() {
     lineItems.push({
       type: 'curtain', space: space, displayName: displayName, fabric: fabric,
       vendor: tr.querySelector('.c-vendor')?.value||'', color: tr.querySelector('.c-color')?.value||'',
+      railVendor: tr.querySelector('.c-rail-vendor')?.value||'',
       vendorIsWorkshop: tr.querySelector('.vendor-is-workshop')?.checked || false,
       pleatType: tr.querySelector('.pleat-type')?.value||'', openType: tr.querySelector('.open-type')?.value||'',
       heightAdjust: tr.querySelector('.height-adjust')?.value||'-3',
@@ -245,6 +246,7 @@ function loadDraft() {
             if (tr.querySelector('.c-display-name')) tr.querySelector('.c-display-name').value = item.displayName || '';
             if (tr.querySelector('.c-fabric')) tr.querySelector('.c-fabric').value = item.fabric || '';
             if (tr.querySelector('.c-vendor')) tr.querySelector('.c-vendor').value = item.vendor || '';
+            if (tr.querySelector('.c-rail-vendor')) tr.querySelector('.c-rail-vendor').value = item.railVendor || '';
             if (tr.querySelector('.c-color')) tr.querySelector('.c-color').value = item.color || '';
             if (tr.querySelector('.vendor-is-workshop')) tr.querySelector('.vendor-is-workshop').checked = !!item.vendorIsWorkshop;
             if (tr.querySelector('.pleat-type')) tr.querySelector('.pleat-type').value = item.pleatType || '';

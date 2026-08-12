@@ -495,6 +495,16 @@ function collectVendorGroups() {
       qty: pnum?(pnum+'폭'):'—',
       vendor: vendor
     });
+    // 2026-08-10: 레일(전동 등) 거래처가 매번 다를 수 있어 견적서마다 입력
+    // 가능하게 함 - 원단과 별개 항목으로 발주서에 반영(선혜님 확인).
+    var railVendor = tr.querySelector('.c-rail-vendor')?.value || '';
+    if (railVendor) {
+      items.push({
+        space: space||'—', product: '레일' + (heightAdjust <= -5 ? '(전동)' : ''), color: '—',
+        size: mw ? (mw+'cm') : '—', fabSize: null,
+        content: '—', qty: '1개', vendor: railVendor
+      });
+    }
   });
 
   document.querySelectorAll('#blind-body tr').forEach(function(tr){
