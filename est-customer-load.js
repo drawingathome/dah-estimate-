@@ -137,11 +137,14 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
   if (!lineItems || lineItems.length === 0) return false;
   document.getElementById('curtain-body').innerHTML = '';
   document.getElementById('blind-body').innerHTML = '';
+  var svcBodyForReset = document.getElementById('svc-body');
+  if (svcBodyForReset) svcBodyForReset.innerHTML = '';
   lineItems.forEach(function(it) {
     if (it.type === 'blind') {
       addBlindRow();
       var tr = document.getElementById('blind-body').lastElementChild;
       var sp = tr.querySelector('.space-inp'); if (sp) sp.value = it.space || '';
+      var bdn = tr.querySelector('.b-display-name'); if (bdn) bdn.value = it.displayName || '';
       var inns = tr.querySelectorAll('.inner-row .inner-inp');
       if (inns[0]) inns[0].value = it.fabric || '';
       if (inns[1]) inns[1].value = it.vendor || '';
@@ -154,6 +157,16 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       var extraEl = tr.querySelector('.blind-extra'); if (extraEl && it.extra) { extraEl.value = it.extra; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(extraEl); }
       var priceEl = tr.querySelector('.blind-price'); if (priceEl && it.price) { priceEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(priceEl); }
       if (typeof calcBlindRow === 'function' && bmw) calcBlindRow(bmw);
+    } else if (it.type === 'svc') {
+      addSvcRow();
+      var str = document.getElementById('svc-body').lastElementChild;
+      if (str) {
+        var svcKindEl = str.querySelector('.svc-kind'); if (svcKindEl) svcKindEl.value = it.kind || '기타';
+        var svcContentEl = str.querySelector('.svc-content'); if (svcContentEl) svcContentEl.value = it.content || '';
+        var svcPriceEl = str.querySelector('.sprice'); if (svcPriceEl && it.price) { svcPriceEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(svcPriceEl); }
+        var svcQtyEl = str.querySelector('.sqty'); if (svcQtyEl) svcQtyEl.value = it.qty || '1';
+        if (typeof calcSvcRow === 'function' && svcPriceEl) calcSvcRow(svcPriceEl);
+      }
     } else {
       addCurtainRow();
       var ctr = document.getElementById('curtain-body').lastElementChild;

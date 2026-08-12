@@ -117,12 +117,30 @@ function collectLineItems() {
     if (!space && !fabric && !bmwVal && !bmhVal) return;
     lineItems.push({
       type: 'blind', space: space, fabric: fabric,
+      displayName: tr.querySelector('.b-display-name')?.value||'',
       vendor: innerInps[1]?.value||'', color: innerInps[2]?.value||'',
       kind: tr.querySelector('.blind-kind')?.value||'', handle: tr.querySelector('.handle-dir')?.value||'',
       bmw: tr.querySelector('.bmw')?.value||'', bmh: tr.querySelector('.bmh')?.value||'',
       opt: tr.querySelector('.blind-opt')?.value||'',
       extra: getPriceVal(tr.querySelector('.blind-extra')),
       price: getPriceVal(tr.querySelector('.blind-price')), amt: tr.querySelector('.bamt')?.textContent||''
+    });
+  });
+  // 2026-08-10: "+ 항목 추가"로 사용자가 직접 넣은 부자재(레일/시공비/전동/
+  // 실측비/부자재/기타) 행이 저장 자체가 안 되던 문제 발견 - 저장은 물론
+  // 계산에는 반영되지만 lineItems에 없어서 다시 열면 완전히 사라짐.
+  // 단, 지역선택/커튼사이즈로 자동생성되는 레일·시공비·실측비 행(각각
+  // data-rail-src, data-svc-type 속성으로 표시됨)은 재계산으로 다시 만들어
+  // 지므로 제외 - 사용자가 수동으로 추가한 행만 저장.
+  document.querySelectorAll('#svc-body tr').forEach(function(tr){
+    if (tr.hasAttribute('data-rail-src') || tr.hasAttribute('data-railcost-src') || tr.hasAttribute('data-svc-type')) return;
+    var content = tr.querySelector('.svc-content')?.value || '';
+    var price = getPriceVal(tr.querySelector('.sprice'));
+    if (!content && !price) return;
+    lineItems.push({
+      type: 'svc', kind: tr.querySelector('.svc-kind')?.value || '기타',
+      content: content, price: price,
+      qty: tr.querySelector('.sqty')?.value || '1'
     });
   });
   return lineItems;
@@ -243,6 +261,7 @@ function loadDraft() {
             var btr = blindBody.lastElementChild;
             if (!btr) return;
             if (btr.querySelector('.space-inp')) btr.querySelector('.space-inp').value = item.space || '';
+            if (btr.querySelector('.b-display-name')) btr.querySelector('.b-display-name').value = item.displayName || '';
             var innerInps = btr.querySelectorAll('.inner-row .inner-inp');
             if (innerInps[0]) innerInps[0].value = item.fabric || '';
             if (innerInps[1]) innerInps[1].value = item.vendor || '';
@@ -256,6 +275,17 @@ function loadDraft() {
             if (btr.querySelector('.blind-price')) btr.querySelector('.blind-price').value = item.price || '';
             var bmwEl = btr.querySelector('.bmw');
             if (bmwEl && typeof calcBlindRow === 'function') calcBlindRow(bmwEl);
+          } else if (item.type === 'svc') {
+            addSvcRow();
+            var svcBody = document.getElementById('svc-body');
+            var str = svcBody.lastElementChild;
+            if (!str) return;
+            if (str.querySelector('.svc-kind')) str.querySelector('.svc-kind').value = item.kind || '기타';
+            if (str.querySelector('.svc-content')) str.querySelector('.svc-content').value = item.content || '';
+            if (str.querySelector('.sprice')) str.querySelector('.sprice').value = item.price || '';
+            if (str.querySelector('.sqty')) str.querySelector('.sqty').value = item.qty || '1';
+            var spriceEl = str.querySelector('.sprice');
+            if (spriceEl && typeof calcSvcRow === 'function') calcSvcRow(spriceEl);
           }
         });
         if (typeof calcTotal === 'function') calcTotal();

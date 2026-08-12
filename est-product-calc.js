@@ -182,7 +182,7 @@ function addBlindRow() {
   tr.innerHTML =
     '<td><input type="text" class="space-inp" placeholder="공간" style="'+INP+';cursor:pointer;caret-color:transparent" readonly onclick="openSpacePicker(this)"></td>'+
     '<td style="padding:6px 8px">'+
-      '<input type="text" placeholder="제품명 (고객용)" style="'+INP+'">'+
+      '<input type="text" placeholder="제품명 (고객용)" class="b-display-name" style="'+INP+'">'+
       '<div class="inner-fields print-hide">'+
         '<div class="inner-row">'+
           '<input type="text" list="blind-list" placeholder="원단명" class="inner-inp">'+
@@ -321,10 +321,10 @@ function addSvcRow() {
   var tbody = document.getElementById('svc-body');
   var tr = document.createElement('tr');
   tr.innerHTML =
-    '<td><select style="'+SEL+'"><option value="레일">레일</option><option value="시공비">시공비</option>'+
+    '<td><select class="svc-kind" style="'+SEL+'"><option value="레일">레일</option><option value="시공비">시공비</option>'+
     '<option value="전동">전동</option><option value="실측비">실측비</option>'+
     '<option value="부자재">부자재</option><option value="기타">기타</option></select></td>'+
-    '<td><input type="text" placeholder="내용 입력" style="'+INP+'"></td>'+
+    '<td><input type="text" placeholder="내용 입력" class="svc-content" style="'+INP+'"></td>'+
     '<td><input type="text" inputmode="numeric" placeholder="단가" class="sprice" oninput="fmtPrice(this);calcSvcRow(this)" onfocus="fmtPriceFocus(this)" onblur="fmtPriceBlur(this);calcSvcRow(this)" style="'+INP+'"></td>'+
     '<td><input type="number" placeholder="1" class="sqty" value="1" oninput="fmtPrice(this);calcSvcRow(this)" style="'+INP+'"></td>'+
     '<td class="amt samt">0원</td>'+
