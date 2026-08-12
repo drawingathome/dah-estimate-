@@ -121,6 +121,7 @@ function collectLineItems() {
       kind: tr.querySelector('.blind-kind')?.value||'', handle: tr.querySelector('.handle-dir')?.value||'',
       bmw: tr.querySelector('.bmw')?.value||'', bmh: tr.querySelector('.bmh')?.value||'',
       opt: tr.querySelector('.blind-opt')?.value||'',
+      extra: getPriceVal(tr.querySelector('.blind-extra')),
       price: getPriceVal(tr.querySelector('.blind-price')), amt: tr.querySelector('.bamt')?.textContent||''
     });
   });
@@ -251,6 +252,7 @@ function loadDraft() {
             if (btr.querySelector('.bmw')) btr.querySelector('.bmw').value = item.bmw || '';
             if (btr.querySelector('.bmh')) btr.querySelector('.bmh').value = item.bmh || '';
             if (btr.querySelector('.blind-opt')) btr.querySelector('.blind-opt').value = item.opt || '';
+            if (btr.querySelector('.blind-extra')) btr.querySelector('.blind-extra').value = item.extra || '';
             if (btr.querySelector('.blind-price')) btr.querySelector('.blind-price').value = item.price || '';
             var bmwEl = btr.querySelector('.bmw');
             if (bmwEl && typeof calcBlindRow === 'function') calcBlindRow(bmwEl);

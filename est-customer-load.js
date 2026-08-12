@@ -147,9 +147,13 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       if (inns[1]) inns[1].value = it.vendor || '';
       if (inns[2]) inns[2].value = it.color || '';
       var kindEl = tr.querySelector('.blind-kind'); if (kindEl) kindEl.value = it.kind || kindEl.value;
+      var handleEl = tr.querySelector('.handle-dir'); if (handleEl && it.handle) handleEl.value = it.handle;
       var bmw = tr.querySelector('.bmw'); if (bmw) bmw.value = it.bmw || '';
       var bmh = tr.querySelector('.bmh'); if (bmh) bmh.value = it.bmh || '';
+      var optEl = tr.querySelector('.blind-opt'); if (optEl) optEl.value = it.opt || '';
+      var extraEl = tr.querySelector('.blind-extra'); if (extraEl && it.extra) { extraEl.value = it.extra; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(extraEl); }
       var priceEl = tr.querySelector('.blind-price'); if (priceEl && it.price) { priceEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(priceEl); }
+      if (typeof calcBlindRow === 'function' && bmw) calcBlindRow(bmw);
     } else {
       addCurtainRow();
       var ctr = document.getElementById('curtain-body').lastElementChild;
