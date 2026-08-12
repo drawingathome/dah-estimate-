@@ -82,16 +82,6 @@ function calcCurtainRow(el) {
   var pnum = Math.max(0, parseFloat(tr.querySelector('.pnum')?.value)||1);
   
   var mhEl = tr.querySelector('.mh');
-  var overWarnEl = tr.querySelector('.over-warn');
-  if(!overWarnEl) {
-    overWarnEl = document.createElement('div');
-    overWarnEl.className = 'over-warn';
-    overWarnEl.style.cssText = 'display:none;font-size:11px;color:#F06E2D;font-weight:700;margin-top:3px;white-space:nowrap';
-    overWarnEl.textContent = '⚠️ 243cm 초과 — 2단 제작 필요';
-    mhEl?.parentNode?.appendChild(overWarnEl);
-  }
-  if(mhEl) mhEl.style.borderBottom = fh>243 ? '2px solid #F06E2D' : '';
-  if(overWarnEl) overWarnEl.style.display = fh>243 ? 'block' : 'none';
 
   // 2026-08-10: 세로(mh) 250/270/290cm 이상이면 금액 추가 검토 안내만 표시
   // (선혜님 확인: 계산에는 반영하지 말고 알림만 띄울 것). 실측 세로값(mh)

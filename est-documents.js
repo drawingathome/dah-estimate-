@@ -507,10 +507,11 @@ function collectVendorGroups() {
     var bmw   = tr.querySelector('.bmw')?.value || '';
     var bmh   = tr.querySelector('.bmh')?.value || '';
     var handle= tr.querySelector('.handle-dir')?.value || '';
+    var opt   = tr.querySelector('.blind-opt')?.value || '';
     items.push({
       space: space||'—', product: fabric||'—', color: color||'—',
       size:(bmw&&bmh)?(bmw+'×'+bmh):'—',
-      content: handle ? (handle==='기타'?'기타':handle+'잡이') : '—',
+      content: [handle ? (handle==='기타'?'기타':handle+'잡이') : '', opt].filter(Boolean).join(' / ')||'—',
       qty: '1개',
       vendor: vendor
     });
