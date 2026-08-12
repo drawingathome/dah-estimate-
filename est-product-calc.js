@@ -92,7 +92,7 @@ function calcCurtainRow(el) {
   var heightFeeWarnEl = tr.querySelector('.height-fee-warn');
   if(!heightFeeWarnEl) {
     heightFeeWarnEl = document.createElement('div');
-    heightFeeWarnEl.className = 'height-fee-warn';
+    heightFeeWarnEl.className = 'height-fee-warn print-hide';
     heightFeeWarnEl.style.cssText = 'display:none;font-size:11px;color:#F06E2D;font-weight:700;margin-top:3px;white-space:nowrap';
     mhEl?.parentNode?.appendChild(heightFeeWarnEl);
   }
@@ -264,7 +264,7 @@ function calcBlindRow(el) {
   var bwWarnEl = tr.querySelector('.blind-wide-warn');
   if(!bwWarnEl) {
     bwWarnEl = document.createElement('div');
-    bwWarnEl.className = 'blind-wide-warn';
+    bwWarnEl.className = 'blind-wide-warn print-hide';
     bwWarnEl.style.cssText = 'display:none;font-size:11px;color:#F06E2D;font-weight:700;margin-top:3px;white-space:nowrap';
     bwWarnEl.textContent = '⚠️ 200cm 초과 — 분할 시공 검토';
     bmwEl?.parentNode?.appendChild(bwWarnEl);
