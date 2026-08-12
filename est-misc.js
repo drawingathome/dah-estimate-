@@ -212,7 +212,10 @@ function loadDraft() {
       if (d.addrDetail)  document.getElementById('c-addr2') && (document.getElementById('c-addr2').value = d.addrDetail);
       if (d.measureDate) document.getElementById('c-measure').value = d.measureDate;
       if (d.installDate) document.getElementById('c-install').value = d.installDate;
-      if (d.region)      document.getElementById('c-region').value = d.region;
+      if (d.region) {
+        document.getElementById('c-region').value = d.region;
+        document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
+      }
       if (d.memo)        document.getElementById('c-memo').value = d.memo;
 
       // 2026-08-10: 커튼/블라인드 행 복원 — 예전엔 고객정보만 복원되고

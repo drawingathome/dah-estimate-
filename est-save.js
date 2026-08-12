@@ -237,7 +237,8 @@ function saveEstimate() {
       branch: '반포점',
       client_id: window._estSaveCustomerId || null,
       line_items: lineItems,
-      cust_type: currentCustType || 'new'
+      cust_type: currentCustType || 'new',
+      region: document.getElementById('c-region')?.value || ''
     }, currentCustType === 'as' ? {
       as_install_date: document.getElementById('as-install-date')?.value || null,
       as_type: document.getElementById('as-type-sel')?.value || null,
@@ -325,7 +326,8 @@ function saveEstimate() {
         confirmedAt: window._estimateConfirmedAt || null,
         branch: '반포점',
         lineItems: lineItems,
-        custType: currentCustType || 'new'
+        custType: currentCustType || 'new',
+        region: document.getElementById('c-region')?.value || ''
       };
       if (currentCustType === 'as') {
         entry.asInstallDate = document.getElementById('as-install-date')?.value || null;

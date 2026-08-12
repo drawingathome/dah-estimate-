@@ -213,7 +213,18 @@ function loadCustByIdx(el) {
       : saved.filter(function(e){ return e.clientName === (c.clientName||''); })
     ).sort(function(a,b){ return (b.savedAt||'') > (a.savedAt||'') ? 1 : -1; });
     var latest = mine[0];
-    if (latest) loadedItems = restoreLineItemsToForm(latest.lineItems, latest.fabric);
+    if (latest) {
+      loadedItems = restoreLineItemsToForm(latest.lineItems, latest.fabric);
+      // 2026-08-12: 저장된 견적의 지역(region)을 복원 - 예전엔 지역 정보 자체가
+      // 저장 안 돼서, 재구매 견적 불러오기 시 지역시공비(실측+설치, 서울기준
+      // 9만원)가 통째로 사라지던 버그. change 이벤트를 발생시켜야
+      // autoAddSvcFee()가 실행되어 지역시공비 행이 다시 생김(value만 설정하면
+      // onchange가 안 걸림).
+      if (latest.region && document.getElementById('c-region')) {
+        document.getElementById('c-region').value = latest.region;
+        document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
+      }
+    }
   } catch(e) { console.warn('기존 견적 품목 불러오기 실패:', e); }
   closeCustLoad();
   showToast('고객 정보를 불러왔습니다 — '+(c.clientName||'')+(loadedItems ? ' (이전 견적 품목 포함)' : ''));
