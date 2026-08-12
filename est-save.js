@@ -248,14 +248,38 @@ function saveEstimate() {
     } : {});
     try {
       var xhr2=new XMLHttpRequest();
-      xhr2.open('POST',SUPABASE_URL+'/rest/v1/estimates',true);
+      // 2026-08-12: "견적서 이력에서 특정 견적서를 열어 수정" 기능 추가를 위한
+      // 기반 작업 — 예전엔 항상 POST(신규)만 해서, 같은 견적서를 다시 저장해도
+      // 서버엔 계속 새 레코드가 쌓였음(로컬만 no기준으로 덮어써짐, 서버는 중복
+      // 축적). window._editingEstDbId가 있으면(견적서이력의 "열어서 수정"으로
+      // 진입한 경우) PATCH로 그 레코드 자체를 갱신, 없으면(신규작성/"복사해서
+      // 새로만들기") 기존처럼 POST — 이 경우 응답에서 생성된 id를 받아 로컬에
+      // dbId로 저장해둬야 다음번에 "열어서 수정"이 가능해짐.
+      var isEditMode = !!window._editingEstDbId;
+      if (isEditMode) {
+        xhr2.open('PATCH', SUPABASE_URL+'/rest/v1/estimates?id=eq.'+encodeURIComponent(window._editingEstDbId), true);
+      } else {
+        xhr2.open('POST', SUPABASE_URL+'/rest/v1/estimates', true);
+      }
       xhr2.setRequestHeader('apikey',SUPABASE_KEY);
       xhr2.setRequestHeader('Authorization','Bearer '+(typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
       xhr2.setRequestHeader('Content-Type','application/json');
-      xhr2.setRequestHeader('Prefer','return=minimal');
+      xhr2.setRequestHeader('Prefer', isEditMode ? 'return=minimal' : 'return=representation');
       xhr2.onload=function(){
         if (xhr2.status >= 200 && xhr2.status < 300) {
           showToast('저장 완료! (DB+로컬)');
+          if (!isEditMode) {
+            try {
+              var createdRows = JSON.parse(xhr2.responseText);
+              var newDbId = createdRows && createdRows[0] && createdRows[0].id;
+              if (newDbId) {
+                window._editingEstDbId = newDbId; // 이후 같은 화면에서 재저장하면 이제부터 수정모드
+                var localArr = JSON.parse(localStorage.getItem('dah_saved')||'[]');
+                var lastIdx = localArr.length - 1;
+                if (lastIdx >= 0) { localArr[lastIdx].dbId = newDbId; localStorage.setItem('dah_saved', JSON.stringify(localArr)); }
+              }
+            } catch(eParse) {}
+          }
         } else if (xhr2.status === 409) {
           // 2026-08-05: idempotency key 중복 = 이전 시도가 실제로는 이미 성공했었다는 뜻
           // (응답만 유실됐던 것) — 실패가 아니라 정상 처리
@@ -299,10 +323,12 @@ function saveEstimate() {
       var uniqCurtainVendors = curtainVendors.filter(function(v,i){ return curtainVendors.indexOf(v)===i; });
       var uniqBlindVendors = blindVendors.filter(function(v,i){ return blindVendors.indexOf(v)===i; });
 
-      var idx = saved.findIndex(function(e){ return e.no === noStr; });
+      var editingDbId = window._editingEstDbId || null;
+      var idx = saved.findIndex(function(e){ return (editingDbId && e.dbId === editingDbId) || e.no === noStr; });
       var entry = {
         id: noStr || ('local-'+Date.now()),
         no: noStr,
+        dbId: editingDbId || (idx >= 0 ? saved[idx].dbId : null) || null,
         clientName: name,
         phone: phone,
         addr: addr+(addr2?' '+addr2:''),

@@ -622,7 +622,7 @@
 <script src="/est-form-controls.js?v=202608065400"></script>
 <script src="/est-product-calc.js?v=202608067300"></script>
 <script src="/est-survey.js?v=202608065400"></script>
-<script src="/est-save.js?v=202608067500"></script>
+<script src="/est-save.js?v=202608067700"></script>
 <script src="/est-documents.js?v=202608067100"></script>
 <script src="/est-customer-load.js?v=202608067500"></script>
 <script src="/est-misc.js?v=202608067500"></script>
@@ -705,6 +705,49 @@ var currentTab = 'ga';
       };
       cxhr.onerror = function() { showToast('⚠️ 고객 정보를 불러오지 못했어요 — 네트워크를 확인해주세요'); };
       cxhr.send();
+    }
+
+    // 2026-08-12: 견적서 이력에서 "열어서 수정" / "복사해서 새로 만들기" —
+    // 특정 견적서(uuid)를 직접 조회. estimates 테이블 자체에 customer_name/
+    // phone이 있어서 고객 조회를 따로 안 해도 됨. mode=edit이면
+    // window._editingEstDbId를 세팅해서 저장시 PATCH(같은 레코드 갱신)로
+    // 동작하게 하고, mode=copy(또는 생략)면 세팅 안 해서 기존처럼 새 견적서로
+    // 저장되게 함(c-no는 항상 새로 발급되므로 자연히 복사가 됨).
+    var loadEstDbId = urlParams.get('loadEstDbId');
+    var loadMode = urlParams.get('mode') || 'copy';
+    if (loadEstDbId) {
+      window.history.replaceState({}, '', window.location.pathname);
+      var estOneUrl = SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(loadEstDbId) + '&select=*';
+      var eoxhr = new XMLHttpRequest();
+      eoxhr.open('GET', estOneUrl, true);
+      eoxhr.setRequestHeader('apikey', SUPABASE_KEY);
+      eoxhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+      eoxhr.onload = function() {
+        try {
+          var erows = JSON.parse(eoxhr.responseText);
+          var e = erows && erows[0];
+          if (!e) { showToast('⚠️ 해당 견적서를 찾을 수 없어요'); return; }
+          if (e.customer_name) document.getElementById('c-name').value = e.customer_name;
+          if (e.phone) document.getElementById('c-phone').value = e.phone;
+          if (e.memo) document.getElementById('c-memo').value = e.memo;
+          var loadedItems = false;
+          if (e.line_items && typeof restoreLineItemsToForm === 'function') {
+            loadedItems = restoreLineItemsToForm(e.line_items, e.product);
+          }
+          if (e.region && document.getElementById('c-region')) {
+            document.getElementById('c-region').value = e.region;
+            document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
+          }
+          if (loadMode === 'edit') {
+            window._editingEstDbId = e.id;
+            showToast('✏️ '+(e.customer_name||'')+' 견적서를 불러왔어요 — 수정 후 저장하면 이 견적서가 갱신돼요');
+          } else {
+            showToast('📋 '+(e.customer_name||'')+' 견적서를 복사했어요 — 저장하면 새 견적서로 만들어져요');
+          }
+        } catch(e2) { showToast('⚠️ 견적서를 불러오는 중 문제가 발생했어요'); }
+      };
+      eoxhr.onerror = function() { showToast('⚠️ 견적서를 불러오지 못했어요 — 네트워크를 확인해주세요'); };
+      eoxhr.send();
     }
   } catch(e) {}
 })();

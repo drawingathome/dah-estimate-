@@ -1133,6 +1133,39 @@ function renderEstimateHistory(container, clientName) {
     bot.textContent = dateStr + (e.staffName ? ' · ' + e.staffName : '');
     card.appendChild(bot);
 
+    if (e.dbId) {
+      var actionRow = el('div', {style:'display:flex;gap:6px;margin-top:8px'});
+      var editBtn = el('button', {style:
+        'flex:1;font-size:11px;font-weight:600;padding:7px;border-radius:8px;' +
+        'border:1px solid var(--border);background:#fff;color:var(--dark);cursor:pointer;font-family:inherit;min-height:32px'
+      });
+      editBtn.textContent = '열어서 수정';
+      (function(dbId){
+        editBtn.addEventListener('click', function(ev){
+          ev.stopPropagation();
+          window.location.href = 'dah-estimate.html?loadEstDbId=' + encodeURIComponent(dbId) + '&mode=edit';
+        });
+      })(e.dbId);
+      var copyBtn = el('button', {style:
+        'flex:1;font-size:11px;font-weight:600;padding:7px;border-radius:8px;' +
+        'border:1px solid var(--border);background:#fff;color:var(--dark);cursor:pointer;font-family:inherit;min-height:32px'
+      });
+      copyBtn.textContent = '복사해서 새로 만들기';
+      (function(dbId){
+        copyBtn.addEventListener('click', function(ev){
+          ev.stopPropagation();
+          window.location.href = 'dah-estimate.html?loadEstDbId=' + encodeURIComponent(dbId) + '&mode=copy';
+        });
+      })(e.dbId);
+      actionRow.appendChild(editBtn); actionRow.appendChild(copyBtn);
+      card.appendChild(actionRow);
+    } else {
+      // 2026-08-12 이전에 저장된 견적서는 서버 레코드 id(dbId)가 없어서
+      // 정확히 다시 열 방법이 없음 - 소급 적용 안 됨(confirmDate/custType과 동일한 한계)
+      var noteEl = el('div', {style:'font-size:10px;color:var(--sub);margin-top:6px', text:'이전 저장 견적 — 열기/복사 불가 (새로 작성한 견적부터 가능)'});
+      card.appendChild(noteEl);
+    }
+
     estSec.appendChild(card);
   });
 
