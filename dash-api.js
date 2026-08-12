@@ -322,6 +322,7 @@ function estimateDbRowToLocal(row) {
     clientId: row.client_id || null,
     lineItems: row.line_items || [],
     custType: row.cust_type || 'new',
+    asFeeType: row.as_fee_type || 'free',
     _fromCloud: true
   };
 }

@@ -114,6 +114,14 @@ function renderEstList() {
       rebuyTag.textContent = '재구매';
       top.appendChild(rebuyTag);
     }
+    if (e.custType === 'as' && e.asFeeType === 'paid') {
+      var paidAsTag = el('span', {style:
+        'font-size:12px;font-weight:700;padding:2px 6px;border-radius:6px;' +
+        'background:#FDECEA;color:#C0392B'
+      });
+      paidAsTag.textContent = '유상 AS';
+      top.appendChild(paidAsTag);
+    }
     top.appendChild(csBadge);
 
     // 중간 행: 고객명 + 금액
