@@ -445,6 +445,11 @@ function calcTotal() {
   var discount=discType==='pct'?Math.round(curtainTotal*discInput/100):discInput;
   var grand=curtainTotal-discount+svcTotal;
   if(grand<0) grand=0;
+  // 2026-08-12: 최종 견적금액 천원단위 절사(내림) 적용 - 당일결제5%/마케팅3%/
+  // 입주10%/재구매5% 등 % 할인 적용 후 끝자리가 지저분하게 나오는 걸 방지
+  // (선혜님 확인: 반올림이 아니라 절사, 천원단위). 계약금/잔금은 이 절사된
+  // 금액을 기준으로 계산되므로 자연히 깔끔한 값이 됨.
+  if(grand>0) grand = Math.floor(grand/1000)*1000;
   var depInp=document.getElementById('deposit-input');
   var depRaw=getPriceVal(depInp)||0;
   if(grand>0 && depInp && !depInp.dataset.manualEdit){
