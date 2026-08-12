@@ -92,6 +92,29 @@ function calcCurtainRow(el) {
   }
   if(mhEl) mhEl.style.borderBottom = fh>243 ? '2px solid #F06E2D' : '';
   if(overWarnEl) overWarnEl.style.display = fh>243 ? 'block' : 'none';
+
+  // 2026-08-10: 세로(mh) 250/270/290cm 이상이면 금액 추가 검토 안내만 표시
+  // (선혜님 확인: 계산에는 반영하지 말고 알림만 띄울 것). 실측 세로값(mh)
+  // 기준으로 판단 — 제작높이 보정(fh)이 아니라 원래 실측값 기준.
+  var heightFeeWarnEl = tr.querySelector('.height-fee-warn');
+  if(!heightFeeWarnEl) {
+    heightFeeWarnEl = document.createElement('div');
+    heightFeeWarnEl.className = 'height-fee-warn';
+    heightFeeWarnEl.style.cssText = 'display:none;font-size:11px;color:#F06E2D;font-weight:700;margin-top:3px;white-space:nowrap';
+    mhEl?.parentNode?.appendChild(heightFeeWarnEl);
+  }
+  if (mh >= 290) {
+    heightFeeWarnEl.textContent = '⚠️ 세로 290cm 이상 — 금액 30% 추가 검토';
+    heightFeeWarnEl.style.display = 'block';
+  } else if (mh >= 270) {
+    heightFeeWarnEl.textContent = '⚠️ 세로 270cm 이상 — 금액 20% 추가 검토';
+    heightFeeWarnEl.style.display = 'block';
+  } else if (mh >= 250) {
+    heightFeeWarnEl.textContent = '⚠️ 세로 250cm 이상 — 금액 10% 추가 검토';
+    heightFeeWarnEl.style.display = 'block';
+  } else {
+    heightFeeWarnEl.style.display = 'none';
+  }
   
   var price = Math.max(0, getPriceVal(tr.querySelector('.cprice'))||0);
   var amt = Math.round(price*pnum);
