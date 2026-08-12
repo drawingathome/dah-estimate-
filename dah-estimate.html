@@ -696,6 +696,19 @@ var currentTab = 'ga';
                 document.getElementById('c-region').value = e.region;
                 document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
               }
+              if (e && e.cust_type && typeof setCustType === 'function') {
+                setCustType(e.cust_type);
+                if (e.cust_type === 'as') {
+                  if (e.as_install_date && document.getElementById('as-install-date')) document.getElementById('as-install-date').value = e.as_install_date;
+                  if (e.as_type && document.getElementById('as-type-sel')) document.getElementById('as-type-sel').value = e.as_type;
+                  if (e.as_symptom && document.getElementById('as-symptom')) document.getElementById('as-symptom').value = e.as_symptom;
+                  if (e.as_photo_memo && document.getElementById('as-photo-memo')) document.getElementById('as-photo-memo').value = e.as_photo_memo;
+                  if (e.as_fee_type) {
+                    var feeRadio3 = document.querySelector('input[name="as-fee"][value="' + e.as_fee_type + '"]');
+                    if (feeRadio3) feeRadio3.checked = true;
+                  }
+                }
+              }
               showToast(''+(c.client_name||'')+' 고객 정보 불러옴'+(loadedItems ? ' (이전 견적 품목 포함)' : ''));
             } catch(e3) {}
           };
@@ -737,6 +750,22 @@ var currentTab = 'ga';
           if (e.region && document.getElementById('c-region')) {
             document.getElementById('c-region').value = e.region;
             document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
+          }
+          // 2026-08-12: cust_type(신규/재구매/AS) 복원 누락 발견 - AS 견적서를
+          // 열어서 수정/복사해도 AS 폼으로 전환 안 되고 증상/유형 등이 전혀
+          // 안 채워지던 문제. "열어서 수정/복사" 기능 만들면서 같이 발견.
+          if (e.cust_type && typeof setCustType === 'function') {
+            setCustType(e.cust_type);
+            if (e.cust_type === 'as') {
+              if (e.as_install_date && document.getElementById('as-install-date')) document.getElementById('as-install-date').value = e.as_install_date;
+              if (e.as_type && document.getElementById('as-type-sel')) document.getElementById('as-type-sel').value = e.as_type;
+              if (e.as_symptom && document.getElementById('as-symptom')) document.getElementById('as-symptom').value = e.as_symptom;
+              if (e.as_photo_memo && document.getElementById('as-photo-memo')) document.getElementById('as-photo-memo').value = e.as_photo_memo;
+              if (e.as_fee_type) {
+                var feeRadio2 = document.querySelector('input[name="as-fee"][value="' + e.as_fee_type + '"]');
+                if (feeRadio2) feeRadio2.checked = true;
+              }
+            }
           }
           if (loadMode === 'edit') {
             window._editingEstDbId = e.id;
