@@ -616,7 +616,7 @@
   <option value="허니콤 No.1">허니콤 No.1</option>
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
-<script src="/est-utils.js?v=202608051400"></script>
+<script src="/est-utils.js?v=202608067200"></script>
 <script src="/est-sync-queue.js?v=202608050001"></script>
 <script src="/dash-supabase-auth.js?v=202608051400"></script>
 <script src="/est-form-controls.js?v=202608065400"></script>
@@ -731,6 +731,7 @@ window.addEventListener('online', function(){
 document.addEventListener('DOMContentLoaded', function() {
   // 지역별 실측비/시공비 최신값 조회 (설정탭에서 바뀌었을 수 있으므로 매번 새로 확인)
   if (typeof fetchRegionFeesFromCloud === 'function') { fetchRegionFeesFromCloud(); }
+  if (typeof fetchVendorListFromCloud === 'function') { fetchVendorListFromCloud(); }
 
   // 자동저장 인디케이터 생성
   var indicator = document.createElement('div');

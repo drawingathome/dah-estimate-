@@ -72,6 +72,40 @@ function fetchRegionFeesFromCloud(callback) {
   xhr.send();
 }
 
+// 2026-08-10: 거래처 목록도 견적서 앱은 대시보드 설정탭에서 추가한 최신
+// 목록을 전혀 못 보고 있었음 - dah-estimate.html의 <datalist id="vendor-list">가
+// HTML에 하드코딩된 예전 목록만 쓰고 있어서, 설정탭에서 새 거래처를 추가해도
+// 견적서 앱 자동완성엔 안 뜨는 문제 발견(선혜님 확인 요청으로 재검토 중 발견 —
+// 실제로 Supabase엔 "다단다"가 있는데 견적서 앱 하드코딩 목록엔 없었음).
+function fetchVendorListFromCloud(callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', SUPABASE_URL + '/rest/v1/app_settings?key=eq.vendor_list&select=value', true);
+  xhr.setRequestHeader('apikey', SUPABASE_KEY);
+  xhr.onload = function() {
+    try {
+      if (xhr.status === 200) {
+        var rows = JSON.parse(xhr.responseText);
+        if (rows && rows[0] && Array.isArray(rows[0].value)) {
+          var dl = document.getElementById('vendor-list');
+          if (dl) {
+            dl.innerHTML = '';
+            rows[0].value.forEach(function(v) {
+              var name = (typeof v === 'string') ? v : v.name;
+              if (!name) return;
+              var opt = document.createElement('option');
+              opt.value = name;
+              dl.appendChild(opt);
+            });
+          }
+        }
+      }
+    } catch(e) {}
+    if (callback) callback();
+  };
+  xhr.onerror = function() { if (callback) callback(); };
+  xhr.send();
+}
+
 // 구글드라이브 자동저장 웹훅 (배포 후 URL 채워넣을 예정)
 var DRIVE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyyNG-Y6sABngKqk2ttfXUK_LIrQtyqiLLaaEvUnhWs3Yn4YqFtsGTVoug7EQAbig6OgQ/exec';
 
