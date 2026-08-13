@@ -133,6 +133,24 @@
   // 일치해야 조회 가능)에 걸려 본인이 저장한 견적서도 못 보는 위험 있었음
   // (선혜님 확인 요청으로 발견/수정). 필드가 비어있을 때만 자동 채움 —
   // 이미 뭔가 입력돼있으면 덮어쓰지 않음.
+  // 2026-08-12: "견적서 앱에서 열기"/"열어서 수정"/"복사"로 Supabase에서
+  // 직접 조회한 대시보드 기존 고객 정보가, 견적서 앱 로컬(dah_customers)엔
+  // 전혀 반영이 안 돼서 - 저장시 로컬 매칭(이름+전화)에 실패해 완전히
+  // 새로운 중복 고객이 POST로 생성되던 심각한 데이터 정합성 버그 발견.
+  // 조회 성공 시 로컬에도 정확히 반영(upsert)해서 저장시 기존 고객으로
+  // 인식되게 함.
+  function upsertLocalCustomer(id, clientName, phone, staffName, addr) {
+    try {
+      var arr = JSON.parse(localStorage.getItem('dah_customers') || '[]');
+      var normPhone = function(p){ return (p||'').replace(/\D/g,''); };
+      var idx = arr.findIndex(function(c){ return c.id === id; });
+      var entry = { id: id, clientName: clientName || '', phone: phone || '', staffName: staffName || '', addr: addr || '' };
+      if (idx >= 0) arr[idx] = Object.assign({}, arr[idx], entry);
+      else arr.unshift(entry);
+      localStorage.setItem('dah_customers', JSON.stringify(arr));
+    } catch(e) {}
+  }
+  window.upsertLocalCustomer = upsertLocalCustomer; // IIFE 밖(다른 script 블록)에서도 호출 가능하도록
   function autoFillStaffField(name) {
     function doFill() {
       try {
@@ -746,6 +764,7 @@ var currentTab = 'ga';
           if (c.addr) document.getElementById('c-addr').value = c.addr;
           if (c.staff_name) document.getElementById('c-staff').value = c.staff_name;
           if (c.memo) document.getElementById('c-memo').value = c.memo;
+          upsertLocalCustomer(c.id, c.client_name, c.phone, c.staff_name, c.addr);
           // 최신 견적서도 같이 조회해서 lineItems/지역 복원
           var estUrl = SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(c.id) + '&order=created_at.desc&limit=1&select=*';
           var exhr = new XMLHttpRequest();
@@ -811,6 +830,7 @@ var currentTab = 'ga';
           if (e.customer_name) document.getElementById('c-name').value = e.customer_name;
           if (e.phone) document.getElementById('c-phone').value = e.phone;
           if (e.memo) document.getElementById('c-memo').value = e.memo;
+          if (e.client_id) upsertLocalCustomer(e.client_id, e.customer_name, e.phone, null, null);
           var loadedItems = false;
           if (e.line_items && typeof restoreLineItemsToForm === 'function') {
             loadedItems = restoreLineItemsToForm(e.line_items, e.product);
