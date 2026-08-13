@@ -200,9 +200,15 @@ function saveEstimate() {
       xhr.onerror=function(){ console.warn('Supabase 고객 저장 실패 (localStorage는 완료)'); saveToEstimates(); };
       var custPayload = {
         client_name:name, phone:phone,
-        memo:custMemo+' | 커튼:'+grand+'원',
         staff_name:staffName
       };
+      // 2026-08-12: 예전엔 여기에 memo:custMemo+' | 커튼:'+grand+'원' 로
+      // customers.memo를 덮어쓰고 있었음 — customers.memo(고객상세 메모,
+      // 오늘 임시저장 기능까지 붙인 별개 필드)와 estimates.memo(견적서
+      // 내부메모)는 서로 다른 용도인데, 이 코드가 매번 견적서 저장할 때마다
+      // 고객이 직접 남긴 중요 메모("이 고객 성격 예민함" 등)를 " | 커튼:
+      // 200000원" 같은 값으로 통째로 지워버리는 실제 데이터 손실 위험이
+      // 있었음(재현 확인함). customers.memo는 절대 여기서 건드리지 않음.
       // 2026-08-05: 기존 고객을 PATCH(업데이트)할 때, 이번 화면에 주소를 안 채웠다고 해서
       // 서버에 저장돼있던 기존 주소까지 빈 값으로 덮어써지면 안 됨. PATCH는 payload에 있는
       // 필드만 갱신하므로, 주소가 비어있을 땐 아예 payload에서 빼서 기존 값이 유지되게 함.
