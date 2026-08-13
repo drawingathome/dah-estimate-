@@ -19,9 +19,13 @@ function getEstPendingQueue() {
   try { return JSON.parse(localStorage.getItem(EST_PENDING_KEY) || '[]'); } catch(e) { return []; }
 }
 
-function addToEstPendingQueue(payload) {
+function addToEstPendingQueue(payload, isEditMode, dbId) {
   var q = getEstPendingQueue();
-  q.push({ payload: payload, addedAt: new Date().toISOString() });
+  // 2026-08-12: 재시도 큐가 항상 POST로만 재시도해서, "열어서 수정" 중
+  // 네트워크가 끊긴 경우 재시도 시 PATCH(기존 견적서 갱신)가 아니라
+  // POST(신규생성)가 나가 중복 견적서가 생기던 버그. isEditMode/dbId를
+  // 큐 항목에 같이 저장해서 재시도시 정확한 method를 쓰도록 함.
+  q.push({ payload: payload, addedAt: new Date().toISOString(), isEditMode: !!isEditMode, dbId: dbId || null });
   if (q.length > 200) q = q.slice(-200); // 무한정 쌓이는 것 방지
   try { localStorage.setItem(EST_PENDING_KEY, JSON.stringify(q)); } catch(e) {}
   updateEstSyncBanner();
@@ -51,11 +55,16 @@ function retryEstPendingSync() {
   var done = 0;
   q.forEach(function(item) {
     var xhr = new XMLHttpRequest();
-    xhr.open('POST', SUPABASE_URL + '/rest/v1/estimates', true);
+    var isEdit = item.isEditMode && item.dbId;
+    if (isEdit) {
+      xhr.open('PATCH', SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(item.dbId), true);
+    } else {
+      xhr.open('POST', SUPABASE_URL + '/rest/v1/estimates', true);
+    }
     xhr.setRequestHeader('apikey', SUPABASE_KEY);
     xhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
     xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.setRequestHeader('Prefer', 'return=minimal');
+    xhr.setRequestHeader('Prefer', isEdit ? 'return=minimal' : 'return=minimal');
     xhr.onload = function() {
       done++;
       // 2026-08-05: 409(idempotency key 중복)도 성공으로 취급 — 이전 시도가

@@ -302,19 +302,19 @@ function saveEstimate() {
           showToast('저장 완료 (로컬) — DB 동기화는 실패했어요');
           // 2026-08-05: 실패하면 그걸로 끝이라 나중에 수동으로 다시 저장해야 했음 —
           // 재시도 큐에 등록해서 네트워크 복구시 자동으로 다시 시도되도록 함
-          if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry);
+          if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._editingEstDbId);
         }
       };
       xhr2.onerror=function(){
         console.warn('Supabase 견적서 저장 실패 (localStorage는 완료)');
         showToast('저장 완료 (로컬) — DB 동기화는 실패했어요');
-        if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry);
+        if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._editingEstDbId);
       };
       xhr2.send(JSON.stringify(estPayloadForRetry));
     } catch(e) {
       console.warn('Supabase 연결 오류:', e);
       showToast('저장 완료 (로컬) — DB 동기화는 실패했어요');
-      if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry);
+      if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._editingEstDbId);
     }
   }
   function saveToLocalStorage() {
