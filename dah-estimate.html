@@ -961,8 +961,14 @@ document.addEventListener('DOMContentLoaded', function() {
   if (curtainTable) curtainTable.addEventListener('input', autoSave);
   if (blindTable) blindTable.addEventListener('input', autoSave);
   
-  // 페이지 로드 시 초안 불러오기
-  setTimeout(loadDraft, 500);
+  // 2026-08-13: 페이지 로드시 자동으로 loadDraft()를 호출하던 것을 제거함 —
+  // 여러 탭에서 서로 다른 고객을 동시에 작업할 때, 새 탭을 열면 다른 탭에서
+  // 진행 중이던 미완성 작업이 자동으로 화면에 나타나서 심각하게 혼란스러운
+  // 문제가 있었음(다양한 상황 재검토 중 발견 및 재현). "임시저장 불러오기"
+  // 버튼은 그대로 있어서(위 window.load 리스너에서 60분 이내 draft 있으면
+  // 표시) 데이터 손실은 없음 — 자동복원이 아니라 사용자가 원할 때만
+  // 명시적으로 불러오는 방식으로 변경.
+  // setTimeout(loadDraft, 500); // 자동복원 제거됨 - 버튼으로만 복원
 
   // 날짜 입력 필드(달력 아이콘이 작아 클릭하기 불편하다는 피드백) —
   // 필드 어디를 클릭해도 달력이 바로 열리도록 개선
