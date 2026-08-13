@@ -199,9 +199,15 @@ function saveEstimate() {
       };
       xhr.onerror=function(){ console.warn('Supabase 고객 저장 실패 (localStorage는 완료)'); saveToEstimates(); };
       var custPayload = {
-        client_name:name, phone:phone,
-        staff_name:staffName
+        client_name:name, phone:phone
       };
+      // 2026-08-12: 기존 고객이면 staff_name을 payload에서 제외 - 예전엔
+      // 무조건 포함시켜서, 다른 담당자가 이름 검색으로 견적서를 저장하기만
+      // 해도 그 고객의 담당자가 조용히 바뀌어버렸음. 담당자가 바뀌면 매출/
+      // 실적 귀속도 같이 바뀌므로 이건 부수효과로 조용히 일어나면 절대 안
+      // 됨(선혜님 확인) - 담당자 변경은 고객상세 등 명시적 화면에서만.
+      // addr과 동일한 패턴: 신규 고객일 때만 포함.
+      if (!isUpdate) custPayload.staff_name = staffName;
       // 2026-08-12: 예전엔 여기에 memo:custMemo+' | 커튼:'+grand+'원' 로
       // customers.memo를 덮어쓰고 있었음 — customers.memo(고객상세 메모,
       // 오늘 임시저장 기능까지 붙인 별개 필드)와 estimates.memo(견적서
