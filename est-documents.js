@@ -714,6 +714,7 @@ function buildRequestHTML(kind, extraNote) {
     document.querySelectorAll('#curtain-body tr').forEach(function(tr){
       var space  = tr.querySelector('.space-inp')?.value || '';
       var vendor = tr.querySelector('.c-vendor')?.value || '';
+      var railVendor = tr.querySelector('.c-rail-vendor')?.value || '';
       var mw = tr.querySelector('.mw')?.value || '';
       var mh = tr.querySelector('.mh')?.value || '';
       var pleat = (tr.querySelector('.pleat-type')?.value || '').replace('형','');
@@ -723,7 +724,10 @@ function buildRequestHTML(kind, extraNote) {
         space: space||'—',
         size: (mw&&mh) ? (mw+'×'+mh) : '—',
         content: [pleat, open].filter(Boolean).join(' ')||'—',
-        etc: vendor||'—'
+        // 2026-08-13: 원단거래처(vendor)는 시공기사가 알 필요없는 내부정보라
+        // 노출하지 않고, 대신 레일거래처(railVendor)를 노출 - 레일은 브랜드별로
+        // (전동레일 등) 시공방식이 달라서 기사님이 반드시 알아야 함(선혜님 확인)
+        etc: railVendor||'—'
       });
     });
     document.querySelectorAll('#blind-body tr').forEach(function(tr){
