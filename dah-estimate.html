@@ -837,6 +837,15 @@ var currentTab = 'ga';
           }
           if (loadMode === 'edit') {
             window._editingEstDbId = e.id;
+            // 2026-08-12: 확정된 견적서를 "열어서 수정"으로 열면 화면엔
+            // 확정 안 된 것처럼 보이고, 그 상태로 아무것도 안 건드리고
+            // 재저장하면 확정 상태가 null로 덮어써져 사라지던 버그(다양한
+            // 상황 재검토 중 발견). "복사해서 새로 만들기"는 새 견적서라
+            // 확정 안 된 채로 시작하는 게 맞아서 이 복원은 edit모드에만 적용.
+            if (e.confirmed_at) {
+              window._estimateConfirmedAt = e.confirmed_at;
+              if (typeof renderConfirmBadge === 'function') renderConfirmBadge();
+            }
             showToast('✏️ '+(e.customer_name||'')+' 견적서를 불러왔어요 — 수정 후 저장하면 이 견적서가 갱신돼요');
           } else {
             showToast('📋 '+(e.customer_name||'')+' 견적서를 복사했어요 — 저장하면 새 견적서로 만들어져요');
