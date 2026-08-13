@@ -63,6 +63,13 @@ function renderCustLoadList(q) {
   if(!list) return;
   var customers = [];
   try { customers = JSON.parse(localStorage.getItem('dah_customers')||'[]'); } catch(e){}
+  // 2026-08-12: 스태프 권한 제약 추가(선혜님 확인) - 예전엔 견적서 앱에
+  // "권한" 개념 자체가 없어서, 스태프로 로그인해도 전체 고객(다른 담당자
+  // 포함)이 다 보였음. 대시보드는 이미 스태프를 자기 담당 고객만 보게
+  // 막고 있는데 견적서 앱만 예외였던 보안 허점.
+  if (window._estCurrentUser && window._estCurrentUser.role === 'staff') {
+    customers = customers.filter(function(c){ return (c.staffName||'마스터') === window._estCurrentUser.name; });
+  }
   var filtered = q ? customers.filter(function(c){
     return (c.clientName||'').includes(q) || (c.phone||'').replace(/-/g,'').includes(q.replace(/-/g,''));
   }) : customers;
