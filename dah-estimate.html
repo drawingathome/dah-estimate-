@@ -128,6 +128,26 @@
 <script>
 (function() {
   var SESSION_VALID_MS = 8 * 60 * 60 * 1000; // 대시보드 로그인 후 8시간 이내면 자동 통과
+  // 2026-08-12: 담당자(#c-staff) 필드가 예전엔 로그인한 사람과 무관하게
+  // 항상 직접 타이핑해야 했음 - 오타/누락시 RLS 정책(staff_name 정확히
+  // 일치해야 조회 가능)에 걸려 본인이 저장한 견적서도 못 보는 위험 있었음
+  // (선혜님 확인 요청으로 발견/수정). 필드가 비어있을 때만 자동 채움 —
+  // 이미 뭔가 입력돼있으면 덮어쓰지 않음.
+  function autoFillStaffField(name) {
+    function doFill() {
+      try {
+        var el = document.getElementById('c-staff');
+        if (el && !el.value.trim() && name) el.value = name;
+      } catch(e) {}
+    }
+    // 이 스크립트가 문서 초반(head 근처)에서 실행되어 #c-staff가 아직
+    // DOM에 없을 수 있음 - readyState 확인해서 안전하게 처리
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', doFill);
+    } else {
+      doFill();
+    }
+  }
   function hasValidDashboardSession() {
     try {
       var s = JSON.parse(localStorage.getItem('dah_session') || 'null');
@@ -195,6 +215,7 @@
           // 지역출장비/거래처목록과 동일 패턴) 실제 이메일이 스태프 것인지
           // 판별 — "고객 불러오기" 목록 필터링에 사용됨(선혜님 확인 요청).
           window._estCurrentUser = { name: '마스터', role: 'master' };
+          autoFillStaffField('마스터');
           try {
             var seXhr = new XMLHttpRequest();
             seXhr.open('GET', SUPABASE_URL + '/rest/v1/app_settings?key=eq.staff_emails&select=value', true);
@@ -211,6 +232,11 @@
                 if (foundStaffName) {
                   window._estCurrentUser = { name: foundStaffName, role: 'staff' };
                   localStorage.setItem('dah_session', JSON.stringify({name:foundStaffName, role:'staff', loginAt: Date.now()}));
+                  // 기본값(마스터)으로 이미 자동채움된 상태일 수 있으니, 스태프로
+                  // 정확히 판별되면 그 값으로 교체(사용자가 그 사이에 직접 고치지
+                  // 않았을 때만 - "마스터"로 남아있을 때만 교체)
+                  var staffEl = document.getElementById('c-staff');
+                  if (staffEl && staffEl.value.trim() === '마스터') staffEl.value = foundStaffName;
                 }
               } catch(eParse) {}
             };
@@ -241,6 +267,7 @@
         window._estCurrentUser = { name: '마스터', role: 'master' };
       }
     } catch(e) { window._estCurrentUser = { name: '마스터', role: 'master' }; }
+    autoFillStaffField(window._estCurrentUser.name);
   }
 })();
 </script>
