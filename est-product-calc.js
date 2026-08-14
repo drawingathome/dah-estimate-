@@ -367,7 +367,10 @@ function addSvcRow() {
 function calcSvcRow(el) {
   if(!el) return;
   var tr = el.closest('tr');
-  var p = Math.max(0, getPriceVal(tr.querySelector('.sprice'))||0);
+  // 2026-08-14: 부자재 단가는 "이 항목만 할인" 용도로 마이너스를 실제로
+  // 쓰신다고 확인 — 여기만 Math.max(0,...) 제거해서 음수 그대로 반영.
+  // toLocaleString()이 음수도 "-50,000원" 형태로 정상 표시해줌.
+  var p = getPriceVal(tr.querySelector('.sprice'))||0;
   var q = Math.max(0, parseFloat(tr.querySelector('.sqty')?.value)||1);
   tr.querySelector('.samt').textContent = (p*q).toLocaleString()+'원';
   calcTotal();
@@ -461,7 +464,9 @@ function calcTotal() {
   });
   var svcTotal=0;
   document.querySelectorAll('#svc-body tr').forEach(function(tr){
-    svcTotal+=Math.max(0, (getPriceVal(tr.querySelector('.sprice'))||0))*
+    // 2026-08-14: 부자재 단가는 할인성 마이너스 입력을 실제로 쓰신다고
+    // 확인(calcSvcRow와 동일 이유) - 여기서도 Math.max(0,...) 제거.
+    svcTotal+=(getPriceVal(tr.querySelector('.sprice'))||0)*
               Math.max(0, (parseFloat(tr.querySelector('.sqty')?.value)||1));
   });
   renderSvcSummary();

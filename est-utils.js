@@ -7,14 +7,31 @@
 var DAH_LOGO_B64 = 'https://raw.githubusercontent.com/drawingathome/dah-estimate-/main/logo.png';
 
 function fmtPrice(inp) {
-  var raw = inp.value.replace(/[^0-9]/g,'');
+  // 2026-08-14: getPriceVal을 고쳐도 여전히 음수가 안 살아나던 진짜 원인 —
+  // 이 함수가 입력 즉시(oninput) 마이너스 부호를 지우고 data-raw에 저장해서,
+  // getPriceVal이 읽는 시점엔 이미 양수로 바뀌어 있었음. 부자재 단가(sprice)만
+  // "이 항목만 할인" 용도로 마이너스를 실제로 쓰신다고 확인(선혜님) — sprice에만
+  // 마이너스 허용, 폭/높이/커튼단가/블라인드단가 등 나머지는 기존대로 방어.
+  var allowNeg = inp.classList.contains('sprice');
+  var raw = inp.value.replace(allowNeg ? /[^0-9-]/g : /[^0-9]/g, '');
+  if (allowNeg) {
+    var isNeg = raw.charAt(0) === '-';
+    raw = raw.replace(/-/g, '');
+    if (isNeg && raw) raw = '-' + raw;
+  }
   inp.setAttribute('data-raw', raw);
   if(document.activeElement !== inp) {
     inp.value = raw ? parseInt(raw).toLocaleString() : '';
   }
 }
 function fmtPriceBlur(inp) {
-  var raw = (inp.getAttribute('data-raw') || inp.value).replace(/[^0-9]/g,'');
+  var allowNeg = inp.classList.contains('sprice');
+  var raw = (inp.getAttribute('data-raw') || inp.value).replace(allowNeg ? /[^0-9-]/g : /[^0-9]/g, '');
+  if (allowNeg) {
+    var isNeg = raw.charAt(0) === '-';
+    raw = raw.replace(/-/g, '');
+    if (isNeg && raw) raw = '-' + raw;
+  }
   inp.setAttribute('data-raw', raw);
   inp.value = raw ? parseInt(raw).toLocaleString() : '';
 }
@@ -28,7 +45,14 @@ var SEL = 'width:100%;padding:2px 0;border:none;font-size:11px;font-family:inher
 function getPriceVal(el) {
   if(!el) return 0;
   var raw = el.getAttribute('data-raw') || el.value || '0';
-  return parseInt(raw.replace(/[^0-9]/g,'')) || 0;
+  // 2026-08-14: 예전엔 [^0-9]로 숫자 아닌 문자를 다 지웠는데, 이때 마이너스
+  // 부호(-)도 같이 사라져서 "-50000"이 "50000"으로 조용히 양수가 됐음
+  // (불변조건 점검 중 발견, 선혜님 확인 — 부자재에 "이 항목만 할인" 용도로
+  // 마이너스를 실제로 쓰신다고 하심). 앞쪽 마이너스 부호는 보존.
+  // 음수를 막아야 하는 필드(폭/높이/커튼단가 등)는 각 호출부에서 이미
+  // Math.max(0, ...)로 방어하고 있으므로, 여기서 값을 죽이지 않아도 안전함.
+  var m = raw.match(/-?[0-9][0-9]*/);
+  return m ? parseInt(m[0]) : 0;
 }
 
 const LOGO_SRC = 'logo.png';
