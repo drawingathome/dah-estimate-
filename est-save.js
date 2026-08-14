@@ -268,17 +268,39 @@ function saveEstimate() {
       // 새로만들기") 기존처럼 POST — 이 경우 응답에서 생성된 id를 받아 로컬에
       // dbId로 저장해둬야 다음번에 "열어서 수정"이 가능해짐.
       var isEditMode = !!window._editingEstDbId;
+      // 2026-08-13: 동시편집 충돌 방지(낙관적 잠금) - PATCH할 때 "내가 불러온
+      // 시점의 updated_at"도 조건에 포함시켜서, 그 사이 다른 사람(다른 탭/다른
+      // 스태프)이 먼저 저장했으면(=updated_at이 달라졌으면) 이번 PATCH가 0건
+      // 매칭되어 아무것도 안 바뀜 - 이걸로 "덮어쓰기 충돌"을 감지해서 조용히
+      // 데이터를 잃지 않고 사용자에게 알림.
+      var lockUpdatedAt = window._editingEstUpdatedAt || null;
       if (isEditMode) {
-        xhr2.open('PATCH', SUPABASE_URL+'/rest/v1/estimates?id=eq.'+encodeURIComponent(window._editingEstDbId), true);
+        var patchUrl = SUPABASE_URL+'/rest/v1/estimates?id=eq.'+encodeURIComponent(window._editingEstDbId);
+        if (lockUpdatedAt) patchUrl += '&updated_at=eq.'+encodeURIComponent(lockUpdatedAt);
+        xhr2.open('PATCH', patchUrl, true);
       } else {
         xhr2.open('POST', SUPABASE_URL+'/rest/v1/estimates', true);
       }
       xhr2.setRequestHeader('apikey',SUPABASE_KEY);
       xhr2.setRequestHeader('Authorization','Bearer '+(typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
       xhr2.setRequestHeader('Content-Type','application/json');
-      xhr2.setRequestHeader('Prefer', isEditMode ? 'return=minimal' : 'return=representation');
+      xhr2.setRequestHeader('Prefer', (isEditMode && lockUpdatedAt) ? 'return=representation' : 'return=minimal');
       xhr2.onload=function(){
         if (xhr2.status >= 200 && xhr2.status < 300) {
+          // 낙관적 잠금이 걸린 수정 저장인데 응답이 빈 배열이면 = 0건 매칭
+          // = 그 사이 다른 곳에서 먼저 저장해서 updated_at이 달라졌다는 뜻
+          if (isEditMode && lockUpdatedAt) {
+            try {
+              var lockCheckRows = JSON.parse(xhr2.responseText);
+              if (Array.isArray(lockCheckRows) && lockCheckRows.length === 0) {
+                showToast('⚠️ 이 견적서가 방금 다른 곳에서 먼저 저장됐어요 — 새로고침해서 최신 내용을 확인해주세요 (내 변경사항은 로컬에만 저장됨)');
+                if (typeof addToEstPendingQueue === 'function') { /* 강제 재시도는 위험하므로 큐에 넣지 않음 - 사용자 확인 필요 */ }
+                return;
+              }
+              // 성공 - 다음 저장을 위해 최신 updated_at 갱신
+              if (lockCheckRows[0] && lockCheckRows[0].updated_at) window._editingEstUpdatedAt = lockCheckRows[0].updated_at;
+            } catch(eLock) {}
+          }
           showToast('저장 완료! (DB+로컬)');
           if (!isEditMode) {
             try {
@@ -286,6 +308,7 @@ function saveEstimate() {
               var newDbId = createdRows && createdRows[0] && createdRows[0].id;
               if (newDbId) {
                 window._editingEstDbId = newDbId; // 이후 같은 화면에서 재저장하면 이제부터 수정모드
+                window._editingEstUpdatedAt = createdRows[0].updated_at || null;
                 var localArr = JSON.parse(localStorage.getItem('dah_saved')||'[]');
                 var lastIdx = localArr.length - 1;
                 if (lastIdx >= 0) { localArr[lastIdx].dbId = newDbId; localStorage.setItem('dah_saved', JSON.stringify(localArr)); }

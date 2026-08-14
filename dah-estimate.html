@@ -708,7 +708,7 @@
 <script src="/est-form-controls.js?v=202608065400"></script>
 <script src="/est-product-calc.js?v=202608067800"></script>
 <script src="/est-survey.js?v=202608065400"></script>
-<script src="/est-save.js?v=202608068200"></script>
+<script src="/est-save.js?v=202608068400"></script>
 <script src="/est-documents.js?v=202608068300"></script>
 <script src="/est-customer-load.js?v=202608068000"></script>
 <script src="/est-misc.js?v=202608067500"></script>
@@ -857,6 +857,11 @@ var currentTab = 'ga';
           }
           if (loadMode === 'edit') {
             window._editingEstDbId = e.id;
+            // 2026-08-13: 동시편집 충돌 감지(낙관적 잠금)를 위해 불러온 시점의
+            // updated_at을 캡처 - 저장시 이 값이 그 사이 바뀌었으면(다른 곳에서
+            // 먼저 저장했다는 뜻) 조용히 덮어쓰지 않고 경고를 띄움(2번 "확신
+            // 못하는 부분"에서 기록만 해뒀다가 실제로 구현함).
+            window._editingEstUpdatedAt = e.updated_at || null;
             // 2026-08-12: 확정된 견적서를 "열어서 수정"으로 열면 화면엔
             // 확정 안 된 것처럼 보이고, 그 상태로 아무것도 안 건드리고
             // 재저장하면 확정 상태가 null로 덮어써져 사라지던 버그(다양한
