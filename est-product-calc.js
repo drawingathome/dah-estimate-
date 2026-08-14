@@ -599,12 +599,19 @@ function renderSvcSummary() {
     var qty = Math.max(0, parseFloat(qtyInp?.value) || 1);
     var amt = price * qty;
     var label = tr.querySelectorAll('td')[1]?.querySelector('input')?.value || '';
-    var isRail = tr.hasAttribute('data-rail-src') || tr.hasAttribute('data-railcost-src');
+    var isRailMaterial = tr.hasAttribute('data-rail-src');   // 레일 자재(1,600원×레일수)
+    var isRailInstall  = tr.hasAttribute('data-railcost-src'); // 레일 시공비(25,000원)
     var isRegionInstall = tr.hasAttribute('data-install-base');
 
-    if (isRail) {
+    if (isRailMaterial) {
       groups.rail.sum += amt;
       groups.rail.details.push(label);
+    } else if (isRailInstall) {
+      // 2026-08-14: 예전엔 레일 시공비도 "레일 자재비" 그룹에 들어가서, 이름은
+      // 자재비인데 시공비가 섞여있는 모순이 있었음(선혜님 지적). 시공비 성격이
+      // 맞으므로 "실측 + 시공비" 그룹으로 이동.
+      groups.measureInstall.sum += amt;
+      groups.measureInstall.details.push(label);
     } else if (isRegionInstall) {
       // 옵션추가금이 합산되어 있다면 그만큼 제외한 순수 실측/시공비만 반영
       groups.measureInstall.sum += Math.max(0, amt - blindExtraSum);
