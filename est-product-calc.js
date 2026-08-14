@@ -566,19 +566,29 @@ function renderSvcSummary() {
   var groups = {
     measureInstall: { label: '실측 + 시공비', sum: 0, details: [] },
     rail: { label: '레일 자재비', sum: 0, details: [] },
-    motor: { label: '전동 옵션', sum: 0, details: [] },
+    motor: { label: '옵션 추가금', sum: 0, details: [] },
     etc: { label: '기타', sum: 0, details: [] }
   };
 
-  // 블라인드 옵션추가금(전동 등)은 별도 행이 아니라 지역시공비 행의 금액에 합산되어 있으므로,
-  // 여기서 직접 합산해 "전동 옵션" 그룹으로 분리하고, 실측+시공비 그룹에서는 그만큼 제외한다.
+  // 블라인드 옵션추가금(전동/이지원손잡이 등)은 별도 행이 아니라 지역시공비 행의 금액에 합산되어 있으므로,
+  // 여기서 직접 합산해 "옵션 추가금" 그룹으로 분리하고, 실측+시공비 그룹에서는 그만큼 제외한다.
+  // 2026-08-14: 예전엔 옵션 종류와 무관하게 무조건 "전동 옵션"이라고 표시돼서,
+  // "이지원 손잡이" 같은 걸 넣어도 전동으로 보이는 문제가 있었음(선혜님 발견).
+  // 실제 입력한 옵션명(.blind-opt)을 읽어서 그대로 보여주도록 수정.
   var blindExtraSum = 0;
-  document.querySelectorAll('#blind-body .blind-extra').forEach(function(inp) {
-    blindExtraSum += Math.max(0, parseFloat((inp.value || '').replace(/[^0-9.-]/g, '')) || 0);
+  var optNames = [];
+  document.querySelectorAll('#blind-body tr').forEach(function(tr) {
+    var extraInp = tr.querySelector('.blind-extra');
+    var extraVal = extraInp ? (Math.max(0, parseFloat((extraInp.value || '').replace(/[^0-9.-]/g, '')) || 0)) : 0;
+    if (extraVal > 0) {
+      blindExtraSum += extraVal;
+      var optName = (tr.querySelector('.blind-opt')?.value || '').trim();
+      if (optName && optNames.indexOf(optName) < 0) optNames.push(optName);
+    }
   });
   if (blindExtraSum > 0) {
     groups.motor.sum += blindExtraSum;
-    groups.motor.details.push('전동/옵션 추가금');
+    groups.motor.details.push(optNames.length ? optNames.join(', ') : '옵션 추가금');
   }
 
   rows.forEach(function(tr) {
