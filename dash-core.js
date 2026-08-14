@@ -12,6 +12,14 @@ function showToast(msg) {
 
 /** @param {string} t 탭ID (home|pipe|search|est-list|cal|chart|settings) */
 function goTab(t) {
+  // 2026-08-14: 설정 화면은 마스터 전용(선혜님 지적) — 버튼을 숨기는 것만으론
+  // 개발자도구나 코드로 goTab('settings')를 직접 호출하면 들어가지므로,
+  // 진입점 자체에서 차단. 거래처목록/지역출장비 등 가게 전체 설정 보호 +
+  // 마스터 비밀번호 재설정 메일 오발송 방지.
+  if (t === 'settings' && !(typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'master')) {
+    if (typeof showToast === 'function') showToast('설정은 마스터만 접근할 수 있어요');
+    return;
+  }
   if (typeof logEvent === 'function') logEvent('tab_view', { tab: t });
   ['home','pipe','est-list','search','cal','chart','settings'].forEach(function(id) { var el2 = document.getElementById(id); if(el2) el2.style.display = id === t ? 'block' : 'none'; });
   document.querySelectorAll('.tab').forEach(function(b) { b.className = b.getAttribute('data-tab') === t ? 'tab on' : 'tab'; });

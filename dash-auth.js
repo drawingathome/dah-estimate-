@@ -48,6 +48,14 @@ function applyPermissions() {
     
     var perfCards = document.querySelectorAll('.perf-card, [data-perf]');
     perfCards.forEach(function(el){ el.style.display = isMaster ? '' : 'none'; });
+
+    // 2026-08-14: 설정 화면 접근을 마스터 전용으로 제한(선혜님 지적).
+    // 예전엔 스태프도 설정 탭에 들어갈 수 있어서 ①거래처 목록/지역 출장비 등
+    // 가게 전체 설정을 수정할 수 있었고 ②"비밀번호 변경"이 마스터 계정 기준으로
+    // 동작해서 실수로 마스터 비밀번호 재설정 메일을 발송할 수도 있었음.
+    document.querySelectorAll('.settings-entry').forEach(function(el){
+      el.style.display = isMaster ? '' : 'none';
+    });
   }, 300);
 }
 
