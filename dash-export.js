@@ -29,6 +29,8 @@ function backupData() {
 }
 
 function exportExcel() {
+  // 2026-08-14: 마스터 전용 - 버튼 숨김만으론 코드 직접호출로 우회 가능하므로 함수에서도 방어
+  if (!(typeof currentUser !== "undefined" && currentUser && currentUser.role === "master")) { if (typeof showToast === "function") showToast("엑셀 다운로드는 마스터만 가능해요"); return; }
   try {
     var customers = loadCustomers().filter(function(c){ return !isSoftDeleted(c); });
     if (!customers || customers.length === 0) { showToast('내보낼 고객 데이터가 없습니다'); return; }
@@ -90,6 +92,8 @@ function exportExcel() {
 }
 
 function exportEstimatesExcel() {
+  // 2026-08-14: 마스터 전용 - 버튼 숨김만으론 코드 직접호출로 우회 가능하므로 함수에서도 방어
+  if (!(typeof currentUser !== "undefined" && currentUser && currentUser.role === "master")) { if (typeof showToast === "function") showToast("엑셀 다운로드는 마스터만 가능해요"); return; }
   try {
     var estimates = [];
     try { estimates = JSON.parse(localStorage.getItem('dah_saved') || '[]'); } catch(ex) {}

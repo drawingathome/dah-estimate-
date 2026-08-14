@@ -49,9 +49,9 @@
 <script src="/dash-customer-order.js?v=202608064600"></script>
 <script src="/dash-customer-detail.js?v=202608067700"></script>
 <script src="/dash-customer-add.js?v=202608060900"></script>
-<script src="/dash-auth.js?v=202608068500"></script>
+<script src="/dash-auth.js?v=202608068600"></script>
 <script src="/dash-settings.js?v=202608065200"></script>
-<script src="/dash-export.js?v=202608066500"></script>
+<script src="/dash-export.js?v=202608068600"></script>
 <script src="/dash-search.js?v=202608044600"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
@@ -140,6 +140,17 @@
         <button class="login-confirm-btn" id="btn-staff-confirm" type="button">확인</button>
       </div>
       <div class="login-pw-error" id="staff-pw-error">이메일 또는 비밀번호가 올바르지 않습니다</div>
+    </div>
+    <!-- 2026-08-14: 비밀번호 재설정 링크(선혜님 요청) — 설정 화면이 마스터 전용이
+         되면서 스태프가 본인 비밀번호를 바꿀 방법이 아예 없어졌던 문제 해결.
+         마스터/스태프 공통으로, 본인 이메일을 입력하면 그 주소로 재설정 링크 발송. -->
+    <div style="text-align:center;margin-top:14px">
+      <button type="button" id="btn-forgot-pw" style="background:none;border:none;color:var(--sub,#756E62);font-size:12px;font-family:inherit;cursor:pointer;text-decoration:underline;padding:8px;min-height:32px">비밀번호를 잊으셨나요?</button>
+    </div>
+    <div id="forgot-pw-wrap" style="display:none;margin-top:10px">
+      <input type="email" id="forgot-pw-email" placeholder="가입한 이메일" autocomplete="username" style="width:100%;height:44px;padding:0 14px;border:1px solid var(--border, #EEE6DC);border-radius:10px;font-size:14px;font-family:inherit;outline:none;margin-bottom:8px;box-sizing:border-box">
+      <button type="button" id="btn-forgot-pw-send" style="width:100%;height:44px;background:#282828;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">재설정 링크 보내기</button>
+      <div id="forgot-pw-msg" style="font-size:12px;margin-top:8px;text-align:center;display:none"></div>
     </div>
   </div>
   <div class="login-footer">ⓒ 2026 Drawing at Home. All rights reserved.</div>
@@ -243,6 +254,52 @@
     function setBtnLoading(btn, loading, label) {
       btn.disabled = loading;
       btn.textContent = loading ? '확인 중...' : label;
+    }
+
+    // 2026-08-14: 비밀번호 재설정 링크(선혜님 요청) — 마스터/스태프 공통.
+    // 설정 화면이 마스터 전용이 되면서 스태프가 본인 비밀번호를 바꿀 방법이
+    // 없어졌던 문제 해결. 본인 이메일 입력 → 그 주소로 재설정 링크 발송.
+    var forgotBtn = document.getElementById('btn-forgot-pw');
+    var forgotWrap = document.getElementById('forgot-pw-wrap');
+    var forgotEmail = document.getElementById('forgot-pw-email');
+    var forgotSend = document.getElementById('btn-forgot-pw-send');
+    var forgotMsg = document.getElementById('forgot-pw-msg');
+    if (forgotBtn && forgotWrap) {
+      forgotBtn.onclick = function() {
+        var opening = forgotWrap.style.display === 'none';
+        forgotWrap.style.display = opening ? 'block' : 'none';
+        if (opening && forgotEmail) forgotEmail.focus();
+      };
+    }
+    if (forgotSend && forgotEmail && forgotMsg) {
+      forgotSend.onclick = function() {
+        var em = forgotEmail.value.trim();
+        forgotMsg.style.display = 'block';
+        if (!em || em.indexOf('@') < 0) {
+          forgotMsg.style.color = '#C0392B';
+          forgotMsg.textContent = '올바른 이메일을 입력해주세요';
+          return;
+        }
+        forgotSend.disabled = true;
+        forgotSend.textContent = '보내는 중...';
+        if (typeof sendPasswordResetEmail !== 'function') {
+          forgotSend.disabled = false; forgotSend.textContent = '재설정 링크 보내기';
+          forgotMsg.style.color = '#C0392B';
+          forgotMsg.textContent = '기능을 불러오지 못했어요 — 새로고침 후 다시 시도해주세요';
+          return;
+        }
+        sendPasswordResetEmail(em, function(err) {
+          forgotSend.disabled = false;
+          forgotSend.textContent = '재설정 링크 보내기';
+          if (err) {
+            forgotMsg.style.color = '#C0392B';
+            forgotMsg.textContent = '발송에 실패했어요 — 이메일을 확인하거나 잠시 후 다시 시도해주세요';
+          } else {
+            forgotMsg.style.color = '#2F6690';
+            forgotMsg.textContent = '✓ ' + em + ' 으로 재설정 링크를 보냈어요. 메일함을 확인해주세요.';
+          }
+        });
+      };
     }
 
     // 마스터 버튼 클릭
@@ -430,7 +487,7 @@
     </div>
     <div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">
       <span id="est-list-count" style="font-size:11px;color:var(--sub)"></span>
-      <button onclick="exportEstimatesExcel()" style="height:30px;padding:0 12px;background:#282828;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px">
+      <button class="master-only-btn" onclick="exportEstimatesExcel()" style="height:30px;padding:0 12px;background:#282828;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         엑셀 다운로드
       </button>
@@ -465,7 +522,7 @@
         <input type="checkbox" id="show-archived" onchange="renderSearch()">
         <span>삭제된 고객 포함</span>
       </label>
-      <button onclick="exportExcel()" style="height:28px;padding:0 12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;border-radius:6px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px">
+      <button class="master-only-btn" onclick="exportExcel()" style="height:28px;padding:0 12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;border-radius:6px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         엑셀 다운로드
       </button>

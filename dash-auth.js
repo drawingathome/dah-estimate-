@@ -56,6 +56,12 @@ function applyPermissions() {
     document.querySelectorAll('.settings-entry').forEach(function(el){
       el.style.display = isMaster ? '' : 'none';
     });
+
+    // 2026-08-14: 엑셀 다운로드도 마스터 전용(선혜님 확인) — 스태프가 전체
+    // 고객명단/금액 데이터를 파일로 통째로 내려받을 수 있으면 안 됨.
+    document.querySelectorAll('.master-only-btn').forEach(function(el){
+      el.style.display = isMaster ? '' : 'none';
+    });
   }, 300);
 }
 
