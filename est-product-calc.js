@@ -484,7 +484,15 @@ function calcTotal() {
     depInp.dataset.raw=String(auto50);
     depRaw=auto50;
   }
+  // 2026-08-14: "대기업 방식으로 불변조건 점검"하다 발견 — 할인을 크게(100%
+  // 초과 등) 입력해서 grand(총액)가 0이 되면, 위 자동갱신 블록이
+  // grand>0 조건 때문에 스킵되어 계약금 입력창에 이전 값(예: 10만원)이
+  // 그대로 남아있었음. "총액 0원인데 계약금 10만원"이라는 논리적 모순이
+  // 사용자에게 그대로 보일 위험이 있었음. grand<=0이면 계약금도 강제로 0.
+  if (grand <= 0) depRaw = 0;
   var deposit=depRaw>0 ? depRaw : 0;
+  // 수동입력 등으로 계약금이 총액보다 큰 경우 잔금이 음수가 되는 것도 함께 방지
+  if (deposit > grand) deposit = grand;
   var balance=grand-deposit;
   // 2026-08-05: 성과매출이 할인을 반영 안 하고 있었음(할인 전 curtainTotal 그대로) —
   // 할인해준 만큼은 실제로 못 받은 돈이니 성과에서도 빠져야 함
