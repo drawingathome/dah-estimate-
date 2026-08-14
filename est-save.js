@@ -5,8 +5,15 @@
    ══════════════════════════════════════════════════ */
 
 function savePDF() {
+  // 2026-08-14: iOS 사파리(아이패드)에서 setTimeout 안의 window.print()가
+  // 사용자 동작과 무관한 호출로 간주되어 조용히 무시되던 문제 — 지연 없이
+  // 사용자 탭과 같은 실행 흐름에서 즉시 호출해야 함(confirmPdfPrint와 동일 이유).
   showToast('PDF 저장 중...');
-  setTimeout(function(){ window.print(); }, 300);
+  try {
+    window.print();
+  } catch (e) {
+    setTimeout(function(){ try { window.print(); } catch(e2) {} }, 300);
+  }
 }
 
 function newEstimate() {

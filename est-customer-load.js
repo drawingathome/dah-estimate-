@@ -43,7 +43,19 @@ function confirmPdfPrint() {
     s.textContent = '@media print { @page { size: A4 portrait; margin: 10mm 12mm; } }';
   }
   document.head.appendChild(s);
-  setTimeout(function(){ window.print(); }, 100);
+  // 2026-08-14: 아이패드/아이폰(iOS 사파리)에서 "인쇄 / PDF 저장"을 눌러도
+  // 아무 반응이 없던 문제(선혜님 발견 — 실무에서 주로 아이패드 사용).
+  // iOS 사파리는 보안상 window.print()를 "사용자가 버튼을 누른 그 실행 흐름
+  // 안에서" 호출할 때만 허용하는데, 예전 코드는 setTimeout(…, 100)으로
+  // 0.1초 뒤에 호출해서 iOS가 사용자 동작과 무관한 호출로 판단하고 조용히
+  // 무시했음(에러조차 안 남아서 원인 파악이 어려웠음).
+  // 스타일 삽입은 동기적으로 이미 끝났으므로 지연 없이 바로 호출해도 안전하다.
+  try {
+    window.print();
+  } catch (e) {
+    // 혹시 즉시 호출이 막히는 브라우저가 있으면 기존 방식으로 한 번 더 시도
+    setTimeout(function(){ try { window.print(); } catch(e2) {} }, 100);
+  }
 }
 
 function openCustomerLoad() {
