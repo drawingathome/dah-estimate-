@@ -399,6 +399,11 @@ function autoAddSvcFee() {
     calcSvcRow(tds[2]?.querySelector('input'));
   });
   if(hint) hint.textContent='→ 실측 '+prices['실측비'].toLocaleString()+'원 + 시공 '+prices['시공비'].toLocaleString()+'원 자동추가';
+  // 2026-08-14: 블라인드를 먼저 입력하고 나중에 지역을 선택하면 블라인드
+  // 시공비(10,000원×개수)가 통째로 누락되던 버그 수정(실장님 실사용에서 발견,
+  // 재현으로 확인). 지역 미선택 상태에선 autoAddBlindSvc()가 시공비 행을
+  // 지우고 끝나는데, 이후 지역을 선택해도 다시 불러주는 곳이 없었음.
+  autoAddBlindSvc();
   recalcBlindOptionExtras();
 }
 

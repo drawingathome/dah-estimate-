@@ -156,19 +156,55 @@ function buildCustomerHTML() {
 
   
   var svcHTML = '';
+  var svcDetailNote = '';  // 참고사항에 넣을 세부 내역 텍스트
   if(svcRows.length) {
-    svcHTML += '<table class="pv-prod-table" style="margin-top:0">';
-    svcHTML += '<colgroup><col style="width:20%"><col style="width:44%"><col style="width:18%"><col style="width:8%"><col style="width:10%"></colgroup>';
-    svcHTML += '<thead><tr><th>구분</th><th style="text-align:left">내용</th><th class="r">단가</th><th class="r">수량</th><th class="r">금액</th></tr></thead><tbody>';
-    svcRows.forEach(function(r){
-      svcHTML += '<tr>';
-      svcHTML += '<td style="font-size:11px;color:#8E8078">'+r.svcType+'</td>';
-      svcHTML += '<td>'+r.desc+'</td>';
-      svcHTML += '<td class="r" style="color:#B0A99F;font-size:11px">'+r.price.toLocaleString()+'</td>';
-      svcHTML += '<td class="r" style="color:#B0A99F;font-size:11px">'+r.qty+'</td>';
-      svcHTML += '<td class="amt">'+r.amt+'</td>';
-      svcHTML += '</tr>';
+    // 2026-08-14: 기존에 쓰시던 견적서 방식(선혜님 확인) — 고객용 출력에서는
+    // 레일/시공비 항목을 하나하나 나열하지 않고 "시공 서비스" 한 줄 합계로만
+    // 보여주고, 세부 내역은 아래 참고사항에 텍스트로 정리해서 넣는다.
+    // (예전엔 항목이 10개 넘게 펼쳐져서 고객이 보기에 복잡했음)
+    var svcTotal = 0;
+    var detailParts = [];
+    var measureInstallSum = 0, measureInstallCount = 0;
+    var railPartsSum = 0, railDetailBits = [];
+    var etcParts = [];
+    document.querySelectorAll('#svc-body tr').forEach(function(tr){
+      var tds = tr.querySelectorAll('td');
+      var desc = tds[1]?.querySelector('input')?.value || '';
+      var price = getPriceVal(tds[2]?.querySelector('input'));
+      var qty = parseFloat(tds[3]?.querySelector('input')?.value) || 1;
+      var amt = price * qty;
+      if (!desc || !amt) return;
+      svcTotal += amt;
+      var isRailMaterial = tr.hasAttribute('data-rail-src');
+      var isRailInstall = tr.hasAttribute('data-railcost-src');
+      var isRegionInstall = tr.hasAttribute('data-install-base');
+      // 실측비/시공비/블라인드시공은 data-svc-type 속성으로 표시됨 — 이걸 안 보면
+      // "기타"로 분류되어 참고사항에 중복 표시되는 문제가 생김(재현으로 발견)
+      var svcTypeAttr = tr.getAttribute('data-svc-type') || '';
+      var isMeasureOrInstall = isRegionInstall || isRailInstall ||
+        svcTypeAttr === '실측비' || svcTypeAttr === '시공비' || svcTypeAttr === '블라인드시공';
+      if (isMeasureOrInstall) {
+        measureInstallSum += amt; measureInstallCount++;
+      } else if (isRailMaterial) {
+        railPartsSum += amt;
+        railDetailBits.push(desc.trim() + (qty > 1 ? ' ' + qty + '개' : ''));
+      } else {
+        etcParts.push(desc.trim() + ' ' + amt.toLocaleString() + '원');
+      }
     });
+    if (measureInstallSum > 0) detailParts.push('실측+시공비 ' + measureInstallSum.toLocaleString() + '원');
+    if (railPartsSum > 0) detailParts.push('레일 및 부자재 ' + railPartsSum.toLocaleString() + '원' + (railDetailBits.length ? ' (' + railDetailBits.join(', ') + ')' : ''));
+    etcParts.forEach(function(p){ detailParts.push(p); });
+    svcDetailNote = detailParts.join('\n');
+
+    svcHTML += '<table class="pv-prod-table" style="margin-top:0">';
+    svcHTML += '<colgroup><col style="width:20%"><col style="width:60%"><col style="width:20%"></colgroup>';
+    svcHTML += '<thead><tr><th>구분</th><th style="text-align:left">내용</th><th class="r">금액</th></tr></thead><tbody>';
+    svcHTML += '<tr>';
+    svcHTML += '<td style="font-size:11px;color:#8E8078">시공 서비스</td>';
+    svcHTML += '<td>세부 내역은 하단 참고사항을 확인해주세요</td>';
+    svcHTML += '<td class="amt">' + svcTotal.toLocaleString() + '원</td>';
+    svcHTML += '</tr>';
     svcHTML += '</tbody></table>';
   }
 
@@ -200,6 +236,12 @@ function buildCustomerHTML() {
   var cMemo = document.getElementById('c-memo')?.value||'';
   var notesHTML = '';
   var noteItems = [];
+  // 2026-08-14: 시공 서비스 세부 내역을 참고사항 맨 위에 표시(선혜님 확인) —
+  // 고객용 출력에서 시공 항목을 한 줄 합계로만 보여주는 대신, 어떤 항목이
+  // 포함됐는지는 여기서 투명하게 안내.
+  if (svcDetailNote) {
+    svcDetailNote.split('\n').forEach(function(line){ if (line.trim()) noteItems.push(line.trim()); });
+  }
   if(cMemo) noteItems.push(cMemo);
   
   noteItems.push('맞춤제작 특성상 계약 후 취소·변경이 불가합니다.');
