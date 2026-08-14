@@ -403,6 +403,13 @@ function autoAddSvcFee() {
   // 시공비(10,000원×개수)가 통째로 누락되던 버그 수정(실장님 실사용에서 발견,
   // 재현으로 확인). 지역 미선택 상태에선 autoAddBlindSvc()가 시공비 행을
   // 지우고 끝나는데, 이후 지역을 선택해도 다시 불러주는 곳이 없었음.
+  // 2026-08-14 추가: 커튼 레일도 완전히 같은 문제가 있었음(선혜님 지적으로
+  // "순서가 달라도 결과는 같아야 한다" 전수검증하다 발견) — 커튼을 먼저
+  // 입력하고 나중에 지역을 선택하면 레일 자재비+레일 시공비(41,000원)가
+  // 통째로 누락됐음. 지역 선택 시 모든 커튼 행의 레일을 다시 계산해준다.
+  document.querySelectorAll('#curtain-body tr').forEach(function(ctr){
+    if (typeof autoUpdateRail === 'function') autoUpdateRail(ctr);
+  });
   autoAddBlindSvc();
   recalcBlindOptionExtras();
 }
