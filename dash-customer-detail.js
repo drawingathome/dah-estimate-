@@ -719,6 +719,14 @@ function changeStage(stage) {
 }
 
 function deleteCustomer() {
+  // 2026-08-14: 불변조건(INV7) 전수점검 중 발견 — 삭제 버튼은 마스터에게만
+  // 보이지만, 함수 자체엔 권한 체크가 없어서 스태프가 함수를 직접 호출하면
+  // 실제로 삭제(보관처리)가 실행됐음. 자기 담당 고객은 RLS(서버)도 막아주지
+  // 못해서(스태프는 본인 담당 레코드에 UPDATE 권한이 있음) 실제 위험이었음.
+  if (!(typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'master')) {
+    if (typeof showToast === 'function') showToast('고객 삭제는 마스터만 할 수 있어요');
+    return;
+  }
   if (!confirm((currentDetailName||'고객') + '을(를) 삭제할까요? (완전히 지워지지 않고 보관 처리되며, 필요하면 나중에 복구할 수 있어요)')) return;
   var arr = loadCustomers();
   var target = findCurrentDetailCustomer(arr);
@@ -731,6 +739,10 @@ function deleteCustomer() {
 // 2026-08-05: 진짜 완전 삭제 — 이중 확인(경고 문구 + 이름 재확인)을 거쳐야
 // 실행됨. 되돌릴 방법이 전혀 없으므로 소프트삭제(deleteCustomer)와 완전히 분리.
 function permanentlyDeleteCustomer(c) {
+  if (!(typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'master')) {
+    if (typeof showToast === 'function') showToast('완전 삭제는 마스터만 할 수 있어요');
+    return;
+  }
   var name = c.clientName || '고객';
   if (!confirm('⚠️ ' + name + '님 정보를 영구 삭제할까요?\n\n이 작업은 절대 되돌릴 수 없어요. 견적서·결제기록 등 모든 정보가 완전히 사라져요.')) return;
   var typed = prompt('정말 삭제하려면 고객명을 정확히 입력해주세요: "' + name + '"');
