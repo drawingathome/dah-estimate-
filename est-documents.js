@@ -214,20 +214,22 @@ function buildCustomerHTML() {
   
   var processHTML = '';
   if(true){
+    // 2026-08-14: 기존에 쓰시던 견적서(PROCESS 섹션) 형식으로 압축(선혜님 확인).
+    // 예전엔 5단계가 각각 번호 뱃지+제목+설명으로 2줄씩 차지해 389px(문서 전체의
+    // 25%)를 써서 A4 1페이지를 넘기는 주원인이었음. "번호. 제목 : 설명" 한 줄
+    // 형식으로 바꿔 내용은 그대로 두면서 높이만 대폭 줄임.
     var steps=[
-      ['상담 및 제품 선택','커튼의 종류, 디자인, 소재 등을 상담하여 선택합니다.'],
-      ['계약금 결제','계약금(50%)을 결제하며 실측·시공 일정을 확정합니다.'],
-      ['실측 및 최종결제','현장 실측 후 최종 견적 및 잔금 결제. 실측 이후 취소·변경이 불가합니다.'],
-      ['제품 제작','결제 완료 후 제품 제작 및 시공 준비가 진행됩니다.'],
-      ['시공 및 설치','약속된 일정에 시공팀이 방문하여 설치를 완료합니다.']
+      ['상담 및 제품 선택','제품을 확인하고 커튼의 종류, 디자인, 소재 등을 상담하여 선택'],
+      ['계약금 결제 및 일정 확정','1차 견적 확인 후 계약금(총 금액의 50%)을 결제하며, 실측 및 시공 일정을 확정'],
+      ['실측 및 최종 결제','현장 실측 후 최종 견적 안내 및 잔금 결제. 실측 이후에는 제작이 진행되어 취소 및 변경이 불가능 합니다.'],
+      ['제품 제작','결제 완료 후 제품 제작 및 시공 준비가 진행'],
+      ['시공 및 설치','약속된 일정에 시공팀이 현장을 방문하여 커튼 시공 및 설치 완료']
     ];
-    processHTML = '<div class="pv-process" style="padding:20px 28px;border-top:1px solid #EEE6DC">';
-    processHTML += '<div class="pv-process-title">진행 안내</div><div>';
+    processHTML = '<div class="pv-process" style="padding:14px 28px;border-top:1px solid #EEE6DC">';
+    processHTML += '<div class="pv-process-title" style="margin-bottom:6px">PROCESS</div>';
+    processHTML += '<div style="font-size:10.5px;line-height:1.65;color:#4A4A4A">';
     steps.forEach(function(s,i){
-      processHTML += '<div class="pv-process-step">'
-        +'<div class="pv-step-num">'+(i+1)+'</div>'
-        +'<div><span class="pv-step-title">'+s[0]+'</span><span class="pv-step-desc">'+s[1]+'</span></div>'
-        +'</div>';
+      processHTML += '<div>'+(i+1)+'. '+s[0]+' : '+s[1]+'</div>';
     });
     processHTML += '</div></div>';
   }
