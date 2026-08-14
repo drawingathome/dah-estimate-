@@ -7,15 +7,17 @@
 var _selectedPdfOpt = 'fit';
 
 function openPdfModal() {
-  _selectedPdfOpt = 'fit';
-  document.getElementById('pdf-opt-fit')?.classList.add('selected');
-  document.getElementById('pdf-opt-a4')?.classList.remove('selected');
-  document.getElementById('pdf-size-modal')?.classList.add('open');
+  // 2026-08-14: 예전엔 "견적 길이에 맞추기 / A4 사이즈로 자르기" 중 고르는
+  // 모달을 띄웠는데, 커스텀 용지 크기가 PDF 저장을 막는 원인이라 A4로
+  // 통일했음(선혜님 발견). 선택할 게 없어졌으므로 모달을 건너뛰고 바로
+  // 인쇄창을 띄운다 — 클릭 단계도 하나 줄어 더 편해짐.
+  confirmPdfPrint();
 }
 function closePdfModal() {
   document.getElementById('pdf-size-modal')?.classList.remove('open');
 }
 function selectPdfOpt(type) {
+  // 하위호환용(더 이상 쓰이지 않음) — 혹시 남아있는 호출이 에러 나지 않도록 유지
   _selectedPdfOpt = type;
   document.getElementById('pdf-opt-fit')?.classList.toggle('selected', type==='fit');
   document.getElementById('pdf-opt-a4')?.classList.toggle('selected', type==='a4');
@@ -27,29 +29,19 @@ function confirmPdfPrint() {
   if(old) old.remove();
   var s = document.createElement('style');
   s.id = styleId;
-  if(_selectedPdfOpt === 'fit') {
-    // "size: auto"는 사용자가 인쇄창에서 선택한 용지 크기를 그대로 따르는 것일 뿐,
-    // 콘텐츠 길이에 맞춰 페이지가 늘어나는 게 아니라서 실제로는 효과가 없었음(선혜님 발견).
-    // 실제 콘텐츠(.pv-wrap)의 렌더링된 높이를 측정해서, 그 길이에 정확히 맞는 커스텀
-    // 페이지 크기(폭 210mm 고정, 높이는 콘텐츠+여백)를 지정해야 한 페이지로 통으로 인쇄됨.
-    var contentEl = document.querySelector('#pv-overlay .pv-wrap') || document.querySelector('.pv-wrap');
-    var heightPx = contentEl ? contentEl.scrollHeight : 1123; // 못 구하면 A4 세로 기본값(약 297mm)으로 폴백
-    var PX_TO_MM = 25.4 / 96; // 웹 표준 96dpi 기준 px→mm 환산
-    var marginMm = 20; // 위아래 여백 10mm씩
-    var heightMm = Math.ceil(heightPx * PX_TO_MM) + marginMm;
-    s.textContent = '@media print { @page { size: 210mm ' + heightMm + 'mm; margin: 10mm 12mm; } .pv-wrap { page-break-inside: avoid; } }';
-  } else {
-    
-    s.textContent = '@media print { @page { size: A4 portrait; margin: 10mm 12mm; } }';
-  }
+  // 2026-08-14: 예전엔 "견적 길이에 맞추기" 옵션이 콘텐츠 높이를 측정해서
+  // 210mm × N mm 같은 비표준 커스텀 용지 크기를 지정했는데, 이러면 브라우저
+  // 인쇄창에서 "PDF로 저장" 대상이 사라지거나 저장이 막히는 문제가 있었음
+  // (선혜님 발견 — PC에서도 인쇄는 되는데 PDF 저장만 안 됨).
+  // 같은 날 고객용 문서를 A4 1페이지에 들어가도록 최적화했으므로 커스텀
+  // 용지 크기가 더 이상 필요 없어졌고, 표준 A4로 통일해 PDF 저장이 정상
+  // 동작하도록 함.
+  s.textContent = '@media print { @page { size: A4 portrait; margin: 10mm 12mm; } .pv-wrap { page-break-inside: auto; } }';
   document.head.appendChild(s);
-  // 2026-08-14: 아이패드/아이폰(iOS 사파리)에서 "인쇄 / PDF 저장"을 눌러도
-  // 아무 반응이 없던 문제(선혜님 발견 — 실무에서 주로 아이패드 사용).
   // iOS 사파리는 보안상 window.print()를 "사용자가 버튼을 누른 그 실행 흐름
   // 안에서" 호출할 때만 허용하는데, 예전 코드는 setTimeout(…, 100)으로
   // 0.1초 뒤에 호출해서 iOS가 사용자 동작과 무관한 호출로 판단하고 조용히
   // 무시했음(에러조차 안 남아서 원인 파악이 어려웠음).
-  // 스타일 삽입은 동기적으로 이미 끝났으므로 지연 없이 바로 호출해도 안전하다.
   try {
     window.print();
   } catch (e) {
