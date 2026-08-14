@@ -119,7 +119,20 @@ function calcCurtainRow(el) {
 function autoUpdateRail(curtainTr) {
   var mw = Math.max(0, parseFloat(curtainTr.querySelector('.mw')?.value)||0);
   if(!mw) return;
-  var rowIdx = curtainTr.rowIndex;
+  // 2026-08-14: rowIndex(테이블 전체 기준 위치)로 레일을 매칭하던 것을
+  // 각 행 고유 ID로 변경(다양한 상황 재검토 중 발견한 심각한 버그).
+  // rowIndex는 다른 행이 삭제되면 값이 바뀌는데, 레일 행의 data-rail-src는
+  // 그대로 남아있어서, "삭제 후 남은 행을 수정"하면 기존 rowIndex와 안 맞아
+  // 레일을 못 찾고 새로 만들어버려 레일이 중복 생성되고 금액이 부풀려졌음
+  // (재현: A행 삭제 후 B행 폭 수정 → 기존 B레일은 안 지워지고 새 레일이
+  // 추가로 생김). 고유ID는 행이 처음 쓰일 때 그 자리에서 한 번만 부여하고
+  // (lazy assignment) 이후 계속 재사용 — 기존 HTML의 첫 행이든 새로 추가한
+  // 행이든 동일하게 안전.
+  if (!curtainTr.dataset.rowUid) {
+    window._curtainRowSeq = (window._curtainRowSeq || 0) + 1;
+    curtainTr.dataset.rowUid = 'crow' + window._curtainRowSeq;
+  }
+  var rowIdx = curtainTr.dataset.rowUid;
   var svcBody = document.getElementById('svc-body');
 
   // "시공 안함(배송)" 상태(지역 미선택)에서는 레일/레일시공비를 추가하지 않음 —
@@ -497,7 +510,9 @@ function calcTotal() {
 
 function delRow(btn) {
   var tr = btn.closest('tr');
-  var rowIdx = tr.rowIndex;
+  // 2026-08-14: autoUpdateRail과 동일하게 rowIndex 대신 rowUid로 매칭 —
+  // 삭제할 행 자체의 레일을 정확히 찾아 지우기 위함(위 autoUpdateRail 주석 참고)
+  var rowIdx = tr.dataset.rowUid || tr.rowIndex;
   var svcBody = document.getElementById('svc-body');
   if(svcBody) {
     var railRow=svcBody.querySelector('[data-rail-src="'+rowIdx+'"]');
@@ -531,11 +546,16 @@ function copyCurtainRow(btn) {
   var tr=btn.closest('tr');
   var clone=tr.cloneNode(true);
   clone.dataset.rowId='c'+Date.now();
+  // 2026-08-14: cloneNode가 dataset.rowUid까지 그대로 복사해버려서, 복사한
+  // 행을 수정하면 원본 행의 레일을 침범할 위험이 있었음(rowUid 도입 부수
+  // 발견). 복사본은 지워서 다음 autoUpdateRail 호출시 새로 부여되게 함.
+  delete clone.dataset.rowUid;
   clone.querySelectorAll('input[data-raw]').forEach(function(inp){
     inp.setAttribute('data-raw',inp.getAttribute('data-raw'));
   });
   tr.parentNode.insertBefore(clone,tr.nextSibling);
   makeRowDraggable(clone);
+  if (typeof autoUpdateRail === 'function') autoUpdateRail(clone);
   calcTotal();
 }
 function copyBlindRow(btn) {
