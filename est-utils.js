@@ -135,7 +135,20 @@ function renderCouponList() {
     cb.dataset.type = c.type;
     cb.dataset.value = c.value;
     cb.style.cssText = 'margin:0;width:14px;height:14px';
-    cb.onchange = function() { calcTotal(); };
+    cb.onchange = function() {
+      // 2026-08-14: 쿠폰을 해제해서 금액이 바뀌면 안내 토스트 표시(선혜님 요청).
+      // 체크 해제(할인 제거) 시에만 - 체크(할인 추가)는 이미 화면 금액이
+      // 바로 줄어드는 걸로 충분히 보이니 안내가 불필요.
+      var wasUnchecked = !cb.checked;
+      var beforeText = document.getElementById('sum-total')?.textContent || '';
+      calcTotal();
+      if (wasUnchecked) {
+        var afterText = document.getElementById('sum-total')?.textContent || '';
+        if (beforeText && afterText && beforeText !== afterText && typeof showToast === 'function') {
+          showToast(cb.dataset.name + ' 쿠폰이 해제되어 금액이 ' + beforeText + ' → ' + afterText + '로 변경됐어요');
+        }
+      }
+    };
     var span = document.createElement('span');
     span.textContent = c.name + ' ' + c.value + (c.type === 'pct' ? '%' : '원');
     label.appendChild(cb); label.appendChild(span);
