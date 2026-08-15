@@ -164,14 +164,12 @@ function buildCustomerHTML() {
 
   
   var svcHTML = '';
-  var svcDetailNote = '';  // 참고사항에 넣을 세부 내역 텍스트
   if(svcRows.length) {
-    // 2026-08-14: 기존에 쓰시던 견적서 방식(선혜님 확인) — 고객용 출력에서는
-    // 레일/시공비 항목을 하나하나 나열하지 않고 "시공 서비스" 한 줄 합계로만
-    // 보여주고, 세부 내역은 아래 참고사항에 텍스트로 정리해서 넣는다.
-    // (예전엔 항목이 10개 넘게 펼쳐져서 고객이 보기에 복잡했음)
+    // 2026-08-15: 고객용 출력에서 실측+시공비/레일/전동및부자재/기타옵션을
+    // "시공 서비스" 표 자체에 4줄(값 있는 것만)로 정리해서 보여줌
+    // (기존엔 표는 한 줄로 뭉뚱그리고 세부내역을 참고사항에 텍스트로
+    // 넣었었는데, 선혜님 정정으로 "시공서비스 표 안에" 정리하는 것으로 변경).
     var svcTotal = 0;
-    var detailParts = [];
     // 2026-08-15: 참고사항을 4줄 고정 구조로 재구성(선혜님 요청):
     // ①실측+시공비(지역별) ②레일 ③전동 및 부자재 ④기타 옵션(블라인드옵션 외)
     var measureInstallSum = 0;
@@ -206,21 +204,29 @@ function buildCustomerHTML() {
         etcOptionSum += amt;
       }
     });
-    if (measureInstallSum > 0) detailParts.push('실측+시공비 ' + measureInstallSum.toLocaleString() + '원');
-    if (railSum > 0) detailParts.push('레일 ' + railSum.toLocaleString() + '원');
-    if (motorMaterialSum > 0) detailParts.push('전동 및 부자재 ' + motorMaterialSum.toLocaleString() + '원');
-    if (etcOptionSum > 0) detailParts.push('기타 옵션 ' + etcOptionSum.toLocaleString() + '원');
+    // 2026-08-15: 4줄이 이제 시공서비스 표에 직접 행으로 렌더링되므로,
+    // 참고사항에 별도 텍스트로 중복 표시할 필요가 없어짐(아래 svcLines 참고).
 
-    svcDetailNote = detailParts.join('\n');
-
+    // 2026-08-15: 4줄(실측+시공비/레일/전동및부자재/기타옵션)을 참고사항
+    // 텍스트가 아니라 "시공 서비스" 표 자체의 실제 행으로 렌더링(선혜님
+    // 정정: "시공서비스에 정리하자는 말이었다" — 예전엔 표는 여전히
+    // "세부 내역은 하단 참고사항을 확인해주세요" 한 줄로 뭉뚱그려두고,
+    // 정작 4줄은 완전히 다른 섹션인 참고사항에 작은 글씨로 묻혀있었음).
     svcHTML += '<table class="pv-prod-table" style="margin-top:0">';
-    svcHTML += '<colgroup><col style="width:20%"><col style="width:60%"><col style="width:20%"></colgroup>';
+    svcHTML += '<colgroup><col style="width:30%"><col style="width:50%"><col style="width:20%"></colgroup>';
     svcHTML += '<thead><tr><th>구분</th><th style="text-align:left">내용</th><th class="r">금액</th></tr></thead><tbody>';
-    svcHTML += '<tr>';
-    svcHTML += '<td style="font-size:11px;color:#8E8078">시공 서비스</td>';
-    svcHTML += '<td>세부 내역은 하단 참고사항을 확인해주세요</td>';
-    svcHTML += '<td class="amt">' + svcTotal.toLocaleString() + '원</td>';
-    svcHTML += '</tr>';
+    var svcLines = [];
+    if (measureInstallSum > 0) svcLines.push(['실측 + 시공비', measureInstallSum]);
+    if (railSum > 0) svcLines.push(['레일', railSum]);
+    if (motorMaterialSum > 0) svcLines.push(['전동 및 부자재', motorMaterialSum]);
+    if (etcOptionSum > 0) svcLines.push(['기타 옵션', etcOptionSum]);
+    svcLines.forEach(function(line){
+      svcHTML += '<tr>';
+      svcHTML += '<td style="font-size:11px;color:#8E8078">' + line[0] + '</td>';
+      svcHTML += '<td></td>';
+      svcHTML += '<td class="amt">' + line[1].toLocaleString() + '원</td>';
+      svcHTML += '</tr>';
+    });
     svcHTML += '</tbody></table>';
   }
 
@@ -254,12 +260,9 @@ function buildCustomerHTML() {
   var cMemo = document.getElementById('c-memo')?.value||'';
   var notesHTML = '';
   var noteItems = [];
-  // 2026-08-14: 시공 서비스 세부 내역을 참고사항 맨 위에 표시(선혜님 확인) —
-  // 고객용 출력에서 시공 항목을 한 줄 합계로만 보여주는 대신, 어떤 항목이
-  // 포함됐는지는 여기서 투명하게 안내.
-  if (svcDetailNote) {
-    svcDetailNote.split('\n').forEach(function(line){ if (line.trim()) noteItems.push(line.trim()); });
-  }
+  // 2026-08-15: 시공 서비스 세부내역은 이제 "시공 서비스" 표 자체에
+  // 직접 4줄로 표시되므로(위 svcLines 참고), 참고사항에는 더 이상
+  // 중복해서 넣지 않음.
   if(cMemo) noteItems.push(cMemo);
   
   noteItems.push('맞춤제작 특성상 계약 후 취소·변경이 불가합니다.');
