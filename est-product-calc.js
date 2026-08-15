@@ -470,9 +470,45 @@ function calcTotal() {
               Math.max(0, (parseFloat(tr.querySelector('.sqty')?.value)||1));
   });
   renderSvcSummary();
+  // 2026-08-14: 할인 다중선택(쿠폰) 순차적용 방식으로 교체(선혜님 확인).
+  // 검증된 공식(기존 견적서 실 데이터로 역산 검증 완료): 각 %할인은 "남은
+  // 제품소계"를 기준으로 순차 계산하고(첫 할인 뺀 금액에서 다음 % 계산),
+  // 계산된 할인액들의 합을 "제품소계+부자재/시공비" 총합계에서 차감한다.
+  var discountRunning = curtainTotal; // 순차 계산용 - 매 쿠폰마다 줄어듦
+  var totalDiscount = 0;
+  var discountBreakdown = [];
+  var appliedCoupons = []; // 저장용 - 쿠폰ID로 불러오기시 정확히 재선택하기 위함
+  document.querySelectorAll('.coupon-check:checked').forEach(function(cb) {
+    var type = cb.dataset.type;
+    var value = parseFloat(cb.dataset.value) || 0;
+    var amt = type === 'pct' ? Math.round(discountRunning * value / 100) : Math.min(value, discountRunning);
+    amt = Math.max(0, amt);
+    totalDiscount += amt;
+    discountRunning -= amt;
+    discountBreakdown.push({ label: cb.dataset.name + ' ' + value + (type==='pct'?'%':'원'), amount: amt });
+    appliedCoupons.push({ id: cb.dataset.id, name: cb.dataset.name, type: type, value: value, amount: amt });
+  });
   var discType=document.getElementById('discount-type')?.value||'won';
   var discInput=Math.max(0, parseFloat(document.getElementById('discount')?.value)||0);
-  var discount=discType==='pct'?Math.round(curtainTotal*discInput/100):discInput;
+  var manualDiscount = null;
+  if (discInput > 0) {
+    var manualAmt = discType==='pct' ? Math.round(discountRunning*discInput/100) : Math.min(discInput, discountRunning);
+    manualAmt = Math.max(0, manualAmt);
+    totalDiscount += manualAmt;
+    discountRunning -= manualAmt;
+    discountBreakdown.push({ label: '직접입력 '+(discType==='pct'?discInput+'%':discInput.toLocaleString()+'원'), amount: manualAmt });
+    manualDiscount = { type: discType, value: discInput, amount: manualAmt };
+  }
+  var discount = totalDiscount;
+  window._lastDiscountBreakdown = discountBreakdown; // 영수증 표시용
+  window._lastAppliedDiscounts = { coupons: appliedCoupons, manual: manualDiscount }; // 저장용(쿠폰ID 포함)
+  var breakdownEl = document.getElementById('discount-breakdown');
+  if (breakdownEl) {
+    breakdownEl.innerHTML = discountBreakdown.map(function(d){
+      return '<div style="display:flex;justify-content:space-between;padding:2px 0">'+
+        '<span>'+d.label+'</span><span>-'+d.amount.toLocaleString()+'원</span></div>';
+    }).join('');
+  }
   var grand=curtainTotal-discount+svcTotal;
   if(grand<0) grand=0;
   // 2026-08-12: 최종 견적금액 천원단위 절사(내림) 적용 - 당일결제5%/마케팅3%/

@@ -562,18 +562,25 @@
         <span class="lbl">제품 소계</span>
         <span class="val" id="sum-curtain">0원</span>
       </div>
-      <div class="sum-row print-hide">
-        <span class="lbl">할인
-          <span class="discount-wrap">
-            <select id="discount-type" onchange="calcTotal()">
-              <option value="won">원</option>
-              <option value="pct">%</option>
-            </select>
-            <input type="number" id="discount" value="0" min="0" oninput="calcTotal()" placeholder="0">
-          </span>
+      <div class="sum-row print-hide" style="flex-direction:column;align-items:stretch;gap:6px">
+        <span class="lbl">할인</span>
+        <!-- 2026-08-14: 쿠폰 다중선택 방식(선혜님 확인) - 등록된 쿠폰들을 체크해서
+             여러개 동시 적용 가능(순차: 앞쿠폰 뺀 금액에서 다음 쿠폰 적용),
+             직접입력도 그 뒤에 이어서 적용됨. 쿠폰 목록은 설정에서 마스터가 관리. -->
+        <div id="coupon-list" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        <span class="discount-wrap">
+          <select id="discount-type" onchange="calcTotal()">
+            <option value="won">원</option>
+            <option value="pct">%</option>
+          </select>
+          <input type="number" id="discount" value="0" min="0" oninput="calcTotal()" placeholder="직접입력">
         </span>
+      </div>
+      <div class="sum-row print-hide">
+        <span class="lbl"></span>
         <span class="val" id="sum-discount">-0원</span>
       </div>
+      <div id="discount-breakdown" class="print-hide" style="font-size:11px;color:var(--sub)"></div>
       <div class="sum-row">
         <span class="lbl">레일 · 시공비</span>
         <span class="val" id="sum-svc">0원</span>
@@ -702,15 +709,15 @@
   <option value="허니콤 No.1">허니콤 No.1</option>
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
-<script src="/est-utils.js?v=202608069800"></script>
+<script src="/est-utils.js?v=202608069900"></script>
 <script src="/est-sync-queue.js?v=202608068200"></script>
 <script src="/dash-supabase-auth.js?v=202608051400"></script>
 <script src="/est-form-controls.js?v=202608065400"></script>
-<script src="/est-product-calc.js?v=202608069800"></script>
+<script src="/est-product-calc.js?v=202608069900"></script>
 <script src="/est-survey.js?v=202608065400"></script>
-<script src="/est-save.js?v=202608069200"></script>
+<script src="/est-save.js?v=202608069900"></script>
 <script src="/est-documents.js?v=202608069100"></script>
-<script src="/est-customer-load.js?v=202608069400"></script>
+<script src="/est-customer-load.js?v=202608069900"></script>
 <script src="/est-misc.js?v=202608067500"></script>
 <script>
 var currentTab = 'ga';
@@ -783,6 +790,9 @@ var currentTab = 'ga';
                 document.getElementById('c-region').value = e.region;
                 document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
               }
+              if (e && e.applied_discounts && typeof restoreAppliedDiscounts === 'function') {
+                restoreAppliedDiscounts(e.applied_discounts);
+              }
               if (e && e.cust_type && typeof setCustType === 'function') {
                 setCustType(e.cust_type);
                 if (e.cust_type === 'as') {
@@ -838,6 +848,9 @@ var currentTab = 'ga';
           if (e.region && document.getElementById('c-region')) {
             document.getElementById('c-region').value = e.region;
             document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
+          }
+          if (e.applied_discounts && typeof restoreAppliedDiscounts === 'function') {
+            restoreAppliedDiscounts(e.applied_discounts);
           }
           // 2026-08-12: cust_type(신규/재구매/AS) 복원 누락 발견 - AS 견적서를
           // 열어서 수정/복사해도 AS 폼으로 전환 안 되고 증상/유형 등이 전혀
@@ -943,6 +956,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // 지역별 실측비/시공비 최신값 조회 (설정탭에서 바뀌었을 수 있으므로 매번 새로 확인)
   if (typeof fetchRegionFeesFromCloud === 'function') { fetchRegionFeesFromCloud(); }
   if (typeof fetchVendorListFromCloud === 'function') { fetchVendorListFromCloud(); }
+  if (typeof renderCouponList === 'function') { renderCouponList(); } // 로컬캐시로 즉시 렌더링(빈 화면 방지)
+  if (typeof fetchDiscountCouponsFromCloud === 'function') { fetchDiscountCouponsFromCloud(); }
 
   // 자동저장 인디케이터 생성
   var indicator = document.createElement('div');

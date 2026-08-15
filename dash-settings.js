@@ -501,6 +501,69 @@ function renderSettings() {
   var groupRegionFees = makeGroup('sec-set-regionfees', '지역별 출장비', [regionFeesCard], false);
   wrap.appendChild(groupRegionFees);
 
+  // ── 할인 쿠폰 관리 (2026-08-14 신규) — 견적서 앱에서 다중선택 가능한 할인 항목 ──
+  var couponCard = div('padding-top:4px', [
+    span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '견적서 작성시 체크박스로 여러개 동시 선택 가능한 할인 항목입니다. 선택한 순서대로(위→아래) 순차 적용돼요.')
+  ]);
+  var curCoupons = (typeof getDiscountCoupons === 'function') ? getDiscountCoupons() : [];
+  var couponListWrap = div('display:flex;flex-direction:column;gap:6px;margin-bottom:10px', []);
+  curCoupons.forEach(function(c, idx) {
+    var row = div('display:flex;gap:6px;align-items:center;padding:8px;background:var(--ivory1);border-radius:10px', []);
+    var nameInput = el('input', { type:'text', value: c.name, 'data-coupon-idx': idx, 'data-field':'name', style:'flex:1;padding:7px 9px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box;min-width:0' });
+    var valueInput = el('input', { type:'number', value: c.value, 'data-coupon-idx': idx, 'data-field':'value', style:'width:56px;padding:7px 9px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box;text-align:right' });
+    var typeSelect = el('select', { 'data-coupon-idx': idx, 'data-field':'type', style:'padding:7px 6px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:inherit;outline:none' });
+    ['pct','won'].forEach(function(t){
+      var opt = el('option', { value:t }, [t === 'pct' ? '%' : '원']);
+      if (c.type === t) opt.selected = true;
+      typeSelect.appendChild(opt);
+    });
+    var delBtn = btn('padding:7px 10px;background:#fff;color:#C0392B;border:1px solid #F5D6D0;border-radius:8px;font-size:11px;font-family:inherit;cursor:pointer;min-height:32px', '삭제', function(){
+      var arr = getDiscountCoupons();
+      arr.splice(idx, 1);
+      setDiscountCoupons(arr);
+      renderSettings(); showToast('쿠폰이 삭제됐습니다');
+    });
+    [nameInput, valueInput].forEach(function(inp){
+      inp.addEventListener('change', function(){
+        var arr = getDiscountCoupons();
+        arr[idx][inp.dataset.field] = inp.type === 'number' ? parseFloat(inp.value)||0 : inp.value;
+        setDiscountCoupons(arr);
+        showToast('쿠폰이 수정됐습니다');
+      });
+    });
+    typeSelect.addEventListener('change', function(){
+      var arr = getDiscountCoupons();
+      arr[idx].type = typeSelect.value;
+      setDiscountCoupons(arr);
+      renderSettings(); showToast('쿠폰이 수정됐습니다');
+    });
+    row.appendChild(nameInput); row.appendChild(valueInput); row.appendChild(typeSelect); row.appendChild(delBtn);
+    couponListWrap.appendChild(row);
+  });
+  if (curCoupons.length === 0) {
+    couponListWrap.appendChild(span('font-size:12px;color:var(--sub)', '등록된 쿠폰이 없어요'));
+  }
+  couponCard.appendChild(couponListWrap);
+  var addCouponWrap = div('display:flex;gap:8px', []);
+  var newCouponName = el('input', { type:'text', placeholder:'쿠폰명 (예: 재구매)', style:'flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;min-width:0' });
+  var newCouponValue = el('input', { type:'number', placeholder:'5', style:'width:64px;padding:9px 10px;border:1px solid var(--border);border-radius:10px;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box' });
+  var newCouponType = el('select', { style:'padding:9px 8px;border:1px solid var(--border);border-radius:10px;font-size:12px;font-family:inherit;outline:none' });
+  newCouponType.appendChild(el('option', {value:'pct'}, ['%']));
+  newCouponType.appendChild(el('option', {value:'won'}, ['원']));
+  addCouponWrap.appendChild(newCouponName); addCouponWrap.appendChild(newCouponValue); addCouponWrap.appendChild(newCouponType);
+  addCouponWrap.appendChild(btn('padding:9px 16px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;min-height:32px', '추가', function(){
+    var name = newCouponName.value.trim();
+    var value = parseFloat(newCouponValue.value) || 0;
+    if (!name) { showToast('쿠폰명을 입력해주세요'); return; }
+    var arr = getDiscountCoupons();
+    arr.push({ id: 'c' + Date.now(), name: name, type: newCouponType.value, value: value });
+    setDiscountCoupons(arr);
+    renderSettings(); showToast('쿠폰이 추가됐습니다');
+  }));
+  couponCard.appendChild(addCouponWrap);
+  var groupCoupons = makeGroup('sec-set-coupons', '할인 쿠폰', [couponCard], false);
+  wrap.appendChild(groupCoupons);
+
   
   // ── 계좌 정보 ──
   var acctCard = div('padding-top:4px', []);

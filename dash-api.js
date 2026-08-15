@@ -67,6 +67,19 @@ function setRegionFees(fees) {
   sbSyncSetting('region_fees', fees);
 }
 
+// 2026-08-14: 할인 쿠폰 관리(선혜님 확인) - 당일결제5%/마케팅3%/입주10%/재구매5% 등
+// 견적서 앱에서 체크박스로 여러개 동시 선택 가능한 할인 항목들. 지역출장비와 동일 패턴.
+function getDiscountCoupons() {
+  try {
+    var cached = JSON.parse(localStorage.getItem('dah_discount_coupons') || 'null');
+    return cached || [];
+  } catch(e) { return []; }
+}
+function setDiscountCoupons(coupons) {
+  try { localStorage.setItem('dah_discount_coupons', JSON.stringify(coupons)); } catch(e){}
+  sbSyncSetting('discount_coupons', coupons);
+}
+
 // 담당자 이름 -> 로그인용 이메일 매핑 (Supabase Auth 연동용, 별도 저장)
 function getStaffEmailMap() {
   try { return JSON.parse(localStorage.getItem('dah_staff_emails') || '{}'); } catch(e) { return {}; }

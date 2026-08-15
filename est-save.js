@@ -257,7 +257,11 @@ function saveEstimate() {
       client_id: window._estSaveCustomerId || null,
       line_items: lineItems,
       cust_type: currentCustType || 'new',
-      region: document.getElementById('c-region')?.value || ''
+      region: document.getElementById('c-region')?.value || '',
+      // 2026-08-14: 할인 정보 자체가 지금까지 저장 안 되고 있던 필드누락을
+      // 쿠폰 다중선택 기능 만들면서 같이 발견/해결 - 재구매/열어서수정시
+      // 어떤 쿠폰이 선택돼있었는지 정확히 복원하기 위해 저장.
+      applied_discounts: window._lastAppliedDiscounts || { coupons: [], manual: null }
     }, currentCustType === 'as' ? {
       as_install_date: document.getElementById('as-install-date')?.value || null,
       as_type: document.getElementById('as-type-sel')?.value || null,
@@ -395,7 +399,8 @@ function saveEstimate() {
         branch: '반포점',
         lineItems: lineItems,
         custType: currentCustType || 'new',
-        region: document.getElementById('c-region')?.value || ''
+        region: document.getElementById('c-region')?.value || '',
+        appliedDiscounts: window._lastAppliedDiscounts || { coupons: [], manual: null }
       };
       if (currentCustType === 'as') {
         entry.asInstallDate = document.getElementById('as-install-date')?.value || null;

@@ -243,6 +243,9 @@ function loadCustByIdx(el) {
         document.getElementById('c-region').value = latest.region;
         document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
       }
+      if (latest.appliedDiscounts && typeof restoreAppliedDiscounts === 'function') {
+        restoreAppliedDiscounts(latest.appliedDiscounts);
+      }
     }
   } catch(e) { console.warn('기존 견적 품목 불러오기 실패:', e); }
   closeCustLoad();
