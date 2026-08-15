@@ -478,7 +478,21 @@ function calcTotal() {
   var totalDiscount = 0;
   var discountBreakdown = [];
   var appliedCoupons = []; // 저장용 - 쿠폰ID로 불러오기시 정확히 재선택하기 위함
-  document.querySelectorAll('.coupon-check:checked').forEach(function(cb) {
+  // 2026-08-14: 쿠폰 적용 순서를 "설정에 등록한 순서"가 아니라 "타입 기준
+  // 자동 정렬(원단위 항상 먼저 → %는 나중)"로 변경(선혜님 요청).
+  // 수학적으로 증명됨: %할인은 그 시점 "남은 금액"을 기준으로 계산되므로,
+  // 원단위를 먼저 빼서 남은 금액을 줄인 뒤 %를 적용해야 %할인액 자체가
+  // 작아진다(차이 = 원단위금액 × %비율, 항상 0 이상 — 원단위 금액이
+  // 5,000원이든 10만원이든 이 방향은 절대 바뀌지 않음). 즉 이 순서가
+  // 쿠폰 금액이 나중에 바뀌어도 항상 총 할인을 최소화(최종 단가를 최대화)한다.
+  // 여러 원단위끼리, 여러 %끼리는 순서 무관(덧셈 교환법칙 / 반올림오차 수준).
+  var checkedCoupons = Array.from(document.querySelectorAll('.coupon-check:checked'));
+  checkedCoupons.sort(function(a, b) {
+    var aRank = a.dataset.type === 'won' ? 0 : 1;
+    var bRank = b.dataset.type === 'won' ? 0 : 1;
+    return aRank - bRank;
+  });
+  checkedCoupons.forEach(function(cb) {
     var type = cb.dataset.type;
     var value = parseFloat(cb.dataset.value) || 0;
     var amt = type === 'pct' ? Math.round(discountRunning * value / 100) : Math.min(value, discountRunning);
