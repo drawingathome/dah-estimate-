@@ -510,7 +510,23 @@ function renderSettings() {
   var couponCard = div('padding-top:4px', [
     span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '견적서 작성시 체크박스로 여러개 동시 선택 가능한 할인 항목입니다. 선택한 순서대로(위→아래) 순차 적용돼요.')
   ]);
-  var curCoupons = (typeof getDiscountCoupons === 'function') ? getDiscountCoupons() : [];
+  // 2026-08-14: 쿠폰 시작일/종료일 추가 + 기간만료 자동삭제(선혜님 요청 —
+  // "어차피 재사용 안 되니 자동삭제"). 설정화면을 열 때마다 종료일이 지난
+  // 쿠폰을 자동으로 찾아서 삭제. 이미 견적서에 사용된 적 있는 쿠폰이어도
+  // 안전함 — 삭제된 쿠폰의 과거 적용 금액은 이미 만든 보정장치
+  // (restoreAppliedDiscounts의 missingAmount 자동채움)로 옛 견적서 금액이
+  // 그대로 유지되므로.
+  var todayStr = new Date().toISOString().slice(0,10);
+  var allCouponsRaw = (typeof getDiscountCoupons === 'function') ? getDiscountCoupons() : [];
+  var expiredNames = [];
+  var curCoupons = allCouponsRaw.filter(function(c) {
+    if (c.endDate && c.endDate < todayStr) { expiredNames.push(c.name); return false; }
+    return true;
+  });
+  if (expiredNames.length > 0) {
+    setDiscountCoupons(curCoupons);
+    if (typeof showToast === 'function') showToast(expiredNames.join(', ') + ' 쿠폰이 기간 만료되어 자동 삭제됐어요');
+  }
   var usedCouponIds = {};
   try { usedCouponIds = JSON.parse(localStorage.getItem('dah_used_coupon_ids') || '{}'); } catch(e) {}
   var couponListWrap = div('display:flex;flex-direction:column;gap:6px;margin-bottom:10px', []);
@@ -557,6 +573,27 @@ function renderSettings() {
     }
     inputRow.appendChild(nameInput); inputRow.appendChild(valueInput); inputRow.appendChild(typeSelect); inputRow.appendChild(delBtn);
     row.appendChild(inputRow);
+    // 시작일/종료일 - 날짜는 계산에 영향 없으므로 사용여부와 무관하게 항상 자유롭게 수정 가능
+    var dateRow = div('display:flex;gap:6px;align-items:center;margin-top:2px', []);
+    dateRow.appendChild(span('font-size:10px;color:var(--sub);white-space:nowrap', '기간'));
+    var startInput = el('input', { type:'date', value: c.startDate || '', style:'flex:1;padding:5px 7px;border:1px solid var(--border);border-radius:6px;font-size:10px;font-family:inherit;outline:none;box-sizing:border-box' });
+    var endInput = el('input', { type:'date', value: c.endDate || '', style:'flex:1;padding:5px 7px;border:1px solid var(--border);border-radius:6px;font-size:10px;font-family:inherit;outline:none;box-sizing:border-box' });
+    startInput.addEventListener('change', function(){
+      var arr = getDiscountCoupons();
+      arr[idx].startDate = startInput.value || null;
+      setDiscountCoupons(arr);
+      showToast('쿠폰 시작일이 설정됐습니다');
+    });
+    endInput.addEventListener('change', function(){
+      var arr = getDiscountCoupons();
+      arr[idx].endDate = endInput.value || null;
+      setDiscountCoupons(arr);
+      showToast('쿠폰 종료일이 설정됐습니다 — 이 날짜가 지나면 자동으로 삭제돼요');
+    });
+    dateRow.appendChild(startInput);
+    dateRow.appendChild(span('font-size:10px;color:var(--sub)', '~'));
+    dateRow.appendChild(endInput);
+    row.appendChild(dateRow);
     if (isUsed) {
       row.appendChild(span('font-size:10px;color:#B0764F', '🔒 이미 견적서에 사용된 쿠폰이라 값/단위 수정이 잠겼어요. 바꾸려면 아래에서 새 쿠폰을 만들어주세요.'));
     }

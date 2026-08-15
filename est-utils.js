@@ -123,6 +123,17 @@ function renderCouponList() {
   if (!wrap) return;
   var coupons = [];
   try { coupons = JSON.parse(localStorage.getItem('dah_discount_coupons') || '[]'); } catch(e) {}
+  // 2026-08-14: 쿠폰 기간(시작일/종료일) 필터링 - 설정화면에서 기간만료
+  // 쿠폰을 자동삭제하지만, 그 사이(마스터가 설정을 아직 안 연 시점)
+  // 스태프가 견적서 앱을 먼저 열 수도 있으므로 여기서도 한 번 더 방어.
+  // 아직 시작 안 됐거나(startDate가 미래) 이미 끝난(endDate가 과거) 쿠폰은
+  // 체크박스 목록에서 아예 안 보이게 함.
+  var todayStr = new Date().toISOString().slice(0,10);
+  coupons = coupons.filter(function(c) {
+    if (c.startDate && c.startDate > todayStr) return false;
+    if (c.endDate && c.endDate < todayStr) return false;
+    return true;
+  });
   wrap.innerHTML = '';
   coupons.forEach(function(c) {
     var label = document.createElement('label');
