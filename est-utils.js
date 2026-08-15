@@ -167,15 +167,17 @@ function restoreAppliedDiscounts(applied, attempt) {
     if (attempt < 10) { setTimeout(function(){ restoreAppliedDiscounts(applied, attempt+1); }, 300); return; }
   }
   // 2026-08-14: 저장 당시 적용됐던 쿠폰이 그 사이 설정에서 삭제되거나
-  // 수정되면(id가 더 이상 매칭 안 되거나, 값이 달라짐), 예전엔 할인 자체가
-  // 조용히 사라져서 "열어서 수정 → 그냥 다시 저장"만 해도 고객과 합의한
-  // 금액이 바뀌는 위험이 있었음(재현으로 발견). 매칭 안 되는 쿠폰의 저장
-  // 당시 금액(amount)을 합산해서 직접입력(원단위)에 자동으로 채워넣어,
-  // 최소한 총 할인액은 저장 당시와 동일하게 유지되도록 방어.
+  // 2026-08-14: 쿠폰이 "삭제"만이 아니라 "값만 수정"(예: 재구매 5%→7%)돼도
+  // 똑같이 조용히 다른 금액으로 재계산되던 문제 확인(재현: 5%/10,000원 할인
+  // 이었던 190,000원 견적서가 7%로 수정 후 열면 186,000원으로 바뀜). id만
+  // 보고 매칭하면 값이 바뀐 것도 "성공"으로 오인하므로, type/value까지
+  // 저장 당시와 정확히 같아야만 매칭 성공으로 보고, 하나라도 다르면
+  // 삭제된 경우와 동일하게 "사라진 쿠폰"으로 취급해 저장 당시 금액을 보존.
   var missingAmount = 0;
   coupons.forEach(function(c) {
     var cb = wrap ? wrap.querySelector('.coupon-check[data-id="'+c.id+'"]') : null;
-    if (cb) {
+    var valueMatches = cb && cb.dataset.type === c.type && parseFloat(cb.dataset.value) === parseFloat(c.value);
+    if (cb && valueMatches) {
       cb.checked = true;
     } else {
       missingAmount += (c.amount || 0);
