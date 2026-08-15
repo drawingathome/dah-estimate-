@@ -518,8 +518,27 @@ function calcTotal() {
     }
   });
   var discount = totalDiscount;
+  var grand=curtainTotal-discount+svcTotal;
+  if(grand<0) grand=0;
+  // 2026-08-12: 최종 견적금액 천원단위 절사(내림) 적용 - 당일결제5%/마케팅3%/
+  // 입주10%/재구매5% 등 % 할인 적용 후 끝자리가 지저분하게 나오는 걸 방지
+  // (선혜님 확인: 반올림이 아니라 절사, 천원단위). 계약금/잔금은 이 절사된
+  // 금액을 기준으로 계산되므로 자연히 깔끔한 값이 됨.
+  // 2026-08-14: 절사분도 기존 견적서 방식대로 할인 내역에 별도 줄로
+  // 명시(선혜님 확인) - 예전엔 절사가 최종금액에 조용히 반영만 되고 얼마나
+  // 깎였는지 안 보였음. 쿠폰/직접입력 계산이 끝난 뒤(절사 직전) 절사액을
+  // 구해서 breakdown 맨 마지막 줄에 추가.
+  if (grand > 0) {
+    var flooredGrand = Math.floor(grand/1000)*1000;
+    var truncAmt = grand - flooredGrand;
+    if (truncAmt > 0) {
+      discountBreakdown.push({ label: '끝자리 절사', amount: truncAmt });
+      discount += truncAmt; // sum-discount(할인 총액) 표시에도 절사분 반영
+    }
+    grand = flooredGrand;
+  }
   window._lastDiscountBreakdown = discountBreakdown; // 영수증 표시용
-  window._lastAppliedDiscounts = { coupons: appliedCoupons, manual: manualDiscount }; // 저장용(쿠폰ID 포함)
+  window._lastAppliedDiscounts = { coupons: appliedCoupons, manual: manualDiscount }; // 저장용(쿠폰ID 포함) - 절사는 매번 계산되므로 저장 불필요
   var breakdownEl = document.getElementById('discount-breakdown');
   if (breakdownEl) {
     breakdownEl.innerHTML = discountBreakdown.map(function(d){
@@ -527,13 +546,6 @@ function calcTotal() {
         '<span>'+d.label+'</span><span>-'+d.amount.toLocaleString()+'원</span></div>';
     }).join('');
   }
-  var grand=curtainTotal-discount+svcTotal;
-  if(grand<0) grand=0;
-  // 2026-08-12: 최종 견적금액 천원단위 절사(내림) 적용 - 당일결제5%/마케팅3%/
-  // 입주10%/재구매5% 등 % 할인 적용 후 끝자리가 지저분하게 나오는 걸 방지
-  // (선혜님 확인: 반올림이 아니라 절사, 천원단위). 계약금/잔금은 이 절사된
-  // 금액을 기준으로 계산되므로 자연히 깔끔한 값이 됨.
-  if(grand>0) grand = Math.floor(grand/1000)*1000;
   var depInp=document.getElementById('deposit-input');
   var depRaw=getPriceVal(depInp)||0;
   if(grand>0 && depInp && !depInp.dataset.manualEdit){
