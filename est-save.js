@@ -104,21 +104,11 @@ function validateEstimate() {
     return false;
   }
 
-  // 블라인드 옵션추가금(전동 등)이 있는데 지역(시공비 행)이 선택 안 된 경우 —
-  // 이 금액이 견적 총액에 반영되지 못하고 그대로 저장되어 누락될 수 있으므로 저장 자체를 막음
-  var blindBody = document.getElementById('blind-body');
-  var svcBody = document.getElementById('svc-body');
-  if (blindBody && svcBody) {
-    var extraSum = 0;
-    blindBody.querySelectorAll('.blind-extra').forEach(function(inp){
-      extraSum += Math.max(0, parseFloat(inp.value.replace(/[^0-9.-]/g,''))||0);
-    });
-    var hasSvcRow = !!svcBody.querySelector('[data-svc-type="시공비"]');
-    if (extraSum > 0 && !hasSvcRow) {
-      showToast('⚠️ 옵션추가금(전동 등)이 반영되려면 먼저 지역(서울/경기/기타)을 선택해주세요', 'error');
-      return false;
-    }
-  }
+  // 2026-08-15: 옵션추가금(전동 부품비 등)을 지역시공비 행과 독립된 svc행으로
+  // 분리하면서(recalcBlindOptionExtras 참고), 이 저장차단 로직 자체가
+  // 불필요해짐 - 예전엔 지역 미선택시 옵션추가금을 "얹을 곳"이 없어서
+  // 누락 위험이 있었지만, 이제 독립 행이라 지역 여부와 무관하게 항상
+  // 정확히 반영/저장됨.
   return true;
 }
 

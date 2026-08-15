@@ -94,7 +94,12 @@ async function run() {
     });
     check('[' + label + '] 실적매출이 커튼값과 정확히 동일(95%로 축소 안 됨)', perfInfo.curtain === perfInfo.perf, 'curtain=' + perfInfo.curtain + ', perf=' + perfInfo.perf);
 
-    // ── 테스트 3: 블라인드 옵션추가금 있는데 지역 미선택시 저장 차단 ──
+    // ── 테스트 3: 블라인드 옵션추가금은 지역 미선택이어도 정확히 저장됨 ──
+    // 2026-08-15 정책변경(선혜님 확인): 옵션추가금(전동 부품비 등)을 지역
+    // 시공비 행과 독립된 svc행으로 분리 - 전동 부품비는 지역/시공 여부와
+    // 무관하게 항상 받아야 하므로, 예전의 "지역 미선택시 저장 차단" 안전장치
+    // 자체가 불필요해짐(독립 행이라 금액 유실 위험이 없으므로). 이제는
+    // 차단되지 않고 정확한 금액(블라인드 제품가+옵션추가금)으로 저장되는지 확인.
     const page2 = await browser.newPage();
     await blockRealNetwork(page2);
     await page2.setViewport({ width: vw, height: 900, isMobile: vw < 500, hasTouch: vw < 500 });
@@ -120,8 +125,14 @@ async function run() {
     await new Promise(r => setTimeout(r, 300));
     await page2.evaluate(() => { localStorage.removeItem('dah_saved'); saveEstimate(); });
     await new Promise(r => setTimeout(r, 500));
-    const savedCountNoRegion = await page2.evaluate(() => JSON.parse(localStorage.getItem('dah_saved') || '[]').length);
-    check('[' + label + '] 지역 미선택+옵션추가금 있을때 저장이 차단됨(금액유실 방지)', savedCountNoRegion === 0, '실제 저장건수=' + savedCountNoRegion + ' (예상: 0건, 차단되어야 함)');
+    const savedNoRegion = await page2.evaluate(() => JSON.parse(localStorage.getItem('dah_saved') || '[]'));
+    const savedCountNoRegion = savedNoRegion.length;
+    check('[' + label + '] 지역 미선택이어도 옵션추가금이 차단없이 정상 저장됨', savedCountNoRegion === 1, '실제 저장건수=' + savedCountNoRegion + ' (예상: 1건, 정상 저장되어야 함)');
+    if (savedCountNoRegion === 1) {
+      const savedPrice = savedNoRegion[0].price;
+      // 블라인드 150x100cm=1.5㎡인데 최소면적(기본종류 기준 2.0㎡) 적용 -> 2.0*50000=100000 + 옵션 30000 = 130000
+      check('[' + label + '] 옵션추가금이 정확히 반영된 금액으로 저장됨', savedPrice === 130000, '실제 price=' + savedPrice + ' (예상: 130000 = 블라인드100000+옵션30000)');
+    }
     await page2.close();
 
     // ── 테스트 6: 시공 지역 "시공 안함(배송)" 선택시 레일/블라인드 시공비가 자동추가되면 안 됨 ──

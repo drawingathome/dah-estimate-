@@ -295,25 +295,40 @@ function recalcBlindOptionExtras() {
   var svcBody = document.getElementById('svc-body');
   if (!blindBody || !svcBody) return;
   var extraSum = 0;
+  var optNames = [];
   blindBody.querySelectorAll('.blind-extra').forEach(function(inp){
-    extraSum += Math.max(0, parseFloat(inp.value.replace(/[^0-9.-]/g,''))||0);
-  });
-  var svcRow = svcBody.querySelector('[data-svc-type="시공비"]');
-  if (!svcRow) {
-    // 시공 지역이 선택 안 된 경우 옵션추가금을 반영할 곳이 없어 금액이 누락될 수 있음 — 사용자에게 명확히 안내
-    if (extraSum > 0) {
-      showToast('⚠️ 옵션추가금을 반영하려면 먼저 지역(서울/경기/기타)을 선택해주세요');
+    var v = Math.max(0, parseFloat(inp.value.replace(/[^0-9.-]/g,''))||0);
+    extraSum += v;
+    if (v > 0) {
+      var tr = inp.closest('tr');
+      var optName = (tr?.querySelector('.blind-opt')?.value || '').trim();
+      if (optName && optNames.indexOf(optName) < 0) optNames.push(optName);
     }
+  });
+  // 2026-08-15: 옵션추가금(전동 부품비 등)을 지역 시공비 행에 합산하던 방식을
+  // 독립된 svc 행으로 완전히 분리(선혜님 확인 — 전동 부품비는 지역/시공
+  // 여부와 무관하게 항상 받아야 함, 전동시공비(8~10만원)는 별개의 얘기라
+  // 지금은 시스템화하지 않기로 함). 예전엔 지역을 선택 안 하면 옵션추가금을
+  // "얹을 곳"(지역시공비 행)이 아예 없어서, 화면에서 사라지고 저장도
+  // 막혔었음(validateEstimate가 저장 자체를 차단). 독립 행이라 지역 여부와
+  // 무관하게 항상 정확히 표시/저장됨.
+  var row = svcBody.querySelector('[data-svc-type="옵션추가금"]');
+  if (extraSum <= 0) {
+    if (row) row.remove();
+    calcTotal();
     return;
   }
-  var base = parseFloat(svcRow.getAttribute('data-install-base'))||0;
-  var priceInput = svcRow.querySelectorAll('td')[2]?.querySelector('input');
-  if (priceInput) {
-    var total = base + extraSum;
-    priceInput.setAttribute('data-raw', String(total));
-    priceInput.value = total.toLocaleString();
-    calcSvcRow(priceInput);
+  if (!row) {
+    addSvcRow();
+    row = svcBody.lastElementChild;
+    row.setAttribute('data-svc-type','옵션추가금');
   }
+  var tds = row.querySelectorAll('td');
+  if(tds[0]) { var sel=tds[0].querySelector('select'); if (sel) sel.value='전동'; }
+  if(tds[1]) { var inp=tds[1].querySelector('input'); if (inp) inp.value = optNames.length ? optNames.join(', ') : '옵션 추가금'; }
+  if(tds[2]) { var inp=tds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw', String(extraSum)); inp.value=extraSum.toLocaleString(); } }
+  if(tds[3]) { var inp=tds[3].querySelector('input'); if (inp) inp.value = 1; }
+  calcSvcRow(tds[2]?.querySelector('input'));
 }
 
 function autoAddBlindSvc() {
@@ -681,26 +696,9 @@ function renderSvcSummary() {
     etc: { label: '기타', sum: 0, details: [] }
   };
 
-  // 블라인드 옵션추가금(전동/이지원손잡이 등)은 별도 행이 아니라 지역시공비 행의 금액에 합산되어 있으므로,
-  // 여기서 직접 합산해 "옵션 추가금" 그룹으로 분리하고, 실측+시공비 그룹에서는 그만큼 제외한다.
-  // 2026-08-14: 예전엔 옵션 종류와 무관하게 무조건 "전동 옵션"이라고 표시돼서,
-  // "이지원 손잡이" 같은 걸 넣어도 전동으로 보이는 문제가 있었음(선혜님 발견).
-  // 실제 입력한 옵션명(.blind-opt)을 읽어서 그대로 보여주도록 수정.
-  var blindExtraSum = 0;
-  var optNames = [];
-  document.querySelectorAll('#blind-body tr').forEach(function(tr) {
-    var extraInp = tr.querySelector('.blind-extra');
-    var extraVal = extraInp ? (Math.max(0, parseFloat((extraInp.value || '').replace(/[^0-9.-]/g, '')) || 0)) : 0;
-    if (extraVal > 0) {
-      blindExtraSum += extraVal;
-      var optName = (tr.querySelector('.blind-opt')?.value || '').trim();
-      if (optName && optNames.indexOf(optName) < 0) optNames.push(optName);
-    }
-  });
-  if (blindExtraSum > 0) {
-    groups.motor.sum += blindExtraSum;
-    groups.motor.details.push(optNames.length ? optNames.join(', ') : '옵션 추가금');
-  }
+  // 2026-08-15: 옵션추가금이 이제 독립된 svc 행(data-svc-type="옵션추가금")으로
+  // 분리되어 있으므로, blind-body를 다시 순회해서 재계산할 필요 없이
+  // 아래 rows.forEach 루프에서 다른 행들과 동일하게 자연스럽게 그룹핑됨.
 
   rows.forEach(function(tr) {
     var type = tr.querySelector('td select')?.value || '';
@@ -724,10 +722,10 @@ function renderSvcSummary() {
       groups.measureInstall.sum += amt;
       groups.measureInstall.details.push(label);
     } else if (isRegionInstall) {
-      // 옵션추가금이 합산되어 있다면 그만큼 제외한 순수 실측/시공비만 반영
-      groups.measureInstall.sum += Math.max(0, amt - blindExtraSum);
+      // 2026-08-15: 옵션추가금이 이제 독립된 행으로 분리되어 지역시공비
+      // 행에는 순수 지역비만 있으므로, 예전처럼 옵션분을 차감할 필요가 없어짐.
+      groups.measureInstall.sum += amt;
       groups.measureInstall.details.push(label);
-      blindExtraSum = 0; // 지역시공비 행은 보통 1개이므로 중복 차감 방지
     } else if (type === '전동') {
       groups.motor.sum += amt;
       groups.motor.details.push(label);
