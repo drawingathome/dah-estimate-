@@ -525,6 +525,24 @@ function renderSettings() {
     });
     [nameInput, valueInput].forEach(function(inp){
       inp.addEventListener('change', function(){
+        // 2026-08-14: 쿠폰 "값"을 바꾸면 앞으로 이 쿠폰을 쓰는 견적서의
+        // 계산이 달라진다는 걸 명확히 안내(선혜님 질문 계기로 추가).
+        // 이름 변경은 표시 텍스트일 뿐 계산에 영향이 없으므로 안내 불필요.
+        // 이미 저장된 과거 견적서는 별도 보호장치(저장 당시 값을 기억)로
+        // 안전하니, 겁주는 경고가 아니라 정확한 정보로 안내.
+        if (inp.dataset.field === 'value') {
+          var oldArr = getDiscountCoupons();
+          var oldVal = oldArr[idx].value;
+          var newVal = parseFloat(inp.value) || 0;
+          if (oldVal !== newVal) {
+            var ok = confirm(
+              '쿠폰 값을 ' + oldVal + '에서 ' + newVal + '(으)로 바꿀까요?\n\n' +
+              '· 이미 저장된 과거 견적서는 영향받지 않아요 (예전 값 그대로 유지됩니다)\n' +
+              '· 앞으로 새로 작성하거나 이 쿠폰을 다시 선택하는 견적서부터 새 값이 적용돼요'
+            );
+            if (!ok) { inp.value = oldVal; return; }
+          }
+        }
         var arr = getDiscountCoupons();
         arr[idx][inp.dataset.field] = inp.type === 'number' ? parseFloat(inp.value)||0 : inp.value;
         setDiscountCoupons(arr);
@@ -532,6 +550,14 @@ function renderSettings() {
       });
     });
     typeSelect.addEventListener('change', function(){
+      var oldArr = getDiscountCoupons();
+      var oldType = oldArr[idx].type;
+      var ok = confirm(
+        '쿠폰 단위를 "' + (oldType==='pct'?'%':'원') + '"에서 "' + (typeSelect.value==='pct'?'%':'원') + '"(으)로 바꿀까요?\n\n' +
+        '· 이미 저장된 과거 견적서는 영향받지 않아요 (예전 값 그대로 유지됩니다)\n' +
+        '· 앞으로 새로 작성하거나 이 쿠폰을 다시 선택하는 견적서부터 새 단위가 적용돼요'
+      );
+      if (!ok) { typeSelect.value = oldType; return; }
       var arr = getDiscountCoupons();
       arr[idx].type = typeSelect.value;
       setDiscountCoupons(arr);
