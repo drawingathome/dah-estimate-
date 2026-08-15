@@ -55,7 +55,13 @@ function buildCustomerHTML() {
     var price=getPriceVal(tr.querySelector('.cprice'))||0;
     var amt  =tr.querySelector('.camt')?.textContent||'—';
     var spec =[pleat,open,hem].filter(Boolean).join(' · ');
-    if(name||space) curtainRows.push({
+    // 2026-08-15: 공간명/제품명을 둘 다 안 입력하면 이 행이 고객용 문서
+    // "표"에서 통째로 빠지던 심각한 사각지대(선혜님과 "실무 조합 검증" 중
+    // 재현으로 발견) - 금액은 제품소계/최종금액에 정확히 반영되는데 표에는
+    // 안 나와서, 고객이 "내가 뭘 주문했는지" 문서로 확인할 수 없는 상태가
+    // 조용히 발생할 수 있었음. 실제로 치수나 단가가 입력된 "유효한 행"이면
+    // 공간/제품명이 비어있어도 표시하도록 필터 완화.
+    if(name||space||mw||price) curtainRows.push({
       space:escHtml(space||'기타'),name:escHtml(name),spec:escHtml(spec),
       mw:mw,mh:mh,pnum:pnum,price:price,amt:amt,type:'curtain'
     });
@@ -74,7 +80,9 @@ function buildCustomerHTML() {
     var price=getPriceVal(tr.querySelector('.blind-price'))||0;
     var amt  =tr.querySelector('.bamt')?.textContent||'—';
     var addon=tr.querySelector('.blind-opt')?.value||'';
-    if(name||space) blindRows.push({
+    // 2026-08-15: 커튼과 동일한 이유로 필터 완화 - 종류/치수/단가가 입력된
+    // 유효한 행이면 공간/제품명이 비어있어도 표시.
+    if(name||space||kind||bw||price) blindRows.push({
       space:escHtml(space||'기타'),name:escHtml(name),kind:escHtml(kind),handle:escHtml(handle),
       addon:escHtml(addon),bw:bw,bh:bh,sqm:sqm,price:price,amt:amt,type:'blind'
     });
