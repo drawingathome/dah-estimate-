@@ -80,6 +80,33 @@ function setDiscountCoupons(coupons) {
   sbSyncSetting('discount_coupons', coupons);
 }
 
+// 2026-08-14: "한번 쓰인 쿠폰은 값 수정 자체를 막고, 바꾸려면 새로 만들게"
+// 방식으로 변경(선혜님 요청) — 값이 바뀌면 과거 견적서 재계산이 달라지는
+// 혼란 자체를 원천 차단. 실제로 견적서에 적용된 적 있는 쿠폰ID 목록을
+// estimates.applied_discounts에서 조회해서, 설정화면에서 그 쿠폰들의
+// 값/단위 입력을 잠그는 데 사용.
+function fetchUsedCouponIdsFromCloud(callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', SUPABASE_URL + '/rest/v1/estimates?select=applied_discounts&applied_discounts=not.is.null', true);
+  xhr.setRequestHeader('apikey', SUPABASE_KEY);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+  xhr.onload = function() {
+    var usedIds = {};
+    try {
+      if (xhr.status === 200) {
+        var rows = JSON.parse(xhr.responseText);
+        rows.forEach(function(r) {
+          var coupons = (r.applied_discounts && r.applied_discounts.coupons) || [];
+          coupons.forEach(function(c) { if (c && c.id) usedIds[c.id] = true; });
+        });
+      }
+    } catch(e) {}
+    if (callback) callback(usedIds);
+  };
+  xhr.onerror = function() { if (callback) callback({}); };
+  xhr.send();
+}
+
 // 담당자 이름 -> 로그인용 이메일 매핑 (Supabase Auth 연동용, 별도 저장)
 function getStaffEmailMap() {
   try { return JSON.parse(localStorage.getItem('dah_staff_emails') || '{}'); } catch(e) { return {}; }

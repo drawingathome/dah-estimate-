@@ -502,16 +502,27 @@ function renderSettings() {
   wrap.appendChild(groupRegionFees);
 
   // ── 할인 쿠폰 관리 (2026-08-14 신규) — 견적서 앱에서 다중선택 가능한 할인 항목 ──
+  // 2026-08-14 개편: "한번 쓰인 쿠폰은 값 수정 자체를 막고, 바꾸려면 새로
+  // 만들게" 방식으로 변경(선혜님 요청) — 값이 바뀌면 과거 견적서 재계산이
+  // 달라지는 혼란 자체를 원천 차단. 실제 견적서에 적용된 적 있는 쿠폰은
+  // 값/단위 입력을 잠그고(이름만 수정 가능), 안 쓰인 쿠폰은 자유롭게(확인창
+  // 없이) 수정 가능 — 리스크 자체가 없으므로 확인창도 불필요해짐.
   var couponCard = div('padding-top:4px', [
     span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '견적서 작성시 체크박스로 여러개 동시 선택 가능한 할인 항목입니다. 선택한 순서대로(위→아래) 순차 적용돼요.')
   ]);
   var curCoupons = (typeof getDiscountCoupons === 'function') ? getDiscountCoupons() : [];
+  var usedCouponIds = {};
+  try { usedCouponIds = JSON.parse(localStorage.getItem('dah_used_coupon_ids') || '{}'); } catch(e) {}
   var couponListWrap = div('display:flex;flex-direction:column;gap:6px;margin-bottom:10px', []);
   curCoupons.forEach(function(c, idx) {
-    var row = div('display:flex;gap:6px;align-items:center;padding:8px;background:var(--ivory1);border-radius:10px', []);
+    var isUsed = !!usedCouponIds[c.id];
+    var row = div('display:flex;flex-direction:column;gap:4px;padding:8px;background:var(--ivory1);border-radius:10px', []);
+    var inputRow = div('display:flex;gap:6px;align-items:center', []);
     var nameInput = el('input', { type:'text', value: c.name, 'data-coupon-idx': idx, 'data-field':'name', style:'flex:1;padding:7px 9px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box;min-width:0' });
-    var valueInput = el('input', { type:'number', value: c.value, 'data-coupon-idx': idx, 'data-field':'value', style:'width:56px;padding:7px 9px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box;text-align:right' });
-    var typeSelect = el('select', { 'data-coupon-idx': idx, 'data-field':'type', style:'padding:7px 6px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:inherit;outline:none' });
+    var valueInput = el('input', { type:'number', value: c.value, 'data-coupon-idx': idx, 'data-field':'value', style:'width:56px;padding:7px 9px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box;text-align:right'+(isUsed?';background:#F0EDE8;color:var(--sub)':'') });
+    if (isUsed) valueInput.disabled = true;
+    var typeSelect = el('select', { 'data-coupon-idx': idx, 'data-field':'type', style:'padding:7px 6px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:inherit;outline:none'+(isUsed?';background:#F0EDE8;color:var(--sub)':'') });
+    if (isUsed) typeSelect.disabled = true;
     ['pct','won'].forEach(function(t){
       var opt = el('option', { value:t }, [t === 'pct' ? '%' : '원']);
       if (c.type === t) opt.selected = true;
@@ -523,53 +534,49 @@ function renderSettings() {
       setDiscountCoupons(arr);
       renderSettings(); showToast('쿠폰이 삭제됐습니다');
     });
-    [nameInput, valueInput].forEach(function(inp){
-      inp.addEventListener('change', function(){
-        // 2026-08-14: 쿠폰 "값"을 바꾸면 앞으로 이 쿠폰을 쓰는 견적서의
-        // 계산이 달라진다는 걸 명확히 안내(선혜님 질문 계기로 추가).
-        // 이름 변경은 표시 텍스트일 뿐 계산에 영향이 없으므로 안내 불필요.
-        // 이미 저장된 과거 견적서는 별도 보호장치(저장 당시 값을 기억)로
-        // 안전하니, 겁주는 경고가 아니라 정확한 정보로 안내.
-        if (inp.dataset.field === 'value') {
-          var oldArr = getDiscountCoupons();
-          var oldVal = oldArr[idx].value;
-          var newVal = parseFloat(inp.value) || 0;
-          if (oldVal !== newVal) {
-            var ok = confirm(
-              '쿠폰 값을 ' + oldVal + '에서 ' + newVal + '(으)로 바꿀까요?\n\n' +
-              '· 이미 저장된 과거 견적서는 영향받지 않아요 (예전 값 그대로 유지됩니다)\n' +
-              '· 앞으로 새로 작성하거나 이 쿠폰을 다시 선택하는 견적서부터 새 값이 적용돼요'
-            );
-            if (!ok) { inp.value = oldVal; return; }
-          }
-        }
+    nameInput.addEventListener('change', function(){
+      // 이름은 표시 텍스트일 뿐 계산에 영향 없음 - 사용 이력과 무관하게 항상 자유롭게 수정 가능
+      var arr = getDiscountCoupons();
+      arr[idx].name = nameInput.value;
+      setDiscountCoupons(arr);
+      showToast('쿠폰이 수정됐습니다');
+    });
+    if (!isUsed) {
+      valueInput.addEventListener('change', function(){
         var arr = getDiscountCoupons();
-        arr[idx][inp.dataset.field] = inp.type === 'number' ? parseFloat(inp.value)||0 : inp.value;
+        arr[idx].value = parseFloat(valueInput.value) || 0;
         setDiscountCoupons(arr);
         showToast('쿠폰이 수정됐습니다');
       });
-    });
-    typeSelect.addEventListener('change', function(){
-      var oldArr = getDiscountCoupons();
-      var oldType = oldArr[idx].type;
-      var ok = confirm(
-        '쿠폰 단위를 "' + (oldType==='pct'?'%':'원') + '"에서 "' + (typeSelect.value==='pct'?'%':'원') + '"(으)로 바꿀까요?\n\n' +
-        '· 이미 저장된 과거 견적서는 영향받지 않아요 (예전 값 그대로 유지됩니다)\n' +
-        '· 앞으로 새로 작성하거나 이 쿠폰을 다시 선택하는 견적서부터 새 단위가 적용돼요'
-      );
-      if (!ok) { typeSelect.value = oldType; return; }
-      var arr = getDiscountCoupons();
-      arr[idx].type = typeSelect.value;
-      setDiscountCoupons(arr);
-      renderSettings(); showToast('쿠폰이 수정됐습니다');
-    });
-    row.appendChild(nameInput); row.appendChild(valueInput); row.appendChild(typeSelect); row.appendChild(delBtn);
+      typeSelect.addEventListener('change', function(){
+        var arr = getDiscountCoupons();
+        arr[idx].type = typeSelect.value;
+        setDiscountCoupons(arr);
+        renderSettings(); showToast('쿠폰이 수정됐습니다');
+      });
+    }
+    inputRow.appendChild(nameInput); inputRow.appendChild(valueInput); inputRow.appendChild(typeSelect); inputRow.appendChild(delBtn);
+    row.appendChild(inputRow);
+    if (isUsed) {
+      row.appendChild(span('font-size:10px;color:#B0764F', '🔒 이미 견적서에 사용된 쿠폰이라 값/단위 수정이 잠겼어요. 바꾸려면 아래에서 새 쿠폰을 만들어주세요.'));
+    }
     couponListWrap.appendChild(row);
   });
   if (curCoupons.length === 0) {
     couponListWrap.appendChild(span('font-size:12px;color:var(--sub)', '등록된 쿠폰이 없어요'));
   }
   couponCard.appendChild(couponListWrap);
+  // 사용이력 조회(비동기) - 오면 잠금상태 갱신을 위해 재렌더링
+  if (typeof fetchUsedCouponIdsFromCloud === 'function') {
+    fetchUsedCouponIdsFromCloud(function(ids) {
+      try {
+        var prevJson = localStorage.getItem('dah_used_coupon_ids') || '{}';
+        var newJson = JSON.stringify(ids);
+        localStorage.setItem('dah_used_coupon_ids', newJson);
+        if (prevJson !== newJson && document.getElementById('sec-set-coupons')) renderSettings();
+      } catch(e) {}
+    });
+  }
   var addCouponWrap = div('display:flex;gap:8px', []);
   var newCouponName = el('input', { type:'text', placeholder:'쿠폰명 (예: 재구매)', style:'flex:1;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box;min-width:0' });
   var newCouponValue = el('input', { type:'number', placeholder:'5', style:'width:64px;padding:9px 10px;border:1px solid var(--border);border-radius:10px;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box' });
