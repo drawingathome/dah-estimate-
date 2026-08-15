@@ -624,7 +624,7 @@ td.amt{
 .pv-prod-table tbody td.name{font-weight:600;color:#282828;width:auto}
 .pv-prod-table tbody td.spec-col{font-size:11px;color:var(--sub)}
 .pv-prod-table tbody td.r{text-align:right}
-.pv-prod-table .sub-head td{background:#EEE6DC;color:#282828;font-size:11px;font-weight:900;letter-spacing:3px}
+.pv-prod-table .sub-head td{background:#fff;color:#282828;font-size:11px;font-weight:900;letter-spacing:3px;border-top:1.5px solid #282828;border-bottom:1px solid #EEE6DC}
  
 .pv-sum-table{width:100%;font-size:11px}
 .pv-sum-table td{padding:8px 28px}
@@ -801,24 +801,24 @@ td.amt{
 
   /* 고객용 테이블 */
   .pv-section { break-inside:avoid; margin-bottom:8px!important; }
-  .pv-table th { background:#F5F2EE!important; font-size:11px!important; }
+  .pv-table th { background:#fff!important; border-bottom:1.5px solid #282828!important; font-size:11px!important; }
   .pv-table td { font-size:11px!important; }
 
   /* 2026-08-14: A4 1페이지 유지를 위한 여백 압축(선혜님 요청 — 기존에 쓰시던
      견적서 수준으로 촘촘하게). 화면 미리보기는 여유있게 그대로 두고,
      실제 인쇄/PDF 출력일 때만 적용해서 항목이 6개 정도까지는 1페이지에
      들어가도록 함. 내용은 하나도 안 지우고 여백/줄간격만 조임. */
-  .pv-party { padding:11px 24px!important; }
+  .pv-party { padding:8px 24px!important; }
   .pv-party-label { margin-bottom:4px!important; letter-spacing:1px!important; }
   .pv-party-name { margin-bottom:4px!important; }
   .pv-party-info { line-height:1.5!important; font-size:10px!important; }
-  .pv-section { padding:11px 24px!important; }
+  .pv-section { padding:8px 24px!important; }
   .pv-sum-table td { padding:5px 24px!important; }
   .pv-payment-split > div { padding:10px 24px!important; }
   .pv-notes { padding:11px 24px!important; }
   .pv-notes-title { margin-bottom:4px!important; }
   .pv-notes-item { line-height:1.5!important; font-size:10px!important; }
-  .pv-process { padding:10px 24px!important; }
+  .pv-process { padding:5px 24px!important; }
   .pv-process-title { margin-bottom:4px!important; }
   .pv-footer { padding:10px 24px!important; font-size:10px!important; }
   .pv-meta { padding:6px 24px!important; }
@@ -829,11 +829,11 @@ td.amt{
   .pv-header { padding:12px 24px!important; }
   .pv-title { font-size:19px!important; }
   .pv-process { font-size:9.5px!important; }
-  .pv-process div { line-height:1.5!important; }
+  .pv-process div { line-height:1.35!important; }
   /* 마지막 여유분 확보 — 품목 3개 기준 1046px 안에 확실히 들어가도록 */
-  .pv-footer { padding:7px 24px!important; font-size:9.5px!important; }
-  .pv-notes { padding:9px 24px!important; }
-  .pv-payment-split > div { padding:8px 24px!important; }
+  .pv-footer { padding:5px 24px!important; font-size:9.5px!important; }
+  .pv-notes { padding:6px 24px!important; }
+  .pv-payment-split > div { padding:6px 24px!important; }
   .pv-sum-table td { padding:4px 24px!important; }
   /* 공간 그룹 헤더(거실/안방 등)는 품목 수만큼 늘어나므로 얇게 */
   .pv-prod-table tr.sub-head td { padding-top:2px!important; padding-bottom:2px!important; font-size:9.5px!important; }
