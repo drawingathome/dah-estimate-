@@ -486,33 +486,37 @@ function calcTotal() {
   // 5,000원이든 10만원이든 이 방향은 절대 바뀌지 않음). 즉 이 순서가
   // 쿠폰 금액이 나중에 바뀌어도 항상 총 할인을 최소화(최종 단가를 최대화)한다.
   // 여러 원단위끼리, 여러 %끼리는 순서 무관(덧셈 교환법칙 / 반올림오차 수준).
-  var checkedCoupons = Array.from(document.querySelectorAll('.coupon-check:checked'));
-  checkedCoupons.sort(function(a, b) {
-    var aRank = a.dataset.type === 'won' ? 0 : 1;
-    var bRank = b.dataset.type === 'won' ? 0 : 1;
+  // 직접입력도 이 정렬에 함께 포함시킴 — 직접입력을 원단위로 쓰면 등록된
+  // %쿠폰들보다 먼저 적용돼야 같은 원칙이 유지되는데, 예전엔 직접입력이
+  // 무조건 맨 마지막으로 고정돼 있어서 이 원칙이 깨지는 구멍이 있었음.
+  var discType=document.getElementById('discount-type')?.value||'won';
+  var discInput=Math.max(0, parseFloat(document.getElementById('discount')?.value)||0);
+  var items = Array.from(document.querySelectorAll('.coupon-check:checked')).map(function(cb){
+    return { source:'coupon', el: cb, type: cb.dataset.type, value: parseFloat(cb.dataset.value)||0,
+             label: cb.dataset.name, id: cb.dataset.id, name: cb.dataset.name };
+  });
+  if (discInput > 0) {
+    items.push({ source:'manual', type: discType, value: discInput, label: '직접입력' });
+  }
+  items.sort(function(a, b) {
+    var aRank = a.type === 'won' ? 0 : 1;
+    var bRank = b.type === 'won' ? 0 : 1;
     return aRank - bRank;
   });
-  checkedCoupons.forEach(function(cb) {
-    var type = cb.dataset.type;
-    var value = parseFloat(cb.dataset.value) || 0;
-    var amt = type === 'pct' ? Math.round(discountRunning * value / 100) : Math.min(value, discountRunning);
+  var manualDiscount = null;
+  items.forEach(function(item) {
+    var amt = item.type === 'pct' ? Math.round(discountRunning * item.value / 100) : Math.min(item.value, discountRunning);
     amt = Math.max(0, amt);
     totalDiscount += amt;
     discountRunning -= amt;
-    discountBreakdown.push({ label: cb.dataset.name + ' ' + value + (type==='pct'?'%':'원'), amount: amt });
-    appliedCoupons.push({ id: cb.dataset.id, name: cb.dataset.name, type: type, value: value, amount: amt });
+    if (item.source === 'coupon') {
+      discountBreakdown.push({ label: item.label + ' ' + item.value + (item.type==='pct'?'%':'원'), amount: amt });
+      appliedCoupons.push({ id: item.id, name: item.name, type: item.type, value: item.value, amount: amt });
+    } else {
+      discountBreakdown.push({ label: '직접입력 '+(item.type==='pct'?item.value+'%':item.value.toLocaleString()+'원'), amount: amt });
+      manualDiscount = { type: item.type, value: item.value, amount: amt };
+    }
   });
-  var discType=document.getElementById('discount-type')?.value||'won';
-  var discInput=Math.max(0, parseFloat(document.getElementById('discount')?.value)||0);
-  var manualDiscount = null;
-  if (discInput > 0) {
-    var manualAmt = discType==='pct' ? Math.round(discountRunning*discInput/100) : Math.min(discInput, discountRunning);
-    manualAmt = Math.max(0, manualAmt);
-    totalDiscount += manualAmt;
-    discountRunning -= manualAmt;
-    discountBreakdown.push({ label: '직접입력 '+(discType==='pct'?discInput+'%':discInput.toLocaleString()+'원'), amount: manualAmt });
-    manualDiscount = { type: discType, value: discInput, amount: manualAmt };
-  }
   var discount = totalDiscount;
   window._lastDiscountBreakdown = discountBreakdown; // 영수증 표시용
   window._lastAppliedDiscounts = { coupons: appliedCoupons, manual: manualDiscount }; // 저장용(쿠폰ID 포함)
