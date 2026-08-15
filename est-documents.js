@@ -172,9 +172,12 @@ function buildCustomerHTML() {
     // (예전엔 항목이 10개 넘게 펼쳐져서 고객이 보기에 복잡했음)
     var svcTotal = 0;
     var detailParts = [];
-    var measureInstallSum = 0, measureInstallCount = 0;
-    var railPartsSum = 0, railDetailBits = [];
-    var etcParts = [];
+    // 2026-08-15: 참고사항을 4줄 고정 구조로 재구성(선혜님 요청):
+    // ①실측+시공비(지역별) ②레일 ③전동 및 부자재 ④기타 옵션(블라인드옵션 외)
+    var measureInstallSum = 0;
+    var railSum = 0, railDetailBits = [];
+    var motorMaterialSum = 0;
+    var etcOptionSum = 0;
     document.querySelectorAll('#svc-body tr').forEach(function(tr){
       var tds = tr.querySelectorAll('td');
       var desc = tds[1]?.querySelector('input')?.value || '';
@@ -186,23 +189,28 @@ function buildCustomerHTML() {
       var isRailMaterial = tr.hasAttribute('data-rail-src');
       var isRailInstall = tr.hasAttribute('data-railcost-src');
       var isRegionInstall = tr.hasAttribute('data-install-base');
-      // 실측비/시공비/블라인드시공은 data-svc-type 속성으로 표시됨 — 이걸 안 보면
-      // "기타"로 분류되어 참고사항에 중복 표시되는 문제가 생김(재현으로 발견)
       var svcTypeAttr = tr.getAttribute('data-svc-type') || '';
+      var kindSelect = tds[0]?.querySelector('select')?.value || '';
       var isMeasureOrInstall = isRegionInstall || isRailInstall ||
         svcTypeAttr === '실측비' || svcTypeAttr === '시공비' || svcTypeAttr === '블라인드시공';
+      var isOptionExtra = svcTypeAttr === '옵션추가금'; // 전동 등 블라인드 옵션추가금
+      var isManualMaterial = kindSelect === '부자재'; // 직접 추가한 부자재
       if (isMeasureOrInstall) {
-        measureInstallSum += amt; measureInstallCount++;
+        measureInstallSum += amt;
       } else if (isRailMaterial) {
-        railPartsSum += amt;
+        railSum += amt;
         railDetailBits.push(desc.trim() + (qty > 1 ? ' ' + qty + '개' : ''));
+      } else if (isOptionExtra || isManualMaterial) {
+        motorMaterialSum += amt;
       } else {
-        etcParts.push(desc.trim() + ' ' + amt.toLocaleString() + '원');
+        etcOptionSum += amt;
       }
     });
     if (measureInstallSum > 0) detailParts.push('실측+시공비 ' + measureInstallSum.toLocaleString() + '원');
-    if (railPartsSum > 0) detailParts.push('레일 및 부자재 ' + railPartsSum.toLocaleString() + '원' + (railDetailBits.length ? ' (' + railDetailBits.join(', ') + ')' : ''));
-    etcParts.forEach(function(p){ detailParts.push(p); });
+    if (railSum > 0) detailParts.push('레일 ' + railSum.toLocaleString() + '원');
+    if (motorMaterialSum > 0) detailParts.push('전동 및 부자재 ' + motorMaterialSum.toLocaleString() + '원');
+    if (etcOptionSum > 0) detailParts.push('기타 옵션 ' + etcOptionSum.toLocaleString() + '원');
+
     svcDetailNote = detailParts.join('\n');
 
     svcHTML += '<table class="pv-prod-table" style="margin-top:0">';
