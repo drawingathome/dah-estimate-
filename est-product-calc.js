@@ -575,7 +575,17 @@ function calcTotal() {
   // grand>0 조건 때문에 스킵되어 계약금 입력창에 이전 값(예: 10만원)이
   // 그대로 남아있었음. "총액 0원인데 계약금 10만원"이라는 논리적 모순이
   // 사용자에게 그대로 보일 위험이 있었음. grand<=0이면 계약금도 강제로 0.
-  if (grand <= 0) depRaw = 0;
+  // 2026-08-18(선혜님 발견 — 실제로 재현됨): 위 수정이 depRaw(계산용 변수)만
+  // 0으로 만들고, 정작 화면에 보이는 입력창(depInp.value) 자체는 안 건드려서
+  // "최종금액 0원인데 계약금 입력창엔 5만원"이 그대로 보이는 문제가 여전히
+  // 있었음 — depInp.value도 명시적으로 비워야 완전히 해결됨.
+  if (grand <= 0) {
+    depRaw = 0;
+    if (depInp && depInp.value) {
+      depInp.value = '';
+      depInp.removeAttribute('data-raw');
+    }
+  }
   var deposit=depRaw>0 ? depRaw : 0;
   // 수동입력 등으로 계약금이 총액보다 큰 경우 잔금이 음수가 되는 것도 함께 방지
   if (deposit > grand) deposit = grand;
