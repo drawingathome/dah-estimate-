@@ -27,22 +27,33 @@ function confirmPdfPrint() {
   if(old) old.remove();
   var s = document.createElement('style');
   s.id = styleId;
-  if(_selectedPdfOpt === 'fit') {
-    // "size: auto"는 사용자가 인쇄창에서 선택한 용지 크기를 그대로 따르는 것일 뿐,
-    // 콘텐츠 길이에 맞춰 페이지가 늘어나는 게 아니라서 실제로는 효과가 없었음(선혜님 발견).
-    // 실제 콘텐츠(.pv-wrap)의 렌더링된 높이를 측정해서, 그 길이에 정확히 맞는 커스텀
-    // 페이지 크기(폭 210mm 고정, 높이는 콘텐츠+여백)를 지정해야 한 페이지로 통으로 인쇄됨.
-    var contentEl = document.querySelector('#pv-overlay .pv-wrap') || document.querySelector('.pv-wrap');
-    var heightPx = contentEl ? contentEl.scrollHeight : 1123; // 못 구하면 A4 세로 기본값(약 297mm)으로 폴백
-    var PX_TO_MM = 25.4 / 96; // 웹 표준 96dpi 기준 px→mm 환산
-    var marginMm = 20; // 위아래 여백 10mm씩
-    var heightMm = Math.ceil(heightPx * PX_TO_MM) + marginMm;
-    s.textContent = '@media print { @page { size: 210mm ' + heightMm + 'mm; margin: 10mm 12mm; } .pv-wrap { page-break-inside: avoid; } }';
-  } else {
-    
-    s.textContent = '@media print { @page { size: A4 portrait; margin: 10mm 12mm; } }';
-  }
+  // 2026-08-16: "견적 길이에 맞추기"를 "A4보다 긴 커스텀 페이지로 늘리는 방식"에서
+  // "A4 크기(210×297mm)는 고정하고, 넘치는 콘텐츠를 비율대로 축소해서 강제로 1장 안에
+  // 욱여넣는 방식"으로 전면 교체(선혜님 확정 — "A4는 바꿀 게 없다, 1장으로 만들어야
+  // 하는 개념이라 폭을 더 압축해야 하는 시스템"). 두 옵션 다 이제 A4 크기 자체는 동일.
+  s.textContent = '@media print { @page { size: A4 portrait; margin: 10mm 12mm; } }';
   document.head.appendChild(s);
+
+  var contentEl = document.querySelector('#pv-overlay .pv-wrap') || document.querySelector('.pv-wrap');
+  // 이전에 "견적 길이에 맞추기"로 시도했을 때 적용된 zoom값이 남아있을 수 있으므로 항상 초기화.
+  // ("A4 사이즈로 자르기"를 고르면 이 초기화된 상태(zoom 없음) 그대로 인쇄되어 N장으로 잘림)
+  if (contentEl) contentEl.style.zoom = '';
+
+  if(_selectedPdfOpt === 'fit') {
+    // transform:scale은 시각적 변환일 뿐이라 인쇄 페이지분할 계산에는 반영이 안 됨(실제로
+    // 확인해봤더니 축소된 것처럼 보여도 여전히 여러 장으로 잘렸음) — zoom 속성은 실제
+    // 레이아웃 크기 자체를 줄이므로 페이지분할 계산에도 정확히 반영됨(Chromium 계열 전용
+    // 비표준 속성이지만, 이 앱의 인쇄/PDF저장은 어차피 Chromium 기반 브라우저 대상이라 문제없음).
+    var A4_HEIGHT_MM = 297;
+    var marginMm = 20; // 상하 10mm씩(위 @page margin과 동일한 값으로 맞춤)
+    var PX_PER_MM = 96 / 25.4; // 웹 표준 96dpi 기준
+    var availableHeightPx = (A4_HEIGHT_MM - marginMm) * PX_PER_MM;
+    var naturalHeight = contentEl ? contentEl.scrollHeight : availableHeightPx;
+    if (contentEl && naturalHeight > availableHeightPx) {
+      var scale = availableHeightPx / naturalHeight;
+      contentEl.style.zoom = scale;
+    }
+  }
   // 2026-08-14: 아이패드/아이폰(iOS 사파리)에서 "인쇄 / PDF 저장"을 눌러도
   // 아무 반응이 없던 문제(선혜님 발견 — 실무에서 주로 아이패드 사용).
   // iOS 사파리는 보안상 window.print()를 "사용자가 버튼을 누른 그 실행 흐름

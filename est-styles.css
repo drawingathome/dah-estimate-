@@ -409,6 +409,7 @@ td.amt{
   font-size:11px;font-weight:700;
   color:#282828;letter-spacing:-0.3px
 }
+.r{text-align:right}
 .c-display-name{font-weight:600!important}
 .sub-size{display:block;font-size:11px;color:#F06E2D;font-weight:600;margin-top:2px;white-space:nowrap}
 
@@ -571,6 +572,21 @@ td.amt{
   border-radius:12px;overflow:hidden;
   border:1px solid #EEE6DC
 }
+.pv-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media (max-width:600px){
+  .pv-table-scroll{width:100%}
+  .pv-table-scroll .pv-prod-table{width:520px!important}
+  .pv-table-scroll-wrap{position:relative}
+  .pv-table-scroll-wrap::after{
+    content:'\203a';color:#B0A99F;font-size:14px;font-weight:700;
+    position:absolute;top:0;right:0;bottom:0;width:26px;
+    display:flex;align-items:center;justify-content:flex-end;padding-right:2px;
+    background:linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.97) 60%);
+    box-shadow:-6px 0 8px -6px rgba(0,0,0,0.15);
+    pointer-events:none;transition:opacity 0.2s;
+  }
+  .pv-table-scroll-wrap.scrolled-end::after{opacity:0}
+}
  
 .pv-meta{
   display:flex;gap:28px;padding:8px 40px;
@@ -603,6 +619,14 @@ td.amt{
 .pv-sch-item:last-child{border-right:none}
  
 .pv-prod-table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
+.pv-list-header{display:flex;justify-content:space-between;border-top:1px solid #282828;border-bottom:1px solid #282828;padding:6px 0;font-size:10px;letter-spacing:0.5px;color:var(--sub);font-weight:600;margin-bottom:6px}
+.pv-space-head{font-size:12px;font-weight:700;letter-spacing:1.5px;color:#282828;margin:16px 0 8px 0}
+.pv-space-head:first-child{margin-top:0}
+.pv-item-row{padding:10px 0;border-bottom:1px solid #F0EEE9}
+.pv-item-main{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.pv-item-name{font-size:13px;font-weight:600;color:#282828}
+.pv-item-amt{font-size:13px;font-weight:700;color:#282828;white-space:nowrap}
+.pv-item-sub{font-size:10.5px;color:var(--sub);margin-top:4px;line-height:1.5}
 .pv-prod-table thead th{
   font-size:11px;font-weight:700;color:var(--sub);
   padding:8px 10px;background:#FAF7F5;
@@ -626,8 +650,10 @@ td.amt{
 .pv-prod-table tbody td.r{text-align:right}
 .pv-prod-table .sub-head td{background:#fff;color:#282828;font-size:11px;font-weight:900;letter-spacing:3px;border-top:1.5px solid #282828;border-bottom:1px solid #EEE6DC}
  
+.pv-summary-divider{border-top:1px solid #282828;margin:14px 0 10px 0}
 .pv-sum-table{width:100%;font-size:11px}
 .pv-sum-table td{padding:8px 28px}
+.pv-sum-table td.sum-val{text-align:right}
 .pv-sum-table .total-row td{
   padding:16px 28px;font-size:11px;font-weight:800;
   background:#fff;border-top:2px solid #282828;border-bottom:2px solid #282828
@@ -647,7 +673,7 @@ td.amt{
   margin-bottom:8px
 }
 .pv-notes-item{display:flex;gap:8px}
-.pv-notes-item::before{content:"·";color:var(--sub);font-weight:700;flex-shrink:0}
+.pv-notes-item::before{content:"";width:4px;height:4px;background:#1A1A1A;flex-shrink:0;margin-top:6px}
 .pv-header{
   background:#fff;
   padding:20px 28px 18px;
@@ -717,8 +743,8 @@ td.amt{
   font-size:11px;font-weight:700;color:var(--sub);
   letter-spacing:0.5px;margin-bottom:4px
 }
-.pv-payment-sub{font-size:11px;color:#756E62;margin-bottom:8px}
-.pv-payment-amount{font-size:11px;font-weight:700;color:#282828}
+.pv-payment-sub{font-size:10px;font-weight:400;color:#756E62}
+.pv-payment-amount{font-size:16px;font-weight:700;color:#282828;margin-top:4px}
 
  
 .pv-process{padding:20px 28px;border-bottom:1px solid #EEE6DC}
@@ -742,114 +768,195 @@ td.amt{
 .pv-step-desc{font-size:11px;color:var(--sub);line-height:1.6;display:block}
 
  
+.pv-section-title{padding:12px 20px 8px;font-size:17px;font-weight:700;color:#282828;letter-spacing:0.5px;display:flex;align-items:center}
+
+/* 최종견적 독립 강조블록 */
+.pv-total-block{display:flex;align-items:baseline;justify-content:space-between;padding:16px 0;border-top:2px solid #282828;border-bottom:1.5px solid #282828;margin-bottom:16px}
+.pv-total-label{font-size:13px;letter-spacing:0.5px;color:var(--sub)}
+.pv-total-value{font-family:'Noto Serif CJK KR',Georgia,serif;font-size:36px;font-weight:600;color:#F06E2D}
+
+/* PROCESS 타임라인 */
+.pv-timeline{padding:0 20px}
+.pv-tl-step{position:relative;padding-left:24px;padding-bottom:8px}
+.pv-tl-line{display:block;position:absolute;left:7px;top:18px;bottom:0;width:2px;background:#B0A99F}
+.pv-tl-dot{position:absolute;left:0;top:0;width:16px;height:16px;border-radius:50%;border:1.5px solid #282828;background:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#282828;line-height:1}
+.pv-tl-text{font-size:11px;line-height:1.5;color:var(--sub);padding-top:1px}
+.pv-tl-text strong{color:#282828;font-weight:700}
+
 .pv-footer{
   padding:14px 28px;background:#fff;
   font-size:11px;color:#282828;line-height:1.7;
   border-top:2px solid #282828
 }
 .pv-footer strong{color:#282828}
+.pv-supplier-line{font-size:10px;color:var(--sub);margin-bottom:10px;line-height:1.6}
+
+/* 2026-08-15: 시그니처 요소 - 커튼 주름을 추상화한 얇은 세로선 리듬 */
+/* 2026-08-15: 시그니처 주름패턴 제거됨 - 있으나마나한 미묘함이라 판단 */
+
+/* 수신자 - 공급자와 비교되던 2열 구조 폐기, 고객 이름을 세리프로 크게 */
+.pv-recipient{padding:18px 28px;border-top:1px solid #EEE6DC;border-bottom:1px solid #EEE6DC}
+.pv-recipient-label{font-size:10px;letter-spacing:3px;color:var(--sub);font-weight:600;margin-bottom:8px;text-transform:uppercase}
+.pv-recipient-name{font-family:'Noto Serif CJK KR',Georgia,serif;font-size:22px;font-weight:600;color:#282828;margin-bottom:6px;letter-spacing:-0.3px}
+.pv-recipient-info{font-size:11px;color:var(--sub)}
 
  
 @media print{
-  @page { size:A4; margin:10mm 14mm; }
-
-  /* 숨길 요소 */
+  /* 숨길 요소 - 작업화면 UI(버튼/탭바 등)가 인쇄물에 찍히지 않도록. 원본에 있던 규칙인데
+     오늘 세션 중 인쇄CSS를 여러 번 재작성하면서 실수로 누락됐던 걸 반영 직전 발견해 복원함. */
   .doc-header-tabbar, .action-bar, .add-btn, .add-row-btns,
   .del-btn, .copy-btn, .btn-preview, .over243-wrap,
   .discount-wrap select, .sec-badge, .sec-tip,
-  .info-toggle, .region-row, .print-hide,
+  .info-toggle, .region-row,
   #survey-card, #space-picker { display:none!important; }
 
-  /* 기본 */
-  body { background:#fff!important; font-size:11px!important; }
-  * { -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; }
-
-  /* 섹션 카드 */
+  /* 섹션 카드 / 표 기본 / 페이지나눔 - 작업화면 자체를 직접 인쇄할 때를 위한 안전장치.
+     오늘 세션에서 새로 안 건드린 부분이라 원본 그대로 보존 */
   .section, .summary-section {
     box-shadow:none!important;
     border:1px solid #EEE6DC!important;
     break-inside:avoid;
     margin-bottom:8px!important;
   }
-
-  /* 테이블 */
   thead { display:table-header-group; }
   tr { break-inside:avoid; }
-  th { background:#F5F2EE!important; font-size:11px!important; }
-  td { font-size:11px!important; }
+  .page-break { page-break-before:always; }
 
-  /* 합계 섹션 */
-  .summary-section { break-inside:avoid; }
-
-  /* 고객용 출력 미리보기 */
+  html, body { background:#fff!important; }
+  .container, .quicknav, .print-hide { display:none!important; }
   body.preview-open .container { display:none!important; }
   body.preview-open #pv-overlay {
-    position:static!important;
-    background:transparent!important;
-    overflow:visible!important;
+    display:block!important; position:static!important; width:100%!important;
+    height:auto!important; overflow:visible!important; background:#fff!important;
   }
+  #pv-overlay .pv-nav { display:none!important; }
+  #pv-overlay .pv-wrap { box-shadow:none!important; border-radius:0!important; max-width:none!important; margin:0!important; border:none!important; }
+  @page { size:A4; margin:3mm 16mm; }
 
-  /* 고객용 헤더 */
+  /* ══════════════════════════════════════════════
+     2026-08-15 v2 — 간격 체계 통일(선혜님 지적: "간격이 서로
+     안 맞다"). 임의의 숫자를 여기저기 조금씩 깎는 대신, 딱
+     3단계 간격만 사용: S=6px(같은 블록 내부) / M=10px(관련
+     섹션 사이) / L=14px(완전히 다른 섹션 전환). 모든 여백은
+     이 세 값 중 하나만 쓴다 — 예외 없음.
+     ══════════════════════════════════════════════ */
+
+  #pv-overlay, #pv-overlay * { color:#1A1A1A!important; }
+
   .pv-header {
     background:#fff!important;
-    border-bottom:2px solid #282828!important;
-    padding:16px 20px!important;
+    border-bottom:1px solid #1A1A1A!important;
+    padding:0 0 6px 0!important;
+    margin-bottom:8px!important;
+    display:flex!important; justify-content:space-between!important; align-items:flex-start!important;
   }
-  .pv-logo { filter:none!important; }
-  .pv-brand { color:#282828!important; font-size:11px!important; }
-  .pv-title { font-size:22px!important; color:#282828!important; }
+  .pv-logo { filter:grayscale(1) contrast(1.3)!important; height:30px!important; }
+  .pv-brand { display:none!important; }
+  .pv-doc-label { display:none!important; }
+  .pv-doc-title { font-family:'Noto Serif CJK KR',Georgia,serif!important; font-size:21px!important; color:#1A1A1A!important; font-weight:600!important; letter-spacing:-0.3px!important; }
 
-  /* 고객용 테이블 */
-  .pv-section { break-inside:avoid; margin-bottom:8px!important; }
-  .pv-table th { background:#fff!important; border-bottom:1.5px solid #282828!important; font-size:11px!important; }
-  .pv-table td { font-size:11px!important; }
+  .pv-meta { padding:0!important; margin-bottom:12px!important; font-size:11px!important; color:#8A8378!important; border:none!important; background:#fff!important; }
+  .pv-meta span strong { color:#1A1A1A!important; font-weight:600!important; }
 
-  /* 2026-08-14: A4 1페이지 유지를 위한 여백 압축(선혜님 요청 — 기존에 쓰시던
-     견적서 수준으로 촘촘하게). 화면 미리보기는 여유있게 그대로 두고,
-     실제 인쇄/PDF 출력일 때만 적용해서 항목이 6개 정도까지는 1페이지에
-     들어가도록 함. 내용은 하나도 안 지우고 여백/줄간격만 조임. */
-  .pv-party { padding:8px 24px!important; }
-  .pv-party-label { margin-bottom:4px!important; letter-spacing:1px!important; }
-  .pv-party-name { margin-bottom:4px!important; }
-  .pv-party-info { line-height:1.5!important; font-size:10px!important; }
-  .pv-section { padding:8px 24px!important; }
-  .pv-sum-table td { padding:5px 24px!important; }
-  .pv-payment-split > div { padding:10px 24px!important; }
-  .pv-notes { padding:11px 24px!important; }
-  .pv-notes-title { margin-bottom:4px!important; }
-  .pv-notes-item { line-height:1.5!important; font-size:10px!important; }
-  .pv-process { padding:5px 24px!important; }
-  .pv-process-title { margin-bottom:4px!important; }
-  .pv-footer { padding:10px 24px!important; font-size:10px!important; }
-  .pv-meta { padding:6px 24px!important; }
-  .pv-prod-table td, .pv-prod-table th { padding-top:5px!important; padding-bottom:5px!important; }
-  /* 표 행/그룹헤더를 한 번 더 조여서 1페이지 여유 확보 */
-  .pv-prod-table td, .pv-prod-table th { padding-top:3px!important; padding-bottom:3px!important; font-size:10px!important; line-height:1.35!important; }
-  .pv-section-title { margin-bottom:4px!important; font-size:10px!important; }
-  .pv-header { padding:12px 24px!important; }
-  .pv-title { font-size:19px!important; }
-  .pv-process { font-size:9.5px!important; }
-  .pv-process div { line-height:1.35!important; }
-  /* 마지막 여유분 확보 — 품목 3개 기준 1046px 안에 확실히 들어가도록 */
-  .pv-footer { padding:5px 24px!important; font-size:9.5px!important; }
-  .pv-notes { padding:6px 24px!important; }
-  .pv-payment-split > div { padding:6px 24px!important; }
-  .pv-sum-table td { padding:4px 24px!important; }
-  /* 공간 그룹 헤더(거실/안방 등)는 품목 수만큼 늘어나므로 얇게 */
-  .pv-prod-table tr.sub-head td { padding-top:2px!important; padding-bottom:2px!important; font-size:9.5px!important; }
+  /* 시그니처 주름 패턴 — 헤더 안에 이미 배치, 별도 여백 불필요 */
+  /* 2026-08-15: 시그니처 주름패턴 제거됨 */
 
-  /* 합계 박스 */
-  .pv-total-box {
-    background:#FAF7F5!important;
-    border:1.5px solid #282828!important;
-    break-inside:avoid;
+  .pv-recipient { padding:0!important; margin-bottom:12px!important; border:none!important; }
+  .pv-recipient-label { font-size:9px!important; letter-spacing:2px!important; color:#8A8378!important; font-weight:600!important; margin-bottom:5px!important; }
+  .pv-recipient-name { font-family:'Noto Serif CJK KR',Georgia,serif!important; font-size:19px!important; font-weight:600!important; color:#1A1A1A!important; margin-bottom:5px!important; }
+  .pv-recipient-info { font-size:11px!important; color:#5C5648!important; }
+
+  .pv-schedule-bar { border:none!important; margin-bottom:12px!important; }
+  .pv-sch-item { padding:0!important; border:none!important; }
+  .pv-sch-item:first-child { padding-left:16px!important; padding-right:16px!important; }
+  .pv-sch-item:last-child { padding-left:16px!important; padding-right:16px!important; }
+  .pv-sch-label { font-size:9px!important; letter-spacing:2px!important; color:#8A8378!important; font-weight:600!important; margin-bottom:5px!important; }
+  .pv-sch-val { font-size:12px!important; font-weight:700!important; color:#1A1A1A!important; }
+
+  .pv-supplier-line { font-size:9px!important; color:#8A8378!important; margin-bottom:8px!important; padding-bottom:0!important; }
+
+  .pv-section { background:#fff!important; padding:0!important; margin-bottom:12px!important; border:none!important; }
+  .pv-section-title { font-size:15px!important; letter-spacing:1px!important; color:#1A1A1A!important; font-weight:700!important; margin-bottom:8px!important; padding-bottom:0!important; border-bottom:none!important; text-transform:none; display:flex!important; align-items:center!important; }
+
+  .pv-table-scroll { overflow:visible!important; }
+  .pv-table-scroll-wrap::after { display:none!important; }
+  .pv-table { border-collapse:collapse!important; }
+  .pv-table th {
+    background:#fff!important; border-top:1px solid #1A1A1A!important; border-bottom:1px solid #1A1A1A!important;
+    font-size:9px!important; letter-spacing:0.5px!important; color:#8A8378!important; font-weight:600!important;
+    padding:4px 4px!important;
   }
+  .pv-table td { border-bottom:none!important; padding:5px 4px!important; font-size:11px!important; }
+  .pv-table tbody tr:last-child td { border-bottom:none!important; }
+  .pv-table th, .pv-prod-table th {
+    background:#fff!important; border-top:1px solid #1A1A1A!important; border-bottom:1px solid #1A1A1A!important;
+    font-size:9px!important; letter-spacing:0.5px!important; color:#8A8378!important; font-weight:600!important;
+    padding:4px 4px!important;
+  }
+  .pv-prod-table td { border-bottom:1px solid #F0EEE9!important; padding:5px 4px!important; font-size:11px!important; vertical-align:top!important; }
+  .pv-prod-table tr.pv-group-first td { border-top:1px solid #E5E1DA!important; padding-top:8px!important; }
+  .pv-prod-table tbody tr:first-child.pv-group-first td { border-top:none!important; padding-top:5px!important; }
+  .pv-prod-table tbody tr:last-child td { border-bottom:none!important; }
+  .pv-prod-table tbody td.name { color:#1A1A1A!important; font-weight:600!important; }
+  .pv-prod-table tbody td.space-cell { color:#B0A99F!important; font-weight:400!important; border-right:1.5px solid #B0A99F!important; vertical-align:middle!important; text-align:left!important; line-height:1!important; }
+  .pv-prod-table tbody td.space-cell .space-cell-text { position:relative!important; top:-8px!important; display:inline-block!important; }
+  .pv-prod-table tbody td.sz { color:#B0A99F!important; }
+  .pv-cell-sub { font-size:9px!important; font-weight:400!important; color:#8A8378!important; margin-top:2px!important; }
+  .r { text-align:right!important; }
+  .amt { font-weight:700!important; text-align:right!important; }
 
-  /* 입금 계좌 */
-  .pv-bank { background:#F5F2EE!important; break-inside:avoid; }
+  .pv-summary-divider { border-top:1px solid #1A1A1A!important; margin:18px 0 8px 0!important; }
+  .pv-sum-table { margin-top:0!important; }
+  .pv-sum-indent { margin-left:90px!important; width:calc(100% - 90px)!important; }
+  .pv-sum-table td { padding:5px 4px!important; font-size:12px!important; border:none!important; }
+  .pv-sum-table td.sum-lbl { padding-left:0!important; }
+  .pv-sum-table td.sum-val { text-align:right!important; font-weight:700!important; }
+  .pv-total-block {
+    display:flex!important; align-items:baseline!important; justify-content:space-between!important;
+    padding:12px 4px 18px 0!important;
+    margin-left:90px!important;
+    border-top:2px solid #1A1A1A!important;
+    border-bottom:1.5px solid #1A1A1A!important;
+    margin-bottom:12px!important;
+  }
+  .pv-total-label { font-size:14px!important; letter-spacing:1px!important; color:#1A1A1A!important; font-weight:600!important; }
+  .pv-total-value { font-family:'Noto Serif CJK KR',Georgia,serif!important; font-size:32px!important; font-weight:700!important; color:#1A1A1A!important; }
+  #pv-overlay .pv-total-value { color:#F06E2D!important; }
 
-  /* 페이지 나눔 */
-  .page-break { page-break-before:always; }
+  .pv-payment-split { border:none!important; margin:0 0 12px 0!important; }
+  .pv-payment-split > div { background:#fff!important; padding:0!important; padding-left:16px!important; padding-right:16px!important; border:none!important; }
+  .pv-payment-split > div:last-child { border-right:none!important; }
+  .pv-payment-label { font-size:11px!important; font-weight:700!important; color:#1A1A1A!important; margin-bottom:5px!important; }
+  .pv-payment-sub { font-size:9px!important; font-weight:400!important; color:#8A8378!important; }
+  .pv-payment-amount { font-size:13px!important; font-weight:700!important; }
+
+  .pv-notes { background:#fff!important; padding:0!important; border:none!important; margin:0 0 8px 0!important; }
+  .pv-notes-title { font-size:9px!important; letter-spacing:2px!important; color:#8A8378!important; margin-bottom:5px!important; font-weight:600!important; }
+  .pv-notes-item { font-size:10px!important; line-height:1.25!important; color:#5C5648!important; display:flex!important; gap:6px!important; }
+  .pv-notes-item::before { content:''!important; width:3px!important; height:3px!important; background:#1A1A1A!important; flex-shrink:0!important; margin-top:4px!important; }
+
+  .pv-process { background:#fff!important; padding:0!important; margin:0 0 6px 0!important; border:none!important; }
+  .pv-process-title { font-size:9px!important; letter-spacing:2px!important; color:#8A8378!important; margin-bottom:5px!important; font-weight:600!important; }
+  .pv-timeline { padding:0!important; }
+  .pv-tl-step { position:relative!important; padding-left:18px!important; padding-bottom:2px!important; }
+  .pv-tl-line {
+    display:block!important; position:absolute!important; left:5.5px!important; top:15px!important; bottom:0!important;
+    width:1.5px!important; background:#B0A99F!important;
+  }
+  .pv-tl-dot {
+    position:absolute!important; left:0!important; top:0!important; width:11px!important; height:11px!important;
+    border-radius:50%!important; border:1px solid #1A1A1A!important; background:#fff!important;
+    display:flex!important; align-items:center!important; justify-content:center!important;
+    font-size:7.5px!important; font-weight:700!important; color:#1A1A1A!important; line-height:1!important;
+  }
+  .pv-tl-text { font-size:10px!important; line-height:1.3!important; color:#5C5648!important; padding-bottom:0!important; padding-top:1px!important; }
+  .pv-tl-text strong { color:#1A1A1A!important; font-weight:700!important; }
+
+  .pv-footer { background:#fff!important; padding:5px 0 0 0!important; border-top:1px solid #1A1A1A!important; margin:0!important; font-size:9px!important; color:#8A8378!important; }
+  .pv-footer strong { color:#1A1A1A!important; }
+
+  .pv-total-box { background:#fff!important; border:none!important; }
+  .pv-bank { background:#fff!important; }
 }
 
  
@@ -1058,7 +1165,7 @@ input,select,textarea{transition:border-color 0.15s ease}
 
 
 
-.copy-btn,.del-btn{min-width:36px!important;min-height:36px!important;padding:6px 8px!important}
+.copy-btn,.del-btn{min-width:35px!important;min-height:35px!important;padding:6px 8px!important}
 
 /* ── 견적서 탭 active ── */
 .est-tab.on {

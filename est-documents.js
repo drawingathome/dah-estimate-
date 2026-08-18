@@ -104,14 +104,9 @@ function buildCustomerHTML() {
   var allRows = curtainRows.concat(blindRows);
   var prodHTML = '';
   if(allRows.length) {
-    prodHTML += '<table class="pv-prod-table">';
-    prodHTML += '<colgroup>';
-    prodHTML += '<col style="width:13%"><col style="width:14%"><col style="width:28%"><col style="width:18%"><col style="width:7%"><col style="width:10%"><col style="width:10%">';
-    prodHTML += '</colgroup>';
-    prodHTML += '<thead><tr>';
-    prodHTML += '<th>공간</th><th>사이즈(cm)</th><th style="text-align:left">제품명</th>';
-    prodHTML += '<th>사양</th><th class="r">폭</th><th class="r">단가</th><th class="r">금액</th>';
-    prodHTML += '</tr></thead><tbody>';
+    prodHTML += '<div class="pv-table-scroll-wrap"><div class="pv-table-scroll"><table class="pv-prod-table">';
+    prodHTML += '<colgroup><col style="width:13%"><col style="width:14%"><col style="width:35%"><col style="width:9%"><col style="width:13%"><col style="width:16%"></colgroup>';
+    prodHTML += '<thead><tr><th style="text-align:left">공간</th><th style="text-align:left">사이즈(cm)</th><th style="text-align:left">제품명</th><th class="r">폭</th><th class="r">단가</th><th class="r">금액</th></tr></thead><tbody>';
 
     // 고객용 견적서는 "공간"(거실/안방/자녀방 등) 기준으로 묶어서 보여줌 —
     // 입력화면(내부관리)에서는 커튼/블라인드로 나눠 작성하지만, 고객이 받는 문서는
@@ -125,41 +120,50 @@ function buildCustomerHTML() {
       spaceGroups[key].push(r);
     });
 
-    function renderCurtainRow(r) {
-      var specParts = r.spec.split(' · ');
-      var specCell = specParts[0]+(specParts.length>1?'<br><span style="font-size:11px;color:#B0A99F">'+specParts.slice(1).join(' · ')+'</span>':'');
-      var html = '<tr>';
-      html += '<td class="space">'+r.space+'</td>';
-      html += '<td class="sz">'+(r.mw?r.mw+'×'+r.mh:'—')+'</td>';
-      html += '<td class="name">'+r.name+'</td>';
-      html += '<td class="spec-col">'+specCell+'</td>';
-      html += '<td class="r" style="color:#B0A99F;font-size:11px">'+(r.pnum?r.pnum:'—')+'</td>';
-      html += '<td class="r" style="color:#B0A99F;font-size:11px">'+(r.price?r.price.toLocaleString():'—')+'</td>';
-      html += '<td class="amt">'+r.amt+'</td>';
-      html += '</tr>';
+    function renderCurtainRow(r, isFirst, groupSize) {
+      var specArr = r.spec.split(' · ');
+      var usedSpecAsTitle = !r.name;
+      var title = r.name || specArr[0] || '커튼';
+      var subSpec = (usedSpecAsTitle ? specArr.slice(1) : specArr).join(' · ');
+      var spaceCell = isFirst ? '<td class="space-cell" rowspan="'+groupSize+'"><span class="space-cell-text">'+(r.space||'')+'</span></td>' : '';
+      var html = '<tr'+(isFirst?' class="pv-group-first"':'')+'>'
+        +spaceCell
+        +'<td class="sz">'+(r.mw?r.mw+'×'+r.mh:'—')+'</td>'
+        +'<td class="name">'+title+(subSpec?'<div class="pv-cell-sub">'+subSpec+'</div>':'')+'</td>'
+        +'<td class="r" style="color:#B0A99F;font-size:10.5px">'+(r.pnum?r.pnum:'—')+'</td>'
+        +'<td class="r" style="color:#B0A99F;font-size:10.5px">'+(r.price?r.price.toLocaleString():'—')+'</td>'
+        +'<td class="amt">'+r.amt+'</td>'
+        +'</tr>';
       return html;
     }
-    function renderBlindRow(r) {
-      var spec = r.kind+(r.handle?' · '+r.handle:'');
-      var html = '<tr>';
-      html += '<td class="space">'+r.space+'</td>';
-      html += '<td class="sz">'+(r.bw?r.bw+'×'+r.bh:'—')+'</td>';
-      html += '<td class="name">'+r.name+'</td>';
-      html += '<td class="spec-col">'+spec+(r.sqm?'<br><span style="font-size:11px;color:#B0A99F">'+r.sqm+'</span>':'')+'</td>';
-      html += '<td class="r">—</td>';
-      html += '<td class="r" style="color:#B0A99F;font-size:11px">'+(r.price?r.price.toLocaleString():'—')+'</td>';
-      html += '<td class="amt">'+r.amt+'</td>';
-      html += '</tr>';
+    function renderBlindRow(r, isFirst, groupSize) {
+      var usedKindAsTitle = !r.name;
+      var title = r.name || r.kind || '블라인드';
+      var subParts = [];
+      if (!usedKindAsTitle) subParts.push(r.kind);
+      if (r.handle) subParts.push(r.handle);
+      if (r.sqm) subParts.push(r.sqm);
+      var subSpec = subParts.join(' · ');
+      var spaceCell = isFirst ? '<td class="space-cell" rowspan="'+groupSize+'"><span class="space-cell-text">'+(r.space||'')+'</span></td>' : '';
+      var html = '<tr'+(isFirst?' class="pv-group-first"':'')+'>'
+        +spaceCell
+        +'<td class="sz">'+(r.bw?r.bw+'×'+r.bh:'—')+'</td>'
+        +'<td class="name">'+title+(subSpec?'<div class="pv-cell-sub">'+subSpec+'</div>':'')+'</td>'
+        +'<td class="r">—</td>'
+        +'<td class="r" style="color:#B0A99F;font-size:10.5px">'+(r.price?r.price.toLocaleString():'—')+'</td>'
+        +'<td class="amt">'+r.amt+'</td>'
+        +'</tr>';
       return html;
     }
 
     spaceOrder.forEach(function(spaceKey) {
-      prodHTML += '<tr class="sub-head"><td colspan="7">'+spaceKey+'</td></tr>';
-      spaceGroups[spaceKey].forEach(function(r) {
-        prodHTML += (r.type === 'blind') ? renderBlindRow(r) : renderCurtainRow(r);
+      var groupSize = spaceGroups[spaceKey].length;
+      spaceGroups[spaceKey].forEach(function(r, idx) {
+        var isFirst = (idx === 0);
+        prodHTML += (r.type === 'blind') ? renderBlindRow(r, isFirst, groupSize) : renderCurtainRow(r, isFirst, groupSize);
       });
     });
-    prodHTML += '</tbody></table>';
+    prodHTML += '</tbody></table></div></div>';
   }
 
   
@@ -212,9 +216,9 @@ function buildCustomerHTML() {
     // 정정: "시공서비스에 정리하자는 말이었다" — 예전엔 표는 여전히
     // "세부 내역은 하단 참고사항을 확인해주세요" 한 줄로 뭉뚱그려두고,
     // 정작 4줄은 완전히 다른 섹션인 참고사항에 작은 글씨로 묻혀있었음).
-    svcHTML += '<table class="pv-prod-table" style="margin-top:0">';
-    svcHTML += '<colgroup><col style="width:30%"><col style="width:50%"><col style="width:20%"></colgroup>';
-    svcHTML += '<thead><tr><th>구분</th><th style="text-align:left">내용</th><th class="r">금액</th></tr></thead><tbody>';
+    svcHTML += '<div class="pv-table-scroll-wrap"><div class="pv-table-scroll"><table class="pv-prod-table" style="margin-top:0">';
+    svcHTML += '<colgroup><col style="width:70%"><col style="width:30%"></colgroup>';
+    svcHTML += '<thead><tr><th style="text-align:left">품목</th><th class="r">금액</th></tr></thead><tbody>';
     var svcLines = [];
     if (measureInstallSum > 0) svcLines.push(['실측 + 시공비', measureInstallSum]);
     if (railSum > 0) svcLines.push(['레일', railSum]);
@@ -223,11 +227,10 @@ function buildCustomerHTML() {
     svcLines.forEach(function(line){
       svcHTML += '<tr>';
       svcHTML += '<td style="font-size:11px;color:#8E8078">' + line[0] + '</td>';
-      svcHTML += '<td></td>';
       svcHTML += '<td class="amt">' + line[1].toLocaleString() + '원</td>';
       svcHTML += '</tr>';
     });
-    svcHTML += '</tbody></table>';
+    svcHTML += '</tbody></table></div></div>';
   }
 
   
@@ -247,11 +250,16 @@ function buildCustomerHTML() {
       ['제품 제작','결제 완료 후 제품 제작 및 시공 준비가 진행'],
       ['시공 및 설치','약속된 일정에 시공팀이 현장을 방문하여 커튼 시공 및 설치 완료']
     ];
-    processHTML = '<div class="pv-process" style="padding:14px 28px;border-top:1px solid #EEE6DC">';
-    processHTML += '<div class="pv-process-title" style="margin-bottom:6px">PROCESS</div>';
-    processHTML += '<div style="font-size:10.5px;line-height:1.65;color:#4A4A4A">';
+    processHTML = '<div class="pv-process">';
+    processHTML += '<div class="pv-process-title">PROCESS</div>';
+    processHTML += '<div class="pv-timeline">';
     steps.forEach(function(s,i){
-      processHTML += '<div>'+(i+1)+'. '+s[0]+' : '+s[1]+'</div>';
+      var isLast = (i === steps.length-1);
+      processHTML += '<div class="pv-tl-step'+(isLast?' pv-tl-last':'')+'">'
+        +'<span class="pv-tl-dot">'+(i+1)+'</span>'
+        +(isLast?'':'<span class="pv-tl-line"></span>')
+        +'<div class="pv-tl-text"><strong>'+s[0]+'</strong> — '+s[1]+'</div>'
+        +'</div>';
     });
     processHTML += '</div></div>';
   }
@@ -277,47 +285,41 @@ function buildCustomerHTML() {
   }
 
   
-  var out = '<div class="pv-wrap" style="min-width:560px;max-width:720px;margin:0 auto">';
+  var out = '<div class="pv-wrap" style="max-width:720px;margin:0 auto">';
 
   
   out += '<div class="pv-header">'
+      +'<div>'
       +'<img class="pv-logo" style="height:36px;display:block;object-fit:contain" src="'+DAH_LOGO_B64+'" alt="드로잉엣홈">'
+      +'<div class="pv-supplier-line" style="margin-top:9px;margin-bottom:0;color:#B0A99F">드로잉엣홈 · 사업자 120-11-39858 · 대표 장선혜 · info@drawingathome.co.kr · 서울 서초구 사평대로 53길 64 1층</div>'
+      +'</div>'
       +'<div class="pv-header-right">'
-      +'<span class="pv-doc-label">ESTIMATE</span>'
+      +''
       +'<div class="pv-doc-title">'+docLabel+'</div>'
       +'</div>'
       +'</div>';
+  // 2026-08-15: 커튼 주름(pleat)을 추상화한 시그니처 요소 — 헤더 바로 아래
+  // 얇은 세로선을 불규칙한 간격으로 배치해 "이 문서는 커튼/블라인드 회사
+  // 것"이라는 걸 은근히 알려줌(선혜님 디자인 피드백 반영 — 뻔한 헤어라인
+  // 신문스타일에서 벗어나 브랜드 고유의 시그니처를 하나 넣음).
+  // 2026-08-15: 시그니처(주름 패턴) 제거 - 너무 미묘해서 있으나마나 하다는
+  // 선혜님 판단. 억지로 살리기보다 깔끔하게 없애기로 함.
 
-  
   out += '<div class="pv-meta">'
       +'<span>No. <strong>'+(cNo||'—')+'</strong></span>'
       +'<span>발행일 <strong>'+today()+'</strong></span>'
       +'<span>담당자 <strong>'+(cStaff||'장선혜')+'</strong></span>'
       +'</div>';
 
-  
-  out += '<div class="pv-parties">';
-  
-  out += '<div class="pv-party">'
-      +'<div class="pv-party-label">공급자</div>'
-      +'<div class="pv-party-name">드로잉엣홈</div>'
-      +'<div class="pv-party-info">'
-      +'<span>사업자 120-11-39858</span>'
-      +'<span>대표자 장선혜</span>'
-      +'<span>이메일 info@drawingathome.co.kr</span>'
-      +'<span>주소 서울 서초구 사평대로 53길 64 1층</span>'
-      +'</div>'
+  // 2026-08-15: 공급자/수신자를 나란히 비교하는 2열 구조를 폐기(선혜님
+  // 피드백 — "간격이 안 맞다": 공급자는 항상 4줄, 수신자는 최대 2줄이라
+  // 구조적으로 항상 불균형했음). 수신자(고객)를 중심에 크게, 공급자
+  // 고정정보는 문서 하단으로 이동해 컴팩트한 한 줄로 처리.
+  out += '<div class="pv-recipient">'
+      +'<div class="pv-recipient-label">수신</div>'
+      +'<div class="pv-recipient-name">'+cName+' 님</div>'
+      +(function(){ var bits=[]; if(cPhone) bits.push(cPhone); if(cAddr) bits.push(cAddr); return bits.length ? '<div class="pv-recipient-info">'+bits.join(' · ')+'</div>' : ''; })()
       +'</div>';
-  
-  out += '<div class="pv-party">'
-      +'<div class="pv-party-label">수신자</div>'
-      +'<div class="pv-party-name">'+cName+'</div>'
-      +'<div class="pv-party-info">'
-      +(cPhone?'<span>연락처 '+cPhone+'</span>':'')
-      +(cAddr?'<span>주소 '+cAddr+'</span>':'')
-      +'</div>'
-      +'</div>';
-  out += '</div>';
 
   
   if(hasSchedule){
@@ -329,38 +331,50 @@ function buildCustomerHTML() {
 
   
   if(prodHTML){
-    out += '<div class="pv-section" style="padding:0;border-radius:0;border:none;border-top:1px solid #EEE6DC;margin-bottom:0">';
-    out += '<div style="padding:12px 20px 8px;font-size:11px;font-weight:800;color:#B0A99F;letter-spacing:1.5px">커튼 · 블라인드</div>';
+    out += '<div class="pv-section">';
+    out += '<div class="pv-section-title">'
+        +'<svg width="20" height="20" viewBox="0 0 20 20" style="vertical-align:-5px;margin-right:6px"><line x1="2" y1="3.5" x2="18" y2="3.5" stroke="#1A1A1A" stroke-width="1.3" stroke-linecap="round"/><path d="M5.5 4.5 Q7.5 11 5.5 17.5" stroke="#1A1A1A" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M10 4.5 Q12 11 10 17.5" stroke="#1A1A1A" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M14.5 4.5 Q16.5 11 14.5 17.5" stroke="#1A1A1A" stroke-width="1.1" fill="none" stroke-linecap="round"/></svg>'
+        +'커튼 · 블라인드</div>';
     out += prodHTML;
     out += '</div>';
   }
 
   
   if(svcHTML){
-    out += '<div class="pv-section" style="padding:0;border-radius:0;border:none;border-top:1px solid #EEE6DC;margin-bottom:0">';
-    out += '<div style="padding:12px 20px 8px;font-size:11px;font-weight:800;color:#B0A99F;letter-spacing:1.5px">시공 서비스</div>';
+    out += '<div class="pv-section">';
+    out += '<div class="pv-section-title">'
+        +'<svg width="20" height="20" viewBox="0 0 20 20" style="vertical-align:-5px;margin-right:6px"><rect x="1.5" y="7.5" width="17" height="5" rx="2.5" stroke="#1A1A1A" stroke-width="1.2" fill="none"/><circle cx="10" cy="10" r="1.6" stroke="#1A1A1A" stroke-width="1" fill="none"/></svg>'
+        +'시공 자재</div>';
     out += svcHTML;
     out += '</div>';
   }
 
   
-  out += '<table class="pv-sum-table" style="border-top:1px solid #EEE6DC;margin-top:0">';
+  out += '<div class="pv-summary-divider"></div>';
+  out += '<table class="pv-sum-table pv-sum-indent" style="margin-top:0">';
+  out += '<colgroup><col style="width:70%"><col style="width:30%"></colgroup>';
   out += '<tr><td class="sum-lbl">제품 소계</td><td class="sum-val">'+sumCurtain+'</td></tr>';
-  if(svcRows.length) out += '<tr><td class="sum-lbl">시공 서비스</td><td class="sum-val">'+sumSvc+'</td></tr>';
+  if(svcRows.length) out += '<tr><td class="sum-lbl">시공 자재</td><td class="sum-val">'+sumSvc+'</td></tr>';
   if(sumDisc && sumDisc !== '-0원' && sumDisc !== '') out += '<tr><td class="sum-lbl">할인</td><td class="sum-val" style="color:#282828">'+sumDisc+'</td></tr>';
-  out += '<tr class="total-row"><td class="sum-lbl" style="font-size:11px;font-weight:500;color:#8E8078">최종 견적</td><td class="sum-val" style="font-size:22px;font-weight:900;letter-spacing:-0.5px;color:#282828">'+sumTotal+'</td></tr>';
   out += '</table>';
+
+  // 2026-08-15: "최종 견적"을 표 행에서 완전히 분리 — 그동안 모든 섹션이
+  // "제목-얇은선-표" 패턴만 반복돼서 리듬감이 없다는 지적(선혜님) 반영.
+  // 유일하게 여기서만 다른 비율(가운데 정렬, 훨씬 큰 여백, 상하 이중선)을
+  // 써서 시선이 자연스럽게 멈추는 지점으로 만듦.
+  out += '<div class="pv-total-block">'
+      +'<span class="pv-total-label">최종 견적</span>'
+      +'<span class="pv-total-value">'+sumTotal+'</span>'
+      +'</div>';
 
   
   out += '<div class="pv-payment-split" style="border-top:none">'
       +'<div class="pv-payment-item">'
-      +'<div class="pv-payment-label">계약금 50%</div>'
-      +'<div class="pv-payment-sub">계약 시 납부</div>'
+      +'<div class="pv-payment-label">계약금 50% <span class="pv-payment-sub">· 계약 시 납부</span></div>'
       +'<div class="pv-payment-amount">'+sumDeposit+'</div>'
       +'</div>'
       +'<div class="pv-payment-item">'
-      +'<div class="pv-payment-label">잔금 50%</div>'
-      +'<div class="pv-payment-sub">실측 후 납부</div>'
+      +'<div class="pv-payment-label">잔금 50% <span class="pv-payment-sub">· 실측 후 납부</span></div>'
       +'<div class="pv-payment-amount">'+sumBalance+'</div>'
       +'</div>'
       +'</div>';
@@ -396,7 +410,7 @@ function buildCustomerHTML() {
 
   out += '<div class="pv-footer">'
       +'<div style="margin-bottom:6px"><strong>결제 계좌</strong>&nbsp;&nbsp;' + _bankName + ' ' + _acctNum + '&nbsp;&nbsp;예금주: ' + _holderName + '(드로잉엣홈)</div>'
-      +'<div style="color:rgba(255,255,255,0.4);font-size:11px">맞춤제작 특성상 제작 시작 후 취소·변경은 불가합니다. 문의사항은 언제든지 연락주세요.</div>'
+      +''
       +'</div>';
 
   out += '</div>';
@@ -471,10 +485,25 @@ function printForCustomer() {
   document.body.appendChild(ov);
   document.body.style.overflow = 'hidden';
   document.body.classList.add('preview-open');
+
+  // 2026-08-16: 모바일에서 표(공간/사이즈/제품명/폭/단가/금액)가 화면보다 넓어서
+  // 옆으로 스크롤해야 하는데, "더 있다"는 걸 알려주는 표시가 없으면 사용자가
+  // 스크롤 가능하다는 걸 모르고 놓칠 수 있음 — 오른쪽 그라데이션 힌트를 넣고,
+  // 끝까지 스크롤하면 자연스럽게 사라지게 함.
+  ov.querySelectorAll('.pv-table-scroll').forEach(function(scrollEl) {
+    var wrap = scrollEl.closest('.pv-table-scroll-wrap');
+    if (!wrap) return;
+    function updateHint() {
+      var atEnd = scrollEl.scrollLeft + scrollEl.clientWidth >= scrollEl.scrollWidth - 2;
+      wrap.classList.toggle('scrolled-end', atEnd);
+    }
+    updateHint();
+    scrollEl.addEventListener('scroll', updateHint, { passive: true });
+  });
 }
 
 function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, today) {
-  var out = '<div class="pv-wrap" style="min-width:560px;max-width:720px;margin:0 auto;background:#fff;padding:36px 32px">';
+  var out = '<div class="pv-wrap" style="max-width:720px;margin:0 auto;background:#fff;padding:36px 32px">';
 
   out += '<div style="text-align:center;margin-bottom:6px">'
       +'<div style="font-size:22px;font-weight:700;letter-spacing:1.5px;color:#282828">DRAWING at HOME</div>'
@@ -608,7 +637,7 @@ function buildVendorHTML(extraNote) {
   var collected = collectVendorGroups();
 
   if(collected.itemCount === 0) {
-    return '<div class="pv-wrap" style="min-width:560px;max-width:720px;margin:0 auto;padding:60px 20px;text-align:center;color:#B0A99F;font-size:13px">거래처 또는 원단명이 입력된 항목이 없습니다.<br>커튼/블라인드 입력창의 "거래처" 필드를 채운 후 다시 시도해주세요.</div>';
+    return '<div class="pv-wrap" style="max-width:720px;margin:0 auto;padding:60px 20px;text-align:center;color:#B0A99F;font-size:13px">거래처 또는 원단명이 입력된 항목이 없습니다.<br>커튼/블라인드 입력창의 "거래처" 필드를 채운 후 다시 시도해주세요.</div>';
   }
 
   var todayStr = today();
@@ -716,7 +745,7 @@ function buildRequestHTML(kind, extraNote) {
   var dateVal  = document.getElementById(kind==='measure' ? 'c-measure' : 'c-install')?.value || '';
   var label = kind==='measure' ? '실측' : '시공';
 
-  var out = '<div class="pv-wrap" style="min-width:560px;max-width:720px;margin:0 auto;background:#fff;padding:36px 32px">';
+  var out = '<div class="pv-wrap" style="max-width:720px;margin:0 auto;background:#fff;padding:36px 32px">';
 
   // 상단 로고/타이틀
   out += '<div style="text-align:center;margin-bottom:6px">'
