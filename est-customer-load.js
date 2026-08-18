@@ -40,18 +40,29 @@ function confirmPdfPrint() {
   if (contentEl) contentEl.style.zoom = '';
 
   if(_selectedPdfOpt === 'fit') {
-    // transform:scale은 시각적 변환일 뿐이라 인쇄 페이지분할 계산에는 반영이 안 됨(실제로
-    // 확인해봤더니 축소된 것처럼 보여도 여전히 여러 장으로 잘렸음) — zoom 속성은 실제
-    // 레이아웃 크기 자체를 줄이므로 페이지분할 계산에도 정확히 반영됨(Chromium 계열 전용
-    // 비표준 속성이지만, 이 앱의 인쇄/PDF저장은 어차피 Chromium 기반 브라우저 대상이라 문제없음).
-    var A4_HEIGHT_MM = 297;
-    var marginMm = 20; // 상하 10mm씩(위 @page margin과 동일한 값으로 맞춤)
-    var PX_PER_MM = 96 / 25.4; // 웹 표준 96dpi 기준
-    var availableHeightPx = (A4_HEIGHT_MM - marginMm) * PX_PER_MM;
-    var naturalHeight = contentEl ? contentEl.scrollHeight : availableHeightPx;
-    if (contentEl && naturalHeight > availableHeightPx) {
-      var scale = availableHeightPx / naturalHeight;
-      contentEl.style.zoom = scale;
+    // 2026-08-18(선혜님 발견 — 아이패드에서 인쇄/PDF저장 자체가 안 되는 심각한 버그):
+    // window.print()는 서버가 아니라 "사용자의 실제 기기 브라우저"에서 직접 실행됨.
+    // 아이패드는 Chromium이 아니라 Safari(WebKit)를 쓰는데, zoom은 WebKit에서 지원이
+    // 불안정하거나 아예 없음 — "이 앱은 Chromium 기반이라 문제없다"고 잘못 가정했던
+    // 어제(2026-08-16) 주석은 틀렸음. 실제 기기 브라우저 엔진에 의존하므로, zoom 지원
+    // 여부를 반드시 feature-detect하고, 지원 안 되면 압축을 아예 건너뛰어 최소한
+    // "표준 A4로 여러 장 인쇄되는" 예전 방식으로 안전하게 폴백시킴(인쇄 자체가 안 되는
+    // 최악의 상황보다, 압축 없이라도 인쇄되는 게 훨씬 나음).
+    var zoomSupported = contentEl && ('zoom' in contentEl.style);
+    if (zoomSupported) {
+      var A4_HEIGHT_MM = 297;
+      var marginMm = 20; // 상하 10mm씩(위 @page margin과 동일한 값으로 맞춤)
+      var PX_PER_MM = 96 / 25.4; // 웹 표준 96dpi 기준
+      var availableHeightPx = (A4_HEIGHT_MM - marginMm) * PX_PER_MM;
+      var naturalHeight = contentEl.scrollHeight;
+      if (naturalHeight > availableHeightPx) {
+        var scale = availableHeightPx / naturalHeight;
+        // 계산값이 비정상(0 이하, 또는 지나치게 작아 글자를 읽을 수 없는 수준)이면
+        // 적용하지 않고 폴백 — 안전장치.
+        if (scale > 0.15 && scale < 1) {
+          contentEl.style.zoom = scale;
+        }
+      }
     }
   }
   // 2026-08-14: 아이패드/아이폰(iOS 사파리)에서 "인쇄 / PDF 저장"을 눌러도
