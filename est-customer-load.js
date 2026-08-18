@@ -35,36 +35,34 @@ function confirmPdfPrint() {
   document.head.appendChild(s);
 
   var contentEl = document.querySelector('#pv-overlay .pv-wrap') || document.querySelector('.pv-wrap');
-  // 이전에 "견적 길이에 맞추기"로 시도했을 때 적용된 zoom값이 남아있을 수 있으므로 항상 초기화.
-  // ("A4 사이즈로 자르기"를 고르면 이 초기화된 상태(zoom 없음) 그대로 인쇄되어 N장으로 잘림)
   if (contentEl) contentEl.style.zoom = '';
 
+  // 2026-08-18 긴급조치(선혜님 발견 — 아이패드·PC·갤럭시탭 전부에서 인쇄/PDF저장
+  // 자체가 안 되는 심각한 문제, "고르는 창은 뜨는데 확인을 눌러도 아무 반응 없음"):
+  // zoom 기반 "A4 한 장에 맞추기" 로직을 계속 의심하며 여러 차례 수정했지만
+  // (feature-detect, 안전범위 체크 등) 실제 기기에서 여전히 재현되어, 원인을
+  // 확정하지 못한 채 이 로직 자체를 완전히 비활성화함. 지금은 "압축 기능"보다
+  // "인쇄가 되는 것" 자체가 훨씬 중요하므로, 두 옵션 다 우선 표준 A4로 안전하게
+  // 인쇄되도록 단순화(넘치면 예전처럼 여러 장으로 잘림 — 압축 없음).
+  // TODO: 원인 확정 후 재도입 검토.
+  /*
   if(_selectedPdfOpt === 'fit') {
-    // 2026-08-18(선혜님 발견 — 아이패드에서 인쇄/PDF저장 자체가 안 되는 심각한 버그):
-    // window.print()는 서버가 아니라 "사용자의 실제 기기 브라우저"에서 직접 실행됨.
-    // 아이패드는 Chromium이 아니라 Safari(WebKit)를 쓰는데, zoom은 WebKit에서 지원이
-    // 불안정하거나 아예 없음 — "이 앱은 Chromium 기반이라 문제없다"고 잘못 가정했던
-    // 어제(2026-08-16) 주석은 틀렸음. 실제 기기 브라우저 엔진에 의존하므로, zoom 지원
-    // 여부를 반드시 feature-detect하고, 지원 안 되면 압축을 아예 건너뛰어 최소한
-    // "표준 A4로 여러 장 인쇄되는" 예전 방식으로 안전하게 폴백시킴(인쇄 자체가 안 되는
-    // 최악의 상황보다, 압축 없이라도 인쇄되는 게 훨씬 나음).
     var zoomSupported = contentEl && ('zoom' in contentEl.style);
     if (zoomSupported) {
       var A4_HEIGHT_MM = 297;
-      var marginMm = 20; // 상하 10mm씩(위 @page margin과 동일한 값으로 맞춤)
-      var PX_PER_MM = 96 / 25.4; // 웹 표준 96dpi 기준
+      var marginMm = 20;
+      var PX_PER_MM = 96 / 25.4;
       var availableHeightPx = (A4_HEIGHT_MM - marginMm) * PX_PER_MM;
       var naturalHeight = contentEl.scrollHeight;
       if (naturalHeight > availableHeightPx) {
         var scale = availableHeightPx / naturalHeight;
-        // 계산값이 비정상(0 이하, 또는 지나치게 작아 글자를 읽을 수 없는 수준)이면
-        // 적용하지 않고 폴백 — 안전장치.
         if (scale > 0.15 && scale < 1) {
           contentEl.style.zoom = scale;
         }
       }
     }
   }
+  */
   // 2026-08-14: 아이패드/아이폰(iOS 사파리)에서 "인쇄 / PDF 저장"을 눌러도
   // 아무 반응이 없던 문제(선혜님 발견 — 실무에서 주로 아이패드 사용).
   // iOS 사파리는 보안상 window.print()를 "사용자가 버튼을 누른 그 실행 흐름
