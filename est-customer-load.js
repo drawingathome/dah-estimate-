@@ -21,6 +21,7 @@ function selectPdfOpt(type) {
   document.getElementById('pdf-opt-a4')?.classList.toggle('selected', type==='a4');
 }
 function confirmPdfPrint() {
+  alert('①확인버튼 클릭됨 - 함수 시작');
   closePdfModal();
   var styleId = 'pdf-page-style';
   var old = document.getElementById(styleId);
@@ -70,11 +71,14 @@ function confirmPdfPrint() {
   // 0.1초 뒤에 호출해서 iOS가 사용자 동작과 무관한 호출로 판단하고 조용히
   // 무시했음(에러조차 안 남아서 원인 파악이 어려웠음).
   // 스타일 삽입은 동기적으로 이미 끝났으므로 지연 없이 바로 호출해도 안전하다.
+  alert('②style/zoom 처리 완료 - print 호출 직전');
   try {
     window.print();
+    alert('③window.print() 호출 완료 - 에러 없음');
   } catch (e) {
+    alert('④window.print() 에러 발생: ' + e.message);
     // 혹시 즉시 호출이 막히는 브라우저가 있으면 기존 방식으로 한 번 더 시도
-    setTimeout(function(){ try { window.print(); } catch(e2) {} }, 100);
+    setTimeout(function(){ try { window.print(); } catch(e2) { alert('⑤재시도도 실패: ' + e2.message); } }, 100);
   }
 }
 
