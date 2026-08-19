@@ -773,7 +773,7 @@ td.amt{
 /* 최종견적 독립 강조블록 */
 .pv-total-block{display:flex;align-items:baseline;justify-content:space-between;padding:16px 0;border-top:2px solid #282828;border-bottom:1.5px solid #282828;margin-bottom:16px}
 .pv-total-label{font-size:13px;letter-spacing:0.5px;color:var(--sub)}
-.pv-total-value{font-family:'Noto Serif CJK KR',Georgia,serif;font-size:36px;font-weight:600;color:#F06E2D}
+.pv-total-value{font-family:'Noto Serif CJK KR',Georgia,serif;font-size:26px;font-weight:600;color:#F06E2D}
 
 /* PROCESS 타임라인 */
 .pv-timeline{padding:0 20px}
@@ -920,7 +920,7 @@ td.amt{
     margin-bottom:12px!important;
   }
   .pv-total-label { font-size:14px!important; letter-spacing:1px!important; color:#1A1A1A!important; font-weight:600!important; }
-  .pv-total-value { font-family:'Noto Serif CJK KR',Georgia,serif!important; font-size:32px!important; font-weight:700!important; color:#1A1A1A!important; }
+  .pv-total-value { font-family:'Noto Serif CJK KR',Georgia,serif!important; font-size:26px!important; font-weight:700!important; color:#1A1A1A!important; }
   #pv-overlay .pv-total-value { color:#F06E2D!important; }
 
   .pv-payment-split { border:none!important; margin:0 0 12px 0!important; }
