@@ -62,6 +62,15 @@ function confirmPdfPrint() {
   }
   document.head.appendChild(s);
 
+  // 2026-08-19(선혜님 발견 — 실제 인쇄물 사진으로 확인): 브라우저의 "머리글/바닥글"
+  // 인쇄 옵션이 켜져 있으면, 페이지 <title> 태그 값이 그대로 인쇄물 상단에 찍히는데,
+  // HTML의 <title>이 "드로잉엣홈 견적서 v20260621"이라는 옛날 버전 표시로 고정되어
+  // 있어서 그게 그대로 인쇄물에 나타남 — 원래 이걸 고객명으로 바꾸던 코드가 있었는데
+  // 오늘 이 함수를 여러 번 재작성하며 실수로 빠졌던 것으로 보임, 복원함.
+  var custNameForTitle = document.getElementById('c-name')?.value || '';
+  var isFinalForTitle = document.getElementById('status-final')?.classList.contains('on');
+  document.title = (custNameForTitle ? custNameForTitle + ' ' : '') + (isFinalForTitle ? '확정견적서' : '가견적서');
+
   // 2026-08-14: 아이패드/아이폰(iOS 사파리)에서 "인쇄 / PDF 저장"을 눌러도
   // 아무 반응이 없던 문제(선혜님 발견 — 실무에서 주로 아이패드 사용).
   // iOS 사파리는 보안상 window.print()를 "사용자가 버튼을 누른 그 실행 흐름
