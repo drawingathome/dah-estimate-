@@ -109,11 +109,15 @@ function displaySurvey(s) {
     {label:'메모',val:s.memo||null},
   ].filter(function(f){return f.val;});
   if(!fields.length) return;
+  // 2026-08-19(보안 취약점 발견 및 수정): 설문 데이터(f.label, f.val)는 고객이 직접
+  // 입력한 외부 데이터(구글시트/Supabase)인데, escHtml 없이 그대로 innerHTML에
+  // 삽입하고 있어서, 고객이 설문 메모란에 <img onerror=...> 같은 스크립트를 넣으면
+  // 실제로 실행되는 XSS 취약점이었음(직접 재현해서 실행되는 것까지 확인함).
   dataEl.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">'+
     fields.map(function(f){
       return '<div style="padding:10px 14px;background:#FAF7F5;border:1px solid #EEE6DC">'+
-        '<div style="font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:0.8px;margin-bottom:var(--sp-1)">'+f.label+'</div>'+
-        '<div style="font-size:11px;font-weight:500">'+f.val+'</div></div>';
+        '<div style="font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:0.8px;margin-bottom:var(--sp-1)">'+escHtml(f.label)+'</div>'+
+        '<div style="font-size:11px;font-weight:500">'+escHtml(f.val)+'</div></div>';
     }).join('')+'</div>';
   if(card) card.style.display='block';
 }
