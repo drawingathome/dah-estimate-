@@ -43,22 +43,34 @@ function confirmPdfPrint() {
     // "견적 길이에 맞추기"를 실행하면, 화면이 좁아서 콘텐츠가 세로로 더 많이
     // 쌓인 상태(scrollHeight가 부풀려진 상태)로 측정되어, 실제 인쇄 폭(더 넓음)
     // 기준으로는 필요 없는 거대한 빈 여백이 페이지 아래에 남는 문제가 있었음.
-    // .pv-wrap의 실제 최대폭(680px, CSS max-width)으로 임시 고정한 뒤 측정하고
-    // 바로 원상복구해서, 화면 폭과 무관하게 항상 정확한 높이가 나오게 함.
+    // + 아래 브라우저 머리글/바닥글 문제 수정으로 .pv-wrap에 좌우 padding(12mm)이
+    // 새로 생기므로, "그 padding까지 적용한 상태"로 측정해야 실제 렌더링과 일치함
+    // (measuring과 rendering의 레이아웃 조건을 반드시 동일하게 맞출 것).
     var origWidth = contentEl.style.width;
     var origMaxWidth = contentEl.style.maxWidth;
+    var origPadding = contentEl.style.padding;
+    var origBoxSizing = contentEl.style.boxSizing;
     contentEl.style.width = '680px';
     contentEl.style.maxWidth = '680px';
+    contentEl.style.boxSizing = 'border-box';
+    contentEl.style.padding = '10mm 12mm';
     var heightPx = contentEl.scrollHeight;
     contentEl.style.width = origWidth;
     contentEl.style.maxWidth = origMaxWidth;
+    contentEl.style.padding = origPadding;
+    contentEl.style.boxSizing = origBoxSizing;
 
     var PX_TO_MM = 25.4 / 96;
-    var marginMm = 20; // 상하 10mm씩
-    var heightMm = Math.ceil(heightPx * PX_TO_MM) + marginMm;
-    s.textContent = '@media print { @page { size: 210mm ' + heightMm + 'mm; margin: 10mm 12mm; } .pv-wrap { page-break-inside: avoid; } }';
+    var heightMm = Math.ceil(heightPx * PX_TO_MM); // 이미 위/아래 padding 10mm씩 포함된 높이라 별도로 안 더함
+    // 2026-08-19(선혜님 발견 — 실제 인쇄물 사진, "우리 앱은 원래 안 그렇다"는 지적):
+    // @page에 margin을 주면 그 여백 공간에 브라우저가 날짜/제목/URL 같은 자체
+    // 머리글·바닥글을 자동으로 넣을 수 있음(그 여백이 "브라우저 몫"으로 남기 때문).
+    // @page margin을 0으로 없애고, 대신 콘텐츠(.pv-wrap) 자체에 동일한 여백을
+    // padding으로 줘서 화면상 보이는 여백은 그대로 유지하면서, 브라우저가 머리글/
+    // 바닥글을 넣을 공간 자체를 원천적으로 없앰(검색으로 확인한 표준적인 해결법).
+    s.textContent = '@media print { @page { size: 210mm ' + heightMm + 'mm; margin: 0; } .pv-wrap { page-break-inside: avoid; padding:10mm 12mm!important; box-sizing:border-box!important; } }';
   } else {
-    s.textContent = '@media print { @page { size: A4 portrait; margin: 10mm 12mm; } }';
+    s.textContent = '@media print { @page { size: A4 portrait; margin: 0; } .pv-wrap { padding:10mm 12mm!important; box-sizing:border-box!important; } }';
   }
   document.head.appendChild(s);
 
