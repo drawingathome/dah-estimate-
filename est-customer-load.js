@@ -21,49 +21,34 @@ function selectPdfOpt(type) {
   document.getElementById('pdf-opt-a4')?.classList.toggle('selected', type==='a4');
 }
 function confirmPdfPrint() {
-  alert('①확인버튼 클릭됨 - 함수 시작');
   closePdfModal();
   var styleId = 'pdf-page-style';
   var old = document.getElementById(styleId);
   if(old) old.remove();
   var s = document.createElement('style');
   s.id = styleId;
-  // 2026-08-16: "견적 길이에 맞추기"를 "A4보다 긴 커스텀 페이지로 늘리는 방식"에서
-  // "A4 크기(210×297mm)는 고정하고, 넘치는 콘텐츠를 비율대로 축소해서 강제로 1장 안에
-  // 욱여넣는 방식"으로 전면 교체(선혜님 확정 — "A4는 바꿀 게 없다, 1장으로 만들어야
-  // 하는 개념이라 폭을 더 압축해야 하는 시스템"). 두 옵션 다 이제 A4 크기 자체는 동일.
-  s.textContent = '@media print { @page { size: A4 portrait; margin: 10mm 12mm; } }';
-  document.head.appendChild(s);
 
   var contentEl = document.querySelector('#pv-overlay .pv-wrap') || document.querySelector('.pv-wrap');
   if (contentEl) contentEl.style.zoom = '';
 
-  // 2026-08-18 긴급조치(선혜님 발견 — 아이패드·PC·갤럭시탭 전부에서 인쇄/PDF저장
-  // 자체가 안 되는 심각한 문제, "고르는 창은 뜨는데 확인을 눌러도 아무 반응 없음"):
-  // zoom 기반 "A4 한 장에 맞추기" 로직을 계속 의심하며 여러 차례 수정했지만
-  // (feature-detect, 안전범위 체크 등) 실제 기기에서 여전히 재현되어, 원인을
-  // 확정하지 못한 채 이 로직 자체를 완전히 비활성화함. 지금은 "압축 기능"보다
-  // "인쇄가 되는 것" 자체가 훨씬 중요하므로, 두 옵션 다 우선 표준 A4로 안전하게
-  // 인쇄되도록 단순화(넘치면 예전처럼 여러 장으로 잘림 — 압축 없음).
-  // TODO: 원인 확정 후 재도입 검토.
-  /*
-  if(_selectedPdfOpt === 'fit') {
-    var zoomSupported = contentEl && ('zoom' in contentEl.style);
-    if (zoomSupported) {
-      var A4_HEIGHT_MM = 297;
-      var marginMm = 20;
-      var PX_PER_MM = 96 / 25.4;
-      var availableHeightPx = (A4_HEIGHT_MM - marginMm) * PX_PER_MM;
-      var naturalHeight = contentEl.scrollHeight;
-      if (naturalHeight > availableHeightPx) {
-        var scale = availableHeightPx / naturalHeight;
-        if (scale > 0.15 && scale < 1) {
-          contentEl.style.zoom = scale;
-        }
-      }
-    }
+  // 2026-08-19(선혜님 발견 — 플러그 앱과 실제 비교): 아이패드·PC·갤럭시탭 전부에서
+  // 인쇄가 안 되던 근본 원인은 zoom 속성 자체의 불안정성이었을 가능성이 높음.
+  // 실제로 잘 작동하는 참고 앱(플러그)의 방식을 확인해보니, zoom으로 압축하는 게
+  // 아니라 "페이지 높이 자체를 콘텐츠 길이에 맞춰 늘리는" 훨씬 단순하고 표준적인
+  // 방식(@page size만 사용, zoom 같은 비표준 속성 전혀 안 씀)을 쓰고 있었음.
+  // 이게 원래(2026-08-16 이전) DAH가 쓰던 방식이기도 함 - zoom을 도입하면서 오히려
+  // 안정성이 떨어졌던 것으로 보여 원래 방식으로 되돌림.
+  if (_selectedPdfOpt === 'fit' && contentEl) {
+    var heightPx = contentEl.scrollHeight;
+    var PX_TO_MM = 25.4 / 96;
+    var marginMm = 20; // 상하 10mm씩
+    var heightMm = Math.ceil(heightPx * PX_TO_MM) + marginMm;
+    s.textContent = '@media print { @page { size: 210mm ' + heightMm + 'mm; margin: 10mm 12mm; } .pv-wrap { page-break-inside: avoid; } }';
+  } else {
+    s.textContent = '@media print { @page { size: A4 portrait; margin: 10mm 12mm; } }';
   }
-  */
+  document.head.appendChild(s);
+
   // 2026-08-14: 아이패드/아이폰(iOS 사파리)에서 "인쇄 / PDF 저장"을 눌러도
   // 아무 반응이 없던 문제(선혜님 발견 — 실무에서 주로 아이패드 사용).
   // iOS 사파리는 보안상 window.print()를 "사용자가 버튼을 누른 그 실행 흐름
@@ -71,14 +56,11 @@ function confirmPdfPrint() {
   // 0.1초 뒤에 호출해서 iOS가 사용자 동작과 무관한 호출로 판단하고 조용히
   // 무시했음(에러조차 안 남아서 원인 파악이 어려웠음).
   // 스타일 삽입은 동기적으로 이미 끝났으므로 지연 없이 바로 호출해도 안전하다.
-  alert('②style/zoom 처리 완료 - print 호출 직전');
   try {
     window.print();
-    alert('③window.print() 호출 완료 - 에러 없음');
   } catch (e) {
-    alert('④window.print() 에러 발생: ' + e.message);
     // 혹시 즉시 호출이 막히는 브라우저가 있으면 기존 방식으로 한 번 더 시도
-    setTimeout(function(){ try { window.print(); } catch(e2) { alert('⑤재시도도 실패: ' + e2.message); } }, 100);
+    setTimeout(function(){ try { window.print(); } catch(e2) {} }, 100);
   }
 }
 

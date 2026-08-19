@@ -7,7 +7,7 @@
 // 대시보드에서 등록된 서비스워커가 Service-Worker-Allowed:/ 설정으로 이 페이지도
 // 덮을 수 있어 동일하게 방어함.
 (function(){
-  var BUILD = '202608181141';
+  var BUILD = '202608190147';
   try {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(regs){
@@ -717,7 +717,7 @@
 <script src="/est-survey.js?v=202608190049"></script>
 <script src="/est-save.js?v=202608071000"></script>
 <script src="/est-documents.js?v=202608160425"></script>
-<script src="/est-customer-load.js?v=202608181141"></script>
+<script src="/est-customer-load.js?v=202608190147"></script>
 <script src="/est-misc.js?v=202608067500"></script>
 <script>
 var currentTab = 'ga';
@@ -1019,8 +1019,8 @@ document.addEventListener('DOMContentLoaded', function() {
           <div style="height:10px;width:60%"></div>
           <div style="height:8px;width:50%"></div>
         </div>
-        <div class="pdf-opt-label">A4 한 장에 맞추기</div>
-        <div class="pdf-opt-desc">내용이 넘치면 전체를 축소해<br>A4 1장의 PDF로 추출돼요.</div>
+        <div class="pdf-opt-label">견적 길이에 맞추기</div>
+        <div class="pdf-opt-desc">작성된 견적서 길이에 맞춰<br>1장의 PDF로 추출돼요.</div>
       </div>
       <div class="pdf-opt" id="pdf-opt-a4" onclick="selectPdfOpt('a4')">
         <div class="pdf-opt-icon a4">
