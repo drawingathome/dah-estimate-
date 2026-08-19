@@ -50,8 +50,12 @@ function confirmPdfPrint() {
     var origMaxWidth = contentEl.style.maxWidth;
     var origPadding = contentEl.style.padding;
     var origBoxSizing = contentEl.style.boxSizing;
-    contentEl.style.width = '680px';
-    contentEl.style.maxWidth = '680px';
+    // 2026-08-19(추가 검증 중 발견): buildCustomerHTML()이 실제로 만드는 .pv-wrap의
+    // 인라인 style="max-width:720px"가 CSS의 max-width:680px보다 항상 우선 적용됨
+    // (인라인 스타일 우선순위 원칙) — 680px로 측정하면 실제 렌더링 폭(720px)과
+    // 40px 차이가 나서 여전히 부정확할 수 있었음. 실제 인라인 값과 정확히 일치시킴.
+    contentEl.style.width = '720px';
+    contentEl.style.maxWidth = '720px';
     contentEl.style.boxSizing = 'border-box';
     contentEl.style.padding = '10mm 12mm';
     var heightPx = contentEl.scrollHeight;
@@ -81,7 +85,16 @@ function confirmPdfPrint() {
   // 오늘 이 함수를 여러 번 재작성하며 실수로 빠졌던 것으로 보임, 복원함.
   var custNameForTitle = document.getElementById('c-name')?.value || '';
   var isFinalForTitle = document.getElementById('status-final')?.classList.contains('on');
-  document.title = (custNameForTitle ? custNameForTitle + ' ' : '') + (isFinalForTitle ? '확정견적서' : '가견적서');
+  // 2026-08-19: 이 함수는 견적서뿐 아니라 발주서·실측의뢰서·시공의뢰서 인쇄에도
+  // 공통으로 쓰이는데, 무조건 "가견적서/확정견적서"로만 제목을 붙이면 발주서를
+  // 인쇄할 때도 "OOO 가견적서"처럼 어색하게 나옴 — 오버레이 안의 문서제목
+  // (.pv-doc-title 등)이나 안내 텍스트로 실제 문서 종류를 판별해서 정확히 표시.
+  var navText = document.querySelector('#pv-overlay .print-hide')?.textContent || '';
+  var docKind = isFinalForTitle ? '확정견적서' : '가견적서';
+  if (navText.indexOf('발주서') >= 0) docKind = '발주서';
+  else if (navText.indexOf('실측') >= 0 && navText.indexOf('의뢰') >= 0) docKind = '실측 의뢰서';
+  else if (navText.indexOf('시공') >= 0 && navText.indexOf('의뢰') >= 0) docKind = '시공 의뢰서';
+  document.title = (custNameForTitle ? custNameForTitle + ' ' : '') + docKind;
 
   // 2026-08-14: 아이패드/아이폰(iOS 사파리)에서 "인쇄 / PDF 저장"을 눌러도
   // 아무 반응이 없던 문제(선혜님 발견 — 실무에서 주로 아이패드 사용).
