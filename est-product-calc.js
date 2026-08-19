@@ -97,17 +97,19 @@ function calcCurtainRow(el) {
     mhEl?.parentNode?.appendChild(heightFeeWarnEl);
   }
   if (mh >= 290) {
-    heightFeeWarnEl.textContent = '⚠️ 세로 290cm 이상 — 금액 30% 추가 검토';
+    heightFeeWarnEl.textContent = '⚠️ 높이 290cm 이상 30% 추가';
     heightFeeWarnEl.style.display = 'block';
   } else if (mh >= 270) {
-    heightFeeWarnEl.textContent = '⚠️ 세로 270cm 이상 — 금액 20% 추가 검토';
+    heightFeeWarnEl.textContent = '⚠️ 높이 270cm 이상 20% 추가';
     heightFeeWarnEl.style.display = 'block';
   } else if (mh >= 250) {
-    heightFeeWarnEl.textContent = '⚠️ 세로 250cm 이상 — 금액 10% 추가 검토';
+    heightFeeWarnEl.textContent = '⚠️ 높이 250cm 이상 10% 추가';
     heightFeeWarnEl.style.display = 'block';
   } else {
     heightFeeWarnEl.style.display = 'none';
   }
+  // 2026-08-19: 243cm 초과 "2단 제작 필요" 경고는 선혜님 확인 결과 불필요해서 제거함
+  // (250/270/290cm 금액추가검토 경고만 유지).
   
   var price = Math.max(0, getPriceVal(tr.querySelector('.cprice'))||0);
   var amt = Math.round(price*pnum);
@@ -455,12 +457,10 @@ function triggerSumPulse(){
 function calcTotal() {
   var curtainTotal = 0;
   document.querySelectorAll('#curtain-body tr').forEach(function(tr){
-    var mh = Math.max(0, parseFloat(tr.querySelector('.mh')?.value)||0);
-    var fh = mh>0 ? mh-3 : 0;
-    var isOver = fh>243;
-    var price = isOver
-      ? (getPriceVal(tr.querySelector('.cprice-over'))||getPriceVal(tr.querySelector('.cprice'))||0)
-      : (getPriceVal(tr.querySelector('.cprice'))||0);
+    // 2026-08-19: isOver/.cprice-over(243cm초과 전용단가) 분기 제거 — 애초에
+    // .cprice-over 입력창 자체가 화면에 없어 항상 일반단가로 폴백되던 죽은 코드였고,
+    // 정책상 243cm 초과는 순수 경고만 필요(가격은 동일). calcCurtainRow의 .over-warn 참고.
+    var price = Math.max(0, getPriceVal(tr.querySelector('.cprice'))||0);
     price = Math.max(0, price);
     var qty = Math.max(0, parseFloat(tr.querySelector('.pnum')?.value)||1);
     curtainTotal += price*qty;
