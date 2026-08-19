@@ -178,19 +178,6 @@ function renderConfirmBadge() {
   }
 }
 
-// 확정된 상태에서 견적 내용(사이즈/금액에 영향 주는 입력)이 바뀌면 확정을 자동 취소.
-// autoSave가 이미 여러 필드의 input 이벤트를 구독하고 있으므로, 같은 시점에 확인만 추가.
-document.addEventListener('DOMContentLoaded', function() {
-  var watchSelectors = ['#curtain-body', '#blind-body', '#svc-body'];
-  watchSelectors.forEach(function(sel) {
-    var container = document.querySelector(sel);
-    if (!container) return;
-    container.addEventListener('input', function() {
-      if (window._estimateConfirmedAt) {
-        window._estimateConfirmedAt = null;
-        renderConfirmBadge();
-        showToast('⚠️ 견적 내용이 변경되어 확정이 취소됐습니다');
-      }
-    });
-  });
-});
+// 2026-08-19(선혜님 확인): 견적 내용을 수정해도 "확정" 표시가 자동으로 취소되지
+// 않도록 함 — 예전엔 사이즈/금액 입력이 바뀌면 확정이 조용히 풀렸는데, 선혜님이
+// "수정해도 확정 표시 그대로 유지"로 확정하셔서 이 감시 로직 자체를 제거함.
