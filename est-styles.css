@@ -586,6 +586,13 @@ td.amt{
     pointer-events:none;transition:opacity 0.2s;
   }
   .pv-table-scroll-wrap.scrolled-end::after{opacity:0}
+
+/* 2026-08-19: 카톡공유 PDF 생성(html2canvas) 전용 - html2canvas는 @media print를
+   평가하지 않아 화면용 스크롤힌트(화살표)가 그대로 캡처되던 문제 발견·수정.
+   표가 가로스크롤 상태(잘린 상태)로 캡처되는 것도 함께 방지(인쇄용과 동일하게 전체노출). */
+.pv-pdf-capture .pv-table-scroll-wrap::after{display:none!important}
+.pv-pdf-capture .pv-table-scroll{overflow:visible!important}
+.pv-pdf-capture .pv-table-scroll .pv-prod-table{width:auto!important}
 }
  
 .pv-meta{

@@ -31,6 +31,7 @@ function shareEstimatePDF() {
   var origMaxWidth = contentEl.style.maxWidth;
   contentEl.style.width = '720px';
   contentEl.style.maxWidth = '720px';
+  contentEl.classList.add('pv-pdf-capture');
 
   var naturalHeightPx = contentEl.scrollHeight;
   var PX_TO_MM = 25.4 / 96;
@@ -51,6 +52,7 @@ function shareEstimatePDF() {
   html2pdf().set(opt).from(contentEl).outputPdf('blob').then(function(pdfBlob) {
     contentEl.style.width = origWidth;
     contentEl.style.maxWidth = origMaxWidth;
+    contentEl.classList.remove('pv-pdf-capture');
     var pdfFile;
     try { pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' }); }
     catch(e) { pdfFile = null; }
@@ -76,6 +78,7 @@ function shareEstimatePDF() {
   }).catch(function(err){
     contentEl.style.width = origWidth;
     contentEl.style.maxWidth = origMaxWidth;
+    contentEl.classList.remove('pv-pdf-capture');
     console.error('PDF 생성 실패:', err);
     showToast('PDF 생성에 실패했어요');
   });
