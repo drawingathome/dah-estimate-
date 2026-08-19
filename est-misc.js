@@ -64,21 +64,8 @@ function renderEmptyState() {
   if(bTable) bTable.style.display = hasB ? 'table' : 'none';
 }
 
-function shareEstimate() {
-  calcTotal();
-  var name = document.getElementById('c-name')?.value?.trim() || '고객';
-  var total = document.getElementById('sum-total')?.textContent || '';
-  var text = '[드로잉엣홈] '+name+'님 견적서\n총 금액: '+total+'\n\n견적서 확인 후 계약금(50%)을 입금해주시면 실측 일정을 잡아드리겠습니다 🙂';
-  if(navigator.share){
-    navigator.share({ title:'드로잉엣홈 견적서', text: text })
-      .then(function(){ showToast('공유 완료'); })
-      .catch(function(){});
-  } else {
-    navigator.clipboard?.writeText(text)
-      .then(function(){ showToast('견적 내용이 복사됐습니다. 카카오톡에 붙여넣기 해주세요 🙂'); })
-      .catch(function(){ showToast('공유 기능을 지원하지 않는 브라우저입니다'); });
-  }
-}
+// 2026-08-19: 요약텍스트 공유(shareEstimate) 함수는 선혜님 확인 결과 불필요해서
+// 제거함 — PDF 파일 자체를 공유하는 shareEstimatePDF()(est-customer-load.js)로 대체됨.
 
 /* ── 자동 저장 (localStorage) ────────────────────── */
 var _autoSaveTimer = null;
