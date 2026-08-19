@@ -7,7 +7,7 @@
 // 대시보드에서 등록된 서비스워커가 Service-Worker-Allowed:/ 설정으로 이 페이지도
 // 덮을 수 있어 동일하게 방어함.
 (function(){
-  var BUILD = '202608192212';
+  var BUILD = '202608192306';
   try {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(regs){
@@ -716,8 +716,9 @@
 <script src="/est-product-calc.js?v=202608191210"></script>
 <script src="/est-survey.js?v=202608190049"></script>
 <script src="/est-save.js?v=202608071000"></script>
-<script src="/est-documents.js?v=202608160425"></script>
-<script src="/est-customer-load.js?v=202608191124"></script>
+<script src="/est-documents.js?v=202608192306"></script>
+<script src="/html2pdf.bundle.min.js"></script>
+<script src="/est-customer-load.js?v=202608192306"></script>
 <script src="/est-misc.js?v=202608067500"></script>
 <script>
 var currentTab = 'ga';

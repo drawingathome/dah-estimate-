@@ -467,7 +467,12 @@ function printForCustomer() {
   printBtn.textContent = '인쇄 / PDF 저장';
   printBtn.onclick = openPdfModal;
   printBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';
+  var shareBtn = document.createElement('button');
+  shareBtn.textContent = '💬 카톡 공유';
+  shareBtn.onclick = shareEstimatePDF;
+  shareBtn.style.cssText = 'padding:7px 18px;background:#F06E2D;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';
   navBtns.appendChild(closeBtn);
+  navBtns.appendChild(shareBtn);
   navBtns.appendChild(printBtn);
   nav.appendChild(navLabel);
   nav.appendChild(navBtns);

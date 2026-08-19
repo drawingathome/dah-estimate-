@@ -6,6 +6,81 @@
 
 var _selectedPdfOpt = 'fit';
 
+// 2026-08-19(선혜님 요청 — "카톡으로 바로 발송" 원클릭 공유): 카카오 비즈니스
+// API(알림톡)는 채널등록+템플릿승인+Make.com 연결이 아직 안 되어 있어 당장은
+// 불가능. 대신 브라우저의 네이티브 "공유하기" 기능(navigator.share)을 활용 —
+// 실제 PDF 파일을 만들어서 공유창을 띄우면, 모바일에서 카카오톡을 직접 선택해
+// 파일째로 보낼 수 있음(사진 공유하듯). PC나 파일공유 미지원 브라우저에서는
+// 자동으로 다운로드로 폴백(기존 인쇄/PDF저장과 동일한 안전한 경로).
+function shareEstimatePDF() {
+  var contentEl = document.querySelector('#pv-overlay .pv-wrap') || document.querySelector('.pv-wrap');
+  if (!contentEl || typeof html2pdf === 'undefined') {
+    showToast('PDF 생성 기능을 사용할 수 없어요');
+    return;
+  }
+  var custName = (document.getElementById('c-name')?.value || '').trim() || '고객';
+  var isFinal = document.getElementById('status-final')?.classList.contains('on');
+  var docLabel = isFinal ? '확정견적서' : '가견적서';
+  var filename = custName + '_' + docLabel + '.pdf';
+
+  showToast('PDF 만드는 중...');
+
+  // 2026-08-19에 확인된 원칙: 측정/생성 시점의 레이아웃 폭을 실제 렌더링폭(720px,
+  // buildCustomerHTML의 인라인 max-width)과 반드시 일치시켜야 정확한 결과가 나옴.
+  var origWidth = contentEl.style.width;
+  var origMaxWidth = contentEl.style.maxWidth;
+  contentEl.style.width = '720px';
+  contentEl.style.maxWidth = '720px';
+
+  var naturalHeightPx = contentEl.scrollHeight;
+  var PX_TO_MM = 25.4 / 96;
+  // 2026-08-19: scrollHeight 측정과 html2canvas 실제 캡처(scale:2) 사이의 미세한
+  // 반올림 오차로, 딱 맞게 계산하면 마지막 몇 px가 빈 페이지로 밀려나가는 문제가
+  // 있었음(실제로 재현됨) - 5mm 여유를 둬서 방지.
+  var pageHeightMm = Math.ceil(naturalHeightPx * PX_TO_MM) + 5;
+
+  var opt = {
+    margin: 0,
+    filename: filename,
+    image: { type: 'jpeg', quality: 0.95 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: [190.5, pageHeightMm], orientation: 'portrait' },
+    pagebreak: { mode: ['css', 'legacy'] }
+  };
+
+  html2pdf().set(opt).from(contentEl).outputPdf('blob').then(function(pdfBlob) {
+    contentEl.style.width = origWidth;
+    contentEl.style.maxWidth = origMaxWidth;
+    var pdfFile;
+    try { pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' }); }
+    catch(e) { pdfFile = null; }
+
+    if (pdfFile && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+      navigator.share({
+        files: [pdfFile],
+        title: custName + '님 ' + docLabel,
+        text: '[드로잉엣홈] ' + custName + '님 ' + docLabel + '를 보내드립니다 🙂'
+      }).then(function(){
+        showToast('공유 완료');
+      }).catch(function(err){
+        if (err && err.name !== 'AbortError') showToast('공유가 취소됐어요');
+      });
+    } else {
+      var url = URL.createObjectURL(pdfBlob);
+      var a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+      showToast('PDF가 다운로드됐어요. 카카오톡에서 직접 첨부해주세요');
+    }
+  }).catch(function(err){
+    contentEl.style.width = origWidth;
+    contentEl.style.maxWidth = origMaxWidth;
+    console.error('PDF 생성 실패:', err);
+    showToast('PDF 생성에 실패했어요');
+  });
+}
+
 function openPdfModal() {
   _selectedPdfOpt = 'fit';
   document.getElementById('pdf-opt-fit')?.classList.add('selected');
