@@ -39,7 +39,20 @@ function confirmPdfPrint() {
   // 이게 원래(2026-08-16 이전) DAH가 쓰던 방식이기도 함 - zoom을 도입하면서 오히려
   // 안정성이 떨어졌던 것으로 보여 원래 방식으로 되돌림.
   if (_selectedPdfOpt === 'fit' && contentEl) {
+    // 2026-08-19(선혜님 발견 — 재검토 요청으로 찾음): 모바일 등 좁은 화면에서
+    // "견적 길이에 맞추기"를 실행하면, 화면이 좁아서 콘텐츠가 세로로 더 많이
+    // 쌓인 상태(scrollHeight가 부풀려진 상태)로 측정되어, 실제 인쇄 폭(더 넓음)
+    // 기준으로는 필요 없는 거대한 빈 여백이 페이지 아래에 남는 문제가 있었음.
+    // .pv-wrap의 실제 최대폭(680px, CSS max-width)으로 임시 고정한 뒤 측정하고
+    // 바로 원상복구해서, 화면 폭과 무관하게 항상 정확한 높이가 나오게 함.
+    var origWidth = contentEl.style.width;
+    var origMaxWidth = contentEl.style.maxWidth;
+    contentEl.style.width = '680px';
+    contentEl.style.maxWidth = '680px';
     var heightPx = contentEl.scrollHeight;
+    contentEl.style.width = origWidth;
+    contentEl.style.maxWidth = origMaxWidth;
+
     var PX_TO_MM = 25.4 / 96;
     var marginMm = 20; // 상하 10mm씩
     var heightMm = Math.ceil(heightPx * PX_TO_MM) + marginMm;
