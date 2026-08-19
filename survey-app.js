@@ -6,7 +6,7 @@
    특수 빌드(next 버전)라 안전을 위해 HTML에 그대로 둡니다.
    ══════════════════════════════════════════════════ */
 
-const { useState, useCallback } = React;
+const { useState, useCallback, useEffect } = React;
 
 // ═══════════════════════════════════════════
 // 디자인 토큰 — 대시보드 완전 통일
@@ -193,7 +193,39 @@ function Section({ children, gap }) {
   }, ...children);
 }
 
-// ── App ───────────────────────────────────
+// 2026-08-19(선혜님 확인 — "설문지 사라지는 건 말이 안 된다"): 구글시트/Supabase
+// 저장이 둘 다 실패해도 고객 화면엔 "제출 완료"만 뜨고 데이터는 조용히 사라지던
+// 문제. Supabase 저장은 no-cors가 아니라 응답을 읽을 수 있으므로, 이 성공여부를
+// 신뢰 가능한 기준으로 삼아 실패시 localStorage에 백업해두고, 페이지 로드시마다
+// 자동으로 재전송을 시도함(성공하면 목록에서 제거).
+var SURVEY_PENDING_KEY = 'dah_survey_pending_v1';
+function retryPendingSurveys() {
+  var pending = [];
+  try { pending = JSON.parse(localStorage.getItem(SURVEY_PENDING_KEY) || '[]'); } catch(e) { return; }
+  if (!pending.length) return;
+  var SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_9nYjQBzwiyausr7-Cd-elw_S9inJlge';
+  var stillPending = [];
+  var promises = pending.map(function(item) {
+    return fetch(SUPABASE_URL + '/rest/v1/surveys', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(item.payload)
+    }).then(function(res) {
+      if (!res.ok) stillPending.push(item);
+    }).catch(function() {
+      stillPending.push(item);
+    });
+  });
+  Promise.all(promises).then(function() {
+    try { localStorage.setItem(SURVEY_PENDING_KEY, JSON.stringify(stillPending)); } catch(e) {}
+  });
+}
 function App() {
   const [step, setStep] = useState(0);
   const [submitted, setSubmitted] = useState(false);
@@ -230,8 +262,13 @@ function App() {
   const prev = () => setStep(s=>s-1);
   const skip = () => setStep(s=>s+1);
 
+  // 페이지 열릴 때, 예전에 실패해서 대기 중이던 설문이 있으면 자동 재시도
+  useEffect(function() { retryPendingSurveys(); }, []);
+
   const submit = async () => {
     setSubmitting(true);
+    // 구글시트 저장 시도 - no-cors라 응답을 읽을 수 없어 성공/실패 판단 불가능.
+    // 최선의 시도로만 남겨두고, 아래 Supabase 결과를 신뢰 가능한 기준으로 삼음.
     try {
       await fetch(SCRIPT_URL, {
         method:'POST', mode:'no-cors',
@@ -245,11 +282,28 @@ function App() {
         })
       });
     } catch(e) { console.warn(e); }
-    // Supabase에도 저장 (구글시트 저장 성공/실패와 무관하게 별도 시도)
+
+    var supabasePayload = {
+      client_name: form.name, phone: form.phone, addr: form.addr,
+      space: form.spaces.join(', '),
+      answers: {
+        pyeong: form.pyeong, homeDir: form.homeDir,
+        wallTone: form.wallTone, floorType: form.floorType,
+        moods: form.moods, functions: form.functions,
+        budget: form.budget, sizeNote: form.sizeNote
+      },
+      memo: form.memo,
+      status: '신규'
+    };
+    // 2026-08-19(선혜님 확인 — "설문지 사라지는 건 말이 안 된다"): 저장이 실패해도
+    // 화면엔 조용히 "제출 완료"만 뜨고 데이터는 영영 사라지던 문제. res.ok로 실제
+    // 저장 성공 여부를 확인하고, 실패시 localStorage에 백업해서 다음 방문(또는
+    // 같은 기기 재방문)시 자동 재시도되게 함 — 최소한 데이터 자체는 안 사라짐.
+    var SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
+    var SUPABASE_KEY = 'sb_publishable_9nYjQBzwiyausr7-Cd-elw_S9inJlge';
+    var saved = false;
     try {
-      var SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
-      var SUPABASE_KEY = 'sb_publishable_9nYjQBzwiyausr7-Cd-elw_S9inJlge';
-      await fetch(SUPABASE_URL + '/rest/v1/surveys', {
+      var res = await fetch(SUPABASE_URL + '/rest/v1/surveys', {
         method:'POST',
         headers:{
           'Content-Type':'application/json',
@@ -257,20 +311,19 @@ function App() {
           'Authorization': 'Bearer ' + SUPABASE_KEY,
           'Prefer': 'return=minimal'
         },
-        body: JSON.stringify({
-          client_name: form.name, phone: form.phone, addr: form.addr,
-          space: form.spaces.join(', '),
-          answers: {
-            pyeong: form.pyeong, homeDir: form.homeDir,
-            wallTone: form.wallTone, floorType: form.floorType,
-            moods: form.moods, functions: form.functions,
-            budget: form.budget, sizeNote: form.sizeNote
-          },
-          memo: form.memo,
-          status: '신규'
-        })
+        body: JSON.stringify(supabasePayload)
       });
+      saved = res.ok;
     } catch(e) { console.warn('Supabase 저장 실패:', e); }
+
+    if (!saved) {
+      try {
+        var pending = JSON.parse(localStorage.getItem(SURVEY_PENDING_KEY) || '[]');
+        pending.push({ payload: supabasePayload, savedAt: new Date().toISOString() });
+        localStorage.setItem(SURVEY_PENDING_KEY, JSON.stringify(pending));
+      } catch(e2) { console.warn('로컬 백업도 실패:', e2); }
+    }
+
     setSubmitting(false);
     setSubmitted(true);
   };
