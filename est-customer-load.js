@@ -21,7 +21,11 @@ function shareEstimatePDF() {
   var custName = (document.getElementById('c-name')?.value || '').trim() || '고객';
   var isFinal = document.getElementById('status-final')?.classList.contains('on');
   var docLabel = isFinal ? '확정견적서' : '가견적서';
-  var filename = custName + '_' + docLabel + '.pdf';
+  // 2026-08-19(재검토 요청으로 발견): 고객명에 파일시스템 금지문자(\/:*?"<>|)가
+  // 섞이면 파일 저장/전달 자체가 실패할 수 있어 안전한 문자로 치환. 길이도
+  // 과도하게 길면(예: 실수로 메모까지 이름칸에 넣은 경우) 잘라서 안전하게 처리.
+  var safeCustName = (custName || '고객').replace(/[\\/:*?"<>|]/g, '_').slice(0, 30);
+  var filename = safeCustName + '_' + docLabel + '.pdf';
 
   showToast('PDF 만드는 중...');
 
