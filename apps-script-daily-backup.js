@@ -469,16 +469,20 @@ function dahPeekRawName(phone) {
  * 실행시키고 결과 로그까지 바로 받아볼 수 있음 — 매번 코드를 복사해서
  * 붙여넣고 실행 버튼을 누르는 과정이 필요 없어짐.
  *
- * URL 예시: [배포후URL]?key=dah-bridge-2026&action=diagnoseSchema
+ * URL 예시: [배포후URL]?key=[Script Properties에 등록한 값]&action=diagnoseSchema
  * key는 아무나 이 주소로 실행하지 못하게 막는 간단한 비밀번호.
  */
 function doGet(e) {
   // 2026-08-05: 이 시크릿 키가 코드에 그대로 하드코딩되어 있었음 — 이 저장소는
   // 공개(public) 저장소라서, SUPABASE_SERVICE_ROLE_KEY와 똑같은 이유로 문제였음.
-  // Script Properties에 DAH_BRIDGE_SECRET_KEY로 등록해서 읽어오도록 변경.
-  // (등록 안 해뒀으면 기존 값으로 자동 대체되니 당장 깨지진 않음 — 다음에 컴퓨터
-  // 있을 때 Script Properties에 새 값으로 등록하고 이 기본값은 지우는 걸 권장)
-  var SECRET_KEY = PropertiesService.getScriptProperties().getProperty('DAH_BRIDGE_SECRET_KEY') || 'dah-bridge-2026';
+  // 2026-08-19: 선혜님이 Script Properties에 DAH_BRIDGE_SECRET_KEY를 실제로
+  // 등록 완료함 — 이제 하드코딩된 기본값(dah-bridge-2026)을 완전히 제거함.
+  // 등록이 안 되어 있으면(getProperty가 null 리턴) 조용히 옛날 값으로 넘어가지
+  // 않고 명확하게 실행 자체를 거부하도록(fail-safe) 변경.
+  var SECRET_KEY = PropertiesService.getScriptProperties().getProperty('DAH_BRIDGE_SECRET_KEY');
+  if (!SECRET_KEY) {
+    return ContentService.createTextOutput('❌ 설정 오류 — Script Properties에 DAH_BRIDGE_SECRET_KEY가 등록되어 있지 않습니다').setMimeType(ContentService.MimeType.TEXT);
+  }
   if (!e || !e.parameter || e.parameter.key !== SECRET_KEY) {
     return ContentService.createTextOutput('❌ 인증 실패 — key 파라미터가 올바르지 않습니다').setMimeType(ContentService.MimeType.TEXT);
   }
