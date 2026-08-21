@@ -119,7 +119,7 @@ function getExpiryBadge(savedAt) {
   if(diff > 0) return '<span class="expiry-badge warn">D-'+diff+' 마감임박</span>';
   return '<span class="expiry-badge over">유효기간 만료</span>';
 }
-function saveEstimate() {
+function _saveEstimateInner() {
   clearDraft(); // 저장 완료 시 초안 삭제
   if (!validateEstimate()) return;
   var name=document.getElementById('c-name').value.trim();
@@ -461,6 +461,21 @@ function saveEstimate() {
   }
   saveToCustomers();
   showToast('저장 완료!');
+}
+
+// 2026-08-20(선혜님 발견 — 아이패드에서 저장이 아무 반응 없이 조용히 실패하던
+// 문제): 근본 원인을 코드 리뷰로는 확정하지 못했지만, _saveEstimateInner() 안의
+// 여러 지점에서 optional chaining 없이 DOM 요소에 직접 접근하고 있어 — 만약
+// 어떤 이유로든 예외가 발생하면 조용히 함수 실행이 멈추고 사용자에게는 아무
+// 신호도 안 갔음. 원인을 못 찾은 채로 넘어가지 않기 위해, 최후의 안전망으로
+// 전체를 try-catch로 감싸서 어떤 예외든 반드시 alert로 드러나게 만듦.
+function saveEstimate() {
+  try {
+    _saveEstimateInner();
+  } catch (err) {
+    console.error('저장 중 예외 발생:', err);
+    alert('⚠️ 저장 중 오류가 발생했어요\n\n' + (err && err.message ? err.message : err) + '\n\n이 화면을 캡처해서 보내주시면 원인을 찾을 수 있어요.');
+  }
 }
 
 function exportAllEstimatesExcel() {
