@@ -81,6 +81,11 @@ function fetchRegionFeesFromCloud(callback) {
   var xhr = new XMLHttpRequest();
   xhr.open('GET', SUPABASE_URL + '/rest/v1/app_settings?key=eq.region_fees&select=value', true);
   xhr.setRequestHeader('apikey', SUPABASE_KEY);
+  // 2026-08-20(선혜님 실제 확인 — 쿠폰이 아예 안 뜨던 문제로 발견): app_settings
+  // 테이블의 SELECT는 RLS상 로그인된 사용자만 허용되는데(auth.uid() IS NOT NULL),
+  // 이 함수는 Authorization 헤더 자체를 아예 안 보내고 있었음 — 로그인 여부와
+  // 무관하게 항상 조회가 거부되고 있었음. 지역요금/거래처목록도 동일 버그.
+  xhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
   xhr.onload = function() {
     try {
       if (xhr.status === 200) {
@@ -103,6 +108,7 @@ function fetchDiscountCouponsFromCloud(callback) {
   var xhr = new XMLHttpRequest();
   xhr.open('GET', SUPABASE_URL + '/rest/v1/app_settings?key=eq.discount_coupons&select=value', true);
   xhr.setRequestHeader('apikey', SUPABASE_KEY);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
   xhr.onload = function() {
     try {
       if (xhr.status === 200) {
@@ -226,6 +232,7 @@ function fetchVendorListFromCloud(callback) {
   var xhr = new XMLHttpRequest();
   xhr.open('GET', SUPABASE_URL + '/rest/v1/app_settings?key=eq.vendor_list&select=value', true);
   xhr.setRequestHeader('apikey', SUPABASE_KEY);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
   xhr.onload = function() {
     try {
       if (xhr.status === 200) {
