@@ -487,6 +487,82 @@ function saveEstimate() {
   }
 }
 
+// 2026-08-21(선혜님 요청 — "내가 어떻게 다 검토하니, 코드를 활용할 수 없니"):
+// 여러 핵심 항목을 자동으로 검사해서 한 화면에 초록/빨강으로 보여주는 자가진단
+// 기능. 하나하나 물어보는 대신, 이 결과 화면 캡처 한 장이면 충분히 진단 가능.
+function runSelfDiagnosis() {
+  var results = [];
+  function render() {
+    var modal = document.getElementById('self-diag-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'self-diag-modal';
+      modal.style.cssText = 'position:fixed;inset:0;z-index:9999999;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
+      modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
+      document.body.appendChild(modal);
+    }
+    var rows = results.map(function(r) {
+      return '<div style="display:flex;gap:8px;padding:8px 0;border-bottom:1px solid #EEE6DC;align-items:flex-start;">' +
+        '<span style="font-size:16px;flex-shrink:0">' + (r.ok ? '✅' : '❌') + '</span>' +
+        '<div><div style="font-size:13px;font-weight:600;color:#1A1A1A">' + r.label + '</div>' +
+        (r.detail ? '<div style="font-size:11px;color:#8A8378;margin-top:2px">' + r.detail + '</div>' : '') +
+        '</div></div>';
+    }).join('');
+    modal.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:420px;width:100%;max-height:80vh;overflow-y:auto;padding:20px;box-sizing:border-box;">' +
+      '<div style="font-size:15px;font-weight:700;margin-bottom:4px">🔍 자가진단 결과</div>' +
+      '<div style="font-size:11px;color:#8A8378;margin-bottom:12px">v' + (window.DAH_BUILD||'?') + ' · ' + new Date().toLocaleString('ko-KR') + '</div>' +
+      rows +
+      '<button onclick="document.getElementById(\'self-diag-modal\').remove()" style="margin-top:16px;width:100%;padding:10px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700">닫기</button>' +
+      '</div>';
+  }
+  function check(label, ok, detail) { results.push({ label: label, ok: ok, detail: detail || '' }); render(); }
+
+  render();
+  check('진단 시작', true, '아래 항목이 하나씩 채워집니다');
+
+  check('인터넷 연결', navigator.onLine, navigator.onLine ? '정상' : '오프라인 상태로 감지됨');
+
+  try {
+    localStorage.setItem('__diag_test__', '1');
+    localStorage.removeItem('__diag_test__');
+    check('기기 저장공간(localStorage)', true, '정상');
+  } catch(e) {
+    check('기기 저장공간(localStorage)', false, '사용 불가 - ' + e.message);
+  }
+
+  var session = (typeof getAuthSession === 'function') ? getAuthSession() : null;
+  if (!session) {
+    check('로그인 세션', false, '세션 없음 - 다시 로그인 필요');
+  } else {
+    var minsLeft = Math.round((session.expires_at - Date.now()) / 60000);
+    check('로그인 세션', minsLeft > 0, minsLeft > 0 ? (minsLeft + '분 후 만료 예정(자동갱신됨)') : (Math.abs(minsLeft) + '분 전 만료됨 - 저장시 자동갱신 시도함'));
+  }
+
+  var xhr1 = new XMLHttpRequest();
+  xhr1.open('GET', SUPABASE_URL + '/rest/v1/', true);
+  xhr1.setRequestHeader('apikey', SUPABASE_KEY);
+  xhr1.timeout = 5000;
+  xhr1.onload = function() { check('서버(Supabase) 연결', xhr1.status < 500, 'HTTP ' + xhr1.status); };
+  xhr1.onerror = function() { check('서버(Supabase) 연결', false, '연결 실패 - 네트워크 확인 필요'); };
+  xhr1.ontimeout = function() { check('서버(Supabase) 연결', false, '응답 없음(5초 초과)'); };
+  xhr1.send();
+
+  var coupons = [];
+  try { coupons = JSON.parse(localStorage.getItem('dah_discount_coupons') || '[]'); } catch(e) {}
+  check('할인쿠폰 목록', coupons.length > 0, coupons.length + '개 로드됨' + (coupons.length === 0 ? ' (설정에 등록된 쿠폰이 없거나 아직 못 받아옴)' : ''));
+
+  var regionFees = null;
+  try { regionFees = JSON.parse(localStorage.getItem('dah_region_fees') || 'null'); } catch(e) {}
+  var regionCount = regionFees ? Object.keys(regionFees).length : 0;
+  check('지역별 실측·시공비', regionCount > 0, regionCount + '개 지역 로드됨');
+
+  var pending = [];
+  try { pending = JSON.parse(localStorage.getItem('dah_pending_estimate_sync') || '[]'); } catch(e) {}
+  check('서버 저장 대기열', pending.length === 0, pending.length === 0 ? '밀린 것 없음' : (pending.length + '건 대기중 - 하단 배너를 눌러 재시도해보세요'));
+
+  check('현재 페이지 버전', true, 'v' + (window.DAH_BUILD||'?'));
+}
+
 function exportAllEstimatesExcel() {
   try {
     var estimates = [];
