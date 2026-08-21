@@ -7,7 +7,7 @@
 // 대시보드에서 등록된 서비스워커가 Service-Worker-Allowed:/ 설정으로 이 페이지도
 // 덮을 수 있어 동일하게 방어함.
 (function(){
-  var BUILD = '202608210604';
+  var BUILD = '202608210652';
   try {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(regs){
@@ -41,7 +41,7 @@
 
 <!-- 2026-08-20: 화면 구석에 작은 버전 표시 - 스크린샷 한 장으로 최신버전인지
      바로 확인 가능하게(캐시 문제 진단용). 인쇄물엔 안 나오게 처리. -->
-<div class="print-hide" style="position:fixed;bottom:4px;right:6px;font-size:9px;color:#B0A99F;z-index:999999;pointer-events:none;font-family:monospace;">v202608210604</div>
+<div class="print-hide" style="position:fixed;bottom:4px;right:6px;font-size:9px;color:#B0A99F;z-index:999999;pointer-events:none;font-family:monospace;">v202608210652</div>
 
 <!-- 비밀번호 재설정 화면 (재설정 이메일 링크를 눌러서 돌아왔을 때만 표시) -->
 <div id="recovery-error-screen" style="display:none;position:fixed;inset:0;z-index:9999999;background:#282828;align-items:center;justify-content:center;flex-direction:column;padding:20px;box-sizing:border-box;font-family:'Pretendard Variable',-apple-system,sans-serif;">
@@ -714,7 +714,7 @@
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
 <script src="/est-utils.js?v=202608070800"></script>
-<script src="/est-sync-queue.js?v=202608068200"></script>
+<script src="/est-sync-queue.js?v=202608210652"></script>
 <script src="/dash-supabase-auth.js?v=202608051400"></script>
 <script src="/est-form-controls.js?v=202608191411"></script>
 <script src="/est-product-calc.js?v=202608191210"></script>

@@ -49,10 +49,14 @@ function retryEstPendingSync() {
   var q = getEstPendingQueue();
   if (q.length === 0) return;
   if (typeof showToast === 'function') showToast('견적서 동기화 재시도 중…');
-  // 성공한 것만 제거하고 나머지는 큐에 남김
+  // 2026-08-20(선혜님 발견 — 태블릿에서 계속 대기중으로 남던 문제): 재시도가
+  // 실패해도 왜 실패했는지 전혀 안 보여줘서 원인 파악이 불가능했음. 인증 세션
+  // 유무와 실패 상태코드를 명확히 alert로 보여주도록 개선.
+  var hasSession = (typeof getAuthSession === 'function') ? !!getAuthSession() : null;
   var remaining = [];
   var pending = q.length;
   var done = 0;
+  var failReasons = [];
   q.forEach(function(item) {
     var xhr = new XMLHttpRequest();
     var isEdit = item.isEditMode && item.dbId;
@@ -67,15 +71,27 @@ function retryEstPendingSync() {
     xhr.setRequestHeader('Prefer', isEdit ? 'return=minimal' : 'return=minimal');
     xhr.onload = function() {
       done++;
-      // 2026-08-05: 409(idempotency key 중복)도 성공으로 취급 — 이전 시도가
-      // 실제로는 서버에 이미 저장됐었다는 뜻(응답만 유실됐던 것)
-      if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 409) remaining.push(item);
-      if (done === pending) { try { localStorage.setItem(EST_PENDING_KEY, JSON.stringify(remaining)); } catch(e) {} updateEstSyncBanner(); }
+      if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 409) {
+        remaining.push(item);
+        failReasons.push('상태코드 ' + xhr.status + (xhr.status === 401 || xhr.status === 403 ? '(로그인 세션 문제로 추정)' : ''));
+      }
+      if (done === pending) {
+        try { localStorage.setItem(EST_PENDING_KEY, JSON.stringify(remaining)); } catch(e) {}
+        updateEstSyncBanner();
+        if (remaining.length > 0) {
+          alert('⚠️ 서버 저장 재시도 실패\n\n로그인 세션 있음: ' + hasSession + '\n실패 사유: ' + failReasons.join(', ') + '\n\n이 화면을 캡처해서 보내주세요.');
+        }
+      }
     };
     xhr.onerror = function() {
       done++;
       remaining.push(item);
-      if (done === pending) { try { localStorage.setItem(EST_PENDING_KEY, JSON.stringify(remaining)); } catch(e) {} updateEstSyncBanner(); }
+      failReasons.push('네트워크 연결 실패(요청 자체가 서버에 도달 못함)');
+      if (done === pending) {
+        try { localStorage.setItem(EST_PENDING_KEY, JSON.stringify(remaining)); } catch(e) {}
+        updateEstSyncBanner();
+        alert('⚠️ 서버 저장 재시도 실패\n\n로그인 세션 있음: ' + hasSession + '\n실패 사유: ' + failReasons.join(', ') + '\n\n이 화면을 캡처해서 보내주세요.');
+      }
     };
     xhr.send(JSON.stringify(item.payload));
   });
