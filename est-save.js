@@ -459,7 +459,16 @@ function _saveEstimateInner() {
 
     } catch(e) { console.warn('localStorage 저장 실패', e); }
   }
-  saveToCustomers();
+  // 2026-08-20(태블릿에서 확인된 실제 문제 — "로그인 세션 있음: true"인데도
+  // 401 인증실패): 토큰 자동갱신이 4분 백그라운드 타이머에만 의존했는데,
+  // 화면이 꺼지거나 다른 앱으로 전환되면 브라우저가 이 타이머를 멈추는 경우가
+  // 흔함. 서버 전송 직전에 명시적으로 토큰 갱신부터 확인하도록 함(재시도큐와
+  // 동일한 패턴 - est-sync-queue.js 참고).
+  if (typeof refreshAuthSessionIfNeeded === 'function') {
+    refreshAuthSessionIfNeeded(function() { saveToCustomers(); });
+  } else {
+    saveToCustomers();
+  }
   showToast('저장 완료!');
 }
 
