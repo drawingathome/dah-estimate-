@@ -12,7 +12,26 @@ var _selectedPdfOpt = 'fit';
 // 실제 PDF 파일을 만들어서 공유창을 띄우면, 모바일에서 카카오톡을 직접 선택해
 // 파일째로 보낼 수 있음(사진 공유하듯). PC나 파일공유 미지원 브라우저에서는
 // 자동으로 다운로드로 폴백(기존 인쇄/PDF저장과 동일한 안전한 경로).
+// 2026-08-19(선혜님 발견 — 아이패드에서 "저장"조차 안 되는 심각한 문제):
+// html2pdf.bundle.min.js(946KB)를 페이지 로드시 무조건 받아오게 했더니, 이게
+// 다른 필수 스크립트(est-save.js 등) 로딩까지 지연시켜서 저장 같은 기본 기능이
+// 먹통처럼 보였을 가능성이 높음. 카톡공유 버튼을 실제로 누른 시점에만 동적으로
+// 불러오도록 변경 — 이러면 카톡공유를 안 쓰는 대다수 상황에서는 이 무거운
+// 라이브러리를 아예 안 받아오니 다른 기능에 전혀 영향을 줄 수 없음.
 function shareEstimatePDF() {
+  if (typeof html2pdf === 'undefined') {
+    showToast('PDF 기능 불러오는 중...');
+    var script = document.createElement('script');
+    script.src = '/html2pdf.bundle.min.js';
+    script.onload = function() { _doShareEstimatePDF(); };
+    script.onerror = function() { showToast('PDF 기능을 불러오지 못했어요. 인터넷 연결을 확인해주세요'); };
+    document.head.appendChild(script);
+    return;
+  }
+  _doShareEstimatePDF();
+}
+
+function _doShareEstimatePDF() {
   var contentEl = document.querySelector('#pv-overlay .pv-wrap') || document.querySelector('.pv-wrap');
   if (!contentEl || typeof html2pdf === 'undefined') {
     showToast('PDF 생성 기능을 사용할 수 없어요');
