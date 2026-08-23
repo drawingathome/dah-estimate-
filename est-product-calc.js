@@ -646,6 +646,21 @@ function delSvcRow(btn) {
   calcTotal();
 }
 
+// 2026-08-22: 복사본을 원본 바로 다음 자리가 아니라, 같은 공간(space) 그룹의
+// 마지막 행 뒤에 붙이도록 변경. 예전엔 tr.nextSibling에 끼워넣기만 해서,
+// 같은 공간 안에 다른 행이 더 있으면 그 사이에 끼어들어 "순서가 이상해진다"는
+// 지적(선혜님, 2026-08-22)이 있었음. 같은 공간이 없으면(=원본이 그 공간의
+// 마지막 행) 기존과 동일하게 원본 바로 다음에 붙음.
+function _findSameSpaceInsertPoint(tr) {
+  var space = tr.querySelector('.space-inp')?.value || '';
+  var insertAfter = tr;
+  var sib = tr.nextElementSibling;
+  while (sib && (sib.querySelector('.space-inp')?.value || '') === space) {
+    insertAfter = sib;
+    sib = sib.nextElementSibling;
+  }
+  return insertAfter;
+}
 function copyCurtainRow(btn) {
   var tr=btn.closest('tr');
   var clone=tr.cloneNode(true);
@@ -657,7 +672,8 @@ function copyCurtainRow(btn) {
   clone.querySelectorAll('input[data-raw]').forEach(function(inp){
     inp.setAttribute('data-raw',inp.getAttribute('data-raw'));
   });
-  tr.parentNode.insertBefore(clone,tr.nextSibling);
+  var insertAfter = _findSameSpaceInsertPoint(tr);
+  insertAfter.parentNode.insertBefore(clone,insertAfter.nextSibling);
   makeRowDraggable(clone);
   if (typeof autoUpdateRail === 'function') autoUpdateRail(clone);
   calcTotal();
@@ -669,7 +685,8 @@ function copyBlindRow(btn) {
   clone.querySelectorAll('input[data-raw]').forEach(function(inp){
     inp.setAttribute('data-raw',inp.getAttribute('data-raw'));
   });
-  tr.parentNode.insertBefore(clone,tr.nextSibling);
+  var insertAfter = _findSameSpaceInsertPoint(tr);
+  insertAfter.parentNode.insertBefore(clone,insertAfter.nextSibling);
   makeRowDraggable(clone);
   autoAddBlindSvc();
   calcTotal();
@@ -773,33 +790,57 @@ function toggleSvcDetail() {
 }
 
 /* ══════════════════════════════════════════════════
-   커튼/블라인드 행 드래그 순서변경 (2026-08-05 신규)
-   행 오른쪽 끝 ⠿ 핸들을 마우스로 드래그해서 위/아래로 옮길 수 있음.
+   커튼/블라인드 행 드래그 순서변경 (2026-08-05 신규, 2026-08-22 재작성)
+   행 오른쪽 끝 ⠿ 핸들을 드래그해서 위/아래로 옮길 수 있음.
+   2026-08-22: 기존엔 HTML5 네이티브 드래그앤드롭(draggable+dragstart)으로
+   구현돼 있었는데, 이 방식은 iOS Safari 등 터치 화면에서는 애초에
+   dragstart 자체가 발생하지 않아 아이패드/갤럭시탭에서 절대 작동하지
+   않는 근본적 제약이 있었음(선혜님 PC 확인 결과 PC에서도 안 됨 —
+   구버전 브라우저에서 dragover 리스너가 tbody 레벨 1곳에만 걸려있어
+   테이블이 가로 스크롤 컨테이너 안에 있을 때 좌표 기준이 어긋나는
+   사례도 있었음). Pointer Events(마우스+터치+펜 공통)로 완전히
+   재작성해서 PC/태블릿 모두에서 동일하게 동작하도록 함.
    ══════════════════════════════════════════════════ */
 function makeRowDraggable(tr) {
-  tr.draggable = true;
-  tr.addEventListener('dragstart', function(e) {
-    // 핸들이 아닌 입력창/버튼을 클릭+드래그한 경우엔(텍스트 선택 등) 행 이동을 시작하지 않음
-    if (!e.target.closest('.row-drag-handle')) { e.preventDefault(); return; }
+  var handle = tr.querySelector('.row-drag-handle');
+  if (!handle || handle.dataset.dragBound) return;
+  handle.dataset.dragBound = '1';
+  handle.style.touchAction = 'none'; // 터치로 핸들을 잡았을 때 화면 스크롤과 충돌하지 않도록
+
+  handle.addEventListener('pointerdown', function(e) {
+    e.preventDefault();
+    var tbody = tr.parentNode;
+    if (!tbody) return;
     tr.classList.add('dragging-row');
-    try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', ''); } catch(err) {}
+
+    // 2026-08-22: setPointerCapture(handle)를 썼더니, 드래그 중 행이
+    // insertBefore로 DOM 안에서 재배치되는 순간(캡처 대상 요소 자신이
+    // 옮겨짐) 브라우저가 캡처를 자동으로 풀어버려서 그 이후 pointermove가
+    // 더 이상 안 들어오는 문제가 있었음(재현 확인: 첫 재배치까지만 되고
+    // 이후 멈춤 — "위치 이동이 안 된다"는 증상과 일치). 리스너를 위치가
+    // 안 바뀌는 document에 걸어서 재배치와 무관하게 계속 이벤트를 받도록 수정.
+    function onMove(ev) {
+      var after = _getDragAfterRow(tbody, ev.clientY);
+      if (after == null) { if (tbody.lastElementChild !== tr) tbody.appendChild(tr); }
+      else if (after !== tr) { tbody.insertBefore(tr, after); }
+    }
+    function onUp() {
+      tr.classList.remove('dragging-row');
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      document.removeEventListener('pointercancel', onUp);
+      calcTotal();
+    }
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+    document.addEventListener('pointercancel', onUp);
   });
-  tr.addEventListener('dragend', function() { tr.classList.remove('dragging-row'); });
 }
 
-function setupRowDragReorder(tbodyId) {
-  var tbody = document.getElementById(tbodyId);
-  if (!tbody || tbody.dataset.dragSetup) return;
-  tbody.dataset.dragSetup = '1';
-  tbody.addEventListener('dragover', function(e) {
-    var dragging = tbody.querySelector('.dragging-row');
-    if (!dragging) return;
-    e.preventDefault();
-    var after = _getDragAfterRow(tbody, e.clientY);
-    if (after == null) tbody.appendChild(dragging);
-    else tbody.insertBefore(dragging, after);
-  });
-}
+// 2026-08-22: pointer 방식은 각 행의 핸들에서 직접 처리하므로 tbody 레벨
+// 리스너가 더 이상 필요 없음 — 기존 호출부(addCurtainRow 등)와의 호환을
+// 위해 함수 자체는 남겨두되 아무 동작도 하지 않음(no-op).
+function setupRowDragReorder(tbodyId) {}
 
 function _getDragAfterRow(tbody, y) {
   var rows = Array.from(tbody.querySelectorAll('tr:not(.dragging-row)'));

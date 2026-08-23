@@ -375,6 +375,8 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
 .info-internal.open{max-height:200px;display:block!important}
 
 .tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0;border-radius:8px}
+/* 2026-08-22: 드래그 중인 행 시각 피드백(전엔 아예 없었음) */
+#curtain-body tr.dragging-row,#blind-body tr.dragging-row{opacity:0.45;background:#F5F2EE}
 .tbl-wrap table{min-width:1100px!important}
 table{width:100%;border-collapse:collapse;font-size:11px;min-width:0!important}
 
@@ -828,6 +830,13 @@ td.amt{
   thead { display:table-header-group; }
   tr { break-inside:avoid; }
   .page-break { page-break-before:always; }
+  /* 2026-08-22: 참고사항+PROCESS+결제계좌를 한 덩어리로 묶어서, 페이지에
+     다 못 들어가면 통째로 다음 페이지로 넘어가게 함(결제계좌 한 줄만
+     혼자 다음 페이지로 떨어지던 문제 수정). padding-top은 .pv-wrap의
+     페이지 상단 여백(10mm)과 맞춰서, 다음 페이지로 넘어갔을 때 1페이지
+     맨 위(헤더)와 같은 여백으로 보이게 함 — 안 넘어가고 1페이지에 그대로
+     있을 때도 앞 섹션과의 구분감이 자연스러워서 무해함. */
+  .pv-tail-group { break-inside:avoid; page-break-inside:avoid; padding-top:10mm; }
 
   html, body { background:#fff!important; }
   .container, .quicknav, .print-hide { display:none!important; }

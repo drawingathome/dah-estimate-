@@ -379,14 +379,19 @@ function buildCustomerHTML() {
       +'</div>'
       +'</div>';
 
-  
+  // 2026-08-22(선혜님 발견): A4 표준 옵션에서 내용이 2페이지로 넘어갈 때,
+  // 참고사항+PROCESS까지는 1페이지 끝에 억지로 다 들어가고 결제계좌 한 줄만
+  // 뚝 떨어져서 2페이지 맨 위에 혼자 남고 나머지는 텅 비는 문제가 있었음
+  // (참고사항/PROCESS/결제계좌가 서로 묶여있지 않고 따로 흘러서 생김).
+  // 세 블록을 한 덩어리(.pv-tail-group)로 묶어서, 남은 공간에 다 못 들어가면
+  // 이 덩어리 전체가 통째로 다음 페이지로 넘어가도록 함 — 마지막 줄만 혼자
+  // 떨어지는 대신, 참고사항부터 결제계좌까지 다음 페이지에 다 같이 나옴.
+  out += '<div class="pv-tail-group">';
+
   out += notesHTML;
 
-  
   out += processHTML;
 
-  
-  
   try {
     var photos = JSON.parse(localStorage.getItem('dah_photos')||'[]');
     if(photos.length > 0) {
@@ -412,6 +417,8 @@ function buildCustomerHTML() {
       +'<div style="margin-bottom:6px"><strong>결제 계좌</strong>&nbsp;&nbsp;' + _bankName + ' ' + _acctNum + '&nbsp;&nbsp;예금주: ' + _holderName + '(드로잉엣홈)</div>'
       +''
       +'</div>';
+
+  out += '</div>'; // .pv-tail-group 닫기
 
   out += '</div>';
   return out;
