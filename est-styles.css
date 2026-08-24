@@ -780,7 +780,7 @@ td.amt{
 .pv-section-title{padding:12px 20px 8px;font-size:17px;font-weight:700;color:#282828;letter-spacing:0.5px;display:flex;align-items:center}
 
 /* 최종견적 독립 강조블록 */
-.pv-total-block{display:flex;align-items:baseline;justify-content:space-between;padding:16px 0;border-top:2px solid #282828;border-bottom:1.5px solid #282828;margin-bottom:16px}
+.pv-total-block{display:flex;align-items:baseline;justify-content:center;gap:32px;padding:16px 0;border-top:2px solid #282828;border-bottom:1.5px solid #282828;margin-bottom:16px}
 .pv-total-label{font-size:13px;letter-spacing:0.5px;color:var(--sub)}
 .pv-total-value{font-family:'Noto Serif CJK KR',Georgia,serif;font-size:26px;font-weight:600;color:#F06E2D}
 
@@ -928,7 +928,7 @@ td.amt{
   .pv-sum-table td.sum-lbl { padding-left:0!important; }
   .pv-sum-table td.sum-val { text-align:right!important; font-weight:700!important; }
   .pv-total-block {
-    display:flex!important; align-items:baseline!important; justify-content:space-between!important;
+    display:flex!important; align-items:baseline!important; justify-content:center!important; gap:32px!important;
     padding:12px 4px 18px 0!important;
     margin-left:90px!important;
     border-top:2px solid #1A1A1A!important;
