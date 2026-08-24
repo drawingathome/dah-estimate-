@@ -792,21 +792,41 @@ function buildRequestHTML(kind, extraNote) {
 
   if(kind === 'measure') {
     // ── 실측 의뢰서: 공간별 번호 목록 ──
-    var items = [];
+    // 2026-08-24(선혜님 지적 — "겉지/속지, 연창 관계가 안 보여서 시공팀이
+    // 헷갈릴 수 있다"): 예전엔 커튼/블라인드 항목 개수만큼 "공간 : 커튼 1조"를
+    // 그대로 반복 출력해서, 같은 공간에 겉지+속지 2줄이 있어도 서로 무관한
+    // 별개 항목처럼 보였음. 같은 공간(커튼은 공간 단위, 블라인드는 공간+종류
+    // 단위)으로 묶어서 개수만 표시하도록 변경 — "거실 : 커튼 2조",
+    // "거실 : 롤스크린 2피스"처럼 한 줄로 정리됨.
+    var curtainCounts = {}; var curtainOrder = [];
     document.querySelectorAll('#curtain-body tr').forEach(function(tr){
       var space  = tr.querySelector('.space-inp')?.value || '';
       var fabric = tr.querySelector('.c-fabric')?.value || '';
       var name   = tr.querySelector('.c-display-name')?.value || '';
       if(!space && !fabric && !name) return;
-      items.push((space||'—')+' : 커튼 1조');
+      var key = space || '—';
+      if(!(key in curtainCounts)) { curtainCounts[key] = 0; curtainOrder.push(key); }
+      curtainCounts[key]++;
     });
+    var blindCounts = {}; var blindOrder = [];
     document.querySelectorAll('#blind-body tr').forEach(function(tr){
       var space  = tr.querySelector('.space-inp')?.value || '';
       var kind2  = tr.querySelector('.blind-kind')?.value || '블라인드';
       var innerInps = tr.querySelectorAll('.inner-row .inner-inp');
       var fabric = innerInps[0]?.value || '';
       if(!space && !fabric) return;
-      items.push((space||'—')+' : '+kind2);
+      var key = (space||'—')+'|'+kind2;
+      if(!(key in blindCounts)) { blindCounts[key] = 0; blindOrder.push(key); }
+      blindCounts[key]++;
+    });
+    var items = [];
+    curtainOrder.forEach(function(space){
+      items.push(space+' : 커튼 '+curtainCounts[space]+'조');
+    });
+    blindOrder.forEach(function(key){
+      var parts = key.split('|'); var space = parts[0]; var kind2 = parts[1];
+      var n = blindCounts[key];
+      items.push(space+' : '+kind2+(n>1 ? ' '+n+'피스' : ''));
     });
     if(items.length === 0) {
       out += '<div style="padding:30px 0;text-align:center;color:#B0A99F;font-size:12px">입력된 공간/제품이 없습니다.</div>';
