@@ -338,6 +338,11 @@ function estimateDbRowToLocal(row) {
   var blindVendors = blindItems.map(function(li){ return li.vendor; }).filter(Boolean);
   return {
     id: row.id,
+    dbId: row.id,
+    // 2026-08-24(전수재검사 발견): renderEstimateHistory()(고객상세 "정보" 탭)는
+    // "열어서 수정"/"복사해서 새로 만들기" 버튼을 e.dbId 존재 여부로 띄우는데,
+    // 클라우드에서 동기화된 항목은 .id만 있고 .dbId가 없어서 이 버튼들이 실제
+    // 고객 대부분(클라우드 동기화된 진짜 견적)에게는 안 뜨고 있었을 것.
     no: row.id ? String(row.id).slice(0,8) : '',
     clientName: row.customer_name || '',
     phone: row.phone || '',
