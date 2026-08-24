@@ -46,6 +46,11 @@ function renderEstList() {
   else if (_estArchiveFilter === 'rejected_archive') all = all.filter(isRejected);
   else if (_estArchiveFilter === 'active') all = all.filter(function(e){ return !isInstallDone(e) && !isRejected(e); });
   // 'all'이면 필터 없음
+  // 2026-08-24(선혜님 발견 — 견적서 목록에 삭제 기능 자체가 없던 문제):
+  // archiveEstimate()는 이미 있었는데(customer-detail 화면 전용) 이 목록에는
+  // 연결이 안 돼 있었고, 심지어 여기선 isArchived 필터조차 없어서 보관 처리를
+  // 해도 이 화면에선 안 사라졌음. 삭제(보관) 버튼을 추가하면서 필터도 같이 적용.
+  all = all.filter(function(e){ return !e.isArchived; });
 
   var q = (document.getElementById('est-search')?.value || '').trim();
   var list = q
@@ -123,6 +128,24 @@ function renderEstList() {
       top.appendChild(paidAsTag);
     }
     top.appendChild(csBadge);
+
+    // 2026-08-24: 목록에서 바로 삭제(보관처리) 가능하게 — 고객 연결이 없는
+    // 견적(client_id가 비어있어 고객상세로 진입 자체가 안 되는 테스트/오류
+    // 데이터 등)도 지울 방법이 있어야 해서 추가.
+    var delBtn = el('button', {type:'button', title:'삭제', style:
+      'margin-left:6px;flex-shrink:0;width:22px;height:22px;border:none;background:transparent;' +
+      'color:var(--sub);font-size:13px;cursor:pointer;border-radius:6px;line-height:1'
+    });
+    delBtn.textContent = '🗑';
+    delBtn.addEventListener('mouseover', function(){ this.style.background='#FDECEA'; this.style.color='#C0392B'; });
+    delBtn.addEventListener('mouseout',  function(){ this.style.background='transparent'; this.style.color='var(--sub)'; });
+    delBtn.addEventListener('click', function(ev){
+      ev.stopPropagation(); // row 클릭(고객상세 이동)으로 안 번지게
+      var label = (e.clientName || '이름없음') + ' · ' + (Number(e.price)||0).toLocaleString() + '원';
+      if (!confirm(label + '\n\n이 견적서를 삭제할까요? (완전히 지워지지 않고 보관되며, 필요하면 나중에 복구할 수 있어요)')) return;
+      archiveEstimate(e, function(){ renderEstList(); showToast('삭제(보관)했어요'); });
+    });
+    top.appendChild(delBtn);
 
     // 중간 행: 고객명 + 금액
     var mid = el('div', {style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-1)'});
