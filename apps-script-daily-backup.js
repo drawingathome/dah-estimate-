@@ -42,7 +42,12 @@ var BACKUP_FOLDER_NAME = 'DAH_자동백업';
 // 10년 이상 보관해야 하는 요구사항이라 완전히 제거함
 
 function dahDailyBackup() {
-  var tables = ['customers', 'estimates', 'surveys'];
+  // 2026-08-24(선혜님 지적 — "우리쪽 백업데이터도 잘 짜야겠는데"): customers/
+  // estimates/surveys 세 개만 백업하고 있었는데, app_settings(마스터/담당자
+  // 이메일, 할인쿠폰, 지역출장비 설정 — 이거 하나 날아가면 로그인부터 막힘),
+  // as_records(A/S 기록), staff_profiles(직원 계정)가 통째로 빠져있었음.
+  // analytics_events는 단순 사용로그라 우선순위 낮지만 비용 거의 안 드니 같이 포함.
+  var tables = ['customers', 'estimates', 'surveys', 'app_settings', 'as_records', 'staff_profiles', 'analytics_events'];
   var backup = { exportedAt: new Date().toISOString(), version: '1.0' };
   var errors = [];
 
@@ -85,10 +90,11 @@ function dahDailyBackup() {
   folder.createFile(fileName, content, MimeType.PLAIN_TEXT);
 
   // 결과 요약 (실행 로그에서 확인 가능: 보기 > 실행 로그)
-  var summary = '백업 완료: ' + today
-    + ' | customers ' + (backup.customers ? backup.customers.length : '실패') + '건'
-    + ' | estimates ' + (backup.estimates ? backup.estimates.length : '실패') + '건'
-    + ' | surveys ' + (backup.surveys ? backup.surveys.length : '실패') + '건';
+  // 2026-08-24: 하드코딩된 3개 대신 tables 배열 전체를 자동으로 순회하도록
+  // 바꿔서, 나중에 테이블이 더 추가돼도 이 요약 로그를 또 고칠 필요 없게 함.
+  var summary = '백업 완료: ' + today + ' | ' + tables.map(function(t) {
+    return t + ' ' + (Array.isArray(backup[t]) ? backup[t].length : '실패') + '건';
+  }).join(' | ');
   Logger.log(summary);
 
   // 실패한 테이블이 있으면 이메일로 알림 (선택사항 — 본인 이메일로 변경)
