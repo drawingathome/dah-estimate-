@@ -7,7 +7,7 @@
 // 대시보드에서 등록된 서비스워커가 Service-Worker-Allowed:/ 설정으로 이 페이지도
 // 덮을 수 있어 동일하게 방어함.
 (function(){
-  var BUILD = '202608240800';
+  var BUILD = '202608240900';
   window.DAH_BUILD = BUILD; // 2026-08-21: 다른 JS파일(est-save.js 자가진단 등)에서 참조할 수 있게 전역 노출
   try {
     if ('serviceWorker' in navigator) {
@@ -723,7 +723,7 @@
 <script src="/est-survey.js?v=202608190049"></script>
 <script src="/est-save.js?v=202608240400"></script>
 <script src="/est-documents.js?v=202608240400"></script>
-<script src="/est-customer-load.js?v=202608240800"></script>
+<script src="/est-customer-load.js?v=202608240900"></script>
 <script src="/est-misc.js?v=202608240145"></script>
 <script>
 var currentTab = 'ga';
@@ -856,6 +856,27 @@ var currentTab = 'ga';
           if (e.phone) document.getElementById('c-phone').value = e.phone;
           if (e.memo) document.getElementById('c-memo').value = e.memo;
           if (e.client_id) upsertLocalCustomer(e.client_id, e.customer_name, e.phone, null, null);
+          // 2026-08-24: loadEstDbId 경로는 estimates 테이블만 조회해서 주소(addr)가
+          // 없음(estimates에는 주소 컬럼 자체가 없음) — 이제 openEstimate()가
+          // "이어서 수정"일 때 이 경로로 오게 바뀌면서, 예전 loadCustId에서는
+          // 항상 채워지던 주소가 여기선 비어보이는 회귀가 생길 뻔했음. client_id로
+          // 고객 주소만 별도로 채워옴.
+          if (e.client_id) {
+            var addrUrl = SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(e.client_id) + '&select=addr';
+            var axhr = new XMLHttpRequest();
+            axhr.open('GET', addrUrl, true);
+            axhr.setRequestHeader('apikey', SUPABASE_KEY);
+            axhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+            axhr.onload = function() {
+              try {
+                var arows = JSON.parse(axhr.responseText);
+                if (arows && arows[0] && arows[0].addr && document.getElementById('c-addr')) {
+                  document.getElementById('c-addr').value = arows[0].addr;
+                }
+              } catch(eAddr) {}
+            };
+            axhr.send();
+          }
           var loadedItems = false;
           if (e.line_items && typeof restoreLineItemsToForm === 'function') {
             loadedItems = restoreLineItemsToForm(e.line_items, e.product);

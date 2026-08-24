@@ -1043,8 +1043,38 @@ function openEstimate(name, id) {
   // 공유되지 않아 "빈 화면"이 뜨는 버그였음(선혜님 실사용에서 확인됨).
   // URL 쿼리파라미터로 고객ID만 넘기고, 견적서 앱이 그 ID로 Supabase에서
   // 직접 조회하도록 변경 - 지역출장비/거래처목록과 동일한 해결 패턴.
+  //
+  // 2026-08-24(선혜님 발견 — "최시내 견적서 또 생겼다"): 이 버튼이 항상
+  // loadCustId 경로로만 열려서, 기존 견적이 있는 고객이어도 _editingEstDbId가
+  // 절대 세팅 안 되고 있었음 — 그래서 이 버튼으로 들어가서 "저장"만 눌러도
+  // 매번 완전히 새 견적이 만들어졌음(오늘 발견된 다른 중복들 — Gbn, Hbug 등도
+  // 같은 경로로 생겼을 가능성이 높음). 고객에게 이미 견적이 있으면
+  // loadEstDbId+mode=edit로 열어서 "이어서 수정"이 되도록, 없으면(진짜 신규
+  // 고객) 기존처럼 loadCustId로 열리도록 분기함.
   if (useId) {
-    window.location.href = 'dah-estimate.html?loadCustId=' + encodeURIComponent(useId);
+    var latestUrl = SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(useId) +
+      '&is_archived=is.false&order=created_at.desc&limit=1&select=id';
+    var lxhr = new XMLHttpRequest();
+    lxhr.open('GET', latestUrl, true);
+    lxhr.setRequestHeader('apikey', SUPABASE_KEY);
+    lxhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+    lxhr.onload = function() {
+      var latestId = null;
+      try {
+        var rows = JSON.parse(lxhr.responseText);
+        if (rows && rows[0] && rows[0].id) latestId = rows[0].id;
+      } catch(e) {}
+      if (latestId) {
+        window.location.href = 'dah-estimate.html?loadEstDbId=' + encodeURIComponent(latestId) + '&mode=edit';
+      } else {
+        window.location.href = 'dah-estimate.html?loadCustId=' + encodeURIComponent(useId);
+      }
+    };
+    lxhr.onerror = function() {
+      // 조회 실패시엔 예전처럼 loadCustId로라도 열리게(완전히 막히는 것보단 나음)
+      window.location.href = 'dah-estimate.html?loadCustId=' + encodeURIComponent(useId);
+    };
+    lxhr.send();
   } else if (name) {
     window.location.href = 'dah-estimate.html?loadCustName=' + encodeURIComponent(name);
   } else {
