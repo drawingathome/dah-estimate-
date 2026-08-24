@@ -119,11 +119,12 @@ function getExpiryBadge(savedAt) {
   if(diff > 0) return '<span class="expiry-badge warn">D-'+diff+' 마감임박</span>';
   return '<span class="expiry-badge over">유효기간 만료</span>';
 }
-function _saveEstimateInner() {
+function _saveEstimateInner(_onDone) {
+  var onDone = typeof _onDone === 'function' ? _onDone : function(){};
   clearDraft(); // 저장 완료 시 초안 삭제
-  if (!validateEstimate()) return;
+  if (!validateEstimate()) { onDone(); return; }
   var name=document.getElementById('c-name').value.trim();
-  if(!name) { showToast('⚠️ 고객명을 입력하세요'); return; }
+  if(!name) { showToast('⚠️ 고객명을 입력하세요'); onDone(); return; }
   var phone=document.getElementById('c-phone').value.trim();
   var addr=document.getElementById('c-addr').value.trim();
   var addr2=document.getElementById('c-addr2')?.value.trim()||'';
@@ -296,6 +297,7 @@ function _saveEstimateInner() {
               if (Array.isArray(lockCheckRows) && lockCheckRows.length === 0) {
                 showToast('⚠️ 이 견적서가 방금 다른 곳에서 먼저 저장됐어요 — 새로고침해서 최신 내용을 확인해주세요 (내 변경사항은 로컬에만 저장됨)');
                 if (typeof addToEstPendingQueue === 'function') { /* 강제 재시도는 위험하므로 큐에 넣지 않음 - 사용자 확인 필요 */ }
+                onDone();
                 return;
               }
               // 성공 - 다음 저장을 위해 최신 updated_at 갱신
@@ -328,17 +330,20 @@ function _saveEstimateInner() {
           // 재시도 큐에 등록해서 네트워크 복구시 자동으로 다시 시도되도록 함
           if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._editingEstDbId);
         }
+        onDone(); // 2026-08-24: 성공/409/실패 모든 경우에 버튼 다시 눌러도 되게 원상복구
       };
       xhr2.onerror=function(){
         console.warn('Supabase 견적서 저장 실패 (localStorage는 완료)');
         showToast('저장 완료 (로컬) — DB 동기화는 실패했어요');
         if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._editingEstDbId);
+        onDone();
       };
       xhr2.send(JSON.stringify(estPayloadForRetry));
     } catch(e) {
       console.warn('Supabase 연결 오류:', e);
       showToast('저장 완료 (로컬) — DB 동기화는 실패했어요');
       if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._editingEstDbId);
+      onDone();
     }
   }
   function saveToLocalStorage() {
@@ -475,15 +480,29 @@ function _saveEstimateInner() {
 // 2026-08-20(선혜님 발견 — 아이패드에서 저장이 아무 반응 없이 조용히 실패하던
 // 문제): 근본 원인을 코드 리뷰로는 확정하지 못했지만, _saveEstimateInner() 안의
 // 여러 지점에서 optional chaining 없이 DOM 요소에 직접 접근하고 있어 — 만약
-// 어떤 이유로든 예외가 발생하면 조용히 함수 실행이 멈추고 사용자에게는 아무
-// 신호도 안 갔음. 원인을 못 찾은 채로 넘어가지 않기 위해, 최후의 안전망으로
-// 전체를 try-catch로 감싸서 어떤 예외든 반드시 alert로 드러나게 만듦.
+// 2026-08-24(선혜님 발견 — 같은 견적이 5개씩 한번에 중복 저장되던 문제):
+// 저장 버튼에 중복 클릭 방지 장치가 전혀 없어서, 짧은 시간 안에 여러 번
+// 눌리면(빠른 연타, 또는 터치가 두 번 인식되는 기기 문제 등) 각각이 독립적으로
+// _saveEstimateInner()를 실행함 — 첫 저장이 서버 응답을 받아 _editingEstDbId를
+// 세팅하기 전에 나머지 클릭들이 이미 실행돼버려서, 전부 "새 견적"으로 처리되어
+// 그대로 중복 생성됨(실제 사례: 0.15초 안에 5건 중복 생성 확인). 버튼을 즉시
+// 비활성화하고, 저장 흐름이 끝나면(성공/실패 무관) 다시 눌러도 되게 원상복구.
 function saveEstimate() {
+  var btn = document.getElementById('btn-save-estimate');
+  if (btn) {
+    if (btn.disabled) return; // 이미 저장 진행 중이면 이번 클릭은 무시
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+  }
+  function reenable() {
+    if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+  }
   try {
-    _saveEstimateInner();
+    _saveEstimateInner(reenable);
   } catch (err) {
     console.error('저장 중 예외 발생:', err);
     alert('⚠️ 저장 중 오류가 발생했어요\n\n' + (err && err.message ? err.message : err) + '\n\n이 화면을 캡처해서 보내주시면 원인을 찾을 수 있어요.');
+    reenable();
   }
 }
 
