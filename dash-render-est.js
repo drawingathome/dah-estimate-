@@ -112,11 +112,36 @@ function renderEstList() {
     typeTag.textContent = STATUS_KO[e.status] || '가견적서';
 
     var csBadge = el('span', {style:
-      'margin-left:auto;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;' +
+      'margin-left:auto;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;cursor:pointer;' +
       'background:' + (cs==='contracted'?'#EEF5F2':cs==='rejected'?'#FDECEA':'#F5F2EE') + ';' +
       'color:' + CONTRACT_COLOR[cs]
     });
     csBadge.textContent = CONTRACT_KO[cs] || '가견적';
+    // 2026-08-24(선혜님 발견 — "확정 미계약 이런 부분은 안보인다"): 고객상세
+    // 화면의 배지는 눌러서 바뀌는데, 이 메인 견적서 목록 화면의 배지는 그냥
+    // 보여주기만 하는 텍스트라 눌러도 아무 반응이 없었음. 똑같이 클릭해서
+    // 바뀌도록(계약됨↔미계약 한번에 토글) 추가.
+    (function(entry, badge){
+      badge.addEventListener('click', function(ev){
+        ev.stopPropagation(); // row 클릭(고객상세 이동)으로 안 번지게
+        var cur = entry.contractStatus || (entry.status === 'final' ? 'contracted' : 'pending');
+        var next = cur === 'rejected' ? 'contracted' : cur === 'contracted' ? 'rejected' : 'contracted';
+        entry.contractStatus = next;
+        try {
+          var arr = JSON.parse(localStorage.getItem('dah_saved')||'[]');
+          var idx = arr.findIndex(function(x){ return x.id === entry.id || x.no === entry.no; });
+          if (idx>=0) { arr[idx].contractStatus = next; localStorage.setItem('dah_saved', JSON.stringify(arr)); }
+        } catch(ex2){}
+        if (entry.id && typeof entry.id === 'string' && entry.id.length > 20 && typeof sbXHR === 'function') {
+          sbXHR('PATCH', 'estimates?id=eq.' + entry.id, { contract_status: next }, function(err){
+            if (err) console.warn('계약상태 서버 저장 실패:', err);
+          });
+        }
+        badge.textContent = CONTRACT_KO[next];
+        badge.style.background = next==='contracted'?'#EEF5F2':next==='rejected'?'#FDECEA':'#F5F2EE';
+        badge.style.color = CONTRACT_COLOR[next];
+      });
+    })(e, csBadge);
 
     top.appendChild(noSpan); top.appendChild(typeTag);
     if (e.custType === 'rebuy') {
