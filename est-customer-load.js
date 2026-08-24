@@ -407,10 +407,27 @@ function loadCustByIdx(el) {
       if (latest.appliedDiscounts && typeof restoreAppliedDiscounts === 'function') {
         restoreAppliedDiscounts(latest.appliedDiscounts);
       }
+      // 2026-08-24(선혜님 발견 — "생성이 안되어야지"): "고객 불러오기"는
+      // 원래 "이 고객정보로 완전히 새 견적을 시작"하는 용도라 항상 새로
+      // 저장되게 만들어져 있었음. 근데 같은 날 이미 만든 견적을 다시 불러와서
+      // (예: 기능 테스트 삼아) 살짝 고치고 저장하면, 그것도 매번 새 견적으로
+      // 쌓여서 유령이 계속 생기는 원인이 됐음. 최근 견적이 "오늘" 저장된
+      // 것이면 새로 만드는 게 아니라 그걸 이어서 수정(PATCH)하도록 함 —
+      // 진짜 재구매(다른 날짜의 새 방문)는 오늘 것이 없으므로 기존처럼
+      // 새 견적으로 정상 시작됨.
+      var todayStr = new Date().toISOString().slice(0,10);
+      var latestDateStr = (latest.savedAt||'').slice(0,10);
+      if (latest.dbId && latestDateStr === todayStr) {
+        window._editingEstDbId = latest.dbId;
+        window._editingEstUpdatedAt = latest.updatedAt || null;
+        showToast('오늘 만드신 성지윤님 견적을 이어서 수정합니다 — 저장하면 새로 안 쌓이고 이 견적이 갱신돼요'.replace('성지윤', c.clientName||''));
+      }
     }
   } catch(e) { console.warn('기존 견적 품목 불러오기 실패:', e); }
   closeCustLoad();
-  showToast('고객 정보를 불러왔습니다 — '+(c.clientName||'')+(loadedItems ? ' (이전 견적 품목 포함)' : ''));
+  if (!(window._editingEstDbId)) {
+    showToast('고객 정보를 불러왔습니다 — '+(c.clientName||'')+(loadedItems ? ' (이전 견적 품목 포함)' : ''));
+  }
 }
 
 function searchCustomer() {
