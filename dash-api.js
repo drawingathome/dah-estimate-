@@ -364,11 +364,18 @@ function estimateDbRowToLocal(row) {
     custType: row.cust_type || 'new',
     region: row.region || '',
     asFeeType: row.as_fee_type || 'free',
-    // 2026-08-24(선혜님 발견 — "삭제해도 계속 다시 생긴다"): 삭제(보관처리)가
-    // 서버(is_archived=true)엔 정확히 반영되고 있었는데, 클라우드에서 다시
-    // 동기화해올 때 이 값을 로컬 isArchived로 옮겨담는 게 통째로 빠져있었음
-    // — 그래서 화면을 새로고침/탭전환할 때마다 방금 지운 견적이 "안 지워진
-    // 상태"로 다시 나타났음(진짜 새로 생긴 게 아니라 삭제 표시만 사라진 것).
+    // 2026-08-24: isArchived 하나만 빠진 게 아니라, 컬럼 전체를 다시 대조해보니
+    // 6개가 더 빠져있었음(같은 종류의 실수가 더 있는지 전수 재검사 — 선혜님
+    // 프로젝트 원칙). A/S 관련 4개는 A/S 항목이 클라우드 동기화되면 증상/사진
+    // 메모가 통째로 사라져 보였을 것이고, price_breakdown 누락은 "저장 당시
+    // 금액 고정" 기능이 dah_saved 캐시 경유 화면에서는 안 먹혔을 수 있음.
+    asInstallDate: row.as_install_date || null,
+    asType: row.as_type || null,
+    asSymptom: row.as_symptom || null,
+    asPhotoMemo: row.as_photo_memo || null,
+    appliedDiscounts: row.applied_discounts || null,
+    priceBreakdown: row.price_breakdown || null,
+    updatedAt: row.updated_at || null,
     isArchived: !!row.is_archived,
     _fromCloud: true
   };
