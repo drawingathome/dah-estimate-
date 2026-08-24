@@ -38,8 +38,16 @@ function renderEstList() {
   function linkedCustomer(e) { return (e.clientId && custById[e.clientId]) || custByName[e.clientName] || null; }
   function isInstallDone(e) { var c = linkedCustomer(e); return !!(c && c.stage === '시공완료'); }
   function isRejected(e) {
+    // 2026-08-24(선혜님 발견 — "견적서 목록 총 0건" 재현됨): 이 함수가
+    // "확정 안 됨" 전부를 "미계약(거절)"으로 취급하고 있어서, 정상적으로
+    // 진행 중인 가견적(pending)까지 전부 미계약 보관함으로 잘못 분류되고
+    // 있었음. 그 결과 "진행중" 탭 필터(isRejected가 아닌 것만)에서 정상
+    // 가견적들이 통째로 사라져 "0건"으로 보이는 게 실제 재현됨(테스트 데이터로
+    // 직접 확인). contractStatus는 'pending'/'contracted'/'rejected' 세
+    // 값을 명시적으로 구분해서 쓰고 있으므로(dash-customer-detail.js에서도
+    // 동일하게 3분류 사용), '미계약'이라고 명시적으로 표시된 것만 걸러야 함.
     var cs = e.contractStatus || (e.status === 'final' ? 'contracted' : 'pending');
-    return cs !== 'contracted' && !isInstallDone(e);
+    return cs === 'rejected' && !isInstallDone(e);
   }
 
   if (_estArchiveFilter === 'completed_archive') all = all.filter(isInstallDone);
