@@ -458,7 +458,14 @@ function saveCustomerToDb(customer, callback) {
 function archiveEstimate(est, callback) {
   var all = [];
   try { all = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
-  var target = all.find(function(x){ return x.id === est.id; });
+  // 2026-08-24(선혜님 발견 — "DAH-20260824-02 눌러도 없다고 나온다"): est.id가
+  // null/undefined인 로컬 전용 유령 견적(서버에 한 번도 저장 안 된 것)은
+  // x.id===est.id로 찾으면 null끼리 매칭돼서 엉뚱한 것이 지워지거나, 배열에
+  // id:null 항목이 여러개면 어느 것도 정확히 못 찾는 문제가 있었음. id가 없으면
+  // 대신 no(견적번호, 로컬에서 고유하게 발급됨)로 정확히 찾도록 보강.
+  var target = est.id
+    ? all.find(function(x){ return x.id === est.id; })
+    : all.find(function(x){ return !x.id && x.no === est.no; });
   if (target) target.isArchived = true;
   localStorage.setItem('dah_saved', JSON.stringify(all));
   if (typeof est.id === 'string' && est.id.length > 20) { // UUID면 서버(client_id 있는 정식 견적서)에도 반영
