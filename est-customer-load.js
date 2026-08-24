@@ -330,14 +330,21 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       var extraEl = tr.querySelector('.blind-extra'); if (extraEl && it.extra) { extraEl.value = it.extra; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(extraEl); }
       var priceEl = tr.querySelector('.blind-price'); if (priceEl && it.price) { priceEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(priceEl); }
       if (typeof calcBlindRow === 'function' && bmw) calcBlindRow(bmw);
-    } else if (it.type === 'svc') {
+    } else if (it.type === 'svc' || it.type === 'service') {
+      // 2026-08-24(선혜님 발견 — 시공서비스 항목이 커튼 표 맨 위에 잘못 끼어있던
+      // 문제): 오늘 플러그 이관 작업에서 시공서비스 항목을 type:'service'로
+      // 저장했는데, 이 복원 함수는 정확히 type:'svc'만 인식해서 커튼 행으로
+      // 잘못 들어가고 있었음(그래서 나비주름형·양개형·리드 같은 커튼 전용
+      // 기본값이 시공서비스 항목에도 붙어 보였음). 'service'도 같이 인식하도록.
+      // ('bedding'/'item'은 실제 제품 항목이라 원래대로 커튼 표로 가야 정상 —
+      // 처음에 이것도 같이 옮기려 했다가 되돌림.
       addSvcRow();
       var str = document.getElementById('svc-body').lastElementChild;
       if (str) {
         var svcKindEl = str.querySelector('.svc-kind'); if (svcKindEl) svcKindEl.value = it.kind || '기타';
-        var svcContentEl = str.querySelector('.svc-content'); if (svcContentEl) svcContentEl.value = it.content || '';
+        var svcContentEl = str.querySelector('.svc-content'); if (svcContentEl) svcContentEl.value = it.content || it.displayName || it.space || '';
         var svcPriceEl = str.querySelector('.sprice'); if (svcPriceEl && it.price) { svcPriceEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(svcPriceEl); }
-        var svcQtyEl = str.querySelector('.sqty'); if (svcQtyEl) svcQtyEl.value = it.qty || '1';
+        var svcQtyEl = str.querySelector('.sqty'); if (svcQtyEl) svcQtyEl.value = it.qty || it.pnum || '1';
         if (typeof calcSvcRow === 'function' && svcPriceEl) calcSvcRow(svcPriceEl);
       }
     } else {
