@@ -18,6 +18,15 @@ function savePDF() {
 
 function newEstimate() {
   if(!confirm('새 견적서를 작성하시겠어요? 현재 내용이 초기화됩니다.')) return;
+  // 2026-08-24(전수 재검사 중 발견 — 잠재적으로 심각한 버그): 기존 견적을
+  // "이어서 수정"하던 중(_editingEstDbId가 세팅된 상태)에 이 버튼을 누르면
+  // 화면은 비워지는데 이 표시값은 안 지워지고 있었음. 그 상태로 완전히 다른
+  // 고객 정보를 입력해서 저장하면, 저장 로직이 "이건 수정이다"로 착각해서
+  // 새 고객이 아니라 원래 열려있던 남의 견적을 그 내용으로 덮어써버릴 수
+  // 있었음(아직 실제 피해 사례는 확인 안 됐지만 재현 가능한 심각한 버그).
+  window._editingEstDbId = null;
+  window._editingEstUpdatedAt = null;
+  window._viewingFrozenEstimate = false;
   document.getElementById('c-name').value='';
   document.getElementById('c-phone').value='';
   document.getElementById('c-addr').value='';
