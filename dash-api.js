@@ -405,7 +405,20 @@ function loadEstimatesAsync(callback, force) {
     // id가 있으면 무시해서, 클라우드에서 나중에 수정해도 브라우저엔 예전 캐시가
     // 계속 남아있는 버그가 있었음). 이 브라우저에서 직접 만든(클라우드기원이
     // 아닌) 로컬전용 항목만 그대로 유지.
-    var localOnly = local.filter(function(e){ return !e._fromCloud && cloudIds.indexOf(e.id) === -1; });
+    // 2026-08-24(선혜님 요청 — "니가 정리해", 매번 삭제버튼 누르게 하지 말고
+    // 자동으로 처리하라는 지적): 오늘 여러 버그로 이미 만들어진 "로컬전용
+    // 유령"들(서버 id를 한 번도 못 받은 채 남은 것)을 매번 손으로 지우게
+    // 하는 대신, 같은 고객(clientId)+같은 금액(price)의 진짜 클라우드 기록이
+    // 이미 있으면 그 유령은 100% 예전 버그의 잔재로 보고 동기화 시점에
+    // 자동으로 제거함(사용자에게 보이지도 않고 조용히 정리됨).
+    var cloudSig = {};
+    cloudLocalFormat.forEach(function(e){ if(e.clientId) cloudSig[e.clientId+'|'+e.price] = true; });
+    var localOnly = local.filter(function(e){
+      if (e._fromCloud) return false;
+      if (cloudIds.indexOf(e.id) !== -1) return false;
+      if (!e.dbId && e.clientId && cloudSig[e.clientId+'|'+e.price]) return false; // 자동 정리 대상
+      return true;
+    });
     var merged = localOnly.concat(cloudLocalFormat);
     _estimateCacheTime = Date.now();
     try { localStorage.setItem('dah_saved', JSON.stringify(merged)); } catch(e) {}
