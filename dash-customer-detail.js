@@ -1143,7 +1143,14 @@ function renderEstimateHistory(container, clientName) {
       badge.addEventListener('click', function(ev){
         ev.stopPropagation();
         var cur = entry.contractStatus || 'pending';
-        var next = csArr[(csArr.indexOf(cur)+1)%csArr.length];
+        // 2026-08-24(선혜님 요청 — "한번만 눌러도 왔다갔다 되게"): 예전엔
+        // 가견적→계약됨→미계약→가견적...으로 3단계를 순서대로만 돌아서,
+        // 미계약에서 계약됨으로 되돌리려면 두 번 눌러야 했음. 이제 가견적
+        // 상태에서만 첫 클릭이 계약됨으로 가고, 계약됨↔미계약은 클릭 한 번
+        // 으로 바로 왔다갔다 하도록 변경.
+        var next = cur === 'rejected' ? 'contracted'
+                 : cur === 'contracted' ? 'rejected'
+                 : 'contracted';
         entry.contractStatus = next;
 
         try {
