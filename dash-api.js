@@ -364,6 +364,12 @@ function estimateDbRowToLocal(row) {
     custType: row.cust_type || 'new',
     region: row.region || '',
     asFeeType: row.as_fee_type || 'free',
+    // 2026-08-24(선혜님 발견 — "삭제해도 계속 다시 생긴다"): 삭제(보관처리)가
+    // 서버(is_archived=true)엔 정확히 반영되고 있었는데, 클라우드에서 다시
+    // 동기화해올 때 이 값을 로컬 isArchived로 옮겨담는 게 통째로 빠져있었음
+    // — 그래서 화면을 새로고침/탭전환할 때마다 방금 지운 견적이 "안 지워진
+    // 상태"로 다시 나타났음(진짜 새로 생긴 게 아니라 삭제 표시만 사라진 것).
+    isArchived: !!row.is_archived,
     _fromCloud: true
   };
 }
