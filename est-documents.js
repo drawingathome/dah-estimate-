@@ -424,7 +424,14 @@ function buildCustomerHTML() {
   return out;
 }
 function printForCustomer() {
-  calcTotal();
+  // 2026-08-24: "저장 당시 금액 고정" 보기 모드일 때는 calcTotal()로 다시
+  // 계산하면 그 순간 최신 설정으로 덮어써버려서 얼려둔 의미가 없어짐 —
+  // 이 경우엔 재계산 대신 저장된 스냅샷을 그대로 다시 적용만 함.
+  if (window._viewingFrozenEstimate && window._lastCalcBreakdown && typeof applyFrozenBreakdown === 'function') {
+    applyFrozenBreakdown(window._lastCalcBreakdown);
+  } else {
+    calcTotal();
+  }
   var html = buildCustomerHTML();
 
   // 구글드라이브에 저장 (2026-08-02 추가, 이후 확정견적서만 저장하도록 조정) —

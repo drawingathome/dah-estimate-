@@ -454,6 +454,47 @@ function triggerSumPulse(){
   requestAnimationFrame(function(){ el.classList.add('updated'); });
   setTimeout(function(){ el.classList.remove('updated'); }, 350);
 }
+// 2026-08-24: 저장된 견적을 다시 열었을 때, 그 사이 할인쿠폰/설정이 바뀌어도
+// 저장 당시 금액 그대로 보여주기 위한 함수. restoreLineItemsToForm+
+// restoreAppliedDiscounts가 끝난 뒤(내부적으로 calcTotal이 최신 설정으로
+// 다시 계산해버린 뒤) 마지막에 호출해서, 화면 표시값만 저장된 스냅샷으로
+// 덮어씀 — 실제 입력값(할인쿠폰 체크상태 등)은 그대로 두므로, 이 상태에서
+// 사용자가 뭔가 직접 수정하면 그 시점부터는 다시 정상적으로 재계산됨.
+function applyFrozenBreakdown(bd) {
+  if (!bd) return;
+  var setText = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+  if (bd.productSubtotal != null) setText('sum-curtain', bd.productSubtotal.toLocaleString()+'원');
+  if (bd.installSubtotal != null) setText('sum-svc', bd.installSubtotal.toLocaleString()+'원');
+  if (bd.finalTotal != null) { setText('sum-total', bd.finalTotal.toLocaleString()+'원'); }
+  if (bd.discount != null) {
+    var discEl = document.getElementById('sum-discount');
+    var discRow = discEl && discEl.closest('.sum-row');
+    if (discEl) discEl.textContent = bd.discount > 0 ? '-'+bd.discount.toLocaleString()+'원' : '';
+    if (discRow) discRow.style.display = bd.discount > 0 ? 'flex' : 'none';
+  }
+  if (bd.balance != null) setText('sum-balance', bd.balance.toLocaleString()+'원');
+  if (bd.performanceRevenue != null) setText('sum-perf', bd.performanceRevenue.toLocaleString()+'원');
+  if (bd.deposit != null) {
+    setText('sum-deposit-disp', bd.deposit > 0 ? bd.deposit.toLocaleString()+'원' : '—');
+    setText('sum-balance-disp', bd.deposit > 0 ? bd.balance.toLocaleString()+'원' : '—');
+    var depInp = document.getElementById('deposit-input');
+    if (depInp && bd.deposit > 0) {
+      depInp.value = bd.deposit.toLocaleString();
+      depInp.dataset.raw = String(bd.deposit);
+    }
+  }
+  if (Array.isArray(bd.discountDetail)) {
+    var breakdownEl = document.getElementById('discount-breakdown');
+    if (breakdownEl) {
+      breakdownEl.innerHTML = bd.discountDetail.map(function(d){
+        return '<div style="display:flex;justify-content:space-between;padding:2px 0">'+
+          '<span>'+d.label+'</span><span>-'+d.amount.toLocaleString()+'원</span></div>';
+      }).join('');
+    }
+  }
+  window._lastCalcBreakdown = bd; // 이 상태로 저장(재저장)해도 같은 스냅샷 유지
+}
+
 function calcTotal() {
   var curtainTotal = 0;
   document.querySelectorAll('#curtain-body tr').forEach(function(tr){
@@ -610,6 +651,15 @@ function calcTotal() {
   
   document.getElementById('sum-balance').textContent=balance.toLocaleString()+'원';
   document.getElementById('sum-perf').textContent=perf.toLocaleString()+'원';
+  // 2026-08-24(선혜님 요청 — "저장된 견적서는 저장 당시 금액으로 고정"):
+  // 나중에 이 견적을 다시 열었을 때, 그 사이 할인쿠폰/설정이 바뀌어도 저장
+  // 당시 금액 그대로 보이게 하려면 이 breakdown을 저장 시점에 DB에 같이
+  // 넣어둬야 함(est-save.js에서 이 값을 읽어감). 매번 계산 끝에 최신값으로 갱신.
+  window._lastCalcBreakdown = {
+    productSubtotal: curtainTotal, discount: discount, installSubtotal: svcTotal,
+    finalTotal: grand, deposit: deposit, balance: balance, performanceRevenue: perf,
+    discountDetail: discountBreakdown
+  };
 }
 
 function delRow(btn) {

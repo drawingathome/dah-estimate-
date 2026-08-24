@@ -252,7 +252,13 @@ function _saveEstimateInner(_onDone) {
       // 2026-08-14: 할인 정보 자체가 지금까지 저장 안 되고 있던 필드누락을
       // 쿠폰 다중선택 기능 만들면서 같이 발견/해결 - 재구매/열어서수정시
       // 어떤 쿠폰이 선택돼있었는지 정확히 복원하기 위해 저장.
-      applied_discounts: window._lastAppliedDiscounts || { coupons: [], manual: null }
+      applied_discounts: window._lastAppliedDiscounts || { coupons: [], manual: null },
+      // 2026-08-24(선혜님 확인 — "다시 열어도 저장 당시 금액 그대로"): 제품소계/
+      // 시공자재/할인/최종금액/계약금/잔금 스냅샷을 같이 저장. 안 하면 견적을
+      // 나중에 다시 열었을 때 그 사이 바뀐 할인쿠폰/설정으로 재계산되어 금액이
+      // 달라지는 문제가 있었음(최시내님 사례로 발견 — 저장시 482만원이었는데
+      // 나중에 다시 여니 490.9만원으로 나옴).
+      price_breakdown: window._lastCalcBreakdown || null
     }, currentCustType === 'as' ? {
       as_install_date: document.getElementById('as-install-date')?.value || null,
       as_type: document.getElementById('as-type-sel')?.value || null,

@@ -191,8 +191,12 @@ function renderDetailEstTab() {
     // 세부내용 보기 (2026-08-04 신규) — 저장된 품목 문자열("이름(금액원), 이름(금액원)...")을
     // 실제로 읽을 수 있는 목록으로 펼쳐서 보여줌. 예전엔 "공간"/"원단" 칸에 요약(또는
     // 지나치게 긴 원문)만 보이고 실제 항목별 내역을 확인할 방법이 없었음.
-    var detailBtn = btn('width:100%;margin-top:6px;padding:9px 0;background:#fff;color:var(--dark);border:1px solid var(--border);border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '🔍 세부내용 보기', function(){
-      showEstimateDetailPopup(e);
+    // 2026-08-24(선혜님 요청 — "세부내용 보기 팝업은 의미없다, 대신 고객용
+    // 견적서를 보여줘"): 내부 요약 팝업 대신, 실제 고객용 견적서 문서를
+    // 저장 당시 금액 그대로 새 창에서 보여줌.
+    var detailBtn = btn('width:100%;margin-top:6px;padding:9px 0;background:#fff;color:var(--dark);border:1px solid var(--border);border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '📄 고객용 견적서 보기', function(){
+      if (!e.id) { showToast('이 견적은 세부 데이터가 없어서 미리보기를 만들 수 없어요'); return; }
+      window.open('dah-estimate.html?loadEstDbId=' + encodeURIComponent(e.id) + '&mode=view', '_blank');
     });
 
     var deleteEstBtn = btn('width:100%;margin-top:6px;padding:9px 0;background:#fff;color:#C0392B;border:1px solid #F5D6D0;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '삭제', function(){
