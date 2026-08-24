@@ -928,7 +928,7 @@ td.amt{
   .pv-sum-table td.sum-lbl { padding-left:0!important; }
   .pv-sum-table td.sum-val { text-align:right!important; font-weight:700!important; }
   .pv-total-block {
-    display:flex!important; align-items:baseline!important; justify-content:center!important; gap:32px!important;
+    display:flex!important; align-items:baseline!important; justify-content:space-between!important;
     padding:12px 4px 18px 0!important;
     margin-left:90px!important;
     border-top:2px solid #1A1A1A!important;
