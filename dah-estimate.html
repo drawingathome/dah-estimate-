@@ -7,7 +7,7 @@
 // 대시보드에서 등록된 서비스워커가 Service-Worker-Allowed:/ 설정으로 이 페이지도
 // 덮을 수 있어 동일하게 방어함.
 (function(){
-  var BUILD = '202608242300';
+  var BUILD = '202608242400';
   window.DAH_BUILD = BUILD; // 2026-08-21: 다른 JS파일(est-save.js 자가진단 등)에서 참조할 수 있게 전역 노출
   try {
     if ('serviceWorker' in navigator) {
@@ -42,7 +42,8 @@
 
 <!-- 2026-08-20: 화면 구석에 작은 버전 표시 - 스크린샷 한 장으로 최신버전인지
      바로 확인 가능하게(캐시 문제 진단용). 인쇄물엔 안 나오게 처리. -->
-<div class="print-hide" style="position:fixed;bottom:4px;right:6px;font-size:9px;color:#B0A99F;z-index:999999;pointer-events:none;font-family:monospace;">v202608211245</div>
+<div class="print-hide" id="dah-build-badge" style="position:fixed;bottom:4px;right:6px;font-size:9px;color:#B0A99F;z-index:999999;pointer-events:none;font-family:monospace;"></div>
+<script>document.getElementById('dah-build-badge').textContent = 'v' + (window.DAH_BUILD||'?');</script>
 <button class="print-hide" onclick="runSelfDiagnosis()" style="position:fixed;bottom:22px;right:6px;z-index:999999;background:#fff;border:1px solid #E5E1DA;border-radius:20px;padding:6px 10px;font-size:11px;box-shadow:0 2px 6px rgba(0,0,0,0.1);cursor:pointer;">🔍 진단</button>
 
 <!-- 비밀번호 재설정 화면 (재설정 이메일 링크를 눌러서 돌아왔을 때만 표시) -->
