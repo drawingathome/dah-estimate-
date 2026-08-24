@@ -355,9 +355,10 @@ function estimateDbRowToLocal(row) {
     performanceRevenue: Number(row.performance_revenue) || 0,
     staffName: row.staff_name || '',
     status: row.estimate_status || 'ga',
-    // 2026-08-04: 여기서 무조건 'pending'으로 고정돼서, 최종견적서(final)로
-    // 저장된 견적도 화면엔 "가견적" 배지로 보이던 진짜 원인이었음
-    contractStatus: row.estimate_status === 'final' ? 'contracted' : 'pending',
+    // 2026-08-24(선혜님 질문 — 계약 안 하는 경우 처리): 서버에 실제로 저장된
+    // contract_status가 있으면 그대로 쓰고("미계약"이 새로고침해도 유지됨),
+    // 없는(예전) 레코드만 estimate_status로 추정하는 기존 방식으로 폴백.
+    contractStatus: row.contract_status || (row.estimate_status === 'final' ? 'contracted' : 'pending'),
     savedAt: row.date || row.created_at || '',
     date: row.date || '',
     installDate: '',

@@ -1145,12 +1145,24 @@ function renderEstimateHistory(container, clientName) {
         var cur = entry.contractStatus || 'pending';
         var next = csArr[(csArr.indexOf(cur)+1)%csArr.length];
         entry.contractStatus = next;
-        
+
         try {
           var arr = JSON.parse(localStorage.getItem('dah_saved')||'[]');
           var idx = arr.findIndex(function(x){ return x.id === entry.id || x.no === entry.no; });
           if (idx>=0) { arr[idx].contractStatus = next; localStorage.setItem('dah_saved', JSON.stringify(arr)); }
         } catch(ex2){}
+        // 2026-08-24(선혜님 질문 — "계약을 안 할 수도 있는데 이런 경우 어떻게
+        // 잡으면 좋을까"): 이 배지가 로컬(그 브라우저)에만 저장되고 서버엔
+        // 전혀 안 남고 있었음 — 다른 기기에서 보거나, 클라우드에서 다시
+        // 동기화되면 "미계약" 표시가 사라짐(estimates 테이블에 이 상태를
+        // 저장할 컬럼 자체가 없었음). contract_status 컬럼을 새로 만들고
+        // 여기서 서버에도 저장하도록 함 — 이제부터 이 배지를 누르면
+        // 기기/새로고침과 무관하게 유지됨.
+        if (entry.id && typeof entry.id === 'string' && entry.id.length > 20 && typeof sbXHR === 'function') {
+          sbXHR('PATCH', 'estimates?id=eq.' + entry.id, { contract_status: next }, function(err){
+            if (err) console.warn('계약상태 서버 저장 실패:', err);
+          });
+        }
         badge.textContent = CONTRACT_LABELS[next];
         badge.style.background = next==='contracted'?'var(--dark)':'var(--ivory1)';
         badge.style.color = next==='contracted'?'#fff':'#6B6B6B';
