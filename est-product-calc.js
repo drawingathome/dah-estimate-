@@ -63,6 +63,20 @@ function addCurtainRow() {
 
 function calcCurtainRow(el) {
   var tr = el.closest('tr');
+  // 2026-08-24(선혜님 발견 — "폭수를 한 폭 줄이거나 늘릴 때도 있는데 수정이
+  // 안 된다"): 폭수(.pnum) 칸 자체를 직접 고쳐도, 곧바로 아래 자동계산 로직이
+  // "수동으로 안 고쳤다"고 판단해서 그 값을 도로 자동계산값으로 덮어쓰고
+  // 있었음 — 폭수 입력칸을 직접 건드린 게 트리거였을 때만 manual 표시를
+  // 남기는 코드가 통째로 빠져있었음. 이제 직접 고치면 그 값이 유지되고,
+  // 가로(mw)/세로(mh)/주름(pleat)을 바꾸면 다시 자동계산으로 돌아감(원래
+  // 자동계산이 도움이 되는 경우가 더 많아서, 치수를 다시 잡을 땐 새로
+  // 제안받는 게 자연스러움).
+  if (el.classList && el.classList.contains('pnum')) {
+    el.dataset.manual = '1';
+  } else if (el.classList && (el.classList.contains('mw') || el.classList.contains('mh') || el.classList.contains('pleat-type'))) {
+    var pnumEl0 = tr.querySelector('.pnum');
+    if (pnumEl0) delete pnumEl0.dataset.manual;
+  }
   var mw = Math.max(0, parseFloat(tr.querySelector('.mw')?.value)||0);
   var mh = Math.max(0, parseFloat(tr.querySelector('.mh')?.value)||0);
   // 2026-08-05: 제작높이 힌트만 레일타입에 따라 다르게 계산 — 일반레일 -3cm / 전동레일 -5cm.
