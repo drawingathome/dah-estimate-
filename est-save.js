@@ -320,7 +320,11 @@ function _saveEstimateInner(_onDone) {
                 window._editingEstUpdatedAt = createdRows[0].updated_at || null;
                 var localArr = JSON.parse(localStorage.getItem('dah_saved')||'[]');
                 var lastIdx = localArr.length - 1;
-                if (lastIdx >= 0) { localArr[lastIdx].dbId = newDbId; localStorage.setItem('dah_saved', JSON.stringify(localArr)); }
+                // 2026-08-24: 여기서도 .dbId만 갱신하고 .id는 그대로 둬서, 첫 저장
+                // 직후부터 이미 로컬 항목과 클라우드 항목이 서로 다른 id로 갈라져
+                // 있었음(위 idx 매칭 로직 수정과 같은 원인). .id도 같이 서버 UUID로
+                // 맞춰서 이후 클라우드 동기화시 정확히 같은 레코드로 병합되게 함.
+                if (lastIdx >= 0) { localArr[lastIdx].dbId = newDbId; localArr[lastIdx].id = newDbId; localStorage.setItem('dah_saved', JSON.stringify(localArr)); }
               }
             } catch(eParse) {}
           }
@@ -371,9 +375,18 @@ function _saveEstimateInner(_onDone) {
       var uniqBlindVendors = blindVendors.filter(function(v,i){ return blindVendors.indexOf(v)===i; });
 
       var editingDbId = window._editingEstDbId || null;
-      var idx = saved.findIndex(function(e){ return (editingDbId && e.dbId === editingDbId) || e.no === noStr; });
+      var idx = saved.findIndex(function(e){ return (editingDbId && (e.dbId === editingDbId || e.id === editingDbId)) || e.no === noStr; });
       var entry = {
-        id: noStr || ('local-'+Date.now()),
+        // 2026-08-24(선혜님 발견 — "이 두개의 견적번호가 다른 이유는?": 같은 저장인데
+        // 로컬 목록엔 실제 서버 UUID(56ab6596...)랑 로컬 표시번호(DAH-20260824-03)
+        // 둘로 쪼개져서 영원히 안 합쳐지고 있었음): 클라우드에서 동기화해온 항목은
+        // .id에 항상 서버 UUID를 쓰는데(estimateDbRowToLocal 참고), 로컬 저장
+        // 항목은 .id에 표시번호(noStr)를 쓰고 있어서 서로 다른 값으로 취급되어
+        // loadEstimatesAsync의 병합 로직(cloudIds.indexOf(e.id)===-1이면 "로컬전용"
+        // 으로 간주해 계속 보존)이 절대 같은 레코드로 인식을 못 했음. 이미 서버
+        // id를 아는 경우(수정 모드)엔 .id를 서버 UUID로 맞춰서 클라우드 동기화때
+        // 정확히 같은 레코드로 병합/치환되도록 함.
+        id: editingDbId || noStr || ('local-'+Date.now()),
         no: noStr,
         dbId: editingDbId || (idx >= 0 ? saved[idx].dbId : null) || null,
         clientName: name,
