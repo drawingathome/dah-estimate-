@@ -444,6 +444,20 @@ function calcDeposit() {
   var bal = grand - dep;
   var balEl = document.getElementById('sum-balance');
   if(balEl) balEl.textContent = bal.toLocaleString()+'원';
+  // 2026-08-24(선혜님 발견 — 최시내님 사례: 계약금을 직접 입력해도 위쪽
+  // 검은 박스(TOTAL ESTIMATE)의 계약금/잔금 표시가 그대로 50% 자동계산값에
+  // 멈춰있던 문제): 아래 "잔금" 줄만 갱신하고 위쪽 박스는 안 건드리고
+  // 있었음 — 이 함수가 처음 만들어질 때부터 있던 누락으로 보임. 같이 갱신.
+  var depDispEl = document.getElementById('sum-deposit-disp');
+  if(depDispEl) depDispEl.textContent = dep>0 ? dep.toLocaleString()+'원' : (grand>0 ? Math.round(grand*0.5).toLocaleString()+'원 (예상)' : '—');
+  var balDispEl = document.getElementById('sum-balance-disp');
+  if(balDispEl) balDispEl.textContent = dep>0 ? bal.toLocaleString()+'원' : '—';
+  // 이 견적을 다시 저장할 때 방금 직접 입력한 계약금/잔금이 정확히 저장되도록
+  // (저장 당시 금액 고정 스냅샷에도 반영되게) 최신 계산값 갱신.
+  if (window._lastCalcBreakdown) {
+    window._lastCalcBreakdown.deposit = dep;
+    window._lastCalcBreakdown.balance = bal;
+  }
 }
 function setDepositAuto(pct) {
   var totalEl = document.getElementById('sum-total');
