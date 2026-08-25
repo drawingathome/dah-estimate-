@@ -213,7 +213,37 @@ function renderEstList() {
     }
 
     // 클릭 시 고객 상세 (이력 탭에 카카오복사/견적서앱 액션이 이미 있어 여기선 중복 버튼 생략)
-    (function(name, cid){ row.addEventListener('click', function(){ if(name) openDetail(name, cid || null, 'est'); }); })(e.clientName, e.clientId);
+    (function(entry){ row.addEventListener('click', function(ev){
+      if (ev.target.closest('button')) return; // 삭제/계약상태 버튼 클릭은 여기로 안 번지게
+      if (!entry.clientName) return;
+      // 2026-08-25(선혜님 발견 — 신화경님 사례): 견적서 앱에서 고객명을
+      // 직접 타이핑만 하고 저장하면(고객 등록/불러오기를 안 거치면) 그
+      // 견적이 어떤 고객 레코드와도 연결이 안 된 채(client_id 없이) 저장됨.
+      // 그런 견적을 목록에서 클릭하면 openDetail이 그 이름의 고객을 찾다가
+      // 실패해서 그냥 오류만 뜨고 끝났음 — "고객으로 등록할까요?"로 안내해서
+      // 그 자리에서 바로 등록하고 이어갈 수 있게 함.
+      if (!entry.clientId) {
+        if (confirm('"' + entry.clientName + '" 님은 아직 고객으로 등록이 안 됐어요.\n지금 고객으로 등록하고 이 견적과 연결할까요?')) {
+          var payload = { client_name: entry.clientName, phone: entry.phone || null, stage: '가견적', price: entry.price || 0 };
+          sbXHR('POST', 'customers', payload, function(err, rows){
+            if (err || !rows || !rows[0]) { showToast('고객 등록 실패 — 다시 시도해주세요'); return; }
+            var newId = rows[0].id;
+            sbXHR('PATCH', 'estimates?id=eq.' + entry.id, { client_id: newId }, function(){
+              entry.clientId = newId;
+              try {
+                var arr = JSON.parse(localStorage.getItem('dah_saved')||'[]');
+                var idx = arr.findIndex(function(x){ return x.id === entry.id; });
+                if (idx>=0) { arr[idx].clientId = newId; localStorage.setItem('dah_saved', JSON.stringify(arr)); }
+              } catch(ex){}
+              showToast('고객으로 등록했어요');
+              openDetail(entry.clientName, newId, 'est');
+            });
+          });
+        }
+        return;
+      }
+      openDetail(entry.clientName, entry.clientId, 'est');
+    }); })(e);
 
     card.appendChild(row);
   });
