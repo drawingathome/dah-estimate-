@@ -17,7 +17,7 @@
 // 사용법: node tests/estimate-customer-link-check.js dah-estimate.html
 
 const path = require('path');
-const { launchBrowser, startServer } = require('./_helpers');
+const { launchBrowser, startServer, setupValidSession } = require('./_helpers');
 
 async function run() {
   const filePath = process.argv[2];
@@ -81,6 +81,7 @@ async function run() {
       tr.querySelector('.cprice').value = '50000'; calcCurtainRow(tr.querySelector('.cprice'));
     });
     await new Promise(r => setTimeout(r, 300));
+    await setupValidSession(page);
     await page.evaluate(() => { saveEstimate(); });
     await new Promise(r => setTimeout(r, 1000));
     const countAfterFirst = await page.evaluate(() => JSON.parse(localStorage.getItem('dah_customers') || '[]').length);

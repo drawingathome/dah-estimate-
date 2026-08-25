@@ -13,7 +13,7 @@
 // 사용법: node tests/estimate-calc-check.js dah-estimate.html
 
 const path = require('path');
-const { launchBrowser, blockRealNetwork, startServer } = require('./_helpers');
+const { launchBrowser, blockRealNetwork, startServer, setupValidSession } = require('./_helpers');
 
 async function run() {
   const filePath = process.argv[2];
@@ -123,6 +123,7 @@ async function run() {
       calcBlindRow(extra);
     });
     await new Promise(r => setTimeout(r, 300));
+    await setupValidSession(page2);
     await page2.evaluate(() => { localStorage.removeItem('dah_saved'); saveEstimate(); });
     await new Promise(r => setTimeout(r, 500));
     const savedNoRegion = await page2.evaluate(() => JSON.parse(localStorage.getItem('dah_saved') || '[]'));

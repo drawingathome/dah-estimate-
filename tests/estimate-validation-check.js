@@ -11,7 +11,7 @@
 // 사용법: node tests/estimate-validation-check.js dah-estimate.html
 
 const path = require('path');
-const { launchBrowser, blockRealNetwork, startServer } = require('./_helpers');
+const { launchBrowser, blockRealNetwork, startServer, setupValidSession } = require('./_helpers');
 
 async function run() {
   const filePath = process.argv[2];
@@ -84,6 +84,7 @@ async function run() {
       last.querySelector('.cprice').value = '30000';
       last.querySelector('.cprice').dispatchEvent(new Event('input'));
     });
+    await setupValidSession(page);
     await page.evaluate(() => { document.querySelector('.btn-save').click(); });
     await new Promise(r => setTimeout(r, 400));
     const okResult = await page.evaluate(() => {

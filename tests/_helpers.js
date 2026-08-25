@@ -169,11 +169,34 @@ async function loginAs(page, role, masterPw) {
   }
 }
 
+// 2026-08-25(선혜님 발견 — CI "Run Tests" 계속 실패, 저장 관련 테스트들이
+// 전부 "실제 저장건수=0"으로 실패): 오늘 세션에서 saveEstimate()에 로그인
+// 세션 유효성 확인(refreshAuthSessionIfNeeded)을 저장 직전 필수로 추가했는데
+// (실제 태블릿 403 반복 문제를 막기 위한 정당한 보안 수정), 이 저장관련
+// 테스트들은 로그인 절차 없이 곧바로 saveEstimate()만 호출하고 있어서 새로
+// 생긴 이 검사에 막혀 저장 자체가 시도조차 안 되고 있었음. 실제 로그인
+// 플로우를 안 거치고도, 이미 유효한 세션이 있는 것처럼 바로 세팅해주는
+// 헬퍼. 각 테스트가 saveEstimate()류를 호출하기 직전에 불러 쓰면 됨.
+async function setupValidSession(page) {
+  await page.evaluate(() => {
+    try {
+      localStorage.setItem('dah_auth_session', JSON.stringify({
+        access_token: 'test-fake-token',
+        refresh_token: 'test-fake-refresh',
+        expires_at: Date.now() + 3600 * 1000,
+        user_id: 'test-fake-uuid',
+        email: 'test@drawingathome.co.kr'
+      }));
+    } catch (e) {}
+  });
+}
+
 module.exports = {
   launchBrowser,
   blockRealNetwork,
   startServer,
   loginAs,
+  setupValidSession,
   SKIP_TAGS,
   ALLOWED_FONT_SIZES,
   MIN_TOUCH_TARGET
