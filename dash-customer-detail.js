@@ -1151,6 +1151,11 @@ function renderEstimateHistory(container, clientName) {
         var next = cur === 'rejected' ? 'contracted'
                  : cur === 'contracted' ? 'rejected'
                  : 'contracted';
+        // 2026-08-24(선혜님 요청 — "확인창이 한번 더 떠야 전문성이 있지"):
+        // 매출 집계에도 영향을 주는 값이라, 실수로 잘못 눌러 바뀌는 걸
+        // 막기 위해 바꾸기 전에 한 번 확인받도록 함.
+        var label = entry.clientName || '이 고객';
+        if (!confirm(label + ' 님을 "' + CONTRACT_LABELS[next] + '"(으)로 변경할까요?')) return;
         entry.contractStatus = next;
 
         try {

@@ -126,6 +126,10 @@ function renderEstList() {
         ev.stopPropagation(); // row 클릭(고객상세 이동)으로 안 번지게
         var cur = entry.contractStatus || (entry.status === 'final' ? 'contracted' : 'pending');
         var next = cur === 'rejected' ? 'contracted' : cur === 'contracted' ? 'rejected' : 'contracted';
+        // 2026-08-24(선혜님 요청 — "확인창이 한번 더 떠야 전문성이 있지"):
+        // 고객상세 화면과 동일하게, 바꾸기 전 한 번 확인받도록 함.
+        var label = entry.clientName || '이 고객';
+        if (!confirm(label + ' 님을 "' + CONTRACT_KO[next] + '"(으)로 변경할까요?')) return;
         entry.contractStatus = next;
         try {
           var arr = JSON.parse(localStorage.getItem('dah_saved')||'[]');
