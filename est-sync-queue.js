@@ -100,7 +100,14 @@ function _doRetryEstPendingSync(q) {
       done++;
       if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 409) {
         remaining.push(item);
-        failReasons.push('상태코드 ' + xhr.status + (xhr.status === 401 || xhr.status === 403 ? '(로그인 세션 문제로 추정)' : ''));
+        // 2026-08-25(선혜님 지적 — "니 테스트가 어떤방식인지 궁금해"): 지금까지
+        // 제가 몇 번을 "이게 원인이다" 추측해서 고쳤는데도 똑같은 403이
+        // 반복됐음. 더 이상 추측하지 않기 위해, 서버가 실제로 뭐라고 응답
+        //했는지(정확한 에러 메시지 본문) 그대로 남겨서, 다음에 또 안 되면
+        // 추측이 아니라 이 정확한 문구로 바로 원인을 알 수 있게 함.
+        var serverMsg = '';
+        try { var eb = JSON.parse(xhr.responseText); serverMsg = eb.message || eb.msg || eb.error || xhr.responseText; } catch(eParse) { serverMsg = (xhr.responseText||'').slice(0,200); }
+        failReasons.push('상태코드 ' + xhr.status + (xhr.status === 401 || xhr.status === 403 ? '(로그인 세션 문제로 추정)' : '') + ' — 서버응답: ' + serverMsg);
         // 2026-08-25(선혜님 발견 — 재시도해도 계속 같은 403): "토큰이 아직
         // 안 만료됐을 시간"이라는 이 기기의 시계 계산만 믿고 갱신을 건너뛰는
         // 경우가 있었음(예: 이미 서버에서 거부된 토큰인데 로컬 계산상으론
@@ -108,6 +115,13 @@ function _doRetryEstPendingSync(q) {
         // 같은 403이 남. 이젠 서버가 실제로 401/403을 준 순간을 최우선으로
         // 믿어서, 로컬 시계 계산과 무관하게 즉시 재로그인 팝업을 띄움.
         if ((xhr.status === 401 || xhr.status === 403) && typeof showReloginPrompt === 'function' && !window._reloginPromptShown) {
+          // 재로그인해도 또 실패하는 걸 무한반복하지 않도록 횟수 제한 — 2번째부터는
+          // 팝업 대신 서버가 준 정확한 메시지를 그대로 보여줘서 추측을 멈춤.
+          window._reloginRetryCount = (window._reloginRetryCount || 0) + 1;
+          if (window._reloginRetryCount > 2) {
+            alert('⚠️ 재로그인해도 계속 저장이 거부돼요.\n\n서버 응답: ' + serverMsg + '\n\n이 화면을 캡처해서 보내주세요 — 이번엔 추측이 아니라 이 메시지로 정확한 원인을 확인할 수 있어요.');
+            return;
+          }
           window._reloginPromptShown = true;
           showReloginPrompt(function() {
             window._reloginPromptShown = false;
