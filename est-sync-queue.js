@@ -101,11 +101,28 @@ function _doRetryEstPendingSync(q) {
       if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 409) {
         remaining.push(item);
         failReasons.push('상태코드 ' + xhr.status + (xhr.status === 401 || xhr.status === 403 ? '(로그인 세션 문제로 추정)' : ''));
+        // 2026-08-25(선혜님 발견 — 재시도해도 계속 같은 403): "토큰이 아직
+        // 안 만료됐을 시간"이라는 이 기기의 시계 계산만 믿고 갱신을 건너뛰는
+        // 경우가 있었음(예: 이미 서버에서 거부된 토큰인데 로컬 계산상으론
+        // 아직 유효해 보이는 경우) — 그러면 갱신 없이 그대로 재시도해서 또
+        // 같은 403이 남. 이젠 서버가 실제로 401/403을 준 순간을 최우선으로
+        // 믿어서, 로컬 시계 계산과 무관하게 즉시 재로그인 팝업을 띄움.
+        if ((xhr.status === 401 || xhr.status === 403) && typeof showReloginPrompt === 'function' && !window._reloginPromptShown) {
+          window._reloginPromptShown = true;
+          showReloginPrompt(function() {
+            window._reloginPromptShown = false;
+            _doRetryEstPendingSync(getEstPendingQueue());
+          });
+        }
       }
       if (done === pending) {
         try { localStorage.setItem(EST_PENDING_KEY, JSON.stringify(remaining)); } catch(e) {}
         updateEstSyncBanner();
-        if (remaining.length > 0) {
+        // 2026-08-25: 401/403이었던 건은 위에서 이미 재로그인 팝업으로 안내
+        // 중이므로, 여기서 또 alert까지 뜨면 팝업 두 개가 겹쳐서 혼란스러움.
+        // 재로그인 관련 실패가 아닌 다른 이유(400 등)로 남은 게 있을 때만 alert.
+        var nonAuthFail = failReasons.some(function(r){ return r.indexOf('401') === -1 && r.indexOf('403') === -1; });
+        if (remaining.length > 0 && nonAuthFail) {
           alert('⚠️ 서버 저장 재시도 실패\n\n로그인 세션 있음: ' + hasSession + '\n실패 사유: ' + failReasons.join(', ') + '\n\n이 화면을 캡처해서 보내주세요.');
         }
       }
