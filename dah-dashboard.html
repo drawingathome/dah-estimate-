@@ -7,7 +7,7 @@
 // 과거에 등록된 서비스워커가 남아있으면 이후 모든 스크립트 요청을 가로채 낡은 버전을
 // 계속 보여줄 수 있어, 다른 태그보다 먼저 실행되도록 이 위치에 둠.
 (function(){
-  var BUILD = '202608251600'; // 배포마다 이 값을 갱신하면, 이전 빌드를 본 기기는 자동으로 1회 강제 새로고침됨
+  var BUILD = '202608251700'; // 배포마다 이 값을 갱신하면, 이전 빌드를 본 기기는 자동으로 1회 강제 새로고침됨
   window.DAH_BUILD = BUILD; // 2026-08-24: 화면 우측하단 버전배지에서 참조
   try {
     if ('serviceWorker' in navigator) {
@@ -434,7 +434,38 @@
           staffPwError.style.display = 'none';
           // 로그인 성공한 이메일을 다음번 편의를 위해 이 기기에 캐시
           if (typeof setStaffEmail === 'function') setStaffEmail(name, email);
-          if (typeof loginAs === 'function') loginAs(name);
+          // 2026-08-25(마스터 로그인칸과 동일한 종류의 버그 — 대칭으로 확인):
+          // 여기도 "눌렀던 아바타 이름"을 그대로 믿고 있었음 — 실제 입력한
+          // 이메일이 그 담당자 것인지 전혀 확인 안 했음. 예를 들어 마스터가
+          // 실수로 "오지은 실장" 아바타를 누르고 본인 이메일/비번을 넣어도
+          // 인증 자체는 성공하니 "오지은 실장"으로 로그인돼버려서, 이후 마스터
+          // 본인이 만든 고객/견적이 전부 "오지은 실장" 담당으로 잘못 기록될
+          // 위험이 있었음. 실제 로그인한 이메일 기준으로 staff_emails를 다시
+          // 조회해서, 정말 그 담당자 이메일이 맞는지 검증 후 진짜 역할로
+          // 로그인시킴.
+          var seXhr3 = new XMLHttpRequest();
+          seXhr3.open('GET', SUPABASE_URL + '/rest/v1/app_settings?key=eq.staff_emails&select=value', true);
+          seXhr3.setRequestHeader('apikey', SUPABASE_KEY);
+          seXhr3.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+          seXhr3.onload = function() {
+            var actualName = null;
+            try {
+              var rows = JSON.parse(seXhr3.responseText);
+              var map = rows && rows[0] && rows[0].value || {};
+              Object.keys(map).forEach(function(sn) { if (map[sn] && map[sn].toLowerCase() === email.toLowerCase()) actualName = sn; });
+            } catch(eParse) {}
+            if (actualName && actualName !== name) {
+              // 다른 담당자 계정으로 로그인됨 — 눌렀던 아바타가 아니라 실제 계정으로 진행
+              if (typeof loginAs === 'function') loginAs(actualName);
+            } else if (!actualName) {
+              // staff_emails에 없는 이메일 = 마스터 계정일 가능성 — 마스터로 정확히 로그인
+              if (typeof loginAs === 'function') loginAs('master');
+            } else {
+              if (typeof loginAs === 'function') loginAs(name);
+            }
+          };
+          seXhr3.onerror = function() { if (typeof loginAs === 'function') loginAs(name); };
+          seXhr3.send();
         } else {
           staffPwError.textContent = result.msg || '이메일 또는 비밀번호가 올바르지 않습니다';
           staffPwError.style.display = 'block';
