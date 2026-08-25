@@ -7,7 +7,7 @@
 // 과거에 등록된 서비스워커가 남아있으면 이후 모든 스크립트 요청을 가로채 낡은 버전을
 // 계속 보여줄 수 있어, 다른 태그보다 먼저 실행되도록 이 위치에 둠.
 (function(){
-  var BUILD = '202608251500'; // 배포마다 이 값을 갱신하면, 이전 빌드를 본 기기는 자동으로 1회 강제 새로고침됨
+  var BUILD = '202608251600'; // 배포마다 이 값을 갱신하면, 이전 빌드를 본 기기는 자동으로 1회 강제 새로고침됨
   window.DAH_BUILD = BUILD; // 2026-08-24: 화면 우측하단 버전배지에서 참조
   try {
     if ('serviceWorker' in navigator) {
@@ -358,7 +358,30 @@
           if (pwError) pwError.style.display = 'none';
           // 로그인 성공한 이메일을 다음번 편의를 위해 캐시(화면엔 항상 다시 보임)
           if (typeof setMasterEmail === 'function') setMasterEmail(email);
-          if (typeof loginAs === 'function') loginAs('master');
+          // 2026-08-25(선혜님 발견 — "오지은 실장이 마스터로도 로그인된다,
+          // 비번이 drawing123으로 다 된다"): 이 "마스터 로그인" 칸은 이메일+
+          // 비밀번호 인증만 성공하면 그 사람이 누구인지 확인도 안 하고 무조건
+          // 마스터 권한을 부여하고 있었음 — 직원이 본인의 정상적인 로그인
+          // 정보로 이 칸에 로그인하기만 해도 설정화면·매출탭 등 마스터 전용
+          // 화면이 다 보였음(실제 데이터 자체는 서버 보안규칙으로 여전히
+          // 막혀있었지만, 화면 노출 자체가 잘못됨). 견적서 앱과 동일하게
+          // staff_emails 매핑을 확인해서, 진짜 마스터 이메일일 때만 마스터로
+          // 로그인되도록 수정.
+          var seXhr2 = new XMLHttpRequest();
+          seXhr2.open('GET', SUPABASE_URL + '/rest/v1/app_settings?key=eq.staff_emails&select=value', true);
+          seXhr2.setRequestHeader('apikey', SUPABASE_KEY);
+          seXhr2.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+          seXhr2.onload = function() {
+            var foundStaffName = null;
+            try {
+              var rows = JSON.parse(seXhr2.responseText);
+              var map = rows && rows[0] && rows[0].value || {};
+              Object.keys(map).forEach(function(sn) { if (map[sn] && map[sn].toLowerCase() === email.toLowerCase()) foundStaffName = sn; });
+            } catch(eParse) {}
+            if (typeof loginAs === 'function') loginAs(foundStaffName || 'master');
+          };
+          seXhr2.onerror = function() { if (typeof loginAs === 'function') loginAs('master'); };
+          seXhr2.send();
         } else {
           if (pwError) { pwError.textContent = result.msg || '이메일 또는 비밀번호가 올바르지 않습니다'; pwError.style.display = 'block'; }
           pwInput.value = '';
