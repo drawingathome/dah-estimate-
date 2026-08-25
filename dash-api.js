@@ -577,3 +577,48 @@ function unparkLead(customer, callback) {
   sbXHR('PATCH', 'customers?' + filter, { lead_parked: false }, function(err, data) { if(err) console.error('리드 복귀 오류:', err.text); if(callback) callback(err, data); });
 }
 
+
+// ══════════════════════════════════════════════════
+// 2026-08-25: 자동 에러 수집 (선혜님 요청 — "대기업처럼 에러를 자동으로 받아보자")
+// 화면에서 나는 JS 에러/처리안된 오류를 자동으로 Supabase에 기록.
+// 캡처 없이도 Claude가 바로 정확한 원인을 조회할 수 있게 함.
+// ══════════════════════════════════════════════════
+(function () {
+  function reportClientError(message, stack, extra) {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', SUPABASE_URL + '/rest/v1/client_error_logs', true);
+      xhr.setRequestHeader('apikey', SUPABASE_KEY);
+      xhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.setRequestHeader('Prefer', 'return=minimal');
+      var role = null, name = null;
+      try {
+        var u = (typeof currentUser !== 'undefined' && currentUser) ? currentUser : (typeof window._estCurrentUser !== 'undefined' ? window._estCurrentUser : null);
+        if (u) { role = u.role || null; name = u.name || null; }
+      } catch (e) {}
+      xhr.send(JSON.stringify({
+        app: (location.pathname.indexOf('dashboard') >= 0 ? 'dashboard' : 'estimate'),
+        message: String(message || '').slice(0, 2000),
+        stack: String(stack || '').slice(0, 4000),
+        url: location.href,
+        user_role: role,
+        user_name: name,
+        build: (typeof window.DAH_BUILD !== 'undefined' ? window.DAH_BUILD : null),
+        extra: extra || null
+      }));
+    } catch (e) { /* 에러 리포팅 자체가 실패해도 화면엔 절대 영향 없게 조용히 무시 */ }
+  }
+
+  window.addEventListener('error', function (ev) {
+    reportClientError(ev.message, ev.error && ev.error.stack, { filename: ev.filename, lineno: ev.lineno, colno: ev.colno });
+  });
+  window.addEventListener('unhandledrejection', function (ev) {
+    var reason = ev.reason;
+    reportClientError(
+      '(Promise rejection) ' + (reason && reason.message ? reason.message : String(reason)),
+      reason && reason.stack
+    );
+  });
+  window.reportClientError = reportClientError; // 수동으로도 기록 가능(예: catch 블록에서)
+})();
