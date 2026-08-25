@@ -60,7 +60,13 @@ function retryEstPendingSync() {
     refreshAuthSessionIfNeeded(function(ok) {
       if (ok) { _doRetryEstPendingSync(q); }
       else {
-        alert('⚠️ 로그인이 만료됐어요.\n\n대기 중인 견적서 ' + q.length + '건이 아직 저장 안 됐어요.\n로그아웃 후 다시 로그인한 뒤, 이 배너를 다시 눌러 재시도해주세요.\n(대기 중인 내용은 사라지지 않아요)');
+        // 2026-08-25(선혜님 요청): alert 안내만 하고 끝내던 걸, 그 자리에서
+        // 비밀번호만 다시 넣으면 재시도까지 자동으로 이어지도록 변경.
+        if (typeof showReloginPrompt === 'function') {
+          showReloginPrompt(function() { _doRetryEstPendingSync(getEstPendingQueue()); });
+        } else {
+          alert('⚠️ 로그인이 만료됐어요.\n\n대기 중인 견적서 ' + q.length + '건이 아직 저장 안 됐어요.\n로그아웃 후 다시 로그인한 뒤, 이 배너를 다시 눌러 재시도해주세요.\n(대기 중인 내용은 사라지지 않아요)');
+        }
       }
     });
   } else {

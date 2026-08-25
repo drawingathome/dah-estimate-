@@ -542,7 +542,14 @@ function _saveEstimateInner(_onDone) {
         saveToCustomers();
       } else {
         onDone();
-        alert('⚠️ 로그인이 만료됐어요.\n\n이 화면을 벗어나지 마시고, 새 탭에서 다시 로그인한 뒤 이 탭으로 돌아와 저장을 다시 눌러주세요.\n(지금 입력하신 내용은 이 화면에 그대로 남아있어요 — 새로고침하지만 마세요)');
+        // 2026-08-25(선혜님 요청 — "로그아웃해서 새로 등록만 오늘 몇번 하니"):
+        // alert로 "다시 로그인하세요"만 띄우고 끝내던 걸, 로그아웃 없이 그
+        // 자리에서 비밀번호만 다시 넣으면 저장까지 자동으로 이어지도록 변경.
+        if (typeof showReloginPrompt === 'function') {
+          showReloginPrompt(function() { _saveEstimateInner(_onDone); });
+        } else {
+          alert('⚠️ 로그인이 만료됐어요.\n\n이 화면을 벗어나지 마시고, 새 탭에서 다시 로그인한 뒤 이 탭으로 돌아와 저장을 다시 눌러주세요.\n(지금 입력하신 내용은 이 화면에 그대로 남아있어요 — 새로고침하지만 마세요)');
+        }
       }
     });
   } else {
