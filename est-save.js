@@ -138,6 +138,18 @@ function _saveEstimateInner(_onDone) {
   var addr=document.getElementById('c-addr').value.trim();
   var addr2=document.getElementById('c-addr2')?.value.trim()||'';
   var staffName=document.getElementById('c-staff').value.trim();
+  // 2026-08-25(선혜님 발견 — "오지은 실장이 작성해서 저장을 했는데 그 견적서가
+  // 다시 확인이 안된다"): 담당자 이름을 화면의 텍스트 입력칸 값에만 의존하고
+  // 있었는데, 이 칸은 로그인 정보와 별개로 사람이 직접 수정 가능한 일반
+  // 텍스트칸이라 자동채움 타이밍/로그인 인식 실패 등으로 실제 로그인한
+  // 사람과 다른 값이 들어갈 위험이 있었음. 최근 적용된 보안규칙(담당자
+  // 이름이 정확히 일치해야 그 직원 계정으로 조회 가능)때문에, 이게 어긋나면
+  // 본인이 방금 저장한 견적서를 본인이 다시 못 보는 심각한 문제로 이어짐.
+  // 로그인 세션(_estCurrentUser)에 신뢰할 수 있는 이름이 있으면 그걸로
+  // 무조건 덮어써서, 화면 입력칸 값과 무관하게 항상 정확한 담당자로 저장되게 함.
+  if (window._estCurrentUser && window._estCurrentUser.name) {
+    staffName = window._estCurrentUser.name;
+  }
   var custMemo=document.getElementById('c-memo').value.trim();
   var grand=parseInt(document.getElementById('sum-total').textContent.replace(/[^0-9]/g,''))||0;
   var perf=parseInt(document.getElementById('sum-perf').textContent.replace(/[^0-9]/g,''))||0;
