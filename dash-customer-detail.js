@@ -401,7 +401,9 @@ function renderDetailHeader(c) {
           var target = arr.find(function(x){ return String(x.id) === String(c.id); });
           if (target) { target.price = v; target.performanceRevenue = v; }
           saveCustomers(arr);
-          sbXHR('PATCH', 'customers?id=eq.' + c.id, { price: v, performance_revenue: v }, function(){});
+          sbXHR('PATCH', 'customers?id=eq.' + c.id, { price: v, performance_revenue: v }, function(err){
+            if (err) showToast('⚠️ 매출 기준금액이 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요');
+          });
           c.price = v; c.performanceRevenue = v;
           renderPriceRow();
         }
@@ -823,7 +825,9 @@ function confirmEstimateToFinal(estId, clientName, price, clientId) {
     // 고객 레코드의 price/performance_revenue는 그대로 0으로 남으면
     // 매출탭 계산에 안 잡히는 문제가 있었음
     if (clientId) {
-      sbXHR('PATCH', 'customers?id=eq.' + clientId, { price: price, performance_revenue: price }, function(){});
+      sbXHR('PATCH', 'customers?id=eq.' + clientId, { price: price, performance_revenue: price }, function(err){
+        if (err) showToast('⚠️ 고객 매출정보가 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요');
+      });
       try {
         var custs = JSON.parse(localStorage.getItem('dah_customers') || '[]');
         var cIdx = custs.findIndex(function(c){ return c.id === clientId; });

@@ -241,7 +241,8 @@ function renderEstList() {
           sbXHR('POST', 'customers', payload, function(err, rows){
             if (err || !rows || !rows[0]) { showToast('고객 등록 실패 — 다시 시도해주세요'); return; }
             var newId = rows[0].id;
-            sbXHR('PATCH', 'estimates?id=eq.' + entry.id, { client_id: newId }, function(){
+            sbXHR('PATCH', 'estimates?id=eq.' + entry.id, { client_id: newId }, function(err){
+              if (err) { showToast('⚠️ 고객은 등록됐지만 이 견적과 연결이 안 됐어요 — 새로고침해서 다시 시도해주세요'); return; }
               entry.clientId = newId;
               try {
                 var arr = JSON.parse(localStorage.getItem('dah_saved')||'[]');

@@ -50,7 +50,12 @@ function changeStageByName(customerName, newStage, id) {
       if (newStage === '확정견적' && customers[idx].confirmDate) patchBody.confirm_date = customers[idx].confirmDate;
       sbXHR('PATCH', 'customers?id=eq.' + customers[idx].id,
         patchBody,
-        function(err) { if (err) console.warn('스테이지 동기화 실패:', err); }
+        function(err) {
+          if (err) {
+            console.warn('스테이지 동기화 실패:', err);
+            showToast('⚠️ 단계 이동이 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요');
+          }
+        }
       );
     }
     showToast(customerName + ' → ' + newStage);
