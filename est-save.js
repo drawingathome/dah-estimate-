@@ -313,23 +313,40 @@ function _saveEstimateInner(_onDone) {
       xhr2.setRequestHeader('apikey',SUPABASE_KEY);
       xhr2.setRequestHeader('Authorization','Bearer '+(typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
       xhr2.setRequestHeader('Content-Type','application/json');
-      xhr2.setRequestHeader('Prefer', (isEditMode && lockUpdatedAt) ? 'return=representation' : 'return=minimal');
+      // 2026-08-25(선혜님 발견 — "저장했는데 나중에 수정이 안 됨", 진짜
+      // 원인): 수정(PATCH) 저장인데 updated_at 잠금값이 없는 경우엔
+      // return=minimal을 써서, 서버가 실제로 몇 건을 바꿨는지 전혀 확인을
+      // 안 하고 있었음. 최근 적용된 보안규칙(담당자 이름이 안 맞으면 그
+      // 견적 수정 자체가 조용히 0건 처리됨) 때문에, 이 경우 실제로는 아무것도
+      // 안 바뀌었는데도 무조건 "저장 완료!"가 떠서 대표님이 데이터가 사라진
+      // 걸 전혀 알 방법이 없었음. 수정 저장은 항상 return=representation으로
+      // 받아서 실제 몇 건이 바뀌었는지 확인하도록 수정.
+      xhr2.setRequestHeader('Prefer', isEditMode ? 'return=representation' : 'return=minimal');
       xhr2.onload=function(){
         if (xhr2.status >= 200 && xhr2.status < 300) {
-          // 낙관적 잠금이 걸린 수정 저장인데 응답이 빈 배열이면 = 0건 매칭
-          // = 그 사이 다른 곳에서 먼저 저장해서 updated_at이 달라졌다는 뜻
-          if (isEditMode && lockUpdatedAt) {
+          // 수정 저장인데 응답이 빈 배열이면 = 0건 매칭 = 실제로 아무것도
+          // 안 바뀐 것(담당자 불일치로 보안규칙에 막혔거나, updated_at
+          // 잠금이 걸려있었다면 그 사이 다른 곳에서 먼저 저장한 것).
+          if (isEditMode) {
             try {
               var lockCheckRows = JSON.parse(xhr2.responseText);
               if (Array.isArray(lockCheckRows) && lockCheckRows.length === 0) {
-                showToast('⚠️ 이 견적서가 방금 다른 곳에서 먼저 저장됐어요 — 새로고침해서 최신 내용을 확인해주세요 (내 변경사항은 로컬에만 저장됨)');
+                showToast(lockUpdatedAt
+                  ? '⚠️ 이 견적서가 방금 다른 곳에서 먼저 저장됐어요 — 새로고침해서 최신 내용을 확인해주세요 (내 변경사항은 로컬에만 저장됨)'
+                  : '⚠️ 저장이 서버에 반영되지 않았어요 (권한 문제일 수 있어요) — 화면을 새로고침한 뒤 다시 시도해주세요. 내 변경사항은 로컬에만 저장된 상태예요');
                 if (typeof addToEstPendingQueue === 'function') { /* 강제 재시도는 위험하므로 큐에 넣지 않음 - 사용자 확인 필요 */ }
                 onDone();
                 return;
               }
               // 성공 - 다음 저장을 위해 최신 updated_at 갱신
               if (lockCheckRows[0] && lockCheckRows[0].updated_at) window._editingEstUpdatedAt = lockCheckRows[0].updated_at;
-            } catch(eLock) {}
+            } catch(eLock) {
+              // 응답 파싱 실패 = 실제로 뭐가 바뀌었는지 확인 불가 상태 —
+              // 조용히 "성공"으로 넘어가지 않고 확인 필요하다고 알림
+              showToast('⚠️ 저장 결과를 확인할 수 없어요 — 새로고침해서 반영됐는지 꼭 확인해주세요');
+              onDone();
+              return;
+            }
           }
           showToast('저장 완료! (DB+로컬)');
           if (!isEditMode) {
