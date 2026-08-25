@@ -65,12 +65,22 @@ function updateSyncBanner() {
 function retryPendingSync() {
   var q = getPendingSyncQueue();
   if (q.length === 0) return;
-  if (typeof showToast === 'function') showToast('동기화 재시도 중…');
-  q.forEach(function(item) {
-    sbXHR(item.method, item.path, item.payload, function(err) {
-      if (!err) removeFromPendingSyncQueue(item.customerKey);
+  // 2026-08-25(선혜님 발견 — 견적서쪽과 동일한 원인, 대시보드 재시도 큐도
+  // 같은 문제): 토큰 갱신 확인 없이 바로 재시도해서, 만료된 토큰으로 계속
+  // 똑같이 실패할 수 있었음. 재시도 전에 먼저 갱신부터 확인.
+  function doRetry() {
+    if (typeof showToast === 'function') showToast('동기화 재시도 중…');
+    q.forEach(function(item) {
+      sbXHR(item.method, item.path, item.payload, function(err) {
+        if (!err) removeFromPendingSyncQueue(item.customerKey);
+      });
     });
-  });
+  }
+  if (typeof refreshAuthSessionIfNeeded === 'function') {
+    refreshAuthSessionIfNeeded(function(ok) { if (ok) doRetry(); });
+  } else {
+    doRetry();
+  }
 }
 
 window.addEventListener('online', function(){ retryPendingSync(); });

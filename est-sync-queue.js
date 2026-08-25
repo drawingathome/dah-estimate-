@@ -48,6 +48,27 @@ function updateEstSyncBanner() {
 function retryEstPendingSync() {
   var q = getEstPendingQueue();
   if (q.length === 0) return;
+  // 2026-08-25(선혜님 발견 — 재시도해도 계속 403): 이 재시도 함수는
+  // refreshAuthSessionIfNeeded를 아예 호출하지 않고 있었음 — 저장 직전에는
+  // 이미 갱신 체크를 넣었는데(est-save.js), 이 "재시도 큐" 경로는 완전히
+  // 별개 코드라 그 수정이 적용 안 됐음. 그래서 처음 저장이 토큰 만료로
+  // 실패해서 큐에 쌓인 뒤, 재시도할 때도 갱신 없이 그 만료된 토큰을 그대로
+  // 다시 써서 매번 똑같이 403이 났음. 재시도 시작 전에 먼저 갱신부터
+  // 확인하도록 수정 — 갱신 자체가 실패하면(로그아웃된 상태) 재시도를
+  // 시도하지 않고 명확히 재로그인을 안내함.
+  if (typeof refreshAuthSessionIfNeeded === 'function') {
+    refreshAuthSessionIfNeeded(function(ok) {
+      if (ok) { _doRetryEstPendingSync(q); }
+      else {
+        alert('⚠️ 로그인이 만료됐어요.\n\n대기 중인 견적서 ' + q.length + '건이 아직 저장 안 됐어요.\n로그아웃 후 다시 로그인한 뒤, 이 배너를 다시 눌러 재시도해주세요.\n(대기 중인 내용은 사라지지 않아요)');
+      }
+    });
+  } else {
+    _doRetryEstPendingSync(q);
+  }
+}
+
+function _doRetryEstPendingSync(q) {
   if (typeof showToast === 'function') showToast('견적서 동기화 재시도 중…');
   // 2026-08-20(선혜님 발견 — 태블릿에서 계속 대기중으로 남던 문제): 재시도가
   // 실패해도 왜 실패했는지 전혀 안 보여줘서 원인 파악이 불가능했음. 인증 세션
