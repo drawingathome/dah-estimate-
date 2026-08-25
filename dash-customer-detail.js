@@ -228,6 +228,21 @@ function openDetail(name, id, forceTab) {
   // 재현이 안 돼서 오늘 검증에서 계속 놓쳤음 — 앞으로 클릭 경로까지 실제로 재현해서 검증할 것.
   var c = id ? customers.find(function(x) { return String(x.id) === String(id); }) : customers.find(function(x) { return x.clientName === name; });
   if (!c) {
+    // 2026-08-25(선혜님 발견 — 오지은 실장 계정에서 신화경님 견적 클릭시
+    // "고객 정보를 찾을 수 없어요" 뜸): 로컬 캐시에 없으면 바로 실패 처리만
+    // 하고 서버에 다시 물어보는 로직이 아예 없었음. 최근에 다른 기기/계정에서
+    // 새로 만든 고객은 이 기기가 아직 동기화 전이라 당연히 로컬엔 없는데,
+    // 그럴 때마다 이 오류가 뜨고 끝이었음. 실패로 단정하기 전에 서버에서
+    // 한 번 더 최신 목록을 받아와서 재시도하도록 함.
+    if (typeof loadCustomersAsync === 'function') {
+      showToast('고객 정보를 새로 불러오는 중...');
+      loadCustomersAsync(function(fresh){
+        var c2 = id ? fresh.find(function(x){ return String(x.id) === String(id); }) : fresh.find(function(x){ return x.clientName === name; });
+        if (c2) { openDetail(name, id, forceTab); }
+        else { showToast('"' + (name||'') + '" 고객 정보를 찾을 수 없어요 (삭제되었거나 이름이 변경된 것 같아요)'); }
+      }, true);
+      return;
+    }
     showToast('"' + (name||'') + '" 고객 정보를 찾을 수 없어요 (삭제되었거나 이름이 변경된 것 같아요)');
     return;
   }
