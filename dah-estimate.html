@@ -7,7 +7,7 @@
 // 대시보드에서 등록된 서비스워커가 Service-Worker-Allowed:/ 설정으로 이 페이지도
 // 덮을 수 있어 동일하게 방어함.
 (function(){
-  var BUILD = '202608250700';
+  var BUILD = '202608250800';
   window.DAH_BUILD = BUILD; // 2026-08-21: 다른 JS파일(est-save.js 자가진단 등)에서 참조할 수 있게 전역 노출
   try {
     if ('serviceWorker' in navigator) {
@@ -231,8 +231,13 @@
         if (result.ok) {
           gate.style.display = 'none';
           errEl.style.display = 'none';
-          // 로그인 성공한 이메일을 다음번 편의를 위해 이 기기에 캐시
-          if (typeof setMasterEmail === 'function') setMasterEmail(email);
+          // 2026-08-25(선혜님 확인 요청 — "직원 로그인 때도 조용히 시도되는
+          // master_email 동기화, 막아야 해??"): 여기서 무조건 setMasterEmail을
+          // 불렀는데, 이 시점엔 아직 마스터인지 스태프인지 모르는 상태(항상
+          // "일단 마스터"로 가정하고 시작)라서 직원 로그인 때도 매번 직원
+          // 이메일이 "마스터 이메일"로 저장 시도되고 있었음(화면엔 영향 없지만
+          // 논리적으로 잘못된 동작). 아래 staff_emails 조회가 끝나서 진짜
+          // 마스터로 확인된 경우에만 저장하도록 이동.
           // 2026-08-12: 예전엔 이메일과 무관하게 항상 role:'master'로 저장돼서,
           // 스태프 계정으로 로그인해도 견적서 앱에선 늘 "마스터"로 취급됐음
           // (권한 개념 자체가 없던 근본 원인). staff_emails 매핑을 Supabase에서
@@ -262,6 +267,9 @@
                   // 않았을 때만 - "마스터"로 남아있을 때만 교체)
                   var staffEl = document.getElementById('c-staff');
                   if (staffEl && staffEl.value.trim() === '마스터') staffEl.value = foundStaffName;
+                } else {
+                  // 진짜 마스터로 확인됨 - 이제 저장
+                  if (typeof setMasterEmail === 'function') setMasterEmail(email);
                 }
               } catch(eParse) {}
             };
