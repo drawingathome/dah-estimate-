@@ -219,8 +219,20 @@ function sbSyncSetting(key, value) {
   xhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
   xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.setRequestHeader('Prefer', 'resolution=merge-duplicates,return=minimal');
-  xhr.onload = function() { if (xhr.status < 200 || xhr.status >= 300) { console.warn('설정 동기화 실패:', key, xhr.status); } };
-  xhr.onerror = function() { console.warn('설정 동기화 실패(네트워크):', key); };
+  xhr.onload = function() {
+    if (xhr.status < 200 || xhr.status >= 300) {
+      console.warn('설정 동기화 실패:', key, xhr.status);
+      // 2026-08-25(선혜님 "더 찾아" 요청으로 전수재검사): 설정(할인쿠폰,
+      // 지역비, 목표매출 등)이 실패해도 콘솔에만 기록되고 화면엔 전혀 안
+      // 보였음 — 저장했다고 믿고 있다가 나중에 값이 그대로인 걸 발견하는
+      // 식으로 이어질 수 있었음.
+      if (typeof showToast === 'function') showToast('⚠️ 설정이 서버에 저장되지 않았어요(' + key + ') — 다시 시도해주세요');
+    }
+  };
+  xhr.onerror = function() {
+    console.warn('설정 동기화 실패(네트워크):', key);
+    if (typeof showToast === 'function') showToast('⚠️ 설정 저장 실패(네트워크) — 다시 시도해주세요');
+  };
   xhr.send(JSON.stringify({ key: key, value: value, updated_at: new Date().toISOString() }));
 }
 
