@@ -224,7 +224,13 @@ function renderEstList() {
       // 그 자리에서 바로 등록하고 이어갈 수 있게 함.
       if (!entry.clientId) {
         if (confirm('"' + entry.clientName + '" 님은 아직 고객으로 등록이 안 됐어요.\n지금 고객으로 등록하고 이 견적과 연결할까요?')) {
-          var payload = { client_name: entry.clientName, phone: entry.phone || null, stage: '가견적', price: entry.price || 0 };
+          // 2026-08-25(선혜님 발견 — "고객 등록할지 물어보지만 실패하는데??"):
+          // 담당자(staff_name)를 안 넣어서 기본값('선혜')으로 들어가고 있었음.
+          // 최근 적용된 보안규칙(RLS) 때문에 직원 계정은 "내 담당 고객"만
+          // 볼 수 있어서, 방금 본인이 만든 고객인데도 담당자가 자기 이름이
+          // 아니면 못 보고 그 직후 이어지는 화면이동이 실패한 것처럼 보였음.
+          var staffName3 = (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'staff') ? currentUser.name : '마스터';
+          var payload = { client_name: entry.clientName, phone: entry.phone || null, stage: '가견적', price: entry.price || 0, staff_name: staffName3 };
           sbXHR('POST', 'customers', payload, function(err, rows){
             if (err || !rows || !rows[0]) { showToast('고객 등록 실패 — 다시 시도해주세요'); return; }
             var newId = rows[0].id;
