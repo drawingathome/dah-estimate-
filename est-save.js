@@ -526,12 +526,28 @@ function _saveEstimateInner(_onDone) {
   // 화면이 꺼지거나 다른 앱으로 전환되면 브라우저가 이 타이머를 멈추는 경우가
   // 흔함. 서버 전송 직전에 명시적으로 토큰 갱신부터 확인하도록 함(재시도큐와
   // 동일한 패턴 - est-sync-queue.js 참고).
+  // 2026-08-25(선혜님 발견 — 오지은 실장 403 사례, "덜 생기는게 아니라
+  // 안생기게 해야지"): 여기 두 가지 심각한 문제가 있었음 —
+  // (1) 바로 아래 있던 showToast('저장 완료!')가 실제 저장 성공 여부와
+  //     무관하게 함수 호출 직후 무조건 떴음(비동기 저장이 끝나기도 전에
+  //     "완료"라고 거짓 표시). 완전히 제거 — 실제 성공/실패 메시지는
+  //     saveToEstimates() 안의 xhr2.onload에서만 뜨도록 함.
+  // (2) refreshAuthSessionIfNeeded의 성공여부(true/false)를 무시하고 항상
+  //     저장을 강행해서, 갱신 자체가 실패한 경우(refresh_token도 만료됨 등)
+  //     예정된 대로 또 403이 났음. 갱신이 실패하면 저장을 시도하지 않고
+  //     "다시 로그인해주세요"로 명확히 안내하고 멈추도록 함.
   if (typeof refreshAuthSessionIfNeeded === 'function') {
-    refreshAuthSessionIfNeeded(function() { saveToCustomers(); });
+    refreshAuthSessionIfNeeded(function(ok) {
+      if (ok) {
+        saveToCustomers();
+      } else {
+        onDone();
+        alert('⚠️ 로그인이 만료됐어요.\n\n이 화면을 벗어나지 마시고, 새 탭에서 다시 로그인한 뒤 이 탭으로 돌아와 저장을 다시 눌러주세요.\n(지금 입력하신 내용은 이 화면에 그대로 남아있어요 — 새로고침하지만 마세요)');
+      }
+    });
   } else {
     saveToCustomers();
   }
-  showToast('저장 완료!');
 }
 
 // 2026-08-20(선혜님 발견 — 아이패드에서 저장이 아무 반응 없이 조용히 실패하던
