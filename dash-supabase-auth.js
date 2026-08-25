@@ -12,6 +12,19 @@ function setMasterEmail(email) {
   try { localStorage.setItem('dah_master_email', email); } catch(e){}
   if (typeof sbSyncSetting === 'function') sbSyncSetting('master_email', email);
 }
+// 2026-08-25(선혜님 발견 — "탭으로 하면 틀린비번이라 뜬다", 진짜 원인):
+// 오늘 앞서 setMasterEmail을 "진짜 마스터일 때만" 부르도록 고치면서, 그
+// 대가로 직원 본인의 이메일이 재로그인 팝업에 자동으로 안 채워지게
+// 됐음(getMasterEmail이 비거나 옛날 값을 줌) — 그 상태로 비밀번호만 정확히
+// 입력하면 이메일+비번 조합 자체가 안 맞아서 "틀린 비번"으로 보였음. 역할과
+// 무관하게 "가장 최근 로그인 성공한 이메일"만 따로 기억해서, 편의상
+// 자동채움 용도로만 씀(마스터 여부 판단 로직과는 완전히 분리).
+function getLastLoginEmail() {
+  try { return localStorage.getItem('dah_last_login_email') || ''; } catch(e) { return ''; }
+}
+function setLastLoginEmail(email) {
+  try { localStorage.setItem('dah_last_login_email', email); } catch(e) {}
+}
 
 // Supabase의 app_settings 테이블에서 직접 master_email을 가져와 localStorage에 캐싱.
 // dash-api.js(loadAppSettingsAsync)를 로드하지 않는 페이지(예: 견적서 앱의 URL직접접근 게이트)에서

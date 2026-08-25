@@ -7,7 +7,7 @@
 // 대시보드에서 등록된 서비스워커가 Service-Worker-Allowed:/ 설정으로 이 페이지도
 // 덮을 수 있어 동일하게 방어함.
 (function(){
-  var BUILD = '202608251800';
+  var BUILD = '202608251900';
   window.DAH_BUILD = BUILD; // 2026-08-21: 다른 JS파일(est-save.js 자가진단 등)에서 참조할 수 있게 전역 노출
   try {
     if ('serviceWorker' in navigator) {
@@ -199,7 +199,7 @@
     // 정의될 때까지 짧게 재시도함
     (function fillCachedEmail(retries) {
       if (typeof getMasterEmail === 'function') {
-        var cached = getMasterEmail() || '';
+        var cached = (typeof getLastLoginEmail === 'function' ? getLastLoginEmail() : '') || getMasterEmail() || '';
         emailInput.value = cached;
         // 이메일이 비어있으면(새 기기) 이메일부터, 채워져 있으면(편의) 비밀번호로 바로
         if (cached) { pwInput.focus(); } else { emailInput.focus(); }
@@ -233,6 +233,7 @@
         if (result.ok) {
           gate.style.display = 'none';
           errEl.style.display = 'none';
+          if (typeof setLastLoginEmail === 'function') setLastLoginEmail(email);
           // 2026-08-25(선혜님 확인 요청 — "직원 로그인 때도 조용히 시도되는
           // master_email 동기화, 막아야 해??"): 여기서 무조건 setMasterEmail을
           // 불렀는데, 이 시점엔 아직 마스터인지 스태프인지 모르는 상태(항상
@@ -750,7 +751,7 @@
 </datalist>
 <script src="/est-utils.js?v=202608210852"></script>
 <script src="/est-sync-queue.js?v=202608251400"></script>
-<script src="/dash-supabase-auth.js?v=202608250600"></script>
+<script src="/dash-supabase-auth.js?v=202608251900"></script>
 <script src="/est-form-controls.js?v=202608191411"></script>
 <script src="/est-product-calc.js?v=202608242000"></script>
 <script src="/est-survey.js?v=202608190049"></script>
