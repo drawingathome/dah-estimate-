@@ -56,6 +56,12 @@ function applyPermissions() {
     document.querySelectorAll('.settings-entry').forEach(function(el){
       el.style.display = isMaster ? '' : 'none';
     });
+    // 2026-08-25: 설정 화면은 마스터 전용이지만, 로그아웃은 직원도 반드시
+    // 필요한 기본 기능이라 별도 버튼으로 분리해서 직원 계정에도 보이게 함
+    // (마스터는 기존 설정 화면 안 로그아웃을 그대로 쓰므로 여기선 숨김).
+    document.querySelectorAll('.staff-logout-btn').forEach(function(el){
+      el.style.display = isMaster ? 'none' : 'inline-flex';
+    });
 
     // 2026-08-14: 엑셀 다운로드도 마스터 전용(선혜님 확인) — 스태프가 전체
     // 고객명단/금액 데이터를 파일로 통째로 내려받을 수 있으면 안 됨.
