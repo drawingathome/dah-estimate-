@@ -194,14 +194,27 @@ function _saveEstimateInner(_onDone) {
       xhr.setRequestHeader('apikey',SUPABASE_KEY);
       xhr.setRequestHeader('Authorization','Bearer '+(typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
       xhr.setRequestHeader('Content-Type','application/json');
-      xhr.setRequestHeader('Prefer', isUpdate ? 'return=minimal' : 'return=representation');
+      // 2026-08-25(선혜님 발견 — "이름을 이라리로 바꿔도 오지은으로 뜬다",
+      // 진짜 원인): 여기가 sbXHR(dash-api.js)이랑 완전히 별개인 견적서 앱만의
+      // 고객 저장 코드라, 오늘 낮에 sbXHR에 넣은 "0건 반영 감지" 수정이 전혀
+      // 적용 안 되고 있었음. 게다가 실패해도 console.warn만 찍고 화면엔
+      // 아무 표시도 안 해서, 이름 수정이 서버에 반영이 안 됐는데도 사용자는
+      // 전혀 알 방법이 없었음. PATCH도 return=representation으로 받아서
+      // 실제 반영 건수를 확인하고, 실패시 화면에 명확히 알림.
+      xhr.setRequestHeader('Prefer', 'return=representation');
       xhr.onload=function(){
         if (xhr.status < 200 || xhr.status >= 300) {
           console.warn('Supabase 고객 저장 실패 (status='+xhr.status+'):', xhr.responseText);
-        } else if (!isUpdate) {
+          showToast('⚠️ 고객정보가 서버에 저장되지 않았어요(오류 '+xhr.status+') — 새로고침해서 확인해주세요');
+        } else {
+          var resData = null;
+          try { resData = xhr.responseText ? JSON.parse(xhr.responseText) : []; } catch(eP) { resData = null; }
+          if (isUpdate && Array.isArray(resData) && resData.length === 0) {
+            // 0건 반영 = 권한(RLS) 문제 등으로 서버에 실제로는 아무것도 안 바뀐 것
+            showToast('⚠️ 고객정보 수정이 서버에 반영되지 않았어요(권한 문제일 수 있어요) — 새로고침해서 확인해주세요');
+          } else if (!isUpdate) {
           // 신규 생성 성공 — 응답으로 받은 진짜 id를 로컬 customer 레코드와 견적이력에도 반영
           try {
-            var resData = JSON.parse(xhr.responseText);
             if (resData && resData[0] && resData[0].id) {
               var newId = resData[0].id;
               var arr = JSON.parse(localStorage.getItem('dah_customers')||'[]');
@@ -213,10 +226,11 @@ function _saveEstimateInner(_onDone) {
               window._estSaveCustomerId = newId;
             }
           } catch(e3) { /* 무시 — 로컬 id는 다음 저장시 이름+전화번호로 다시 매칭됨 */ }
+          }
         }
         saveToEstimates();
       };
-      xhr.onerror=function(){ console.warn('Supabase 고객 저장 실패 (localStorage는 완료)'); saveToEstimates(); };
+      xhr.onerror=function(){ console.warn('Supabase 고객 저장 실패 (localStorage는 완료)'); showToast('⚠️ 고객정보 저장 실패(네트워크) — 로컬엔 저장됨'); saveToEstimates(); };
       var custPayload = {
         client_name:name, phone:phone
       };
@@ -475,9 +489,21 @@ function _saveEstimateInner(_onDone) {
         // 이제 "이름+전화번호"로 기존 고객을 찾아서, 있으면 그 고객의 진짜 id(Supabase UUID)를
         // 유지한 채 갱신하고, 없을 때만 새로 만든다.
         var normPhone = function(p){ return (p||'').replace(/\D/g,''); };
-        var cidx = customers.findIndex(function(c){
-          return c.clientName === entry.clientName && normPhone(c.phone) === normPhone(entry.phone);
-        });
+        // 2026-08-25(선혜님 발견 — "이름을 이라리로 바꿔도 오지은으로 뜬다",
+        // 진짜 원인): 이름+전화번호로만 기존 고객을 찾다 보니, "이름을 바꾸는"
+        // 상황 자체에서 항상 매칭에 실패했음(바뀐 새 이름은 로컬에 없으니 당연히
+        // 못 찾음) — 그래서 수정이 아니라 매번 완전히 새 고객으로 만들어지고
+        // 있었음. 이미 "이 견적은 이 고객 것"이라고 알고 있는 id(고객 불러오기로
+        // 로드했거나 이전에 이미 저장해서 알고 있는 경우 window._estSaveCustomerId
+        // 에 남아있음)가 있으면 이름이 바뀌었어도 그 id를 최우선으로 써서 정확히
+        // "수정"으로 처리되게 함 — 이름+전화번호 매칭은 그 id를 모를 때(진짜
+        // 신규/다른 고객 가능성)만 보조적으로 사용.
+        var knownId = window._estSaveCustomerId || null;
+        var cidx = knownId
+          ? customers.findIndex(function(c){ return String(c.id) === String(knownId); })
+          : customers.findIndex(function(c){
+              return c.clientName === entry.clientName && normPhone(c.phone) === normPhone(entry.phone);
+            });
         var existingId = cidx >= 0 ? customers[cidx].id : null;
         entry.clientId = existingId; // dah_saved(견적이력)에도 고객 고유번호 반영
         localStorage.setItem('dah_saved', JSON.stringify(saved));

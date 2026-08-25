@@ -7,7 +7,7 @@
 // 대시보드에서 등록된 서비스워커가 Service-Worker-Allowed:/ 설정으로 이 페이지도
 // 덮을 수 있어 동일하게 방어함.
 (function(){
-  var BUILD = '202608251100';
+  var BUILD = '202608251200';
   window.DAH_BUILD = BUILD; // 2026-08-21: 다른 JS파일(est-save.js 자가진단 등)에서 참조할 수 있게 전역 노출
   try {
     if ('serviceWorker' in navigator) {
@@ -754,7 +754,7 @@
 <script src="/est-form-controls.js?v=202608191411"></script>
 <script src="/est-product-calc.js?v=202608242000"></script>
 <script src="/est-survey.js?v=202608190049"></script>
-<script src="/est-save.js?v=202608251100"></script>
+<script src="/est-save.js?v=202608251200"></script>
 <script src="/est-documents.js?v=202608242300"></script>
 <script src="/est-customer-load.js?v=202608242600"></script>
 <script src="/est-misc.js?v=202608240145"></script>
@@ -805,6 +805,14 @@ var currentTab = 'ga';
           var rows = JSON.parse(cxhr.responseText);
           var c = rows && rows[0];
           if (!c) return;
+          // 2026-08-25(선혜님 발견 — "이름을 이라리로 바꿔도 오지은으로 뜬다"):
+          // 이 경로로 기존 고객을 불러오면서도 window._estSaveCustomerId를 여기서
+          // 세팅 안 하고 있었음 — 저장할 때 이름+전화번호로 다시 매칭해야 했는데,
+          // 이름을 바꾸는 상황(정확히 이 경우)에서는 그 매칭이 항상 실패해서
+          // 수정이 아니라 매번 새 고객으로 만들어지고 있었음. 불러온 시점에
+          // 이미 알고 있는 진짜 id를 바로 세팅해서, 이름을 바꿔도 "그 고객"으로
+          // 정확히 인식되게 함.
+          window._estSaveCustomerId = c.id;
           if (c.client_name) document.getElementById('c-name').value = c.client_name;
           if (c.phone) document.getElementById('c-phone').value = c.phone;
           if (c.addr) document.getElementById('c-addr').value = c.addr;
@@ -885,6 +893,10 @@ var currentTab = 'ga';
           var erows = JSON.parse(eoxhr.responseText);
           var e = erows && erows[0];
           if (!e) { showToast('⚠️ 해당 견적서를 찾을 수 없어요'); return; }
+          // 2026-08-25: loadCustId 경로와 동일한 이유 — 이 경로도 window._estSaveCustomerId를
+          // 여기서 세팅 안 하고 있었음. 이름을 바꿔서 저장해도 정확히 "그 고객"
+          // 수정으로 인식되도록, 불러온 시점에 이미 알고 있는 client_id를 바로 세팅.
+          if (e.client_id) window._estSaveCustomerId = e.client_id;
           if (e.customer_name) document.getElementById('c-name').value = e.customer_name;
           if (e.phone) document.getElementById('c-phone').value = e.phone;
           if (e.memo) document.getElementById('c-memo').value = e.memo;
