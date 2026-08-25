@@ -180,7 +180,14 @@ function renderEstList() {
       ev.stopPropagation(); // row 클릭(고객상세 이동)으로 안 번지게
       var label = (e.clientName || '이름없음') + ' · ' + (Number(e.price)||0).toLocaleString() + '원';
       if (!confirm(label + '\n\n이 견적서를 삭제할까요? (완전히 지워지지 않고 보관되며, 필요하면 나중에 복구할 수 있어요)')) return;
-      archiveEstimate(e, function(){ renderEstList(); showToast('삭제(보관)했어요'); });
+      archiveEstimate(e, function(err){
+        renderEstList();
+        // 2026-08-25(선혜님 발견 — "오지은 실장으로 삭제가 안 된다"): 서버가
+        // 실제로 거부해도(권한 불일치 등) 확인 없이 무조건 "삭제했어요"라고
+        // 뜨고 있었음 — 아까 sbXHR에 넣은 실패감지가 무색해지고 있었음.
+        if (err) showToast('⚠️ 삭제가 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요');
+        else showToast('삭제(보관)했어요');
+      });
     });
     top.appendChild(delBtn);
 

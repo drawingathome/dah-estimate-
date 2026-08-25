@@ -201,7 +201,11 @@ function renderDetailEstTab() {
 
     var deleteEstBtn = btn('width:100%;margin-top:6px;padding:9px 0;background:#fff;color:#C0392B;border:1px solid #F5D6D0;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '삭제', function(){
       if (!confirm('이 견적서를 삭제할까요? (완전히 지워지지 않고 보관되며, 필요하면 나중에 복구할 수 있어요)')) return;
-      archiveEstimate(e, function(){ renderDetailEstTab(); });
+      archiveEstimate(e, function(err){
+        renderDetailEstTab();
+        if (err) showToast('⚠️ 삭제가 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요');
+        else showToast('삭제(보관)했어요');
+      });
     });
 
     card.appendChild(top);

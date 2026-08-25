@@ -35,6 +35,18 @@ function renderPaySection(c, payBody) {
 
   function savePayData(pd) {
     if (typeof logEvent === 'function') logEvent('payment_save', { hasDeposit: Number(pd.depositAmount) > 0, hasBalance: Number(pd.balanceAmount) > 0 });
+    // 2026-08-25(선혜님 발견 — "오지은 실장이 119만원 입금했는데 목표가 그대로"):
+    // 매출(목표달성률) 계산은 customers.price/performance_revenue를 기준으로
+    // 하는데, 이 두 필드는 오직 견적서를 저장할 때만 채워지고 있었음. 견적서
+    // 없이(또는 이 결제화면이 그 견적과 연결이 안 된 채) 입금 정보만 먼저
+    // 기록하면, 실제로 돈은 들어왔는데도 매출 집계엔 전혀 안 잡히는 빈틈이
+    // 있었음. price/performance_revenue가 아직 비어있는(0) 고객이면, 이번에
+    // 입력한 입금 총액만큼은 최소한 매출로 잡히도록 자동으로 채워줌(이미
+    // 값이 있으면 덮어쓰지 않음 — 견적서 기반 정확한 금액을 그대로 존중).
+    var newDep = Number(pd.depositAmount)||0;
+    var newBal = Number(pd.balanceAmount)||0;
+    var paidTotal = newDep + newBal;
+    var priceWasEmpty = !(Number(c.price) > 0) && !(Number(c.performanceRevenue) > 0);
     // 1) localStorage 백업
     // 2026-08-04: 이름 기반 키만 쓰면 동명이인일 때 결제정보가 섞일 이론적
     // 위험이 있어(실제 최우선 소스는 customers.depositAmount라 id기반으로
@@ -46,6 +58,7 @@ function renderPaySection(c, payBody) {
     var arr = loadCustomers();
     var idx = c.id ? arr.findIndex(function(x){ return x.id === c.id; }) : arr.findIndex(function(x){ return x.clientName === c.clientName; });
     if (idx >= 0) {
+      if (priceWasEmpty && paidTotal > 0) { arr[idx].price = paidTotal; arr[idx].performanceRevenue = paidTotal; }
       arr[idx].depositAmount  = Number(pd.depositAmount)||0;
       arr[idx].depositDate    = pd.depositDate||'';
       arr[idx].depositMethod  = pd.depositMethod||'';
@@ -58,7 +71,7 @@ function renderPaySection(c, payBody) {
     }
     // 3) Supabase 동기화
     if (c.id) {
-      sbXHR('PATCH', 'customers?id=eq.'+c.id, {
+      var patchBody = {
         deposit_amount:  Number(pd.depositAmount)||0,
         deposit_date:    pd.depositDate||'',
         deposit_method:  pd.depositMethod||'',
@@ -67,7 +80,11 @@ function renderPaySection(c, payBody) {
         balance_date:    pd.balanceDate||'',
         balance_method:  pd.balanceMethod||'',
         balance_receipt: pd.balanceReceipt||false
-      }, function(){});
+      };
+      if (priceWasEmpty && paidTotal > 0) { patchBody.price = paidTotal; patchBody.performance_revenue = paidTotal; }
+      sbXHR('PATCH', 'customers?id=eq.'+c.id, patchBody, function(err){
+        if (err) showToast('⚠️ 결제정보가 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요');
+      });
     }
   }
 
