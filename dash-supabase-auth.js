@@ -233,6 +233,20 @@ function stopAuthAutoRefresh() {
   if (getAuthSession()) startAuthAutoRefresh();
 })();
 
+// 2026-08-25(오지은 실장님 사례 — 403 "서버 저장 재시도 실패"): 태블릿에서
+// 다른 앱으로 전환하면(브라우저 탭이 백그라운드로 가면) 모바일 브라우저가
+// setInterval 타이머 자체를 멈추거나 크게 늦추는 게 흔한 동작이라, 4분마다
+// 갱신 체크하는 startAuthAutoRefresh만으로는 오래 백그라운드에 있다 돌아왔을
+// 때 토큰이 이미 만료된 채로 방치될 수 있었음(타이머가 안 돌았으니 갱신 자체가
+// 안 일어남). 탭이 다시 화면에 보이는 순간 즉시 한 번 더 확인/갱신하도록 보강.
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden && getAuthSession()) {
+      refreshAuthSessionIfNeeded(function () {});
+    }
+  });
+}
+
 // 현재 세션의 access_token 반환 (API 호출시 Authorization 헤더에 사용)
 // 세션이 없으면 anon key로 폴백 (RLS가 막고있으면 어차피 서버에서 거부됨)
 function getAuthToken() {
