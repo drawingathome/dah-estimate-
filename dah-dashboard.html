@@ -7,7 +7,7 @@
 // 과거에 등록된 서비스워커가 남아있으면 이후 모든 스크립트 요청을 가로채 낡은 버전을
 // 계속 보여줄 수 있어, 다른 태그보다 먼저 실행되도록 이 위치에 둠.
 (function(){
-  var BUILD = '202608251900'; // 배포마다 이 값을 갱신하면, 이전 빌드를 본 기기는 자동으로 1회 강제 새로고침됨
+  var BUILD = '202608252000'; // 배포마다 이 값을 갱신하면, 이전 빌드를 본 기기는 자동으로 1회 강제 새로고침됨
   window.DAH_BUILD = BUILD; // 2026-08-24: 화면 우측하단 버전배지에서 참조
   try {
     if ('serviceWorker' in navigator) {
@@ -68,7 +68,7 @@
   <link rel="apple-touch-icon" href="/logo.png">
 </head>
 <body>
-<div id="dah-build-badge" style="position:fixed;bottom:4px;right:6px;font-size:9px;color:#B0A99F;z-index:999999;pointer-events:none;font-family:monospace;"></div>
+<div id="dah-build-badge" style="position:fixed;bottom:4px;right:6px;font-size:11px;color:#B0A99F;z-index:999999;pointer-events:none;font-family:monospace;"></div>
 <script>document.getElementById('dah-build-badge').textContent = 'v' + (window.DAH_BUILD||'?');</script>
 <div class="mob-app-header" id="mob-app-header" style="display:flex;background:#282828;height:48px;min-height:48px;position:sticky;top:0;left:0;right:0;z-index:9999;color:#fff;padding:0 16px;align-items:center;justify-content:space-between;box-sizing:border-box;width:100%;overflow:hidden">
   <div style="display:flex;align-items:center;gap:12px">
