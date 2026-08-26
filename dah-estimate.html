@@ -1061,7 +1061,56 @@ document.addEventListener('DOMContentLoaded', function() {
   indicator.id = 'auto-save-indicator';
   indicator.style.cssText = 'position:fixed;bottom:80px;right:16px;background:#282828;color:#fff;padding:6px 12px;border-radius:4px;font-size:11px;font-weight:600;opacity:0;transition:opacity 0.3s;z-index:9999;pointer-events:none;font-family:inherit';
   document.body.appendChild(indicator);
-  
+
+  // 2026-08-26(선혜님과 함께 진행한 "내부견적서 한눈에 안 들어옴" 개선 2단계):
+  // 품목을 입력하는 동안엔 화면 맨 아래(TOTAL ESTIMATE 블록)까지 스크롤해야만
+  // 지금 총액이 얼마인지 보였음. 이 총액 고정바는 계산을 새로 하지 않고,
+  // 이미 계산이 끝난 #sum-total의 값을 그대로 옮겨 보여주기만 함(계산
+  // 로직은 est-product-calc.js의 calcTotal() 그대로 유지, 안 건드림).
+  // 실제 총액 블록(.summary-total-block)이 화면에 보이는 동안엔 중복이라
+  // 안 보이게 하고, 그 블록이 스크롤에서 벗어났을 때만 나타남.
+  (function setupStickyTotalBar() {
+    var bar = document.createElement('div');
+    bar.id = 'sticky-total-bar';
+    bar.className = 'print-hide';
+    bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;background:#1A1A1A;color:#fff;'+
+      'padding:10px 20px;display:flex;justify-content:space-between;align-items:center;'+
+      'z-index:500;transform:translateY(100%);transition:transform 0.2s ease;'+
+      'box-shadow:0 -2px 12px rgba(0,0,0,0.15);font-family:inherit';
+    bar.innerHTML =
+      '<span style="font-size:12px;color:#B0A99F;letter-spacing:0.5px">TOTAL ESTIMATE</span>'+
+      '<span id="sticky-total-amount" style="font-size:17px;font-weight:700;color:#fff">0원</span>';
+    document.body.appendChild(bar);
+
+    var totalEl = document.getElementById('sum-total');
+    var stickyAmountEl = document.getElementById('sticky-total-amount');
+    var totalBlockEl = document.querySelector('.summary-total-block');
+    if (!totalEl || !stickyAmountEl || !totalBlockEl) return;
+
+    // #sum-total 텍스트가 바뀔 때마다(=calcTotal()이 재계산할 때마다)
+    // 고정바의 표시값도 그대로 따라가게 함 - 값 자체를 다시 계산하지 않고
+    // 그저 "지금 이미 계산된 값을 하나 더 보여주는" 거울 역할만 함.
+    var mo = new MutationObserver(function() {
+      stickyAmountEl.textContent = totalEl.textContent;
+    });
+    mo.observe(totalEl, { childList: true, characterData: true, subtree: true });
+    stickyAmountEl.textContent = totalEl.textContent;
+
+    // 실제 총액 블록이 화면에 보이는 동안엔 고정바를 숨기고, 스크롤로
+    // 벗어나면 고정바가 나타남(중복 표시 방지).
+    var buildBadge = document.getElementById('dah-build-badge');
+    var diagBtn = document.querySelector('button[onclick="runSelfDiagnosis()"]');
+    var io = new IntersectionObserver(function(entries) {
+      var isVisible = entries[0].isIntersecting;
+      bar.style.transform = isVisible ? 'translateY(100%)' : 'translateY(0)';
+      // 고정바가 화면에 뜨면 우측 하단의 버전배지/진단버튼과 겹치므로 위로 밀어올림
+      if (buildBadge) buildBadge.style.bottom = isVisible ? '4px' : '50px';
+      if (diagBtn) diagBtn.style.bottom = isVisible ? '22px' : '68px';
+    }, { threshold: 0 });
+    io.observe(totalBlockEl);
+  })();
+
+
   // 입력 필드들에 이벤트 연결
   var fields = ['c-name','c-phone','c-addr','c-addr2','c-measure','c-install','c-region','c-memo'];
   fields.forEach(function(id) {
