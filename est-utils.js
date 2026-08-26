@@ -238,6 +238,10 @@ function fetchVendorListFromCloud(callback) {
       if (xhr.status === 200) {
         var rows = JSON.parse(xhr.responseText);
         if (rows && rows[0] && Array.isArray(rows[0].value)) {
+          // 2026-08-26: datalist(이름 자동완성)용으로만 쓰던 걸, 카테고리/연락처까지
+          // 포함한 원본 그대로도 보관 - printRequest()에서 '실측·시공' 담당 거래처의
+          // 연락처를 자동으로 채우는 데 사용.
+          window._dahVendorListRaw = rows[0].value;
           var dl = document.getElementById('vendor-list');
           if (dl) {
             dl.innerHTML = '';

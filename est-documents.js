@@ -919,9 +919,24 @@ function printRequest(kind) {
   var installerNameEl = document.getElementById('c-installer-name');
   var installerPhoneEl = document.getElementById('c-installer-phone');
   var currentInstallerName = installerNameEl ? installerNameEl.value : '';
+  var currentInstallerPhone = installerPhoneEl ? installerPhoneEl.value : '';
+  // 2026-08-26(선혜님 발견 — "거래처 등록을 했는데 왜 수기로 다 써야 하지"):
+  // 이 견적에 아직 설치기사 정보가 없고(=이번이 처음 묻는 거고), 설정탭
+  // 거래처관리에서 '실측·시공' 담당으로 등록해둔 곳이 정확히 1곳뿐이면
+  // 그 정보로 자동 채움 - 그 경우 사용자는 그냥 "확인"만 누르면 됨(여전히
+  // 필요하면 팝업에서 직접 고쳐 쓸 수 있음). 등록된 곳이 없거나 2곳 이상
+  // (누구인지 특정 불가)이면 예전처럼 빈 값으로 물어봄.
+  if (!currentInstallerName && !currentInstallerPhone && Array.isArray(window._dahVendorListRaw)) {
+    var installVendors = window._dahVendorListRaw.filter(function(v) {
+      return v && Array.isArray(v.categories) && v.categories.indexOf('install') >= 0;
+    });
+    if (installVendors.length === 1) {
+      currentInstallerName = installVendors[0].name || '';
+      currentInstallerPhone = installVendors[0].phone || '';
+    }
+  }
   var newInstallerName = window.prompt(label+' 담당 설치기사명을 입력해주세요 (없으면 빈칸으로 확인)', currentInstallerName);
   if (newInstallerName !== null && installerNameEl) installerNameEl.value = newInstallerName;
-  var currentInstallerPhone = installerPhoneEl ? installerPhoneEl.value : '';
   var newInstallerPhone = window.prompt(label+' 담당 설치기사 연락처를 입력해주세요 (없으면 빈칸으로 확인)', currentInstallerPhone);
   if (newInstallerPhone !== null && installerPhoneEl) installerPhoneEl.value = newInstallerPhone;
 

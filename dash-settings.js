@@ -400,6 +400,28 @@ function renderSettings() {
       tagWrap.appendChild(tag);
     });
     row.appendChild(tagWrap);
+    // 2026-08-26(선혜님 발견 — "거래처 등록을 했는데 왜 수기로 다 써야 하지"):
+    // 거래처 항목에 연락처 필드 자체가 없어서, 실측·시공 의뢰서 만들 때마다
+    // 담당 설치기사 연락처를 매번 손으로 입력해야 했음. 연락처를 여기서
+    // 관리하면, '실측·시공' 담당 거래처가 1곳으로 특정될 때 견적서 앱에서
+    // 자동으로 채워줄 수 있음(est-documents.js printRequest() 참고).
+    var phoneRow = div('display:flex;align-items:center;gap:8px;margin-top:8px', [
+      span('font-size:11px;color:var(--sub);flex-shrink:0', '연락처')
+    ]);
+    var phoneInput = el('input', {
+      type: 'tel', placeholder: '010-0000-0000', value: v.phone || '',
+      style: 'flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box'
+    });
+    phoneInput.addEventListener('change', function() {
+      var list = getVendorList();
+      var target = list.find(function(x){ return x.name === v.name; });
+      if (!target) return;
+      target.phone = phoneInput.value.trim();
+      setVendorList(list);
+      showToast(v.name + ' 연락처가 저장됐습니다');
+    });
+    phoneRow.appendChild(phoneInput);
+    row.appendChild(phoneRow);
     vendorListWrap.appendChild(row);
   });
   if (vendorList.length === 0) {
