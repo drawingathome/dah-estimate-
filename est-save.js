@@ -16,6 +16,23 @@ function savePDF() {
   }
 }
 
+// 2026-08-26(선혜님과 함께 진행한 코드 구조 개선 — "전역변수가 여기저기
+// 흩어져있어서 한 곳에서 리셋을 빠뜨리면 또 버그가 난다"는 문제의식으로 시작):
+// "지금 편집 중인 견적이 무엇인지" 관련 상태 4가지(_editingEstDbId/
+// _editingEstUpdatedAt/_viewingFrozenEstimate/_estSaveCustomerId)를 "새로
+// 시작하는" 모든 지점에서 반드시 함께 리셋하도록 이 함수 하나로 모음. 예전엔
+// newEstimate()가 앞 3개만 리셋하고 _estSaveCustomerId는 빠뜨리고 있었음
+// (다행히 saveToLocalStorage()의 이름기반 재매칭이 우연히 이 문제를 가려주고
+// 있었지만, 그건 "우연히 안전"한 거였지 확실한 보장이 아니었음). 앞으로 견적
+// 편집상태를 초기화해야 하는 곳이 새로 생기면, 각 변수를 따로따로 건드리지
+// 말고 반드시 이 함수를 호출할 것.
+function resetEstEditingState() {
+  window._editingEstDbId = null;
+  window._editingEstUpdatedAt = null;
+  window._viewingFrozenEstimate = false;
+  window._estSaveCustomerId = null;
+}
+
 function newEstimate() {
   if(!confirm('새 견적서를 작성하시겠어요? 현재 내용이 초기화됩니다.')) return;
   // 2026-08-24(전수 재검사 중 발견 — 잠재적으로 심각한 버그): 기존 견적을
@@ -24,9 +41,7 @@ function newEstimate() {
   // 고객 정보를 입력해서 저장하면, 저장 로직이 "이건 수정이다"로 착각해서
   // 새 고객이 아니라 원래 열려있던 남의 견적을 그 내용으로 덮어써버릴 수
   // 있었음(아직 실제 피해 사례는 확인 안 됐지만 재현 가능한 심각한 버그).
-  window._editingEstDbId = null;
-  window._editingEstUpdatedAt = null;
-  window._viewingFrozenEstimate = false;
+  resetEstEditingState();
   document.getElementById('c-name').value='';
   document.getElementById('c-phone').value='';
   document.getElementById('c-addr').value='';

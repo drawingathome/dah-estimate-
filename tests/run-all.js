@@ -56,6 +56,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['estimate-customer-link-check.js', [target]]);
   scripts.push(['estimate-duplicate-blindspot-check.js', [target]]);
   scripts.push(['master-vs-staff-feature-check.js', []]);
+  scripts.push(['est-editing-state-reset-check.js', [target]]);
 }
 
 let anyFail = false;
