@@ -420,15 +420,22 @@ td.amt{
    있어서 정보 위계가 없었음. 여기서 로직은 하나도 안 건드리고, "이미 화면에
    그려진 걸 CSS로만" 강조/약화시킴(inline style보다 나중에 로드되는 CSS가
    !important로 덮어씀 - HTML/JS 생성 코드는 그대로 유지). */
+/* 2026-08-26 재조정(선혜님 지적 - "낱개 금액을 그렇게 크게 강조하는 게
+   의미가 있냐, 전체 총액만 제대로 보이면 된다"): 1단계에서 낱개 제품명/
+   금액을 15px+오렌지색으로 크게 강조했었는데, 실제 작업 흐름(여러 품목을
+   빠르게 훑어보는 것)엔 오히려 시선만 분산시켰음. 강조는 전체 총액
+   (.summary-total-block, 32px 오렌지)에만 남기고, 낱개는 다시 수수하게
+   되돌림 - 대신 "안 보이던" 예전 문제로 돌아가지 않게 sticky 고정(1단계에서
+   만든 것)은 그대로 유지해서 "안 보임"과 "과한 강조" 둘 다 피함.*/
 #curtain-body .c-display-name,
 #blind-body .c-display-name{
-  font-size:15px!important;
-  color:#1A1A1A!important;
+  font-size:13px!important;
+  color:#282828!important;
 }
 #curtain-body td.amt,
 #blind-body td.amt{
-  font-size:15px!important;
-  color:#D85A30!important; /* 브랜드 오렌지 계열 - 고객용 견적서 최종금액과 같은 강조 원리 */
+  font-size:13px!important;
+  color:#282828!important;
 }
 /* 부가옵션(주름/개폐/시접)은 값은 필요하지만 시선을 덜 끌어도 되는 정보라 옅게 */
 #curtain-body .pleat-type,
@@ -512,9 +519,18 @@ td.amt{
   #curtain-body td[data-label="주름"],#curtain-body td[data-label="개폐"],#curtain-body td[data-label="시접"]{order:5;width:33%;box-sizing:border-box}
   #blind-body td[data-label="종류"],#blind-body td[data-label="손잡이"]{order:5;width:50%;box-sizing:border-box}
 
-  /* 단가/금액 - 하단에 좌우로 크게 */
-  #curtain-body td[data-label="단가"],#blind-body td[data-label="단가"]{order:6;width:50%;box-sizing:border-box}
-  #curtain-body td.amt,#blind-body td.amt{order:6;width:50%;box-sizing:border-box;text-align:right!important}
+  /* 단가/금액/액션버튼 - 한 줄로 합침(2026-08-26 재조정 - "스크롤 줄이기")
+     예전엔 액션버튼(복사/삭제)이 구분선까지 그어가며 별도 줄을 차지했는데,
+     단가/금액과 같은 줄에 넣어서 한 줄 통째로 절약함.
+     블라인드는 단가칸 안에 "옵션추가금" 입력까지 2줄로 들어있어서 좁은
+     칸에 넣으면 겹침 - 단가만 전체폭 유지, 금액+액션만 합침. */
+  #curtain-body td[data-label="단가"]{order:6;width:38%;box-sizing:border-box}
+  #curtain-body td.amt{order:6;width:32%;box-sizing:border-box;text-align:right!important}
+  #curtain-body td:last-child{order:6;width:30%;box-sizing:border-box;text-align:right;padding-top:8px!important}
+
+  #blind-body td[data-label="단가"]{order:6;width:100%;box-sizing:border-box}
+  #blind-body td.amt{order:7;width:60%;box-sizing:border-box;text-align:right!important}
+  #blind-body td:last-child{order:7;width:40%;box-sizing:border-box;text-align:right;padding-top:8px!important}
 
   /* 2026-08-26 추가(선혜님 지적 - "빈 카드와 채워진 카드가 구분이 안 됨"):
      제품명이 아직 비어있는(placeholder만 보이는) 카드는 점선 테두리 +
@@ -522,12 +538,6 @@ td.amt{
   #curtain-body tr:has(.c-display-name:placeholder-shown),
   #blind-body tr:has(.b-display-name:placeholder-shown){
     border-style:dashed;background:#FAF8F5;
-  }
-
-  /* 액션버튼(드래그/복사/삭제) - 맨 아래, 구분선 위 */
-  #curtain-body td:last-child,#blind-body td:last-child{
-    order:7;width:100%;text-align:right;
-    border-top:1px solid #EEE6DC!important;padding-top:8px!important;margin-top:6px
   }
 }
 
