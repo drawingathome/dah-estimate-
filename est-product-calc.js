@@ -10,8 +10,8 @@ function addCurtainRow() {
   var tr = document.createElement('tr');
   tr.className = 'row-curtain';
   tr.innerHTML =
-    '<td><input type="text" class="space-inp" placeholder="공간" style="'+INP+';cursor:pointer;caret-color:transparent" readonly onclick="openSpacePicker(this)"></td>'+
-    '<td style="padding:6px 8px">'+
+    '<td data-label="공간"><input type="text" class="space-inp" placeholder="공간" style="'+INP+';cursor:pointer;caret-color:transparent" readonly onclick="openSpacePicker(this)"></td>'+
+    '<td data-label="제품명" style="padding:6px 8px">'+
       '<input type="text" placeholder="제품명 (고객용)" class="c-display-name" style="'+INP+'">'+
       '<div class="inner-fields print-hide">'+
         '<div class="inner-row">'+
@@ -28,16 +28,16 @@ function addCurtainRow() {
         '</div>'+
       '</div>'+
     '</td>'+
-    '<td><select class="pleat-type" onchange="calcCurtainRow(this)" style="'+SEL+'">'+
+    '<td data-label="주름"><select class="pleat-type" onchange="calcCurtainRow(this)" style="'+SEL+'">'+
       '<option value="나비주름형">나비주름</option><option value="민자형">민자</option></select></td>'+
-    '<td><select class="open-type" style="'+SEL+'">'+
+    '<td data-label="개폐"><select class="open-type" style="'+SEL+'">'+
       '<option value="양개형">양개</option><option value="편개형">편개</option></select></td>'+
-    '<td><select class="hem-type" style="'+SEL+'">'+
+    '<td data-label="시접"><select class="hem-type" style="'+SEL+'">'+
       '<option>리드</option><option>5cm</option><option>8cm</option></select></td>'+
-    '<td>'+
+    '<td data-label="가로">'+
       '<input type="number" placeholder="cm" class="mw" oninput="calcCurtainRow(this)" style="'+INP+'">'+
     '</td>'+
-    '<td>'+
+    '<td data-label="높이">'+
       '<input type="number" placeholder="cm" class="mh" oninput="calcCurtainRow(this)" style="'+INP+'">'+
       '<div style="display:flex;gap:2px;margin-top:2px">'+
         '<input type="number" placeholder="-3" class="height-adjust" value="-3" oninput="calcCurtainRow(this)" style="width:38px;font-size:11px;padding:1px 2px;border:1px solid var(--border);border-radius:4px;text-align:center" title="제작높이 보정값(cm). 일반레일 -3, 전동레일은 브랜드마다 달라서(솜피 등) -5 근처로 직접 조정하세요">'+
@@ -45,9 +45,9 @@ function addCurtainRow() {
         '<button type="button" onclick="var i=this.parentNode.querySelector(\'.height-adjust\'); i.value=-5; calcCurtainRow(i);" style="font-size:11px;padding:8px 9px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;min-width:32px;white-space:nowrap">전동</button>'+
       '</div>'+
     '</td>'+
-    '<td><input type="number" class="pnum" value="2" oninput="calcCurtainRow(this)" style="'+INP+'"></td>'+
-    '<td><input type="text" inputmode="numeric" placeholder="단가" class="cprice" oninput="fmtPrice(this);calcCurtainRow(this)" onfocus="fmtPriceFocus(this)" onblur="fmtPriceBlur(this);calcCurtainRow(this)" style="'+INP+'"></td>'+
-    '<td class="amt camt">—</td>'+
+    '<td data-label="폭"><input type="number" class="pnum" value="2" oninput="calcCurtainRow(this)" style="'+INP+'"></td>'+
+    '<td data-label="단가"><input type="text" inputmode="numeric" placeholder="단가" class="cprice" oninput="fmtPrice(this);calcCurtainRow(this)" onfocus="fmtPriceFocus(this)" onblur="fmtPriceBlur(this);calcCurtainRow(this)" style="'+INP+'"></td>'+
+    '<td class="amt camt" data-label="금액">—</td>'+
     '<td style="white-space:nowrap">'+
       '<span class="row-drag-handle print-hide" title="드래그해서 순서 바꾸기" style="cursor:grab;padding:4px 6px;color:var(--sub);user-select:none;display:inline-block">⠿</span>'+
       '<button class="copy-btn print-hide" onclick="copyCurtainRow(this)" title="복사">⧉</button>'+
@@ -225,8 +225,8 @@ function addBlindRow() {
   if(tbl) tbl.style.display = 'table';
   var tr = document.createElement('tr');
   tr.innerHTML =
-    '<td><input type="text" class="space-inp" placeholder="공간" style="'+INP+';cursor:pointer;caret-color:transparent" readonly onclick="openSpacePicker(this)"></td>'+
-    '<td style="padding:6px 8px">'+
+    '<td data-label="공간"><input type="text" class="space-inp" placeholder="공간" style="'+INP+';cursor:pointer;caret-color:transparent" readonly onclick="openSpacePicker(this)"></td>'+
+    '<td data-label="제품명" style="padding:6px 8px">'+
       '<input type="text" placeholder="제품명 (고객용)" class="b-display-name" style="'+INP+'">'+
       '<div class="inner-fields print-hide">'+
         '<div class="inner-row">'+
@@ -236,21 +236,21 @@ function addBlindRow() {
         '</div>'+
       '</div>'+
     '</td>'+
-    '<td><select class="blind-kind" onchange="calcBlindRow(this)" style="'+SEL+'">'+
+    '<td data-label="종류"><select class="blind-kind" onchange="calcBlindRow(this)" style="'+SEL+'">'+
       '<option>롤스크린</option><option>알루미늄</option><option>우드</option>'+
       '<option>허니콤</option><option>로만쉐이드</option><option>기타</option>'+
     '</select></td>'+
-    '<td><select class="handle-dir" style="'+SEL+'"><option>좌손</option><option>우손</option><option>기타</option></select></td>'+
+    '<td data-label="손잡이"><select class="handle-dir" style="'+SEL+'"><option>좌손</option><option>우손</option><option>기타</option></select></td>'+
 
-    '<td><input type="text" inputmode="numeric" placeholder="cm" class="bmw" oninput="fmtPrice(this);calcBlindRow(this)" style="'+INP+'"></td>'+
-    '<td><input type="text" inputmode="numeric" placeholder="cm" class="bmh" oninput="fmtPrice(this);calcBlindRow(this)" style="'+INP+'"></td>'+
-    '<td><input type="text" placeholder="옵션" class="blind-opt" style="'+INP+'"></td>'+
-    '<td>'+
+    '<td data-label="가로"><input type="text" inputmode="numeric" placeholder="cm" class="bmw" oninput="fmtPrice(this);calcBlindRow(this)" style="'+INP+'"></td>'+
+    '<td data-label="높이"><input type="text" inputmode="numeric" placeholder="cm" class="bmh" oninput="fmtPrice(this);calcBlindRow(this)" style="'+INP+'"></td>'+
+    '<td data-label="옵션"><input type="text" placeholder="옵션" class="blind-opt" style="'+INP+'"></td>'+
+    '<td data-label="단가">'+
       '<input type="text" inputmode="numeric" placeholder="단가(원/㎡)" class="blind-price" oninput="fmtPrice(this);calcBlindRow(this)" onfocus="fmtPriceFocus(this)" onblur="fmtPriceBlur(this);calcBlindRow(this)" style="'+INP+'">'+
       '<span class="bsqm">—</span>'+
       '<input type="text" inputmode="numeric" placeholder="옵션추가금" class="blind-extra" oninput="fmtPrice(this);calcBlindRow(this)" onfocus="fmtPriceFocus(this)" onblur="fmtPriceBlur(this);calcBlindRow(this)" style="'+INP+';margin-top:3px;font-size:11px">'+
     '</td>'+
-    '<td class="amt bamt">—</td>'+
+    '<td class="amt bamt" data-label="금액">—</td>'+
     '<td style="white-space:nowrap">'+
       '<span class="row-drag-handle print-hide" title="드래그해서 순서 바꾸기" style="cursor:grab;padding:4px 6px;color:var(--sub);user-select:none;display:inline-block">⠿</span>'+
       '<button class="copy-btn print-hide" onclick="copyBlindRow(this)">⧉</button>'+
