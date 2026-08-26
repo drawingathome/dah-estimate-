@@ -1151,8 +1151,11 @@ td.amt{
  
 @media(max-width:768px){
   
-  
-  .info-grid{grid-template-columns:1fr}
+  /* 2026-08-26(선혜님과 함께 진행 - "고객정보 섹션이 725px나 차지해서
+     너무 길다" 발견): 실측/시공 예정일 2칸이 모바일에서 세로로 쌓이게
+     되어 있었음(1fr 1칸). 날짜 입력창 폭 155px에서도 안 잘리는 것 확인
+     하고 2열 유지로 되돌림 - 이 한 줄로 카드 개수와 무관하게 고정으로
+     차지하던 세로 공간을 약 80px 절약. */
   
   .doc-header-divider{margin:0}
   .doc-title-ko{font-size:11px;letter-spacing:0}
