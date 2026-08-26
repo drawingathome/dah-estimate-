@@ -494,22 +494,33 @@ td.amt{
   #curtain-body td[data-label="제품명"],#blind-body td[data-label="제품명"]{order:2;width:100%}
   #curtain-body td[data-label="제품명"]:before,#blind-body td[data-label="제품명"]:before{display:none}
 
-  /* 사이즈 그룹(가로/높이/폭 또는 가로/높이) - 한 줄에 나란히 */
-  #curtain-body td[data-label="가로"],#curtain-body td[data-label="높이"],#curtain-body td[data-label="폭"],
-  #blind-body td[data-label="가로"],#blind-body td[data-label="높이"]{order:3;width:33%;box-sizing:border-box}
-  #blind-body td[data-label="옵션"]{order:3;width:34%;box-sizing:border-box}
+  /* 가로/폭 - 한 줄에 절반씩 (커튼은 폭까지, 블라인드는 가로만) */
+  #curtain-body td[data-label="가로"],#curtain-body td[data-label="폭"]{order:3;width:50%;box-sizing:border-box}
+  #blind-body td[data-label="가로"]{order:3;width:50%;box-sizing:border-box}
+  #blind-body td[data-label="옵션"]{order:3;width:50%;box-sizing:border-box}
+  /* 높이 - 안에 -3/일반/전동 보정버튼까지 있어서 좁은 칸에 넣으면 버튼이
+     줄바꿈되며 붕 떠 보였음(선혜님 지적) - 전체폭 한 줄로 따로 뺌 */
+  #curtain-body td[data-label="높이"],#blind-body td[data-label="높이"]{order:4;width:100%;box-sizing:border-box}
 
   /* 부가옵션 그룹(주름/개폐/시접 또는 종류/손잡이) - 옅은 톤으로 한 줄 */
-  #curtain-body td[data-label="주름"],#curtain-body td[data-label="개폐"],#curtain-body td[data-label="시접"],
-  #blind-body td[data-label="종류"],#blind-body td[data-label="손잡이"]{order:4;width:33%;box-sizing:border-box}
+  #curtain-body td[data-label="주름"],#curtain-body td[data-label="개폐"],#curtain-body td[data-label="시접"]{order:5;width:33%;box-sizing:border-box}
+  #blind-body td[data-label="종류"],#blind-body td[data-label="손잡이"]{order:5;width:50%;box-sizing:border-box}
 
   /* 단가/금액 - 하단에 좌우로 크게 */
-  #curtain-body td[data-label="단가"],#blind-body td[data-label="단가"]{order:5;width:50%;box-sizing:border-box}
-  #curtain-body td.amt,#blind-body td.amt{order:5;width:50%;box-sizing:border-box;text-align:right!important}
+  #curtain-body td[data-label="단가"],#blind-body td[data-label="단가"]{order:6;width:50%;box-sizing:border-box}
+  #curtain-body td.amt,#blind-body td.amt{order:6;width:50%;box-sizing:border-box;text-align:right!important}
+
+  /* 2026-08-26 추가(선혜님 지적 - "빈 카드와 채워진 카드가 구분이 안 됨"):
+     제품명이 아직 비어있는(placeholder만 보이는) 카드는 점선 테두리 +
+     살짝 다른 배경으로 시각적으로 구분되게 함. */
+  #curtain-body tr:has(.c-display-name:placeholder-shown),
+  #blind-body tr:has(.b-display-name:placeholder-shown){
+    border-style:dashed;background:#FAF8F5;
+  }
 
   /* 액션버튼(드래그/복사/삭제) - 맨 아래, 구분선 위 */
   #curtain-body td:last-child,#blind-body td:last-child{
-    order:6;width:100%;text-align:right;
+    order:7;width:100%;text-align:right;
     border-top:1px solid #EEE6DC!important;padding-top:8px!important;margin-top:6px
   }
 }
