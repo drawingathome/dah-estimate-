@@ -831,7 +831,8 @@ function buildRequestHTML(kind, extraNote) {
     if(items.length === 0) {
       out += '<div style="padding:30px 0;text-align:center;color:#B0A99F;font-size:12px">입력된 공간/제품이 없습니다.</div>';
     } else {
-      out += '<div style="padding:20px 10px;text-align:center">';
+      out += '<div class="print-hide" style="text-align:center;font-size:11px;color:#B0A99F;margin-top:8px">✏️ 아래 내용을 클릭하면 발송 전에 직접 고칠 수 있어요</div>';
+      out += '<div id="pv-request-editable" contenteditable="true" style="padding:20px 10px;text-align:center;outline:none;border:1px dashed #DDD5CB;border-radius:8px;margin-top:6px">';
       items.forEach(function(txt, i){
         out += '<div style="font-size:13px;color:#282828;padding:8px 0">'+(i+1)+'. '+escHtml(txt)+'</div>';
       });
@@ -880,6 +881,8 @@ function buildRequestHTML(kind, extraNote) {
     if(rows.length === 0) {
       out += '<div style="padding:30px 0;text-align:center;color:#B0A99F;font-size:12px">입력된 공간/제품이 없습니다.</div>';
     } else {
+      out += '<div class="print-hide" style="text-align:center;font-size:11px;color:#B0A99F;margin-top:8px">✏️ 아래 표를 클릭하면 발송 전에 직접 고칠 수 있어요</div>';
+      out += '<div id="pv-request-editable" contenteditable="true" style="outline:none;border:1px dashed #DDD5CB;border-radius:8px;margin-top:6px;padding:4px">';
       out += '<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:2px">'
           +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
           +'<th style="text-align:left;padding:8px 6px">위치</th>'
@@ -899,11 +902,12 @@ function buildRequestHTML(kind, extraNote) {
             +'</tr>';
       });
       out += '</tbody></table>';
+      out += '</div>';
     }
   }
 
   if(extraNote) {
-    out += '<div style="margin-top:var(--sp-6);text-align:center;font-size:13px;color:#E4483A;font-weight:600;line-height:1.7;white-space:pre-wrap">'+escHtml(extraNote)+'</div>';
+    out += '<div id="pv-request-note-editable" contenteditable="true" style="margin-top:var(--sp-6);text-align:center;font-size:13px;color:#E4483A;font-weight:600;line-height:1.7;white-space:pre-wrap;outline:none;border:1px dashed #F0C9C4;border-radius:8px;padding:8px">'+escHtml(extraNote)+'</div>';
   }
 
   out += '</div>';
@@ -945,7 +949,13 @@ function printRequest(kind) {
 
   var cNameForDrive = document.getElementById('c-name')?.value || '미지정고객';
   var instNameForDrive = document.getElementById('c-installer-name')?.value || '';
-  saveDocumentToDrive('실측시공', cNameForDrive, label + (instNameForDrive ? '_' + instNameForDrive : ''), html);
+  // 2026-08-26(선혜님 발견 — "자동으로 적히지만 수정할 부분이 있을 수도 있는데,
+  // 마지막 발송전에 수정할 수 있게 가능하니"): 예전엔 미리보기가 뜨기도 전에
+  // 이 시점(생성 직후)에 구글드라이브 저장이 먼저 끝나버려서, 그 뒤 미리보기에서
+  // 내용을 고쳐도 이미 저장된 문서엔 반영이 안 됐음(애초에 고칠 수도 없었음).
+  // 아래에서 "내용"/메모 영역을 contenteditable로 만들고, 드라이브 저장도
+  // "인쇄/PDF저장" 버튼을 실제로 눌러 최종 확정하는 시점으로 미룸 - 그때
+  // 화면에 떠 있는(수정됐을 수 있는) 최신 내용을 그대로 저장함.
 
   var existing = document.getElementById('pv-overlay');
   if(existing) existing.remove();
@@ -981,7 +991,13 @@ function printRequest(kind) {
   closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit';
   var printBtn = document.createElement('button');
   printBtn.textContent = '인쇄 / PDF 저장';
-  printBtn.onclick = openPdfModal;
+  printBtn.onclick = function() {
+    try {
+      var finalHtml = inner ? inner.innerHTML : html;
+      saveDocumentToDrive('실측시공', cNameForDrive, label + (instNameForDrive ? '_' + instNameForDrive : ''), finalHtml);
+    } catch(e) { console.warn('의뢰서 드라이브 저장 실패:', e); }
+    openPdfModal();
+  };
   printBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';
   navBtns.appendChild(closeBtn);
   navBtns.appendChild(printBtn);
