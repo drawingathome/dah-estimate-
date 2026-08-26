@@ -55,6 +55,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['multi-device-sync-check.js', [target]]);
   scripts.push(['estimate-customer-link-check.js', [target]]);
   scripts.push(['estimate-duplicate-blindspot-check.js', [target]]);
+  scripts.push(['master-vs-staff-feature-check.js', []]);
 }
 
 let anyFail = false;
