@@ -21,6 +21,14 @@
  * 자동 삭제 없음 — 10년 이상 장기 보관 목적이라 오래된 백업도
  * 절대 지우지 않습니다 (JSON 텍스트 파일이라 용량 부담 거의 없음:
  * 10년치 매일 백업해도 보통 1~2GB 수준으로 무료 용량 내에서 충분)
+ *
+ * 2026-08-26 추가: 매일 백업할 때마다 "중복 의심 데이터"도 함께 자동
+ * 스캔합니다(같은 전화번호의 고객이 2건 이상, 또는 같은 고객명+금액+날짜의
+ * 견적서가 2건 이상 있으면 의심 대상). 발견되면 자동으로 지우지 않고,
+ * 트리거를 설정한 구글 계정 이메일로 알림만 보냅니다 — 실제 정리는 직접
+ * 확인 후 처리. 지금 당장 한 번만 확인하고 싶으면 함수 목록에서
+ * dahDuplicateScanOnly()를 선택해 수동 실행하면 됩니다(백업은 안 만들고
+ * 스캔+알림만 함).
  * ══════════════════════════════════════════════════
  */
 
@@ -97,6 +105,29 @@ function dahDailyBackup() {
   }).join(' | ');
   Logger.log(summary);
 
+  // 2026-08-26(선혜님과 함께 도입 — "중복탐지 자동알림"): 백업 때 이미
+  // customers/estimates 전체를 한 번 가져오므로, 그 데이터를 그대로 재사용해서
+  // 중복 의심 건이 있는지 매일 스캔함(API 호출을 따로 더 늘리지 않음).
+  // 8/26에 실제로 발견했던 패턴 그대로: 고객은 "전화번호가 같은데 둘 다
+  // 안 지워진(is_archived=false) 레코드가 2건 이상", 견적은 "같은 고객명+
+  // 같은 금액+같은 날짜에 생성된 게 2건 이상"인 경우를 의심 대상으로 봄.
+  var dupIssues = dahScanForDuplicates(backup);
+  if (dupIssues.length > 0) {
+    Logger.log('⚠️ 중복 의심 ' + dupIssues.length + '건 발견:\n' + dupIssues.join('\n'));
+    try {
+      MailApp.sendEmail(
+        Session.getActiveUser().getEmail(),
+        'DAH 중복 의심 데이터 발견 (' + today + ')',
+        '오늘 백업 중 아래와 같은 중복 의심 건이 발견됐습니다. 실제 중복인지 확인 후 필요하면 정리해주세요.\n' +
+        '(자동으로 지우지 않습니다 — 실제 다른 사람일 수도 있어서 반드시 직접 확인 후 처리)\n\n' +
+        dupIssues.join('\n\n') +
+        '\n\n※ 이 알림은 apps-script-daily-backup.js의 dahScanForDuplicates()에서 매일 자동 발송됩니다.'
+      );
+    } catch (e) { Logger.log('중복알림 이메일 발송 실패: ' + e.message); }
+  } else {
+    Logger.log('✅ 중복 의심 건 없음');
+  }
+
   // 실패한 테이블이 있으면 이메일로 알림 (선택사항 — 본인 이메일로 변경)
   if (errors.length > 0) {
     try {
@@ -107,6 +138,93 @@ function dahDailyBackup() {
       );
     } catch (e) { /* 이메일 발송 실패는 무시 */ }
   }
+}
+
+/**
+ * ══════════════════════════════════════════════════
+ * 중복 의심 데이터 스캔 (dahScanForDuplicates)
+ * ══════════════════════════════════════════════════
+ * 2026-08-26 도입 — 8/26에 실제로 발견했던 중복 사례(김채은/유경진 견적서,
+ * 정은송/박소진 마이그레이션 중복)를 계기로, "사람이 우연히 발견하기 전에
+ * 자동으로 걸러내자"는 취지로 만듦.
+ *
+ * backup 객체(customers/estimates 배열 포함)를 받아서:
+ *  - 고객: 같은 전화번호로 안 지워진(is_archived=false) 레코드가 2건 이상
+ *  - 견적: 같은 고객명 + 같은 금액 + 같은 날짜(생성일 기준)로 안 지워진
+ *    레코드가 2건 이상
+ * 인 경우를 의심 목록으로 반환. 아무것도 안 지우거나 고치지 않는 순수
+ * "찾아서 보고만" 하는 함수 — 실제 정리는 사람이 확인 후 직접 처리.
+ */
+function dahScanForDuplicates(backup) {
+  var issues = [];
+
+  // 1) 고객 중복 의심 (전화번호 기준)
+  if (Array.isArray(backup.customers)) {
+    var byPhone = {};
+    backup.customers.forEach(function(c) {
+      if (c.is_archived || !c.phone) return;
+      var key = String(c.phone).replace(/[^0-9]/g, '');
+      if (!key) return;
+      (byPhone[key] = byPhone[key] || []).push(c);
+    });
+    Object.keys(byPhone).forEach(function(phone) {
+      var group = byPhone[phone];
+      if (group.length > 1) {
+        issues.push('[고객 중복의심] 전화번호 ' + phone + ' — ' + group.length + '건: ' +
+          group.map(function(c) { return c.client_name + '(id:' + c.id + ')'; }).join(', '));
+      }
+    });
+  }
+
+  // 2) 견적서 중복 의심 (고객명+금액+생성일 기준)
+  if (Array.isArray(backup.estimates)) {
+    var byKey = {};
+    backup.estimates.forEach(function(e) {
+      if (e.is_archived || !e.customer_name) return;
+      var day = (e.created_at || '').slice(0, 10);
+      var key = e.customer_name + '|' + e.price + '|' + day;
+      (byKey[key] = byKey[key] || []).push(e);
+    });
+    Object.keys(byKey).forEach(function(key) {
+      var group = byKey[key];
+      if (group.length > 1) {
+        var parts = key.split('|');
+        issues.push('[견적서 중복의심] ' + parts[0] + ' / ' + Number(parts[1]).toLocaleString() + '원 / ' + parts[2] +
+          ' — ' + group.length + '건: ' + group.map(function(e) { return e.id; }).join(', '));
+      }
+    });
+  }
+
+  return issues;
+}
+
+/**
+ * 수동으로 지금 바로 중복 스캔만 돌려보고 싶을 때 사용 (백업은 안 만듦,
+ * 스캔 전용 API 호출 — customers/estimates만 가져와서 검사).
+ * 결과는 실행 로그 + 발견되면 이메일로도 발송.
+ */
+function dahDuplicateScanOnly() {
+  var backup = {};
+  var tables = ['customers', 'estimates'];
+  tables.forEach(function(table) {
+    var res = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=*', {
+      method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true
+    });
+    backup[table] = res.getResponseCode() === 200 ? JSON.parse(res.getContentText()) : [];
+  });
+  var issues = dahScanForDuplicates(backup);
+  if (issues.length === 0) {
+    Logger.log('✅ 중복 의심 건 없음');
+    return;
+  }
+  Logger.log('⚠️ 중복 의심 ' + issues.length + '건 발견:\n' + issues.join('\n'));
+  try {
+    MailApp.sendEmail(
+      Session.getActiveUser().getEmail(),
+      'DAH 중복 의심 데이터 발견 (수동 스캔)',
+      issues.join('\n\n')
+    );
+  } catch (e) { Logger.log('이메일 발송 실패: ' + e.message); }
 }
 
 /**
@@ -499,7 +617,8 @@ function doGet(e) {
     else if (action === 'cleanupTestData') dahCleanupTestData();
     else if (action === 'restoreDrill') dahRestoreDrill();
     else if (action === 'peekRawName') dahPeekRawName(e.parameter.phone || '');
-    else return ContentService.createTextOutput('❌ 알 수 없는 action: "' + action + '"\n사용가능: dailyBackup, diagnoseSchema, cleanupTestData, restoreDrill, peekRawName').setMimeType(ContentService.MimeType.TEXT);
+    else if (action === 'duplicateScan') dahDuplicateScanOnly();
+    else return ContentService.createTextOutput('❌ 알 수 없는 action: "' + action + '"\n사용가능: dailyBackup, diagnoseSchema, cleanupTestData, restoreDrill, peekRawName, duplicateScan').setMimeType(ContentService.MimeType.TEXT);
   } catch (err) {
     return ContentService.createTextOutput('❌ 실행 중 오류 발생: ' + err.message + '\n' + err.stack).setMimeType(ContentService.MimeType.TEXT);
   }
