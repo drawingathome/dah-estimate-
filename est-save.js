@@ -265,6 +265,57 @@ function _saveEstimateInner(_onDone) {
     } catch(e) { console.warn('Supabase 연결 오류:', e); saveToEstimates(); }
   }
   function saveToEstimates() {
+    // 2026-08-26(선혜님 발견 — 김채은/유경진 견적서 중복 생성 사례):
+    // "오늘 이미 만든 견적이면 PATCH로 이어서 수정"하는 판단(est-customer-load.js)이
+    // 이 브라우저의 로컬 저장소(dah_saved)만 보고 내려졌음 — 그래서 (1) 다른
+    // 기기/다른 탭에서 방금 저장한 걸 이 브라우저가 모르거나, (2) 같은 브라우저라도
+    // 탭을 두 개 열어 거의 동시에 저장하면(유경진 사례: 19초 간격) 양쪽 다
+    // "처음 저장하는 줄" 알고 각자 새로 생성해버림. 로컬 판단을 믿지 말고, 실제
+    // POST/PATCH를 결정하기 직전에 서버에 "이 고객, 오늘, 아직 안 지워진 견적이
+    // 이미 있는지"를 직접 한 번 더 물어봐서 있으면 그 레코드로 PATCH하도록 함.
+    // (완벽한 동시성 보장은 아님 - 두 탭이 이 확인마저 같은 찰나에 동시에 하면
+    // 여전히 둘 다 생성될 수 있음. 그 마지막 좁은 틈은 DB의
+    // estimates_idempotency_key_uniq 유니크 제약과는 별개 문제라 여기선 못 막음 -
+    // 대신 그 경우를 대비해 8-2번처럼 주기적으로 견적서 목록에서 중복을
+    // 스캔하는 걸 권장.)
+    if (!window._editingEstDbId && window._estSaveCustomerId && typeof SUPABASE_URL !== 'undefined') {
+      var todayStart = new Date(); todayStart.setHours(0,0,0,0);
+      var xhrCheck = new XMLHttpRequest();
+      xhrCheck.open('GET', SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(window._estSaveCustomerId) +
+        '&is_archived=eq.false&created_at=gte.' + encodeURIComponent(todayStart.toISOString()) +
+        '&select=id,updated_at&order=created_at.desc&limit=1', true);
+      xhrCheck.setRequestHeader('apikey', SUPABASE_KEY);
+      xhrCheck.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+      xhrCheck.timeout = 5000;
+      var proceeded = false;
+      var proceed = function() {
+        if (proceeded) return; proceeded = true;
+        _saveToEstimatesActual();
+      };
+      xhrCheck.onload = function() {
+        try {
+          if (xhrCheck.status >= 200 && xhrCheck.status < 300) {
+            var rows = JSON.parse(xhrCheck.responseText || '[]');
+            if (rows && rows.length) {
+              window._editingEstDbId = rows[0].id;
+              window._editingEstUpdatedAt = rows[0].updated_at || null;
+              showToast('오늘 이미 저장된 견적을 찾아 이어서 수정합니다(중복 방지)');
+            }
+          }
+        } catch (e) { /* 파싱 실패시에도 아래 proceed()로 정상 진행(신규 저장 취급) */ }
+        proceed();
+      };
+      // 이 확인 자체가 실패(네트워크/타임아웃)해도 저장 흐름 전체를 막지는 않음 —
+      // "중복 방지 확인 한 번 더" 실패가 "아예 저장이 안 됨"보다 훨씬 나쁜 결과이므로,
+      // 확인이 안 되면 예전처럼 로컬 판단 그대로 신규 저장을 진행함.
+      xhrCheck.onerror = proceed;
+      xhrCheck.ontimeout = proceed;
+      xhrCheck.send();
+      return;
+    }
+    _saveToEstimatesActual();
+  }
+  function _saveToEstimatesActual() {
     // 2026-08-05: 재시도 큐에서도 그대로 재사용할 수 있도록 payload를 변수로 분리
     // 2026-08-05: 중복행 방지용 idempotency key — 이 저장 시도(재시도 포함) 전체에서
     // 동일한 값을 유지. "서버는 실제로 성공했는데 응답을 못 받아 실패로 오판"해서
