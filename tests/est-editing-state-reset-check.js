@@ -35,6 +35,10 @@ async function run() {
       window._editingEstUpdatedAt = '2026-08-26T00:00:00Z';
       window._viewingFrozenEstimate = true;
       window._estSaveCustomerId = 'fake-customer-id';
+      // 2026-08-26 추가: 계산결과 캐시 3개도 이전 고객 것인 양 채워둠
+      window._lastCalcBreakdown = { total: 999999 };
+      window._lastDiscountBreakdown = [{ label: '가짜할인', amount: 1000 }];
+      window._lastAppliedDiscounts = { coupons: ['fake-coupon'], manual: 500 };
     });
 
     await page.evaluate(() => { newEstimate(); });
@@ -44,13 +48,21 @@ async function run() {
       editingEstDbId: window._editingEstDbId,
       editingEstUpdatedAt: window._editingEstUpdatedAt,
       viewingFrozenEstimate: window._viewingFrozenEstimate,
-      estSaveCustomerId: window._estSaveCustomerId
+      estSaveCustomerId: window._estSaveCustomerId,
+      lastCalcBreakdown: window._lastCalcBreakdown,
+      lastDiscountBreakdown: window._lastDiscountBreakdown,
+      lastAppliedDiscounts: window._lastAppliedDiscounts
     }));
 
     check('[' + label + '] _editingEstDbId가 null로 리셋됨', state.editingEstDbId === null, `실제=${state.editingEstDbId}`);
     check('[' + label + '] _editingEstUpdatedAt이 null로 리셋됨', state.editingEstUpdatedAt === null, `실제=${state.editingEstUpdatedAt}`);
     check('[' + label + '] _viewingFrozenEstimate가 false로 리셋됨', state.viewingFrozenEstimate === false, `실제=${state.viewingFrozenEstimate}`);
     check('[' + label + '] _estSaveCustomerId가 null로 리셋됨(예전엔 빠져있던 것)', state.estSaveCustomerId === null, `실제=${state.estSaveCustomerId}`);
+    // calcTotal()이 newEstimate() 끝에서 호출되면서 0원 상태의 새 breakdown 객체로
+    // 덮어써짐(=null이 아니라 total:0에 가까운 값) - "이전 고객의 999999가 아님"만 확인
+    check('[' + label + '] _lastCalcBreakdown이 이전 고객 값(999999)로 남아있지 않음', !state.lastCalcBreakdown || state.lastCalcBreakdown.total !== 999999, `실제=${JSON.stringify(state.lastCalcBreakdown)}`);
+    check('[' + label + '] _lastDiscountBreakdown이 이전 고객 값(가짜할인)로 남아있지 않음', !Array.isArray(state.lastDiscountBreakdown) || !state.lastDiscountBreakdown.some(d => d.label === '가짜할인'), `실제=${JSON.stringify(state.lastDiscountBreakdown)}`);
+    check('[' + label + '] _lastAppliedDiscounts가 이전 고객 값(fake-coupon)로 남아있지 않음', !state.lastAppliedDiscounts || !(state.lastAppliedDiscounts.coupons||[]).includes('fake-coupon'), `실제=${JSON.stringify(state.lastAppliedDiscounts)}`);
 
     await page.close();
   }

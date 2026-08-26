@@ -31,6 +31,15 @@ function resetEstEditingState() {
   window._editingEstUpdatedAt = null;
   window._viewingFrozenEstimate = false;
   window._estSaveCustomerId = null;
+  // 2026-08-26 추가: 계산결과 캐시 3개(_lastCalcBreakdown/_lastDiscountBreakdown/
+  // _lastAppliedDiscounts)도 함께 리셋. 지금은 newEstimate() 끝에서 calcTotal()을
+  // 호출해서 결과적으로 이 값들이 다시 채워지고 있어 실제로는 안전하지만, 그건
+  // "calcTotal()이 항상 호출된다"는 암묵적 전제에 기댄 우연한 안전이었음(그
+  // 호출이 나중에 실수로 빠지면 이전 고객의 계산결과가 새 견적에 남아있을 수
+  // 있었음). 명시적으로 여기서도 비워서 그 전제에 기대지 않도록 함.
+  window._lastCalcBreakdown = null;
+  window._lastDiscountBreakdown = null;
+  window._lastAppliedDiscounts = null;
 }
 
 function newEstimate() {
