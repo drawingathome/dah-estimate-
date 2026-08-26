@@ -494,13 +494,19 @@ td.amt{
   #curtain-body td[data-label="제품명"],#blind-body td[data-label="제품명"]{order:2;width:100%}
   #curtain-body td[data-label="제품명"]:before,#blind-body td[data-label="제품명"]:before{display:none}
 
-  /* 가로/폭 - 한 줄에 절반씩 (커튼은 폭까지, 블라인드는 가로만) */
-  #curtain-body td[data-label="가로"],#curtain-body td[data-label="폭"]{order:3;width:50%;box-sizing:border-box}
-  #blind-body td[data-label="가로"]{order:3;width:50%;box-sizing:border-box}
-  #blind-body td[data-label="옵션"]{order:3;width:50%;box-sizing:border-box}
-  /* 높이 - 안에 -3/일반/전동 보정버튼까지 있어서 좁은 칸에 넣으면 버튼이
-     줄바꿈되며 붕 떠 보였음(선혜님 지적) - 전체폭 한 줄로 따로 뺌 */
-  #curtain-body td[data-label="높이"],#blind-body td[data-label="높이"]{order:4;width:100%;box-sizing:border-box}
+  /* 2026-08-26 재작업(선혜님 지적 - "접으면 하나씩 펴봐야 해서 비효율적,
+     다른 방법 찾아"): 가로/높이(숫자)/폭을 한 줄로 합침. 측정해보니 예전엔
+     가로+폭(45px) 줄과 높이+보정버튼(80px) 줄이 따로 있어서 125px이었는데,
+     보정버튼(-3/일반/전동)을 별도 td로 분리해서 숫자 셋(가로/높이/폭)만
+     한 줄에 합치면 그 줄은 45px로 끝나고, 보정버튼은 전체폭 한 줄(약 40px)
+     로 따로 둠 - 합계 85px로, 버튼을 압축하지 않고도(정상 크기 유지) 40px
+     절약. 버튼을 억지로 줄였던 첫 시도(패딩/폰트 축소)는 오히려 버튼 3개가
+     세로로 쌓이며 117px까지 늘어나 실패 - 제거함. */
+  #curtain-body td[data-label="가로"],#curtain-body td[data-label="높이"],#curtain-body td[data-label="폭"],
+  #blind-body td[data-label="가로"],#blind-body td[data-label="높이"]{order:3;width:33.33%;box-sizing:border-box}
+  #blind-body td[data-label="옵션"]{order:3;width:33.33%;box-sizing:border-box}
+  #curtain-body td[data-label="보정"]{order:4;width:100%;box-sizing:border-box}
+  #curtain-body td[data-label="보정"]:before{display:none}
 
   /* 부가옵션 그룹(주름/개폐/시접 또는 종류/손잡이) - 옅은 톤으로 한 줄 */
   #curtain-body td[data-label="주름"],#curtain-body td[data-label="개폐"],#curtain-body td[data-label="시접"]{order:5;width:33%;box-sizing:border-box}
