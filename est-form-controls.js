@@ -161,20 +161,23 @@ function toggleConfirmEstimate() {
 }
 
 function renderConfirmBadge() {
-  var badge = document.getElementById('hd-confirmed-badge');
-  var dateSpan = document.getElementById('hd-confirmed-date');
-  var btn = document.getElementById('btn-confirm-estimate');
+  // 2026-08-26: 예전엔 배지(표시 전용, 확정시에만 보임)와 버튼(탭줄의
+  // 액션, 항상 보임)이 따로 있었는데, 이제 hd-confirm-badge 하나가 표시+
+  // 클릭 액션을 겸함(A안). 미확정=연한 테두리만, 확정=진한 배경으로 채움.
+  var badge = document.getElementById('hd-confirm-badge');
   if (!badge) return;
   if (window._estimateConfirmedAt) {
-    badge.style.display = 'inline-block';
-    if (dateSpan) {
-      var d = new Date(window._estimateConfirmedAt);
-      dateSpan.textContent = '(' + d.getFullYear() + '.' + (d.getMonth()+1) + '.' + d.getDate() + ')';
-    }
-    if (btn) { btn.textContent = '확정 취소'; btn.classList.add('on'); }
+    var d = new Date(window._estimateConfirmedAt);
+    var dateStr = d.getFullYear() + '.' + (d.getMonth()+1) + '.' + d.getDate();
+    badge.textContent = '✓ 확정됨 (' + dateStr + ')';
+    badge.style.background = '#3B6D11';
+    badge.style.borderColor = '#3B6D11';
+    badge.style.color = '#EAF3DE';
   } else {
-    badge.style.display = 'none';
-    if (btn) { btn.textContent = '✓ 확정'; btn.classList.remove('on'); }
+    badge.textContent = '✓ 확정';
+    badge.style.background = 'transparent';
+    badge.style.borderColor = 'rgba(255,255,255,0.25)';
+    badge.style.color = 'rgba(255,255,255,0.5)';
   }
 }
 

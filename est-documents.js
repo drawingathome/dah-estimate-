@@ -466,9 +466,9 @@ function printForCustomer() {
   var isFinal = (document.getElementById('status-final')?.classList.contains('on'));
   var navLabel = document.createElement('span');
   navLabel.textContent = isFinal ? '최종 견적서 — 고객용 미리보기' : '가견적서 — 고객용 미리보기';
-  navLabel.style.cssText = 'color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;letter-spacing:0.3px';
+  navLabel.style.cssText = 'color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;letter-spacing:0.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto;margin-right:8px';
   var navBtns = document.createElement('div');
-  navBtns.style.cssText = 'display:flex;gap:var(--sp-2)';
+  navBtns.style.cssText = 'display:flex;gap:var(--sp-2);flex-shrink:0';
   var closeBtn = document.createElement('button');
   closeBtn.textContent = '✕ 닫기';
   closeBtn.onclick = function(){
@@ -476,15 +476,15 @@ function printForCustomer() {
     document.body.style.overflow = '';
     document.body.classList.remove('preview-open');
   };
-  closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit';
+  closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap;flex-shrink:0';
   var printBtn = document.createElement('button');
   printBtn.textContent = '인쇄 / PDF 저장';
   printBtn.onclick = openPdfModal;
-  printBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';
+  printBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;flex-shrink:0';
   var shareBtn = document.createElement('button');
   shareBtn.textContent = '💬 카톡 공유';
   shareBtn.onclick = shareEstimatePDF;
-  shareBtn.style.cssText = 'padding:7px 18px;background:#F06E2D;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';
+  shareBtn.style.cssText = 'padding:7px 18px;background:#F06E2D;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;flex-shrink:0';
   navBtns.appendChild(closeBtn);
   navBtns.appendChild(shareBtn);
   navBtns.appendChild(printBtn);
@@ -706,9 +706,9 @@ function printForVendor() {
   ].join(';');
   var navLabel = document.createElement('span');
   navLabel.textContent = '발주서 — 거래처별 원단 발주 목록';
-  navLabel.style.cssText = 'color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;letter-spacing:0.3px';
+  navLabel.style.cssText = 'color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;letter-spacing:0.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto;margin-right:8px';
   var navBtns = document.createElement('div');
-  navBtns.style.cssText = 'display:flex;gap:var(--sp-2)';
+  navBtns.style.cssText = 'display:flex;gap:var(--sp-2);flex-shrink:0';
   var closeBtn = document.createElement('button');
   closeBtn.textContent = '✕ 닫기';
   closeBtn.onclick = function(){
@@ -716,11 +716,11 @@ function printForVendor() {
     document.body.style.overflow = '';
     document.body.classList.remove('preview-open');
   };
-  closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit';
+  closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap;flex-shrink:0';
   var printBtn = document.createElement('button');
   printBtn.textContent = '인쇄 / PDF 저장';
   printBtn.onclick = openPdfModal;
-  printBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';
+  printBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;flex-shrink:0';
   navBtns.appendChild(closeBtn);
   navBtns.appendChild(printBtn);
   nav.appendChild(navLabel);
@@ -978,9 +978,9 @@ function printRequest(kind) {
   ].join(';');
   var navLabel = document.createElement('span');
   navLabel.textContent = label+' 의뢰서 미리보기';
-  navLabel.style.cssText = 'color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;letter-spacing:0.3px';
+  navLabel.style.cssText = 'color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;letter-spacing:0.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto;margin-right:8px';
   var navBtns = document.createElement('div');
-  navBtns.style.cssText = 'display:flex;gap:var(--sp-2)';
+  navBtns.style.cssText = 'display:flex;gap:var(--sp-2);flex-shrink:0';
   var closeBtn = document.createElement('button');
   closeBtn.textContent = '✕ 닫기';
   closeBtn.onclick = function(){
@@ -988,7 +988,7 @@ function printRequest(kind) {
     document.body.style.overflow = '';
     document.body.classList.remove('preview-open');
   };
-  closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit';
+  closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap;flex-shrink:0';
   var printBtn = document.createElement('button');
   printBtn.textContent = '인쇄 / PDF 저장';
   printBtn.onclick = function() {
@@ -998,7 +998,7 @@ function printRequest(kind) {
     } catch(e) { console.warn('의뢰서 드라이브 저장 실패:', e); }
     openPdfModal();
   };
-  printBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit';
+  printBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;flex-shrink:0';
   navBtns.appendChild(closeBtn);
   navBtns.appendChild(printBtn);
   nav.appendChild(navLabel);
