@@ -276,14 +276,14 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
 }
 .doc-header-tabbar::-webkit-scrollbar{display:none}
 .doc-header-tabbar-left{
-  display:flex;gap:2px;align-items:flex-end;order:1
+  display:flex;gap:2px;align-items:flex-end;order:1;flex-shrink:0
 }
 /* 2026-08-08: 문서상태(가견적서/최종견적서/확정)와 작업유형(신규/재구매/
    AS수선)은 서로 다른 성격의 선택 UI라 의도적으로 다른 패턴(밑줄 vs
    버튼)을 씀. 근데 둘이 바로 붙어있어서 하나의 뒤섞인 툴바처럼 보이던
    문제 - 구분선+간격으로 "의도적으로 다른 그룹"임을 명확히 함 */
 .doc-header-tabbar-right{
-  display:flex;gap:1px;align-items:flex-end;order:2;
+  display:flex;gap:1px;align-items:flex-end;order:2;flex-shrink:0;
   margin-left:14px;padding-left:14px;
   border-left:1px solid rgba(255,255,255,0.15);
 }
@@ -1424,6 +1424,8 @@ h1, h2, h3 { font-weight: 700; }
   cursor: pointer;
   font-family: inherit;
   transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
 }
 .est-status-btn.on {
   background: transparent !important;
@@ -1443,12 +1445,18 @@ h1, h2, h3 { font-weight: 700; }
   font-weight: 600 !important;
   border-radius: 4px !important;
   padding: 5px 12px !important;
+  min-height: 32px !important;
+  display: inline-flex !important;
+  align-items: center !important;
   cursor: pointer;
   font-family: inherit;
   transition: all 0.15s;
   border: 1px solid #EEE6DC !important;
   background: transparent !important;
   color: #756E62 !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
 }
 .cust-type-btn.on {
   background: #F06E2D !important;
