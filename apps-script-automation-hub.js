@@ -188,6 +188,64 @@ function cleanupJunkCustomerRows() {
   Logger.log('삭제된 잔재 행 수: ' + deletedCount);
 }
 
+// 2026-08-27(선혜님 발견 — "발주서 이런거는 정리된게 없어, 제대로 안
+// 들어오는거 같은데"): 구글드라이브 "DAH_문서보관" 폴더 전수조사 결과
+// 발견한 문제 2가지를 정리하는 함수.
+//   1) "실측시공_실측_[설치기사이름].html" 같이 설치기사 이름이 파일명에
+//      들어간 예전 파일들 - saveDocumentToDrive() 호출부(est-documents.js)를
+//      고쳐서 앞으로는 이런 파일명이 안 생기게 했지만, 이미 만들어진 예전
+//      파일들은 새 이름("실측시공_실측.html")의 최신 파일과 별개로 계속
+//      남아있어 정리가 필요함.
+//      ⚠️ 처음엔 "설치기사 이름이 파일명에 있으면 무조건 지운다"로
+//      만들었는데, 그러면 아직 "깨끗한" 버전이 한 번도 안 만들어진
+//      고객(예: 장선혜 폴더)은 가지고 있던 유일한 파일이 통째로 없어져
+//      데이터가 사라지는 사고가 날 뻔했음 - "같은 종류(실측/시공) 중
+//      가장 최근에 만들어진 파일 1개만 남기고, 그보다 오래된 것만 지운다"
+//      로 바꿔서 안전하게 함(유일한 파일은 항상 "가장 최근"이라 안 지워짐).
+//   2) "회귀테스트중복방지고객" 테스트 잔재 폴더 - 고객명단 시트와 똑같이
+//      여기 문서보관함에도 남아있었음 - 폴더째 휴지통으로 이동.
+function cleanupJunkDriveDocuments() {
+  var rootFolder = DriveApp.getFolderById(ROOT_FOLDER_ID);
+  var monthFolders = rootFolder.getFolders();
+  var deletedFiles = 0, deletedFolders = 0;
+
+  while (monthFolders.hasNext()) {
+    var monthFolder = monthFolders.next();
+    // "2026-08" 같은 연월 폴더가 아니면(예: 옛 구조의 "원단"/"견적서" 카테고리
+    // 폴더) 건드리지 않고 건너뜀 - 안전하게 새 구조([연월]/[고객명]) 안에서만 청소
+    if (!/^\d{4}-\d{2}$/.test(monthFolder.getName())) continue;
+
+    var custFolders = monthFolder.getFolders();
+    while (custFolders.hasNext()) {
+      var custFolder = custFolders.next();
+      if (custFolder.getName() === '회귀테스트중복방지고객') {
+        custFolder.setTrashed(true);
+        deletedFolders++;
+        continue;
+      }
+      // "실측시공_실측" 종류와 "실측시공_시공" 종류를 각각 따로 묶어서,
+      // 그룹 안에서 가장 최근 파일 1개만 남기고 나머지는 지움.
+      var groups = { '실측': [], '시공': [] };
+      var files = custFolder.getFiles();
+      while (files.hasNext()) {
+        var f = files.next();
+        var m = f.getName().match(/^실측시공_(실측|시공)(_.+)?\.html$/);
+        if (m) groups[m[1]].push(f);
+      }
+      ['실측', '시공'].forEach(function(kind) {
+        var group = groups[kind];
+        if (group.length <= 1) return; // 지울 게 없음(유일한 파일은 절대 안 건드림)
+        group.sort(function(a, b) { return b.getLastUpdated().getTime() - a.getLastUpdated().getTime(); });
+        for (var i = 1; i < group.length; i++) { // 0번(최신)은 남기고 나머지만 지움
+          group[i].setTrashed(true);
+          deletedFiles++;
+        }
+      });
+    }
+  }
+  Logger.log('삭제된 폴더: ' + deletedFolders + ', 삭제된 파일: ' + deletedFiles);
+}
+
 function testSaveDocument() {
   var result = saveDocumentFile({
     customerName: '테스트고객', category: '원단', vendor: '디테라',

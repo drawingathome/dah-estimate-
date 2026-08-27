@@ -994,7 +994,18 @@ function printRequest(kind) {
   printBtn.onclick = function() {
     try {
       var finalHtml = inner ? inner.innerHTML : html;
-      saveDocumentToDrive('실측시공', cNameForDrive, label + (instNameForDrive ? '_' + instNameForDrive : ''), finalHtml);
+      // 2026-08-27(선혜님 발견 — "발주서 이런거는 정리된게 없어, 제대로
+      // 안들어오는거 같은데"로 구글드라이브 문서보관함을 전수조사하다 발견):
+      // 예전엔 파일명 구분자에 label(실측/시공)뿐 아니라 설치기사 이름까지
+      // 같이 들어가고 있었음(instNameForDrive). 구글Apps Script의 저장
+      // 로직은 "같은 [연월]/[고객명]/[문서종류] 파일명이면 덮어쓰기"인데,
+      // 설치기사 이름이 비어있다가 나중에 채워지면(오늘 만든 "거래처 등록
+      // 연동 자동입력" 기능 덕에 앞으로 더 자주 채워질 것) 파일명 자체가
+      // 바뀌어서 예전 파일이 안 지워지고 계속 쌓임(실제로 유경진 폴더에
+      // "실측시공_실측.html"과 "실측시공_실측_유지철팀장님.html" 두 개가
+      // 남아있는 것 확인함). 설치기사 이름은 문서 "내용"에 이미 표시되고
+      // 있으니, 파일명 구분자에서는 빼고 label(실측/시공)만 남김.
+      saveDocumentToDrive('실측시공', cNameForDrive, label, finalHtml);
     } catch(e) { console.warn('의뢰서 드라이브 저장 실패:', e); }
     openPdfModal();
   };
