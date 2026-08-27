@@ -525,10 +525,10 @@ td.amt{
     content:attr(data-label);display:block;font-size:10px;color:#B0A99F;margin-bottom:2px;
   }
   /* 공간/제품명 - 카드 맨 위, 전체폭 */
-  #curtain-body td[data-label="공간"],#blind-body td[data-label="공간"]{order:1;width:100%;padding-bottom:0!important}
+  #curtain-body td[data-label="공간"],#blind-body td[data-label="공간"]{order:1;width:26%;padding-bottom:0!important}
   #curtain-body td[data-label="공간"]:before,#blind-body td[data-label="공간"]:before{display:none}
-  #curtain-body td[data-label="공간"] .space-inp,#blind-body td[data-label="공간"] .space-inp{font-size:11px;color:#8E8078}
-  #curtain-body td[data-label="제품명"],#blind-body td[data-label="제품명"]{order:2;width:100%}
+  #curtain-body td[data-label="공간"] .space-inp,#blind-body td[data-label="공간"] .space-inp{font-size:11px;color:#8E8078;font-weight:700}
+  #curtain-body td[data-label="제품명"],#blind-body td[data-label="제품명"]{order:2;width:74%}
   #curtain-body td[data-label="제품명"]:before,#blind-body td[data-label="제품명"]:before{display:none}
 
   /* 2026-08-26 재작업(선혜님 지적 - "접으면 하나씩 펴봐야 해서 비효율적,
@@ -681,8 +681,8 @@ td.amt{
   display:flex;flex-direction:column;gap:2px
 }
 .summary-sub-label{font-size:11px;font-weight:500;color:rgba(255,255,255,0.55);letter-spacing:0.5px}
-.summary-sub-amount{font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.5px}
-.summary-sub-amount.orange{color:#fff;font-size:22px;font-weight:800}
+.summary-sub-amount{font-size:17px;font-weight:700;color:#fff;letter-spacing:-0.3px}
+.summary-sub-amount.orange{color:#fff;font-size:17px;font-weight:700}
 .action-bar{background:#fff;border-top:2px solid #EEE6DC;padding:16px 16px 40px;display:flex;flex-direction:column;gap:8px}
 .action-bar button{font-size:11px;font-family:inherit;font-weight:700;border-radius:4px;cursor:pointer;transition:all 0.15s}
 .action-main{display:flex;flex-direction:column;gap:10px;max-width:520px;margin:0 auto;width:100%}
