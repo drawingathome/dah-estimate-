@@ -60,8 +60,24 @@ function renderEmptyState() {
   var hasB = bBody && bBody.children.length > 0;
   var emWrap = document.getElementById('empty-hint');
   if(emWrap) emWrap.style.display = (!hasC && !hasB) ? 'flex' : 'none';
-  if(cTable) cTable.style.display = hasC ? 'table' : 'none';
-  if(bTable) bTable.style.display = hasB ? 'table' : 'none';
+  // 2026-08-26(선혜님과 함께 발견 — "모바일 카드 폭을 넓히면 높이를 더
+  // 줄일 수 있지 않겠냐"는 질문에서 시작된 디버깅): 여기서 보일 때
+  // display:'table'을 인라인으로 강제 지정하고 있었는데, 인라인 스타일이
+  // CSS(모바일에서 표→카드로 바꾸는 미디어쿼리)보다 우선순위가 높아서
+  // 카드형 전환 자체가 무력화되고 있었음(카드 폭이 내용물 크기만큼만
+  // 좁게 쪼그라들어 있던 원인). "숨길 때"만 인라인으로 지정하고, "보일
+  // 때"는 인라인 스타일을 아예 제거해서 CSS(PC=표, 모바일=카드)가 알아서
+  // 결정하게 함.
+  // 2026-08-26(선혜님과 함께 발견 — "모바일 카드 폭을 넓히면 높이를 더
+  // 줄일 수 있지 않겠냐"는 질문에서 시작된 디버깅): 여기서 보일 때
+  // display:'table'을 인라인으로 강제 지정하고 있었는데, 인라인 스타일이
+  // CSS(모바일에서 표→카드로 바꾸는 미디어쿼리)보다 우선순위가 높아서
+  // 카드형 전환 자체가 무력화되고 있었음(카드 폭이 내용물 크기만큼만
+  // 좁게 쪼그라들어 있던 원인). display 값을 직접 지정하지 않고 클래스
+  // 토글로 바꿔서, "보일 때"는 PC/모바일 각자의 CSS(표 또는 카드)가
+  // 알아서 결정하게 하고, "숨길 때"만 tbl-hidden 클래스로 확실히 숨김.
+  if(cTable) cTable.classList.toggle('tbl-hidden', !hasC);
+  if(bTable) bTable.classList.toggle('tbl-hidden', !hasB);
 }
 
 // 2026-08-19: 요약텍스트 공유(shareEstimate) 함수는 선혜님 확인 결과 불필요해서
