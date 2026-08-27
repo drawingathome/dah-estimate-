@@ -201,7 +201,7 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
   overflow:visible;
   display:grid;
   grid-template-columns:1fr auto;
-  grid-template-rows:auto 1px auto auto;
+  grid-template-rows:auto 1px auto;
   gap:0;
   border-radius:0 10px 0 0
 }
@@ -256,7 +256,7 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
 }
  
 .doc-header-tabbar-wrap{
-  grid-column:1/-1;grid-row:4;
+  grid-column:1/-1;grid-row:3;
   position:relative;
 }
 /* 2026-08-05: 가로스크롤해야 보이는 탭(AS·수선 등)이 있다는 걸 알려주는
