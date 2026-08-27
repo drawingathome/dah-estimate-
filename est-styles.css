@@ -660,8 +660,8 @@ td.amt{
 }
 .summary-total-block{
   background:#282828;
-  padding:20px 20px 18px;
-  margin-top:16px
+  padding:16px 20px 15px;
+  margin-top:12px
 }
 .summary-total-label{
   font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);
@@ -674,7 +674,7 @@ td.amt{
 }
 .summary-total-sub{
   display:flex;justify-content:space-between;align-items:center;
-  margin-top:16px;padding-top:14px;
+  margin-top:12px;padding-top:11px;
   border-top:1px solid rgba(255,255,255,0.1)
 }
 .summary-deposit-row, .summary-balance-row{
@@ -683,7 +683,7 @@ td.amt{
 .summary-sub-label{font-size:11px;font-weight:500;color:rgba(255,255,255,0.55);letter-spacing:0.5px}
 .summary-sub-amount{font-size:17px;font-weight:700;color:#fff;letter-spacing:-0.3px}
 .summary-sub-amount.orange{color:#fff;font-size:17px;font-weight:700}
-.action-bar{background:#fff;border-top:2px solid #EEE6DC;padding:16px 16px 40px;display:flex;flex-direction:column;gap:8px}
+.action-bar{background:#fff;border-top:2px solid #EEE6DC;padding:14px 16px 20px;display:flex;flex-direction:column;gap:8px}
 .action-bar button{font-size:11px;font-family:inherit;font-weight:700;border-radius:4px;cursor:pointer;transition:all 0.15s}
 .action-main{display:flex;flex-direction:column;gap:10px;max-width:520px;margin:0 auto;width:100%}
 .btn-new{background:transparent;color:#756E62;border:1.5px solid #EEE6DC}
