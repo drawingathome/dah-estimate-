@@ -127,16 +127,20 @@ async function run() {
     async function testOnDevice(width, label) {
       const master = await checkAsMaster(browser, port, file, masterPw, width);
       const staff = await checkAsStaff(browser, port, file, width);
+      // 2026-08-27(선혜님 지시 - "실장도 삭제 권한 줘야 할 것 같아"): 삭제
+      // (보관처리)는 이제 스태프도 노출돼야 정상 - 항목별로 스태프에게
+      // 기대하는 값이 다르므로 desc/key 옆에 "스태프도 노출돼야 하는지"를
+      // 명시. 완전삭제/복구는 여전히 마스터 전용이라 여기 체크 대상이 아님.
       const checks = [
-        ['고객상세 삭제 버튼', 'deleteBtnVisible'],
-        ['고객상세 수정 버튼', 'editBtnVisible'],
-        [width < 500 ? '모바일 하단네비 매출탭' : 'PC 상단 매출탭', 'salesTabDisplayed']
+        ['고객상세 삭제 버튼', 'deleteBtnVisible', true],
+        ['고객상세 수정 버튼', 'editBtnVisible', false],
+        [width < 500 ? '모바일 하단네비 매출탭' : 'PC 상단 매출탭', 'salesTabDisplayed', false]
       ];
       console.log(`(참고,${label}) 로그인 후 body class — 마스터: "${master.bodyRole}" / 스태프: "${staff.bodyRole}"\n`);
-      checks.forEach(([desc, key]) => {
+      checks.forEach(([desc, key, staffShouldSeeToo]) => {
         const m = master[key];
         const s = staff[key];
-        const ok = m === true && s === false;
+        const ok = m === true && s === staffShouldSeeToo;
         if (!ok) anyFailed = true;
         console.log(`${ok ? '✅' : '❌'} [${label}] ${desc}: 마스터=${m ? '노출' : '숨김'} / 스태프=${s ? '노출' : '숨김'}`);
       });

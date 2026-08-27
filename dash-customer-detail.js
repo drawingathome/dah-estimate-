@@ -704,13 +704,20 @@ function renderDetailInfoSection(c, body) {
 
 function renderDetailBottomButtons(c, isMaster, body) {
   var bottomBtns = [btn('flex:2;padding:11px;background:var(--dark);color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:12px;letter-spacing:0.2px', '닫기', closeDetail)];
-  if (isMaster) {
-    if (isSoftDeleted(c)) {
+  // 2026-08-27(선혜님 지시 - "실장도 삭제 권한 줘야 할 것 같아"): 예전엔
+  // 보관처리(소프트삭제)까지 완전삭제와 같이 마스터 전용으로 묶여있어서,
+  // 실장 계정으론 삭제 버튼 자체가 아예 안 보였음. 되돌릴 수 없는 "완전
+  // 삭제"/"복구"는 여전히 마스터 전용으로 남기고, 되돌릴 수 있는 "삭제"
+  // (보관처리)만 실장도 쓸 수 있게 분리함. (DB쪽 RLS는 이미 스태프가
+  // 본인 담당 고객을 UPDATE할 수 있게 되어 있어서, 이 변경은 화면에
+  // 버튼을 보여주기만 하면 됨 - 별도 권한 정책 추가 불필요.)
+  if (isSoftDeleted(c)) {
+    if (isMaster) {
       bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid var(--dark);font-size:11px;font-family:inherit;cursor:pointer;color:var(--dark);font-weight:700;border-radius:12px', '↩ 복구', function(){ restoreCustomer(c.clientName, c.id); }));
       bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid #C0392B;font-size:11px;font-family:inherit;cursor:pointer;color:#C0392B;font-weight:700;border-radius:12px', '완전 삭제', function(){ permanentlyDeleteCustomer(c); }));
-    } else {
-      bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid var(--border);font-size:11px;font-family:inherit;cursor:pointer;color:var(--dark);border-radius:12px', '삭제', deleteCustomer));
     }
+  } else {
+    bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid var(--border);font-size:11px;font-family:inherit;cursor:pointer;color:var(--dark);border-radius:12px', '삭제', deleteCustomer));
   }
   body.appendChild(div('display:flex;gap:var(--sp-2)', bottomBtns));
 
