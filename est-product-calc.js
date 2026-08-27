@@ -95,7 +95,19 @@ function calcCurtainRow(el) {
   // 계산에 계속 쓰이므로 로직은 그대로 두고 화면 표시만 없앰.
   var pleat = tr.querySelector('.pleat-type')?.value||'민자형';
   var ratio = pleat==='나비주름형' ? 2.0 : 1.5;
-  var sugP = Math.max(0, Math.ceil((mw*ratio)/130));
+  // 2026-08-27(선혜님 지시 - "무조건 반올림하니 폭수가 너무 많다"):
+  // 예전엔 Math.ceil()로 소수점이 조금만 넘어도(예: 4.015배) 무조건 한
+  // 폭 전체를 더 잡았음. 이제 주름형태별로 "이 정도 여유분까지는 그냥
+  // 내려도 된다"는 허용 기준을 둠 — 민자형은 소수점 0.2 이하, 나비주름형은
+  // 0.1 이하면 올리지 않고 내림. 그 기준을 넘는 소수점은 여전히 올림
+  // (원단 부족 방지). 예: 나비주름형 300cm → 4.615배 → 소수점 0.615는
+  // 허용범위(0.1) 밖이라 여전히 5폭. 나비주름형 261cm → 4.015배 → 소수점
+  // 0.015는 허용범위(0.1) 이내라 4폭으로 내려감(예전엔 5폭이었음).
+  var rawP = (mw*ratio)/130;
+  var floorP = Math.floor(rawP);
+  var decimalP = rawP - floorP;
+  var tolerance = pleat==='나비주름형' ? 0.1 : 0.2;
+  var sugP = Math.max(0, decimalP <= tolerance ? floorP : Math.ceil(rawP));
   var pnumEl = tr.querySelector('.pnum');
   if(pnumEl && !pnumEl.dataset.manual) pnumEl.value = sugP||1;
   var pnum = Math.max(0, parseFloat(tr.querySelector('.pnum')?.value)||1);
