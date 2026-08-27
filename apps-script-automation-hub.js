@@ -54,6 +54,15 @@ function saveDocumentFile(data) {
   var customerName = (data.customerName || '미지정고객').replace(/[\\\/:*?"<>|]/g, '_');
   var docType = (data.category || '기타').replace(/[\\\/:*?"<>|]/g, '_');
   var vendorSuffix = data.vendor ? '_' + data.vendor.replace(/[\\\/:*?"<>|]/g, '_') : '';
+  // 2026-08-27(선혜님 요청 - "실장/마스터를 나눠서 보관, 접근제한이 아니라
+  // 그냥 누가 언제 만든 문서인지 보기 편하게"): 파일명 끝에 담당자 이름을
+  // 붙여서, 폴더를 열었을 때 파일명만 봐도 누가 작업한 문서인지 바로
+  // 보이게 함. 폴더를 따로 나누지 않은 이유는, 폴더를 나누면 "같은 고객의
+  // 문서가 여러 폴더에 흩어지는" 게 오히려 더 찾기 불편해질 수 있어서
+  // (예: 유경진 고객 실측의뢰서는 마스터가, 시공의뢰서는 실장이 만들면
+  // 폴더가 나뉘어 한눈에 안 보임) - 지금처럼 고객별 폴더 하나로 모으고,
+  // 파일명으로만 담당자를 구분하는 게 더 실용적이라고 판단함.
+  var staffSuffix = data.staffName ? '_' + data.staffName.replace(/[\\\/:*?"<>|]/g, '_') : '';
   var htmlContent = data.htmlContent || '<p>내용 없음</p>';
 
   // 공용드라이브 안의 폴더는 이름검색보다 ID로 직접 여는 게 확실함
@@ -66,16 +75,26 @@ function saveDocumentFile(data) {
   var custFolders = monthFolder.getFoldersByName(customerName);
   var custFolder = custFolders.hasNext() ? custFolders.next() : monthFolder.createFolder(customerName);
 
-  var fileName = docType + vendorSuffix + '.html';
+  var fileName = docType + vendorSuffix + staffSuffix + '.html';
+  // 2026-08-27 추가: 중복방지(덮어쓰기) 검색은 담당자 이름 없는 "기본
+  // 이름"으로 함 - 담당자가 바뀌어도(예: 마스터→실장) 새 파일이 안 쌓이고
+  // 예전 담당자 파일이 정확히 지워지도록. 실제로 만드는 파일명(fileName)
+  // 에만 최신 담당자 이름이 붙음.
+  var searchFileNamePrefix = docType + vendorSuffix;
 
   var fullHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
     + '<title>' + docType + ' - ' + customerName + '</title></head><body>'
     + htmlContent + '</body></html>';
 
-  // 같은 [연월]/[고객명]/[문서종류] 파일이 이미 있으면 덮어쓰기(최신본만 유지)
-  var existingFiles = custFolder.getFilesByName(fileName);
-  while (existingFiles.hasNext()) {
-    existingFiles.next().setTrashed(true);
+  // 같은 [연월]/[고객명]/[문서종류] 파일이 이미 있으면 덮어쓰기(최신본만
+  // 유지) - 담당자 이름은 접두어 매칭에서 제외해서, 담당자가 바뀌어도
+  // 예전 담당자 이름이 붙은 파일이 정확히 지워지고 새 파일만 남음.
+  var allFiles = custFolder.getFiles();
+  while (allFiles.hasNext()) {
+    var existing = allFiles.next();
+    if (existing.getName().indexOf(searchFileNamePrefix) === 0) {
+      existing.setTrashed(true);
+    }
   }
 
   var file = custFolder.createFile(fileName, fullHtml, MimeType.HTML);

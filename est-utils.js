@@ -279,14 +279,14 @@ function vendorCategory(vendor) {
 }
 
 // 구글드라이브에 문서 저장 (실패해도 조용히 무시 — 화면 흐름을 절대 막지 않음)
-function saveDocumentToDrive(category, customerName, vendor, htmlContent) {
+function saveDocumentToDrive(category, customerName, vendor, htmlContent, staffName) {
   if (!DRIVE_WEBHOOK_URL) return;
   try {
     var estimateNo = document.getElementById('c-no')?.value || '';
     fetch(DRIVE_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' }, // Apps Script는 text/plain이 CORS 프리플라이트 없이 가장 안정적
-      body: JSON.stringify({ action: 'saveDocument', category: category, customerName: customerName, vendor: vendor || '', estimateNo: estimateNo, htmlContent: htmlContent })
+      body: JSON.stringify({ action: 'saveDocument', category: category, customerName: customerName, vendor: vendor || '', estimateNo: estimateNo, htmlContent: htmlContent, staffName: staffName || '' })
     }).catch(function(e) { console.warn('구글드라이브 저장 실패:', e); });
   } catch (e) { console.warn('구글드라이브 저장 실패:', e); }
 }

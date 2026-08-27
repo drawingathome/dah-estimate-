@@ -440,7 +440,8 @@ function printForCustomer() {
   var isFinalForDrive = (document.getElementById('status-final')?.classList.contains('on'));
   if (isFinalForDrive) {
     var cNameForDrive2 = document.getElementById('c-name')?.value || '미지정고객';
-    saveDocumentToDrive('확정견적서', cNameForDrive2, '', html);
+    var cStaffForDrive2 = document.getElementById('c-staff')?.value || '';
+    saveDocumentToDrive('확정견적서', cNameForDrive2, '', html, cStaffForDrive2);
   }
 
   var existing = document.getElementById('pv-overlay');
@@ -681,7 +682,7 @@ function printForVendor() {
     var todayStr = (function(){ var d=new Date(); return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일'; })();
     Object.keys(collected.groups).forEach(function(vendor){
       var oneDoc = buildVendorDocForOne(vendor, collected.groups[vendor], collected.cName, collected.cStaff, extraNote, todayStr);
-      saveDocumentToDrive(vendorCategory(vendor), collected.cName || '미지정고객', vendor, oneDoc);
+      saveDocumentToDrive(vendorCategory(vendor), collected.cName || '미지정고객', vendor, oneDoc, collected.cStaff);
     });
   }
 
@@ -1005,7 +1006,8 @@ function printRequest(kind) {
       // "실측시공_실측.html"과 "실측시공_실측_유지철팀장님.html" 두 개가
       // 남아있는 것 확인함). 설치기사 이름은 문서 "내용"에 이미 표시되고
       // 있으니, 파일명 구분자에서는 빼고 label(실측/시공)만 남김.
-      saveDocumentToDrive('실측시공', cNameForDrive, label, finalHtml);
+      var cStaffForDrive3 = document.getElementById('c-staff')?.value || '';
+      saveDocumentToDrive('실측시공', cNameForDrive, label, finalHtml, cStaffForDrive3);
     } catch(e) { console.warn('의뢰서 드라이브 저장 실패:', e); }
     openPdfModal();
   };
