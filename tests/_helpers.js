@@ -127,8 +127,14 @@ function startServer(dir, port) {
   });
 }
 
-async function loginAs(page, role, masterPw) {
+async function loginAs(page, role, masterPw, staffName) {
   // role: 'master' | 'staff'
+  // staffName: staff일 때만 사용, 생략하면 기존처럼 '_테스트실장' 사용
+  //   (2026-08-27 추가 — 선혜님 질문 "오지은실장으로 들어갔을때 생기는
+  //   오류도 다 체크가 된거니??"에 답하려고, 실제 스태프 이름으로도
+  //   테스트할 수 있게 파라미터화함. 기존 호출부들은 인자를 안 넘기니
+  //   전부 그대로 '_테스트실장'으로 동작 - 하위호환 깨짐 없음.)
+  var staffNameToUse = staffName || '_테스트실장';
   // Supabase Auth 도입 이후: 로그인 전에 테스트용 이메일을 등록하고,
   // blockRealNetwork가 가로채는 고정 비밀번호(TEST_OK_PW)로 로그인한다.
   if (role === 'master') {
@@ -143,22 +149,22 @@ async function loginAs(page, role, masterPw) {
     await new Promise(r => setTimeout(r, 1200));
   } else {
     // 스태프 목록에 테스트 계정을 하나 등록하고, 그 이름으로 로그인 시도
-    await page.evaluate(() => {
+    await page.evaluate((name) => {
       if (typeof getStaffList !== 'function') return;
       var list = getStaffList();
-      if (list.indexOf('_테스트실장') < 0) {
-        list.push('_테스트실장');
+      if (list.indexOf(name) < 0) {
+        list.push(name);
         localStorage.setItem('dah_staff_list', JSON.stringify(list));
       }
-      if (typeof setStaffEmail === 'function') setStaffEmail('_테스트실장', 'test-staff@dah-test.local');
+      if (typeof setStaffEmail === 'function') setStaffEmail(name, 'test-staff@dah-test.local');
       if (typeof renderStaffLoginList === 'function') renderStaffLoginList();
-    });
+    }, staffNameToUse);
     await new Promise(r => setTimeout(r, 300));
-    await page.evaluate(() => {
+    await page.evaluate((name) => {
       const btns = Array.from(document.querySelectorAll('#staff-login-list button, [onclick]'));
-      const staffBtn = btns.find(b => (b.textContent || '').includes('_테스트실장'));
+      const staffBtn = btns.find(b => (b.textContent || '').includes(name));
       if (staffBtn) staffBtn.click();
-    });
+    }, staffNameToUse);
     await new Promise(r => setTimeout(r, 300));
     await page.evaluate((pw) => {
       const el = document.getElementById('staff-pw-input');

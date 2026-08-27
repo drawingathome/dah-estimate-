@@ -64,11 +64,27 @@ async function auditPage(dir, file, role, vw, label, port) {
       await new Promise(r => setTimeout(r, 700));
       await loginAs(page, role);
       await new Promise(r => setTimeout(r, 500));
-      await page.evaluate(() => { if (typeof switchTab === 'function') switchTab('pipe'); });
+
+      // 2026-08-27 추가 — 로그인이 "시도됐다"와 "실제로 그 권한으로 됐다"는
+      // 다른 문제. currentUser.role이 기대한 값과 실제로 같은지 확인.
+      const actualRole = await page.evaluate(() => (typeof currentUser !== 'undefined' && currentUser) ? currentUser.role : null);
+      if (actualRole !== role) errors.push('로그인 실패 의심: 기대한 role=' + role + ', 실제=' + actualRole);
+
+      await page.evaluate(() => { if (typeof goTab === 'function') goTab('pipe'); });
       await new Promise(r => setTimeout(r, 500));
-      await page.evaluate(() => { if (typeof switchTab === 'function') switchTab('sales'); });
+
+      // 2026-08-27 추가 — 크래시가 안 나는 것과 데이터가 실제로 화면에
+      // 보이는 것은 다른 문제(오늘 이 차이 때문에 하루 종일 헷갈렸음).
+      // 진행현황(pipe) 탭에 표시된 총 고객 수를 화면 텍스트에서 직접 세서,
+      // 0명인데 실제로는 고객이 있어야 하는 상황(빈 화면 버그)을 잡는다.
+      const pipeText = await page.evaluate(() => document.getElementById('pipe') ? document.getElementById('pipe').textContent : '');
+      if (pipeText.trim().length < 20) errors.push('진행현황(pipe) 탭이 사실상 비어있음(길이 ' + pipeText.trim().length + '자) - 렌더링 실패 의심');
+
+      await page.evaluate(() => { if (typeof goTab === 'function') goTab('chart'); });
       await new Promise(r => setTimeout(r, 500));
-      await page.evaluate(() => { if (typeof switchTab === 'function') switchTab('home'); });
+      await page.evaluate(() => { if (typeof goTab === 'function') goTab('search'); });
+      await new Promise(r => setTimeout(r, 500));
+      await page.evaluate(() => { if (typeof goTab === 'function') goTab('home'); });
       await new Promise(r => setTimeout(r, 300));
     }
   } catch (e) {
