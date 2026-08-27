@@ -55,7 +55,9 @@ function dahDailyBackup() {
   // 이메일, 할인쿠폰, 지역출장비 설정 — 이거 하나 날아가면 로그인부터 막힘),
   // as_records(A/S 기록), staff_profiles(직원 계정)가 통째로 빠져있었음.
   // analytics_events는 단순 사용로그라 우선순위 낮지만 비용 거의 안 드니 같이 포함.
-  var tables = ['customers', 'estimates', 'surveys', 'app_settings', 'as_records', 'staff_profiles', 'analytics_events'];
+  // 2026-08-27(선혜님 요청 - "에러 모니터링 도입하자"): client_error_logs도
+  // 백업 대상에 포함 + 아래에서 새로 쌓인 에러가 있으면 이메일로 알림.
+  var tables = ['customers', 'estimates', 'surveys', 'app_settings', 'as_records', 'staff_profiles', 'analytics_events', 'client_error_logs'];
   var backup = { exportedAt: new Date().toISOString(), version: '1.0' };
   var errors = [];
 
@@ -148,6 +150,34 @@ function dahDailyBackup() {
         '다음 테이블 백업에 실패했습니다:\n\n' + errors.join('\n') + '\n\n나머지는 정상 백업되었습니다.'
       );
     } catch (e) { /* 이메일 발송 실패는 무시 */ }
+  }
+
+  // 2026-08-27(선혜님 요청 - "에러 모니터링 도입하자"): 백업 때 이미 가져온
+  // client_error_logs 안에서, 최근 24시간 안에 새로 쌓인 에러가 있으면
+  // 이메일로 알림. (client_error_logs_insert RLS 정책도 오늘 함께 손봄 -
+  // 예전엔 로그인 세션 없을 때 조용히 실패하던 구멍이 있었음, 지금은
+  // 로그인 여부와 무관하게 항상 기록되도록 고쳐놓음)
+  if (Array.isArray(backup.client_error_logs)) {
+    var oneDayAgo = new Date(Date.now() - 24*60*60*1000);
+    var recentErrors = backup.client_error_logs.filter(function(e) {
+      return new Date(e.created_at) > oneDayAgo;
+    });
+    if (recentErrors.length > 0) {
+      Logger.log('⚠️ 최근 24시간 신규 에러 ' + recentErrors.length + '건 발견');
+      try {
+        var errorSummary = recentErrors.slice(0, 20).map(function(e) {
+          return '[' + e.app + '/' + (e.user_role||'?') + '] ' + e.message + ' (' + e.created_at + ')';
+        }).join('\n');
+        MailApp.sendEmail(
+          Session.getActiveUser().getEmail(),
+          'DAH 신규 에러 ' + recentErrors.length + '건 발견 (' + today + ')',
+          '최근 24시간 안에 화면에서 발생한 에러입니다:\n\n' + errorSummary +
+          (recentErrors.length > 20 ? '\n\n... 외 ' + (recentErrors.length-20) + '건 더' : '')
+        );
+      } catch (e) { Logger.log('에러알림 이메일 발송 실패: ' + e.message); }
+    } else {
+      Logger.log('✅ 최근 24시간 신규 에러 없음');
+    }
   }
 }
 
