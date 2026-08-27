@@ -192,6 +192,20 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
 .container{max-width:100%;padding:0 0 32px}
 @media (min-width: 1024px) {
   .container{max-width:900px;margin:0 auto}
+  /* 2026-08-27(선혜님 지적 - "PC도 같이 평가해야지", 실제 확인 결과 "금액"
+     칸이 표 영역 부족으로 처음부터 화면 밖에 있었음): 전체 컨테이너는
+     900px로 좁게 유지하되(다른 섹션들은 읽기 편한 폭이 나음), 커튼·블라인드
+     품목 표 섹션만 예외적으로 더 넓게 써서 표 내용(약 1100px)이 스크롤 없이
+     한 번에 들어오게 함. 1200px 폭으로 확장(900px 기준 좌우 150px씩 더 씀),
+     너무 넓어지는 아주 큰 화면(1300px 미만 뷰포트)에서는 안전하게 원래
+     900px로 되돌아가도록 min-width 조건을 별도로 둠. */
+  .section.wide-section{
+    max-width:1200px;
+    margin-left:-150px;margin-right:-150px;
+  }
+}
+@media (min-width:1024px) and (max-width:1299px){
+  .section.wide-section{max-width:900px;margin-left:auto;margin-right:auto}
 }
 
  
