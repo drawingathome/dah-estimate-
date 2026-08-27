@@ -8,6 +8,13 @@
 //   node tests/run-all.js dah-estimate.html
 //
 // 참고: 권한별 검사(role-permission-check)는 dah-dashboard.html에만 해당됩니다.
+//
+// 2026-08-27 추가: 헤더/전체폭 레이아웃처럼 두 앱(견적서+대시보드) 모두에
+// 영향을 주는 큰 구조 변경을 했다면, 이 스크립트와 별개로
+//   node tests/full-role-device-audit.js dah-estimate.html dah-dashboard.html
+// 를 한 번 더 돌린다(마스터/실장 x PC/모바일 x 두 앱 = 8조합 스모크 테스트).
+// 두 파일을 동시에 받아야 해서 이 run-all.js의 단일 target 구조에는
+// 안 넣고 별도 스크립트로 둠 - CHANGE_IMPACT_CHECKLIST.md 15번 참고.
 
 const { execSync } = require('child_process');
 const path = require('path');

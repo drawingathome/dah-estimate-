@@ -236,6 +236,27 @@ function dahScanForDuplicates(backup) {
     });
   }
 
+  // 3) 고아 데이터 의심 (2026-08-27 추가 — 선혜님과 함께 실제로 발견한
+  // 최시내 고객님 사례가 계기: 선금결제 단계까지 갔는데 정작 확정된
+  // 견적서가 하나도 없던 상태. "결제 단계인데 뒷받침하는 견적이 없다"는
+  // 건을 자동으로 걸러냄.)
+  if (Array.isArray(backup.customers) && Array.isArray(backup.estimates)) {
+    var PAID_STAGES = ['선금결제', '잔금결제', '시공준비중', '시공완료'];
+    var estByClientId = {};
+    backup.estimates.forEach(function(e) {
+      if (e.is_archived || !e.client_id) return;
+      (estByClientId[e.client_id] = estByClientId[e.client_id] || []).push(e);
+    });
+    backup.customers.forEach(function(c) {
+      if (c.is_archived) return;
+      if (PAID_STAGES.indexOf(c.stage) === -1) return;
+      var ests = estByClientId[c.id] || [];
+      if (ests.length === 0) {
+        issues.push('[고아데이터의심] ' + c.client_name + '(id:' + c.id + ') — "' + c.stage + '" 단계인데 연결된 견적서가 없음');
+      }
+    });
+  }
+
   return issues;
 }
 
