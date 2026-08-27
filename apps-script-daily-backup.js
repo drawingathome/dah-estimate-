@@ -61,12 +61,23 @@ function dahDailyBackup() {
 
   tables.forEach(function(table) {
     try {
-      var url = SUPABASE_URL + '/rest/v1/' + table + '?select=*';
+      // 2026-08-27(선혜님과 함께 디버깅 — service_role 키가 정확한데도
+      // 계속 0건이 나오던 문제): Supabase 서버 로그로 확인해보니 요청 자체는
+      // service_role로 정상 인식되고 200 응답까지 왔는데도 결과가 계속
+      // 빈 배열이었음(원인 불명 - PostgREST 단의 이례적 동작으로 추정).
+      // 원인을 더 캐는 대신, DB에 SECURITY DEFINER 함수(dah_backup_export)를
+      // 만들어서 그 함수를 통해 데이터를 가져오는 방식으로 우회함 - 이
+      // 함수는 함수 소유자 권한으로 실행되어 이 이례적 문제와 무관하게
+      // 항상 정상 작동함.
+      var url = SUPABASE_URL + '/rest/v1/rpc/dah_backup_export';
       var res = UrlFetchApp.fetch(url, {
-        method: 'get',
+        method: 'post',
+        contentType: 'application/json',
         headers: {
-          'apikey': SUPABASE_SERVICE_ROLE_KEY
+          'apikey': SUPABASE_SERVICE_ROLE_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY
         },
+        payload: JSON.stringify({ table_name: table }),
         muteHttpExceptions: true
       });
       if (res.getResponseCode() === 200) {
@@ -207,8 +218,11 @@ function dahDuplicateScanOnly() {
   var backup = {};
   var tables = ['customers', 'estimates'];
   tables.forEach(function(table) {
-    var res = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + table + '?select=*', {
-      method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true
+    var res = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/rpc/dah_backup_export', {
+      method: 'post', contentType: 'application/json',
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
+      payload: JSON.stringify({ table_name: table }),
+      muteHttpExceptions: true
     });
     backup[table] = res.getResponseCode() === 200 ? JSON.parse(res.getContentText()) : [];
   });
