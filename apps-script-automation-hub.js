@@ -151,6 +151,43 @@ function syncCustomerRow(data) {
 
 /* ══════════════ 테스트용 함수 (직접 실행해서 확인 가능) ══════════════ */
 
+// 2026-08-27(선혜님 발견 — "고객명단 시트에 이상한 게 너무 많다"):
+// syncCustomerRow의 중복방지 로직은 이미 2026-08-05에 고쳐져 있어서 지금은
+// 정상 작동 중(실제 고객은 전부 1행씩만 있는 것 확인함) - 다만 그 수정
+// 전날(8/4)에 만들어진 테스트 잔재("회귀테스트중복방지고객" 950행)와,
+// 이후 Claude가 실장/견적서 기능을 테스트하다 실수로 흘려보낸 몇 건
+// ("_사각지대테스트고객" 등, 오늘 8/27)이 계속 시트에 남아있었음. 아래
+// 함수를 딱 한 번 실행하면 이 잔재들만 정확히 지워짐(진짜 고객 데이터는
+// 전혀 안 건드림 - 정확히 이 이름 목록에 있는 행만 지움).
+function cleanupJunkCustomerRows() {
+  var JUNK_NAMES = [
+    '회귀테스트중복방지고객',
+    '_사각지대테스트고객',
+    '_사각지대폴백테스트고객',
+    '_역할검증고객',
+    '_실장A고객1', '_실장A고객2',
+    '_설치기사테스트고객', '_문서테스트고객', '_길이측정고객', '_8개품목테스트',
+    '_편집테스트고객', '_발주서테스트고객',
+    // 2026-08-27 추가: 의미없는 테스트 입력(과거 세션) + 담당자 이름이
+    // 고객명으로 잘못 들어간 항목(선혜님 확인 후 함께 삭제 결정)
+    'Gbn', 'Hbug', 'ㄱㅇㅊ', 'ㅇㅇ', 'ㅏㅏ', 'ㅛㅅㅅ6ㄹ',
+    '오지은', '장선혜'
+  ];
+  var sheet = getOrCreateCustomerSheet();
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) { Logger.log('삭제할 데이터 없음'); return; }
+  var names = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  var deletedCount = 0;
+  // 아래에서 위로 지워야 인덱스가 안 밀림
+  for (var i = names.length - 1; i >= 0; i--) {
+    if (JUNK_NAMES.indexOf(names[i][0]) > -1) {
+      sheet.deleteRow(i + 2);
+      deletedCount++;
+    }
+  }
+  Logger.log('삭제된 잔재 행 수: ' + deletedCount);
+}
+
 function testSaveDocument() {
   var result = saveDocumentFile({
     customerName: '테스트고객', category: '원단', vendor: '디테라',
