@@ -197,7 +197,7 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
  
 .doc-header{
   background:#282828;
-  padding:18px 16px 0;
+  padding:12px 16px 0;
   overflow:visible;
   display:grid;
   grid-template-columns:1fr auto;
@@ -209,14 +209,14 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
 .doc-header-logo{
   grid-column:1;grid-row:1;
   display:flex;align-items:center;
-  padding-bottom:16px
+  padding-bottom:10px
 }
 .doc-header-logo img{height:26px;display:block;object-fit:contain;filter:brightness(0) invert(1);opacity:0.95}
  
 .doc-header-type{
   grid-column:2;grid-row:1;
   display:flex;flex-direction:column;align-items:flex-end;
-  padding-bottom:16px
+  padding-bottom:10px
 }
 .doc-title{
   font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);
@@ -237,7 +237,7 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
 .doc-header-bottom{
   grid-column:1/-1;grid-row:3;
   display:flex;justify-content:space-between;align-items:center;
-  padding:10px 0
+  padding:6px 0
 }
 .doc-date{
   font-size:11px;color:rgba(255,255,255,0.4);
@@ -294,6 +294,19 @@ html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;col
   padding:13px;
   margin:0 12px 8px;
   box-shadow: 0 1px 2px rgba(40,32,24,0.04), 0 4px 16px rgba(40,32,24,0.06);
+}
+
+/* 2026-08-27(선혜님 발견 - "위치 바꾸는게 잘 안 되는데? 하나는 옮겼는데
+   그 이후로는 옮겨지지 않아"): 드래그 손잡이(⠿)가 22×28px로, 프로젝트
+   자체 최소 터치타겟 기준(32px)에도 못 미치고 있었음 - 어제 액션버튼
+   (복사/삭제)을 단가/금액과 같은 줄로 합치면서 손잡이가 눌려 좁아진
+   것으로 보임. 실제 손가락으로 정확히 잡기 어려워서 "한 번은 되고 그
+   다음은 안 되는" 것처럼 느껴졌을 가능성이 높음 - 최소 크기를 명시적으로
+   보장함. */
+.row-drag-handle{
+  min-width:32px!important;min-height:32px!important;
+  display:inline-flex!important;align-items:center;justify-content:center;
+  font-size:15px;
 }
 .sec-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px}
 .sec-title{
