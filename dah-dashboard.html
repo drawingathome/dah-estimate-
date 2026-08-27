@@ -368,20 +368,43 @@
           // 막혀있었지만, 화면 노출 자체가 잘못됨). 견적서 앱과 동일하게
           // staff_emails 매핑을 확인해서, 진짜 마스터 이메일일 때만 마스터로
           // 로그인되도록 수정.
+          //
+          // 2026-08-27(선혜님 지적 - "실장으로 들어갔을때 오류가 왜 이렇게
+          // 많은지 분석하자"로 발견): 위 8/25 수정 자체에도 같은 종류의
+          // 구멍이 있었음 — 이 확인 조회가 실패/에러나면 여전히 loginAs(
+          // foundStaffName || 'master')로 무조건 마스터가 됐음. 즉 확인이
+          // 안 되면 오히려 더 높은 권한을 주는 fail-open 구조라, 정작
+          // 8/25에 막으려던 문제(직원이 마스터로 로그인됨)가 "조회 실패"
+          // 상황에서 그대로 재발할 수 있었음. 이 흐름은 로그인 성공 직후
+          // setMasterEmail(email)을 이미 실행해버려서(방금 입력한 값을
+          // "마스터 이메일"로 캐시), doStaffConfirm 쪽에서 썼던 "마스터
+          // 이메일과 비교" 방식은 여기선 자기 자신과 비교하는 셈이라 의미가
+          // 없음 — 대신 조회 응답 상태(status)와 파싱 성공 여부를 명시적으로
+          // 확인해서, 확인 자체가 실패하면 아무 권한도 안 주고 재시도를
+          // 요청함(권한을 낮추는 쪽으로만 실패).
           var seXhr2 = new XMLHttpRequest();
           seXhr2.open('GET', SUPABASE_URL + '/rest/v1/app_settings?key=eq.staff_emails&select=value', true);
           seXhr2.setRequestHeader('apikey', SUPABASE_KEY);
           seXhr2.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
           seXhr2.onload = function() {
+            if (seXhr2.status !== 200) {
+              if (pwError) { pwError.textContent = '계정 확인 중 오류가 발생했습니다. 다시 시도해주세요.'; pwError.style.display = 'block'; }
+              return;
+            }
             var foundStaffName = null;
             try {
               var rows = JSON.parse(seXhr2.responseText);
               var map = rows && rows[0] && rows[0].value || {};
               Object.keys(map).forEach(function(sn) { if (map[sn] && map[sn].toLowerCase() === email.toLowerCase()) foundStaffName = sn; });
-            } catch(eParse) {}
+            } catch(eParse) {
+              if (pwError) { pwError.textContent = '계정 확인 중 오류가 발생했습니다. 다시 시도해주세요.'; pwError.style.display = 'block'; }
+              return;
+            }
             if (typeof loginAs === 'function') loginAs(foundStaffName || 'master');
           };
-          seXhr2.onerror = function() { if (typeof loginAs === 'function') loginAs('master'); };
+          seXhr2.onerror = function() {
+            if (pwError) { pwError.textContent = '계정 확인 중 네트워크 오류가 발생했습니다. 다시 시도해주세요.'; pwError.style.display = 'block'; }
+          };
           seXhr2.send();
         } else {
           if (pwError) { pwError.textContent = result.msg || '이메일 또는 비밀번호가 올바르지 않습니다'; pwError.style.display = 'block'; }

@@ -77,6 +77,22 @@ async function blockRealNetwork(page) {
         });
         return;
       }
+      if (url.includes('/rest/v1/app_settings') && url.includes('staff_emails')) {
+        // 2026-08-27 추가 — doStaffConfirm/doMasterConfirm이 로그인 시
+        // "이 사람이 진짜 누구인지" 재확인하려고 staff_emails를 조회함
+        // (보안수정: 조회 실패시 더 이상 마스터로 자동승격 안 됨). 이 요청을
+        // 처리 안 해두면 req.abort()로 떨어져서 네트워크 에러가 되고,
+        // 로그인 자체가 완료 안 됨 — 예전엔 "실패시 마스터로" 버그 덕에
+        // 우연히 테스트가 통과했었음. 테스트용 스태프 목록(_테스트실장 등)을
+        // 실제로 반영해서, 정상적인 "조회 성공 → 판정" 경로로 테스트가
+        // 지나가게 함.
+        req.respond({
+          status: 200, contentType: 'application/json',
+          headers: { 'Access-Control-Allow-Origin': '*' },
+          body: JSON.stringify([{ value: (global.__DAH_TEST_STAFF_EMAILS__ || {}) }])
+        });
+        return;
+      }
       if (url.includes('/auth/v1/token') && req.postData()) {
         let body;
         try { body = JSON.parse(req.postData()); } catch (e) { body = {}; }
@@ -135,6 +151,14 @@ async function loginAs(page, role, masterPw, staffName) {
   //   테스트할 수 있게 파라미터화함. 기존 호출부들은 인자를 안 넘기니
   //   전부 그대로 '_테스트실장'으로 동작 - 하위호환 깨짐 없음.)
   var staffNameToUse = staffName || '_테스트실장';
+  var staffTestEmail = 'test-staff@dah-test.local';
+  if (role !== 'master') {
+    // 2026-08-27 추가 — blockRealNetwork의 app_settings(staff_emails) mock이
+    // 이 전역 맵을 읽어서 응답하므로, 로그인 시도 전에 먼저 등록해둬야
+    // doStaffConfirm의 서버 재확인 로직이 이 이름을 정상적으로 찾아냄.
+    global.__DAH_TEST_STAFF_EMAILS__ = global.__DAH_TEST_STAFF_EMAILS__ || {};
+    global.__DAH_TEST_STAFF_EMAILS__[staffNameToUse] = staffTestEmail;
+  }
   // Supabase Auth 도입 이후: 로그인 전에 테스트용 이메일을 등록하고,
   // blockRealNetwork가 가로채는 고정 비밀번호(TEST_OK_PW)로 로그인한다.
   if (role === 'master') {
