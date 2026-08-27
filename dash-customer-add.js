@@ -118,10 +118,37 @@ function saveCustomer() {
       showToast('고객 정보가 수정됐습니다');
     }
   } else {
+    // 2026-08-27(선혜님 발견 — "고객명단에 중복이 너무 많다", 김작미/조승희
+    // 실제 중복 사례): 아래 로컬 중복확인(samePersonExisting)이 이 브라우저의
+    // loadCustomers()(로컬 저장소) 기준으로만 판단되고 있었음 - 오늘 견적서
+    // 중복생성 버그를 고칠 때와 정확히 같은 사각지대(다른 기기/세션에서 방금
+    // 등록한 고객을 이 브라우저가 모르면 못 걸러냄). 저장 버튼을 누른 시점에
+    // 서버에 직접 "이 전화번호로 이미 등록된 고객이 있는지" 한 번 더 확인한
+    // 뒤에 진행하도록 함.
+    var phoneNorm = (phone||'').replace(/\D/g,'');
+    if (typeof sbXHR === 'function' && phoneNorm) {
+      sbXHR('GET', 'customers?phone=eq.' + encodeURIComponent(phone) + '&is_archived=eq.false&select=id,client_name,phone', null, function(err, rows) {
+        var serverMatch = null;
+        if (!err && Array.isArray(rows)) {
+          serverMatch = rows.find(function(r) { return (r.phone||'').replace(/\D/g,'') === phoneNorm; });
+        }
+        _saveNewCustomerActual(name, phone, arr, serverMatch);
+      });
+      return;
+    }
+    _saveNewCustomerActual(name, phone, arr, null);
+  }
+}
+
+function _saveNewCustomerActual(name, phone, arr, serverMatch) {
     // 재구매 판단은 이름만으로 하지 않고 전화번호까지 같아야 "같은 사람"으로 봄.
     // 이름만 같고 전화번호가 다르면 동명이인일 가능성이 높으므로, 기존 사람을
     // 덮어쓰지 않고 명확히 안내한 뒤 완전히 별도의 새 레코드로 등록함.
-    var samePersonExisting = arr.find(function(c) { return c.clientName === name && (c.phone||'').replace(/\D/g,'') === (phone||'').replace(/\D/g,''); });
+    // 2026-08-27: 로컬(arr) 확인에 더해, 저장 직전 서버에서 직접 확인한
+    // serverMatch도 함께 반영 - 로컬 캐시가 모르는(다른 기기/세션에서 방금
+    // 등록된) 기존 고객도 "이미 있음" 판단에 걸리게 함.
+    var samePersonExisting = arr.find(function(c) { return c.clientName === name && (c.phone||'').replace(/\D/g,'') === (phone||'').replace(/\D/g,''); })
+      || (serverMatch ? { clientName: serverMatch.client_name, phone: serverMatch.phone, visitCount: 1 } : null);
     var sameNameDiffPhone = !samePersonExisting && arr.find(function(c) { return c.clientName === name; });
     if (samePersonExisting) {
       if (!confirm('"' + name + '"(' + phone + ') 고객이 이미 있습니다.\n재구매 고객으로 업데이트할까요?')) return;
@@ -137,5 +164,4 @@ function saveCustomer() {
     saveCustomerToDb(newCustomer, function(err, data) { if(!err && data && data[0]) { newCustomer.id = data[0].id; saveCustomers(arr); } });
     closeAdd(); renderHome(true); openDetail(name, newCustomer.id);
     showToast('고객이 추가됐습니다');
-  }
 }
