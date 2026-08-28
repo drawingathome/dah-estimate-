@@ -4,17 +4,11 @@
    전체 견적서 엑셀 내보내기, 토스트 알림.
    ══════════════════════════════════════════════════ */
 
-function savePDF() {
-  // 2026-08-14: iOS 사파리(아이패드)에서 setTimeout 안의 window.print()가
-  // 사용자 동작과 무관한 호출로 간주되어 조용히 무시되던 문제 — 지연 없이
-  // 사용자 탭과 같은 실행 흐름에서 즉시 호출해야 함(confirmPdfPrint와 동일 이유).
-  showToast('PDF 저장 중...');
-  try {
-    window.print();
-  } catch (e) {
-    setTimeout(function(){ try { window.print(); } catch(e2) {} }, 300);
-  }
-}
+// 2026-08-28(선혜님 지시 - "코드정리 싹 다 한거니?"로 발견): savePDF는
+// confirmPdfPrint(est-customer-load.js, "인쇄/PDF저장" 버튼에 실제 연결된
+// 함수)와 정확히 같은 목적(window.print() 호출)의 버려진 예전 버전이었음
+// - 어디서도 안 불리는 걸 확인 후 제거.
+
 
 // 2026-08-26(선혜님과 함께 진행한 코드 구조 개선 — "전역변수가 여기저기
 // 흩어져있어서 한 곳에서 리셋을 빠뜨리면 또 버그가 난다"는 문제의식으로 시작):
@@ -145,13 +139,11 @@ function validateEstimate() {
   return true;
 }
 
-function getExpiryBadge(savedAt) {
-  if(!savedAt) return '';
-  var diff = Math.ceil((new Date(savedAt).getTime() + 7*24*60*60*1000 - Date.now()) / 86400000);
-  if(diff > 3) return '<span class="expiry-badge ok">D-'+diff+'</span>';
-  if(diff > 0) return '<span class="expiry-badge warn">D-'+diff+' 마감임박</span>';
-  return '<span class="expiry-badge over">유효기간 만료</span>';
-}
+// 2026-08-28(선혜님 지시 - "코드정리 싹 다 한거니?"로 발견, 선혜님 확인 -
+// "이 기능은 스킵"): getExpiryBadge(견적서 유효기간 7일 D-day 뱃지)는
+// 계산 로직은 완성돼있는데 화면 어디에도 안 붙어있던 미완성 기능이었음 -
+// 어디에 붙일지 여쭤봤고 스킵하기로 확인해 제거함.
+
 function _saveEstimateInner(_onDone) {
   var onDone = typeof _onDone === 'function' ? _onDone : function(){};
   clearDraft(); // 저장 완료 시 초안 삭제

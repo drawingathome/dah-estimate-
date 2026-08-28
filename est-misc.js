@@ -37,19 +37,11 @@ function openKakaoAddr(targetId) {
   }
 }
 
-function fmtDateKo(el) {
-  var v = el.value.replace(/[^0-9]/g,'');
-  var out = '';
-  if(v.length>0) out = v.slice(0,4);
-  if(v.length>4) out += '년 '+v.slice(4,6);
-  if(v.length>6) out += '월 '+v.slice(6,8);
-  if(v.length>=8) out += '일';
-  
-  var pos = el.selectionStart;
-  el.value = out;
-  
-  el.setAttribute('data-date-raw', v.slice(0,8));
-}
+// 2026-08-28(선혜님 지시 - "코드정리 싹 다 한거니?"로 발견): fmtDateKo(직접
+// 타이핑하는 텍스트필드를 "2026년 08월 28일" 형식으로 자동 포맷하던
+// 헬퍼)는 지금 견적서 앱의 모든 날짜입력이 네이티브 type="date" 달력
+// 입력창으로 대체돼서 어디서도 안 불리고 있었음 - 제거.
+
 
 function renderEmptyState() {
   var cBody = document.getElementById('curtain-body');

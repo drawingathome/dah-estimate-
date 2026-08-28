@@ -430,34 +430,13 @@ function loadCustByIdx(el) {
   }
 }
 
-function searchCustomer() {
-  var ov = document.getElementById('customer-search-overlay');
-  if(ov) { ov.style.display='flex'; return; }
-  var el = document.createElement('div');
-  el.id='customer-search-overlay';
-  el.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:9998;display:flex;align-items:center;justify-content:center';
-  var inner=document.createElement('div');
-  inner.style.cssText='background:#fff;border-radius:12px;padding:var(--sp-6);width:480px;max-width:90vw';
-  inner.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--sp-4)"><span style="font-size:11px;font-weight:700">고객 검색</span><span id="cs-close" style="cursor:pointer;font-size:11px">&#x2715;</span></div><div style="display:flex;gap:var(--sp-2);margin-bottom:var(--sp-3)"><input type="text" id="cs-query" placeholder="이름 또는 전화번호" style="flex:1;padding:9px 12px;border:1.5px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;outline:none"><button id="cs-btn" style="padding:8px 16px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">검색</button></div><div id="cs-results" style="color:#8E8078;font-size:11px;text-align:center;padding:var(--sp-5)">Supabase 연동 후 사용 가능합니다.</div>';
-  el.appendChild(inner);
-  document.body.appendChild(el);
-  document.getElementById('cs-close').onclick=function(){el.style.display='none';};
-  document.getElementById('cs-btn').onclick=function(){
-    var res=document.getElementById('cs-results');
-    if(res) res.innerHTML='<p>검색 기능 준비 중...</p>';
-  };
-}
-function selectCustomer(name,phone,addr){
-  if(name) document.getElementById('c-name').value=name;
-  if(phone) document.getElementById('c-phone').value=phone;
-  if(addr) document.getElementById('c-addr').value=addr;
-  var ov=document.getElementById('customer-search-overlay');
-  if(ov) ov.style.display='none';
-}
-function closeCustomerSearch(){
-  var ov=document.getElementById('customer-search-overlay');
-  if(ov) ov.style.display='none';
-}
+// 2026-08-28(선혜님 지시 - "코드정리 싹 다 한거니?"로 발견): searchCustomer/
+// selectCustomer/closeCustomerSearch 세트는 애초에 "Supabase 연동 후 사용
+// 가능합니다"/"검색 기능 준비 중..."이라는 placeholder 상태로 미완성이었고,
+// 지금은 loadCustId/loadEstDbId URL파라미터 기반 고객불러오기(오늘 하루 종일
+// 다뤘던 방식)로 완전히 대체됨 - HTML에도 이걸 여는 버튼 자체가 없어서
+// 셋 다 안전하게 제거.
+
 
 function calcDeposit() {
   var depInp = document.getElementById('deposit-input');
