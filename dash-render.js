@@ -72,6 +72,23 @@ function renderHome(skipServerFetch) {
     var thisMonthRev = typeof getMonthPerformanceRevenue === 'function'
       ? getMonthPerformanceRevenue(customers, _thisMonthKey)
       : 0;
+    // 2026-08-28(선혜님 지시 — "이번달 매출은 실장님의 인센매출_제품매출만
+    // 되어야 해, 오늘이 8월 28일이라면 이번달 매출은 7월 31일까지의
+    // 제품매출이 되어야 하고 현재 매출은 8월 28일까지의 제품매출이 되어야
+    // 해 이거는 마스터도 동일해"): 용어를 명확히 나눔 —
+    //   "현재 매출" = 이번달(진행중인 달) 1일부터 오늘까지 누적(위 thisMonthRev,
+    //                기존 "이달 매출"과 같은 계산, 이름만 명확히 함)
+    //   "이번달 매출" = 직전에 마감된 달(예: 오늘이 8/28이면 7월 전체) 확정
+    //                  실적 - 아직 진행 중인 이번달과 섞이지 않는 "마감된
+    //                  지난달 총 제품매출"
+    // 둘 다 제품매출(perf)만 집계하는 getMonthPerformanceRevenue를 그대로
+    // 재사용 - 마스터/스태프 모두 이 화면 자체가 이미 스태프면 본인담당만
+    // 필터링된 customers를 쓰므로 자동으로 동일 기준 적용됨.
+    var _prevMonthDate = new Date(_year, _today.getMonth()-1, 1);
+    var _prevMonthKey = _prevMonthDate.getFullYear() + '-' + String(_prevMonthDate.getMonth()+1).padStart(2,'0');
+    var lastMonthRev = typeof getMonthPerformanceRevenue === 'function'
+      ? getMonthPerformanceRevenue(customers, _prevMonthKey)
+      : 0;
     var thisMonthContracts = customers.filter(function(c) {
       return ['선금결제','실측준비중','확정견적','잔금결제','시공준비중'].indexOf(c.stage) >= 0;
     }).length;
@@ -168,10 +185,14 @@ function renderHome(skipServerFetch) {
             '<div style="height:100%;border-radius:6px;width:' + pct + '%;background:' + (isOver ? 'linear-gradient(90deg,#2F6690,#4A85AC)' : 'linear-gradient(90deg,var(--terra),var(--orange))') + ';transition:width 0.8s cubic-bezier(0.4,0,0.2,1)"></div>',
           '</div>',
         '</div>',
-        '<div id="sec-kpi" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-top:1px solid var(--border)">',
+        '<div id="sec-kpi" style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-top:1px solid var(--border)">',
           '<div style="background:#fff;padding:14px 20px">',
-            '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">이달 매출</div>',
+            '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">현재 매출</div>',
             '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + Math.round(thisMonthRev/10000).toLocaleString() + '<span style="font-size:12px;font-weight:400;color:var(--sub)">만원</span></div>',
+          '</div>',
+          '<div style="background:#fff;padding:14px 20px">',
+            '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">이번달 매출(전월 마감)</div>',
+            '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + Math.round(lastMonthRev/10000).toLocaleString() + '<span style="font-size:12px;font-weight:400;color:var(--sub)">만원</span></div>',
           '</div>',
           '<div style="background:#fff;padding:14px 20px">',
             '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">진행 건수</div>',

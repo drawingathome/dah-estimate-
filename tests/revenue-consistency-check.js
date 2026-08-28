@@ -57,12 +57,13 @@ async function run() {
     check(`[${label}] 7월 성과매출 = 전체×선금비율(48만원)`, calc.julyPerf === 480000, `실제=${calc.julyPerf}`);
     check(`[${label}] 8월 성과매출 = 전체×잔금비율(32만원)`, calc.augPerf === 320000, `실제=${calc.augPerf}`);
 
-    // 화면 표시 검증 — 홈 "이달 매출" (오늘이 7월이라고 가정, 함수와 별개로 실제 렌더된 텍스트 확인)
+    // 화면 표시 검증 — 홈 "현재 매출" (2026-08-28 명칭변경: "이달 매출"→"현재 매출",
+    // "이번달 매출(전월 마감)"이 새로 추가되면서 용어를 명확히 구분함)
     await page.evaluate(() => { goTab('home'); renderHome(true); });
     await new Promise(r => setTimeout(r, 400));
     const homeText = await page.evaluate(() => document.getElementById('home').textContent);
-    const homeMatch = homeText.match(/이달 매출([\d,]+)만원/);
-    check(`[${label}] 홈화면 "이달 매출"이 실제로 렌더링됨(숫자 형식)`, !!homeMatch, `홈텍스트일부="${homeText.slice(0, 60)}"`);
+    const homeMatch = homeText.match(/현재 매출([\d,]+)만원/);
+    check(`[${label}] 홈화면 "현재 매출"이 실제로 렌더링됨(숫자 형식)`, !!homeMatch, `홈텍스트일부="${homeText.slice(0, 60)}"`);
 
     // 매출탭 이번달요약 표시 검증
     await page.evaluate(() => goTab('chart'));

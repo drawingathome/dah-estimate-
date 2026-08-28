@@ -83,7 +83,12 @@ function _handleRealtimeCustomerChange(payload) {
 
     // 3) 하필 지금 열려있는 상세화면이 "이 고객"이면, 자동으로 덮어쓰지 않고 알림만 띄움
     if (typeof currentDetailId !== 'undefined' && currentDetailId === changedCustomer.id) {
-      _showRealtimeUpdateBanner(changedCustomer);
+      // 2026-08-28(선혜님 지적 — "이 문구는 왜 또 뜨지??"): 방금 이 탭에서
+      // 직접 저장한 것(3초 이내)이면 "다른 곳에서 바꿨다"는 알림이 아니라
+      // 그냥 내가 한 저장이 되돌아온 것 - 배너를 띄우지 않음.
+      var isSelfWrite = window._lastSelfCustomerWriteId === changedCustomer.id &&
+        (Date.now() - (window._lastSelfCustomerWriteTime || 0)) < 3000;
+      if (!isSelfWrite) _showRealtimeUpdateBanner(changedCustomer);
     }
   } catch (e) {
     console.warn('실시간 동기화 처리 중 오류:', e);

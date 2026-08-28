@@ -493,6 +493,17 @@ function loadCustomersAsync(callback, force) {
 function saveCustomers(arr) { _customerCache = arr; try { localStorage.setItem('dah_customers', JSON.stringify(arr)); } catch(e) {} }
 
 function saveCustomerToDb(customer, callback) {
+  // 2026-08-28(선혜님 지적 — "이 문구는 왜 또 뜨지??", 배재연을 방금 등록한
+  // 직후 본인 화면에서 "다른 곳에서 방금 업데이트됐어요" 배너가 뜬 사례):
+  // Realtime 구독은 "누가" 바꿨는지 구분 안 하고 이 브라우저 자신의 저장도
+  // 그대로 되돌아와서 알려줌 - 그래서 본인이 방금 한 행동인데도 "다른 곳에서"
+  // 바꾼 것처럼 잘못 알림. 이 탭에서 방금 저장 중인 고객 id+시각을 표시해두고,
+  // 실시간 이벤트 쪽(dash-realtime.js)에서 "방금 나 자신이 한 것"이면
+  // 배너를 건너뛰도록 함.
+  if (customer && customer.id) {
+    window._lastSelfCustomerWriteId = customer.id;
+    window._lastSelfCustomerWriteTime = Date.now();
+  }
   var row = customerToDbRow(customer);
   syncCustomerToSheet(customer);
   var key = customer.id || customer.clientName;
@@ -506,6 +517,12 @@ function saveCustomerToDb(customer, callback) {
       if (typeof addToPendingSyncQueue === 'function') addToPendingSyncQueue(key, method, path, row);
     } else if (typeof removeFromPendingSyncQueue === 'function') {
       removeFromPendingSyncQueue(key);
+    }
+    // 신규 생성(POST)이면 저장 전엔 id를 몰라서 위에서 못 찍었음 - 서버가
+    // 응답으로 준 진짜 id로 지금 찍어야 방금 만든 신규 고객도 배너에서 제외됨.
+    if (!err && !customer.id && data && data[0] && data[0].id) {
+      window._lastSelfCustomerWriteId = data[0].id;
+      window._lastSelfCustomerWriteTime = Date.now();
     }
     if (callback) callback(err, data);
   });
