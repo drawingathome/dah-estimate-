@@ -34,7 +34,19 @@ function splitCustomerPayments(c) {
   var depDate = c.depositDate || pd.depositDate || '';
   var bal = Number(c.balanceAmount) || Number(pd.balanceAmount) || 0;
   var balDate = c.balanceDate || pd.balanceDate || '';
-  var perf = Number(c.performanceRevenue) || 0;
+  // 2026-08-28(선혜님 확인 — "선금 넣고 실측준비중이면 이 선금이 매출에
+  // 안 잡히는거야??" → "후자지!" = 확정견적 여부와 무관하게, 실제 입금된
+  // 순간부터 매출로 잡혀야 함): 예전엔 c.performanceRevenue(확정견적일
+  // 때만 채워짐 - 2026-08-04 도입)에만 의존해서, 선금결제/실측준비중처럼
+  // 확정견적 이전 단계에서 실제로 입금을 받았어도 매출(목표달성률)에
+  // 전혀 안 잡히고 있었음. 이 함수를 호출하는 쪽(getMonthRevenue 등)이
+  // 이미 PRE_CONTRACT_STAGES(방문예약/상담/가견적)는 걸러내고 있으므로,
+  // 여기까지 온 고객은 이미 선금결제 이상 단계 - c.price(매출계산
+  // 기준금액, 이제 가견적 단계부터도 항상 최신 견적금액으로 동기화됨)를
+  // 우선 사용해서 확정 여부와 무관하게 실제 견적금액 기준으로 반영되게 함.
+  // performanceRevenue가 별도로 명시돼있으면(과거 이관 데이터 등) 그 값을
+  // 그대로 존중.
+  var perf = Number(c.performanceRevenue) || Number(c.price) || 0;
   var totalPaid = dep + bal;
   // 2026-08-04: 성과매출 배분 비율의 분모가 잘못됐던 버그 수정 — 예전엔
   // totalPaid(지금까지 실제 입금된 금액)로 나눠서, 계약금만 들어온 시점엔

@@ -237,6 +237,19 @@ function renderDetailEstTabInner(estEl) {
 }
 
 function openDetail(name, id, forceTab) {
+  // 2026-08-28(선혜님 지적 — "유경진 이름 클릭하면 견적서 3개 나와", F5해도
+  // 그대로였던 문제와 같은 원인이 이 화면(고객상세 '정보'탭, 이름클릭으로
+  // 들어오는 기본화면)에도 있었음): renderEstimateHistory()와 이력탭
+  // 배지(dtab-est-cnt)가 전부 localStorage(dah_saved)만 그대로 읽고
+  // 있어서, 서버에서 견적서가 지워져도 브라우저에 남은 예전 캐시를 계속
+  // 보여주고 있었음. 이력탭(renderDetailEstTab)만 먼저 고쳤었는데,
+  // 고객상세를 여는 진입점 자체인 이 함수도 똑같이 고쳐야 했음 - 다음부턴
+  // 고객상세를 열 때마다(이름 클릭이든 어디서든) 항상 서버 최신 견적
+  // 목록을 먼저 받아온 뒤에만 화면을 그림.
+  loadEstimatesAsync(function(){ openDetailInner(name, id, forceTab); }, true);
+}
+
+function openDetailInner(name, id, forceTab) {
   var customers = loadCustomers();
   // 2026-08-05: HTML data-cid 속성에서 넘어오는 id는 항상 문자열인데, customer.id는
   // 숫자라서 엄격비교(===)가 항상 실패해 "고객을 찾을 수 없습니다" 오류가 나던 버그.

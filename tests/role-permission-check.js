@@ -85,26 +85,33 @@ async function evaluateChecks(page, width) {
       return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
     };
 
-    if (typeof openDetail === 'function') {
-      try { openDetail(customerName); } catch (e) {}
-    }
+    // 2026-08-28: openDetail이 서버에서 최신 견적목록을 먼저 받아온 뒤(비동기)
+    // 렌더링하도록 바뀌어서(유경진 사례 - 캐시가 서버 삭제를 반영 안 하던 버그
+    // 수정), 이 테스트도 완료를 기다려야 함. 안 그러면 렌더링 전 빈 화면을
+    // "버튼이 숨겨졌다"고 오판함.
+    return new Promise((resolve) => {
+      if (typeof openDetail === 'function') {
+        try { openDetail(customerName); } catch (e) {}
+      }
+      setTimeout(() => {
+        const detailOverlay = document.getElementById('detail-overlay');
+        const detailButtons = detailOverlay ? Array.from(detailOverlay.querySelectorAll('button')) : [];
+        const hasDeleteBtn = detailButtons.some(b => /^삭제$/.test((b.textContent || '').trim()));
+        const hasEditBtn = detailButtons.some(b => /수정/.test(b.textContent || ''));
 
-    const detailOverlay = document.getElementById('detail-overlay');
-    const detailButtons = detailOverlay ? Array.from(detailOverlay.querySelectorAll('button')) : [];
-    const hasDeleteBtn = detailButtons.some(b => /^삭제$/.test((b.textContent || '').trim()));
-    const hasEditBtn = detailButtons.some(b => /수정/.test(b.textContent || ''));
+        // 모바일은 하단 네비(data-mob-tab), PC는 상단 탭(data-tab)으로 매출탭 확인
+        const salesTab = isMobileWidth
+          ? document.querySelector('[data-mob-tab="chart"]')
+          : document.querySelector('[data-tab="chart"]');
 
-    // 모바일은 하단 네비(data-mob-tab), PC는 상단 탭(data-tab)으로 매출탭 확인
-    const salesTab = isMobileWidth
-      ? document.querySelector('[data-mob-tab="chart"]')
-      : document.querySelector('[data-tab="chart"]');
-
-    return {
-      bodyRole: document.body.className,
-      deleteBtnVisible: hasDeleteBtn,
-      editBtnVisible: hasEditBtn,
-      salesTabDisplayed: isVisible(salesTab)
-    };
+        resolve({
+          bodyRole: document.body.className,
+          deleteBtnVisible: hasDeleteBtn,
+          editBtnVisible: hasEditBtn,
+          salesTabDisplayed: isVisible(salesTab)
+        });
+      }, 1200);
+    });
   }, TEST_CUSTOMER_NAME, width < 500);
 }
 
