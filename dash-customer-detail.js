@@ -83,6 +83,18 @@ function switchDetailTab(tab) {
 function renderDetailEstTab() {
   var estEl = document.getElementById('detail-est-body');
   if (!estEl || !currentDetailName) return;
+  // 2026-08-28(선혜님 지적 — "F5해도 여전히 3개야", 유경진 사례로 발견):
+  // 이 함수가 localStorage(dah_saved)만 그대로 읽고 있어서, 서버에서
+  // 견적서가 지워져도(관리자가 직접 지웠거나, 다른 기기/다른 사람이
+  // 지웠거나) 이 화면은 브라우저에 남아있는 예전 캐시를 계속 보여주고
+  // 있었음 - 새로고침(F5)해도 dah_saved 자체를 새로 받아오는 코드가
+  // 없어서 안 고쳐졌음. loadEstimatesAsync(force=true)로 서버 최신
+  // 상태를 먼저 받아온 뒤에만 그리도록 구조 변경.
+  loadEstimatesAsync(function(){ renderDetailEstTabInner(estEl); }, true);
+}
+
+function renderDetailEstTabInner(estEl) {
+  if (!currentDetailName || !document.getElementById('detail-est-body')) return; // 로딩 중 다른 고객으로 넘어간 경우 방지
   estEl.innerHTML = '';
 
   var all = [];
@@ -200,11 +212,11 @@ function renderDetailEstTab() {
     });
 
     var deleteEstBtn = btn('width:100%;margin-top:6px;padding:9px 0;background:#fff;color:#C0392B;border:1px solid #F5D6D0;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '삭제', function(){
-      if (!confirm('이 견적서를 삭제할까요? (완전히 지워지지 않고 보관되며, 필요하면 나중에 복구할 수 있어요)')) return;
+      if (!confirm('⚠️ 이 견적서를 완전히 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) return;
       archiveEstimate(e, function(err){
-        renderDetailEstTab();
-        if (err) showToast('⚠️ 삭제가 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요');
-        else showToast('삭제(보관)했어요');
+        if (err) { showToast('⚠️ 삭제가 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요'); return; }
+        showToast('완전히 삭제했어요');
+        loadEstimatesAsync(function(){ renderDetailEstTab(); }, true); // 서버 최신상태로 강제 재동기화 후 다시 그림
       });
     });
 
