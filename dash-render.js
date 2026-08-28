@@ -325,10 +325,16 @@ function renderHome(skipServerFetch) {
         var byStaff = typeof getMonthStaffPerformance === 'function'
           ? getMonthStaffPerformance(customers, _thisMonthKey)
           : {};
-        var rows = Object.keys(byStaff).map(function(s) {
+        // 2026-08-28(선혜님 요청 — "담당자별 실적 비교"): 오늘 만든 공용
+        // 뱃지함수(renderStaffBadge, dash-utils.js)로 통일(체크리스트
+        // 24번 - 이 화면만 따로 하드코딩된 뱃지를 쓰고 있었음), 매출
+        // 큰 순서로 정렬해서 한눈에 비교되게 함.
+        var staffNames = Object.keys(byStaff).sort(function(a, b) { return byStaff[b].rev - byStaff[a].rev; });
+        var rows = staffNames.map(function(s, idx) {
+          var rankBadge = staffNames.length > 1 ? '<span style="font-size:10px;font-weight:700;color:' + (idx===0?'var(--terra)':'var(--sub)') + ';margin-right:4px">' + (idx+1) + '위</span>' : '';
           return '<div style="padding:10px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center">' +
-            '<div style="width:28px;height:28px;border-radius:50%;background:var(--dark);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-right:10px">' + (s[0]||'?') + '</div>' +
-            '<div style="flex:1;font-size:12px;font-weight:700;color:var(--dark)">' + s + '</div>' +
+            (typeof renderStaffBadge === 'function' ? renderStaffBadge(s, 28) : '<div style="width:28px;height:28px;border-radius:50%;background:var(--dark);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">' + (s[0]||'?') + '</div>') +
+            '<div style="flex:1;font-size:12px;font-weight:700;color:var(--dark);margin-left:10px">' + rankBadge + s + '</div>' +
             '<div style="text-align:right">' +
               '<div style="font-size:12px;font-weight:700;color:var(--dark)">' + Math.round(byStaff[s].rev/10000).toLocaleString() + '만원</div>' +
               '<div style="font-size:11px;color:var(--sub)">' + byStaff[s].count + '건</div>' +
