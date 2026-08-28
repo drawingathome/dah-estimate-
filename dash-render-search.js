@@ -15,18 +15,9 @@ function renderSearch() {
   if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter === 'parked') {
     all = all.filter(function(c){ return c.leadParked === true; });
   } else if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter === 'unpaid') {
-    // 2026-08-28(선혜님 요청 - "미수금 현황판"): 전체금액이 있는데 실제
-    // 받은 금액(선금+잔금)이 그보다 적은 고객만 모아봄. 가견적/상담처럼
-    // 아직 결제 자체를 시작 안 한 고객(price는 있어도 결제 개념이 없는
-    // 단계)은 "미수금"이 아니라 "아직 청구 전"이므로 제외 - 실제로 결제가
-    // 진행된(선금이라도 받은) 이후 단계만 대상으로 함.
-    var UNPAID_RELEVANT_STAGES = ['선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'];
-    all = all.filter(function(c){
-      if (UNPAID_RELEVANT_STAGES.indexOf(c.stage) < 0) return false;
-      var price = Number(c.price) || 0;
-      var received = (Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0);
-      return price > 0 && received < price;
-    });
+    // 2026-08-28(선혜님 요청 - "미수금 현황판"): 공용함수(getUnpaidAmount)로
+    // 판정 - 홈화면 "처리 필요" 알림과 동일 기준 사용(체크리스트 24번).
+    all = all.filter(function(c){ return getUnpaidAmount(c) > 0; });
   } else if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter !== 'all') {
     all = all.filter(function(c){ return c.stage === _currentStageFilter; });
   } else {
@@ -116,7 +107,7 @@ function renderSearch() {
     // 2026-08-28(선혜님 요청 - "미수금 현황판"): 칸반카드의 "받은 X원"과
     // 짝을 이루는 표시 - 전체금액 아래에 미수금(아직 못 받은 금액)을
     // 주황색으로 별도 표시. 완납이면 표시 안 함(불필요한 정보 추가 방지).
-    var unpaidAmt = (Number(c.price)||0) - ((Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0));
+    var unpaidAmt = getUnpaidAmount(c);
     var unpaidEl = null;
     if (unpaidAmt > 0 && Number(c.price) > 0) {
       unpaidEl = el('div', {style:'font-size:11px;color:var(--terra);font-weight:700;margin-top:2px'});

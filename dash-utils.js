@@ -31,6 +31,20 @@ function renderStaffBadge(staffName, sizePx) {
     'font-weight:700;flex-shrink:0;line-height:1">' + escHtml(initial) + '</span>';
 }
 
+// 2026-08-28(선혜님 요청 — "잔금 리마인더"): 미수금(전체금액-받은금액)
+// 계산을 공용함수로 분리 - 고객목록의 "미수금" 필터와 홈화면 "처리 필요"
+// 알림 둘 다 이 함수 하나를 재사용함(체크리스트 24번). 결제가 실제로
+// 시작된 단계(선금결제~시공완료)만 대상 - 가견적/상담처럼 아직 청구
+// 전인 단계는 "미수금"이 아니라 "아직 청구 전"이므로 0을 반환.
+var UNPAID_RELEVANT_STAGES = ['선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'];
+function getUnpaidAmount(c) {
+  if (UNPAID_RELEVANT_STAGES.indexOf(c.stage) < 0) return 0;
+  var price = Number(c.price) || 0;
+  if (price <= 0) return 0;
+  var received = (Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0);
+  return Math.max(0, price - received);
+}
+
 function isArchived(c) {
   if (c.stage !== '시공완료') return false;
   var refDate = c.installDate || c.date || c.createdAt;

@@ -35,7 +35,12 @@ async function run() {
       const pastDate = '2026-01-01';
       saveCustomers([
         { clientName: '중복검사고객계약금' + suffix, phone: '01011112222', stage: '선금결제', staffName: '마스터', price: 800000, date: pastDate, createdAt: new Date().toISOString(), orderStatus: {} },
-        { clientName: '중복검사고객시공' + suffix, phone: '01033334444', stage: '시공준비중', staffName: '마스터', price: 500000, date: pastDate, createdAt: new Date().toISOString(), orderStatus: {} },
+        // 2026-08-28(선혜님 요청 - "잔금 리마인더"로 홈화면 미수금 감지가
+        // 새로 추가되면서, 이 고객이 결제데이터 없이(선금 0원) "시공준비중"
+        // 단계였던 게 뜻하지 않게 "미수금" 사유에도 걸려 이 테스트 본연의
+        // 목적(발주 중복표시 검사)과 안 맞게 2번 나타나게 됨 - 실제
+        // 업무흐름처럼 선금을 이미 받은 상태로 채워서 발주 검사만 순수하게 함.
+        { clientName: '중복검사고객시공' + suffix, phone: '01033334444', stage: '시공준비중', staffName: '마스터', price: 500000, depositAmount: 500000, date: pastDate, createdAt: new Date().toISOString(), orderStatus: {} },
         { clientName: '중복검사고객잔금' + suffix, phone: '01055556666', stage: '잔금결제', staffName: '마스터', price: 700000, date: pastDate, createdAt: new Date().toISOString(), orderStatus: { fabric: true, production: true, blind: true, material: true, install: true } }
       ]);
       renderHome(true);

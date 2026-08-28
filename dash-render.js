@@ -126,6 +126,18 @@ function renderHome(skipServerFetch) {
       // 계속 "결제처리 필요"로 잘못 뜨던 버그.
       if (c.stage === '선금결제' && !(Number(c.depositAmount) > 0)) reasons.push('선금결제 처리');
       if (c.stage === '잔금결제' && !(Number(c.balanceAmount) > 0)) reasons.push('잔금결제 처리');
+      // 2026-08-28(선혜님 요청 - "잔금 리마인더", "다음단계 하자"): 위
+      // 두 줄은 딱 그 단계에 있을 때만 걸림 - 그 단계를 지나쳐서
+      // 실측준비중/확정견적/시공준비중/시공완료까지 진행됐는데도 여전히
+      // 다 못 받은 경우는 못 잡고 있었음. getUnpaidAmount 공용함수로
+      // "결제가 진행된 어느 단계든 아직 미수금이 있으면" 놓치지 않게 함.
+      // 위 두 항목과 중복돼도 무방(reasons는 Set이 아니라 배열이라
+      // 그대로 두 줄 다 뜰 수 있음 - 어차피 아래에서 "결제 처리" 카테고리로
+      // 하나로 묶여 표시되므로 사용자에게 중복으로 안 보임).
+      var unpaidHere = (typeof getUnpaidAmount === 'function') ? getUnpaidAmount(c) : 0;
+      if (unpaidHere > 0 && c.stage !== '선금결제' && c.stage !== '잔금결제') {
+        reasons.push('미수금 ' + unpaidHere.toLocaleString() + '원');
+      }
       if (ORDER_STAGES_FOR_ACTION.indexOf(c.stage) >= 0) {
         // 2026-07-21 수정: 예전엔 "5개 항목 전부 미체크"일 때만 발주필요로 떴는데,
         // 하나라도 체크하면 나머지를 깜빡해도 목록에서 사라지는 심각한 버그였음.
@@ -253,7 +265,7 @@ function renderHome(skipServerFetch) {
                 '</div>';
               }
               var groups = [
-                { title: '결제 처리', test: function(r){ return r.indexOf('선금결제 처리')>=0 || r.indexOf('잔금결제 처리')>=0; }, tab: 'pay' },
+                { title: '결제 처리', test: function(r){ return r.indexOf('선금결제 처리')>=0 || r.indexOf('잔금결제 처리')>=0 || r.indexOf('미수금')>=0; }, tab: 'pay' },
                 { title: '발주 필요', test: function(r){ return r.indexOf('발주 필요')>=0 || r.indexOf('발주정보 확인 필요')>=0; }, tab: 'order' },
                 { title: '리드 팔로업', test: function(r){ return r.indexOf('진행없음')>=0; }, tab: 'info' }
               ];
