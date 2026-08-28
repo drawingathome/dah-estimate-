@@ -61,13 +61,21 @@ function checkDuplicate(name, phone) {
     var customers = loadCustomers();
     var cleanPhone = (phone || '').replace(/[^0-9]/g, '');
 
-    // 이름 중복
+    // 2026-08-28(선혜님 지적 — "등록이 되어있다고 등록이 안되는데 여기서
+    // 검토도 안되네", 배재연 사례): 오지은 실장이 등록했던 배재연을
+    // 선혜님이 보관처리(삭제)하고 마스터 계정으로 새로 등록하려 했는데,
+    // 이 중복확인이 "이미 등록된 연락처예요"라고 막았음(실제로는 새
+    // 등록이 아예 안 됐음 - DB 확인 결과 마스터 버전은 존재하지 않고
+    // 오지은의 보관된 기록만 남아있었음). 원인: 이름/연락처 중복 판정이
+    // is_archived(보관처리됨) 여부를 전혀 확인 안 하고 있었음 - 이미
+    // 지운(보관한) 예전 기록도 "아직 있는 고객"으로 취급해서 정당한
+    // 재등록을 막고 있었음. 활성(보관 안 된) 고객만 중복으로 본다.
     var nameDup = customers.filter(function(c) {
-      return c.clientName && c.clientName.trim() === name.trim();
+      return !c.is_archived && c.clientName && c.clientName.trim() === name.trim();
     });
     // 연락처 중복
     var phoneDup = customers.filter(function(c) {
-      return c.phone && c.phone.replace(/[^0-9]/g, '') === cleanPhone && cleanPhone.length >= 10;
+      return !c.is_archived && c.phone && c.phone.replace(/[^0-9]/g, '') === cleanPhone && cleanPhone.length >= 10;
     });
 
     if (phoneDup.length > 0) {
