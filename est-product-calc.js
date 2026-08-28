@@ -509,6 +509,14 @@ function applyFrozenBreakdown(bd) {
     if (depInp && bd.deposit > 0) {
       depInp.value = bd.deposit.toLocaleString();
       depInp.dataset.raw = String(bd.deposit);
+      // 2026-08-28(선혜님 지적 — "선금을 넣으면 선금이 자꾸 바뀌니깐 계속
+      // 손이 가서 번거롭네"): 이 함수(불러오기/복사시 저장당시 금액 고정)가
+      // 선금 입력창 값만 채우고 "수동입력 보호" 플래그(dataset.manualEdit)는
+      // 안 켜주고 있었음 - 그래서 불러온 직후 품목 하나만 살짝 건드려도
+      // calcTotal()의 자동 50% 재계산이 그대로 발동해서 애써 불러온(혹은
+      // 저장 당시 직접 입력했던) 선금 금액이 조용히 50% 자동값으로
+      // 되돌아가고 있었음. 여기서도 같은 플래그를 켜서 보호되게 함.
+      depInp.dataset.manualEdit = '1';
     }
   }
   if (Array.isArray(bd.discountDetail)) {
