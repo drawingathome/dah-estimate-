@@ -947,6 +947,18 @@ var currentTab = 'ga';
           if (e.line_items && typeof restoreLineItemsToForm === 'function') {
             loadedItems = restoreLineItemsToForm(e.line_items, e.product);
           }
+          // 2026-08-28(선혜님 지적 — "견적서에 실측일을 적어도 견적서가
+          // 자꾸 없어진다니깐????"): 저장할 땐 c-measure 값이 estimates.date로
+          // 정확히 저장되고 있었는데(est-save.js), "열어서 수정"으로 이
+          // 견적서를 다시 열 때 그 값을 c-measure에 도로 채워주는 코드가
+          // 어디에도 없었음 - line_items/region/할인 등은 다 복원하면서
+          // 이 필드만 빠져있었음. 그래서 열 때마다 실측일 칸이 항상
+          // 빈칸으로 보이고("적었던 게 사라졌다"는 인상), 그 상태로 별
+          // 생각 없이 다시 저장하면 방금 전까지 있던 실측일이 진짜로
+          // 빈 값으로 덮어써져 사라지고 있었음.
+          if (e.date && document.getElementById('c-measure')) {
+            document.getElementById('c-measure').value = e.date;
+          }
           if (e.region && document.getElementById('c-region')) {
             document.getElementById('c-region').value = e.region;
             document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
