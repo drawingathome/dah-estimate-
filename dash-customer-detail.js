@@ -1273,6 +1273,32 @@ function renderEstimateHistory(container, clientName) {
         });
       })(e.dbId);
       actionRow.appendChild(editBtn); actionRow.appendChild(copyBtn);
+      // 2026-08-28(선혜님 지적 — "위 이미지에서 개별 견적서 삭제는 왜 안되지
+      // 전체 삭제만 되게 했지??"): 맨 위 "견적서" 탭엔 이미 개별 삭제(🗑)
+      // 버튼이 있었는데, 이 고객상세 화면의 견적서 목록엔 애초에 코드
+      // 자체가 없었음(열기/복사만 있었음). 같은 archiveEstimate() 함수를
+      // 그대로 재사용해서 여기도 추가함(완전삭제로 동작하도록 함께 수정됨).
+      var delBtn2 = el('button', {style:
+        'flex:0 0 40px;font-size:13px;padding:7px;border-radius:8px;' +
+        'border:1px solid #F0D8D5;background:#fff;color:#C0392B;cursor:pointer;font-family:inherit;min-height:32px'
+      });
+      delBtn2.textContent = '🗑';
+      delBtn2.title = '삭제';
+      (function(estObj){
+        delBtn2.addEventListener('click', function(ev){
+          ev.stopPropagation();
+          var label = (estObj.clientName || currentDetailName || '이름없음') + ' · ' + (Number(estObj.price)||0).toLocaleString() + '원';
+          if (!confirm(label + '\n\n⚠️ 이 견적서를 완전히 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) return;
+          // archiveEstimate()는 est.id(서버 UUID)를 기준으로 판단하는데,
+          // 이 카드 객체는 서버ID가 e.dbId에 들어있어서 명시적으로 매핑.
+          archiveEstimate({ id: estObj.dbId, no: estObj.no, clientName: estObj.clientName, price: estObj.price }, function(err){
+            if (err) { if (typeof showToast === 'function') showToast('⚠️ 삭제가 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요'); return; }
+            if (typeof showToast === 'function') showToast('완전히 삭제했어요');
+            openDetail(currentDetailName, currentDetailId); // 목록 새로고침
+          });
+        });
+      })(e);
+      actionRow.appendChild(delBtn2);
       card.appendChild(actionRow);
     } else {
       // 2026-08-12 이전에 저장된 견적서는 서버 레코드 id(dbId)가 없어서

@@ -511,8 +511,17 @@ function saveCustomerToDb(customer, callback) {
   });
 }
 
-// 견적서 보관(소프트 삭제) — 2026-08-05: 예전엔 견적서를 삭제/숨길 방법이
+// 견적서 삭제 — 2026-08-05: 예전엔 견적서를 삭제/숨길 방법이
 // 앱 어디에도 없었음(estimates.is_archived 컬럼은 있는데 쓰는 코드가 없었음)
+//
+// 2026-08-28(선혜님 지시 — "한번 삭제를 하면 보관하지 않아도 돼 괜히 다
+// 있으니 헷갈리잖아"): 보관처리(소프트삭제) 방식은 고객상세 화면의
+// "견적서" 목록에 지운 것까지 계속 쌓여서 오히려 헷갈리게 만든다는
+// 지적으로, 진짜 완전삭제(DB에서 실제로 지움)로 변경. DB쪽
+// estimates_delete RLS도 실장이 본인 담당 견적을 지울 수 있게 함께 확장함
+// (예전엔 마스터 전용이라 "오지은 실장으로 삭제가 안 된다"는 문제의
+// 실제 원인이었을 가능성이 있음 - 8/25엔 "서버가 거부해도 성공했다고
+// 뜨는" 거짓성공 증상만 고쳐졌고 근본 권한 문제는 안 고쳐져 있었음).
 function archiveEstimate(est, callback) {
   var all = [];
   try { all = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
@@ -521,13 +530,13 @@ function archiveEstimate(est, callback) {
   // x.id===est.id로 찾으면 null끼리 매칭돼서 엉뚱한 것이 지워지거나, 배열에
   // id:null 항목이 여러개면 어느 것도 정확히 못 찾는 문제가 있었음. id가 없으면
   // 대신 no(견적번호, 로컬에서 고유하게 발급됨)로 정확히 찾도록 보강.
-  var target = est.id
-    ? all.find(function(x){ return x.id === est.id; })
-    : all.find(function(x){ return !x.id && x.no === est.no; });
-  if (target) target.isArchived = true;
+  var idx = est.id
+    ? all.findIndex(function(x){ return x.id === est.id; })
+    : all.findIndex(function(x){ return !x.id && x.no === est.no; });
+  if (idx >= 0) all.splice(idx, 1); // 완전삭제 - 로컬 캐시에서도 그냥 제거(보관 플래그 대신)
   localStorage.setItem('dah_saved', JSON.stringify(all));
   if (typeof est.id === 'string' && est.id.length > 20) { // UUID면 서버(client_id 있는 정식 견적서)에도 반영
-    sbXHR('PATCH', 'estimates?id=eq.' + est.id, { is_archived: true }, function(err){ if(callback) callback(err); });
+    sbXHR('DELETE', 'estimates?id=eq.' + est.id, null, function(err){ if(callback) callback(err); });
   } else if (callback) callback(null);
 }
 
