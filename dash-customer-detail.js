@@ -755,9 +755,24 @@ function deleteCustomer() {
   // 보이지만, 함수 자체엔 권한 체크가 없어서 스태프가 함수를 직접 호출하면
   // 실제로 삭제(보관처리)가 실행됐음. 자기 담당 고객은 RLS(서버)도 막아주지
   // 못해서(스태프는 본인 담당 레코드에 UPDATE 권한이 있음) 실제 위험이었음.
-  if (!(typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'master')) {
-    if (typeof showToast === 'function') showToast('고객 삭제는 마스터만 할 수 있어요');
-    return;
+  // → 당시엔 여기에 마스터전용 체크를 추가해서 막았음.
+  //
+  // 2026-08-27(선혜님 지시로 renderDetailBottomButtons에서 삭제(보관처리)
+  // 버튼을 실장에게도 보이게 넓혔는데, 정작 이 함수 안의 위 8/14 체크를
+  // 그대로 남겨둬서 실장이 버튼을 눌러도 "마스터만 할 수 있어요" 토스트만
+  // 뜨고 아무 일도 안 일어나던 버그. 선혜님이 "실장으로 로그인했을 때
+  // 삭제되게 해라고 했는데 왜 안되냐"고 지적해서 발견함 — 버튼 노출과
+  // 실제 실행 함수를 따로따로 고치면서 한쪽을 빠뜨린 전형적인 실수.
+  // 완전삭제/복구는 여전히 마스터 전용으로 남기고, 이 함수(보관처리)만
+  // "본인 담당 고객이면 실장도 가능"으로 조건을 맞춤 - DB RLS(customers_update)
+  // 는 이미 스태프의 본인담당 고객 UPDATE를 허용하고 있어 서버쪽은 안전.
+  if (currentUser && currentUser.role === 'staff') {
+    var arrCheck = loadCustomers();
+    var targetCheck = findCurrentDetailCustomer(arrCheck);
+    if (!targetCheck || (targetCheck.staffName||'마스터') !== currentUser.name) {
+      if (typeof showToast === 'function') showToast('본인 담당 고객만 삭제할 수 있어요');
+      return;
+    }
   }
   if (!confirm((currentDetailName||'고객') + '을(를) 삭제할까요? (완전히 지워지지 않고 보관 처리되며, 필요하면 나중에 복구할 수 있어요)')) return;
   var arr = loadCustomers();
