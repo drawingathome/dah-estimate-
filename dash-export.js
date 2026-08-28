@@ -31,6 +31,15 @@ function backupData() {
 function exportExcel() {
   // 2026-08-14: 마스터 전용 - 버튼 숨김만으론 코드 직접호출로 우회 가능하므로 함수에서도 방어
   if (!(typeof currentUser !== "undefined" && currentUser && currentUser.role === "master")) { if (typeof showToast === "function") showToast("엑셀 다운로드는 마스터만 가능해요"); return; }
+  // 2026-08-28(선혜님 요청 - "카카오 진행 전에 전반적으로 싹 다 확인"으로
+  // 발견): exportEstimatesExcel(견적서 엑셀)은 오늘 이미 서버 강제
+  // 재동기화하도록 고쳤는데, 이 쌍둥이 함수(고객목록 엑셀)는 똑같은
+  // loadCustomers() 캐시 직접읽기 패턴을 그대로 갖고 있었음 - 놓쳤던
+  // 사각지대. 똑같이 강제 재동기화 wrapper로 구조 변경.
+  if (typeof showToast === 'function') showToast('최신 데이터 확인 중...');
+  loadCustomersAsync(function(){ _exportExcelInner(); }, true);
+}
+function _exportExcelInner() {
   try {
     var customers = loadCustomers().filter(function(c){ return !isSoftDeleted(c); });
     if (!customers || customers.length === 0) { showToast('내보낼 고객 데이터가 없습니다'); return; }
