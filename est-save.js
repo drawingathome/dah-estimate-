@@ -365,6 +365,12 @@ function _saveEstimateInner(_onDone) {
       estimate_status:currentTab||'ga',
       phone:phone, space:spaceStr, product:fabricStr,
       date: document.getElementById('c-measure')?.value || '',
+      // 2026-08-28(선혜님 지적 — "견적서에 시공일을 적어놔도 없어져"):
+      // 시공일(c-install)이 지금까지 구글시트 동기화(syncCustomerToSheet)
+      // 에만 보내지고, 정작 견적서 DB(estimates 테이블)엔 저장할 컬럼
+      // 자체가 없었음 - 그래서 적어도 저장할 곳이 없어 사라진 것처럼
+      // 보였음. install_date 컬럼을 새로 추가하고 여기서 함께 저장.
+      install_date: document.getElementById('c-install')?.value || '',
       memo: custMemo,
       confirmed_at: window._estimateConfirmedAt || null,
       branch: '반포점',

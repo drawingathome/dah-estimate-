@@ -854,6 +854,14 @@ var currentTab = 'ga';
               if (e && e.line_items && typeof restoreLineItemsToForm === 'function') {
                 loadedItems = restoreLineItemsToForm(e.line_items, e.product);
               }
+              // 2026-08-28: 이 견적서 자체에 저장된 실측일/시공일이 있으면
+              // (고객 레코드값보다 더 구체적이므로) 우선 반영.
+              if (e && e.date && document.getElementById('c-measure')) {
+                document.getElementById('c-measure').value = e.date;
+              }
+              if (e && e.install_date && document.getElementById('c-install')) {
+                document.getElementById('c-install').value = e.install_date;
+              }
               if (e && e.region && document.getElementById('c-region')) {
                 document.getElementById('c-region').value = e.region;
                 document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
@@ -958,6 +966,9 @@ var currentTab = 'ga';
           // 빈 값으로 덮어써져 사라지고 있었음.
           if (e.date && document.getElementById('c-measure')) {
             document.getElementById('c-measure').value = e.date;
+          }
+          if (e.install_date && document.getElementById('c-install')) {
+            document.getElementById('c-install').value = e.install_date;
           }
           if (e.region && document.getElementById('c-region')) {
             document.getElementById('c-region').value = e.region;
