@@ -246,7 +246,24 @@ function renderKanbanCols(customers, kanbanWrap) {
               'style="border:none;background:none;color:var(--light);font-size:15px;cursor:pointer;padding:8px 10px;line-height:1;min-height:32px;min-width:32px">···</button>' +
           '</div>' +
           '<div class="kanban-item-sub">' + escHtml(c.phone || '') + '</div>' +
-          (c.price ? '<div class="kanban-item-price">' + Number(c.price).toLocaleString() + '원</div>' : '');
+          (function() {
+            // 2026-08-28(선혜님 재지적 — "어떤거는 선금 금액이 있고 어떤거는
+            // 토탈 금액이 있지????", 오늘 아침부터 반복된 지적): c.price(전체
+            // 계약금액)만 보여주던 게, 손현영님처럼 우연히 선금=전체금액인
+            // 경우와 조승희님처럼 선금<전체금액인 경우가 겉보기에 구분이
+            // 안 돼서 "어떤 카드는 선금, 어떤 카드는 전체가 보인다"는 착시로
+            // 계속 오해를 샀음. "착시다"라고 설명만 하지 않고, 실제로 받은
+            // 금액과 전체 금액을 카드에 둘 다 명확히 구분해서 보여주도록 변경.
+            var price = Number(c.price) || 0;
+            var received = (Number(c.depositAmount) || 0) + (Number(c.balanceAmount) || 0);
+            if (!price) return '';
+            var totalLine = '<div class="kanban-item-price">' + price.toLocaleString() + '원</div>';
+            if (received > 0 && received < price) {
+              // 일부만 받은 상태 - "받은 X원" 을 전체금액 위에 작게 별도 표시
+              return '<div style="font-size:11px;color:#2F6690;font-weight:700;margin-top:2px">받은 ' + received.toLocaleString() + '원</div>' + totalLine;
+            }
+            return totalLine;
+          })();
         item.addEventListener('click', function() { openDetail(c.clientName, c.id); });
         item.addEventListener('dragstart', function(e) {
           e.dataTransfer.setData('text/customer-name', c.clientName || '');
