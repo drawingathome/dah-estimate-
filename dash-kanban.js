@@ -240,7 +240,10 @@ function renderKanbanCols(customers, kanbanWrap) {
         var stageChangeCurrent = stage.key;
         item.innerHTML =
           '<div style="display:flex;align-items:flex-start;justify-content:space-between">' +
-            '<div class="kanban-item-name" style="flex:1">' + escHtml(c.clientName || '') + '</div>' +
+            '<div class="kanban-item-name" style="flex:1;display:flex;align-items:center;gap:5px">' +
+              (typeof renderStaffBadge === 'function' ? renderStaffBadge(c.staffName, 16) : '') +
+              '<span>' + escHtml(c.clientName || '') + '</span>' +
+            '</div>' +
             '<button class="ksb" data-n="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-s="' + stage.key + '" data-id="' + escHtml(c.id||'') + '" ' +
               'onclick="event.stopPropagation();var t=this;showStageMenu(t.dataset.n,t.dataset.s,t,t.dataset.id)" ' +
               'style="border:none;background:none;color:var(--light);font-size:15px;cursor:pointer;padding:8px 10px;line-height:1;min-height:32px;min-width:32px">···</button>' +

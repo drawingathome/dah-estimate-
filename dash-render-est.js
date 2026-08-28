@@ -193,8 +193,11 @@ function renderEstList() {
 
     // 중간 행: 고객명 + 금액
     var mid = el('div', {style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-1)'});
-    var nameEl = el('span', {style:'font-size:12px;font-weight:700;color:var(--dark)'});
-    nameEl.textContent = e.clientName || '—';
+    var nameEl = el('span', {style:'font-size:12px;font-weight:700;color:var(--dark);display:flex;align-items:center;gap:5px'});
+    // 2026-08-28(선혜님 지시 — 담당자 구분 표시): 칸반과 동일한 공용 뱃지
+    // 재사용(체크리스트 24번 - 같은 표시를 여러 화면에 따로 안 짜기 위함).
+    nameEl.innerHTML = (typeof renderStaffBadge === 'function' ? renderStaffBadge(e.staffName, 15) : '') +
+      '<span>' + escHtml(e.clientName || '—') + '</span>';
     var priceEl = el('span', {style:'font-size:11px;font-weight:800;color:var(--dark);letter-spacing:-0.5px'});
     priceEl.textContent = (Number(e.price)||0).toLocaleString() + '원';
     mid.appendChild(nameEl); mid.appendChild(priceEl);
