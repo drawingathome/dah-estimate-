@@ -557,16 +557,10 @@ function archiveEstimate(est, callback) {
   } else if (callback) callback(null);
 }
 
-// customer 객체(id 포함 가능)를 받아 삭제. id가 있으면 id로 정확히 지정,
-// 없는 예전 데이터는 부득이 이름으로 폴백(이 경우에만 동명이인 위험이 남음).
-function deleteCustomerFromDb(customer, callback) {
-  var filter = customer && customer.id
-    ? 'id=eq.' + customer.id
-    : 'client_name=eq.' + encodeURIComponent(typeof customer === 'string' ? customer : (customer && customer.clientName) || '');
-  // 실제 DELETE는 RLS에서 master 역할만 허용됨(customers_delete 정책) → 여기선 안전하게 소프트 삭제(is_archived=true)만 함
-  sbXHR('PATCH', 'customers?' + filter, { is_archived: true }, function(err, data) { if(err) console.error('삭제 오류:', err.text); if(callback) callback(err, data); });
-}
-
+// 2026-08-28(선혜님 요청 - "코드 정리, 제대로 하자"로 발견): 이 함수(보관
+// 처리용 소프트삭제)는 오늘 삭제 정책을 완전삭제로 전환하면서
+// permanentlyDeleteCustomerFromDb로 대체됐고, 더 이상 어디서도 호출되지
+// 않는 죽은 코드였음 - 제거함.
 // 2026-08-05: 진짜 완전 삭제(되돌릴 수 없음) — 이미 보관(소프트삭제) 처리된
 // 고객에게만 노출됨(2단계 안전장치). RLS의 customers_delete 정책상 master
 // 역할만 실제로 성공함.

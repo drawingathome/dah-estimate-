@@ -856,5 +856,8 @@ function exportAllEstimatesExcel() {
 function showToast(msg) {
   var t=document.getElementById('toast');
   t.textContent=msg; t.style.opacity='1';
-  setTimeout(function(){ t.style.opacity='0'; },2200);
+  // 2026-08-28: 대시보드 버전(dash-core.js)과 표시시간(2200→2500ms) 통일
+  // - 실질적 버그는 아니었지만 두 앱 UX를 일관되게 맞춤(선혜님 요청 -
+  // "쌍둥이 함수 찾기, 코드 정리, 제대로 하자").
+  setTimeout(function(){ t.style.opacity='0'; },2500);
 }
