@@ -94,6 +94,17 @@ function exportExcel() {
 function exportEstimatesExcel() {
   // 2026-08-14: 마스터 전용 - 버튼 숨김만으론 코드 직접호출로 우회 가능하므로 함수에서도 방어
   if (!(typeof currentUser !== "undefined" && currentUser && currentUser.role === "master")) { if (typeof showToast === "function") showToast("엑셀 다운로드는 마스터만 가능해요"); return; }
+  // 2026-08-28(선혜님 지적 — "전체적으로 한번 검사하는건 어때"로 발견): 이
+  // 함수가 localStorage(dah_saved)를 서버 재동기화 없이 그대로 읽고
+  // 있었음 - 오늘 하루 여러 곳(고객상세 이력/정보탭, openDetail 등)에서
+  // 발견한 것과 같은 패턴. 실제 회계/보고용으로 쓰는 엑셀 파일에
+  // 이미 삭제한 중복 견적이 예전 캐시 그대로 다시 나타날 수 있는
+  // 심각한 문제라, 다운로드 직전 서버 최신상태로 강제 재동기화하도록
+  // wrapper로 구조 변경.
+  if (typeof showToast === 'function') showToast('최신 데이터 확인 중...');
+  loadEstimatesAsync(function(){ _exportEstimatesExcelInner(); }, true);
+}
+function _exportEstimatesExcelInner() {
   try {
     var estimates = [];
     try { estimates = JSON.parse(localStorage.getItem('dah_saved') || '[]'); } catch(ex) {}
