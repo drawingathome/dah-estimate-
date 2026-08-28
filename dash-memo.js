@@ -22,32 +22,11 @@ function setMemoPhrasesList(phrases) {
   if (typeof sbSyncSetting === 'function') sbSyncSetting('memo_phrases', phrases);
 }
 
-function saveMemoPhrase(phrase) {
-  var phrases = getMempoPhrases();
-  if (!phrases.includes(phrase)) {
-    phrases.unshift(phrase);
-    if (phrases.length > 20) phrases = phrases.slice(0, 20);
-    setMemoPhrasesList(phrases);
-  }
-}
+// 2026-08-28(선혜님 확인 - "이 기능은 스킵"): 아래 3개 함수(saveMemoPhrase/
+// insertMemoPhrase/renderMemoPhrases)는 원래 "고객 추가" 모달의 메모칸에
+// 빠른문구 버튼을 붙이려고 만든 것인데, 그 메모칸이 hidden 필드로 바뀌면서
+// 붙을 자리가 없어져 죽은 코드가 됐음. 참고로 "빠른 문구" 기능 자체는
+// 죽지 않고 고객상세 화면의 메모칸(dash-customer-detail.js)에서 이미 다른
+// 방식으로 살아 쓰이고 있음 - 그쪽은 getMempoPhrases/setMemoPhrasesList를
+// 그대로 재사용하므로 이 두 함수는 유지, 여기 3개만 제거.
 
-function insertMemoPhrase(phrase) {
-  var memoEl = document.getElementById('add-memo');
-  if (!memoEl) return;
-  var cur = memoEl.value;
-  memoEl.value = cur ? cur + ' / ' + phrase : phrase;
-  memoEl.focus();
-}
-
-function renderMemoPhrases() {
-  var wrap = document.getElementById('memo-quick-wrap');
-  if (!wrap) return;
-  wrap.innerHTML = '';
-  getMempoPhrases().slice(0, 9).forEach(function(p) {
-    var btn = document.createElement('button');
-    btn.className = 'memo-quick-btn';
-    btn.textContent = p;
-    btn.onclick = function() { insertMemoPhrase(p); };
-    wrap.appendChild(btn);
-  });
-}
