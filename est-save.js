@@ -292,12 +292,20 @@ function _saveEstimateInner(_onDone) {
       // 저장해도 customers.price가 계속 0으로 남아서, 칸반카드의 금액
       // 표시(c.price 기준)와 "선금결제 처리" 필요항목 판단 등이 전부
       // 어긋나고 있었음. price(매출계산 기준금액=화면표시용)는 가견적
-      // 단계에서도 항상 최신 견적금액으로 동기화하도록 분리 - 다만
-      // performance_revenue(실제 매출실적 집계용)는 원래 의도(미확정
-      // 견적을 실적으로 잘못 잡지 않기 위함)를 그대로 지켜서 확정일
-      // 때만 채움.
+      // 단계에서도 항상 최신 견적금액으로 동기화하도록 분리했었음.
+      //
+      // 2026-08-28(선혜님 재확인 — "실장의 매출은 제품비용만으로 들어가는건데
+      // 50%선금 50%잔금으로 진행하면 계산이 안맞지 않니?"): 위에서
+      // performance_revenue만 "확정일 때만"으로 남겨뒀던 게 오히려 문제를
+      // 만들었음 - 미확정(가견적/실측준비중/선금결제 등) 고객은 performance_
+      // revenue가 계속 0으로 남아서, splitCustomerPayments()가 어쩔 수 없이
+      // c.price(전체 100%, 레일·시공비 포함)로 폴백해서 매출을 계산하고
+      // 있었음(오늘 아침 그 폴백 자체를 도입한 게 부작용을 만든 것).
+      // perf 변수 자체가 이미 "커튼·블라인드 총액-할인"(레일·시공비는
+      // 애초에 안 들어감, 순수 제품비용)이라 확정 여부와 무관하게 항상
+      // 동기화해도 실적 왜곡 위험이 없음 - price와 동일하게 gate 제거.
       custPayload.price = grand;
-      if (isFinalForDrive) { custPayload.performance_revenue = perf; }
+      custPayload.performance_revenue = perf;
       xhr.send(JSON.stringify(custPayload));
     } catch(e) { console.warn('Supabase 연결 오류:', e); saveToEstimates(); }
   }
