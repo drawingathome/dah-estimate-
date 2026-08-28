@@ -936,7 +936,7 @@ var currentTab = 'ga';
           // 항상 채워지던 주소가 여기선 비어보이는 회귀가 생길 뻔했음. client_id로
           // 고객 주소만 별도로 채워옴.
           if (e.client_id) {
-            var addrUrl = SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(e.client_id) + '&select=addr';
+            var addrUrl = SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(e.client_id) + '&select=addr,measure_date,install_date,deposit_amount';
             var axhr = new XMLHttpRequest();
             axhr.open('GET', addrUrl, true);
             axhr.setRequestHeader('apikey', SUPABASE_KEY);
@@ -944,8 +944,42 @@ var currentTab = 'ga';
             axhr.onload = function() {
               try {
                 var arows = JSON.parse(axhr.responseText);
-                if (arows && arows[0] && arows[0].addr && document.getElementById('c-addr')) {
-                  document.getElementById('c-addr').value = arows[0].addr;
+                var cRow = arows && arows[0];
+                if (cRow && cRow.addr && document.getElementById('c-addr')) {
+                  document.getElementById('c-addr').value = cRow.addr;
+                }
+                // 2026-08-28(선혜님 지적 — "실측일 넣고 선금을 넣어도
+                // 견적서에는 적용이 안돼!!", 유경진 사례): 대시보드↔견적서
+                // 동기화를 loadCustId 경로(완전 신규/견적없는 고객)에만
+                // 넣어놨는데, openEstimate()는 기존 견적이 있는 고객이면
+                // 전부 이 loadEstDbId 경로로 오게 되어있어서(2026-08-24
+                // 변경), 이미 견적서가 있는 대부분의 실사용 케이스에서
+                // 정작 동기화가 전혀 적용 안 되고 있었음. 이 견적서
+                // 자체에 저장된 실측일/시공일이 비어있으면(=대시보드에서
+                // 나중에 입력됐거나, 견적서를 만들 당시엔 없었던 값)
+                // 고객 레코드값으로 채워넣고, 계약금은 실제 입금액
+                // (deposit_amount)이 있으면 이 견적서의 계산값(50%자동
+                // 등)보다 항상 실제 입금액을 우선함.
+                if (!e.date && cRow && cRow.measure_date && document.getElementById('c-measure')) {
+                  document.getElementById('c-measure').value = cRow.measure_date;
+                }
+                if (!e.install_date && cRow && cRow.install_date && document.getElementById('c-install')) {
+                  document.getElementById('c-install').value = cRow.install_date;
+                }
+                if (cRow && Number(cRow.deposit_amount) > 0) {
+                  var applyRealDeposit = function() {
+                    var depInpFromCustEdit = document.getElementById('deposit-input');
+                    if (depInpFromCustEdit) {
+                      depInpFromCustEdit.value = Number(cRow.deposit_amount).toLocaleString();
+                      depInpFromCustEdit.dataset.raw = String(cRow.deposit_amount);
+                      depInpFromCustEdit.dataset.manualEdit = '1';
+                    }
+                  };
+                  // applyFrozenBreakdown이 즉시+3.5초 뒤 2차례 계약금을
+                  // 계산값으로 덮어쓰므로, 그 이후(4초)에 실제 입금액으로
+                  // 확실히 마지막에 적용되게 함(순서경쟁 방지).
+                  applyRealDeposit();
+                  setTimeout(applyRealDeposit, 4000);
                 }
               } catch(eAddr) {}
             };
