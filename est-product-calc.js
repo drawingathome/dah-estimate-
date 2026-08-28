@@ -723,6 +723,13 @@ function delRow(btn) {
     } else {
       autoAddBlindSvc();
     }
+    // 2026-08-28(선혜님 지적 - 복사시 옵션추가금 누락과 같은 종류): 블라인드
+    // 행을 삭제할 때도 옵션추가금 합계를 다시 계산해야 함 - 안 하면 지운
+    // 행의 옵션값이 계속 합계에 남아있거나(과다계상), 마지막 블라인드를
+    // 지워도 옵션추가금 행이 안 없어지는 문제가 있었음. recalcBlindOptionExtras
+    // 자체가 "합계 0이면 행 제거"까지 처리하므로 blindBody 유무 분기와
+    // 무관하게 항상 호출하면 됨.
+    recalcBlindOptionExtras();
   }
   calcTotal();
 }
@@ -775,6 +782,13 @@ function copyBlindRow(btn) {
   insertAfter.parentNode.insertBefore(clone,insertAfter.nextSibling);
   makeRowDraggable(clone);
   autoAddBlindSvc();
+  // 2026-08-28(선혜님 지적 — "옵션칸에 금액을 넣어도 금액 추가가 안되네",
+  // 실제로는 블라인드 행을 복사했을 때 재현됨): autoAddBlindSvc(블라인드
+  // 시공비)만 다시 계산하고, 옵션추가금 합계를 다시 계산하는
+  // recalcBlindOptionExtras()는 안 불러서, 복사된 행에 옵션값이 있어도(또는
+  // 원본 행 옵션값이 있는 상태로 복사해도) "레일·시공비·기타"의 옵션추가금
+  // 합계가 새로 추가된 행만큼 안 늘어나고 예전 값에 멈춰있었음.
+  recalcBlindOptionExtras();
   calcTotal();
 }
 function copySvcRow(btn) {
