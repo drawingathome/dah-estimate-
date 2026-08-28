@@ -799,35 +799,67 @@ function buildRequestHTML(kind, extraNote) {
     // 별개 항목처럼 보였음. 같은 공간(커튼은 공간 단위, 블라인드는 공간+종류
     // 단위)으로 묶어서 개수만 표시하도록 변경 — "거실 : 커튼 2조",
     // "거실 : 롤스크린 2피스"처럼 한 줄로 정리됨.
-    var curtainCounts = {}; var curtainOrder = [];
+    // 2026-08-28(선혜님 요청 — "블라인드 실측 다 누락되었어", "거실[메인] :
+    // 겉커튼+속커튼 / 거실[알파룸] : 겉커튼+속커튼 / 거실[측면] : 블라인드
+    // 2피스... 이런식으로 만들게 구조를 짜줄 수 있어?"): 예전엔 공간
+    // 단위로만 묶어서 "거실 : 커튼 4조"처럼 뭉뚱그려져, 같은 거실 안에
+    // [메인]/[알파룸]처럼 서로 다른 창문 위치가 있어도 구분이 안 되고
+    // 겉커튼/속커튼 구성도 안 보여서 시공팀이 헷갈릴 수 있었음(제품명이
+    // "[메인] 이븐 아이보리 겉커튼"처럼 대괄호 세부위치를 담고 있는 걸
+    // 활용해서 재설계). 공간+세부위치로 묶고, 그 안의 겉커튼/속커튼
+    // 구성을 함께 표시.
+    function extractSubLoc(name) {
+      var m = (name||'').match(/^\[([^\]]+)\]/);
+      return m ? m[1] : '';
+    }
+    function curtainRole(name) {
+      if (/속커튼/.test(name)) return '속커튼';
+      if (/겉커튼/.test(name)) return '겉커튼';
+      return '커튼';
+    }
+    var curtainGroups = {}; var curtainOrder = [];
     document.querySelectorAll('#curtain-body tr').forEach(function(tr){
       var space  = tr.querySelector('.space-inp')?.value || '';
       var fabric = tr.querySelector('.c-fabric')?.value || '';
       var name   = tr.querySelector('.c-display-name')?.value || '';
       if(!space && !fabric && !name) return;
-      var key = space || '—';
-      if(!(key in curtainCounts)) { curtainCounts[key] = 0; curtainOrder.push(key); }
-      curtainCounts[key]++;
+      var subLoc = extractSubLoc(name);
+      var key = (space||'—')+'|'+subLoc;
+      if(!(key in curtainGroups)) { curtainGroups[key] = { space: space||'—', subLoc: subLoc, roles: {} }; curtainOrder.push(key); }
+      var role = curtainRole(name);
+      curtainGroups[key].roles[role] = (curtainGroups[key].roles[role]||0) + 1;
     });
-    var blindCounts = {}; var blindOrder = [];
+    var blindGroups = {}; var blindOrder = [];
     document.querySelectorAll('#blind-body tr').forEach(function(tr){
       var space  = tr.querySelector('.space-inp')?.value || '';
       var kind2  = tr.querySelector('.blind-kind')?.value || '블라인드';
+      var name   = tr.querySelector('.b-display-name')?.value || '';
       var innerInps = tr.querySelectorAll('.inner-row .inner-inp');
       var fabric = innerInps[0]?.value || '';
-      if(!space && !fabric) return;
-      var key = (space||'—')+'|'+kind2;
-      if(!(key in blindCounts)) { blindCounts[key] = 0; blindOrder.push(key); }
-      blindCounts[key]++;
+      if(!space && !fabric && !name) return;
+      var subLoc = extractSubLoc(name);
+      var key = (space||'—')+'|'+subLoc+'|'+kind2;
+      if(!(key in blindGroups)) { blindGroups[key] = { space: space||'—', subLoc: subLoc, kind: kind2, count: 0 }; blindOrder.push(key); }
+      blindGroups[key].count++;
     });
+    function groupLabel(space, subLoc) { return space + (subLoc ? '['+subLoc+']' : ''); }
     var items = [];
-    curtainOrder.forEach(function(space){
-      items.push(space+' : 커튼 '+curtainCounts[space]+'조');
+    curtainOrder.forEach(function(key){
+      var g = curtainGroups[key];
+      var label = groupLabel(g.space, g.subLoc);
+      var roleKeys = Object.keys(g.roles);
+      if (g.roles['겉커튼'] && g.roles['속커튼'] && roleKeys.length === 2) {
+        items.push(label+' : 겉커튼+속커튼');
+      } else if (roleKeys.length === 1 && roleKeys[0] === '커튼') {
+        items.push(label+' : 커튼 '+g.roles['커튼']+'장');
+      } else {
+        items.push(label+' : '+roleKeys.map(function(r){ var n=g.roles[r]; return n>1 ? r+' '+n+'장' : r; }).join('+'));
+      }
     });
     blindOrder.forEach(function(key){
-      var parts = key.split('|'); var space = parts[0]; var kind2 = parts[1];
-      var n = blindCounts[key];
-      items.push(space+' : '+kind2+(n>1 ? ' '+n+'피스' : ''));
+      var g = blindGroups[key];
+      var label = groupLabel(g.space, g.subLoc);
+      items.push(label+' : '+g.kind+(g.count>1 ? ' '+g.count+'피스' : ''));
     });
     if(items.length === 0) {
       out += '<div style="padding:30px 0;text-align:center;color:#B0A99F;font-size:12px">입력된 공간/제품이 없습니다.</div>';
@@ -867,10 +899,11 @@ function buildRequestHTML(kind, extraNote) {
       var space  = tr.querySelector('.space-inp')?.value || '';
       var innerInps = tr.querySelectorAll('.inner-row .inner-inp');
       var vendor = innerInps[1]?.value || '';
+      var bname  = tr.querySelector('.b-display-name')?.value || '';
       var bmw = tr.querySelector('.bmw')?.value || '';
       var bmh = tr.querySelector('.bmh')?.value || '';
       var handle = tr.querySelector('.handle-dir')?.value || '';
-      if(!space && !bmw && !vendor) return;
+      if(!space && !bmw && !vendor && !bname) return;
       rows.push({
         space: space||'—',
         size: (bmw&&bmh) ? (bmw+'×'+bmh) : '—',
