@@ -46,40 +46,41 @@ async function run() {
     const timerRegistered = await page.evaluate(() => typeof _authAutoRefreshTimer !== 'undefined' && _authAutoRefreshTimer !== null);
     check(`[${label}] 자동갱신 타이머가 등록되어 있음`, timerRegistered, '실제값=' + timerRegistered);
 
-    await page.evaluate((suffix) => {
-      saveCustomers([{ clientName: '회귀삭제복구고객' + suffix, phone: '01099998888', stage: '상담', staffName: '마스터', price: 100000, date: (typeof todayStr === 'function' ? todayStr() : ''), createdAt: new Date().toISOString() }]);
-    }, label);
+    const custName = '회귀삭제복구고객' + label;
+    // 2026-08-28(선혜님 지시 - "삭제하면 보관처리 하지마"): deleteCustomer가
+    // permanentlyDeleteCustomer를 재사용하게 되면서 confirm 외에
+    // prompt(고객명 정확히 입력)도 추가로 뜨게 됨 - 빈 값으로 accept하면
+    // 이름이 안 맞아 삭제 자체가 취소되므로, prompt엔 정확한 이름을 넣어줌.
+    page.removeAllListeners('dialog');
+    page.on('dialog', async d => {
+      try { await d.accept(d.type() === 'prompt' ? custName : ''); } catch (e) {}
+    });
+
+    await page.evaluate((name) => {
+      saveCustomers([{ clientName: name, phone: '01099998888', stage: '상담', staffName: '마스터', price: 100000, date: (typeof todayStr === 'function' ? todayStr() : ''), createdAt: new Date().toISOString() }]);
+    }, custName);
     await new Promise(r => setTimeout(r, 300));
-    await page.evaluate((suffix) => { openDetail('회귀삭제복구고객' + suffix); }, label);
+    await page.evaluate((name) => { openDetail(name); }, custName);
     await new Promise(r => setTimeout(r, 300));
     await page.evaluate(() => { deleteCustomer(); });
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 1500));
 
-    const homeHidden = await page.evaluate((suffix) => !document.getElementById('home').textContent.includes('회귀삭제복구고객' + suffix), label);
+    const homeHidden = await page.evaluate((name) => !document.getElementById('home').textContent.includes(name), custName);
     check(`[${label}] 삭제 직후 홈화면에서 즉시 사라짐`, homeHidden, '실제값=' + homeHidden);
 
     await page.evaluate(() => { goTab('pipe'); });
     await new Promise(r => setTimeout(r, 400));
-    const pipeHidden = await page.evaluate((suffix) => !document.getElementById('pipe').textContent.includes('회귀삭제복구고객' + suffix), label);
+    const pipeHidden = await page.evaluate((name) => !document.getElementById('pipe').textContent.includes(name), custName);
     check(`[${label}] 삭제 직후 칸반화면에서 즉시 사라짐`, pipeHidden, '실제값=' + pipeHidden);
 
+    // 2026-08-28: 예전엔 "삭제=보관"이라 "보관 포함" 체크시 검색화면에 다시
+    // 나타나고, 복구 버튼으로 되돌릴 수 있었음. 이제 삭제=완전삭제라서,
+    // 완전히 지워졌으므로 "보관 포함"을 체크해도 더 이상 나타나면 안 됨
+    // (나타난다면 오히려 진짜 삭제가 안 된 것이므로 버그).
     await page.evaluate(() => { goTab('search'); var cb = document.getElementById('show-archived'); if (cb) cb.checked = true; renderSearch(); });
     await new Promise(r => setTimeout(r, 400));
-    const visibleWhenArchivedShown = await page.evaluate((suffix) => document.getElementById('search-list').textContent.includes('회귀삭제복구고객' + suffix), label);
-    check(`[${label}] 보관 포함 체크시 검색화면에 다시 나타남`, visibleWhenArchivedShown, '실제값=' + visibleWhenArchivedShown);
-
-    await page.evaluate((suffix) => { openDetail('회귀삭제복구고객' + suffix); }, label);
-    await new Promise(r => setTimeout(r, 300));
-    const restoreBtnVisible = await page.evaluate(() => Array.from(document.querySelectorAll('#detail-body button')).some(b => b.textContent.includes('복구')));
-    check(`[${label}] 삭제된 고객 상세화면에 복구버튼이 정확히 뜸`, restoreBtnVisible, '실제값=' + restoreBtnVisible);
-
-    await page.evaluate((suffix) => { restoreCustomer('회귀삭제복구고객' + suffix); }, label);
-    await new Promise(r => setTimeout(r, 500));
-    const restoredFlag = await page.evaluate((suffix) => {
-      const c = JSON.parse(localStorage.getItem('dah_customers') || '[]').find(x => x.clientName === '회귀삭제복구고객' + suffix);
-      return c ? c.is_archived : 'not-found';
-    }, label);
-    check(`[${label}] 복구 버튼 클릭 후 is_archived가 false로 되돌아감`, restoredFlag === false, '실제값=' + restoredFlag);
+    const goneEvenWithArchivedShown = await page.evaluate((name) => !document.getElementById('search-list').textContent.includes(name), custName);
+    check(`[${label}] 완전삭제 후엔 보관 포함 체크해도 나타나지 않음(진짜 삭제됨)`, goneEvenWithArchivedShown, '실제값=' + goneEvenWithArchivedShown);
 
     await page.close();
   }

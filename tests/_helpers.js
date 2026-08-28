@@ -125,6 +125,15 @@ async function blockRealNetwork(page) {
         }
         return;
       }
+      if ((url.includes('/rest/v1/customers') || url.includes('/rest/v1/estimates')) && req.method() === 'DELETE') {
+        // 2026-08-28 추가 — 삭제(완전삭제) 관련 테스트에서 DELETE 요청이
+        // 처리 안 돼서 req.abort()로 떨어지고 있었음. permanentlyDeleteCustomer
+        // 같은 흐름은 DELETE 실패시 로컬 반영을 아예 안 하도록 되어있어서
+        // (안전을 위해 의도된 설계), 이 mock이 없으면 삭제 관련 테스트 자체가
+        // "서버 실패"로 조용히 아무 일도 안 하고 넘어가고 있었음.
+        req.respond({ status: 204, headers: { 'Access-Control-Allow-Origin': '*' } });
+        return;
+      }
       req.abort();
     } else {
       req.continue();

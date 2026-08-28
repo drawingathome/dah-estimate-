@@ -553,11 +553,25 @@ function deleteCustomerFromDb(customer, callback) {
 // 2026-08-05: 진짜 완전 삭제(되돌릴 수 없음) — 이미 보관(소프트삭제) 처리된
 // 고객에게만 노출됨(2단계 안전장치). RLS의 customers_delete 정책상 master
 // 역할만 실제로 성공함.
+// 2026-08-28(선혜님 지시 - "삭제하면 보관처리 하지마"): 고객을 완전삭제하기
+// 전에, 연결된 견적서를 먼저 지워야 함 - estimates.client_id가 customers.id를
+// 참조하는 외래키 제약(NO ACTION)이 있어서, 견적서가 남아있으면 고객
+// 삭제 자체가 서버에서 거부됨. 순서를 지켜서 삭제.
 function permanentlyDeleteCustomerFromDb(customer, callback) {
   var filter = customer && customer.id
     ? 'id=eq.' + customer.id
     : 'client_name=eq.' + encodeURIComponent(typeof customer === 'string' ? customer : (customer && customer.clientName) || '');
-  sbXHR('DELETE', 'customers?' + filter, null, function(err, data) { if(err) console.error('완전삭제 오류:', err.text); if(callback) callback(err, data); });
+  var doDeleteCustomer = function() {
+    sbXHR('DELETE', 'customers?' + filter, null, function(err, data) { if(err) console.error('완전삭제 오류:', err.text); if(callback) callback(err, data); });
+  };
+  if (customer && customer.id) {
+    sbXHR('DELETE', 'estimates?client_id=eq.' + customer.id, null, function(estErr) {
+      if (estErr) console.warn('연결된 견적서 삭제 중 오류(계속 진행):', estErr.text);
+      doDeleteCustomer();
+    });
+  } else {
+    doDeleteCustomer(); // id가 없는 예전 데이터는 이름 매칭이라 견적서 client_id와 못 엮음 - 그대로 진행
+  }
 }
 
 // 소프트 삭제(보관 처리)된 고객을 다시 되돌림 (동일하게 id 우선, 없으면 이름 폴백)

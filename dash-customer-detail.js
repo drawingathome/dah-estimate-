@@ -729,15 +729,15 @@ function renderDetailInfoSection(c, body) {
 
 function renderDetailBottomButtons(c, isMaster, body) {
   var bottomBtns = [btn('flex:2;padding:11px;background:var(--dark);color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:12px;letter-spacing:0.2px', '닫기', closeDetail)];
-  // 2026-08-27(선혜님 지시 - "실장도 삭제 권한 줘야 할 것 같아"): 예전엔
-  // 보관처리(소프트삭제)까지 완전삭제와 같이 마스터 전용으로 묶여있어서,
-  // 실장 계정으론 삭제 버튼 자체가 아예 안 보였음. 되돌릴 수 없는 "완전
-  // 삭제"/"복구"는 여전히 마스터 전용으로 남기고, 되돌릴 수 있는 "삭제"
-  // (보관처리)만 실장도 쓸 수 있게 분리함. (DB쪽 RLS는 이미 스태프가
-  // 본인 담당 고객을 UPDATE할 수 있게 되어 있어서, 이 변경은 화면에
-  // 버튼을 보여주기만 하면 됨 - 별도 권한 정책 추가 불필요.)
+  // 2026-08-27(선혜님 지시 - "실장도 삭제 권한 줘야 할 것 같아") →
+  // 2026-08-28(선혜님 지시 - "삭제하면 보관처리 하지마", "실장도 완전삭제"):
+  // 이제 "삭제"는 항상 완전삭제이므로, 앞으로는 이 isSoftDeleted 분기 자체를
+  // 새로 만들 일이 없음(예전에 이미 보관 처리됐던 레거시 데이터만 여기 걸림).
+  // 그런 레거시 건에 대해서도 마스터+본인담당실장 둘 다 완전삭제/복구
+  // 가능하게 일관되게 맞춤.
+  var canActOnThis = isMaster || (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'staff' && (c.staffName||'마스터') === currentUser.name);
   if (isSoftDeleted(c)) {
-    if (isMaster) {
+    if (canActOnThis) {
       bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid var(--dark);font-size:11px;font-family:inherit;cursor:pointer;color:var(--dark);font-weight:700;border-radius:12px', '↩ 복구', function(){ restoreCustomer(c.clientName, c.id); }));
       bottomBtns.unshift(btn('flex:1;padding:11px;background:#fff;border:1px solid #C0392B;font-size:11px;font-family:inherit;cursor:pointer;color:#C0392B;font-weight:700;border-radius:12px', '완전 삭제', function(){ permanentlyDeleteCustomer(c); }));
     }
@@ -775,52 +775,43 @@ function changeStage(stage) {
   });
 }
 
+// 2026-08-28(선혜님 지시 — "삭제하면 보관처리 하지마"): 예전엔 이 함수가
+// 보관처리(is_archived=true)를 했었는데, 그게 나중에 "이미 등록된 고객"
+// 오판 등 계속 혼란을 만들어서, 이제 "삭제"는 항상 완전삭제로 감. 별도
+// 로직을 여기 다시 짜지 않고 permanentlyDeleteCustomer를 그대로 재사용함
+// (같은 개념이 두 곳에 따로 있으면 한쪽만 고치고 잊어버리는 실수가
+// 오늘 하루 계속 반복됐음 - 체크리스트 24번).
 function deleteCustomer() {
-  // 2026-08-14: 불변조건(INV7) 전수점검 중 발견 — 삭제 버튼은 마스터에게만
-  // 보이지만, 함수 자체엔 권한 체크가 없어서 스태프가 함수를 직접 호출하면
-  // 실제로 삭제(보관처리)가 실행됐음. 자기 담당 고객은 RLS(서버)도 막아주지
-  // 못해서(스태프는 본인 담당 레코드에 UPDATE 권한이 있음) 실제 위험이었음.
-  // → 당시엔 여기에 마스터전용 체크를 추가해서 막았음.
-  //
-  // 2026-08-27(선혜님 지시로 renderDetailBottomButtons에서 삭제(보관처리)
-  // 버튼을 실장에게도 보이게 넓혔는데, 정작 이 함수 안의 위 8/14 체크를
-  // 그대로 남겨둬서 실장이 버튼을 눌러도 "마스터만 할 수 있어요" 토스트만
-  // 뜨고 아무 일도 안 일어나던 버그. 선혜님이 "실장으로 로그인했을 때
-  // 삭제되게 해라고 했는데 왜 안되냐"고 지적해서 발견함 — 버튼 노출과
-  // 실제 실행 함수를 따로따로 고치면서 한쪽을 빠뜨린 전형적인 실수.
-  // 완전삭제/복구는 여전히 마스터 전용으로 남기고, 이 함수(보관처리)만
-  // "본인 담당 고객이면 실장도 가능"으로 조건을 맞춤 - DB RLS(customers_update)
-  // 는 이미 스태프의 본인담당 고객 UPDATE를 허용하고 있어 서버쪽은 안전.
-  if (currentUser && currentUser.role === 'staff') {
-    var arrCheck = loadCustomers();
-    var targetCheck = findCurrentDetailCustomer(arrCheck);
-    if (!targetCheck || (targetCheck.staffName||'마스터') !== currentUser.name) {
-      if (typeof showToast === 'function') showToast('본인 담당 고객만 삭제할 수 있어요');
-      return;
-    }
-  }
-  if (!confirm((currentDetailName||'고객') + '을(를) 삭제할까요? (완전히 지워지지 않고 보관 처리되며, 필요하면 나중에 복구할 수 있어요)')) return;
   var arr = loadCustomers();
   var target = findCurrentDetailCustomer(arr);
-  deleteCustomerFromDb(target || currentDetailName, null);
-  if (target) target.is_archived = true;
-  saveCustomers(arr);
-  closeDetail(); renderHome(true);
+  if (!target) { if (typeof showToast === 'function') showToast('고객 정보를 찾을 수 없어요'); return; }
+  permanentlyDeleteCustomer(target);
 }
 
 // 2026-08-05: 진짜 완전 삭제 — 이중 확인(경고 문구 + 이름 재확인)을 거쳐야
-// 실행됨. 되돌릴 방법이 전혀 없으므로 소프트삭제(deleteCustomer)와 완전히 분리.
+// 실행됨. 되돌릴 방법이 전혀 없음.
+//
+// 2026-08-28(선혜님 지시 — "삭제하면 보관처리 하지마 그러면 자꾸 이런
+// 헷갈리거나 중복되는 일이 생기는거 같아", 배재연 사례로 확인됨): 보관처리
+// (소프트삭제)가 나중에 "이미 등록된 고객"으로 잘못 잡히는 등 계속 혼란을
+// 만들어서, 이제 "삭제"는 항상 이 완전삭제 함수 하나로 통일함(deleteCustomer는
+// 이 함수를 그대로 재사용 - 같은 로직을 두 번 안 짜기 위함, 체크리스트 24번).
+// 마스터는 항상 가능, 실장은 본인 담당 고객만 가능(일관성 우선으로 선혜님
+// 확인) - DB RLS(customers_delete)도 함께 확장해뒀음.
 function permanentlyDeleteCustomer(c) {
-  if (!(typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'master')) {
-    if (typeof showToast === 'function') showToast('완전 삭제는 마스터만 할 수 있어요');
+  var isMasterUser = typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'master';
+  var isOwnStaffCustomer = typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'staff' &&
+    c && (c.staffName || '마스터') === currentUser.name;
+  if (!isMasterUser && !isOwnStaffCustomer) {
+    if (typeof showToast === 'function') showToast('본인 담당 고객만 삭제할 수 있어요');
     return;
   }
   var name = c.clientName || '고객';
-  if (!confirm('⚠️ ' + name + '님 정보를 영구 삭제할까요?\n\n이 작업은 절대 되돌릴 수 없어요. 견적서·결제기록 등 모든 정보가 완전히 사라져요.')) return;
+  if (!confirm('⚠️ ' + name + '님 정보를 삭제할까요?\n\n이 작업은 절대 되돌릴 수 없어요. 견적서·결제기록 등 모든 정보가 완전히 사라져요.')) return;
   var typed = prompt('정말 삭제하려면 고객명을 정확히 입력해주세요: "' + name + '"');
   if (typed !== name) { showToast('입력한 이름이 정확하지 않아 취소됐어요'); return; }
   permanentlyDeleteCustomerFromDb(c, function(err) {
-    if (err) { showToast('완전 삭제 실패 — 다시 시도해주세요'); return; }
+    if (err) { showToast('삭제 실패 — 다시 시도해주세요'); return; }
     var arr = loadCustomers().filter(function(x){ return String(x.id) !== String(c.id); });
     saveCustomers(arr);
     showToast(name + '님 정보가 완전히 삭제됐습니다');
