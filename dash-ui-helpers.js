@@ -111,13 +111,9 @@ function validateName(name) {
 }
 
 // 금액 검증 (음수 방지)
-function validateAmount(val) {
-  var num = Number(String(val).replace(/[^0-9.-]/g, ''));
-  if (isNaN(num)) return { ok: false, msg: '올바른 금액을 입력해주세요' };
-  if (num < 0)    return { ok: false, msg: '금액은 0원 이상이어야 합니다' };
-  if (num > 999999999) return { ok: false, msg: '금액이 너무 큽니다' };
-  return { ok: true, value: num };
-}
+// 2026-08-28: validateAmount(음수 방지 금액검증 헬퍼)도 어디서도 호출
+// 안 되고 있어서 제거.
+
 
 // 날짜 검증
 function validateDate(dateStr) {

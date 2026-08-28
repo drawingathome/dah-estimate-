@@ -19,9 +19,9 @@ function setMasterEmail(email) {
 // 입력하면 이메일+비번 조합 자체가 안 맞아서 "틀린 비번"으로 보였음. 역할과
 // 무관하게 "가장 최근 로그인 성공한 이메일"만 따로 기억해서, 편의상
 // 자동채움 용도로만 씀(마스터 여부 판단 로직과는 완전히 분리).
-function getLastLoginEmail() {
-  try { return localStorage.getItem('dah_last_login_email') || ''; } catch(e) { return ''; }
-}
+// 2026-08-28: getLastLoginEmail(마지막 로그인 이메일 자동채움용)도 호출하는
+// 곳이 없어서 함께 제거.
+
 function setLastLoginEmail(email) {
   try { localStorage.setItem('dah_last_login_email', email); } catch(e) {}
 }
@@ -29,27 +29,11 @@ function setLastLoginEmail(email) {
 // Supabase의 app_settings 테이블에서 직접 master_email을 가져와 localStorage에 캐싱.
 // dash-api.js(loadAppSettingsAsync)를 로드하지 않는 페이지(예: 견적서 앱의 URL직접접근 게이트)에서
 // 다른 기기에 등록된 마스터 이메일을 가져오기 위해 사용. callback(email) 형태로 결과 전달.
-function fetchAndCacheMasterEmail(callback) {
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', SUPABASE_URL + '/rest/v1/app_settings?key=eq.master_email&select=value', true);
-  xhr.setRequestHeader('apikey', SUPABASE_KEY);
-  xhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_KEY);
-  xhr.onload = function() {
-    try {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        var rows = JSON.parse(xhr.responseText);
-        if (rows && rows[0] && rows[0].value) {
-          try { localStorage.setItem('dah_master_email', rows[0].value); } catch(e){}
-          callback(rows[0].value);
-          return;
-        }
-      }
-    } catch(e) {}
-    callback(getMasterEmail());
-  };
-  xhr.onerror = function() { callback(getMasterEmail()); };
-  xhr.send();
-}
+// 2026-08-28(선혜님 지시 - "3번만 지우고" 죽은코드 정리로 발견): 아래
+// fetchAndCacheMasterEmail은 다른 기기 등록 마스터 이메일을 견적서 앱
+// URL직접접근 게이트용으로 가져오려던 함수였으나, 그 게이트 자체가 현재
+// 구현에 안 남아있어서 어디서도 호출 안 되고 있었음 - 제거함.
+
 
 // 로그인: 이메일+비밀번호로 Supabase Auth 토큰 발급
 // 성공시 { ok:true, session:{access_token, refresh_token, user} } 반환

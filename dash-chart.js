@@ -112,75 +112,12 @@ function getMonthStaffPerformance(customers, monthKey) {
   return byStaff;
 }
 
-function buildRevenueChartData(customers, period) {
-  var now = new Date();
-  var data = [];
-  
-  if (period === 'monthly') {
-    // 12개월
-    for (var i = 11; i >= 0; i--) {
-      var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      var label = (d.getMonth() + 1) + '월';
-      var value = customers.filter(function(c) {
-        var cd = new Date(c.depositDate || c.createdAt || '');
-        return cd.getFullYear() === d.getFullYear() && cd.getMonth() === d.getMonth();
-      }).reduce(function(sum, c) { return sum + (Number(c.depositAmount) || 0) + (Number(c.balanceAmount) || 0); }, 0);
-      data.push({ label: label, value: value, active: i === 0 });
-    }
-  } else if (period === 'weekly') {
-    // 최근 8주
-    for (var i = 7; i >= 0; i--) {
-      var weekStart = new Date(now);
-      weekStart.setDate(now.getDate() - (i * 7));
-      var weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 6);
-      var label = (weekStart.getMonth()+1) + '/' + weekStart.getDate();
-      var value = customers.filter(function(c) {
-        var cd = new Date(c.depositDate || c.createdAt || '');
-        return cd >= weekStart && cd <= weekEnd;
-      }).reduce(function(sum, c) { return sum + (Number(c.depositAmount) || 0) + (Number(c.balanceAmount) || 0); }, 0);
-      data.push({ label: label, value: value, active: i === 0 });
-    }
-  }
-  return data;
-}
-
-
+// 2026-08-28(선혜님 지시 - "3번만 지우고 나머지는 살려보자"로 확인): buildRevenueChartData
+// /drawBarChart는 매출탭 차트의 예전(SVG 기반) 시도였는데, 현재는 renderChart()
+// (아래, #chart-bars를 직접 채우는 방식)로 완전히 대체되어 어디서도 안 불리고
+// 있었음 - 이미 있는 기능과 중복이라 되살리지 않고 제거함.
 var currentChartPeriod = 'monthly';
 
-
-/* ── SVG 차트 헬퍼 ── */
-function drawBarChart(containerId, data, options) {
-  var container = document.getElementById(containerId);
-  if (!container) return;
-  options = options || {};
-  var W = container.offsetWidth || 320;
-  var H = options.height || 120;
-  var pad = {top:20, right:10, bottom:24, left:10};
-  var maxVal = Math.max.apply(null, data.map(function(d){ return d.value; })) || 1;
-  var barW = Math.max(4, (W - pad.left - pad.right) / data.length - 4);
-  
-  var svg = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">';
-  
-  data.forEach(function(d, i) {
-    var x = pad.left + i * ((W - pad.left - pad.right) / data.length) + 2;
-    var barH = Math.max(2, (d.value / maxVal) * (H - pad.top - pad.bottom));
-    var y = H - pad.bottom - barH;
-    var color = d.active ? 'var(--terra)' : 'var(--border)';
-    
-    svg += '<g class="chart-bar-group">';
-    svg += '<rect class="chart-bar-rect" x="' + x + '" y="' + y + '" width="' + barW + '" height="' + barH + '" rx="2" fill="' + color + '"/>';
-    if (d.value > 0) {
-      var valText = d.value >= 10000 ? Math.round(d.value/10000) + '만' : d.value;
-      svg += '<text class="chart-value" x="' + (x + barW/2) + '" y="' + (y - 4) + '" text-anchor="middle">' + valText + '</text>';
-    }
-    svg += '<text class="chart-label" x="' + (x + barW/2) + '" y="' + (H - 6) + '" text-anchor="middle">' + (d.label || '') + '</text>';
-    svg += '</g>';
-  });
-  
-  svg += '</svg>';
-  container.innerHTML = svg;
-}
 
 function renderChart(period) {
   if (period) currentChartPeriod = period;

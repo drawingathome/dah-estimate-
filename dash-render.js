@@ -92,6 +92,14 @@ function renderHome(skipServerFetch) {
     var thisMonthContracts = customers.filter(function(c) {
       return ['선금결제','실측준비중','확정견적','잔금결제','시공준비중'].indexOf(c.stage) >= 0;
     }).length;
+    // 2026-08-28(선혜님 지시 - "3번만 지우고 나머지는 살려보자"):
+    // getMonthContractCount(이번달 계약일 기준 신규 건수)가 계산은 되는데
+    // 화면 어디에도 안 보이던 걸 되살림 - "진행 건수"(현재 스냅샷)와는
+    // 다른 개념(이번달 신규 계약)이라 카드를 새로 안 늘리고 그 아래
+    // 작은 글씨로 곁들임.
+    var thisMonthNewContracts = typeof getMonthContractCount === 'function'
+      ? getMonthContractCount(customers, _thisMonthKey)
+      : 0;
 
     // ── 목표 설정 ────────────────────────────────────
     var s = typeof getSettings === 'function' ? getSettings() : {};
@@ -209,6 +217,7 @@ function renderHome(skipServerFetch) {
           '<div style="background:#fff;padding:14px 20px">',
             '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">진행 건수</div>',
             '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + thisMonthContracts + '<span style="font-size:12px;font-weight:400;color:var(--sub)">건</span></div>',
+            '<div style="font-size:10px;color:var(--sub);margin-top:2px">이번달 신규계약 ' + thisMonthNewContracts + '건</div>',
           '</div>',
           '<div style="background:#fff;padding:14px 20px">',
             '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">전체 고객</div>',
@@ -249,8 +258,17 @@ function renderHome(skipServerFetch) {
               // 예전엔 다 섞인 flat 목록이라 "지금 결제처리부터 몰아서 하고 싶다" 같은
               // 작업이 어려웠음. 한 고객이 여러 사유에 해당하면(예: 선금결제 처리 +
               // 발주 필요 둘 다) 해당하는 그룹에 각각 나타남 — 그룹별로 그 사유만 표시.
-              function renderRow(c, reasonText, targetTab) {
+              function renderRow(c, reasonText, targetTab, showParkBtn) {
                 var stageColor = (['방문예약','상담','가견적'].indexOf(c.stage) >= 0) ? '#8A8378' : (c.stage === '시공완료') ? '#2F6690' : 'var(--terra)';
+                // 2026-08-28(선혜님 지시 - "3번만 지우고 나머지는 살려보자"):
+                // parkLeadFromHome(홈화면에서 바로 리드를 "대기중"으로 보관
+                // 처리하는 기능, 2026-08-02 신규)이 UI 연결이 끊겨서 죽은
+                // 코드로 남아있던 걸 되살림 - 리드 팔로업 항목에만 "보관"
+                // 버튼을 추가.
+                var parkBtnHtml = showParkBtn
+                  ? '<button data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-cid="' + escHtml(c.id||'') + '" onclick="event.stopPropagation();parkLeadFromHome(this)" ' +
+                    'style="flex-shrink:0;padding:5px 10px;min-height:28px;background:#fff;border:1px solid var(--border);border-radius:8px;font-size:10px;font-weight:700;color:var(--sub);cursor:pointer;font-family:inherit">보관</button>'
+                  : '';
                 return '<div data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-cid="' + escHtml(c.id||'') + '" data-tab="' + targetTab + '" onclick="openDetail(this.getAttribute(\'data-cname\'),this.getAttribute(\'data-cid\')||undefined,this.getAttribute(\'data-tab\'))" ' +
                   'style="padding:10px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:var(--sp-3);cursor:pointer"><div style="width:6px;height:6px;border-radius:50%;background:' + stageColor + ';flex-shrink:0"></div>' +
                   '<div style="flex:1;min-width:0">' +
@@ -261,19 +279,20 @@ function renderHome(skipServerFetch) {
                     '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(c.phone||'') + '</div>' +
                   '</div>' +
                   '<span style="font-size:11px;font-weight:700;color:' + stageColor + ';flex-shrink:0;text-align:right">' + escHtml(reasonText) + '</span>' +
+                  parkBtnHtml +
                   '<span style="color:var(--sub);font-size:14px;flex-shrink:0">›</span>' +
                 '</div>';
               }
               var groups = [
                 { title: '결제 처리', test: function(r){ return r.indexOf('선금결제 처리')>=0 || r.indexOf('잔금결제 처리')>=0 || r.indexOf('미수금')>=0; }, tab: 'pay' },
                 { title: '발주 필요', test: function(r){ return r.indexOf('발주 필요')>=0 || r.indexOf('발주정보 확인 필요')>=0; }, tab: 'order' },
-                { title: '리드 팔로업', test: function(r){ return r.indexOf('진행없음')>=0; }, tab: 'info' }
+                { title: '리드 팔로업', test: function(r){ return r.indexOf('진행없음')>=0; }, tab: 'info', park: true }
               ];
               return groups.map(function(g){
                 var rows = [];
                 needAction.forEach(function(item){
                   item.reasons.forEach(function(r){
-                    if (g.test(r)) rows.push(renderRow(item.customer, r, g.tab));
+                    if (g.test(r)) rows.push(renderRow(item.customer, r, g.tab, g.park));
                   });
                 });
                 if (rows.length === 0) return '';

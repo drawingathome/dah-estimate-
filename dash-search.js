@@ -66,11 +66,7 @@ function getDateFilterRange() {
   return { start: start, end: end };
 }
 
-function filterByDate(customers) {
-  var range = getDateFilterRange();
-  if (!range) return customers;
-  return customers.filter(function(c) {
-    var d = new Date(c.createdAt || c.date || '');
-    return d >= range.start && d <= range.end;
-  });
-}
+// 2026-08-28: filterByDate(날짜범위로 고객 거르는 헬퍼)도 어디서도 호출
+// 안 되고 있어서 제거 - getDateFilterRange() 자체는 계속 사용중(날짜필터
+// 버튼들이 그 범위를 직접 매출계산 함수에 넘기는 방식으로 씀).
+

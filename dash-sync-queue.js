@@ -44,9 +44,9 @@ function removeFromPendingSyncQueue(customerKey) {
   _savePendingSyncQueue(q);
 }
 
-function isPendingSync(customerKey) {
-  return getPendingSyncQueue().some(function(x){ return x.customerKey === customerKey; });
-}
+// 2026-08-28: isPendingSync(특정 고객이 동기화 대기중인지 확인하는 헬퍼)도
+// 어디서도 호출 안 되고 있어서 제거. getPendingSyncQueue() 자체는 계속 사용중.
+
 
 function updateSyncBanner() {
   var q = getPendingSyncQueue();
