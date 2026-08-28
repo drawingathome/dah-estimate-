@@ -40,7 +40,7 @@
 <script src="/dash-core.js?v=202608068500"></script>
 <script src="/dash-render.js?v=202608282400"></script>
 <script src="/dash-render-est.js?v=202608282600"></script>
-<script src="/dash-render-search.js?v=202608063300"></script>
+<script src="/dash-render-search.js?v=202608282700"></script>
 <script src="/dash-memo.js?v=202608044600"></script>
 <script src="/dash-chart.js?v=202608282345"></script>
 <script src="/dash-calendar.js?v=202608282600"></script>
@@ -617,6 +617,10 @@
     <div class="stage-filter-wrap" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
       <button class="sort-btn stage-filter-btn on" data-stage="all" onclick="setStageFilter('all')">전체</button>
       <button class="sort-btn stage-filter-btn" data-stage="parked" onclick="setStageFilter('parked')">대기 리드</button>
+      <!-- 2026-08-28(선혜님 요청 - "미수금 현황판", 오늘 만든 받은금액/전체금액
+           구분을 재사용해서 구현): 잔금이든 선금이든 아직 다 안 받은 고객만
+           모아보는 필터. -->
+      <button class="sort-btn stage-filter-btn" data-stage="unpaid" onclick="setStageFilter('unpaid')">미수금</button>
     </div>
     <!-- 정렬 버튼 -->
     <div class="sort-wrap" style="margin-top:8px">

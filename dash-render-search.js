@@ -14,6 +14,19 @@ function renderSearch() {
   // 그래서 이 화면(고객목록)에선 isArchived 관련 필터/숨김을 전부 제거함.
   if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter === 'parked') {
     all = all.filter(function(c){ return c.leadParked === true; });
+  } else if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter === 'unpaid') {
+    // 2026-08-28(선혜님 요청 - "미수금 현황판"): 전체금액이 있는데 실제
+    // 받은 금액(선금+잔금)이 그보다 적은 고객만 모아봄. 가견적/상담처럼
+    // 아직 결제 자체를 시작 안 한 고객(price는 있어도 결제 개념이 없는
+    // 단계)은 "미수금"이 아니라 "아직 청구 전"이므로 제외 - 실제로 결제가
+    // 진행된(선금이라도 받은) 이후 단계만 대상으로 함.
+    var UNPAID_RELEVANT_STAGES = ['선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'];
+    all = all.filter(function(c){
+      if (UNPAID_RELEVANT_STAGES.indexOf(c.stage) < 0) return false;
+      var price = Number(c.price) || 0;
+      var received = (Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0);
+      return price > 0 && received < price;
+    });
   } else if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter !== 'all') {
     all = all.filter(function(c){ return c.stage === _currentStageFilter; });
   } else {
@@ -45,6 +58,25 @@ function renderSearch() {
     }
   }
   var listEl = document.getElementById('search-list'); listEl.innerHTML = '';
+  // 2026-08-28(선혜님 요청 - "미수금 현황판"): 미수금 필터일 때 상단에
+  // 총 합계를 보여줘서, 목록을 하나하나 안 더해도 전체 규모를 한눈에 알 수 있게 함.
+  var unpaidSummaryEl = document.getElementById('search-unpaid-summary');
+  if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter === 'unpaid') {
+    var totalUnpaid = customers.reduce(function(sum, c) {
+      var u = (Number(c.price)||0) - ((Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0));
+      return sum + Math.max(0, u);
+    }, 0);
+    if (!unpaidSummaryEl) {
+      unpaidSummaryEl = document.createElement('div');
+      unpaidSummaryEl.id = 'search-unpaid-summary';
+      unpaidSummaryEl.style.cssText = 'background:#FFF3EE;border:1px solid var(--terra);border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:13px;font-weight:700;color:var(--terra)';
+      listEl.parentNode.insertBefore(unpaidSummaryEl, listEl);
+    }
+    unpaidSummaryEl.textContent = '미수금 ' + customers.length + '건 합계: ' + totalUnpaid.toLocaleString() + '원';
+    unpaidSummaryEl.style.display = '';
+  } else if (unpaidSummaryEl) {
+    unpaidSummaryEl.style.display = 'none';
+  }
   if (customers.length === 0) { (function(){
     var _emp = document.createElement('div');
     _emp.className = 'empty-state';
@@ -81,6 +113,15 @@ function renderSearch() {
 
     var right = el('div', {class:'ci-right'});
     var priceEl = el('div', {class:'ci-price'}); priceEl.textContent = fmt(c.price);
+    // 2026-08-28(선혜님 요청 - "미수금 현황판"): 칸반카드의 "받은 X원"과
+    // 짝을 이루는 표시 - 전체금액 아래에 미수금(아직 못 받은 금액)을
+    // 주황색으로 별도 표시. 완납이면 표시 안 함(불필요한 정보 추가 방지).
+    var unpaidAmt = (Number(c.price)||0) - ((Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0));
+    var unpaidEl = null;
+    if (unpaidAmt > 0 && Number(c.price) > 0) {
+      unpaidEl = el('div', {style:'font-size:11px;color:var(--terra);font-weight:700;margin-top:2px'});
+      unpaidEl.textContent = '미수금 ' + unpaidAmt.toLocaleString() + '원';
+    }
 
     // 단계 뱃지 + 날짜
     var stageEl = el('div', {class:'ci-stage stage-pill '+c.stage}); stageEl.textContent = c.stage;
@@ -90,7 +131,9 @@ function renderSearch() {
       dateEl.textContent = diff === 0 ? '오늘' : diff > 0 ? diff+'일 경과' : Math.abs(diff)+'일 후';
     }
 
-    right.appendChild(priceEl); right.appendChild(stageEl); right.appendChild(dateEl);
+    right.appendChild(priceEl);
+    if (unpaidEl) right.appendChild(unpaidEl);
+    right.appendChild(stageEl); right.appendChild(dateEl);
     if (c.leadParked) {
       var unparkBtn = el('button', {style:'margin-top:4px;padding:0 10px;min-height:32px;background:var(--dark);color:#fff;border:none;border-radius:8px;font-size:10px;font-weight:700;font-family:inherit;cursor:pointer'});
       unparkBtn.textContent = '복귀';
