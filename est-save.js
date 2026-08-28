@@ -284,7 +284,20 @@ function _saveEstimateInner(_onDone) {
       // 절대 안 잡히는 구조적 결함이었음(이관 데이터만 수동으로 채워놔서
       // 우연히 정상으로 보였을 뿐). 가견적 단계에선 그대로 0으로 둬서,
       // 혹시 오래 방치돼도 하위호환 폴백에 잘못 걸리지 않도록 안전하게 둠.
-      if (isFinalForDrive) { custPayload.price = grand; custPayload.performance_revenue = perf; }
+      //
+      // 2026-08-28(선혜님 지적 — "결제도 대시보드쪽에 적으면 견적서에
+      // 같이 적어지게 해줘", 최시내 사례로 발견: 선금 200만원을 실제
+      // 받았는데도 칸반카드엔 금액이 하나도 안 보였음): 위 gate가
+      // "확정견적일 때만"이라 가견적 단계인 고객은 견적을 몇 번을 다시
+      // 저장해도 customers.price가 계속 0으로 남아서, 칸반카드의 금액
+      // 표시(c.price 기준)와 "선금결제 처리" 필요항목 판단 등이 전부
+      // 어긋나고 있었음. price(매출계산 기준금액=화면표시용)는 가견적
+      // 단계에서도 항상 최신 견적금액으로 동기화하도록 분리 - 다만
+      // performance_revenue(실제 매출실적 집계용)는 원래 의도(미확정
+      // 견적을 실적으로 잘못 잡지 않기 위함)를 그대로 지켜서 확정일
+      // 때만 채움.
+      custPayload.price = grand;
+      if (isFinalForDrive) { custPayload.performance_revenue = perf; }
       xhr.send(JSON.stringify(custPayload));
     } catch(e) { console.warn('Supabase 연결 오류:', e); saveToEstimates(); }
   }

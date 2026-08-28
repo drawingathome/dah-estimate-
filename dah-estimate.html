@@ -821,6 +821,24 @@ var currentTab = 'ga';
           if (c.addr) document.getElementById('c-addr').value = c.addr;
           if (c.staff_name) document.getElementById('c-staff').value = c.staff_name;
           if (c.memo) document.getElementById('c-memo').value = c.memo;
+          // 2026-08-28(선혜님 지적 — "고객 대시보드에 실측일 시공일을 적으면
+          // 견적서쪽에도 자동으로 정리되게 해줘", "결제도 대시보드쪽에 적으면
+          // 견적서에 같이 적어지게 해줘"): 이 경로가 고객 전체 데이터(select=*,
+          // measure_date/install_date/deposit_amount 등 이미 다 포함)를 받아오고
+          // 있었는데, 정작 그 값들을 실측/시공일 입력창과 계약금 입력창에
+          // 채워주는 코드가 없어서 대시보드에 입력해둔 값이 견적서엔 하나도
+          // 안 보이는 상태였음(고객이 직접 겪은 증상 - "실측일을 대시보드쪽에
+          // 정리해도 견적서에 열면 아무것도 적은게 없어").
+          if (c.measure_date && document.getElementById('c-measure')) document.getElementById('c-measure').value = c.measure_date;
+          if (c.install_date && document.getElementById('c-install')) document.getElementById('c-install').value = c.install_date;
+          if (Number(c.deposit_amount) > 0) {
+            var depInpFromCust = document.getElementById('deposit-input');
+            if (depInpFromCust) {
+              depInpFromCust.value = Number(c.deposit_amount).toLocaleString();
+              depInpFromCust.dataset.raw = String(c.deposit_amount);
+              depInpFromCust.dataset.manualEdit = '1'; // 실제 입금액이니 자동 50%재계산으로 덮어쓰면 안 됨
+            }
+          }
           upsertLocalCustomer(c.id, c.client_name, c.phone, c.staff_name, c.addr);
           // 최신 견적서도 같이 조회해서 lineItems/지역 복원
           var estUrl = SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(c.id) + '&order=created_at.desc&limit=1&select=*';
