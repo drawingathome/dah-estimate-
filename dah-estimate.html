@@ -788,7 +788,42 @@ var currentTab = 'ga';
         return base+(next<10?'0'+next:String(next));
       }catch(e){return base+'01';}}())
   addCurtainRow();
-  
+
+  // 2026-08-28(선혜님 지시 — "같은 종류 버그가 또 생길 가능성 자체를
+  // 줄이는 작업": 오늘 실측일/시공일/계약금 동기화를 loadCustId 경로와
+  // loadEstDbId 경로에 따로따로 짜다가, 정확히 같은 개념이 3~4곳에
+  // 복제되는 걸 스스로 발견함. 앞으로 이 로직을 다시 고칠 일이 생겨도
+  // 한 곳만 고치면 되도록, 여기 공용 함수 하나로 합침.
+  //
+  // 우선순위: 이 견적서 자체에 저장된 값(estDate/estInstallDate)이 있으면
+  // 그걸 최우선(가장 구체적인 값이므로). 없으면 고객 레코드값으로 채움.
+  // 계약금은 항상 고객의 실제 입금액(customerRow.deposit_amount)을
+  // 최우선으로 하고(자동계산된 50%보다 항상 우선), applyFrozenBreakdown이
+  // 나중에(즉시+3.5초 뒤 2차례) 계산값으로 덮어써도 최종적으로는 실제
+  // 입금액이 남도록 4초 뒤에 한 번 더 확정 적용함.
+  function applyScheduleAndDepositToForm(customerRow, estDate, estInstallDate) {
+    var measureVal = estDate || (customerRow && customerRow.measure_date) || '';
+    var installVal = estInstallDate || (customerRow && customerRow.install_date) || '';
+    if (measureVal && document.getElementById('c-measure')) {
+      document.getElementById('c-measure').value = measureVal;
+    }
+    if (installVal && document.getElementById('c-install')) {
+      document.getElementById('c-install').value = installVal;
+    }
+    if (customerRow && Number(customerRow.deposit_amount) > 0) {
+      var applyDeposit = function() {
+        var depInp = document.getElementById('deposit-input');
+        if (depInp) {
+          depInp.value = Number(customerRow.deposit_amount).toLocaleString();
+          depInp.dataset.raw = String(customerRow.deposit_amount);
+          depInp.dataset.manualEdit = '1';
+        }
+      };
+      applyDeposit();
+      setTimeout(applyDeposit, 4000);
+    }
+  }
+
   try {
     var urlParams = new URLSearchParams(window.location.search);
     var loadCustId = urlParams.get('loadCustId');
@@ -821,24 +856,11 @@ var currentTab = 'ga';
           if (c.addr) document.getElementById('c-addr').value = c.addr;
           if (c.staff_name) document.getElementById('c-staff').value = c.staff_name;
           if (c.memo) document.getElementById('c-memo').value = c.memo;
-          // 2026-08-28(선혜님 지적 — "고객 대시보드에 실측일 시공일을 적으면
-          // 견적서쪽에도 자동으로 정리되게 해줘", "결제도 대시보드쪽에 적으면
-          // 견적서에 같이 적어지게 해줘"): 이 경로가 고객 전체 데이터(select=*,
-          // measure_date/install_date/deposit_amount 등 이미 다 포함)를 받아오고
-          // 있었는데, 정작 그 값들을 실측/시공일 입력창과 계약금 입력창에
-          // 채워주는 코드가 없어서 대시보드에 입력해둔 값이 견적서엔 하나도
-          // 안 보이는 상태였음(고객이 직접 겪은 증상 - "실측일을 대시보드쪽에
-          // 정리해도 견적서에 열면 아무것도 적은게 없어").
-          if (c.measure_date && document.getElementById('c-measure')) document.getElementById('c-measure').value = c.measure_date;
-          if (c.install_date && document.getElementById('c-install')) document.getElementById('c-install').value = c.install_date;
-          if (Number(c.deposit_amount) > 0) {
-            var depInpFromCust = document.getElementById('deposit-input');
-            if (depInpFromCust) {
-              depInpFromCust.value = Number(c.deposit_amount).toLocaleString();
-              depInpFromCust.dataset.raw = String(c.deposit_amount);
-              depInpFromCust.dataset.manualEdit = '1'; // 실제 입금액이니 자동 50%재계산으로 덮어쓰면 안 됨
-            }
-          }
+          // 2026-08-28: 이 시점엔 아직 견적서(e)를 못 받아왔으니 고객
+          // 레코드값만으로 우선 적용 - 아래에서 견적서를 받아오면
+          // applyScheduleAndDepositToForm을 한 번 더 불러서 견적서
+          // 자체값이 있으면 그걸로 덮어씀(공용함수 우선순위 로직).
+          applyScheduleAndDepositToForm(c, null, null);
           upsertLocalCustomer(c.id, c.client_name, c.phone, c.staff_name, c.addr);
           // 최신 견적서도 같이 조회해서 lineItems/지역 복원
           var estUrl = SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(c.id) + '&order=created_at.desc&limit=1&select=*';
@@ -855,13 +877,8 @@ var currentTab = 'ga';
                 loadedItems = restoreLineItemsToForm(e.line_items, e.product);
               }
               // 2026-08-28: 이 견적서 자체에 저장된 실측일/시공일이 있으면
-              // (고객 레코드값보다 더 구체적이므로) 우선 반영.
-              if (e && e.date && document.getElementById('c-measure')) {
-                document.getElementById('c-measure').value = e.date;
-              }
-              if (e && e.install_date && document.getElementById('c-install')) {
-                document.getElementById('c-install').value = e.install_date;
-              }
+              // (고객 레코드값보다 더 구체적이므로) 공용함수로 우선 반영.
+              applyScheduleAndDepositToForm(c, e && e.date, e && e.install_date);
               if (e && e.region && document.getElementById('c-region')) {
                 document.getElementById('c-region').value = e.region;
                 document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
@@ -954,33 +971,9 @@ var currentTab = 'ga';
                 // 넣어놨는데, openEstimate()는 기존 견적이 있는 고객이면
                 // 전부 이 loadEstDbId 경로로 오게 되어있어서(2026-08-24
                 // 변경), 이미 견적서가 있는 대부분의 실사용 케이스에서
-                // 정작 동기화가 전혀 적용 안 되고 있었음. 이 견적서
-                // 자체에 저장된 실측일/시공일이 비어있으면(=대시보드에서
-                // 나중에 입력됐거나, 견적서를 만들 당시엔 없었던 값)
-                // 고객 레코드값으로 채워넣고, 계약금은 실제 입금액
-                // (deposit_amount)이 있으면 이 견적서의 계산값(50%자동
-                // 등)보다 항상 실제 입금액을 우선함.
-                if (!e.date && cRow && cRow.measure_date && document.getElementById('c-measure')) {
-                  document.getElementById('c-measure').value = cRow.measure_date;
-                }
-                if (!e.install_date && cRow && cRow.install_date && document.getElementById('c-install')) {
-                  document.getElementById('c-install').value = cRow.install_date;
-                }
-                if (cRow && Number(cRow.deposit_amount) > 0) {
-                  var applyRealDeposit = function() {
-                    var depInpFromCustEdit = document.getElementById('deposit-input');
-                    if (depInpFromCustEdit) {
-                      depInpFromCustEdit.value = Number(cRow.deposit_amount).toLocaleString();
-                      depInpFromCustEdit.dataset.raw = String(cRow.deposit_amount);
-                      depInpFromCustEdit.dataset.manualEdit = '1';
-                    }
-                  };
-                  // applyFrozenBreakdown이 즉시+3.5초 뒤 2차례 계약금을
-                  // 계산값으로 덮어쓰므로, 그 이후(4초)에 실제 입금액으로
-                  // 확실히 마지막에 적용되게 함(순서경쟁 방지).
-                  applyRealDeposit();
-                  setTimeout(applyRealDeposit, 4000);
-                }
+                // 정작 동기화가 전혀 적용 안 되고 있었음. 공용함수로
+                // "이 견적서 자체값이 있으면 우선, 없으면 고객값" 반영.
+                applyScheduleAndDepositToForm(cRow, e.date, e.install_date);
               } catch(eAddr) {}
             };
             axhr.send();
@@ -989,15 +982,12 @@ var currentTab = 'ga';
           if (e.line_items && typeof restoreLineItemsToForm === 'function') {
             loadedItems = restoreLineItemsToForm(e.line_items, e.product);
           }
-          // 2026-08-28(선혜님 지적 — "견적서에 실측일을 적어도 견적서가
-          // 자꾸 없어진다니깐????"): 저장할 땐 c-measure 값이 estimates.date로
-          // 정확히 저장되고 있었는데(est-save.js), "열어서 수정"으로 이
-          // 견적서를 다시 열 때 그 값을 c-measure에 도로 채워주는 코드가
-          // 어디에도 없었음 - line_items/region/할인 등은 다 복원하면서
-          // 이 필드만 빠져있었음. 그래서 열 때마다 실측일 칸이 항상
-          // 빈칸으로 보이고("적었던 게 사라졌다"는 인상), 그 상태로 별
-          // 생각 없이 다시 저장하면 방금 전까지 있던 실측일이 진짜로
-          // 빈 값으로 덮어써져 사라지고 있었음.
+          // 2026-08-28: 여기서 견적서 자체값(e.date/e.install_date)을 먼저
+          // 즉시 반영해두는 이유 — 아래에서 고객 레코드를 별도로 조회해서
+          // applyScheduleAndDepositToForm을 한 번 더 부르긴 하지만, 그
+          // 조회가 느리거나 실패해도 최소한 "이 견적서 자체에 저장된 값"
+          // 만큼은 항상 즉시 보이도록 하는 안전장치임(나쁜 중복이 아니라
+          // 의도된 2단계 설계 — 뒤에서 고객값까지 반영되면 자연히 갱신됨).
           if (e.date && document.getElementById('c-measure')) {
             document.getElementById('c-measure').value = e.date;
           }
