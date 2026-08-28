@@ -147,9 +147,15 @@ function _saveNewCustomerActual(name, phone, arr, serverMatch) {
     // 2026-08-27: 로컬(arr) 확인에 더해, 저장 직전 서버에서 직접 확인한
     // serverMatch도 함께 반영 - 로컬 캐시가 모르는(다른 기기/세션에서 방금
     // 등록된) 기존 고객도 "이미 있음" 판단에 걸리게 함.
-    var samePersonExisting = arr.find(function(c) { return c.clientName === name && (c.phone||'').replace(/\D/g,'') === (phone||'').replace(/\D/g,''); })
+    // 2026-08-28(선혜님 재지적 — "내가 다시 등록했는데 여전히 안되네", 배재연
+    // 재현): checkDuplicate()(dash-ui-helpers.js)의 보관고객 제외 수정과는
+    // 완전히 별개로, 이 함수 안의 samePersonExisting 판정도 똑같이
+    // is_archived를 안 걸러서 "이미 있습니다. 재구매 고객으로 업데이트할까요?"
+    // 라는 혼란스러운 경고가 보관된(이미 지운) 고객 때문에 떴었음 - 정확히
+    // 같은 종류의 버그가 서로 다른 두 곳에 따로 있던 사례(체크리스트 24번).
+    var samePersonExisting = arr.find(function(c) { return !c.is_archived && c.clientName === name && (c.phone||'').replace(/\D/g,'') === (phone||'').replace(/\D/g,''); })
       || (serverMatch ? { clientName: serverMatch.client_name, phone: serverMatch.phone, visitCount: 1 } : null);
-    var sameNameDiffPhone = !samePersonExisting && arr.find(function(c) { return c.clientName === name; });
+    var sameNameDiffPhone = !samePersonExisting && arr.find(function(c) { return !c.is_archived && c.clientName === name; });
     if (samePersonExisting) {
       if (!confirm('"' + name + '"(' + phone + ') 고객이 이미 있습니다.\n재구매 고객으로 업데이트할까요?')) return;
     } else if (sameNameDiffPhone) {
