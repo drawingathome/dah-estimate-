@@ -1269,32 +1269,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- 카카오 주소 검색 -->
 
-<script>
-(function() {
-  // 2026-08-20(선혜님 - 아이패드 저장 안되는 문제 1회 진단용): 기존 저장 로직은
-  // 전혀 안 건드리고, 전역 에러 감지 + 반응없음 감지만 추가함. 여러 번 다시
-  // 시도하시게 안 하고, 딱 한 번으로 정확한 원인을 파악하기 위함.
-  var diagLog = [];
-  window.addEventListener('error', function(e) {
-    diagLog.push('오류: ' + e.message + ' (줄 ' + e.lineno + ')');
-    alert('⚠️ 오류 발생\n\n' + e.message + '\n\n(줄 ' + e.lineno + ', ' + (e.filename||'').split('/').pop() + ')');
-  });
-  document.addEventListener('click', function(e) {
-    var btn = e.target.closest && e.target.closest('.btn-save');
-    if (!btn) return;
-    var beforeSaved = localStorage.getItem('dah_saved');
-    setTimeout(function() {
-      var afterSaved = localStorage.getItem('dah_saved');
-      var toastVisible = !!document.querySelector('.toast, [class*="toast"], .field-err');
-      if (beforeSaved === afterSaved && !toastVisible && diagLog.length === 0) {
-        alert('⚠️ 저장 버튼을 눌렀는데 아무 변화가 없어요.\n\n에러 메시지도 안 떴어요 — 이 화면을 그대로 캡처해서 보내주세요.');
-      } else if (beforeSaved !== afterSaved) {
-        // 정상 저장됨 - 조용히 넘어감(방해 안 함)
-      }
-    }, 2500);
-  }, true);
-})();
-</script>
+<!-- 2026-08-20(선혜님 - 아이패드 저장 안되는 문제 1회 진단용)에 넣었던
+     임시 진단 코드는 그 문제가 이미 해결돼서 목적을 다함 + 사소한 JS
+     오류에도 무서운 alert가 뜨는 위험이 더 커서, 2026-08-29(선혜님 확인
+     - "지우자") 제거함. -->
 
 </body>
 </html>
