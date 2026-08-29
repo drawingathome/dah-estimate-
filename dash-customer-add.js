@@ -89,12 +89,33 @@ function closeAdd() {
   var _ov = document.getElementById('add-overlay');
   _ov.className = 'overlay';
   _ov.style.display = 'none';
+  // 2026-08-29(선혜님이 견적서 중복저장 건 확인 요청으로 발견 — "비슷한
+  // 오류 찾아": saveCustomer()도 견적서저장과 정확히 같은 근본 문제를
+  // 갖고 있었음 - 저장버튼 연타시 중복클릭 방지가 전혀 없어서, 실제
+  // 재현 테스트로 3번 연타→고객 3명 생성 확인함) 모달을 닫을 때 저장
+  // 버튼도 함께 재활성화 - 아래 saveCustomer()에서 저장 시작시 비활성화함.
+  var _saveBtn = document.getElementById('add-save-btn');
+  if (_saveBtn) { _saveBtn.disabled = false; _saveBtn.style.opacity = ''; }
 }
 
 function saveCustomer() {
+  // 2026-08-29: 위 참고 - 저장 진행 중 중복클릭 방지. 모달이 닫히면(성공/
+  // 실패 무관, closeAdd에서) 재활성화됨. 혹시 어떤 이유로 콜백을 못 타서
+  // 모달이 안 닫히는 예외상황에 대비해 3초 뒤 안전장치로도 재활성화함.
+  var _saveBtn0 = document.getElementById('add-save-btn');
+  if (_saveBtn0) {
+    if (_saveBtn0.disabled) return;
+    _saveBtn0.disabled = true;
+    _saveBtn0.style.opacity = '0.6';
+    setTimeout(function(){ if (_saveBtn0) { _saveBtn0.disabled = false; _saveBtn0.style.opacity = ''; } }, 3000);
+  }
   var name = document.getElementById('add-name').value.trim();
   var phone = document.getElementById('add-phone').value.trim();
-  if (!name || !phone) { alert('이름과 연락처는 필수입니다.'); return; }
+  if (!name || !phone) {
+    alert('이름과 연락처는 필수입니다.');
+    if (_saveBtn0) { _saveBtn0.disabled = false; _saveBtn0.style.opacity = ''; }
+    return;
+  }
   var arr = loadCustomers();
   if (editingCustomerName) {
     var matched = false;
