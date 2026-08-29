@@ -712,6 +712,14 @@ function renderSettings() {
       try {
         var data = JSON.parse(ev.target.result);
         if(data.customers) {
+          // 2026-08-29(선혜님 지시 - "코드 다 봤니"로 발견): 복원이 확인창
+          // 없이 바로 전체 고객목록을 덮어쓰고 있었음 - 오래된 백업파일을
+          // 실수로 올리면 최신 데이터가 조용히 전부 사라질 수 있는 위험한
+          // 동작이었음. 몇 건짜리 파일인지 미리 보여주고 명시적으로 확인받음.
+          if (!confirm('이 백업파일엔 고객 ' + data.customers.length + '건이 들어있어요.\n\n지금 복원하면 현재 저장된 고객 데이터가 이 파일 내용으로 전부 바뀝니다.\n계속할까요?')) {
+            restoreInput.value = '';
+            return;
+          }
           saveCustomers(data.customers);
           showToast('복원 완료! ' + data.customers.length + '건');
           renderHome();
