@@ -48,6 +48,14 @@ function updateEstSyncBanner() {
 function retryEstPendingSync() {
   var q = getEstPendingQueue();
   if (q.length === 0) return;
+  // 2026-08-29(선혜님 지시 - "코드 다 봤니"로 이어서 발견): online 이벤트,
+  // 30초 주기 타이머, 페이지로드 2초뒤 재시도 - 이 3가지 트리거가 동시에
+  // 겹치면 같은 큐 항목이 중복으로 재전송될 수 있었음(진행중 플래그가
+  // 전혀 없었음). 오늘 고친 idempotency key 재사용 덕분에 DB 유니크
+  // 인덱스가 최종적으로는 막아주지만, 애초에 중복 호출 자체를 막는 게
+  // 더 안전하고 서버 부하도 줄임.
+  if (window._estRetrySyncInProgress) return;
+  window._estRetrySyncInProgress = true;
   // 2026-08-25(선혜님 발견 — 재시도해도 계속 403): 이 재시도 함수는
   // refreshAuthSessionIfNeeded를 아예 호출하지 않고 있었음 — 저장 직전에는
   // 이미 갱신 체크를 넣었는데(est-save.js), 이 "재시도 큐" 경로는 완전히
@@ -60,10 +68,17 @@ function retryEstPendingSync() {
     refreshAuthSessionIfNeeded(function(ok) {
       if (ok) { _doRetryEstPendingSync(q); }
       else {
+        // 2026-08-29(선혜님 지시 - "코드 다 봤니"로 발견): 여기서
+        // _doRetryEstPendingSync가 실행 안 되는 경로들(재로그인 프롬프트를
+        // 그냥 닫거나 응답 안 함, showReloginPrompt 함수 자체가 없는 경우)엔
+        // 위에서 세운 진행중 플래그를 해제할 기회가 전혀 없어서, 한 번 이
+        // 상황을 겪으면 그 이후 30초 자동재시도/online 이벤트 재시도가
+        // 전부 조용히 무시되는 심각한 회귀가 될 뻔했음 - 즉시 해제.
+        window._estRetrySyncInProgress = false;
         // 2026-08-25(선혜님 요청): alert 안내만 하고 끝내던 걸, 그 자리에서
         // 비밀번호만 다시 넣으면 재시도까지 자동으로 이어지도록 변경.
         if (typeof showReloginPrompt === 'function') {
-          showReloginPrompt(function() { _doRetryEstPendingSync(getEstPendingQueue()); });
+          showReloginPrompt(function() { window._estRetrySyncInProgress = true; _doRetryEstPendingSync(getEstPendingQueue()); });
         } else {
           alert('⚠️ 로그인이 만료됐어요.\n\n대기 중인 견적서 ' + q.length + '건이 아직 저장 안 됐어요.\n로그아웃 후 다시 로그인한 뒤, 이 배너를 다시 눌러 재시도해주세요.\n(대기 중인 내용은 사라지지 않아요)');
         }
@@ -132,6 +147,7 @@ function _doRetryEstPendingSync(q) {
       if (done === pending) {
         try { localStorage.setItem(EST_PENDING_KEY, JSON.stringify(remaining)); } catch(e) {}
         updateEstSyncBanner();
+        window._estRetrySyncInProgress = false;
         // 2026-08-25: 401/403이었던 건은 위에서 이미 재로그인 팝업으로 안내
         // 중이므로, 여기서 또 alert까지 뜨면 팝업 두 개가 겹쳐서 혼란스러움.
         // 재로그인 관련 실패가 아닌 다른 이유(400 등)로 남은 게 있을 때만 alert.
@@ -148,6 +164,7 @@ function _doRetryEstPendingSync(q) {
       if (done === pending) {
         try { localStorage.setItem(EST_PENDING_KEY, JSON.stringify(remaining)); } catch(e) {}
         updateEstSyncBanner();
+        window._estRetrySyncInProgress = false;
         alert('⚠️ 서버 저장 재시도 실패\n\n로그인 세션 있음: ' + hasSession + '\n실패 사유: ' + failReasons.join(', ') + '\n\n이 화면을 캡처해서 보내주세요.');
       }
     };
