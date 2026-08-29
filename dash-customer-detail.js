@@ -928,8 +928,45 @@ function buildRequestFromLineItems(kind, e) {
 
   var items = e.lineItems || [];
   if (kind === 'measure') {
-    var lines = items.map(function(it) {
-      return (it.space||'—') + ' : ' + (it.type === 'curtain' ? '커튼 1조' : (it.kind||'블라인드'));
+    // 2026-08-29(선혜님 지시 - "코드도 다 봤어?"로 발견): 이 대시보드 버전이
+    // 2026-08-04 최초 버전 그대로 방치돼서, 견적서 앱(est-documents.js)이
+    // 8/24("겉지/속지 묶어서 표시")·8/28("공간+세부위치[메인] 구분, 겉/속커튼
+    // 구성 표시")에 걸쳐 개선한 내용을 전혀 반영 못 하고 있었음 - 실측일 다시
+    // 볼 때마다 낡은 형식(항목별 1:1 나열)으로 보이고 있었음. est-documents.js의
+    // 최신 그룹핑 로직을 lineItems 배열 기반으로 그대로 포팅.
+    function extractSubLoc(name) { var m = (name||'').match(/^\[([^\]]+)\]/); return m ? m[1] : ''; }
+    function curtainRole(name) {
+      if (/속커튼/.test(name)) return '속커튼';
+      if (/겉커튼/.test(name)) return '겉커튼';
+      return '커튼';
+    }
+    function groupLabel(space, subLoc) { return (space||'—') + (subLoc ? '['+subLoc+']' : ''); }
+    var curtainGroups = {}, curtainOrder = [];
+    var blindGroups = {}, blindOrder = [];
+    items.forEach(function(it) {
+      if (it.type === 'curtain') {
+        var subLoc = extractSubLoc(it.displayName);
+        var key = (it.space||'—')+'|'+subLoc;
+        if (!(key in curtainGroups)) { curtainGroups[key] = { space: it.space, subLoc: subLoc, roles: {} }; curtainOrder.push(key); }
+        var role = curtainRole(it.displayName);
+        curtainGroups[key].roles[role] = (curtainGroups[key].roles[role]||0) + 1;
+      } else if (it.type === 'blind') {
+        var subLoc2 = extractSubLoc(it.displayName);
+        var key2 = (it.space||'—')+'|'+subLoc2+'|'+(it.kind||'블라인드');
+        if (!(key2 in blindGroups)) { blindGroups[key2] = { space: it.space, subLoc: subLoc2, kind: it.kind||'블라인드', count: 0 }; blindOrder.push(key2); }
+        blindGroups[key2].count++;
+      }
+    });
+    var lines = [];
+    curtainOrder.forEach(function(key) {
+      var g = curtainGroups[key], label = groupLabel(g.space, g.subLoc), roleKeys = Object.keys(g.roles);
+      if (g.roles['겉커튼'] && g.roles['속커튼'] && roleKeys.length === 2) lines.push(label+' : 겉커튼+속커튼');
+      else if (roleKeys.length === 1 && roleKeys[0] === '커튼') lines.push(label+' : 커튼 '+g.roles['커튼']+'장');
+      else lines.push(label+' : '+roleKeys.map(function(r){ var n=g.roles[r]; return n>1 ? r+' '+n+'장' : r; }).join('+'));
+    });
+    blindOrder.forEach(function(key) {
+      var g = blindGroups[key], label = groupLabel(g.space, g.subLoc);
+      lines.push(label+' : '+g.kind+(g.count>1 ? ' '+g.count+'피스' : ''));
     });
     out += lines.length
       ? '<div style="padding:20px 10px;text-align:center">' + lines.map(function(t,i){ return '<div style="font-size:13px;color:#282828;padding:8px 0">'+(i+1)+'. '+escHtml(t)+'</div>'; }).join('') + '</div>'
