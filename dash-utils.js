@@ -69,7 +69,11 @@ function escHtml(s) {
 
 function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 function fmt(n) { return (Number(n) || 0).toLocaleString() + '원'; }
-function fmtMan(n) { return Math.round((Number(n)||0)/10000).toLocaleString() + '만원'; }
+// 2026-08-29(선혜님 지시 - "코드정리 누락없이 다했니" 재점검으로 발견):
+// fmtMan(만원단위 포맷 헬퍼)도 어디서도 안 불리고 있었음 - 오늘 만든
+// KPI 카드들(현재매출/이번달매출)이 이 함수를 쓰지 않고 각자 직접
+// Math.round(n/10000).toLocaleString()으로 계산하고 있어서 제거함.
+
 function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate()); }
 function thisMonthStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1); }
 function daysDiff(dateStr) { return Math.floor((new Date() - new Date(dateStr)) / 86400000); }

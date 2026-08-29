@@ -222,6 +222,23 @@ function renderEstList() {
       row.appendChild(memoRow);
     }
 
+    // 2026-08-29(선혜님 지시 - "견적서목록/고객상세의 이력탭에 버튼으로
+    // 다시 붙이기"): 저장된 lineItems로 발주서/실측·시공 의뢰서를 다시
+    // 만드는 기능 복원. 목록 화면이라 공간이 좁아 작은 아이콘 버튼으로.
+    if (e.lineItems && e.lineItems.length > 0) {
+      var reGenRow = el('div', {style:'display:flex;gap:5px;margin-top:6px'});
+      var mkMiniBtn = function(label, fn) {
+        var b = el('button', {style:'flex:1;padding:6px 0;background:#fff;border:1px solid var(--border);border-radius:8px;font-size:10px;font-weight:700;color:var(--sub);font-family:inherit;cursor:pointer'});
+        b.textContent = label;
+        b.addEventListener('click', function(ev){ ev.stopPropagation(); fn(); });
+        return b;
+      };
+      reGenRow.appendChild(mkMiniBtn('📋 발주서', function(){ showVendorOrderFromEstimate(e); }));
+      reGenRow.appendChild(mkMiniBtn('📐 실측', function(){ showRequestFromEstimate('measure', e); }));
+      reGenRow.appendChild(mkMiniBtn('🔧 시공', function(){ showRequestFromEstimate('install', e); }));
+      row.appendChild(reGenRow);
+    }
+
     // 클릭 시 고객 상세 (이력 탭에 카카오복사/견적서앱 액션이 이미 있어 여기선 중복 버튼 생략)
     (function(entry){ row.addEventListener('click', function(ev){
       if (ev.target.closest('button')) return; // 삭제/계약상태 버튼 클릭은 여기로 안 번지게

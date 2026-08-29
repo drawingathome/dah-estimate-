@@ -211,6 +211,20 @@ function renderDetailEstTabInner(estEl) {
       window.open('dah-estimate.html?loadEstDbId=' + encodeURIComponent(e.id) + '&mode=view', '_blank');
     });
 
+    // 2026-08-29(선혜님 지시 - "견적서목록/고객상세의 이력탭에 버튼으로
+    // 다시 붙이기"): 저장된 lineItems로 발주서/실측·시공 의뢰서를 다시
+    // 만드는 기능 - 8/24에 세부내용팝업을 없애면서 같이 사라졌던 걸 복원.
+    // lineItems가 없는 예전 견적(요약 문자열만 있던 시절)은 재구성할
+    // 원본 데이터가 없으므로 버튼 자체를 안 보여줌.
+    var reGenActions = null;
+    if (e.lineItems && e.lineItems.length > 0) {
+      reGenActions = div('display:flex;gap:6px;margin-top:6px', [
+        btn('flex:1;padding:9px 0;background:#fff;color:var(--dark);border:1px solid var(--border);border-radius:12px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer', '📋 발주서', function(){ showVendorOrderFromEstimate(e); }),
+        btn('flex:1;padding:9px 0;background:#fff;color:var(--dark);border:1px solid var(--border);border-radius:12px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer', '📐 실측의뢰서', function(){ showRequestFromEstimate('measure', e); }),
+        btn('flex:1;padding:9px 0;background:#fff;color:var(--dark);border:1px solid var(--border);border-radius:12px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer', '🔧 시공의뢰서', function(){ showRequestFromEstimate('install', e); })
+      ]);
+    }
+
     var deleteEstBtn = btn('width:100%;margin-top:6px;padding:9px 0;background:#fff;color:#C0392B;border:1px solid #F5D6D0;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '삭제', function(){
       if (!confirm('⚠️ 이 견적서를 완전히 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) return;
       archiveEstimate(e, function(err){
@@ -226,6 +240,7 @@ function renderDetailEstTabInner(estEl) {
     card.appendChild(dateRow);
     card.appendChild(actions);
     card.appendChild(detailBtn);
+    if (reGenActions) card.appendChild(reGenActions);
     card.appendChild(deleteEstBtn);
     estEl.appendChild(card);
   });
@@ -836,49 +851,15 @@ var editingCustomerId = null; // 동명이인 구분용
 /** @param {string} [editName] 편집 시 기존 고객명 */
 
 // 견적서 품목 문자열("이름(금액원), 이름(금액원)...")을 파싱해서 항목별
-// 목록으로 보여주는 팝업 (2026-08-04 신규)
-function parseEstimateItems(fabricStr) {
-  if (!fabricStr) return [];
-  return fabricStr.split(/,\s*(?=[^)]*(?:\(|$))/).map(function(part) {
-    var m = part.trim().match(/^(.*)\(([\d,]+)원\)$/);
-    if (m) return { name: m[1].trim() || '(이름없음)', amount: m[2] };
-    return part.trim() ? { name: part.trim(), amount: null } : null;
-  }).filter(Boolean);
-}
+// 2026-08-29(선혜님 지시 - "코드정리 누락없이 다했니" 재점검으로 발견):
+// showEstimateDetailPopup을 지운 여파로 그 안에서만 쓰이던
+// parseEstimateItems/confirmEstimateToFinal/showRequestFromEstimate/
+// showVendorOrderFromEstimate가 연쇄적으로 고아 코드가 됐던 걸 발견해
+// 함께 제거함(실제 발주서/의뢰서 생성 로직인 buildVendorOrderFromLineItems/
+// buildRequestFromLineItems는 계속 사용중이라 그대로 둠 - 그걸 새 창으로
+// 띄우던 wrapper만 죽어있었음). 하나를 지우면 그 안에서만 쓰이던 것들도
+// 같이 죽을 수 있다는 교훈 - 삭제할 때마다 다시 스캔해야 함.
 
-function confirmEstimateToFinal(estId, clientName, price, clientId) {
-  if (!confirm(clientName + '님의 이 견적을 "확정견적"으로 전환할까요?\n(계약이 성사된 게 맞을 때만 눌러주세요)')) return;
-  var btn = document.getElementById('est-confirm-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
-  sbXHR('PATCH', 'estimates?id=eq.' + estId, { estimate_status: 'final', performance_revenue: price, confirmed_at: new Date().toISOString() }, function(err) {
-    if (err) { showToast('전환 실패 — 다시 시도해주세요'); if (btn) { btn.disabled = false; btn.textContent = '확정견적으로 전환'; } return; }
-    // 로컬 캐시도 즉시 반영
-    try {
-      var saved = JSON.parse(localStorage.getItem('dah_saved') || '[]');
-      var idx = saved.findIndex(function(s){ return s.id === estId; });
-      if (idx >= 0) { saved[idx].status = 'final'; saved[idx].performanceRevenue = price; saved[idx].contractStatus = 'contracted'; }
-      localStorage.setItem('dah_saved', JSON.stringify(saved));
-    } catch(e) {}
-    // 연결된 고객의 실적도 동기화 (2026-08-04 신규) — 견적만 확정되고
-    // 고객 레코드의 price/performance_revenue는 그대로 0으로 남으면
-    // 매출탭 계산에 안 잡히는 문제가 있었음
-    if (clientId) {
-      sbXHR('PATCH', 'customers?id=eq.' + clientId, { price: price, performance_revenue: price }, function(err){
-        if (err) showToast('⚠️ 고객 매출정보가 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요');
-      });
-      try {
-        var custs = JSON.parse(localStorage.getItem('dah_customers') || '[]');
-        var cIdx = custs.findIndex(function(c){ return c.id === clientId; });
-        if (cIdx >= 0) { custs[cIdx].price = price; custs[cIdx].performanceRevenue = price; }
-        localStorage.setItem('dah_customers', JSON.stringify(custs));
-      } catch(e) {}
-    }
-    showToast('확정견적으로 전환됐습니다');
-    document.getElementById('est-detail-popup')?.remove();
-    if (typeof loadEstimatesAsync === 'function') loadEstimatesAsync(renderEstList, true);
-    if (typeof openDetail === 'function' && currentDetailName) openDetail(currentDetailName, currentDetailId, 'est');
-  });
-}
 
 // 2026-08-28(선혜님 지시 - "누락된 코드정리는 없니?"로 발견): showEstimateDetailPopup은
 // 2026-08-24에 선혜님이 "세부내용 보기 팝업은 의미없다, 대신 고객용 견적서를
@@ -970,6 +951,10 @@ function buildRequestFromLineItems(kind, e) {
   return out;
 }
 
+// 2026-08-29(선혜님 지시 - "견적서목록/고객상세의 이력탭에 버튼으로 다시
+// 붙이기"): 8/24에 세부내용 팝업을 없애면서 이 두 wrapper도 같이 죽었던
+// 걸 복원 - build*FromLineItems(실제 문서 생성 로직)는 계속 살아있었고,
+// 이건 그걸 새 창으로 띄우기만 하는 얇은 래퍼임.
 function showRequestFromEstimate(kind, e) {
   if (!e.lineItems || e.lineItems.length === 0) { showToast('이 견적엔 저장된 세부 항목이 없어요'); return; }
   var html = buildRequestFromLineItems(kind, e);
@@ -978,7 +963,6 @@ function showRequestFromEstimate(kind, e) {
   w.document.write('<html><head><title>' + label + ' - ' + escHtml(e.clientName||'') + '</title></head><body style="margin:0;background:#f5f5f5;padding:20px">' + html + '</body></html>');
   w.document.close();
 }
-
 function showVendorOrderFromEstimate(e) {
   var html = buildVendorOrderFromLineItems(e.lineItems, e.clientName, e.staffName);
   if (!html) { showToast('이 견적엔 거래처가 입력된 항목이 없어요'); return; }
