@@ -55,13 +55,15 @@ function renderAlimSection(c, alimBody) {
   var categories = [
     ['방문예약', STAGE_ALIM.방문예약], ['상담', STAGE_ALIM.상담], ['가견적', STAGE_ALIM.가견적],
     ['선금결제', STAGE_ALIM.선금결제], ['실측준비중', STAGE_ALIM.실측준비중], ['확정견적', STAGE_ALIM.확정견적],
-    ['잔금결제', STAGE_ALIM.잔금결제], ['시공준비중', STAGE_ALIM.시공준비중], ['시공완료/기타', STAGE_ALIM.시공완료]
+    ['잔금결제', STAGE_ALIM.잔금결제], ['시공준비중', STAGE_ALIM.시공준비중], ['시공완료', STAGE_ALIM.시공완료],
+    // 2026-08-29: v3 재작성 시 추가 — 특정 단계에 속하지 않는 취소/노쇼/재고/AS 문구 모음
+    ['취소·기타', OTHER_ALIM_KEYS]
   ];
   var catListWrap = div('', []);
   catListWrap.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin:8px 0 4px', text:'단계별 전체 보기'}));
   categories.forEach(function(cat) {
     var stageName = cat[0], keys = cat[1] || [];
-    var isCurrentStage = (stageName === c.stage) || (stageName === '시공완료/기타' && c.stage === '시공완료');
+    var isCurrentStage = (stageName === c.stage);
     var sentCount = keys.filter(function(k){ return sentMap[k]; }).length;
     var header = div('display:flex;align-items:center;justify-content:space-between;padding:8px 0;cursor:pointer', [
       span('font-size:12px;font-weight:700;color:var(--dark)', stageName + ' (' + sentCount + '/' + keys.length + ')'),
@@ -79,12 +81,31 @@ function renderAlimSection(c, alimBody) {
 }
 
 // ── 아래부터는 dash-customer-detail.js에서 이동됨 (2026-07-19, 파일명과 책임 일치시키기 위함) ──
+// 2026-08-29: v3 문서의 #{변수} 형식(카카오 알림톡 실제 템플릿 변수 표기와 동일)에 맞춰
+// 여러 변수를 한번에 치환. 값이 없으면 '미정'/안내문구로 대체해 빈칸 발송을 방지.
+function fillAlimTemplate(tpl, c) {
+  var fmt = function(n) { return (Number(n) || 0).toLocaleString('ko-KR'); };
+  var map = {
+    '고객명': c.clientName || '',
+    '방문일시': c.date || '미정',
+    '실측일시': c.measureDate || '미정',
+    '시공일시': c.installDate || '미정',
+    'AS일시': c.asDate || '미정', // 2026-08-29: as_records UI 미구현 — 값 저장처가 아직 없음, 항상 '미정'
+    '계약금': fmt(c.depositAmount),
+    '잔금': fmt(c.balanceAmount),
+    '결제링크': c.paymentLink || '(결제링크 미등록 — 고객상세에서 먼저 입력해주세요)'
+  };
+  return (tpl || '').replace(/#\{([^}]+)\}/g, function(_, key) {
+    return (key in map) ? map[key] : ('#{' + key + '}');
+  });
+}
+
 function sendAlimtalk(key) {
   var arr = loadCustomers();
   var c = findCurrentDetailCustomer(arr);
   if (!c) return;
   var meta = ALIM_META[key]; if (!meta) return;
-  var initialMsg = (meta.template || '').replace(/\{name\}/g, c.clientName || '');
+  var initialMsg = fillAlimTemplate(meta.template, c);
   _openAlimtalkPreview(meta, key, c, initialMsg);
 }
 
