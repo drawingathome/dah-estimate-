@@ -883,17 +883,15 @@ window.saveCustomer = function() {
   if (_origSaveCustomer) _origSaveCustomer.apply(this, arguments);
 };
 
-// 연락처 입력 시 자동 포맷
+// 2026-08-29(선혜님 지시 - "이 부분도 다 확인한거니"로 이어서 발견): 이
+// 리스너(formatPhone 사용)와 아래쪽(1009번 근처, fmtPhone 사용)에 정확히
+// 같은 목적의 'input' 이벤트 리스너가 add-phone에 중복 등록되어 있었음 -
+// 타이핑할 때마다 포맷 처리가 두 번 실행되는 불필요한 중복. formatPhone과
+// fmtPhone 로직을 오늘 통일해서 결과는 같지만, 하나만 남기고 정리 -
+// fmtPhone(더 널리 쓰이고 오늘 만든 자동감시테스트 대상) 쪽만 유지.
 document.addEventListener('DOMContentLoaded', function() {
   var phoneEl = document.getElementById('add-phone');
   if (phoneEl) {
-    phoneEl.addEventListener('input', function() {
-      var pos = this.selectionStart;
-      var formatted = formatPhone(this.value);
-      if (formatted !== this.value) {
-        this.value = formatted;
-      }
-    });
     phoneEl.addEventListener('blur', function() {
       var result = validatePhone(this.value);
       if (!result.ok && this.value) {
