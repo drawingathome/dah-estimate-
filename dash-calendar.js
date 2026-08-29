@@ -185,13 +185,10 @@ function renderCalList(customers, selectedDate) {
   var events;
   if (selectedDate) {
     
-    var all = getCalEvents(customers, yr, mo);
-    
-    var allAll = getCalEvents(customers, yr-1, 11).concat(getCalEvents(customers, yr, 0), getCalEvents(customers, yr, 1),
-      getCalEvents(customers, yr, 2), getCalEvents(customers, yr, 3), getCalEvents(customers, yr, 4),
-      getCalEvents(customers, yr, 5), getCalEvents(customers, yr, 6), getCalEvents(customers, yr, 7),
-      getCalEvents(customers, yr, 8), getCalEvents(customers, yr, 9), getCalEvents(customers, yr, 10),
-      getCalEvents(customers, yr, 11), getCalEvents(customers, yr+1, 0));
+    // 2026-08-29(선혜님 지시 - "이어서 보자"로 발견): 여기서 작년12월~
+    // 내년1월까지 14번 getCalEvents를 호출해 만들던 allAll 변수와, 바로
+    // 아래의 all 변수 둘 다 어디서도 안 쓰이고 버려지고 있었음(순수 계산
+    // 낭비) - 둘 다 제거.
     events = getCalEvents(customers, yr, mo).filter(function(ev){ return ev.date === selectedDate; });
     var d = new Date(selectedDate);
     var DOW2 = ['일','월','화','수','목','금','토'];
