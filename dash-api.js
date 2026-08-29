@@ -254,7 +254,9 @@ function loadAppSettingsAsync(callback) {
       if (row.key === 'staff_list') { try { localStorage.setItem('dah_staff_list', JSON.stringify(row.value)); } catch(e){} }
       else if (row.key === 'settings') { try { localStorage.setItem('dah_settings', JSON.stringify(row.value)); } catch(e){} }
       else if (row.key === 'webhook_url') { try { localStorage.setItem('dah_webhook_url', row.value); } catch(e){} }
-      else if (row.key === 'master_pw') { try { localStorage.setItem('dah_master_pw', row.value); MASTER_PW = row.value; } catch(e){} }
+      // 2026-08-29: master_pw 동기화(MASTER_PW 전역변수 갱신)는 그 변수 자체가
+      // 죽은 코드가 되어 제거됨 - 예전 클라우드에 남아있는 master_pw 설정값은
+      // 이제 아무 데도 반영 안 되지만, 데이터 자체는 안전하게 그대로 둠.
       else if (row.key === 'staff_goals') { try { Object.keys(row.value||{}).forEach(function(staff){ localStorage.setItem('dah_goal_'+staff, String(row.value[staff])); }); } catch(e){} }
       else if (row.key === 'master_email') { try { localStorage.setItem('dah_master_email', row.value); } catch(e){} }
       else if (row.key === 'staff_emails') { try { localStorage.setItem('dah_staff_emails', JSON.stringify(row.value||{})); } catch(e){} }

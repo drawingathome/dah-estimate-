@@ -285,27 +285,18 @@ function renderSettings() {
     ]);
     appendPasswordResetFlow(pwCard, _masterEmailNow);
   } else {
+  // 2026-08-29(선혜님 지적 - "그럼 이부분은 다 했다는거야????" 정리 완료
+  // 요청으로 재검토): 여기 있던 평문 비밀번호(MASTER_PW 전역변수) 검증
+  // 방식은 실제 로그인(Supabase Auth)과 완전히 무관한 예전 레거시였음.
+  // "완전 죽은 코드"는 아니고 마스터 이메일 미등록 상태에선 여전히
+  // 나타날 수 있는 조건부 경로였지만, 그 상태에서 사용자가 해야 할
+  // 진짜 다음 행동은 "비밀번호 변경"이 아니라 "위에서 마스터 이메일부터
+  // 등록하는 것"이므로, 혼란을 주고 평문 비밀번호 위험만 남기던 예전
+  // 방식 전체를 제거하고 올바른 경로로 안내만 함.
   pwCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:var(--sp-3)', [
     span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:var(--sp-1)', '비밀번호 변경'),
-    span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '마스터 이메일을 등록하면 더 안전한 로그인 방식으로 전환돼요.')
+    span('font-size:11px;color:var(--sub);display:block', '먼저 위에서 마스터 로그인 이메일을 등록해주세요. 등록하면 이메일로 안전하게 비밀번호를 재설정할 수 있어요.')
   ]);
-  [['change-pw-current2','현재 비밀번호'],['change-pw-new2','새 비밀번호 (4자 이상)'],['change-pw-confirm2','새 비밀번호 확인']].forEach(function(row) {
-    var inp = el('input', {type:'password', id:row[0], placeholder:row[1], style:'width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:10px;font-size:11px;font-family:inherit;outline:none;margin-bottom:6px;box-sizing:border-box'});
-    pwCard.appendChild(inp);
-  });
-  pwCard.appendChild(btn('width:100%;padding:11px;background:var(--dark);color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px', '비밀번호 변경', function() {
-    var cur = document.getElementById('change-pw-current2');
-    var nw = document.getElementById('change-pw-new2');
-    var con = document.getElementById('change-pw-confirm2');
-    if(cur.value !== MASTER_PW) { alert('현재 비밀번호가 틀렸습니다.'); cur.value=''; return; }
-    if(nw.value.length < 4) { alert('새 비밀번호는 4자 이상이어야 합니다.'); return; }
-    if(nw.value !== con.value) { alert('새 비밀번호가 일치하지 않습니다.'); con.value=''; return; }
-    MASTER_PW = nw.value;
-    try { localStorage.setItem('dah_master_pw', MASTER_PW); } catch(e){}
-    sbSyncSetting('master_pw', MASTER_PW);
-    cur.value=''; nw.value=''; con.value='';
-    showToast('비밀번호가 변경됐습니다');
-  }));
   }
 
   
@@ -647,6 +638,12 @@ function renderSettings() {
     var name = newCouponName.value.trim();
     var value = parseFloat(newCouponValue.value) || 0;
     if (!name) { showToast('쿠폰명을 입력해주세요'); return; }
+    // 2026-08-29(선혜님 지적 - "그럼 이부분은 다 했다는거야????" 정리 완료 요청):
+    // renderSettings()로 재렌더링되기 전에 두 번째 클릭이 처리되면 같은
+    // 쿠폰이 중복 추가될 수 있었음(로컬저장이라 심각하진 않지만 성가심) -
+    // 클릭 즉시 입력값부터 비워서, 혹시 재렌더링 전에 두번째 클릭이 와도
+    // "쿠폰명을 입력해주세요"로 자연스럽게 막히게 함.
+    newCouponName.value = '';
     var arr = getDiscountCoupons();
     arr.push({ id: 'c' + Date.now(), name: name, type: newCouponType.value, value: value });
     setDiscountCoupons(arr);

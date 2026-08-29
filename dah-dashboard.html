@@ -31,7 +31,7 @@
 <link rel="stylesheet" href="/dash-styles.css?v=202608240700">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="/dash-utils.js?v=202608291100"></script>
-<script src="/dash-api.js?v=202608283200"></script>
+<script src="/dash-api.js?v=202608291700"></script>
 <script src="/dash-sync-queue.js?v=202608283400"></script>
 <script src="/dash-supabase-auth.js?v=202608283400"></script>
 <script src="/dash-realtime.js?v=202608282400"></script>
@@ -51,7 +51,7 @@
 <script src="/dash-customer-detail.js?v=202608291300"></script>
 <script src="/dash-customer-add.js?v=202608291000"></script>
 <script src="/dash-auth.js?v=202608251500"></script>
-<script src="/dash-settings.js?v=202608291400"></script>
+<script src="/dash-settings.js?v=202608291700"></script>
 <script src="/dash-export.js?v=202608283000"></script>
 <script src="/dash-search.js?v=202608283400"></script>
 <meta charset="UTF-8">
@@ -982,7 +982,10 @@ window.loadCustomersAsync = function(callback) {
 
 
 
-var MASTER_PW = (function(){ try{ return localStorage.getItem('dah_master_pw')||'dah2012'; }catch(e){ return 'dah2012'; } })();
+// 2026-08-29(선혜님 지적 - "그럼 이부분은 다 했다는거야????" 정리 완료
+// 요청): MASTER_PW(설정화면 레거시 "비밀번호 변경" UI가 쓰던 전역변수,
+// MASTER_PW_BOOTSTRAP과는 완전히 별개)는 그 UI 자체를 방금 제거하면서
+// 완전히 죽은 코드가 됨 - 평문 비밀번호를 담던 전역변수라 제거.
 var currentUser = null;
 
 
