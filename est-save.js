@@ -25,6 +25,15 @@ function resetEstEditingState() {
   window._editingEstUpdatedAt = null;
   window._viewingFrozenEstimate = false;
   window._estSaveCustomerId = null;
+  // 2026-08-29(선혜님이 자동백업 중복탐지 알림으로 발견 — 임민희 견적서
+  // 8건 중복, 0.074초 안에 생성됨): idempotency_key가 저장 시도(재시도
+  // 포함) "전체에서 동일한 값을 유지"해야 DB 유니크 제약이 중복을 막아줄
+  // 수 있는데, 실제로는 _saveToEstimatesActual()이 호출될 때마다 매번
+  // crypto.randomUUID()로 새 키를 만들고 있었음 - 8/24에 넣은 버튼
+  // 비활성화 방어가 어떤 이유로든 뚫리면(리렌더링으로 버튼이 새로
+  // 교체되는 등) 각 시도가 전부 다른 키를 가져서 서버쪽 방어가 무력화됨.
+  // 이 견적서 편집 세션 하나당 키 하나만 쓰도록 여기서 한 번만 생성.
+  window._currentEstIdempotencyKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('est-' + Date.now() + '-' + Math.random().toString(36).slice(2));
   // 2026-08-26 추가: 계산결과 캐시 3개(_lastCalcBreakdown/_lastDiscountBreakdown/
   // _lastAppliedDiscounts)도 함께 리셋. 지금은 newEstimate() 끝에서 calcTotal()을
   // 호출해서 결과적으로 이 값들이 다시 채워지고 있어 실제로는 안전하지만, 그건
@@ -359,7 +368,7 @@ function _saveEstimateInner(_onDone) {
     // 재시도했을 때, DB의 유니크 제약(estimates_idempotency_key_uniq)이 중복 삽입을
     // 막아주고, 그 409 응답을 "이미 저장됨"으로 해석해서 정상 처리함.
     var estPayloadForRetry = Object.assign({
-      client_idempotency_key: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('est-' + Date.now() + '-' + Math.random().toString(36).slice(2)),
+      client_idempotency_key: window._currentEstIdempotencyKey || ((window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('est-' + Date.now() + '-' + Math.random().toString(36).slice(2))),
       customer_name:name, price:grand,
       performance_revenue:perf, staff_name:staffName,
       estimate_status:currentTab||'ga',
@@ -677,9 +686,6 @@ function _saveEstimateInner(_onDone) {
   }
 }
 
-// 2026-08-20(선혜님 발견 — 아이패드에서 저장이 아무 반응 없이 조용히 실패하던
-// 문제): 근본 원인을 코드 리뷰로는 확정하지 못했지만, _saveEstimateInner() 안의
-// 여러 지점에서 optional chaining 없이 DOM 요소에 직접 접근하고 있어 — 만약
 // 2026-08-24(선혜님 발견 — 같은 견적이 5개씩 한번에 중복 저장되던 문제):
 // 저장 버튼에 중복 클릭 방지 장치가 전혀 없어서, 짧은 시간 안에 여러 번
 // 눌리면(빠른 연타, 또는 터치가 두 번 인식되는 기기 문제 등) 각각이 독립적으로
@@ -687,6 +693,18 @@ function _saveEstimateInner(_onDone) {
 // 세팅하기 전에 나머지 클릭들이 이미 실행돼버려서, 전부 "새 견적"으로 처리되어
 // 그대로 중복 생성됨(실제 사례: 0.15초 안에 5건 중복 생성 확인). 버튼을 즉시
 // 비활성화하고, 저장 흐름이 끝나면(성공/실패 무관) 다시 눌러도 되게 원상복구.
+//
+// 2026-08-29(선혜님이 자동백업 중복탐지 알림으로 발견 — 임민희 8건 중복,
+// 0.074초 안에 발생): 근본 원인은 idempotency_key가 매번 새로 생성돼서
+// DB의 기존 유니크 인덱스(estimates_idempotency_key_uniq, 이미 있었음 -
+// pg_constraint로만 찾다가 놓쳤던 별도 unique index)가 무력화되고 있던
+// 것이었음 - resetEstEditingState()에서 키를 한 번만 생성해 세션 내내
+// 재사용하도록 수정(위 참고)해서, 이제 짧은 시간 안에 여러 번 시도해도
+// 같은 키로 요청되어 DB가 두 번째부터 정확히 막아줌.
+// (참고: 처음엔 여기에 "2초 이내 재호출 무조건 무시"라는 시간기반
+// 방어도 추가했었으나, 검증 후→값 수정→재저장 같은 정당한 짧은 간격의
+// 재시도까지 막아버리는 회귀를 자체 테스트로 발견해 제거함 - idempotency
+// key 재사용만으로 이미 충분한 방어였음.)
 function saveEstimate() {
   var btn = document.getElementById('btn-save-estimate');
   if (btn) {
