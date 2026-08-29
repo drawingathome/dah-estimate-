@@ -133,6 +133,17 @@ function validateDate(dateStr) {
 // 연락처 자동 포맷 (010-1234-5678)
 function formatPhone(input) {
   var clean = input.replace(/[^0-9]/g, '');
+  // 2026-08-29(선혜님 지시 - HTML 파일 전체 재검토로 발견): 대시보드/견적서
+  // 앱의 fmtPhone 2개(오늘 이미 발견·통일함)와는 완전히 별개인 세 번째
+  // 전화번호 포맷 함수 - "고객 추가" 폼(add-name)에서 지금 실제로 쓰이고
+  // 있는데, 정확히 같은 버그(서울 지역번호 02 처리 누락)가 있었음. 서울
+  // 유선전화(02-XXXX-XXXX)를 입력하면 3자리 프리픽스로 잘못 나뉘어
+  // 포맷되고 있었음 - fmtPhone과 동일한 로직으로 맞춤.
+  if (clean.slice(0,2) === '02') {
+    if (clean.length<=6) return clean.slice(0,2)+'-'+clean.slice(2);
+    if (clean.length<=9) return clean.slice(0,2)+'-'+clean.slice(2,5)+'-'+clean.slice(5);
+    return clean.slice(0,2)+'-'+clean.slice(2,6)+'-'+clean.slice(6,10);
+  }
   if (clean.length <= 3)  return clean;
   if (clean.length <= 7)  return clean.slice(0,3) + '-' + clean.slice(3);
   if (clean.length <= 11) return clean.slice(0,3) + '-' + clean.slice(3,7) + '-' + clean.slice(7);

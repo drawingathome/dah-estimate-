@@ -135,6 +135,12 @@ async function main() {
       const dashPage = await browser.newPage();
       await dashPage.goto(`http://localhost:${port}/dah-dashboard.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });
       const dashResult = await dashPage.evaluate((v) => (typeof fmtPhone === 'function' ? fmtPhone(v) : null), t.input);
+      // 2026-08-29(선혜님 지시 - HTML 파일 전체 재검토로 발견): 대시보드
+      // 안에 fmtPhone과는 완전히 별개인 세 번째 전화번호 포맷 함수
+      // formatPhone(dash-ui-helpers.js, "고객추가" 폼에서 실사용중)이
+      // 있었고 똑같은 서울지역번호 버그가 있었음 - fmtPhone과 계속
+      // 일관되게 유지되는지 여기서 같이 확인.
+      const dashFormatPhoneResult = await dashPage.evaluate((v) => (typeof formatPhone === 'function' ? formatPhone(v) : null), t.input);
       await dashPage.close();
 
       const estPage = await browser.newPage();
@@ -148,6 +154,7 @@ async function main() {
       await estPage.close();
 
       check(`fmtPhone(${t.label}) 대시보드/견적서 같은 결과`, dashResult === estResult, `대시보드="${dashResult}", 견적서="${estResult}"`);
+      check(`formatPhone(${t.label}, 세번째 별도함수) fmtPhone과 같은 결과`, dashFormatPhoneResult === dashResult, `formatPhone="${dashFormatPhoneResult}", fmtPhone="${dashResult}"`);
     }
   } finally {
     await browser.close();
