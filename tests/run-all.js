@@ -48,6 +48,14 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['revenue-consistency-check.js', [target]]);
   scripts.push(['detail-structure-check.js', [target]]);
   scripts.push(['responsive-layout-check.js', [target]]);
+  // 2026-08-29(선혜님 제안 - "1번도 2번도 아니고 자동 감시 테스트를
+  // 만들자"): 대시보드/견적서 앱은 서로 다른 도메인이라 코드 공유가
+  // 안 되고, 같은 목적의 로직이 양쪽에 따로 구현되면서 한쪽만 고치면
+  // 조용히 어긋나는 문제(fmtPhone, 실측의뢰서 그룹핑 로직 등)가 오늘
+  // 실제로 있었음. 양쪽 파일을 다 확인하는 특수한 테스트라, 중복 실행
+  // 방지를 위해 dah-dashboard 대상일 때 한 번만 돌림(target 인자 자체는
+  // 안 쓰고 dash-*.js/est-*.js 전체를 직접 스캔함).
+  scripts.push(['cross-app-twin-check.js', []]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',
