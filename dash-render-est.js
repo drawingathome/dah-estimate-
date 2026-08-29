@@ -251,6 +251,12 @@ function renderEstList() {
       // 그 자리에서 바로 등록하고 이어갈 수 있게 함.
       if (!entry.clientId) {
         if (confirm('"' + entry.clientName + '" 님은 아직 고객으로 등록이 안 됐어요.\n지금 고객으로 등록하고 이 견적과 연결할까요?')) {
+          // 2026-08-29(선혜님 지시 - "다른 누락된거는 없니?"로 발견): confirm()은
+          // blocking이라 클릭 자체가 중복 실행되긴 어렵지만, 사용자가 이 확인창을
+          // 실수로 여러 번 "확인"하면(예: 응답이 느려서 다시 클릭 후 또 confirm이
+          // 뜬 경우) 같은 견적에 대해 고객이 중복 생성될 수 있음 - 진행중 플래그로 방지.
+          if (entry._registeringAsCustomer) return;
+          entry._registeringAsCustomer = true;
           // 2026-08-25(선혜님 발견 — "고객 등록할지 물어보지만 실패하는데??"):
           // 담당자(staff_name)를 안 넣어서 기본값('선혜')으로 들어가고 있었음.
           // 최근 적용된 보안규칙(RLS) 때문에 직원 계정은 "내 담당 고객"만
@@ -259,6 +265,7 @@ function renderEstList() {
           var staffName3 = (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'staff') ? currentUser.name : '마스터';
           var payload = { client_name: entry.clientName, phone: entry.phone || null, stage: '가견적', price: entry.price || 0, staff_name: staffName3 };
           sbXHR('POST', 'customers', payload, function(err, rows){
+            entry._registeringAsCustomer = false;
             if (err || !rows || !rows[0]) { showToast('고객 등록 실패 — 다시 시도해주세요'); return; }
             var newId = rows[0].id;
             sbXHR('PATCH', 'estimates?id=eq.' + entry.id, { client_id: newId }, function(err){
