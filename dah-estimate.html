@@ -249,6 +249,18 @@
           // 판별 — "고객 불러오기" 목록 필터링에 사용됨(선혜님 확인 요청).
           window._estCurrentUser = { name: '마스터', role: 'master' };
           autoFillStaffField('마스터');
+          // 2026-08-31(선혜님 지시 - "그 비슷한 버그를 더 찾아봐"로 발견,
+          // 신화경 사건의 진짜 근본원인으로 추정): 아래 staff_emails
+          // 조회(비동기)가 끝나야 "이 사람이 진짜 마스터인지 실장인지"가
+          // 확정되는데, 그 사이 몇백ms 동안은 담당자 필드가 일단 '마스터'
+          // 로 채워진 채로 열려있음. 이미 "값이 '마스터'로 남아있을 때만
+          // 교체"하는 방어(아래)가 있었지만, 그 교체가 실행되기 전에
+          // 사용자가 먼저 저장 버튼을 누르면 담당자가 '마스터'로 그대로
+          // 저장돼버림 - 실장이 로그인 직후 급하게 저장하면 걸릴 수 있는
+          // 레이스 컨디션. 조회가 끝날 때까지 저장 버튼을 잠깐 막아서
+          // 이 경로 자체를 차단.
+          var _saveBtnDuringAuth = document.getElementById('btn-save-estimate');
+          if (_saveBtnDuringAuth) { _saveBtnDuringAuth.disabled = true; _saveBtnDuringAuth.title = '담당자 확인 중...'; }
           try {
             var seXhr = new XMLHttpRequest();
             seXhr.open('GET', SUPABASE_URL + '/rest/v1/app_settings?key=eq.staff_emails&select=value', true);
@@ -275,9 +287,21 @@
                   if (typeof setMasterEmail === 'function') setMasterEmail(email);
                 }
               } catch(eParse) {}
+              if (_saveBtnDuringAuth) { _saveBtnDuringAuth.disabled = false; _saveBtnDuringAuth.title = ''; }
+            };
+            // 2026-08-31: 네트워크 오류/타임아웃으로 onload 자체가 안 불리면
+            // 저장 버튼이 영원히 비활성화된 채로 남을 위험 - 반드시 재활성화.
+            seXhr.onerror = function() {
+              if (_saveBtnDuringAuth) { _saveBtnDuringAuth.disabled = false; _saveBtnDuringAuth.title = ''; }
+            };
+            seXhr.timeout = 8000;
+            seXhr.ontimeout = function() {
+              if (_saveBtnDuringAuth) { _saveBtnDuringAuth.disabled = false; _saveBtnDuringAuth.title = ''; }
             };
             seXhr.send();
-          } catch(eOuter) {}
+          } catch(eOuter) {
+            if (_saveBtnDuringAuth) { _saveBtnDuringAuth.disabled = false; _saveBtnDuringAuth.title = ''; }
+          }
           // 확인 성공 시 이 창에서도 세션 갱신 (같은 브라우저에서 계속 쓸 수 있도록)
           // staff_emails 조회가 끝나기 전까지의 기본값 — 조회 완료되면 위 콜백에서 정확한 값으로 덮어씀
           try { localStorage.setItem('dah_session', JSON.stringify({name:'마스터', role:'master', loginAt: Date.now()})); } catch(e) {}
