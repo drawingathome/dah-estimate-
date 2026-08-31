@@ -88,6 +88,7 @@ async function testRoleAndViewport(role, vw, label, port) {
   // 고객/견적 내용 입력
   await page.evaluate(() => {
     document.getElementById('c-name').value = '_역할검증고객';
+    document.getElementById('c-phone').value = '010-1234-5678';
     document.querySelector('.space-inp').value = '거실';
     const tr = document.querySelector('.row-curtain');
     tr.querySelector('.mw').value = '300'; tr.querySelector('.mw').dispatchEvent(new Event('input'));

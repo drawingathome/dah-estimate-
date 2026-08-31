@@ -42,7 +42,7 @@ async function run() {
     console.log('\n[견적서 다중행 검증 회귀 검사] ' + file + ' @ ' + label);
 
     // ── 케이스 1: 커튼 3행 중 마지막 1행만 단가 누락 → 저장이 막혀야 함 ──
-    await page.evaluate(() => { document.getElementById('c-name').value = '회귀검증고객'; });
+    await page.evaluate(() => { document.getElementById('c-name').value = '회귀검증고객'; document.getElementById('c-phone').value = '010-1234-5678'; });
     await page.evaluate(() => { addCurtainRow(); addCurtainRow(); });
     await new Promise(r => setTimeout(r, 200));
     await page.evaluate(() => {

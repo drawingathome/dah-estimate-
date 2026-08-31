@@ -51,6 +51,7 @@ async function auditPage(dir, file, role, vw, label, port) {
       await new Promise(r => setTimeout(r, 200));
       await page.evaluate(() => {
         document.getElementById('c-name').value = '_감사테스트';
+        document.getElementById('c-phone').value = '010-1234-5678';
         const tr = document.querySelector('.row-curtain');
         if (tr) {
           tr.querySelector('.c-display-name').value = '테스트품목';

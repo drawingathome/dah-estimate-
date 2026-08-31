@@ -112,6 +112,15 @@ function showFieldError(fieldId, msg) {
 function validateEstimate() {
   var name = document.getElementById('c-name')?.value?.trim();
   if (!name) { showFieldError('c-name', '고객명을 입력해주세요'); return false; }
+  // 2026-08-29(선혜님 지적 - "이게 중복이 생기는거는 심각한데", 신화경
+  // 사례로 발견): 고객명만 필수였고 연락처는 검증이 전혀 없어서, 연락처
+  // 없이 저장하면 그런 고객이 그대로 자동 생성됐음 - 나중에 같은 사람을
+  // 연락처 포함해서 다시 등록하면, 연락처가 다르니(하나는 없음) 시스템이
+  // "다른 사람"으로 착각해 중복 경고 없이 통과되고 있었음(신화경님 사례
+  // - 견적 1,192,000원짜리 빈 고객과 실제 결제완료된 고객이 따로 존재).
+  // 연락처도 필수로 만들어서 이 경로 자체를 막음.
+  var phone = document.getElementById('c-phone')?.value?.trim();
+  if (!phone) { showFieldError('c-phone', '연락처를 입력해주세요'); return false; }
   var hasProduct = false;
   var missingPriceRows = []; // 가로/높이는 채웠는데 단가를 빼먹은 행 번호(사람이 세는 순서, 1부터)
 

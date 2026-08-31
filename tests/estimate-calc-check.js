@@ -108,6 +108,7 @@ async function run() {
     await new Promise(r => setTimeout(r, 700));
     await page2.evaluate(() => {
       document.getElementById('c-name').value = '회귀테스트고객';
+      document.getElementById('c-phone').value = '010-1234-5678';
       addBlindRow();
     });
     await new Promise(r => setTimeout(r, 300));
