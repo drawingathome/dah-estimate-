@@ -8,34 +8,74 @@ var STAGES = ['방문예약','상담','가견적','선금결제','실측준비�
 // 2026-08-05: STAGES_ALL(옛 6단계 이름 배열)은 코드베이스 어디서도 참조되지 않는
 // 죽은 코드였고 이름까지 옛것이라 혼동 소지가 있어 제거함
 
+// 2026-08-29: 알림톡 v3 문서(선혜님 원본) 기준으로 전면 재작성.
+// v3의 A/B/C 상황별 분기(예: 3번 가견적 발송, 7번 확정견적 발송)는 이번엔
+// 케이스 구분 없이 대표 문구 1개만 등록함 — 선혜님 결정, 세분화는 다음 세션.
+// 각 대표문구 선택 근거는 ALIM_META의 template 옆 주석에 표시.
 var STAGE_ALIM = {
-  방문예약: ['t01_reservation','t02_reminder'],
-  상담:   ['t01_reservation','t02_reminder','t03_estimate','t04_followup'],
-  가견적: ['t03_estimate','t04_followup'],
-  선금결제: ['t03_estimate','t31_deposit','t05_measure_confirm'],
-  실측준비중:   ['t05_measure_confirm','t06_measure_dday','t07_final_estimate','t71_balance_request'],
-  확정견적: ['t07_final_estimate','t71_balance_request'],
-  잔금결제:   ['t71_balance_request','t08_balance_remind','t09_order_confirm'],
-  시공준비중:   ['t09_order_confirm','t10_install_confirm','t11_install_dday'],
-  시공완료:   ['t12_after_install','t13_cancel','t14_noshow']
+  방문예약: ['t00_reservation','t01_survey','t02_reminder'],
+  상담:   ['t00_reservation','t02_reminder','t03_estimate','t04_followup'],
+  가견적: ['t03_estimate','t04_followup','t41_payment_method','t42_deposit_cash','t43_deposit_card'],
+  선금결제: ['t42_deposit_cash','t43_deposit_card','t05_measure_confirm'],
+  실측준비중:   ['t05_measure_confirm','t06_measure_dday','t07_final_estimate'],
+  확정견적: ['t07_final_estimate','t08_balance_remind'],
+  잔금결제:   ['t08_balance_remind','t09_install_confirm'],
+  시공준비중:   ['t09_install_confirm','t10_install_dday'],
+  시공완료:   ['t10_install_dday','t11_after_install','t12_repeat_purchase','t18_as_confirm']
 };
+// 특정 단계에 묶이지 않는 항목(취소/노쇼/재고이슈/AS) — "취소·기타" 카테고리에서 표시
+var OTHER_ALIM_KEYS = ['t13_cancel','t14_noshow','t15_restock_split','t16_cancel_before_measure','t17_cancel_after_measure'];
 var ALIM_META = {
-  t01_reservation:    {label:'1. 예약확인',           desc:'수동 · 예약 즉시',         tag:'수동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n상담 예약이 확인됐습니다. 편하신 시간에 뵙겠습니다!'},
-  t02_reminder:       {label:'2. 방문 1일 전 리마인더',desc:'자동 · 방문일 D-1',        tag:'자동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n내일 방문 예정이신 것 리마인드 드려요. 편하게 뵙겠습니다!'},
-  t03_estimate:       {label:'3. 가견적서 발송',       desc:'수동 · 상담 당일',         tag:'수동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n상담 내용을 바탕으로 가견적서를 보내드립니다. 확인 부탁드려요!'},
-  t31_deposit:        {label:'3-1. 계약금 결제 요청',  desc:'수동 · 가견적서 발송 후',  tag:'수동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n계약 진행을 위해 계약금(견적금액의 50%) 결제를 부탁드려요. 입금 확인되면 실측 일정을 잡아드리겠습니다.'},
-  t04_followup:       {label:'4. 팔로업',             desc:'알림 · 상담 2일 후',        tag:'알림', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n상담 후 궁금하신 점은 없으셨나요? 편하게 말씀해 주세요!'},
-  t05_measure_confirm:{label:'5. 실측 일정 확정',      desc:'수동 · 계약금 납부 후',    tag:'수동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n계약금 확인됐습니다. 실측 방문 일정을 조율하고 싶어요. 편하신 날짜와 시간을 알려주세요!'},
-  t06_measure_dday:   {label:'6. 실측 하루 전 안내',   desc:'알림 · 실측일 D-1',        tag:'알림', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n내일 실측 방문 예정입니다. 편하게 뵙겠습니다!'},
-  t07_final_estimate: {label:'7. 확정견적서 발송',     desc:'수동 · 실측 완료 후',      tag:'수동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n실측한 사이즈 기준으로 확정견적서를 보내드립니다. 확인 부탁드려요!'},
-  t71_balance_request:{label:'7-1. 잔금 결제 요청',    desc:'수동 · 확정견적서 확인 후',tag:'수동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n잔금 결제를 부탁드려요. 완납 확인되면 시공 일정이 확정됩니다. 감사합니다!'},
-  t08_balance_remind: {label:'8. 잔금 리마인드',       desc:'알림 · 미납 2일 후',       tag:'알림', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n잔금 결제가 아직 확인되지 않아 안내드려요. 편하실 때 확인 부탁드립니다!'},
-  t09_order_confirm:  {label:'9. 발주 확정+제작 안내', desc:'수동 · 잔금 완납 후',      tag:'수동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n잔금 완납 확인됐습니다. 제작을 시작합니다. 완료되면 시공 일정을 안내드릴게요!'},
-  t10_install_confirm:{label:'10. 시공 일정 확정',     desc:'수동 · 제작 완료 후',      tag:'수동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n제작이 완료됐습니다. 시공 일정을 조율하고 싶어요. 편하신 날짜를 알려주세요!'},
-  t11_install_dday:   {label:'11. 시공 전날 안내',     desc:'알림 · 시공일 D-1',        tag:'알림', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n내일 시공 방문 예정입니다. 편하게 뵙겠습니다!'},
-  t12_after_install:  {label:'12. 시공 후 안부',       desc:'자동 · 시공일 D+3',        tag:'자동', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n시공은 만족스러우셨나요? 불편하신 점 있으시면 언제든 말씀해 주세요!'},
-  t13_cancel:         {label:'13. 취소 안내',          desc:'선택 · 취소 시',           tag:'선택', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n요청하신 대로 취소 처리됐습니다. 다음에 또 좋은 인연으로 뵙겠습니다!'},
-  t14_noshow:         {label:'14. 노쇼 재예약 안내',   desc:'선택 · 노쇼 처리 후',      tag:'선택', template:'안녕하세요, {name}님 🙂\n드로잉엣홈입니다.\n지난 방문 일정에 연락이 닿지 않아 안내드려요. 편하실 때 다시 예약 부탁드립니다!'}
+  t00_reservation: {label:'0. 예약 확인', desc:'수동 · 즉시', tag:'수동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 쇼룸 방문 예약이 확인됐습니다 ✔\n\n방문 일정: #{방문일시}\n위치: 서울 서초구 반포동 (예약제 운영)\n주차는 쇼룸 바로 옆 주차장을 이용하시면 됩니다.\n\n1:1 예약제로 운영되어 방문이 어려우신 경우\n하루 전까지 꼭 연락 주시면 감사하겠습니다.\n\n궁금하신 점은 편하게 말씀해 주세요.'},
+  t01_survey: {label:'1. 설문지 발송', desc:'자동 · 예약확인 30분~1시간 후', tag:'자동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 방문 전 설문지를 미리 작성해 주시면\n상담 시간을 줄이고 공간에 맞는 원단을\n미리 준비해드릴 수 있어요 ✔\n\n3분이면 충분합니다.\n설문지: https://dah-estimate.vercel.app/survey'},
+  // v3 원본은 방문 D-1이 설문지 완료(A)/미완료(B) 2가지로 갈라짐 — 이번엔 케이스 구분 없이
+  // B(미완료 가정, 설문지 링크 재안내 포함)를 대표로 사용. 완료 고객에게도 무난히 통함.
+  t02_reminder: {label:'2. 방문 1일 전 리마인더', desc:'자동 · 방문일 D-1', tag:'자동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 내일 쇼룸 방문 예정이세요 ✔\n\n방문 일정: #{방문일시}\n\n아직 설문지를 작성 안 하셨다면\n방문 전에 미리 작성해 주시면 더 좋아요 ✔\n공간 사이즈나 도면도 함께 준비해 오시면\n더 정확한 견적과 제품 선택이 수월해져요.\n\n내일 뵙겠습니다 🙂\n설문지: https://dah-estimate.vercel.app/survey'},
+  // v3 원본 3케이스(A:매장결제완료/B:생각중/C:카톡결제예정) 중 B를 대표로 사용
+  // — 결제 여부를 가정하지 않는 게 가장 무난함.
+  t03_estimate: {label:'3. 가견적서 발송', desc:'수동 · 상담 당일', tag:'수동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 오늘 상담 감사드려요 ✔\n\n가견적서를 아래에 정리해드렸어요.\n\n계약금(총 금액의 50%) 결제 후\n실측 일정을 잡아드리며,\n실측 후 정확한 치수로 최종 견적을 다시 안내드려요.\n\n진행을 원하시면 편하게 말씀해 주세요 🙂'},
+  t04_followup: {label:'4. 팔로업', desc:'자동 · 상담 3일 후 · 계약금 미결제', tag:'자동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 지난번 상담 이후 잘 지내고 계신가요?\n\n결정이 쉽지 않으실 수 있어요.\n추가로 궁금하신 점이 있으시면\n언제든 편하게 말씀해 주세요 ✔\n\n쇼룸에 다시 방문하셔서 원단을 한 번 더\n확인해보시는 것도 좋아요 🙂'},
+  t41_payment_method: {label:'4-1. 결제 방법 확인', desc:'수동 · 팔로업 후 진행의사 밝혔을 때', tag:'수동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 계약금 결제 안내드릴게요 ✔\n\n아래 두 가지 방법이 가능해요.\n\n✔ 현금 계좌이체 (현금영수증 발급 가능)\n✔ 카드 결제 링크\n\n어떤 방법이 편하세요? 🙂'},
+  t42_deposit_cash: {label:'4-2. 계약금 안내 · 현금', desc:'수동', tag:'수동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 계좌 안내드릴게요 ✔\n\n국민은행 015401-04-258798\n(예금주: 장선혜(드로잉엣홈))\n금액: #{계약금}원\n\n현금영수증 발급을 원하시면\n휴대폰 번호를 남겨주세요.\n\n입금 확인 후 실측 일정 안내드릴게요 🙂'},
+  t43_deposit_card: {label:'4-3. 계약금 안내 · 카드', desc:'수동', tag:'수동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 결제 링크 안내드릴게요 ✔\n\n결제 링크: #{결제링크}\n금액: #{계약금}원\n\n결제 완료 후 실측 일정 안내드릴게요 🙂'},
+  t05_measure_confirm: {label:'5. 실측 일정 확정', desc:'수동 · 계약금 결제 확인 후', tag:'수동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 계약금 결제 확인했어요 ✔\n\n실측 일정을 아래와 같이 잡아드렸어요.\n\n실측 일정: #{실측일시}\n\n정확한 방문 시간은 실측 전날 오후에\n전담팀에서 직접 연락드릴게요.\n\n궁금하신 점은 편하게 말씀해 주세요 🙂'},
+  t06_measure_dday: {label:'6. 실측 1일 전 안내', desc:'자동 · 실측일 D-1 오후', tag:'자동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 내일 실측 방문 예정입니다 ✔\n\n실측 일정: #{실측일시}\n\n오늘 오후 중으로 전담팀에서\n정확한 방문 시간 안내 전화드릴게요.\n\n궁금하신 점은 편하게 말씀해 주세요 🙂'},
+  // v3 3케이스(A:매장결제완료/B:결제방법확인필요/C:카드링크발송) 중 B를 대표로 사용
+  t07_final_estimate: {label:'7. 확정 견적서 발송', desc:'수동 · 실측 완료 후', tag:'수동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 실측 치수를 바탕으로\n최종 견적서를 정리해드렸어요 ✔\n\n실측 사이즈에 따라 가견적과\n금액이 달라질 수 있어요.\n\n잔금 결제는 아래 두 가지 방법이 가능해요.\n\n✔ 현금 계좌이체 (현금영수증 발급 가능)\n✔ 카드 결제 링크\n\n어떤 방법이 편하세요? 🙂'},
+  // v3 2케이스(A:현금/B:카드) 중 A를 대표로 사용
+  t08_balance_remind: {label:'8. 잔금 리마인드', desc:'자동 · 확정견적 발송 2일 후 · 잔금 미결제', tag:'자동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 잔금 안내드려요 ✔\n\n국민은행 015401-04-258798 (예금주: 장선혜(드로잉엣홈))\n금액: #{잔금}원\n\n현금영수증 발급을 원하시면\n휴대폰 번호를 남겨주세요 ✔\n\n입금 확인 후 바로 시공 일정을 잡아드릴게요.\n궁금하신 점은 편하게 말씀해 주세요 🙂'},
+  t09_install_confirm: {label:'9. 시공 일정 확정', desc:'수동 · 잔금 결제 확인 후', tag:'수동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 잔금 결제 확인했어요 ✔\n\n시공 일정이 확정됐습니다.\n\n시공 일정: #{시공일시}\n\n정확한 방문 시간은 시공 전날 오후에\n전담팀에서 직접 연락드릴게요.\n\n궁금하신 점은 편하게 말씀해 주세요 🙂'},
+  t10_install_dday: {label:'10. 시공 1일 전 안내', desc:'자동 · 시공일 D-1 오후', tag:'자동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 내일 시공 방문 예정입니다 ✔\n\n시공 일정: #{시공일시}\n\n오늘 오후 중으로 전담팀에서\n정확한 방문 시간 안내 전화드릴게요.\n\n시공 당일 길이나 마감 상태를\n고객님과 함께 꼼꼼히 확인해드려요.\n현장에서 바로 말씀해 주시면\n즉시 수정해드릴게요 ✔\n\n궁금하신 점은 편하게 말씀해 주세요 🙂'},
+  t11_after_install: {label:'11. 시공 후 안부', desc:'자동 · 시공완료 3일 후', tag:'자동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 시공 후 잘 사용하고 계신가요? ✔\n\n궁금하신 점이 있으시면\n언제든 편하게 말씀해 주세요.\n\n시공 후 예뻐진 공간, 자랑해주세요 🙂\n\n아래 중 하나를 카톡으로 보내주시면\n작은 사은품을 택배로 보내드릴게요!\n\n✔ 네이버 리뷰 작성 후 링크 전송\n✔ 카페 후기 작성 후 링크 전송\n✔ 예뻐진 공간 사진 5장 이상 전송\n\n보내주신 모든 분께 빠짐없이 보내드려요 ✔\n네이버 리뷰: https://map.naver.com/v5/entry/place/1813414113'},
+  t12_repeat_purchase: {label:'12. 재구매 유도', desc:'자동 · 시공완료 6개월 후', tag:'자동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 시공 후 잘 지내고 계신가요? ✔\n\n혹시 다른 공간도 커튼이나 블라인드가\n필요하시면 편하게 말씀해 주세요.\n\n재구매 고객님께는 추가 5% 할인을\n드리고 있어요 🙂\n\n언제든 편하게 연락 주세요 ✔'},
+  t13_cancel: {label:'13. 취소 안내', desc:'선택 · 취소 시', tag:'선택',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 예약 취소 처리됐습니다.\n\n나중에 필요하실 때 언제든 다시 연락 주세요.\n감사합니다 🙂'},
+  t14_noshow: {label:'14. 노쇼 재예약 안내', desc:'수동 · 노쇼 처리 후', tag:'수동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 오늘 방문이 어려우셨나요?\n\n일정 조율이 필요하시면\n편하게 말씀해 주세요.\n재예약 도와드릴게요 🙂'},
+  t15_restock_split: {label:'15. 재고 없음 · 2차 시공 안내', desc:'수동', tag:'수동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 주문하신 제품 중\n일부 재고 확인이 필요해요 ✔\n\n재고 상황에 따라 2차 시공으로\n나눠서 진행해드릴 수 있어요.\n\n일정은 별도로 안내드릴게요.\n불편을 드려 죄송합니다 🙂'},
+  t16_cancel_before_measure: {label:'16. 취소 안내 · 실측 전', desc:'수동', tag:'수동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 취소 접수 확인했습니다.\n\n계약금 전액을 환불해드릴게요 ✔\n\n환불 계좌를 알려주시면\n빠르게 처리해드릴게요.\n\n나중에 필요하실 때 언제든\n다시 연락 주세요 🙂'},
+  t17_cancel_after_measure: {label:'17. 취소 안내 · 실측 후', desc:'수동', tag:'수동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, 취소 접수 확인했습니다.\n\n실측 진행 후 취소의 경우\n실측 수수료 10만원을 제외한\n금액을 환불해드려요 ✔\n\n환불 계좌를 알려주시면\n빠르게 처리해드릴게요.\n\n나중에 필요하실 때 언제든\n다시 연락 주세요 🙂'},
+  t18_as_confirm: {label:'18. AS 접수 확인', desc:'수동', tag:'수동',
+    template:'안녕하세요, 드로잉엣홈입니다 🙂\n\n#{고객명}님, AS 접수 확인했어요 ✔\n\n방문 일정: #{AS일시}\n\n전담팀에서 꼼꼼히 확인해드릴게요.\n궁금하신 점은 편하게 말씀해 주세요 🙂'}
 };
 
 // 2026-08-05: 색상 3그룹으로 단순화(제안1 확정) - 방문예약~가견적=회색, 선금결제~시공준비중=오렌지, 시공완료=그린
@@ -690,6 +730,43 @@ function renderDetailInfoSection(c, body) {
     });
   });
   infoSec.appendChild(memoBlock);
+
+  // 2026-08-29: 카카오 알림톡 v3 재작성 시 추가 — #{결제링크} 변수용 저장란.
+  // 결제선생/네이버페이 등에서 발급한 링크를 여기 한 번 저장해두면, 4-3/7-C/8-B 등
+  // 카드결제 안내 알림톡 발송 때마다 다시 입력할 필요 없이 자동으로 채워짐.
+  function renderPaymentLinkDisplay(block, val) {
+    block.innerHTML = '';
+    block.appendChild(el('div', {style:'font-size:11px;color:var(--terra);letter-spacing:0.8px;margin-bottom:3px', text:'결제 링크 (탭해서 편집 · #{결제링크} 변수로 사용)'}));
+    block.appendChild(el('div', {style:'font-size:11px;color:'+(val?'var(--dark)':'var(--light)')+';line-height:1.6;word-break:break-all', text: val || '결제 링크를 추가하려면 눌러주세요'}));
+  }
+  var paymentLinkBlock = div('background:#FFFBF5;border:1px solid #FFE5CC;border-radius:12px;padding:10px 14px;margin-bottom:var(--sp-2);cursor:pointer', []);
+  renderPaymentLinkDisplay(paymentLinkBlock, c.paymentLink || '');
+  paymentLinkBlock.addEventListener('click', function() {
+    if (paymentLinkBlock.querySelector('input')) return;
+    paymentLinkBlock.innerHTML = '';
+    paymentLinkBlock.appendChild(el('div', {style:'font-size:11px;color:var(--terra);letter-spacing:0.8px;margin-bottom:4px', text:'결제 링크'}));
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.value = c.paymentLink || '';
+    input.placeholder = 'https://...';
+    input.style.cssText = 'width:100%;min-height:36px;border:1px solid var(--border);border-radius:8px;padding:8px;font-size:12px;font-family:inherit;box-sizing:border-box';
+    paymentLinkBlock.appendChild(input);
+    input.focus();
+    input.addEventListener('blur', function() {
+      var newVal = input.value.trim();
+      var arr = loadCustomers();
+      var target = findCurrentDetailCustomer(arr);
+      if (target) {
+        target.paymentLink = newVal;
+        saveCustomers(arr);
+        saveCustomerToDb(target, function(err){
+          showToast(err ? '⚠️ 결제링크: 로컬엔 저장됨(서버 재시도 대기)' : '결제 링크가 저장됐습니다');
+        });
+      }
+      renderPaymentLinkDisplay(paymentLinkBlock, newVal);
+    });
+  });
+  infoSec.appendChild(paymentLinkBlock);
 
   // 날짜 3개 가로 배열 — 실측예정/시공예정은 클릭하면 바로 날짜를 고쳐 저장할 수 있음
   // (기존엔 전체 "수정" 모달을 열어야만 했음 — 선혜님 피드백으로 원클릭 편집 추가)

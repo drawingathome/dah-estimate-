@@ -312,7 +312,11 @@ function dbRowToCustomer(row) {
     orderStatus:        row.order_status||{},
     branch:             row.branch||'반포점',
     leadParked:         row.lead_parked||false,
-    confirmDate:        row.confirm_date||''
+    confirmDate:        row.confirm_date||'',
+    // 2026-08-29: 카카오 알림톡 v3 재작성 시 추가 — #{결제링크} 변수용 저장란.
+    // DB에 payment_link 컬럼은 이미 존재했으나(원인 불명, 마이그레이션 파일엔 없음)
+    // 코드에서 쓰인 적은 없었음 — 이번에 처음 실제 연결함.
+    paymentLink:        row.payment_link||''
   };
 }
 
@@ -342,7 +346,8 @@ function customerToDbRow(c) {
     balance_receipt:     c.balanceReceipt||false,
     order_status:        c.orderStatus||{},
     branch:              c.branch||'반포점',
-    confirm_date:        c.confirmDate||null
+    confirm_date:        c.confirmDate||null,
+    payment_link:        c.paymentLink||''
   };
 }
 
