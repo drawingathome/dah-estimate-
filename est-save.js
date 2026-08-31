@@ -336,9 +336,19 @@ function _saveEstimateInner(_onDone) {
     if (!window._editingEstDbId && window._estSaveCustomerId && typeof SUPABASE_URL !== 'undefined') {
       var todayStart = new Date(); todayStart.setHours(0,0,0,0);
       var xhrCheck = new XMLHttpRequest();
+      // 2026-08-31(선혜님 지적 — "현은지 왜 또 중복이 되지????", 개판이네
+      // 진짜!!!!): 이 "오늘 이미 저장된 견적 찾기" 안전장치가 created_at
+      // (최초 생성일) 기준으로만 찾고 있었음 - 현은지 원본 견적서는
+      // 8/4에 처음 만들어졌는데, 오늘(8/31) 그 견적을 열어서 수정저장까지
+      // 했음에도 "오늘 생성된 것"에는 안 걸려서 못 찾음. 그 상태로
+      // _editingEstDbId도 어떤 이유로(정확한 재현은 못 했으나 mode=edit
+      // 아닌 경로로 재진입했을 가능성) 유실된 채 "확정" 저장을 하니,
+      // 이 안전장치도 원본을 못 찾아 완전히 새 레코드(POST)를 만들어버림.
+      // "오늘 작업 중인 견적"을 정확히 찾으려면 최초 생성일이 아니라
+      // 최근 수정일(updated_at) 기준이어야 함.
       xhrCheck.open('GET', SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(window._estSaveCustomerId) +
-        '&is_archived=eq.false&created_at=gte.' + encodeURIComponent(todayStart.toISOString()) +
-        '&select=id,updated_at&order=created_at.desc&limit=1', true);
+        '&is_archived=eq.false&updated_at=gte.' + encodeURIComponent(todayStart.toISOString()) +
+        '&select=id,updated_at&order=updated_at.desc&limit=1', true);
       xhrCheck.setRequestHeader('apikey', SUPABASE_KEY);
       xhrCheck.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
       xhrCheck.timeout = 5000;
