@@ -516,6 +516,43 @@ function loadCustomersAsync(callback, force) {
 function saveCustomers(arr) { _customerCache = arr; try { localStorage.setItem('dah_customers', JSON.stringify(arr)); } catch(e) {} }
 
 function saveCustomerToDb(customer, callback) {
+  // 2026-08-31(선혜님 지적 — "본인이 쓴것도 인지하는거야??"로 발견): 방금
+  // 만든 동시편집 충돌감지(updated_at 잠금)가, 같은 사람이 같은 고객을
+  // 빠르게 연달아 두 번 저장(예: 단계변경 changeStage처럼 중복클릭
+  // 방지가 없는 저장 버튼들)하면 오히려 자기 자신과 충돌한 것으로
+  // 오판할 위험이 있었음 - 1차 저장이 서버 응답을 받아 최신 updated_at을
+  // 반영하기 전에 2차 저장이 이미 낡은 잠금값으로 시작하면, 2차 저장이
+  // "누군가 먼저 저장했다"고 잘못 판단함. 6곳(메모/결제링크/날짜/단계변경
+  // 등) 저장버튼 하나하나에 중복클릭 방지를 붙이는 대신, 이 함수 한 곳
+  // 에서 같은 고객(id)에 대한 저장을 직렬화(진행중이면 대기했다가 최신
+  // updated_at으로 이어서 실행)해서 근본적으로 막음.
+  if (customer && customer.id) {
+    if (!window._custSaveInFlight) window._custSaveInFlight = {};
+    if (window._custSaveInFlight[customer.id]) {
+      // 이미 이 고객에 대한 저장이 진행 중 - 그 저장이 끝난 뒤(최신
+      // updated_at 반영된 뒤) 이어서 실행되도록 대기열에 추가.
+      if (!window._custSaveQueue) window._custSaveQueue = {};
+      window._custSaveQueue[customer.id] = { customer: customer, callback: callback };
+      return;
+    }
+    window._custSaveInFlight[customer.id] = true;
+  }
+  var _origCallback = callback;
+  callback = function(err, data) {
+    if (customer && customer.id) {
+      window._custSaveInFlight[customer.id] = false;
+      var queued = window._custSaveQueue && window._custSaveQueue[customer.id];
+      if (queued) {
+        window._custSaveQueue[customer.id] = null;
+        // 대기하던 요청은 이제 최신 customer.updatedAt(방금 갱신됨)을
+        // 가진 객체로 이어서 실행 - queued.customer가 같은 참조라면
+        // 이미 최신값을 갖고 있고, 다른 참조라도 갱신된 값을 넘겨줌.
+        queued.customer.updatedAt = customer.updatedAt;
+        saveCustomerToDb(queued.customer, queued.callback);
+      }
+    }
+    if (_origCallback) _origCallback(err, data);
+  };
   // 2026-08-28(선혜님 지적 — "이 문구는 왜 또 뜨지??", 배재연을 방금 등록한
   // 직후 본인 화면에서 "다른 곳에서 방금 업데이트됐어요" 배너가 뜬 사례):
   // Realtime 구독은 "누가" 바꿨는지 구분 안 하고 이 브라우저 자신의 저장도
