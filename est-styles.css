@@ -1113,8 +1113,11 @@ td.amt{
   .pv-total-value { font-family:'Noto Serif CJK KR',Georgia,serif!important; font-size:26px!important; font-weight:700!important; color:#1A1A1A!important; }
   #pv-overlay .pv-total-value { color:#F06E2D!important; }
 
-  .pv-payment-split { border:none!important; margin:0 0 12px 0!important; }
-  .pv-payment-split > div { background:#fff!important; padding:0!important; padding-left:16px!important; padding-right:16px!important; border:none!important; }
+  .pv-payment-split {
+    border:none!important; margin:0 0 12px 0!important;
+    margin-left:90px!important; width:calc(100% - 90px)!important;
+  }
+  .pv-payment-split > div { background:#fff!important; padding:0!important; padding-left:4px!important; padding-right:16px!important; border:none!important; }
   .pv-payment-split > div:last-child { border-right:none!important; }
   .pv-payment-label { font-size:11px!important; font-weight:700!important; color:#1A1A1A!important; margin-bottom:5px!important; }
   .pv-payment-sub { font-size:9px!important; font-weight:400!important; color:#8A8378!important; }
