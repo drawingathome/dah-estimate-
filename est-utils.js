@@ -339,6 +339,12 @@ function syncCustomerToSheet(customer) {
       }));
     } catch (e) { /* 에러 리포팅 자체가 실패해도 화면엔 절대 영향 없게 조용히 무시 */ }
   }
+  // 2026-08-31(선혜님 지적 - "복구 못하는게 말이 되니"로 실패한 저장을
+  // 서버에도 백업하려다 발견): 지금까지 이 함수가 이 IIFE 안에서만
+  // 정의돼있어서, window.error 리스너 자체에서만 자동으로 쓰이고 있었고
+  // 다른 파일(est-save.js 등)에서 특정 상황에 맞춰 명시적으로 호출할
+  // 방법이 없었음 - 전역에 노출해서 재사용 가능하게 함.
+  window.reportClientError = reportClientError;
 
   window.addEventListener('error', function (ev) {
     reportClientError(ev.message, ev.error && ev.error.stack, { filename: ev.filename, lineno: ev.lineno, colno: ev.colno });

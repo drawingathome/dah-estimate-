@@ -468,9 +468,41 @@ function _saveEstimateInner(_onDone) {
               var lockCheckRows = JSON.parse(xhr2.responseText);
               if (Array.isArray(lockCheckRows) && lockCheckRows.length === 0) {
                 showToast(lockUpdatedAt
-                  ? '⚠️ 이 견적서가 방금 다른 곳에서 먼저 저장됐어요 — 새로고침해서 최신 내용을 확인해주세요 (내 변경사항은 로컬에만 저장됨)'
-                  : '⚠️ 저장이 서버에 반영되지 않았어요 (권한 문제일 수 있어요) — 화면을 새로고침한 뒤 다시 시도해주세요. 내 변경사항은 로컬에만 저장된 상태예요');
-                if (typeof addToEstPendingQueue === 'function') { /* 강제 재시도는 위험하므로 큐에 넣지 않음 - 사용자 확인 필요 */ }
+                  ? '⚠️ 이 견적서가 방금 다른 곳에서 먼저 저장됐어요 — 새로고침해서 최신 내용을 확인해주세요 (내 변경사항은 안전하게 백업됐어요)'
+                  : '⚠️ 저장이 서버에 반영되지 않았어요 (권한 문제일 수 있어요) — 마스터님께 알려주세요. 내 변경사항은 안전하게 백업됐어요');
+                // 2026-08-31(선혜님 지적 — "앞으로 다른 견적서도 확정을
+                // 누르면 지워진다는 말이니, 복구 못하는게 말이 되니"로
+                // 발견·수정): 저장이 서버에 막혔을 때(권한 문제 등) "강제
+                // 재시도는 위험하니 큐에 안 넣는다"는 판단까지는 맞지만,
+                // 그럼 그 내용 자체를 아예 어디에도 안 남기고 있었음 -
+                // 유일한 백업이던 자동저장 초안(dah_estimate_draft)도
+                // 60분 지나면 지워지는 임시용이라, 신화경 사례처럼 며칠
+                // 뒤엔 이미 사라지고 없었음. 재시도는 안 하되(위험 방지는
+                // 유지), 이 payload 자체는 기한 없이 별도 보관해서 절대
+                // 사라지지 않게 함 - 나중에 마스터가 이 백업을 보고 수동
+                // 으로 확인/재저장할 수 있음.
+                try {
+                  var failedSaves = JSON.parse(localStorage.getItem('dah_failed_saves')||'[]');
+                  failedSaves.push({
+                    savedAt: new Date().toISOString(),
+                    reason: lockUpdatedAt ? '동시저장충돌' : '권한문제(담당자불일치 추정)',
+                    editingEstDbId: window._editingEstDbId,
+                    payload: estPayloadForRetry
+                  });
+                  if (failedSaves.length > 50) failedSaves = failedSaves.slice(-50); // 무한정 쌓이지 않게 최근 50건만
+                  localStorage.setItem('dah_failed_saves', JSON.stringify(failedSaves));
+                } catch(eBackup) { /* 백업 자체가 실패해도 저장 흐름엔 영향 안 줌 */ }
+                // 로컬 백업은 "이 브라우저/이 기기"에서만 확인 가능한 한계가
+                // 있어서, 어느 기기에서든 마스터가 확인할 수 있게 서버
+                // (client_error_logs, 이미 있던 자동 에러수집 채널)에도
+                // 같은 내용을 함께 남김.
+                if (typeof reportClientError === 'function') {
+                  reportClientError(
+                    '견적서 저장 실패(권한문제 또는 동시저장충돌) - 내용 백업됨',
+                    null,
+                    { estPayload: estPayloadForRetry, reason: lockUpdatedAt ? '동시저장충돌' : '권한문제' }
+                  );
+                }
                 onDone();
                 return;
               }
