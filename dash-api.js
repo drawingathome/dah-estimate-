@@ -299,6 +299,11 @@ function dbRowToCustomer(row) {
     measureDate:        row.measure_date||'',
     installDate:        row.install_date||'',
     createdAt:          row.created_at||new Date().toISOString(),
+    // 2026-08-31(선혜님 지시 - "만들어줘", 견적서에 이미 있는 동시편집
+    // 충돌감지를 고객 레코드에도 적용하기 위해 추가): 이 값을 잠금
+    // 기준으로 써서, 저장 직전에 "그 사이 다른 곳에서 먼저 저장했는지"
+    // 확인할 수 있게 함.
+    updatedAt:          row.updated_at||null,
     is_archived:        row.is_archived === true,
     // 결제 필드
     depositAmount:      Number(row.deposit_amount)||0,
@@ -527,14 +532,54 @@ function saveCustomerToDb(customer, callback) {
   var key = customer.id || customer.clientName;
   var method = customer.id ? 'PATCH' : 'POST';
   var path = customer.id ? ('customers?id=eq.' + customer.id) : 'customers';
+  // 2026-08-31(선혜님 지시 - "만들어줘", 견적서엔 이미 있는 "동시편집
+  // 충돌감지"가 고객 레코드엔 없다는 걸 발견해 추가): 수정(PATCH)일 때,
+  // 이 화면을 열었던 시점의 updated_at을 잠금조건으로 함께 보내서,
+  // 그 사이 다른 사람이 먼저 저장했으면(=updated_at이 달라졌으면)
+  // 이번 PATCH가 0건 매칭되어 조용히 실패함 - sbXHR이 이미 감지하는
+  // err.zeroRows로 구분해서 사용자에게 명확히 알림.
+  var lockUpdatedAt = (method === 'PATCH' && customer.updatedAt) ? customer.updatedAt : null;
+  if (lockUpdatedAt) path += '&updated_at=eq.' + encodeURIComponent(lockUpdatedAt);
   sbXHR(method, path, row, function(err, data) {
     if (err) {
+      if (err.zeroRows) {
+        // 견적서 저장실패 백업(est-save.js)과 정확히 같은 안전망 - 재시도는
+        // 위험하니 안 하되, 그 내용은 로컬(기한없이)+서버(다른 기기에서도
+        // 확인 가능) 이중으로 백업해서 절대 사라지지 않게 함.
+        showToast(lockUpdatedAt
+          ? '⚠️ 이 고객 정보가 방금 다른 곳에서 먼저 저장됐어요 — 새로고침해서 최신 내용을 확인해주세요 (내 변경사항은 안전하게 백업됐어요)'
+          : '⚠️ 저장이 서버에 반영되지 않았어요 (권한 문제일 수 있어요) — 마스터님께 알려주세요. 내 변경사항은 안전하게 백업됐어요');
+        try {
+          var failedCustSaves = JSON.parse(localStorage.getItem('dah_failed_customer_saves')||'[]');
+          failedCustSaves.push({
+            savedAt: new Date().toISOString(),
+            reason: lockUpdatedAt ? '동시저장충돌' : '권한문제(담당자불일치 추정)',
+            customerId: customer.id,
+            payload: row
+          });
+          if (failedCustSaves.length > 50) failedCustSaves = failedCustSaves.slice(-50);
+          localStorage.setItem('dah_failed_customer_saves', JSON.stringify(failedCustSaves));
+        } catch(eBackup) { /* 백업 실패해도 저장 흐름엔 영향 안 줌 */ }
+        if (typeof reportClientError === 'function') {
+          reportClientError('고객정보 저장 실패(권한문제 또는 동시저장충돌) - 내용 백업됨', null,
+            { customerPayload: row, reason: lockUpdatedAt ? '동시저장충돌' : '권한문제' });
+        }
+        if (callback) callback(err, data);
+        return;
+      }
       console.error((customer.id?'수정':'추가') + ' 오류:', err.text);
       // 2026-08-05: 실패를 콘솔에만 남기고 조용히 무시하던 것 수정 —
       // 대기 큐에 기록해서 화면에 경고 배너가 뜨고, 네트워크 복구시 자동 재시도됨
       if (typeof addToPendingSyncQueue === 'function') addToPendingSyncQueue(key, method, path, row);
     } else if (typeof removeFromPendingSyncQueue === 'function') {
       removeFromPendingSyncQueue(key);
+    }
+    // 저장 성공시, 다음 저장을 위해 최신 updated_at을 반영해둠 - 이걸
+    // 안 하면 이 화면을 안 벗어나고 연속으로 두 번 저장할 때, 두 번째
+    // 저장이 (이미 낡은) 첫 저장 이전 잠금값을 써서 스스로와 충돌하는
+    // 오탐이 날 수 있음.
+    if (!err && data && data[0] && data[0].updated_at) {
+      customer.updatedAt = data[0].updated_at;
     }
     // 신규 생성(POST)이면 저장 전엔 id를 몰라서 위에서 못 찍었음 - 서버가
     // 응답으로 준 진짜 id로 지금 찍어야 방금 만든 신규 고객도 배너에서 제외됨.
