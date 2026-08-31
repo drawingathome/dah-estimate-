@@ -959,11 +959,20 @@ var editingCustomerId = null; // 동명이인 구분용
 // 다시 만들 방법이 전혀 없었음. 지금부터 저장되는 견적서는 lineItems에
 // 이 정보가 남아있으므로, 그걸로 발주서를 재구성할 수 있음.
 function buildVendorOrderFromLineItems(lineItems, clientName, staffName) {
-  var withVendor = (lineItems || []).filter(function(it){ return it.vendor; });
+  // 2026-08-31(선혜님 지적 - "발주서 클릭하면 그 뒤가 진행이 안돼"로 발견):
+  // 실제 프로덕션 데이터를 확인해보니 거래처(vendor) 필드가 채워진 견적이
+  // 거의 없었음 - 이 함수가 거래처 없으면 null을 반환해서 새 창 자체가
+  // 안 열리고, 대신 2.5초 뒤 사라지는 토스트("거래처가 입력된 항목이
+  // 없어요")만 뜨는데, 이게 놓치기 쉬워서 "클릭해도 반응이 없다"고
+  // 느껴지고 있었음. 견적서 앱 자체의 발주서 버튼(collectVendorGroups)은
+  // 이미 거래처 없어도 "미지정"으로 묶어서 보여주는 방식이었는데, 이
+  // 함수만 그렇게 안 돼있었음 - 같은 방식으로 맞춤. 완전히 막는 대신
+  // 최소한의 결과는 보여줘서, 나중에 수기로 거래처를 채워넣을 수 있게 함.
+  var withVendor = (lineItems || []).filter(function(it){ return it.type === 'curtain' || it.type === 'blind'; });
   if (withVendor.length === 0) return null;
   var groups = {};
   withVendor.forEach(function(it) {
-    var key = it.vendor;
+    var key = it.vendor || '미지정';
     if (!groups[key]) groups[key] = [];
     var size = it.type === 'curtain' ? (it.mw && it.mh ? it.mw+'×'+it.mh : '—') : (it.bmw && it.bmh ? it.bmw+'×'+it.bmh : '—');
     var content = it.type === 'curtain'
@@ -1089,7 +1098,7 @@ function showRequestFromEstimate(kind, e) {
 }
 function showVendorOrderFromEstimate(e) {
   var html = buildVendorOrderFromLineItems(e.lineItems, e.clientName, e.staffName);
-  if (!html) { showToast('이 견적엔 거래처가 입력된 항목이 없어요'); return; }
+  if (!html) { showToast('이 견적엔 발주할 커튼/블라인드 품목이 없어요'); return; }
   var w = window.open('', '_blank');
   w.document.write('<html><head><title>발주서 - ' + escHtml(e.clientName||'') + '</title></head><body style="margin:0;background:#f5f5f5;padding:20px">' + html + '</body></html>');
   w.document.close();
