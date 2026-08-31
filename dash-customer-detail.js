@@ -362,7 +362,11 @@ function openDetailInner(name, id, forceTab) {
   switchDetailTab(autoTab || 'info');
   // 견적 건수 배지
   var all = []; try { all = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
-  var estCnt = all.filter(function(e){ return e.clientName === c.clientName; }).length;
+  // 2026-08-31(선혜님 지시 - "더 디테일한 검사를 하길 바래"로 발견): 오늘
+  // clientId 매핑 누락 버그(신화경 사례)와 정확히 같은 위험 패턴 - 여기는
+  // id 체크 자체가 없이 무조건 이름으로만 세고 있었음. 동명이인이 있으면
+  // 서로의 견적 건수가 합쳐져서 잘못된 숫자("N건")가 표시될 수 있었음.
+  var estCnt = all.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; }).length;
   var cntEl = document.getElementById('dtab-est-cnt');
   if (cntEl) cntEl.textContent = estCnt > 0 ? estCnt+'건' : '';
 
@@ -380,7 +384,7 @@ function openDetailInner(name, id, forceTab) {
   // 고객 정보 섹션
   renderDetailInfoSection(c, body);
 
-  renderEstimateHistory(body, c.clientName);
+  renderEstimateHistory(body, c.clientName, c.id);
 
   
   body.appendChild(btn('width:100%;padding:var(--sp-3);background:var(--ivory1);color:var(--dark);border:1px solid var(--border);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:6px', '견적서 앱에서 열기', function(){ openEstimate(currentDetailName); }));
@@ -434,7 +438,13 @@ function renderDetailHeader(c) {
   var curEstBox = document.getElementById('detail-current-est');
   var allEstsForCur = [];
   try { allEstsForCur = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
-  var myEsts = allEstsForCur.filter(function(e){ return e.clientName === c.clientName; });
+  // 2026-08-31(선혜님 지시 - "더 디테일한 검사를 하길 바래"로 발견,
+  // 오늘 신화경 사건이 실제로는 여기서부터 시작됐을 가능성이 높음):
+  // "고객상세 화면 상단에 항상 보이는 현재 견적 요약"이 id 체크 없이
+  // 무조건 이름으로만 매칭하고 있었음 - 동명이인이 있으면 다른 사람의
+  // 최근 견적이 이 고객의 "현재 견적"인 것처럼 화면 맨 위에 표시될 수
+  // 있었음(이력탭 안쪽이 아니라 처음 딱 보이는 자리라 더 위험).
+  var myEsts = allEstsForCur.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
   myEsts.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
   var latestEst = myEsts[0];
   if (curEstBox) {
@@ -1137,7 +1147,7 @@ function openEstimate(name, id) {
 var CONTRACT_LABELS = {pending:'가견적', contracted:'계약됨', rejected:'미계약'};
 var STATUS_LABELS = {ga:'가견적서', final:'최종견적서'};
 
-function renderEstimateHistory(container, clientName) {
+function renderEstimateHistory(container, clientName, clientId) {
   var estSec = el('div', {style:'margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)'});
   var hd = el('div', {style:'display:flex;align-items:center;justify-content:space-between;margin-bottom:10px'});
   var lbl = el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase', text:'견적서'});
@@ -1147,7 +1157,10 @@ function renderEstimateHistory(container, clientName) {
   var estimates = [];
   try {
     var all = JSON.parse(localStorage.getItem('dah_saved')||'[]');
-    estimates = all.filter(function(e){ return e.clientName === clientName; });
+    // 2026-08-31(선혜님 지시 - "더 디테일한 검사를 하길 바래"로 발견):
+    // 고객상세 "정보" 탭의 견적서 목록도 id 체크 없이 무조건 이름으로만
+    // 매칭하고 있었음 - 동명이인이면 여기서도 섞여 보일 수 있었음.
+    estimates = all.filter(function(e){ return (clientId && e.clientId) ? e.clientId === clientId : e.clientName === clientName; });
   } catch(ex) {}
 
   if (estimates.length === 0) {
