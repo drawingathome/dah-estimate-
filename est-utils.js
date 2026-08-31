@@ -181,7 +181,12 @@ function restoreAppliedDiscounts(applied, attempt) {
   var wrap = document.getElementById('coupon-list');
   var coupons = (applied.coupons || []);
   if (coupons.length > 0 && (!wrap || wrap.children.length === 0)) {
-    if (attempt < 10) { setTimeout(function(){ restoreAppliedDiscounts(applied, attempt+1); }, 300); return; }
+    // 2026-08-29(선혜님 지적 - "저장을 해도 할인이 빠진다"로 재점검):
+    // 기존 10회x300ms(최대 3초) 재시도는 네트워크가 느리면 부족할 수
+    // 있음 - 쿠폰목록 클라우드 조회가 3초 안에 안 끝나면 복원 자체가
+    // 포기되고 "쿠폰이 삭제된 것"처럼 취급돼서 직접입력으로 강제 대체
+    // 되거나 경고만 뜨고 반영이 안 됨. 20회x400ms(최대 8초)로 여유를 늘림.
+    if (attempt < 20) { setTimeout(function(){ restoreAppliedDiscounts(applied, attempt+1); }, 400); return; }
   }
   // 2026-08-14: 저장 당시 적용됐던 쿠폰이 그 사이 설정에서 삭제되거나
   // 2026-08-14: 쿠폰이 "삭제"만이 아니라 "값만 수정"(예: 재구매 5%→7%)돼도

@@ -359,6 +359,15 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       var cl = ctr.querySelector('.c-color'); if (cl) cl.value = it.color || '';
       var pt = ctr.querySelector('.pleat-type'); if (pt && it.pleatType) pt.value = it.pleatType;
       var ot = ctr.querySelector('.open-type'); if (ot && it.openType) ot.value = it.openType;
+      // 2026-08-29(선혜님 지적 - "주름은 나비주름/개폐는 양개형/시접은
+      // 리드라고 자동으로 뜨는데 이게 왜 자꾸 돌아가지"로 발견): 시접
+      // (hem-type)은 저장할 때는 정상적으로 담기는데(est-misc.js
+      // collectLineItems), 이 함수(견적서 이력에서 "열어서 수정" 할 때
+      // 쓰임)엔 복원 코드가 통째로 빠져있었음 - 다른 복원함수(자동저장
+      // 초안 복원용, est-misc.js 269번줄 근처)엔 이미 있었는데 이
+      // 함수만 놓쳐서, 열 때마다 새 행의 기본값(select 첫 옵션)으로
+      // 리셋되고 있었음. 정확히 같은 패턴으로 추가.
+      var hm = ctr.querySelector('.hem-type'); if (hm && it.hemType) hm.value = it.hemType;
       var ha = ctr.querySelector('.height-adjust'); if (ha) ha.value = (it.heightAdjust !== undefined && it.heightAdjust !== null) ? it.heightAdjust : -3;
       var mw = ctr.querySelector('.mw'); if (mw) mw.value = it.mw || '';
       var mh = ctr.querySelector('.mh'); if (mh) mh.value = it.mh || '';
