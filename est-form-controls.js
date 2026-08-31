@@ -4,7 +4,7 @@
    AS비용 표시, 내부정보 접기/펼치기, 공간선택 팝업, 전화번호 포맷.
    ══════════════════════════════════════════════════ */
 
-function setStatus(s) {
+function setStatus(s, isRestoring) {
   var prev = currentTab;
   currentTab = s;
   ['ga','final'].forEach(function(t){
@@ -13,7 +13,15 @@ function setStatus(s) {
   var titles = {ga:'가견적서', final:'최종 견적서'};
   document.getElementById('hd-title').textContent = titles[s];
   
-  if(prev==='ga' && s==='final'){
+  // 2026-08-29(선혜님 지적 - "확정견적서를 눌러도 왜 계속 다시 가견적서로
+  // 돌아가니"로 발견, 수정 중 추가 발견): 견적서를 "열어서 수정"할 때
+  // 저장된 확정상태를 복원하려고 이 함수를 부르면, 로드 직후 currentTab이
+  // 항상 초기값('ga')이라 아래 "가견적→확정 전환" 로직이 실수로 함께
+  // 실행됨 - "지금 막 전환하는 것"으로 오인해 부적절한 안내 토스트가
+  // 뜨고, 고객명이 비어있는 특정 상황에선 localStorage의 다른 가견적
+  // 항목으로 고객정보를 덮어쓸 위험까지 있었음. isRestoring=true로
+  // 부르면 이 전환 로직 전체를 건너뛰고 상태표시만 조용히 갱신함.
+  if(!isRestoring && prev==='ga' && s==='final'){
     var cName = document.getElementById('c-name')?.value?.trim();
     if(cName){
       

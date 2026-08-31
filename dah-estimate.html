@@ -754,7 +754,7 @@
 <script src="/est-utils.js?v=202608292000"></script>
 <script src="/est-sync-queue.js?v=202608291500"></script>
 <script src="/dash-supabase-auth.js?v=202608251900"></script>
-<script src="/est-form-controls.js?v=202608283100"></script>
+<script src="/est-form-controls.js?v=202608292100"></script>
 <script src="/est-product-calc.js?v=202608282500"></script>
 <script src="/est-survey.js?v=202608190049"></script>
 <script src="/est-save.js?v=202608291900"></script>
@@ -879,6 +879,18 @@ var currentTab = 'ga';
               // 2026-08-28: 이 견적서 자체에 저장된 실측일/시공일이 있으면
               // (고객 레코드값보다 더 구체적이므로) 공용함수로 우선 반영.
               applyScheduleAndDepositToForm(c, e && e.date, e && e.install_date);
+              // 2026-08-29(선혜님 지적 - "확정견적서를 눌러도 왜 계속
+              // 다시 가견적서로 돌아가니", 오늘 계속 발견한 것과 정확히
+              // 같은 패턴): currentTab(가견적/확정 상태 변수)에 값을
+              // 대입하는 곳이 페이지 최초 로드시 초기화('ga' 고정) 딱
+              // 한 곳뿐이었음 - 견적서를 "열어서 수정"할 때 저장된
+              // estimate_status를 읽어서 반영하는 코드가 통째로 없어서,
+              // 확정견적을 열어도 항상 가견적 상태로 보이고, 그 상태에서
+              // 뭔가 하나만 고쳐도 저장시 estimate_status가 다시
+              // 'ga'로 저장되어 확정견적이 가견적으로 되돌아가고 있었음.
+              if (e && e.estimate_status === 'final' && typeof setStatus === 'function') {
+                setStatus('final', true);
+              }
               if (e && e.region && document.getElementById('c-region')) {
                 document.getElementById('c-region').value = e.region;
                 document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
@@ -907,6 +919,15 @@ var currentTab = 'ga';
                     if (feeRadio3) feeRadio3.checked = true;
                   }
                 }
+              }
+              // 2026-08-29(선혜님 지적 - "확정견적서가 계속 가견적서로
+              // 돌아간다"로 재점검 중 발견): confirmed_at(확정 시각)
+              // 복원이 loadEstDbId 경로(아래쪽)에만 있고, 이 경로(신규/
+              // 견적없는 고객 진입점, 최신 견적을 함께 불러오는 부분)엔
+              // 빠져있었음 - 같은 원인의 또 다른 사각지대.
+              if (e && e.confirmed_at) {
+                window._estimateConfirmedAt = e.confirmed_at;
+                if (typeof renderConfirmBadge === 'function') renderConfirmBadge();
               }
               showToast(''+(c.client_name||'')+' 고객 정보 불러옴'+(loadedItems ? ' (이전 견적 품목 포함)' : ''));
             } catch(e3) {}
@@ -981,6 +1002,14 @@ var currentTab = 'ga';
           var loadedItems = false;
           if (e.line_items && typeof restoreLineItemsToForm === 'function') {
             loadedItems = restoreLineItemsToForm(e.line_items, e.product);
+          }
+          // 2026-08-29(선혜님 지적 - "확정견적서를 눌러도 왜 계속
+          // 다시 가견적서로 돌아가니"): loadCustId 경로와 정확히 같은
+          // 원인/같은 수정 - 여기(기존 견적이 있는 고객을 여는 경로,
+          // 오늘 대부분의 실사용 케이스가 여기를 탐)에도 상태 복원이
+          // 빠져있었음.
+          if (e.estimate_status === 'final' && typeof setStatus === 'function') {
+            setStatus('final', true);
           }
           // 2026-08-28: 여기서 견적서 자체값(e.date/e.install_date)을 먼저
           // 즉시 반영해두는 이유 — 아래에서 고객 레코드를 별도로 조회해서
