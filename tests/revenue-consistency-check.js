@@ -62,7 +62,10 @@ async function run() {
     await page.evaluate(() => { goTab('home'); renderHome(true); });
     await new Promise(r => setTimeout(r, 400));
     const homeText = await page.evaluate(() => document.getElementById('home').textContent);
-    const homeMatch = homeText.match(/현재 매출([\d,]+)만원/);
+    // 2026-09-01(선혜님 지시 - "반올림 하면 안돼 정확한 금액이 찍혀야지"):
+    // 현재매출/이번달매출 표시를 "만원" 반올림에서 "원" 단위 정확한
+    // 금액으로 바꿔서, 이 정규식도 새 형식에 맞게 갱신.
+    const homeMatch = homeText.match(/현재 매출([\d,]+)원/);
     check(`[${label}] 홈화면 "현재 매출"이 실제로 렌더링됨(숫자 형식)`, !!homeMatch, `홈텍스트일부="${homeText.slice(0, 60)}"`);
 
     // 매출탭 이번달요약 표시 검증

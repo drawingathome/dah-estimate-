@@ -86,20 +86,16 @@ function renderHome(skipServerFetch) {
     // 필터링된 customers를 쓰므로 자동으로 동일 기준 적용됨.
     var _prevMonthDate = new Date(_year, _today.getMonth()-1, 1);
     var _prevMonthKey = _prevMonthDate.getFullYear() + '-' + String(_prevMonthDate.getMonth()+1).padStart(2,'0');
-    // 2026-09-01(선혜님 지적 — "이번달 매출(전월마감)이랑 지난달 담당자별
-    // 성과가 왜 다르지"로 발견): getMonthPerformanceRevenue(전체 원단위
-    // 합계를 딱 한 번만 반올림)와 getMonthStaffPerformance(담당자별로
-    // 각각 원단위 합산 후 개별 반올림)는 계산 로직 자체는 100% 동일한데,
-    // "반올림하는 시점"이 달라서 합계가 1만원 정도 어긋날 수 있었음(실제
-    // 프로덕션 데이터로 재현해서 확인함 - 예: 1361 vs 1360). 사용자가
-    // "담당자별 숫자를 손으로 더하면 카드의 총액과 정확히 같아야 한다"고
-    // 자연스럽게 기대하므로, 카드의 총액 자체를 "담당자별로 반올림해서
-    // 화면에 보여주는 값들의 합"으로 재정의 - 이러면 정의상 항상 정확히
-    // 일치함(정밀도를 아주 미세하게 희생하는 대신 일관성을 보장).
-    var _lastMonthByStaff = typeof getMonthStaffPerformance === 'function' ? getMonthStaffPerformance(customers, _prevMonthKey) : {};
-    var lastMonthRev = Object.keys(_lastMonthByStaff).reduce(function(sum, s) {
-      return sum + Math.round(_lastMonthByStaff[s].rev / 10000) * 10000;
-    }, 0);
+    // 2026-09-01(선혜님 지적 — "반올림 하면 안돼 정확한 금액이 찍혀야지"):
+    // 어제 "만원 단위로 반올림하는 시점 차이" 때문에 카드 총액과 담당자별
+    // 합계가 어긋나던 걸 "담당자별 반올림값의 합으로 재정의"하는 방식으로
+    // 우회했었는데 — 이건 애초에 "반올림 자체를 없애면" 근본적으로
+    // 해결되는 문제였음. 원단위 정확한 값을 그대로 쓰면 반올림 시점
+    // 차이가 생길 여지 자체가 없어짐. 원래 방식(정확한 전체 합계)으로
+    // 되돌리고, 아래 화면 표시 부분에서 반올림 없이 원단위 그대로 출력.
+    var lastMonthRev = typeof getMonthPerformanceRevenue === 'function'
+      ? getMonthPerformanceRevenue(customers, _prevMonthKey)
+      : 0;
     var thisMonthContracts = customers.filter(function(c) {
       return ['선금결제','실측준비중','확정견적','잔금결제','시공준비중'].indexOf(c.stage) >= 0;
     }).length;
@@ -219,11 +215,11 @@ function renderHome(skipServerFetch) {
         '<div id="sec-kpi" style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-top:1px solid var(--border)">',
           '<div style="background:#fff;padding:14px 20px">',
             '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">현재 매출</div>',
-            '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + Math.round(thisMonthRev/10000).toLocaleString() + '<span style="font-size:12px;font-weight:400;color:var(--sub)">만원</span></div>',
+            '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + Math.round(thisMonthRev).toLocaleString() + '<span style="font-size:12px;font-weight:400;color:var(--sub)">원</span></div>',
           '</div>',
           '<div style="background:#fff;padding:14px 20px">',
             '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">이번달 매출(전월 마감)</div>',
-            '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + Math.round(lastMonthRev/10000).toLocaleString() + '<span style="font-size:12px;font-weight:400;color:var(--sub)">만원</span></div>',
+            '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + Math.round(lastMonthRev).toLocaleString() + '<span style="font-size:12px;font-weight:400;color:var(--sub)">원</span></div>',
           '</div>',
           '<div style="background:#fff;padding:14px 20px">',
             '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">진행 건수</div>',
@@ -380,7 +376,7 @@ function renderHome(skipServerFetch) {
             (typeof renderStaffBadge === 'function' ? renderStaffBadge(s, 28) : '<div style="width:28px;height:28px;border-radius:50%;background:var(--dark);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">' + (s[0]||'?') + '</div>') +
             '<div style="flex:1;font-size:12px;font-weight:700;color:var(--dark);margin-left:10px">' + rankBadge + s + '</div>' +
             '<div style="text-align:right">' +
-              '<div style="font-size:12px;font-weight:700;color:var(--dark)">' + Math.round(byStaff[s].rev/10000).toLocaleString() + '만원</div>' +
+              '<div style="font-size:12px;font-weight:700;color:var(--dark)">' + Math.round(byStaff[s].rev).toLocaleString() + '원</div>' +
               '<div style="font-size:11px;color:var(--sub)">' + byStaff[s].count + '건</div>' +
             '</div>' +
           '</div>';
