@@ -339,10 +339,16 @@ function renderHome(skipServerFetch) {
       // 5. 담당자별 성과 (마스터 전용, 기본 접힘 — 펼쳐진 섹션 개수에 안 잡히도록)
       // 2026-07-20: 예전엔 월 구분 없이 전체 누적이라 인센티브 정산에 못 썼음.
       // 이제 "이번달" 입금(선금/잔금) 기준으로 집계 — 매달 정산 가능하도록 수정.
+      // 2026-08-31(선혜님 지적 — "9월이 됐는데 8월분 매출은 보여야 인센을
+      // 정리할 수 있는데 왜 안되지"): 이 섹션이 "이번달"(_thisMonthKey)만
+      // 계산하고 있어서, 매달 1일에 열어보면 항상 0에 가까운 이번달 것만
+      // 보이고 정작 인센티브 정산에 필요한 "방금 마감된 지난달" 실적은
+      // 볼 방법이 아예 없었음 - "이번달/지난달" 토글 추가.
       (function() {
         if (!currentUser || currentUser.role !== 'master') return '';
+        var staffPerfMonthKey = (window._staffPerfViewMode === 'prev') ? _prevMonthKey : _thisMonthKey;
         var byStaff = typeof getMonthStaffPerformance === 'function'
-          ? getMonthStaffPerformance(customers, _thisMonthKey)
+          ? getMonthStaffPerformance(customers, staffPerfMonthKey)
           : {};
         // 2026-08-28(선혜님 요청 — "담당자별 실적 비교"): 오늘 만든 공용
         // 뱃지함수(renderStaffBadge, dash-utils.js)로 통일(체크리스트
@@ -360,15 +366,20 @@ function renderHome(skipServerFetch) {
             '</div>' +
           '</div>';
         }).join('');
-        return rows ? (
+        var isPrev = window._staffPerfViewMode === 'prev';
+        var toggleHtml = '<div style="display:flex;gap:6px" onclick="event.stopPropagation()">' +
+          '<button onclick="window._staffPerfViewMode=\'this\';renderHome(true);" style="padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:' + (!isPrev?'var(--dark)':'#fff') + ';color:' + (!isPrev?'#fff':'var(--sub)') + ';font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">이번달</button>' +
+          '<button onclick="window._staffPerfViewMode=\'prev\';renderHome(true);" style="padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:' + (isPrev?'var(--dark)':'#fff') + ';color:' + (isPrev?'#fff':'var(--sub)') + ';font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">지난달</button>' +
+        '</div>';
+        return (
           '<div id="sec-staff-perf" style="background:#fff;border-bottom:1px solid var(--border)">' +
             '<div style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleHomeAccordion(this)">' +
-              '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">이번달 담당자별 성과</span>' +
-              '<span style="font-size:11px;color:var(--sub)">▸</span>' +
+              '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">' + (isPrev?'지난달':'이번달') + ' 담당자별 성과</span>' +
+              toggleHtml +
             '</div>' +
-            '<div style="display:none">' + rows + '</div>' +
+            '<div style="display:none">' + (rows || '<div style="padding:14px 20px;font-size:12px;color:var(--sub);text-align:center">해당 기간에 담당자별 실적이 없어요</div>') + '</div>' +
           '</div>'
-        ) : '';
+        );
       })(),
 
     ].join('');
