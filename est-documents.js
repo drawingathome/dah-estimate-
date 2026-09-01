@@ -905,9 +905,31 @@ function buildRequestHTML(kind, extraNote) {
     // 그 레일이 어느 커튼 행에서 왔는지 연결돼있음) - 이걸 찾아서 "내용" 칸에 합침.
     function getRailLengthText(curtainTr) {
       var rowUid = curtainTr.dataset.rowUid;
-      if (!rowUid) return '';
       var svcBody = document.getElementById('svc-body');
-      var railTr = svcBody && svcBody.querySelector('[data-rail-src="' + rowUid + '"]');
+      var railTr = null;
+      if (rowUid) {
+        railTr = svcBody && svcBody.querySelector('[data-rail-src="' + rowUid + '"]');
+      }
+      // 2026-09-01(선혜님 지시 - "좀 더 파봐"로 발견, 실제 재현 성공): 저장된
+      // 견적서를 다시 열면(restoreLineItemsToForm), 레일 서비스행의 텍스트는
+      // 정확히 복원되지만 data-rail-src 속성은 안 붙임(그 정보 자체가 저장된
+      // lineItems에 없음) - 그래서 위 매칭이 항상 실패해서, "저장 후 다시 열어
+      // 시공요청서 만들기"(오늘 만든 '다시보기' 기능이 정확히 이 경로를 탐 -
+      // 실사용에서 가장 흔한 경로)에서 레일길이가 항상 빠지고 있었음. rowUid
+      // 매칭이 안 되면, 레일 서비스행 텍스트가 정확히 "그 공간 이름"으로
+      // 시작하는지로 폴백 매칭 - 완벽하진 않지만(같은 공간에 레일이 여러개면
+      // 첫번째와 매칭) 없는 것보다 훨씬 나음.
+      if (!railTr) {
+        var space = curtainTr.querySelector('.space-inp')?.value || '';
+        if (space && svcBody) {
+          var svcRows = svcBody.querySelectorAll('tr');
+          for (var i = 0; i < svcRows.length; i++) {
+            var inp0 = svcRows[i].querySelectorAll('td')[1]?.querySelector('input');
+            var txt0 = inp0 ? inp0.value : '';
+            if (txt0.indexOf(space + ' ') === 0 && /자/.test(txt0)) { railTr = svcRows[i]; break; }
+          }
+        }
+      }
       if (!railTr) return '';
       var inp = railTr.querySelectorAll('td')[1] && railTr.querySelectorAll('td')[1].querySelector('input');
       var txt = inp ? inp.value : '';
