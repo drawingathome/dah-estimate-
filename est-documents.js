@@ -884,6 +884,36 @@ function buildRequestHTML(kind, extraNote) {
     // ── 시공 의뢰서: 위치/실측사이즈/내용/기타 표 (2026-08-05: "제작사이즈"는 오해 소지가
     // 있어 "실측사이즈"로 정정 — 제작사이즈(보정값 반영)는 가공소 발주할 때만 필요하고,
     // 그건 collectVendorGroups()의 fabSize로 별도 처리됨) ──
+    // 2026-09-01(선혜님 지시 - "실측 시공 요청서 해보자", 실제 시공요청서
+    // 4개 예시로 비교해서 발견): 기존엔 "기타" 칸에 원단/레일 거래처만
+    // 단독으로 나왔는데, 실제 문서는 항상 "캔가공소(제작)/거래처" 조합으로
+    // 나옴 - production(제작) 카테고리 거래처를 1곳뿐이면 자동으로 앞에
+    // 붙이는 패턴을 printRequest()의 기존 install업체 자동선택과 동일하게 적용.
+    var productionVendorName = '';
+    if (Array.isArray(window._dahVendorListRaw)) {
+      var prodVendors = window._dahVendorListRaw.filter(function(v) {
+        return v && Array.isArray(v.categories) && v.categories.indexOf('production') >= 0;
+      });
+      if (prodVendors.length === 1) productionVendorName = prodVendors[0].name || '';
+    }
+    function withProduction(etc) {
+      if (!etc || etc === '—') return productionVendorName || '—';
+      return productionVendorName ? (productionVendorName + '/' + etc) : etc;
+    }
+    // 2026-09-01: 레일 길이(N자)는 커튼 행 자체엔 저장 안 되고, autoUpdateRail()이
+    // svc-body에 별도로 만드는 "레일" 서비스행의 텍스트에만 있음(data-rail-src로
+    // 그 레일이 어느 커튼 행에서 왔는지 연결돼있음) - 이걸 찾아서 "내용" 칸에 합침.
+    function getRailLengthText(curtainTr) {
+      var rowUid = curtainTr.dataset.rowUid;
+      if (!rowUid) return '';
+      var svcBody = document.getElementById('svc-body');
+      var railTr = svcBody && svcBody.querySelector('[data-rail-src="' + rowUid + '"]');
+      if (!railTr) return '';
+      var inp = railTr.querySelectorAll('td')[1] && railTr.querySelectorAll('td')[1].querySelector('input');
+      var txt = inp ? inp.value : '';
+      var m = txt.match(/(\d+)자/);
+      return m ? m[1] + '자 레일' : '';
+    }
     var rows = [];
     document.querySelectorAll('#curtain-body tr').forEach(function(tr){
       var space  = tr.querySelector('.space-inp')?.value || '';
@@ -893,15 +923,16 @@ function buildRequestHTML(kind, extraNote) {
       var mh = tr.querySelector('.mh')?.value || '';
       var pleat = (tr.querySelector('.pleat-type')?.value || '').replace('형','');
       var open  = (tr.querySelector('.open-type')?.value || '').replace('형','');
+      var railLen = getRailLengthText(tr);
       if(!space && !mw && !vendor) return;
       rows.push({
         space: space||'—',
         size: (mw&&mh) ? (mw+'×'+mh) : '—',
-        content: [pleat, open].filter(Boolean).join(' ')||'—',
+        content: [pleat, open, railLen].filter(Boolean).join(' / ')||'—',
         // 2026-08-13: 원단거래처(vendor)는 시공기사가 알 필요없는 내부정보라
         // 노출하지 않고, 대신 레일거래처(railVendor)를 노출 - 레일은 브랜드별로
         // (전동레일 등) 시공방식이 달라서 기사님이 반드시 알아야 함(선혜님 확인)
-        etc: railVendor||'—'
+        etc: withProduction(railVendor)
       });
     });
     document.querySelectorAll('#blind-body tr').forEach(function(tr){
@@ -917,7 +948,7 @@ function buildRequestHTML(kind, extraNote) {
         space: space||'—',
         size: (bmw&&bmh) ? (bmw+'×'+bmh) : '—',
         content: handle ? (handle==='기타'?'기타':handle+'잡이') : '—',
-        etc: vendor||'—'
+        etc: withProduction(vendor)
       });
     });
 
