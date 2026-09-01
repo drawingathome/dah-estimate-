@@ -1064,7 +1064,15 @@ var currentTab = 'ga';
           // 고객용 견적서를 보여줘"): mode=view면 불러오자마자 실제 고객용
           // 문서를 자동으로 띄움. 쿠폰 복원 재시도(최대 3초)가 끝난 뒤 얼린
           // 금액을 다시 한번 확실히 맞추고 나서 문서를 엶.
-          if (loadMode === 'view') {
+          // 2026-09-01(선혜님 지적 - "실측요청서 그 거 클릭하면 되는거야??"
+          // 로 발견): autoDoc이 지정된 경우(대시보드에서 시공/실측/발주서
+          // 다시보기)엔 이 printForCustomer()를 실행하면 안 됨 - 둘 다
+          // loadMode==='view'일 때 같은 3600ms 뒤에 실행되면서, 먼저 만든
+          // pv-overlay를 나중 것이 덮어쓰거나 충돌해서 원하는 문서가 아예
+          // 안 뜨고 있었음(실측요청서 재현시 실제로 재현됨). autoDoc이
+          // 없을 때만 실행하도록 명확히 분리.
+          var autoDoc = urlParams.get('autoDoc');
+          if (loadMode === 'view' && !autoDoc) {
             setTimeout(function(){
               if (typeof printForCustomer === 'function') printForCustomer();
             }, 3600);
@@ -1079,7 +1087,6 @@ var currentTab = 'ga';
           // 안 물어보고, "다시보기" 목적이니) 자동으로 그 문서를 띄움.
           // 이러면 문서 생성 로직이 이 파일 한 곳에만 존재하게 되어, 앞으로
           // 시공요청서를 고치면 대시보드도 자동으로 최신 상태가 됨.
-          var autoDoc = urlParams.get('autoDoc');
           if (autoDoc) {
             setTimeout(function(){
               if ((autoDoc === 'install' || autoDoc === 'measure') && typeof printRequest === 'function') {
