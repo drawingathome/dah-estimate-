@@ -214,11 +214,16 @@ function renderHome(skipServerFetch) {
         '</div>',
         '<div id="sec-kpi" style="display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-top:1px solid var(--border)">',
           '<div style="background:#fff;padding:14px 20px">',
-            '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">현재 매출</div>',
+            // 2026-09-01(선혜님 지적 — "이번달 매출(전월마감)이면서 왜 이번달이야??
+            // 표현이 명확하지 않은데"): "이번달"이라는 단어가 두 카드 모두에
+            // 애매하게 쓰이고 있었음(왼쪽="9월 현재까지", 오른쪽="8월 최종"인데
+            // 둘 다 "이번달"로만 표현됨) - 실제 월 숫자를 라벨에 직접 넣어서
+            // 모호함 자체를 없앰.
+            '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">' + _month + '월 매출(진행중)</div>',
             '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + Math.round(thisMonthRev).toLocaleString() + '<span style="font-size:12px;font-weight:400;color:var(--sub)">원</span></div>',
           '</div>',
           '<div style="background:#fff;padding:14px 20px">',
-            '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">이번달 매출(전월 마감)</div>',
+            '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">' + (_prevMonthDate.getMonth()+1) + '월 매출(마감)</div>',
             '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + Math.round(lastMonthRev).toLocaleString() + '<span style="font-size:12px;font-weight:400;color:var(--sub)">원</span></div>',
           '</div>',
           '<div style="background:#fff;padding:14px 20px">',
