@@ -671,9 +671,9 @@ function buildVendorHTML(extraNote) {
   return out;
 }
 
-function printForVendor() {
+function printForVendor(skipPrompts) {
   calcTotal();
-  var extraNote = window.prompt('발주서에 남길 추가 메모가 있으면 입력해주세요 (없으면 취소 또는 빈칸으로 확인)', '');
+  var extraNote = skipPrompts ? '' : window.prompt('발주서에 남길 추가 메모가 있으면 입력해주세요 (없으면 취소 또는 빈칸으로 확인)', '');
   var html = buildVendorHTML(extraNote);
 
   // 구글드라이브에 거래처별로 각각 저장 (카테고리 자동 분류)
@@ -999,7 +999,7 @@ function buildRequestHTML(kind, extraNote) {
 }
 
 
-function printRequest(kind) {
+function printRequest(kind, skipPrompts) {
   calcTotal();
   var label = kind==='measure' ? '실측' : '시공';
 
@@ -1023,12 +1023,21 @@ function printRequest(kind) {
       currentInstallerPhone = installVendors[0].phone || '';
     }
   }
-  var newInstallerName = window.prompt(label+' 담당 설치기사명을 입력해주세요 (없으면 빈칸으로 확인)', currentInstallerName);
-  if (newInstallerName !== null && installerNameEl) installerNameEl.value = newInstallerName;
-  var newInstallerPhone = window.prompt(label+' 담당 설치기사 연락처를 입력해주세요 (없으면 빈칸으로 확인)', currentInstallerPhone);
-  if (newInstallerPhone !== null && installerPhoneEl) installerPhoneEl.value = newInstallerPhone;
-
-  var extraNote = window.prompt(label+' 담당자에게 남길 추가 메모가 있으면 입력해주세요 (없으면 취소 또는 빈칸으로 확인)', '');
+  // 2026-09-01(선혜님 지시 - "왜 2개를 만드니"로 만든 대시보드 "다시보기"
+  // 자동실행 경로): 이미 저장된 견적을 그냥 다시 열어보는 거라, 매번
+  // 설치기사 정보를 재확인하는 창을 띄우면 성가심 - skipPrompts가 true면
+  // 조용히 넘어가고(기존 저장값 또는 자동조회값 그대로), 추가메모도 안 물어봄.
+  var newInstallerName = currentInstallerName, newInstallerPhone = currentInstallerPhone, extraNote = '';
+  if (!skipPrompts) {
+    newInstallerName = window.prompt(label+' 담당 설치기사명을 입력해주세요 (없으면 빈칸으로 확인)', currentInstallerName);
+    if (newInstallerName !== null && installerNameEl) installerNameEl.value = newInstallerName;
+    newInstallerPhone = window.prompt(label+' 담당 설치기사 연락처를 입력해주세요 (없으면 빈칸으로 확인)', currentInstallerPhone);
+    if (newInstallerPhone !== null && installerPhoneEl) installerPhoneEl.value = newInstallerPhone;
+    extraNote = window.prompt(label+' 담당자에게 남길 추가 메모가 있으면 입력해주세요 (없으면 취소 또는 빈칸으로 확인)', '');
+  } else {
+    if (installerNameEl) installerNameEl.value = currentInstallerName;
+    if (installerPhoneEl) installerPhoneEl.value = currentInstallerPhone;
+  }
   var html = buildRequestHTML(kind, extraNote);
 
   var cNameForDrive = document.getElementById('c-name')?.value || '미지정고객';

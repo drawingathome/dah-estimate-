@@ -782,7 +782,7 @@
 <script src="/est-product-calc.js?v=202609011500"></script>
 <script src="/est-survey.js?v=202608190049"></script>
 <script src="/est-save.js?v=202608311800"></script>
-<script src="/est-documents.js?v=202609011600"></script>
+<script src="/est-documents.js?v=202609011700"></script>
 <script src="/est-customer-load.js?v=202608292000"></script>
 <script src="/est-misc.js?v=202608283500"></script>
 <script>
@@ -1067,6 +1067,26 @@ var currentTab = 'ga';
           if (loadMode === 'view') {
             setTimeout(function(){
               if (typeof printForCustomer === 'function') printForCustomer();
+            }, 3600);
+          }
+          // 2026-09-01(선혜님 지시 - "왜 2개를 만드니", 대시보드가 저장된
+          // lineItems로 문서를 따로 재구성하던 buildRequestFromLineItems/
+          // buildVendorOrderFromLineItems(오늘 발견한 "쌍둥이 함수" 패턴의
+          // 새로운 사례)를 없애기 위한 근본 해결책): 대시보드는 이제 문서를
+          // 직접 안 만들고, 이 견적서 앱을 새 창으로 열어서 "네가 진짜
+          // 데이터로 만들어줘"라고 시키기만 함 - autoDoc 파라미터로 어떤
+          // 문서를 열지 지정하면, 로드 완료 후 조용히(설치기사 정보 재확인
+          // 안 물어보고, "다시보기" 목적이니) 자동으로 그 문서를 띄움.
+          // 이러면 문서 생성 로직이 이 파일 한 곳에만 존재하게 되어, 앞으로
+          // 시공요청서를 고치면 대시보드도 자동으로 최신 상태가 됨.
+          var autoDoc = urlParams.get('autoDoc');
+          if (autoDoc) {
+            setTimeout(function(){
+              if ((autoDoc === 'install' || autoDoc === 'measure') && typeof printRequest === 'function') {
+                printRequest(autoDoc, true); // true = 설치기사 정보 재확인 prompt 건너뜀
+              } else if (autoDoc === 'vendor' && typeof printForVendor === 'function') {
+                printForVendor(true); // true = 추가메모 prompt 건너뜀
+              }
             }, 3600);
           }
           // 2026-08-12: cust_type(신규/재구매/AS) 복원 누락 발견 - AS 견적서를

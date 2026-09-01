@@ -942,174 +942,33 @@ var editingCustomerId = null; // 동명이인 구분용
 // showEstimateDetailPopup을 지운 여파로 그 안에서만 쓰이던
 // parseEstimateItems/confirmEstimateToFinal/showRequestFromEstimate/
 // showVendorOrderFromEstimate가 연쇄적으로 고아 코드가 됐던 걸 발견해
-// 함께 제거함(실제 발주서/의뢰서 생성 로직인 buildVendorOrderFromLineItems/
-// buildRequestFromLineItems는 계속 사용중이라 그대로 둠 - 그걸 새 창으로
-// 띄우던 wrapper만 죽어있었음). 하나를 지우면 그 안에서만 쓰이던 것들도
-// 같이 죽을 수 있다는 교훈 - 삭제할 때마다 다시 스캔해야 함.
+// 2026-09-01(선혜님 지시 - "왜 2개를 만드니"로 발견): buildVendorOrderFromLineItems/
+// buildRequestFromLineItems(저장된 lineItems로 대시보드가 직접 발주서/의뢰서를
+// 재구성하던 로직)는 오늘 발견한 "쌍둥이 함수" 패턴의 또 다른 사례였음 - 견적서
+// 앱(est-documents.js)에 똑같은 목적의 원본 로직이 따로 있어서, 시공요청서를
+// 개선할 때마다 두 곳을 매번 똑같이 고쳐야 했음. showRequestFromEstimate/
+// showVendorOrderFromEstimate(아래)가 이제 견적서 앱을 새 창으로 열어서(autoDoc
+// 파라미터로 조용히 자동실행) 진짜 데이터로 만들게 바뀌면서, 이 두 함수와
+// 그 안에서만 쓰이던 헬퍼(extractSubLoc/curtainRole/groupLabel 등)는 완전히
+// 불필요해져 제거함 - 문서 생성 로직이 이제 한 곳에만 존재.
 
 
-// 2026-08-28(선혜님 지시 - "누락된 코드정리는 없니?"로 발견): showEstimateDetailPopup은
-// 2026-08-24에 선혜님이 "세부내용 보기 팝업은 의미없다, 대신 고객용 견적서를
-// 보여줘"라고 요청하셔서 printForCustomer()로 대체된 뒤 어디서도 안 불리던
-// 죽은 코드였음 - 제거함.
-
-
-// 저장된 견적 세부데이터(lineItems)로 발주서를 다시 만드는 기능 (2026-08-04 신규)
-// — 예전엔 견적서 저장 후엔 사이즈/원단/거래처 정보가 사라져서 발주서를
-// 다시 만들 방법이 전혀 없었음. 지금부터 저장되는 견적서는 lineItems에
-// 이 정보가 남아있으므로, 그걸로 발주서를 재구성할 수 있음.
-function buildVendorOrderFromLineItems(lineItems, clientName, staffName) {
-  // 2026-08-31(선혜님 지적 - "발주서 클릭하면 그 뒤가 진행이 안돼"로 발견):
-  // 실제 프로덕션 데이터를 확인해보니 거래처(vendor) 필드가 채워진 견적이
-  // 거의 없었음 - 이 함수가 거래처 없으면 null을 반환해서 새 창 자체가
-  // 안 열리고, 대신 2.5초 뒤 사라지는 토스트("거래처가 입력된 항목이
-  // 없어요")만 뜨는데, 이게 놓치기 쉬워서 "클릭해도 반응이 없다"고
-  // 느껴지고 있었음. 견적서 앱 자체의 발주서 버튼(collectVendorGroups)은
-  // 이미 거래처 없어도 "미지정"으로 묶어서 보여주는 방식이었는데, 이
-  // 함수만 그렇게 안 돼있었음 - 같은 방식으로 맞춤. 완전히 막는 대신
-  // 최소한의 결과는 보여줘서, 나중에 수기로 거래처를 채워넣을 수 있게 함.
-  var withVendor = (lineItems || []).filter(function(it){ return it.type === 'curtain' || it.type === 'blind'; });
-  if (withVendor.length === 0) return null;
-  var groups = {};
-  withVendor.forEach(function(it) {
-    var key = it.vendor || '미지정';
-    if (!groups[key]) groups[key] = [];
-    var size = it.type === 'curtain' ? (it.mw && it.mh ? it.mw+'×'+it.mh : '—') : (it.bmw && it.bmh ? it.bmw+'×'+it.bmh : '—');
-    var content = it.type === 'curtain'
-      ? [(it.pleatType||'').replace('형',''), (it.openType||'').replace('형','')].filter(Boolean).join(' ')
-      : (it.handle ? it.handle+'잡이' : '—');
-    groups[key].push({ space: it.space||'—', product: it.fabric||it.displayName||'—', color: it.color||'—', size: size, content: content||'—' });
-  });
-  var today = new Date();
-  var todayStr = today.getFullYear()+'년 '+(today.getMonth()+1)+'월 '+today.getDate()+'일';
-  var out = '';
-  Object.keys(groups).forEach(function(vendor, i) {
-    out += '<div style="' + (i>0 ? 'page-break-before:always;margin-top:40px;' : '') + 'max-width:720px;margin:0 auto;background:#fff;padding:36px 32px;font-family:inherit">';
-    out += '<div style="text-align:center;margin-bottom:6px"><div style="font-size:22px;font-weight:700;letter-spacing:1.5px;color:#282828">DRAWING at HOME</div><div style="font-size:11px;color:#B0A99F;letter-spacing:3px;margin-top:6px">발 주 서</div></div>';
-    out += '<div style="display:flex;gap:24px;margin-top:24px;padding-top:16px;border-top:1px solid #282828;font-size:13px">' +
-      '<div style="flex:1"><div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">요청일</span><strong>'+todayStr+'</strong></div>' +
-      '<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">업체명</span><strong>드로잉엣홈</strong></div>' +
-      '<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">담당자</span><strong>'+escHtml(staffName||'—')+'</strong></div></div>' +
-      '<div style="flex:1"><div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">받는곳</span><strong>'+escHtml(vendor)+'</strong></div></div></div>';
-    out += '<div style="margin-top:20px;padding:8px 14px;background:#F5F2EE;font-size:13px;font-weight:700;color:#282828">거래처: '+escHtml(vendor)+'</div>';
-    out += '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">' +
-      '<th style="text-align:left;padding:8px 6px">위치</th><th style="text-align:left;padding:8px 6px">품명</th>' +
-      '<th style="text-align:left;padding:8px 6px">컬러</th><th style="text-align:center;padding:8px 6px">사이즈</th>' +
-      '<th style="text-align:left;padding:8px 6px">내용</th><th style="text-align:left;padding:8px 6px">고객명</th></tr></thead><tbody>';
-    groups[vendor].forEach(function(it){
-      out += '<tr style="border-bottom:1px solid #EEE6DC"><td style="padding:8px 6px">'+escHtml(it.space)+'</td>' +
-        '<td style="padding:8px 6px">'+escHtml(it.product)+'</td><td style="padding:8px 6px">'+escHtml(it.color)+'</td>' +
-        '<td style="padding:8px 6px;text-align:center">'+escHtml(it.size)+'</td><td style="padding:8px 6px">'+escHtml(it.content)+'</td>' +
-        '<td style="padding:8px 6px;font-weight:700;color:#E4483A">'+escHtml(clientName||'—')+'</td></tr>';
-    });
-    out += '</tbody></table></div>';
-  });
-  return out;
-}
-
-// 저장된 lineItems로 실측/시공 의뢰서를 재생성 (2026-08-04 신규, 발주서와 같은 원리)
-function buildRequestFromLineItems(kind, e) {
-  var label = kind === 'measure' ? '실측' : '시공';
-  var dateVal = kind === 'measure' ? e.date : e.installDate;
-  function infoRow(l, v) {
-    return '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px">' +
-      '<span style="color:#8E8078">' + l + '</span><strong style="color:#282828;text-align:right">' + escHtml(v||'—') + '</strong></div>';
-  }
-  var out = '<div style="max-width:720px;margin:0 auto;background:#fff;padding:36px 32px;font-family:inherit">';
-  out += '<div style="text-align:center;margin-bottom:6px"><div style="font-size:22px;font-weight:700;letter-spacing:1.5px;color:#282828">DRAWING at HOME</div>' +
-    '<div style="font-size:11px;color:#B0A99F;letter-spacing:3px;margin-top:6px">' + label + ' 의 뢰 서</div></div>';
-  out += '<div style="margin-top:24px;padding-top:16px;border-top:1px solid #282828;font-size:13px">' +
-    infoRow(label+'일', dateVal||'미정') + infoRow('고객명', e.clientName) + infoRow('연락처', e.phone) + infoRow('담당자', e.staffName) + '</div>';
-  out += '<div style="margin-top:14px;padding:8px 0;background:#F5F2EE;text-align:center;font-size:12px;font-weight:700;color:#282828">내 용</div>';
-
-  var items = e.lineItems || [];
-  if (kind === 'measure') {
-    // 2026-08-29(선혜님 지시 - "코드도 다 봤어?"로 발견): 이 대시보드 버전이
-    // 2026-08-04 최초 버전 그대로 방치돼서, 견적서 앱(est-documents.js)이
-    // 8/24("겉지/속지 묶어서 표시")·8/28("공간+세부위치[메인] 구분, 겉/속커튼
-    // 구성 표시")에 걸쳐 개선한 내용을 전혀 반영 못 하고 있었음 - 실측일 다시
-    // 볼 때마다 낡은 형식(항목별 1:1 나열)으로 보이고 있었음. est-documents.js의
-    // 최신 그룹핑 로직을 lineItems 배열 기반으로 그대로 포팅.
-    function extractSubLoc(name) { var m = (name||'').match(/^\[([^\]]+)\]/); return m ? m[1] : ''; }
-    function curtainRole(name) {
-      if (/속커튼/.test(name)) return '속커튼';
-      if (/겉커튼/.test(name)) return '겉커튼';
-      return '커튼';
-    }
-    function groupLabel(space, subLoc) { return (space||'—') + (subLoc ? '['+subLoc+']' : ''); }
-    // 2026-08-31(선혜님 지적 — "속커튼+블라인드 일 수도 있는데 이런 것들이
-    // 구현되지 않아"): 커튼/블라인드가 각각 별개 그룹이라, 같은 공간+
-    // 세부위치에 둘 다 있어도 두 줄로 따로 나오고 있었음 - est-documents.js
-    // 와 동일하게, 공간+세부위치 기준 하나의 통합 그룹으로 재설계.
-    var groups = {}, groupOrder = [];
-    function getGroup(space, subLoc) {
-      var key = (space||'—')+'|'+subLoc;
-      if (!(key in groups)) { groups[key] = { space: space, subLoc: subLoc, parts: {} }; groupOrder.push(key); }
-      return groups[key];
-    }
-    items.forEach(function(it) {
-      if (it.type === 'curtain') {
-        var g = getGroup(it.space, extractSubLoc(it.displayName));
-        var role = curtainRole(it.displayName);
-        g.parts[role] = (g.parts[role]||0) + 1;
-      } else if (it.type === 'blind') {
-        var g2 = getGroup(it.space, extractSubLoc(it.displayName));
-        var kind3 = it.kind||'블라인드';
-        g2.parts[kind3] = (g2.parts[kind3]||0) + 1;
-      }
-    });
-    var CURTAIN_PARTS = {'겉커튼':1,'속커튼':1,'커튼':1};
-    var lines = [];
-    groupOrder.forEach(function(key) {
-      var g = groups[key], label = groupLabel(g.space, g.subLoc), partKeys = Object.keys(g.parts);
-      if (g.parts['겉커튼'] && g.parts['속커튼'] && partKeys.length === 2) {
-        lines.push(label+' : 겉커튼+속커튼');
-      } else {
-        lines.push(label+' : '+partKeys.map(function(k){
-          var n = g.parts[k];
-          if (n <= 1) return k;
-          return k+' '+n+(CURTAIN_PARTS[k] ? '장' : '피스');
-        }).join('+'));
-      }
-    });
-    out += lines.length
-      ? '<div style="padding:20px 10px;text-align:center">' + lines.map(function(t,i){ return '<div style="font-size:13px;color:#282828;padding:8px 0">'+(i+1)+'. '+escHtml(t)+'</div>'; }).join('') + '</div>'
-      : '<div style="padding:30px 0;text-align:center;color:#B0A99F;font-size:12px">저장된 세부 항목이 없어요</div>';
-  } else {
-    out += '<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">' +
-      '<th style="text-align:left;padding:8px 6px">위치</th><th style="text-align:center;padding:8px 6px">사이즈</th>' +
-      '<th style="text-align:left;padding:8px 6px">내용</th><th style="text-align:left;padding:8px 6px">거래처</th></tr></thead><tbody>';
-    items.forEach(function(it) {
-      var size = it.type === 'curtain' ? (it.mw && it.mh ? it.mw+'×'+it.mh : '—') : (it.bmw && it.bmh ? it.bmw+'×'+it.bmh : '—');
-      var content = it.type === 'curtain' ? [(it.pleatType||'').replace('형',''),(it.openType||'').replace('형','')].filter(Boolean).join(' ') : (it.handle ? it.handle+'잡이' : '—');
-      out += '<tr style="border-bottom:1px solid #EEE6DC"><td style="padding:8px 6px">'+escHtml(it.space||'—')+'</td>' +
-        '<td style="padding:8px 6px;text-align:center">'+escHtml(size)+'</td><td style="padding:8px 6px">'+escHtml(content||'—')+'</td>' +
-        '<td style="padding:8px 6px">'+escHtml(it.vendor||'—')+'</td></tr>';
-    });
-    out += '</tbody></table>';
-  }
-  out += '</div>';
-  return out;
-}
-
-// 2026-08-29(선혜님 지시 - "견적서목록/고객상세의 이력탭에 버튼으로 다시
-// 붙이기"): 8/24에 세부내용 팝업을 없애면서 이 두 wrapper도 같이 죽었던
-// 걸 복원 - build*FromLineItems(실제 문서 생성 로직)는 계속 살아있었고,
-// 이건 그걸 새 창으로 띄우기만 하는 얇은 래퍼임.
+// 2026-09-01(선혜님 지시 - "왜 2개를 만드니": 어제 되살렸던 두 wrapper가
+// buildRequestFromLineItems/buildVendorOrderFromLineItems(저장된 lineItems로
+// 대시보드가 직접 문서를 재구성하는 로직)를 불렀는데, 이게 오늘 발견한
+// "쌍둥이 함수" 패턴의 새로운 사례였음 - 견적서 앱(est-documents.js)에도
+// 똑같은 목적의 원본 로직이 따로 있어서, 시공요청서를 개선할 때마다
+// 두 곳을 매번 똑같이 고쳐야 했음(실제로 오늘 여러 번 놓칠 뻔함).
+// 근본 해결: 대시보드는 이제 문서를 직접 안 만들고, 견적서 앱을 새 창으로
+// 열어서(autoDoc 파라미터로 조용히 자동 실행) 진짜 데이터로 만들게 함 -
+// 문서 생성 로직이 이제 한 곳(est-documents.js)에만 존재.
 function showRequestFromEstimate(kind, e) {
-  if (!e.lineItems || e.lineItems.length === 0) { showToast('이 견적엔 저장된 세부 항목이 없어요'); return; }
-  var html = buildRequestFromLineItems(kind, e);
-  var w = window.open('', '_blank');
-  var label = kind === 'measure' ? '실측의뢰서' : '시공의뢰서';
-  w.document.write('<html><head><title>' + label + ' - ' + escHtml(e.clientName||'') + '</title></head><body style="margin:0;background:#f5f5f5;padding:20px">' + html + '</body></html>');
-  w.document.close();
+  if (!e.dbId) { showToast('이 견적은 세부 데이터가 없어서 다시 만들 수 없어요'); return; }
+  window.open('dah-estimate.html?loadEstDbId=' + encodeURIComponent(e.dbId) + '&mode=view&autoDoc=' + encodeURIComponent(kind), '_blank');
 }
 function showVendorOrderFromEstimate(e) {
-  var html = buildVendorOrderFromLineItems(e.lineItems, e.clientName, e.staffName);
-  if (!html) { showToast('이 견적엔 발주할 커튼/블라인드 품목이 없어요'); return; }
-  var w = window.open('', '_blank');
-  w.document.write('<html><head><title>발주서 - ' + escHtml(e.clientName||'') + '</title></head><body style="margin:0;background:#f5f5f5;padding:20px">' + html + '</body></html>');
-  w.document.close();
+  if (!e.dbId) { showToast('이 견적은 세부 데이터가 없어서 다시 만들 수 없어요'); return; }
+  window.open('dah-estimate.html?loadEstDbId=' + encodeURIComponent(e.dbId) + '&mode=view&autoDoc=vendor', '_blank');
 }
 
 function openEstimate(name, id) {

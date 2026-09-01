@@ -103,23 +103,14 @@ async function main() {
     check('지역요금 기본값(DEFAULT_REGION_FEES) 동일', same, detail);
   }
 
-  // ── 3) 실측의뢰서 그룹핑 로직 - 오늘 어긋났던 그 로직 (텍스트 비교) ──
-  // buildRequestFromLineItems(대시보드) 안의 extractSubLoc/curtainRole과
-  // buildRequestHTML(견적서앱) 안의 동일 이름 내부함수를 비교.
-  {
-    const dashOuter = extractFunctionSource(dashContent, 'buildRequestFromLineItems');
-    const estOuter = extractFunctionSource(estContent, 'buildRequestHTML');
-    ['extractSubLoc', 'curtainRole'].forEach(innerFn => {
-      const a = dashOuter ? normalize(extractFunctionSource(dashOuter, innerFn)) : null;
-      const b = estOuter ? normalize(extractFunctionSource(estOuter, innerFn)) : null;
-      check(
-        `실측의뢰서 그룹핑 로직(${innerFn}) 대시보드/견적서 동일`,
-        a !== null && b !== null && a === b,
-        a === null ? '대시보드 buildRequestFromLineItems 안에서 못 찾음(로직이 다시 낡아졌을 수 있음)' :
-        b === null ? '견적서 buildRequestHTML 안에서 못 찾음' : '내용이 서로 다름 - 견적서 앱이 개선됐는데 대시보드가 못 따라갔을 가능성'
-      );
-    });
-  }
+  // 2026-09-01(선혜님 지시 - "왜 2개를 만드니"로 이 쌍둥이 문제 자체를
+  // 근본 해결): buildRequestFromLineItems(대시보드가 저장된 lineItems로
+  // 직접 문서를 재구성하던 로직)를 완전히 제거하고, 대시보드는 이제
+  // 견적서 앱을 새 창으로 열어서(autoDoc 파라미터) 문서를 만들게 바뀜 -
+  // 쌍둥이 비교 대상 자체가 없어져서 이 검사도 함께 제거. 문서 생성
+  // 로직이 이제 est-documents.js 한 곳에만 있어서, 애초에 "어긋날" 방법이
+  // 없어짐(가장 확실한 쌍둥이 버그 방지).
+
 
   // ── 4) fmtPhone - 파라미터 형태가 달라 텍스트 비교 불가, 실제 동작(출력값)으로 비교 ──
   const port = 27300 + Math.floor(Math.random()*500);
