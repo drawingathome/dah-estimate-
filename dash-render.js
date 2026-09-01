@@ -86,9 +86,20 @@ function renderHome(skipServerFetch) {
     // 필터링된 customers를 쓰므로 자동으로 동일 기준 적용됨.
     var _prevMonthDate = new Date(_year, _today.getMonth()-1, 1);
     var _prevMonthKey = _prevMonthDate.getFullYear() + '-' + String(_prevMonthDate.getMonth()+1).padStart(2,'0');
-    var lastMonthRev = typeof getMonthPerformanceRevenue === 'function'
-      ? getMonthPerformanceRevenue(customers, _prevMonthKey)
-      : 0;
+    // 2026-09-01(선혜님 지적 — "이번달 매출(전월마감)이랑 지난달 담당자별
+    // 성과가 왜 다르지"로 발견): getMonthPerformanceRevenue(전체 원단위
+    // 합계를 딱 한 번만 반올림)와 getMonthStaffPerformance(담당자별로
+    // 각각 원단위 합산 후 개별 반올림)는 계산 로직 자체는 100% 동일한데,
+    // "반올림하는 시점"이 달라서 합계가 1만원 정도 어긋날 수 있었음(실제
+    // 프로덕션 데이터로 재현해서 확인함 - 예: 1361 vs 1360). 사용자가
+    // "담당자별 숫자를 손으로 더하면 카드의 총액과 정확히 같아야 한다"고
+    // 자연스럽게 기대하므로, 카드의 총액 자체를 "담당자별로 반올림해서
+    // 화면에 보여주는 값들의 합"으로 재정의 - 이러면 정의상 항상 정확히
+    // 일치함(정밀도를 아주 미세하게 희생하는 대신 일관성을 보장).
+    var _lastMonthByStaff = typeof getMonthStaffPerformance === 'function' ? getMonthStaffPerformance(customers, _prevMonthKey) : {};
+    var lastMonthRev = Object.keys(_lastMonthByStaff).reduce(function(sum, s) {
+      return sum + Math.round(_lastMonthByStaff[s].rev / 10000) * 10000;
+    }, 0);
     var thisMonthContracts = customers.filter(function(c) {
       return ['선금결제','실측준비중','확정견적','잔금결제','시공준비중'].indexOf(c.stage) >= 0;
     }).length;
