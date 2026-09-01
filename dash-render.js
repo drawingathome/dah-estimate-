@@ -245,6 +245,14 @@ function renderHome(skipServerFetch) {
         '</div>',
       '</div>',
 
+      // 2026-08-31(선혜님 지적 - "보기 편한 구도인거 같니??"로 발견):
+      // sec-todo/sec-staff-perf 각각에 grid-row를 지정하니, 왼쪽 컬럼
+      // (3개 행)과 grid 행을 공유하게 되어 서로의 높이에 영향을 줌 -
+      // 오른쪽 두 섹션을 wrapper 하나로 감싸서, 이 wrapper 자체만
+      // grid 2열에 배치하고 내부는 일반 흐름(세로로 자연스럽게 쌓임)을
+      // 쓰게 함 - 왼쪽 컬럼과 완전히 독립적으로 높이가 정해짐.
+      '<div id="home-right-col">',
+
       // 4. 지금 챙길 것 (처리필요 + 오늘/내일 일정을 하나로 병합)
       '<div id="sec-todo" style="background:#fff;border-bottom:1px solid var(--border)">',
         '<div style="padding:14px 20px 10px;display:flex;align-items:center;justify-content:space-between">',
@@ -390,6 +398,8 @@ function renderHome(skipServerFetch) {
           '</div>'
         );
       })(),
+
+      '</div>', // 오른쪽 컬럼 wrapper 닫기
 
     ].join('');
 

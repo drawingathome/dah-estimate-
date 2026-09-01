@@ -1853,8 +1853,16 @@ button:active:not(:disabled) { filter: brightness(0.9); }
   #home > div:first-child { grid-column: 1; grid-row: 1; }
   #sec-goal { grid-column: 1; grid-row: 2; }
   #sec-stage { grid-column: 1; grid-row: 3; border-bottom: 1px solid var(--border); border-radius: 0 0 var(--r-card) var(--r-card); }
-  #sec-todo { grid-column: 2; grid-row: 1 / 4; border-radius: var(--r-card); overflow: hidden; align-self: start; }
-  #sec-staff-perf { grid-column: 2; grid-row: 4; border-radius: var(--r-card); overflow: hidden; margin-top: 16px; }
+  /* 2026-08-31(선혜님 지적 - "보기 편한 구도인거 같니??"로 발견): sec-todo가
+     grid-row:1/4로 왼쪽 컬럼 3개 행 전체 높이만큼 공간을 강제로 예약하고
+     있었음 - align-self:start로 자기 콘텐츠는 위쪽에 짧게 표시되지만, 그
+     예약된 공간 자체는 그대로 남아서, 오른쪽 다음 섹션(sec-staff-perf)이
+     쓸데없이 아래로 밀려나 그 사이에 큰 빈 공백이 생기고 있었음. 자동
+     흐름(grid-row 지정 안 함)으로 바꿔서, 오른쪽 컬럼도 왼쪽처럼 내용이
+     있는 만큼만 차곡차곡 쌓이게 함. */
+  #home-right-col { grid-column: 2; grid-row: 1 / 4; align-self: start; }
+  #sec-todo { border-radius: var(--r-card); overflow: hidden; }
+  #sec-staff-perf { border-radius: var(--r-card); overflow: hidden; margin-top: 16px; }
   #sec-todo, #sec-staff-perf { border: 1px solid var(--border); }
 }
 
