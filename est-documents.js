@@ -817,19 +817,30 @@ function buildRequestHTML(kind, extraNote) {
       if (/겉커튼/.test(name)) return '겉커튼';
       return '커튼';
     }
-    var curtainGroups = {}; var curtainOrder = [];
+    // 2026-08-31(선혜님 지적 — "속커튼+블라인드 일 수도 있는데 이런 것들이
+    // 구현되지 않아"): 커튼/블라인드를 각각 별개 딕셔너리(curtainGroups/
+    // blindGroups)로 묶어서, 같은 공간+세부위치에 커튼(예: 속커튼만)과
+    // 블라인드가 함께 있어도 "거실[정면] : 속커튼 1장"과 "거실[정면] :
+    // 롤스크린" 두 줄로 따로 나오고 있었음 — 실제로는 같은 창문 하나에
+    // 대한 시공 지시라 한 줄("거실[정면] : 속커튼+롤스크린")로 합쳐서
+    // 보여줘야 시공팀이 헷갈리지 않음. 공간+세부위치 기준 하나의 통합
+    // 그룹으로 재설계 - 커튼 구성요소(겉커튼/속커튼/커튼)와 블라인드
+    // 종류를 같은 그룹 안의 "구성요소" 목록으로 합쳐서 담음.
+    var groups = {}; var groupOrder = [];
+    function getGroup(space, subLoc) {
+      var key = (space||'—')+'|'+subLoc;
+      if(!(key in groups)) { groups[key] = { space: space||'—', subLoc: subLoc, parts: {} }; groupOrder.push(key); }
+      return groups[key];
+    }
     document.querySelectorAll('#curtain-body tr').forEach(function(tr){
       var space  = tr.querySelector('.space-inp')?.value || '';
       var fabric = tr.querySelector('.c-fabric')?.value || '';
       var name   = tr.querySelector('.c-display-name')?.value || '';
       if(!space && !fabric && !name) return;
-      var subLoc = extractSubLoc(name);
-      var key = (space||'—')+'|'+subLoc;
-      if(!(key in curtainGroups)) { curtainGroups[key] = { space: space||'—', subLoc: subLoc, roles: {} }; curtainOrder.push(key); }
+      var g = getGroup(space, extractSubLoc(name));
       var role = curtainRole(name);
-      curtainGroups[key].roles[role] = (curtainGroups[key].roles[role]||0) + 1;
+      g.parts[role] = (g.parts[role]||0) + 1;
     });
-    var blindGroups = {}; var blindOrder = [];
     document.querySelectorAll('#blind-body tr').forEach(function(tr){
       var space  = tr.querySelector('.space-inp')?.value || '';
       var kind2  = tr.querySelector('.blind-kind')?.value || '블라인드';
@@ -837,29 +848,27 @@ function buildRequestHTML(kind, extraNote) {
       var innerInps = tr.querySelectorAll('.inner-row .inner-inp');
       var fabric = innerInps[0]?.value || '';
       if(!space && !fabric && !name) return;
-      var subLoc = extractSubLoc(name);
-      var key = (space||'—')+'|'+subLoc+'|'+kind2;
-      if(!(key in blindGroups)) { blindGroups[key] = { space: space||'—', subLoc: subLoc, kind: kind2, count: 0 }; blindOrder.push(key); }
-      blindGroups[key].count++;
+      var g = getGroup(space, extractSubLoc(name));
+      g.parts[kind2] = (g.parts[kind2]||0) + 1;
     });
     function groupLabel(space, subLoc) { return space + (subLoc ? '['+subLoc+']' : ''); }
+    var CURTAIN_PARTS = {'겉커튼':1,'속커튼':1,'커튼':1}; // 단위가 "장"인 구성요소(나머지는 블라인드류 - "피스")
     var items = [];
-    curtainOrder.forEach(function(key){
-      var g = curtainGroups[key];
+    groupOrder.forEach(function(key){
+      var g = groups[key];
       var label = groupLabel(g.space, g.subLoc);
-      var roleKeys = Object.keys(g.roles);
-      if (g.roles['겉커튼'] && g.roles['속커튼'] && roleKeys.length === 2) {
-        items.push(label+' : 겉커튼+속커튼');
-      } else if (roleKeys.length === 1 && roleKeys[0] === '커튼') {
-        items.push(label+' : 커튼 '+g.roles['커튼']+'장');
+      var partKeys = Object.keys(g.parts);
+      var desc;
+      if (g.parts['겉커튼'] && g.parts['속커튼'] && partKeys.length === 2) {
+        desc = '겉커튼+속커튼';
       } else {
-        items.push(label+' : '+roleKeys.map(function(r){ var n=g.roles[r]; return n>1 ? r+' '+n+'장' : r; }).join('+'));
+        desc = partKeys.map(function(k){
+          var n = g.parts[k];
+          if (n <= 1) return k;
+          return k + ' ' + n + (CURTAIN_PARTS[k] ? '장' : '피스');
+        }).join('+');
       }
-    });
-    blindOrder.forEach(function(key){
-      var g = blindGroups[key];
-      var label = groupLabel(g.space, g.subLoc);
-      items.push(label+' : '+g.kind+(g.count>1 ? ' '+g.count+'피스' : ''));
+      items.push(label+' : '+desc);
     });
     if(items.length === 0) {
       out += '<div style="padding:30px 0;text-align:center;color:#B0A99F;font-size:12px">입력된 공간/제품이 없습니다.</div>';

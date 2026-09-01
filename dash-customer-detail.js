@@ -1037,32 +1037,40 @@ function buildRequestFromLineItems(kind, e) {
       return '커튼';
     }
     function groupLabel(space, subLoc) { return (space||'—') + (subLoc ? '['+subLoc+']' : ''); }
-    var curtainGroups = {}, curtainOrder = [];
-    var blindGroups = {}, blindOrder = [];
+    // 2026-08-31(선혜님 지적 — "속커튼+블라인드 일 수도 있는데 이런 것들이
+    // 구현되지 않아"): 커튼/블라인드가 각각 별개 그룹이라, 같은 공간+
+    // 세부위치에 둘 다 있어도 두 줄로 따로 나오고 있었음 - est-documents.js
+    // 와 동일하게, 공간+세부위치 기준 하나의 통합 그룹으로 재설계.
+    var groups = {}, groupOrder = [];
+    function getGroup(space, subLoc) {
+      var key = (space||'—')+'|'+subLoc;
+      if (!(key in groups)) { groups[key] = { space: space, subLoc: subLoc, parts: {} }; groupOrder.push(key); }
+      return groups[key];
+    }
     items.forEach(function(it) {
       if (it.type === 'curtain') {
-        var subLoc = extractSubLoc(it.displayName);
-        var key = (it.space||'—')+'|'+subLoc;
-        if (!(key in curtainGroups)) { curtainGroups[key] = { space: it.space, subLoc: subLoc, roles: {} }; curtainOrder.push(key); }
+        var g = getGroup(it.space, extractSubLoc(it.displayName));
         var role = curtainRole(it.displayName);
-        curtainGroups[key].roles[role] = (curtainGroups[key].roles[role]||0) + 1;
+        g.parts[role] = (g.parts[role]||0) + 1;
       } else if (it.type === 'blind') {
-        var subLoc2 = extractSubLoc(it.displayName);
-        var key2 = (it.space||'—')+'|'+subLoc2+'|'+(it.kind||'블라인드');
-        if (!(key2 in blindGroups)) { blindGroups[key2] = { space: it.space, subLoc: subLoc2, kind: it.kind||'블라인드', count: 0 }; blindOrder.push(key2); }
-        blindGroups[key2].count++;
+        var g2 = getGroup(it.space, extractSubLoc(it.displayName));
+        var kind3 = it.kind||'블라인드';
+        g2.parts[kind3] = (g2.parts[kind3]||0) + 1;
       }
     });
+    var CURTAIN_PARTS = {'겉커튼':1,'속커튼':1,'커튼':1};
     var lines = [];
-    curtainOrder.forEach(function(key) {
-      var g = curtainGroups[key], label = groupLabel(g.space, g.subLoc), roleKeys = Object.keys(g.roles);
-      if (g.roles['겉커튼'] && g.roles['속커튼'] && roleKeys.length === 2) lines.push(label+' : 겉커튼+속커튼');
-      else if (roleKeys.length === 1 && roleKeys[0] === '커튼') lines.push(label+' : 커튼 '+g.roles['커튼']+'장');
-      else lines.push(label+' : '+roleKeys.map(function(r){ var n=g.roles[r]; return n>1 ? r+' '+n+'장' : r; }).join('+'));
-    });
-    blindOrder.forEach(function(key) {
-      var g = blindGroups[key], label = groupLabel(g.space, g.subLoc);
-      lines.push(label+' : '+g.kind+(g.count>1 ? ' '+g.count+'피스' : ''));
+    groupOrder.forEach(function(key) {
+      var g = groups[key], label = groupLabel(g.space, g.subLoc), partKeys = Object.keys(g.parts);
+      if (g.parts['겉커튼'] && g.parts['속커튼'] && partKeys.length === 2) {
+        lines.push(label+' : 겉커튼+속커튼');
+      } else {
+        lines.push(label+' : '+partKeys.map(function(k){
+          var n = g.parts[k];
+          if (n <= 1) return k;
+          return k+' '+n+(CURTAIN_PARTS[k] ? '장' : '피스');
+        }).join('+'));
+      }
     });
     out += lines.length
       ? '<div style="padding:20px 10px;text-align:center">' + lines.map(function(t,i){ return '<div style="font-size:13px;color:#282828;padding:8px 0">'+(i+1)+'. '+escHtml(t)+'</div>'; }).join('') + '</div>'
