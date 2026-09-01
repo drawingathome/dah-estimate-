@@ -1089,10 +1089,36 @@ var currentTab = 'ga';
           // 시공요청서를 고치면 대시보드도 자동으로 최신 상태가 됨.
           if (autoDoc) {
             setTimeout(function(){
-              if ((autoDoc === 'install' || autoDoc === 'measure') && typeof printRequest === 'function') {
-                printRequest(autoDoc, true); // true = 설치기사 정보 재확인 prompt 건너뜀
-              } else if (autoDoc === 'vendor' && typeof printForVendor === 'function') {
-                printForVendor(true); // true = 추가메모 prompt 건너뜀
+              function runAutoDoc() {
+                if ((autoDoc === 'install' || autoDoc === 'measure') && typeof printRequest === 'function') {
+                  printRequest(autoDoc, true); // true = 설치기사 정보 재확인 prompt 건너뜀
+                } else if (autoDoc === 'vendor' && typeof printForVendor === 'function') {
+                  printForVendor(true); // true = 추가메모 prompt 건너뜀
+                }
+              }
+              runAutoDoc();
+              // 2026-09-01(선혜님 지시 - "다른건 없니??"로 재점검 중 발견,
+              // 실제 재현 성공): 거래처목록(window._dahVendorListRaw, "캔가공소"
+              // 자동조합에 씀)은 DOMContentLoaded 시점에 별도로 비동기 조회가
+              // 시작되는데, 느린 네트워크에서 이 3600ms 고정 타이머보다 늦게
+              // 도착하면 "캔가공소"가 안 붙은 채로 문서가 만들어져버림 - 재현
+              // 테스트로 실제 확인함. 처음엔 fetchVendorListFromCloud를 또
+              // 호출해서 재확인하려 했는데, 이러면 완전히 새로운 요청을 또
+              // 만들어서 오히려 원래 요청보다 더 늦게 끝나는 역효과가 있었음
+              // (재현 테스트로 이것도 발견) - 새 요청 대신, 이미 DOMContentLoaded
+              // 시점에 시작된 원래 요청이 끝나길 짧은 간격(200ms)으로 확인만
+              // 하다가, 채워지는 순간 정확한 정보로 한 번 더 재실행함.
+              if (!Array.isArray(window._dahVendorListRaw)) {
+                var pollCount = 0;
+                var pollTimer = setInterval(function(){
+                  pollCount++;
+                  if (Array.isArray(window._dahVendorListRaw)) {
+                    clearInterval(pollTimer);
+                    runAutoDoc();
+                  } else if (pollCount >= 25) { // 최대 5초(200ms×25)까지만 재시도
+                    clearInterval(pollTimer);
+                  }
+                }, 200);
               }
             }, 3600);
           }
