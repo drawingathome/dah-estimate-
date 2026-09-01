@@ -965,12 +965,22 @@ function buildRequestHTML(kind, extraNote) {
           +'<th style="text-align:left;padding:8px 6px">기타</th>'
           +'</tr></thead><tbody>';
       var lastSpace = null;
+      var lastSize = null;
       rows.forEach(function(r){
-        var spaceCell = (r.space === lastSpace) ? '' : escHtml(r.space);
+        var spaceChanged = (r.space !== lastSpace);
+        var spaceCell = spaceChanged ? escHtml(r.space) : '';
         lastSpace = r.space;
+        // 2026-09-01(선혜님 지시 - "니머지는?"으로 이어서 진행, 실제 시공요청서
+        // 예시 이미지4에서 발견): 같은 위치(예: 거실) 안에서 여러 항목이 같은
+        // 사이즈를 공유하면(예: 겉커튼+속커튼이 같은 창), 사이즈도 위치처럼
+        // 빈칸으로 병합해서 표시함 - 단, 위치가 바뀌면 사이즈도 반드시 다시
+        // 표시(다른 방의 우연히 같은 사이즈와 잘못 병합되면 안 되므로 리셋).
+        if (spaceChanged) lastSize = null;
+        var sizeCell = (r.size === lastSize) ? '' : escHtml(r.size);
+        lastSize = r.size;
         out += '<tr style="border-bottom:1px solid #EEE6DC">'
             +'<td style="padding:8px 6px;font-weight:700">'+spaceCell+'</td>'
-            +'<td style="padding:8px 6px;text-align:center">'+escHtml(r.size)+'</td>'
+            +'<td style="padding:8px 6px;text-align:center">'+sizeCell+'</td>'
             +'<td style="padding:8px 6px">'+escHtml(r.content)+'</td>'
             +'<td style="padding:8px 6px;color:#8E8078">'+escHtml(r.etc)+'</td>'
             +'</tr>';
