@@ -191,7 +191,11 @@ function autoUpdateRail(curtainTr) {
   var existing = svcBody.querySelector('[data-rail-src="'+rowIdx+'"]');
   if(existing) {
     var tds = existing.querySelectorAll('td');
-    if(tds[1]) { var inp=tds[1].querySelector('input'); if(inp) inp.value=(space?space+' ':' ')+'레일 '+jaR+'자'; }
+    // 2026-09-01(선혜님 지시 - "조절레일 (타공형) 이 기본이야"): 그냥 "레일"
+    // 이라고만 나오던 것을, 실제로 기본으로 쓰는 레일 종류(조절레일/타공형)를
+    // 명시하도록 변경 - 시공요청서에도 이 텍스트에서 레일길이를 추출해서
+    // 보여주니, 시공기사님이 어떤 레일인지 더 명확히 알 수 있게 됨.
+    if(tds[1]) { var inp=tds[1].querySelector('input'); if(inp) inp.value=(space?space+' ':' ')+'조절레일(타공형) '+jaR+'자'; }
     if(tds[2]) { var inp=tds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw',String(RAIL_UNIT_PRICE)); inp.value=(RAIL_UNIT_PRICE).toLocaleString(); } }
     if(tds[3]) { var inp=tds[3].querySelector('input'); if(inp) inp.value=jaR; }
     calcSvcRow(tds[2]?.querySelector('input'));
@@ -201,7 +205,7 @@ function autoUpdateRail(curtainTr) {
     newRow.setAttribute('data-rail-src', rowIdx);
     var tds = newRow.querySelectorAll('td');
     if(tds[0]) { var sel=tds[0].querySelector('select'); if(sel) sel.value='레일'; }
-    if(tds[1]) { var inp=tds[1].querySelector('input'); if(inp) inp.value=(space?space+' ':' ')+'레일 '+jaR+'자'; }
+    if(tds[1]) { var inp=tds[1].querySelector('input'); if(inp) inp.value=(space?space+' ':' ')+'조절레일(타공형) '+jaR+'자'; }
     if(tds[2]) { var inp=tds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw',String(RAIL_UNIT_PRICE)); inp.value=(RAIL_UNIT_PRICE).toLocaleString(); } }
     if(tds[3]) { var inp=tds[3].querySelector('input'); if(inp) inp.value=jaR; }
     calcSvcRow(tds[2]?.querySelector('input'));
