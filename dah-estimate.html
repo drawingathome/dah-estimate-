@@ -1051,6 +1051,16 @@ var currentTab = 'ga';
             document.getElementById('c-region').value = e.region;
             document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
           }
+          // 2026-09-01(선혜님 지시 - "니가 오늘 가장 크게 손댔 곳 버그를 한번
+          // 더 파보자"로 발견, 실제 재현 성공): c-staff(담당자) 복원이
+          // loadCustId 경로에만 있고 loadEstDbId 경로(대시보드 "다시보기"가
+          // 항상 이 경로를 씀)엔 없었음 - 그래서 담당자 필드가 항상 비어있는
+          // 채로 남고, 문서 생성시 기본값('장선혜', 대표님 본인)으로 폴백되어,
+          // 다른 담당자(예: 오지은 실장)의 견적서를 "다시보기"해도 시공요청서/
+          // 실측요청서/발주서에 항상 잘못된 담당자 이름이 찍혀 나가고 있었음.
+          if (e.staff_name && document.getElementById('c-staff')) {
+            document.getElementById('c-staff').value = e.staff_name;
+          }
           if (e.applied_discounts && typeof restoreAppliedDiscounts === 'function') {
             restoreAppliedDiscounts(e.applied_discounts);
           }
