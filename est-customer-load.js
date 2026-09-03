@@ -132,29 +132,27 @@ function confirmPdfPrint() {
   var contentEl = document.querySelector('#pv-overlay .pv-wrap') || document.querySelector('.pv-wrap');
   if (contentEl) contentEl.style.zoom = '';
 
-  // 2026-08-19(선혜님 발견 — 플러그 앱과 실제 비교): 아이패드·PC·갤럭시탭 전부에서
-  // 인쇄가 안 되던 근본 원인은 zoom 속성 자체의 불안정성이었을 가능성이 높음.
-  // 실제로 잘 작동하는 참고 앱(플러그)의 방식을 확인해보니, zoom으로 압축하는 게
-  // 아니라 "페이지 높이 자체를 콘텐츠 길이에 맞춰 늘리는" 훨씬 단순하고 표준적인
-  // 방식(@page size만 사용, zoom 같은 비표준 속성 전혀 안 씀)을 쓰고 있었음.
-  // 이게 원래(2026-08-16 이전) DAH가 쓰던 방식이기도 함 - zoom을 도입하면서 오히려
-  // 안정성이 떨어졌던 것으로 보여 원래 방식으로 되돌림.
+  // "견적 길이에 맞추기": @page 높이 자체를 콘텐츠 길이에 맞춰 늘리는 방식.
+  // (zoom 속성은 아이패드 등에서 불안정해서 8/19에 이 방식으로 정착함)
   if (_selectedPdfOpt === 'fit' && contentEl) {
-    // 2026-08-19(선혜님 발견 — 재검토 요청으로 찾음): 모바일 등 좁은 화면에서
-    // "견적 길이에 맞추기"를 실행하면, 화면이 좁아서 콘텐츠가 세로로 더 많이
-    // 쌓인 상태(scrollHeight가 부풀려진 상태)로 측정되어, 실제 인쇄 폭(더 넓음)
-    // 기준으로는 필요 없는 거대한 빈 여백이 페이지 아래에 남는 문제가 있었음.
-    // + 아래 브라우저 머리글/바닥글 문제 수정으로 .pv-wrap에 좌우 padding(12mm)이
-    // 새로 생기므로, "그 padding까지 적용한 상태"로 측정해야 실제 렌더링과 일치함
-    // (measuring과 rendering의 레이아웃 조건을 반드시 동일하게 맞출 것).
+    // ⚠️ 정확도 미해결(2026-09-03): 실제 인쇄시 렌더링 폭/패딩과 화면에서
+    // 강제로 흉내낸 측정 조건이 안 맞아서, 계산된 높이가 실제 필요한
+    // 높이보다 꽤 크게(테스트 사례에서 최대 100mm+) 나오는 문제가 있음.
+    // 여러 방식(측정폭 조정, 부모 컨테이너 흉내, beforeprint 이벤트 활용)을
+    // 시도했지만 전부 실제값과 안 맞았음 — Puppeteer emulateMediaType
+    // (print)+자연측정으로는 정확한 값이 나왔는데, 이걸 실제 프로덕션
+    // 코드(beforeprint 이벤트)로 재현하면 여전히 부정확함 — 즉 "브라우저가
+    // 진짜 인쇄를 준비하는 정확한 타이밍에 어떤 CSS 조건이 실제로 걸려
+    // 있는지"를 아직 정확히 못 밝혀냄. 다음 시도는 실제 브라우저(크롬/
+    // 사파리)에서 인쇄 미리보기를 직접 열어 개발자도구로 그 순간의 실제
+    // 렌더링을 확인하는 것부터 시작할 것 — 이 컨테이너 환경(Puppeteer)
+    // 만으로는 한계가 있었음.
     var origWidth = contentEl.style.width;
     var origMaxWidth = contentEl.style.maxWidth;
     var origPadding = contentEl.style.padding;
     var origBoxSizing = contentEl.style.boxSizing;
-    // 2026-08-19(추가 검증 중 발견): buildCustomerHTML()이 실제로 만드는 .pv-wrap의
-    // 인라인 style="max-width:720px"가 CSS의 max-width:680px보다 항상 우선 적용됨
-    // (인라인 스타일 우선순위 원칙) — 680px로 측정하면 실제 렌더링 폭(720px)과
-    // 40px 차이가 나서 여전히 부정확할 수 있었음. 실제 인라인 값과 정확히 일치시킴.
+    // 측정 폭은 buildCustomerHTML()의 인라인 max-width(720px)와 일치시킴
+    // (CSS의 max-width:680px보다 인라인 스타일이 우선 적용되므로).
     contentEl.style.width = '720px';
     contentEl.style.maxWidth = '720px';
     contentEl.style.boxSizing = 'border-box';
@@ -166,30 +164,19 @@ function confirmPdfPrint() {
     contentEl.style.boxSizing = origBoxSizing;
 
     var PX_TO_MM = 25.4 / 96;
-    var heightMm = Math.ceil(heightPx * PX_TO_MM); // 이미 위/아래 padding 10mm씩 포함된 높이라 별도로 안 더함
-    // 2026-08-19(선혜님 발견 — 실제 인쇄물 사진, "우리 앱은 원래 안 그렇다"는 지적):
-    // @page에 margin을 주면 그 여백 공간에 브라우저가 날짜/제목/URL 같은 자체
-    // 머리글·바닥글을 자동으로 넣을 수 있음(그 여백이 "브라우저 몫"으로 남기 때문).
-    // @page margin을 0으로 없애고, 대신 콘텐츠(.pv-wrap) 자체에 동일한 여백을
-    // padding으로 줘서 화면상 보이는 여백은 그대로 유지하면서, 브라우저가 머리글/
-    // 바닥글을 넣을 공간 자체를 원천적으로 없앰(검색으로 확인한 표준적인 해결법).
+    var heightMm = Math.ceil(heightPx * PX_TO_MM);
+    // @page margin 대신 .pv-wrap의 padding으로 여백을 줌 — margin을 쓰면
+    // 그 공간에 브라우저가 자체 머리글/바닥글(날짜·URL 등)을 넣을 수 있음.
     s.textContent = '@media print { @page { size: 210mm ' + heightMm + 'mm; margin: 0; } .pv-wrap { page-break-inside: avoid; padding:10mm 12mm!important; box-sizing:border-box!important; } }';
   } else {
     s.textContent = '@media print { @page { size: A4 portrait; margin: 0; } .pv-wrap { padding:10mm 12mm!important; box-sizing:border-box!important; } }';
   }
   document.head.appendChild(s);
 
-  // 2026-08-19(선혜님 발견 — 실제 인쇄물 사진으로 확인): 브라우저의 "머리글/바닥글"
-  // 인쇄 옵션이 켜져 있으면, 페이지 <title> 태그 값이 그대로 인쇄물 상단에 찍히는데,
-  // HTML의 <title>이 "드로잉엣홈 견적서 v20260621"이라는 옛날 버전 표시로 고정되어
-  // 있어서 그게 그대로 인쇄물에 나타남 — 원래 이걸 고객명으로 바꾸던 코드가 있었는데
-  // 오늘 이 함수를 여러 번 재작성하며 실수로 빠졌던 것으로 보임, 복원함.
+  // 브라우저 "머리글/바닥글" 인쇄 옵션이 켜져 있으면 <title>이 그대로
+  // 인쇄물에 찍히므로, 실제 문서 종류에 맞게 갱신(견적서/발주서/의뢰서 등).
   var custNameForTitle = document.getElementById('c-name')?.value || '';
   var isFinalForTitle = document.getElementById('status-final')?.classList.contains('on');
-  // 2026-08-19: 이 함수는 견적서뿐 아니라 발주서·실측의뢰서·시공의뢰서 인쇄에도
-  // 공통으로 쓰이는데, 무조건 "가견적서/확정견적서"로만 제목을 붙이면 발주서를
-  // 인쇄할 때도 "OOO 가견적서"처럼 어색하게 나옴 — 오버레이 안의 문서제목
-  // (.pv-doc-title 등)이나 안내 텍스트로 실제 문서 종류를 판별해서 정확히 표시.
   var navText = document.querySelector('#pv-overlay .print-hide')?.textContent || '';
   var docKind = isFinalForTitle ? '확정견적서' : '가견적서';
   if (navText.indexOf('발주서') >= 0) docKind = '발주서';
@@ -197,17 +184,12 @@ function confirmPdfPrint() {
   else if (navText.indexOf('시공') >= 0 && navText.indexOf('의뢰') >= 0) docKind = '시공 의뢰서';
   document.title = (custNameForTitle ? custNameForTitle + ' ' : '') + docKind;
 
-  // 2026-08-14: 아이패드/아이폰(iOS 사파리)에서 "인쇄 / PDF 저장"을 눌러도
-  // 아무 반응이 없던 문제(선혜님 발견 — 실무에서 주로 아이패드 사용).
-  // iOS 사파리는 보안상 window.print()를 "사용자가 버튼을 누른 그 실행 흐름
-  // 안에서" 호출할 때만 허용하는데, 예전 코드는 setTimeout(…, 100)으로
-  // 0.1초 뒤에 호출해서 iOS가 사용자 동작과 무관한 호출로 판단하고 조용히
-  // 무시했음(에러조차 안 남아서 원인 파악이 어려웠음).
-  // 스타일 삽입은 동기적으로 이미 끝났으므로 지연 없이 바로 호출해도 안전하다.
+  // iOS 사파리는 window.print()를 "사용자 클릭의 실행 흐름 안"에서만
+  // 허용함 — setTimeout으로 지연 호출하면 조용히 무시됨(에러도 안 남음).
+  // 스타일 삽입은 이미 동기적으로 끝났으므로 지연 없이 바로 호출.
   try {
     window.print();
   } catch (e) {
-    // 혹시 즉시 호출이 막히는 브라우저가 있으면 기존 방식으로 한 번 더 시도
     setTimeout(function(){ try { window.print(); } catch(e2) {} }, 100);
   }
 }
