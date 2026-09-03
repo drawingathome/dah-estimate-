@@ -159,6 +159,18 @@ function confirmPdfPrint() {
 }
 
 function confirmPdfPrint_fitAsCanvas(contentEl) {
+  // 2026-09-03(선혜님 지시 - "버그를 찾아보자"로 발견, 실제 재현 성공):
+  // html2canvas 캡처(비동기, 실측 900ms 이상 소요)가 끝난 뒤 .then() 콜백
+  // 안에서 window.open()을 호출하고 있었음 - 클릭 시점으로부터 926ms나
+  // 지난 뒤 호출되니, 브라우저(특히 iOS 사파리 - 이 앱의 주 사용 환경)가
+  // "사용자 클릭과 무관한 호출"로 판단해서 팝업을 조용히 차단할 위험이
+  // 매우 높음(체크리스트 30번 - 사용자 제스처 필요 API는 지연 호출 금지
+  // 원칙과 정확히 같은 함정). 표준 우회: 클릭과 동기적으로 먼저 빈 탭을
+  // 열어두고(이 시점엔 진짜 사용자 클릭 흐름 안이라 안전), 나중에 캡처가
+  // 끝나면 그 탭의 location만 바꿔치기 - 탭 자체는 이미 열려있으니 팝업
+  // 차단 정책과 무관해짐.
+  var preOpenedTab = window.open('', '_blank');
+
   function run() {
     var custName = (document.getElementById('c-name')?.value || '').trim() || '고객';
     var isFinal = document.getElementById('status-final')?.classList.contains('on');
@@ -195,12 +207,19 @@ function confirmPdfPrint_fitAsCanvas(contentEl) {
       contentEl.style.maxWidth = origMaxWidth;
       contentEl.classList.remove('pv-pdf-capture');
       var url = URL.createObjectURL(pdfBlob);
-      window.open(url, '_blank');
+      if (preOpenedTab && !preOpenedTab.closed) {
+        preOpenedTab.location.href = url;
+      } else {
+        // 미리 연 탭이 실패했거나 사용자가 닫은 경우의 폴백(이 시점엔 이미
+        // 늦었을 수 있지만, 최소한 시도는 함).
+        window.open(url, '_blank');
+      }
       showToast('PDF가 만들어졌어요 — 새 탭에서 확인·저장해주세요');
     }).catch(function(err){
       contentEl.style.width = origWidth;
       contentEl.style.maxWidth = origMaxWidth;
       contentEl.classList.remove('pv-pdf-capture');
+      if (preOpenedTab && !preOpenedTab.closed) preOpenedTab.close();
       console.error('PDF 생성 실패:', err);
       showToast('PDF 생성에 실패했어요');
     });
