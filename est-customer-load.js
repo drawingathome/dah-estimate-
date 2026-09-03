@@ -123,55 +123,102 @@ function selectPdfOpt(type) {
 }
 function confirmPdfPrint() {
   closePdfModal();
+  var contentEl = document.querySelector('#pv-overlay .pv-wrap') || document.querySelector('.pv-wrap');
+  if (contentEl) contentEl.style.zoom = '';
+
+  // 2026-09-03(선혜님 지적 — "니가 할 수 있는데까지 하고 말해야지, 전문업체는
+  // 어떻게 하지?"로 근본 재설계): "견적 길이에 맞추기"를 브라우저 네이티브
+  // 인쇄(@page size + window.print())로 구현하려던 시도가 여러 차례
+  // 실패했음 — 화면에서 실제 인쇄시 CSS(부모 width:100%, max-width:none,
+  // .print-hide 등)가 어떻게 상호작용할지 정확히 흉내내는 게 근본적으로
+  // 어려웠음(같은 콘텐츠로도 매번 다른 오차가 남). 대신 이 파일에 이미
+  // 있던 카톡공유 기능(_doShareEstimatePDF, html2canvas+jsPDF 방식)이
+  // 정확히 같은 문제(콘텐츠 길이에 맞춘 PDF 1장)를 겪지 않고 있었음을
+  // 발견 — 이유는 브라우저의 @media print CSS를 전혀 안 거치고, 화면에
+  // "실제로 보이는 상태"를 캔버스로 그대로 캡처해서 그 이미지 크기에
+  // 맞는 PDF를 만들기 때문(전문 인쇄/PDF 도구들이 흔히 쓰는 방식 —
+  // 브라우저 인쇄 CSS의 크로스브라우저 불확실성을 아예 우회함). 재현
+  // 테스트로 정확도 확인(결제계좌 마지막 줄이 페이지 끝에 거의 여백 없이
+  // 정확히 맞음). "견적 길이에 맞추기"만 이 방식으로 교체 — "A4로
+  // 자르기"는 기존 방식이 원래도 문제없이 여러 페이지로 잘 나뉘고 있어서
+  // 그대로 유지.
+  if (_selectedPdfOpt === 'fit' && contentEl) {
+    confirmPdfPrint_fitAsCanvas(contentEl);
+    return;
+  }
+
   var styleId = 'pdf-page-style';
   var old = document.getElementById(styleId);
   if(old) old.remove();
   var s = document.createElement('style');
   s.id = styleId;
+  s.textContent = '@media print { @page { size: A4 portrait; margin: 0; } .pv-wrap { padding:10mm 12mm!important; box-sizing:border-box!important; } }';
+  document.head.appendChild(s);
 
-  var contentEl = document.querySelector('#pv-overlay .pv-wrap') || document.querySelector('.pv-wrap');
-  if (contentEl) contentEl.style.zoom = '';
+  _setPrintTitleAndPrint();
+}
 
-  // "견적 길이에 맞추기": @page 높이 자체를 콘텐츠 길이에 맞춰 늘리는 방식.
-  // (zoom 속성은 아이패드 등에서 불안정해서 8/19에 이 방식으로 정착함)
-  if (_selectedPdfOpt === 'fit' && contentEl) {
-    // ⚠️ 정확도 미해결(2026-09-03): 실제 인쇄시 렌더링 폭/패딩과 화면에서
-    // 강제로 흉내낸 측정 조건이 안 맞아서, 계산된 높이가 실제 필요한
-    // 높이보다 꽤 크게(테스트 사례에서 최대 100mm+) 나오는 문제가 있음.
-    // 여러 방식(측정폭 조정, 부모 컨테이너 흉내, beforeprint 이벤트 활용)을
-    // 시도했지만 전부 실제값과 안 맞았음 — Puppeteer emulateMediaType
-    // (print)+자연측정으로는 정확한 값이 나왔는데, 이걸 실제 프로덕션
-    // 코드(beforeprint 이벤트)로 재현하면 여전히 부정확함 — 즉 "브라우저가
-    // 진짜 인쇄를 준비하는 정확한 타이밍에 어떤 CSS 조건이 실제로 걸려
-    // 있는지"를 아직 정확히 못 밝혀냄. 다음 시도는 실제 브라우저(크롬/
-    // 사파리)에서 인쇄 미리보기를 직접 열어 개발자도구로 그 순간의 실제
-    // 렌더링을 확인하는 것부터 시작할 것 — 이 컨테이너 환경(Puppeteer)
-    // 만으로는 한계가 있었음.
+function confirmPdfPrint_fitAsCanvas(contentEl) {
+  function run() {
+    var custName = (document.getElementById('c-name')?.value || '').trim() || '고객';
+    var isFinal = document.getElementById('status-final')?.classList.contains('on');
+    var navText = document.querySelector('#pv-overlay .print-hide')?.textContent || '';
+    var docLabel = isFinal ? '확정견적서' : '가견적서';
+    if (navText.indexOf('발주서') >= 0) docLabel = '발주서';
+    else if (navText.indexOf('실측') >= 0 && navText.indexOf('의뢰') >= 0) docLabel = '실측의뢰서';
+    else if (navText.indexOf('시공') >= 0 && navText.indexOf('의뢰') >= 0) docLabel = '시공의뢰서';
+    var safeCustName = custName.replace(/[\\/:*?"<>|]/g, '_').slice(0, 30);
+    var filename = safeCustName + '_' + docLabel + '.pdf';
+
+    showToast('PDF 만드는 중...');
     var origWidth = contentEl.style.width;
     var origMaxWidth = contentEl.style.maxWidth;
-    var origPadding = contentEl.style.padding;
-    var origBoxSizing = contentEl.style.boxSizing;
-    // 측정 폭은 buildCustomerHTML()의 인라인 max-width(720px)와 일치시킴
-    // (CSS의 max-width:680px보다 인라인 스타일이 우선 적용되므로).
     contentEl.style.width = '720px';
     contentEl.style.maxWidth = '720px';
-    contentEl.style.boxSizing = 'border-box';
-    contentEl.style.padding = '10mm 12mm';
-    var heightPx = contentEl.scrollHeight;
-    contentEl.style.width = origWidth;
-    contentEl.style.maxWidth = origMaxWidth;
-    contentEl.style.padding = origPadding;
-    contentEl.style.boxSizing = origBoxSizing;
+    contentEl.classList.add('pv-pdf-capture');
 
+    var naturalHeightPx = contentEl.scrollHeight;
     var PX_TO_MM = 25.4 / 96;
-    var heightMm = Math.ceil(heightPx * PX_TO_MM);
-    // @page margin 대신 .pv-wrap의 padding으로 여백을 줌 — margin을 쓰면
-    // 그 공간에 브라우저가 자체 머리글/바닥글(날짜·URL 등)을 넣을 수 있음.
-    s.textContent = '@media print { @page { size: 210mm ' + heightMm + 'mm; margin: 0; } .pv-wrap { page-break-inside: avoid; padding:10mm 12mm!important; box-sizing:border-box!important; } }';
-  } else {
-    s.textContent = '@media print { @page { size: A4 portrait; margin: 0; } .pv-wrap { padding:10mm 12mm!important; box-sizing:border-box!important; } }';
+    var pageHeightMm = Math.ceil(naturalHeightPx * PX_TO_MM) + 5;
+
+    var opt = {
+      margin: 0,
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: [190.5, pageHeightMm], orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] }
+    };
+
+    html2pdf().set(opt).from(contentEl).outputPdf('blob').then(function(pdfBlob) {
+      contentEl.style.width = origWidth;
+      contentEl.style.maxWidth = origMaxWidth;
+      contentEl.classList.remove('pv-pdf-capture');
+      var url = URL.createObjectURL(pdfBlob);
+      window.open(url, '_blank');
+      showToast('PDF가 만들어졌어요 — 새 탭에서 확인·저장해주세요');
+    }).catch(function(err){
+      contentEl.style.width = origWidth;
+      contentEl.style.maxWidth = origMaxWidth;
+      contentEl.classList.remove('pv-pdf-capture');
+      console.error('PDF 생성 실패:', err);
+      showToast('PDF 생성에 실패했어요');
+    });
   }
-  document.head.appendChild(s);
+
+  if (typeof html2pdf === 'undefined') {
+    showToast('PDF 기능 불러오는 중...');
+    var script = document.createElement('script');
+    script.src = '/html2pdf.bundle.min.js';
+    script.onload = run;
+    script.onerror = function() { showToast('PDF 기능을 불러오지 못했어요. 인터넷 연결을 확인해주세요'); };
+    document.head.appendChild(script);
+  } else {
+    run();
+  }
+}
+
+function _setPrintTitleAndPrint() {
 
   // 브라우저 "머리글/바닥글" 인쇄 옵션이 켜져 있으면 <title>이 그대로
   // 인쇄물에 찍히므로, 실제 문서 종류에 맞게 갱신(견적서/발주서/의뢰서 등).
