@@ -1021,7 +1021,7 @@ td.amt{
   }
   #pv-overlay .pv-nav { display:none!important; }
   #pv-overlay .pv-wrap { box-shadow:none!important; border-radius:0!important; max-width:none!important; margin:0!important; border:none!important; }
-  @page { size:A4; margin:3mm 16mm; }
+  @page { size:A4; margin:14mm 16mm; }
 
   /* ══════════════════════════════════════════════
      2026-08-15 v2 — 간격 체계 통일(선혜님 지적: "간격이 서로
