@@ -585,7 +585,16 @@ function collectVendorGroups() {
     var fabric = tr.querySelector('.c-fabric')?.value || '';
     var vendor = tr.querySelector('.c-vendor')?.value || '';
     var color  = tr.querySelector('.c-color')?.value || '';
-    if(!fabric && !vendor) return;
+    var railVendorCheck = tr.querySelector('.c-rail-vendor')?.value || '';
+    // 2026-09-01(선혜님 지적 — "발주서(거래처별) 클릭하고 목성을 적으니
+    // '거래처 또는 원단명이 입력된 항목이 없습니다'가 뜬다"로 발견, 실제
+    // 프로덕션 재현): 목성은 실제로 원단(fabric)이 아니라 레일/부자재
+    // 거래처라 "레일 거래처" 칸에 입력하는 게 자연스러운데, 이 조기 return
+    // 조건이 fabric/vendor(원단쪽)만 확인해서, 원단은 안 채우고 레일거래처만
+    // 채운 행은 이 시점에 통째로 걸러져(return) 그 아래(611번대)에 이미
+    // 있던 railVendor 처리 코드에 도달하지도 못하고 있었음 - 조건에
+    // railVendor도 포함해서 이 행이 계속 처리되게 함.
+    if(!fabric && !vendor && !railVendorCheck) return;
     var space  = tr.querySelector('.space-inp')?.value || '';
     var mw     = tr.querySelector('.mw')?.value || '';
     var mh     = tr.querySelector('.mh')?.value || '';
@@ -596,17 +605,19 @@ function collectVendorGroups() {
     var heightAdjust = parseFloat(tr.querySelector('.height-adjust')?.value);
     if (isNaN(heightAdjust)) heightAdjust = -3;
     var fh = (mh && parseFloat(mh) > 0) ? (parseFloat(mh) + heightAdjust) : null;
-    items.push({
-      space: space||'—', product: fabric||'—', color: color||'—',
-      // 2026-08-05: 원단(커튼) 거래처는 야드 단위로 구매하는 거라 사이즈 자체가 불필요.
-      // 가공소로 체크된 경우에만 실측+제작사이즈를 보여줌. (블라인드는 업체가 직접
-      // 사이즈에 맞춰 재단해서 나오는 제품이라 아래 블라인드 쪽은 별도로 계속 표시함)
-      size: isWorkshop ? ((mw&&mh)?(mw+'×'+mh):'—') : '—',
-      fabSize: (isWorkshop && mw && fh!==null) ? (mw+'×'+fh.toFixed(1).replace(/\.0$/,'')) : null,
-      content:[pleat, open].filter(Boolean).join(' ')||'—',
-      qty: pnum?(pnum+'폭'):'—',
-      vendor: vendor
-    });
+    if (fabric || vendor) {
+      items.push({
+        space: space||'—', product: fabric||'—', color: color||'—',
+        // 2026-08-05: 원단(커튼) 거래처는 야드 단위로 구매하는 거라 사이즈 자체가 불필요.
+        // 가공소로 체크된 경우에만 실측+제작사이즈를 보여줌. (블라인드는 업체가 직접
+        // 사이즈에 맞춰 재단해서 나오는 제품이라 아래 블라인드 쪽은 별도로 계속 표시함)
+        size: isWorkshop ? ((mw&&mh)?(mw+'×'+mh):'—') : '—',
+        fabSize: (isWorkshop && mw && fh!==null) ? (mw+'×'+fh.toFixed(1).replace(/\.0$/,'')) : null,
+        content:[pleat, open].filter(Boolean).join(' ')||'—',
+        qty: pnum?(pnum+'폭'):'—',
+        vendor: vendor
+      });
+    }
     // 2026-08-10: 레일(전동 등) 거래처가 매번 다를 수 있어 견적서마다 입력
     // 가능하게 함 - 원단과 별개 항목으로 발주서에 반영(선혜님 확인).
     var railVendor = tr.querySelector('.c-rail-vendor')?.value || '';
