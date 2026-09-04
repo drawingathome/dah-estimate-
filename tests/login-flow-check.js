@@ -39,7 +39,7 @@ async function run() {
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     await page.setRequestInterception(true);
-    page.on('request', (req) => { if (req.url().includes('supabase.co')) { req.abort(); return; } req.continue(); });
+    page.on('request', (req) => { const u = req.url(); if (u.includes('supabase.co') || u.includes('script.google.com')) { req.abort(); return; } if (u.startsWith('http://localhost') || u.startsWith('http://127.0.0.1')) { req.continue(); } else { req.abort(); } });
     await page.setViewport({ width, height: 844, isMobile: width < 500, hasTouch: width < 500 });
     await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await new Promise(r => setTimeout(r, 1000));

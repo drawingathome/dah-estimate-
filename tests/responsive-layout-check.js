@@ -40,7 +40,7 @@ async function run() {
       const errors = [];
       page.on('pageerror', e => errors.push(e.message));
       await page.setRequestInterception(true);
-      page.on('request', (req) => { if (req.url().includes('supabase.co')) { req.abort(); return; } req.continue(); });
+      page.on('request', (req) => { const u = req.url(); if (u.includes('supabase.co') || u.includes('script.google.com')) { req.abort(); return; } if (u.startsWith('http://localhost') || u.startsWith('http://127.0.0.1')) { req.continue(); } else { req.abort(); } });
       await page.setViewport({ width, height: 900 });
       await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await new Promise(r => setTimeout(r, 700));
@@ -61,7 +61,7 @@ async function run() {
     {
       const page = await browser.newPage();
       await page.setRequestInterception(true);
-      page.on('request', (req) => { if (req.url().includes('supabase.co')) { req.abort(); return; } req.continue(); });
+      page.on('request', (req) => { const u = req.url(); if (u.includes('supabase.co') || u.includes('script.google.com')) { req.abort(); return; } if (u.startsWith('http://localhost') || u.startsWith('http://127.0.0.1')) { req.continue(); } else { req.abort(); } });
       await page.setViewport({ width: 2560, height: 900 });
       await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await new Promise(r => setTimeout(r, 700));
@@ -95,7 +95,7 @@ async function run() {
       const page = await browser.newPage();
       page.on('dialog', async d => { try { await d.accept(); } catch (e) {} });
       await page.setRequestInterception(true);
-      page.on('request', (req) => { if (req.url().includes('supabase.co')) { req.abort(); return; } req.continue(); });
+      page.on('request', (req) => { const u = req.url(); if (u.includes('supabase.co') || u.includes('script.google.com')) { req.abort(); return; } if (u.startsWith('http://localhost') || u.startsWith('http://127.0.0.1')) { req.continue(); } else { req.abort(); } });
       await page.setViewport({ width: 390, height: 900 });
       await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
       await new Promise(r => setTimeout(r, 700));

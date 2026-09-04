@@ -69,13 +69,13 @@ async function testRoleAndViewport(role, vw, label, port) {
   await page.setRequestInterception(true);
   page.on('request', (req) => {
     const url = req.url();
-    if (url.includes('supabase.co')) {
+    if ((url.includes('supabase.co') || url.includes('script.google.com'))) {
       if (url.includes('/estimates') && req.method() === 'PATCH') estPatchCount++;
       if (url.includes('/estimates') && req.method() === 'POST') estPostCount++;
       mockRoute(req, url);
       return;
     }
-    req.continue();
+    if (url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) { req.continue(); } else { req.abort(); }
   });
   await page.setViewport({ width: vw, height: 900, isMobile: vw < 500, hasTouch: vw < 500 });
   await page.goto(`http://localhost:${port}/dah-estimate.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });

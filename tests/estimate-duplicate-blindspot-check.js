@@ -46,7 +46,7 @@ async function run() {
     await page.setRequestInterception(true);
     page.on('request', (req) => {
       const url = req.url();
-      if (url.includes('supabase.co')) {
+      if ((url.includes('supabase.co') || url.includes('script.google.com'))) {
         if (req.method() === 'OPTIONS') {
           req.respond({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Allow-Headers': '*' } });
           return;
@@ -79,7 +79,7 @@ async function run() {
         req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[]' });
         return;
       }
-      req.continue();
+      if (url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) { req.continue(); } else { req.abort(); }
     });
 
     await page.setViewport({ width: vw, height: 900, isMobile: vw < 500, hasTouch: vw < 500 });
@@ -123,7 +123,7 @@ async function run() {
     await page.setRequestInterception(true);
     page.on('request', (req) => {
       const url = req.url();
-      if (url.includes('supabase.co')) {
+      if ((url.includes('supabase.co') || url.includes('script.google.com'))) {
         if (req.method() === 'OPTIONS') { req.respond({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Allow-Headers': '*' } }); return; }
         if (url.includes('/customers') && (req.method() === 'PATCH' || req.method() === 'POST')) { req.respond({ status: req.method() === 'POST' ? 201 : 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[{"id":"test-known-customer-id"}]' }); return; }
         if (url.includes('/estimates') && req.method() === 'GET') { req.abort('failed'); return; } // 확인 요청 자체가 실패
@@ -131,7 +131,7 @@ async function run() {
         req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[]' });
         return;
       }
-      req.continue();
+      if (url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) { req.continue(); } else { req.abort(); }
     });
     await page.setViewport({ width: vw, height: 900, isMobile: vw < 500, hasTouch: vw < 500 });
     await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
