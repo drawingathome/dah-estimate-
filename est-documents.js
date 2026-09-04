@@ -957,11 +957,18 @@ function buildRequestHTML(kind, extraNote) {
       var pleat = (tr.querySelector('.pleat-type')?.value || '').replace('형','');
       var open  = (tr.querySelector('.open-type')?.value || '').replace('형','');
       var railLen = getRailLengthText(tr);
+      // 2026-09-04(선혜님 지적 - "무슨 제품인지 안나와"로 발견, 실제
+      // 스크린샷으로 재현 성공): "내용" 칸이 주름형/개폐형/레일길이만
+      // 있고, 정작 무슨 제품(원단/제품명)을 다는지가 전혀 없었음 - 시공
+      // 기사님이 봤을 때 "나비주름/양개/18자레일"만으론 어떤 커튼을
+      // 달아야 하는지 알 수 없음. 고객용 제품명(있으면)을 맨 앞에 추가,
+      // 없으면 원단명으로 대체.
+      var productName = (tr.querySelector('.c-display-name')?.value || tr.querySelector('.c-fabric')?.value || '').trim();
       if(!space && !mw && !vendor) return;
       rows.push({
         space: space||'—',
         size: (mw&&mh) ? (mw+'×'+mh) : '—',
-        content: [pleat, open, railLen].filter(Boolean).join(' / ')||'—',
+        content: [productName, [pleat, open, railLen].filter(Boolean).join(' / ')].filter(Boolean).join(' — ')||'—',
         // 2026-08-13: 원단거래처(vendor)는 시공기사가 알 필요없는 내부정보라
         // 노출하지 않고, 대신 레일거래처(railVendor)를 노출 - 레일은 브랜드별로
         // (전동레일 등) 시공방식이 달라서 기사님이 반드시 알아야 함(선혜님 확인)
@@ -976,11 +983,12 @@ function buildRequestHTML(kind, extraNote) {
       var bmw = tr.querySelector('.bmw')?.value || '';
       var bmh = tr.querySelector('.bmh')?.value || '';
       var handle = tr.querySelector('.handle-dir')?.value || '';
+      var blindKind = tr.querySelector('.blind-kind')?.value || '';
       if(!space && !bmw && !vendor && !bname) return;
       rows.push({
         space: space||'—',
         size: (bmw&&bmh) ? (bmw+'×'+bmh) : '—',
-        content: handle ? (handle==='기타'?'기타':handle+'잡이') : '—',
+        content: [blindKind, handle ? (handle==='기타'?'기타':handle+'잡이') : ''].filter(Boolean).join(' — ')||'—',
         etc: withProduction(vendor)
       });
     });
