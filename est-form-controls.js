@@ -129,7 +129,20 @@ function openSpacePicker(inp) {
     var on = inp.value === s ? ' on' : '';
     return '<button class="space-btn'+on+'" data-space="'+s+'" onclick="pickSpace(this)">'+s+'</button>';
   }).join('');
+  // 2026-09-04: 이미 입력된 값이 고정 버튼 목록에 없는 직접입력 값이면
+  // (예: "드레스룸"), 다시 열었을 때도 그 값이 보이도록 미리 채워둠 -
+  // 프리셋 중 하나면 버튼 클릭이 명확하니 직접입력 칸은 비워둠.
+  var customInp = document.getElementById('space-custom-input');
+  if (customInp) customInp.value = (inp.value && SPACES.indexOf(inp.value) < 0) ? inp.value : '';
   document.getElementById('space-picker').style.display = 'block';
+}
+
+function pickCustomSpace() {
+  var customInp = document.getElementById('space-custom-input');
+  var val = customInp ? customInp.value.trim() : '';
+  if (!val) return;
+  if (_spaceTarget) _spaceTarget.value = val;
+  document.getElementById('space-picker').style.display = 'none';
 }
 
 function pickSpace(btn) {

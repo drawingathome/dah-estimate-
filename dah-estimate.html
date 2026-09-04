@@ -730,6 +730,13 @@
   <div id="space-picker-box" onclick="event.stopPropagation()">
     <div style="font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:0.5px;margin-bottom:12px">공간 선택</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="space-btns"></div>
+    <!-- 2026-09-04(선혜님 지시 - "내가 추가로 쓸 수 있게 되었으면 하는데"):
+         고정 버튼(거실/안방/자녀방/서재/주방/욕실/기타)에 없는 공간(드레스룸,
+         펜트리, 다용도실 등)을 자유롭게 쓸 수 있는 직접입력 칸 신설. -->
+    <div style="display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <input type="text" id="space-custom-input" placeholder="직접 입력 (예: 드레스룸)" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit" onkeydown="if(event.key==='Enter'){event.preventDefault();pickCustomSpace();}">
+      <button type="button" onclick="pickCustomSpace()" style="padding:8px 14px;background:var(--dark);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">확인</button>
+    </div>
   </div>
 </div>
 
@@ -778,7 +785,7 @@
 <script src="/est-utils.js?v=202609041400"></script>
 <script src="/est-sync-queue.js?v=202608291500"></script>
 <script src="/dash-supabase-auth.js?v=202608251900"></script>
-<script src="/est-form-controls.js?v=202608292100"></script>
+<script src="/est-form-controls.js?v=202609041500"></script>
 <script src="/est-product-calc.js?v=202609041300"></script>
 <script src="/est-survey.js?v=202608190049"></script>
 <script src="/est-save.js?v=202608311800"></script>
