@@ -175,8 +175,13 @@ function renderCouponList() {
 // 2026-08-14: 불러오기(견적서앱에서열기/열어서수정/복사) 시 저장된
 // applied_discounts를 정확히 복원 — 쿠폰목록이 클라우드에서 아직 로딩중일
 // 수 있어(비동기) 체크박스가 없으면 잠깐 대기했다 재시도.
-function restoreAppliedDiscounts(applied, attempt) {
-  if (!applied) return;
+function restoreAppliedDiscounts(applied, attempt, onComplete) {
+  // 2026-09-04(선혜님 지시 - "다시보기 속도 개선 바로 하자"): 이 함수가
+  // 끝나는 시점(재시도 완료 또는 애초에 쿠폰이 없어 즉시 끝나는 경우)을
+  // 호출부가 알 수 있도록 완료 콜백을 추가 - 아래 다시보기(autoDoc) 흐름이
+  // 항상 최악의 경우(8초)만큼 고정으로 기다리는 대신, 실제로 끝나는
+  // 즉시 다음 단계로 넘어갈 수 있게 함.
+  if (!applied) { if (typeof onComplete === 'function') onComplete(); return; }
   attempt = attempt || 0;
   var wrap = document.getElementById('coupon-list');
   var coupons = (applied.coupons || []);
@@ -197,7 +202,7 @@ function restoreAppliedDiscounts(applied, attempt) {
       // 가 빈 배열로 저장된 것 확인) - 복원 중엔 저장 버튼을 잠시
       // 비활성화해서 이 레이스컨디션을 원천 차단.
       if (saveBtn) { saveBtn.disabled = true; saveBtn.style.opacity = '0.5'; saveBtn.title = '쿠폰 정보를 불러오는 중이에요. 잠시만 기다려주세요.'; }
-      setTimeout(function(){ restoreAppliedDiscounts(applied, attempt+1); }, 400);
+      setTimeout(function(){ restoreAppliedDiscounts(applied, attempt+1, onComplete); }, 400);
       return;
     }
   }
@@ -240,6 +245,7 @@ function restoreAppliedDiscounts(applied, attempt) {
     }
   }
   if (typeof calcTotal === 'function') calcTotal();
+  if (typeof onComplete === 'function') onComplete();
 }
 
 // 2026-08-10: 거래처 목록도 견적서 앱은 대시보드 설정탭에서 추가한 최신
