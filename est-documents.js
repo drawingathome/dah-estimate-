@@ -656,6 +656,15 @@ function collectVendorGroups() {
     if(!groups[key]) groups[key] = [];
     groups[key].push(it);
   });
+  // 2026-09-04(선혜님 지시 - "공간별로 나오게 해줘"): 화면에 입력한 순서
+  // 그대로 나열되고 있었는데, 같은 공간(거실/안방 등) 품목끼리 모여서
+  // 보이는 게 실무에서 훨씬 보기 편함 - 각 거래처 그룹 안에서 공간 기준
+  // 정렬(같은 공간끼리는 원래 입력 순서 그대로 유지되도록 안정 정렬).
+  Object.keys(groups).forEach(function(key){
+    groups[key].sort(function(a, b){
+      return (a.space||'').localeCompare(b.space||'', 'ko');
+    });
+  });
 
   return { groups: groups, cName: cName, cStaff: cStaff, itemCount: items.length };
 }
@@ -992,6 +1001,14 @@ function buildRequestHTML(kind, extraNote) {
         etc: withProduction(vendor)
       });
     });
+
+    // 2026-09-04(선혜님 지시 - "공간별로 나오게 해줘"): 화면 입력 순서
+    // 그대로 나열되고 있었음 - 공간(위치) 기준 정렬(안정 정렬이라 같은
+    // 공간끼리는 원래 입력 순서 유지). 이건 발주서뿐 아니라 여기(시공
+    // 요청서)에도 필요함 - 어제 만든 "사이즈 셀 병합"이 같은 공간이
+    // 연속으로 붙어있어야 정확히 작동하는데, 입력 순서가 뒤섞이면
+    // (예: 거실→안방→거실) 병합이 제대로 안 될 수 있었음.
+    rows.sort(function(a, b){ return (a.space||'').localeCompare(b.space||'', 'ko'); });
 
     if(rows.length === 0) {
       out += '<div style="padding:30px 0;text-align:center;color:#B0A99F;font-size:12px">입력된 공간/제품이 없습니다.</div>';

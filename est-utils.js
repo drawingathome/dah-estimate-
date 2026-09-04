@@ -180,14 +180,28 @@ function restoreAppliedDiscounts(applied, attempt) {
   attempt = attempt || 0;
   var wrap = document.getElementById('coupon-list');
   var coupons = (applied.coupons || []);
+  var saveBtn = document.getElementById('btn-save-estimate');
   if (coupons.length > 0 && (!wrap || wrap.children.length === 0)) {
     // 2026-08-29(선혜님 지적 - "저장을 해도 할인이 빠진다"로 재점검):
     // 기존 10회x300ms(최대 3초) 재시도는 네트워크가 느리면 부족할 수
     // 있음 - 쿠폰목록 클라우드 조회가 3초 안에 안 끝나면 복원 자체가
     // 포기되고 "쿠폰이 삭제된 것"처럼 취급돼서 직접입력으로 강제 대체
     // 되거나 경고만 뜨고 반영이 안 됨. 20회x400ms(최대 8초)로 여유를 늘림.
-    if (attempt < 20) { setTimeout(function(){ restoreAppliedDiscounts(applied, attempt+1); }, 400); return; }
+    if (attempt < 20) {
+      // 2026-09-04(선혜님 지적 - "현은지 할인 쿠폰 또 빠지네"로 재확인,
+      // 실제 DB 데이터로 재현 성공): 재시도(최대 8초)가 아직 안 끝난
+      // 상태에서 사용자가 저장 버튼을 누르면, calcTotal()이 아직 "쿠폰
+      // 복원 완료 후" 상태로 재실행되기 전이라 window._lastAppliedDiscounts
+      // 가 여전히 빈 상태({coupons:[]})로 남아있고, 그 빈 상태 그대로
+      // 저장돼서 쿠폰 정보가 통째로 사라짐(실제 DB에서 applied_discounts
+      // 가 빈 배열로 저장된 것 확인) - 복원 중엔 저장 버튼을 잠시
+      // 비활성화해서 이 레이스컨디션을 원천 차단.
+      if (saveBtn) { saveBtn.disabled = true; saveBtn.style.opacity = '0.5'; saveBtn.title = '쿠폰 정보를 불러오는 중이에요. 잠시만 기다려주세요.'; }
+      setTimeout(function(){ restoreAppliedDiscounts(applied, attempt+1); }, 400);
+      return;
+    }
   }
+  if (saveBtn) { saveBtn.disabled = false; saveBtn.style.opacity = ''; saveBtn.title = ''; }
   // 2026-08-14: 저장 당시 적용됐던 쿠폰이 그 사이 설정에서 삭제되거나
   // 2026-08-14: 쿠폰이 "삭제"만이 아니라 "값만 수정"(예: 재구매 5%→7%)돼도
   // 똑같이 조용히 다른 금액으로 재계산되던 문제 확인(재현: 5%/10,000원 할인
