@@ -853,8 +853,13 @@ var currentTab = 'ga';
     var loadCustId = urlParams.get('loadCustId');
     var loadCustName = urlParams.get('loadCustName');
     if (loadCustId || loadCustName) {
-      // 히스토리에서 쿼리스트링 제거(새로고침해도 중복 조회 안 되도록)
-      window.history.replaceState({}, '', window.location.pathname);
+      // 2026-09-04(선혜님 지적 — "새로고침을 하면 왜 그대로 안되고 새페이지로
+      // 넘어가지??"로 발견, 실제 재현 성공): 원래 "새로고침해도 중복 조회
+      // 안 되도록" URL에서 쿼리스트링(loadCustId 등)을 지우고 있었는데,
+      // 이 때문에 새로고침하면 브라우저가 파라미터 없는 빈 URL을 다시
+      // 불러와서 완전히 새(빈) 견적서 화면이 되어버리는 훨씬 심각한
+      // 문제가 있었음 - "중복 조회 방지"보다 "새로고침해도 보던 견적서가
+      // 그대로 유지되는 것"이 훨씬 중요하므로, URL을 지우지 않고 그대로 둠.
       var custUrl = loadCustId
         ? SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(loadCustId) + '&select=*'
         : SUPABASE_URL + '/rest/v1/customers?client_name=eq.' + encodeURIComponent(loadCustName) + '&select=*&limit=1';
@@ -973,7 +978,7 @@ var currentTab = 'ga';
     var loadEstDbId = urlParams.get('loadEstDbId');
     var loadMode = urlParams.get('mode') || 'copy';
     if (loadEstDbId) {
-      window.history.replaceState({}, '', window.location.pathname);
+      // 2026-09-04: 위 loadCustId 경로와 동일한 이유로 URL을 지우지 않고 유지.
       var estOneUrl = SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(loadEstDbId) + '&select=*';
       var eoxhr = new XMLHttpRequest();
       eoxhr.open('GET', estOneUrl, true);
