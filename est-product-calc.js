@@ -12,15 +12,7 @@ function addCurtainRow() {
   tr.innerHTML =
     '<td data-label="공간"><input type="text" class="space-inp" placeholder="공간" style="'+INP+';cursor:pointer;caret-color:transparent" readonly onclick="openSpacePicker(this)"></td>'+
     '<td data-label="제품명" style="padding:6px 8px">'+
-      '<div style="display:flex;align-items:center;gap:4px">'+
-        '<input type="text" placeholder="제품명 (고객용)" class="c-display-name" style="'+INP+'">'+
-        // 2026-09-04(선혜님 지시 - "필요할때만 펼치는 버튼 추가"로 해결):
-        // 원단명/거래처/컬러/레일거래처 칸(.inner-fields)이 6월부터 화면에서
-        // 완전히 숨겨진 채(display:none!important) 열 방법이 없었음(실제
-        // DB의 최근 견적 15건 전부 이 값이 비어있는 것으로 확인) - 이 문제로
-        // 발주서 기능이 몇 달째 사실상 무용지물이었음. 토글 버튼 신설.
-        '<button type="button" class="inner-toggle-btn print-hide" onclick="toggleInnerFields(this)" title="원단명·거래처·컬러 입력" style="flex-shrink:0;min-height:32px;padding:8px 8px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;font-size:11px;color:var(--sub)">거래처 ▾</button>'+
-      '</div>'+
+      '<input type="text" placeholder="제품명 (고객용)" class="c-display-name" style="'+INP+'">'+
       '<div class="inner-fields print-hide">'+
         '<div class="inner-row">'+
           '<input type="text" list="fabric-list" placeholder="원단명" class="c-fabric inner-inp">'+
@@ -59,6 +51,13 @@ function addCurtainRow() {
     '<td data-label="단가"><input type="text" inputmode="numeric" placeholder="단가" class="cprice" oninput="fmtPrice(this);calcCurtainRow(this)" onfocus="fmtPriceFocus(this)" onblur="fmtPriceBlur(this);calcCurtainRow(this)" style="'+INP+'"></td>'+
     '<td class="amt camt" data-label="금액">—</td>'+
     '<td style="white-space:nowrap">'+
+      // 2026-09-04(선혜님 지적 - 실제 스크린샷으로 "이 방식이 최선이니?"
+      // 평가 요청, 실제 재현 성공): 처음엔 이 버튼을 제품명 입력창 옆에
+      // 나란히 뒀는데, 그러면 제품명 칸 폭이 줄어들어서 실제 제품명
+      // 텍스트가 잘려 보이는 부작용이 있었음(재현: 필요폭 131px인데
+      // 표시폭 98.6px로 줄어듦) - 더 중요한 정보(제품명)를 침범하지 않게
+      // 오른쪽 액션 버튼들(드래그/복사/삭제) 옆, 작은 아이콘 형태로 이동.
+      '<button type="button" class="inner-toggle-btn print-hide" onclick="toggleInnerFields(this)" title="원단명·거래처·컬러 입력" style="min-height:32px;min-width:32px;padding:6px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;font-size:13px;color:var(--sub);margin-right:2px" aria-label="거래처 정보">🏢</button>'+
       '<span class="row-drag-handle print-hide" title="드래그해서 순서 바꾸기" style="cursor:grab;padding:4px 6px;color:var(--sub);user-select:none;display:inline-block">⠿</span>'+
       '<button class="copy-btn print-hide" onclick="copyCurtainRow(this)" title="복사">⧉</button>'+
       '<button class="del-btn print-hide" onclick="delRow(this)">✕</button>'+
@@ -253,10 +252,7 @@ function addBlindRow() {
   tr.innerHTML =
     '<td data-label="공간"><input type="text" class="space-inp" placeholder="공간" style="'+INP+';cursor:pointer;caret-color:transparent" readonly onclick="openSpacePicker(this)"></td>'+
     '<td data-label="제품명" style="padding:6px 8px">'+
-      '<div style="display:flex;align-items:center;gap:4px">'+
-        '<input type="text" placeholder="제품명 (고객용)" class="b-display-name" style="'+INP+'">'+
-        '<button type="button" class="inner-toggle-btn print-hide" onclick="toggleInnerFields(this)" title="원단명·거래처·컬러 입력" style="flex-shrink:0;min-height:32px;padding:8px 8px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;font-size:11px;color:var(--sub)">거래처 ▾</button>'+
-      '</div>'+
+      '<input type="text" placeholder="제품명 (고객용)" class="b-display-name" style="'+INP+'">'+
       '<div class="inner-fields print-hide">'+
         '<div class="inner-row">'+
           '<input type="text" list="blind-list" placeholder="원단명" class="inner-inp">'+
@@ -281,6 +277,7 @@ function addBlindRow() {
     '</td>'+
     '<td class="amt bamt" data-label="금액">—</td>'+
     '<td style="white-space:nowrap">'+
+      '<button type="button" class="inner-toggle-btn print-hide" onclick="toggleInnerFields(this)" title="원단명·거래처·컬러 입력" style="min-height:32px;min-width:32px;padding:6px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;font-size:13px;color:var(--sub);margin-right:2px" aria-label="거래처 정보">🏢</button>'+
       '<span class="row-drag-handle print-hide" title="드래그해서 순서 바꾸기" style="cursor:grab;padding:4px 6px;color:var(--sub);user-select:none;display:inline-block">⠿</span>'+
       '<button class="copy-btn print-hide" onclick="copyBlindRow(this)">⧉</button>'+
       '<button class="del-btn print-hide" onclick="delRow(this)">✕</button>'+
@@ -973,11 +970,10 @@ function _getDragAfterRow(tbody, y) {
 // 버튼을 누르면 그 행에서만 펼쳐지도록 함. 버튼 텍스트/화살표도 상태에
 // 맞춰 바꿔서 지금 펼쳐진 상태인지 한눈에 알 수 있게 함.
 function toggleInnerFields(btn) {
-  var td = btn.closest('td');
-  var fields = td ? td.querySelector('.inner-fields') : null;
+  var tr = btn.closest('tr');
+  var fields = tr ? tr.querySelector('.inner-fields') : null;
   if (!fields) return;
   var isOpen = fields.classList.toggle('expanded');
-  btn.textContent = isOpen ? '거래처 ▴' : '거래처 ▾';
   btn.style.background = isOpen ? 'var(--dark)' : '#fff';
   btn.style.color = isOpen ? '#fff' : 'var(--sub)';
 }
