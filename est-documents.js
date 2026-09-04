@@ -1065,18 +1065,26 @@ function printRequest(kind, skipPrompts) {
   calcTotal();
   var label = kind==='measure' ? '실측' : '시공';
 
-  // 2026-09-04(선혜님 지시 - "지역 미입력시 경고 바로 하자"): "지역을
-  // 선택해야만 레일 길이가 자동으로 계산된다"는 규칙이 화면 어디에도
-  // 안 써있어서, 문서를 다 만들고 나서야 "왜 레일 길이가 없지?" 하고
-  // 뒤늦게 알게 되는 문제가 있었음(오늘 발견한 gap). 문서 생성 직전에
-  // 지역이 비어있으면 미리 확인창을 띄움 - 다시보기(autoDoc, skipPrompts
-  // =true)일 땐 이미 저장된 값 그대로 자동으로 보여주는 흐름이라 경고를
-  // 건너뜀(경고가 뜨면 자동화 자체가 멈춰버림).
+  // 2026-09-04(선혜님 지시 - "주소/실측일자/시공일자도 기입 안하면 경고가
+  // 떠야할것 같은데?"로 확장): 지역 미입력 경고를 만들고 나서, "정작 더
+  // 중요한 주소/날짜는 저장(saveEstimate) 시점에만 확인하고, 정작 시공
+  // 기사가 실제로 쓰는 이 문서(시공/실측요청서) 생성 시점엔 확인이 없었다"
+  // 는 정확한 지적으로 추가. 시공요청서는 시공일을, 실측요청서는 실측일을
+  // 확인 대상으로 삼음(문서 성격에 맞는 날짜만 - 시공요청서에 실측일이
+  // 없다고 경고하는 건 무의미하므로). 여러 항목이 한꺼번에 비어있으면
+  // 개별 확인창이 연달아 뜨지 않도록 모아서 한 번에 보여줌. 날짜미정
+  // 체크박스가 되어있으면 그 항목은 빠뜨림으로 안 잡음(진짜 미정이니까).
+  // 다시보기(autoDoc, skipPrompts=true)일 땐 이미 저장된 값 그대로
+  // 자동으로 보여주는 흐름이라 전부 건너뜀(경고가 뜨면 자동화가 멈춤).
   if (!skipPrompts) {
-    var regionVal = document.getElementById('c-region')?.value || '';
-    if (!regionVal) {
-      var proceedNoRegion = window.confirm('지역이 선택되지 않았어요.\n지역을 선택하지 않으면 레일 길이 등 일부 정보가 자동으로 채워지지 않을 수 있어요.\n\n그래도 계속하시겠어요?');
-      if (!proceedNoRegion) return;
+    var missingForDoc = [];
+    if (!(document.getElementById('c-region')?.value || '')) missingForDoc.push('지역(레일 길이 등 일부 정보가 자동으로 안 채워질 수 있어요)');
+    if (!(document.getElementById('c-addr')?.value || '').trim()) missingForDoc.push('주소');
+    if (kind === 'measure' && !document.getElementById('c-measure-tbd')?.checked && !(document.getElementById('c-measure')?.value || '')) missingForDoc.push('실측 예정일');
+    if (kind === 'install' && !document.getElementById('c-install-tbd')?.checked && !(document.getElementById('c-install')?.value || '')) missingForDoc.push('시공 예정일');
+    if (missingForDoc.length > 0) {
+      var proceedMissing = window.confirm('다음 항목이 비어있어요:\n\n' + missingForDoc.join('\n') + '\n\n그래도 ' + label + '요청서를 만드시겠어요?');
+      if (!proceedMissing) return;
     }
   }
 
