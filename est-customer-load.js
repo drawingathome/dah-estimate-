@@ -62,6 +62,14 @@ function _doShareEstimatePDF() {
   // 반올림 오차로, 딱 맞게 계산하면 마지막 몇 px가 빈 페이지로 밀려나가는 문제가
   // 있었음(실제로 재현됨) - 5mm 여유를 둬서 방지.
   var pageHeightMm = Math.ceil(naturalHeightPx * PX_TO_MM) + 5;
+  // 2026-09-04(선혜님 지적 — "발주서는 어떻게 됐지??"로 실제 확인하다
+  // 발견): 발주서처럼 품목이 적어 내용이 짧으면 pageHeightMm이 폭(190.5mm)
+  // 보다 작아질 수 있는데, jsPDF에 orientation:'portrait'를 강제한 채로
+  // 폭>높이인 모순된 크기를 주면 jsPDF가 내부적으로 폭/높이를 뒤바꿔버려서
+  // 콘텐츠가 이상하게 배치되고 오른쪽이 잘리는 문제가 있었음(재현으로 확인
+  // - 견적서는 항상 세로로 길어서 이 경로를 안 탔지만 발주서에서 처음 드러남).
+  // 높이가 폭보다 항상 크도록 최소값을 보장해서 모순을 원천 차단.
+  pageHeightMm = Math.max(pageHeightMm, 200);
 
   var opt = {
     margin: 0,
@@ -192,6 +200,12 @@ function confirmPdfPrint_fitAsCanvas(contentEl) {
     var naturalHeightPx = contentEl.scrollHeight;
     var PX_TO_MM = 25.4 / 96;
     var pageHeightMm = Math.ceil(naturalHeightPx * PX_TO_MM) + 5;
+    // 2026-09-04(선혜님 지적 — "발주서는 어떻게 됐지??"로 실제 확인하다
+    // 발견): 발주서처럼 짧은 문서에서 pageHeightMm이 폭(190.5mm)보다
+    // 작아지면 jsPDF가 orientation:'portrait'와 모순되어 폭/높이를
+    // 뒤바꿔버리는 문제 - 최소값 보장으로 원천 차단(자세한 설명은
+    // _doShareEstimatePDF의 동일 지점 주석 참고).
+    pageHeightMm = Math.max(pageHeightMm, 200);
 
     var opt = {
       margin: 0,
