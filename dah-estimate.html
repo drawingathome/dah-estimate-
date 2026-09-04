@@ -424,11 +424,21 @@
     <div class="info-grid" style="margin-top:8px;padding-top:8px;border-top:1px dashed #EEE6DC">
       <div class="info-item">
         <label class="info-label">실측 예정일</label>
-        <input type="date" id="c-measure" style="letter-spacing:0.3px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <input type="date" id="c-measure" style="letter-spacing:0.3px;flex:1;min-width:140px">
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--sub);white-space:nowrap;cursor:pointer">
+            <input type="checkbox" id="c-measure-tbd" onchange="toggleDateTbd('c-measure')" style="width:16px;height:16px;cursor:pointer">날짜미정
+          </label>
+        </div>
       </div>
       <div class="info-item">
         <label class="info-label">시공 예정일</label>
-        <input type="date" id="c-install" style="letter-spacing:0.3px">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <input type="date" id="c-install" style="letter-spacing:0.3px;flex:1;min-width:140px">
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--sub);white-space:nowrap;cursor:pointer">
+            <input type="checkbox" id="c-install-tbd" onchange="toggleDateTbd('c-install')" style="width:16px;height:16px;cursor:pointer">날짜미정
+          </label>
+        </div>
       </div>
     </div>
     <div class="info-grid print-hide" style="margin-top:10px; display:none">
@@ -785,10 +795,10 @@
 <script src="/est-utils.js?v=202609041400"></script>
 <script src="/est-sync-queue.js?v=202608291500"></script>
 <script src="/dash-supabase-auth.js?v=202608251900"></script>
-<script src="/est-form-controls.js?v=202609041500"></script>
+<script src="/est-form-controls.js?v=202609041600"></script>
 <script src="/est-product-calc.js?v=202609041300"></script>
 <script src="/est-survey.js?v=202608190049"></script>
-<script src="/est-save.js?v=202608311800"></script>
+<script src="/est-save.js?v=202609041600"></script>
 <script src="/est-documents.js?v=202609041400"></script>
 <script src="/est-customer-load.js?v=202609041000"></script>
 <script src="/est-misc.js?v=202608283500"></script>
@@ -832,7 +842,7 @@ var currentTab = 'ga';
   // 최우선으로 하고(자동계산된 50%보다 항상 우선), applyFrozenBreakdown이
   // 나중에(즉시+3.5초 뒤 2차례) 계산값으로 덮어써도 최종적으로는 실제
   // 입금액이 남도록 4초 뒤에 한 번 더 확정 적용함.
-  function applyScheduleAndDepositToForm(customerRow, estDate, estInstallDate) {
+  function applyScheduleAndDepositToForm(customerRow, estDate, estInstallDate, measureTbd, installTbd) {
     var measureVal = estDate || (customerRow && customerRow.measure_date) || '';
     var installVal = estInstallDate || (customerRow && customerRow.install_date) || '';
     if (measureVal && document.getElementById('c-measure')) {
@@ -840,6 +850,17 @@ var currentTab = 'ga';
     }
     if (installVal && document.getElementById('c-install')) {
       document.getElementById('c-install').value = installVal;
+    }
+    // 2026-09-04(선혜님 요청 - "날짜미정 체크박스"): 저장 당시 미정으로
+    // 체크해뒀던 상태를 다시 열었을 때도 그대로 복원 - 날짜입력을
+    // 비활성화하는 toggleDateTbd()를 그대로 재사용.
+    if (measureTbd && document.getElementById('c-measure-tbd')) {
+      document.getElementById('c-measure-tbd').checked = true;
+      if (typeof toggleDateTbd === 'function') toggleDateTbd('c-measure');
+    }
+    if (installTbd && document.getElementById('c-install-tbd')) {
+      document.getElementById('c-install-tbd').checked = true;
+      if (typeof toggleDateTbd === 'function') toggleDateTbd('c-install');
     }
     if (customerRow && Number(customerRow.deposit_amount) > 0) {
       var applyDeposit = function() {
@@ -914,7 +935,7 @@ var currentTab = 'ga';
               }
               // 2026-08-28: 이 견적서 자체에 저장된 실측일/시공일이 있으면
               // (고객 레코드값보다 더 구체적이므로) 공용함수로 우선 반영.
-              applyScheduleAndDepositToForm(c, e && e.date, e && e.install_date);
+              applyScheduleAndDepositToForm(c, e && e.date, e && e.install_date, e && e.measure_date_tbd, e && e.install_date_tbd);
               // 2026-08-29(선혜님 지적 - "확정견적서를 눌러도 왜 계속
               // 다시 가견적서로 돌아가니", 오늘 계속 발견한 것과 정확히
               // 같은 패턴): currentTab(가견적/확정 상태 변수)에 값을
@@ -1030,7 +1051,7 @@ var currentTab = 'ga';
                 // 변경), 이미 견적서가 있는 대부분의 실사용 케이스에서
                 // 정작 동기화가 전혀 적용 안 되고 있었음. 공용함수로
                 // "이 견적서 자체값이 있으면 우선, 없으면 고객값" 반영.
-                applyScheduleAndDepositToForm(cRow, e.date, e.install_date);
+                applyScheduleAndDepositToForm(cRow, e.date, e.install_date, e.measure_date_tbd, e.install_date_tbd);
               } catch(eAddr) {}
             };
             axhr.send();

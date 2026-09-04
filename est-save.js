@@ -399,6 +399,11 @@ function _saveEstimateInner(_onDone) {
       // 자체가 없었음 - 그래서 적어도 저장할 곳이 없어 사라진 것처럼
       // 보였음. install_date 컬럼을 새로 추가하고 여기서 함께 저장.
       install_date: document.getElementById('c-install')?.value || '',
+      // 2026-09-04(선혜님 요청 - "실측일 시공일은 <날짜미정>도 체크될 수
+      // 있게 해줘"): "날짜미정" 체크박스 상태도 저장 - 저장/복원 시
+      // 이 값을 기준으로 체크박스와 날짜입력 비활성화 상태를 되살림.
+      measure_date_tbd: document.getElementById('c-measure-tbd')?.checked || false,
+      install_date_tbd: document.getElementById('c-install-tbd')?.checked || false,
       memo: custMemo,
       confirmed_at: window._estimateConfirmedAt || null,
       branch: '반포점',
@@ -757,6 +762,21 @@ function _saveEstimateInner(_onDone) {
 // 재시도까지 막아버리는 회귀를 자체 테스트로 발견해 제거함 - idempotency
 // key 재사용만으로 이미 충분한 방어였음.)
 function saveEstimate() {
+  // 2026-09-04(선혜님 요청 - "우리가 채워야 하는 부분... 안채워지면
+  // 견적서 저장할때 따로 알림이 뜨게 해줘"): 저장 직전에 주소/실측일/
+  // 시공일이 비어있는지 확인 - "날짜미정" 체크박스가 되어있으면 그
+  // 항목은 빠뜨림 취급 안 함(진짜로 아직 못 정한 거니까). 강제로 막지는
+  // 않고(급하게 먼저 저장해야 할 상황도 있으니) 확인창으로 한 번 더
+  // 물어봐서, 실수로 빠뜨린 걸 이 시점에 알아차릴 수 있게 함.
+  var missing = [];
+  if (!(document.getElementById('c-addr')?.value || '').trim()) missing.push('주소');
+  if (!document.getElementById('c-measure-tbd')?.checked && !(document.getElementById('c-measure')?.value || '')) missing.push('실측 예정일');
+  if (!document.getElementById('c-install-tbd')?.checked && !(document.getElementById('c-install')?.value || '')) missing.push('시공 예정일');
+  if (missing.length > 0) {
+    var okToProceed = window.confirm('다음 항목이 비어있어요: ' + missing.join(', ') + '\n\n그래도 저장하시겠어요?');
+    if (!okToProceed) return;
+  }
+
   var btn = document.getElementById('btn-save-estimate');
   if (btn) {
     if (btn.disabled) return; // 이미 저장 진행 중이면 이번 클릭은 무시

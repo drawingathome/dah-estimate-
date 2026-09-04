@@ -115,6 +115,18 @@ function toggleInternal(btn) {
 var _spaceTarget = null;
 var SPACES = ['거실','안방','자녀방','서재','주방','욕실','기타'];
 
+function toggleDateTbd(dateFieldId) {
+  var dateInp = document.getElementById(dateFieldId);
+  var tbdCb = document.getElementById(dateFieldId + '-tbd');
+  if (!dateInp || !tbdCb) return;
+  if (tbdCb.checked) {
+    dateInp.value = '';
+    dateInp.disabled = true;
+  } else {
+    dateInp.disabled = false;
+  }
+}
+
 function openSpacePicker(inp) {
   _spaceTarget = inp;
   var rect = inp.getBoundingClientRect();
