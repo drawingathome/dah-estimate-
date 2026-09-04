@@ -297,6 +297,66 @@ function vendorCategory(vendor) {
   return VENDOR_CATEGORY_MAP[vendor] || '기타';
 }
 
+// 2026-09-04(선혜님 지시 - "1번(발주서→발주현황판 자동연결) 먼저 하자"):
+// 지금까지 견적서 앱에서 "발주서(거래처별)" 문서를 만드는 것과, 대시보드의
+// "발주 현황판"(품목 카테고리별로 완료/거래처/날짜를 기록하는 곳)이 완전히
+// 분리되어 있었음 - 발주서를 만들어 실제로 거래처에 보내도, 대시보드에 가서
+// 똑같은 내용을 수동으로 또 체크해야 하는 이중 작업이었음(선혜님께 "전문업체라면
+// 만족스러울까"라는 질문에 정직하게 확인해서 발견한 gap). 발주서 생성이 성공하면
+// 그 안의 각 항목(orderCategory: fabric/material/blind/production)과 거래처명을
+// 모아서, customers.order_status(jsonb)를 자동으로 갱신함 - 기존 다른 카테고리
+// (예: install)를 실수로 지우지 않도록 먼저 현재 값을 읽어와 병합한 뒤 저장.
+function updateOrderStatusFromVendorGroups(groups) {
+  if (!window._estSaveCustomerId || typeof SUPABASE_URL === 'undefined') return;
+  var todayISO = new Date().toISOString().slice(0, 10);
+  var updates = {};
+  Object.keys(groups).forEach(function(vendor){
+    if (vendor === '미지정') return;
+    (groups[vendor] || []).forEach(function(item){
+      var cat = item.orderCategory;
+      if (!cat) return;
+      updates[cat] = { done: true, vendor: vendor, orderDate: todayISO };
+    });
+  });
+  if (Object.keys(updates).length === 0) return;
+
+  try {
+    var xhrGet = new XMLHttpRequest();
+    xhrGet.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estSaveCustomerId) + '&select=order_status', true);
+    xhrGet.setRequestHeader('apikey', SUPABASE_KEY);
+    xhrGet.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+    xhrGet.onload = function() {
+      var current = {};
+      try {
+        var rows = JSON.parse(xhrGet.responseText);
+        if (rows[0] && rows[0].order_status) current = rows[0].order_status;
+      } catch (e) {}
+      // 같은 카테고리에 이미 dueDate 등 기존 값이 있었으면 그것도 함께 보존
+      Object.keys(updates).forEach(function(cat){
+        if (current[cat] && typeof current[cat] === 'object' && current[cat].dueDate) {
+          updates[cat].dueDate = current[cat].dueDate;
+        }
+      });
+      var merged = Object.assign({}, current, updates);
+      try {
+        var xhrPatch = new XMLHttpRequest();
+        xhrPatch.open('PATCH', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estSaveCustomerId), true);
+        xhrPatch.setRequestHeader('apikey', SUPABASE_KEY);
+        xhrPatch.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+        xhrPatch.setRequestHeader('Content-Type', 'application/json');
+        xhrPatch.onload = function() {
+          if (xhrPatch.status < 300 && typeof showToast === 'function') {
+            showToast('📋 발주 현황판에도 자동으로 기록됐어요');
+          }
+        };
+        xhrPatch.send(JSON.stringify({ order_status: merged }));
+      } catch (e) { console.warn('발주현황 자동갱신 실패:', e); }
+    };
+    xhrGet.onerror = function() { console.warn('발주현황 자동갱신 실패(조회 실패)'); };
+    xhrGet.send();
+  } catch (e) { console.warn('발주현황 자동갱신 실패:', e); }
+}
+
 // 구글드라이브에 문서 저장 (실패해도 조용히 무시 — 화면 흐름을 절대 막지 않음)
 function saveDocumentToDrive(category, customerName, vendor, htmlContent, staffName) {
   if (!DRIVE_WEBHOOK_URL) return;

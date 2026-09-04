@@ -615,7 +615,8 @@ function collectVendorGroups() {
         fabSize: (isWorkshop && mw && fh!==null) ? (mw+'×'+fh.toFixed(1).replace(/\.0$/,'')) : null,
         content:[pleat, open].filter(Boolean).join(' ')||'—',
         qty: pnum?(pnum+'폭'):'—',
-        vendor: vendor
+        vendor: vendor,
+        orderCategory: isWorkshop ? 'production' : 'fabric'
       });
     }
     // 2026-08-10: 레일(전동 등) 거래처가 매번 다를 수 있어 견적서마다 입력
@@ -625,7 +626,8 @@ function collectVendorGroups() {
       items.push({
         space: space||'—', product: '레일' + (heightAdjust <= -5 ? '(전동)' : ''), color: '—',
         size: mw ? (mw+'cm') : '—', fabSize: null,
-        content: '—', qty: '1개', vendor: railVendor
+        content: '—', qty: '1개', vendor: railVendor,
+        orderCategory: 'material'
       });
     }
   });
@@ -646,7 +648,8 @@ function collectVendorGroups() {
       size:(bmw&&bmh)?(bmw+'×'+bmh):'—',
       content: [handle ? (handle==='기타'?'기타':handle+'잡이') : '', opt].filter(Boolean).join(' / ')||'—',
       qty: '1개',
-      vendor: vendor
+      vendor: vendor,
+      orderCategory: 'blind'
     });
   });
 
@@ -704,6 +707,7 @@ function printForVendor(skipPrompts) {
       var oneDoc = buildVendorDocForOne(vendor, collected.groups[vendor], collected.cName, collected.cStaff, extraNote, todayStr);
       saveDocumentToDrive(vendorCategory(vendor), collected.cName || '미지정고객', vendor, oneDoc, collected.cStaff);
     });
+    updateOrderStatusFromVendorGroups(collected.groups);
   }
 
   var existing = document.getElementById('pv-overlay');
