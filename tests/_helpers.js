@@ -135,8 +135,18 @@ async function blockRealNetwork(page) {
         return;
       }
       req.abort();
-    } else {
+    } else if (url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) {
       req.continue();
+    } else {
+      // 2026-09-04(선혜님 질문 - "위와 같은 상황이 또 안일어나는거 맞니??"로
+      // 강화): supabase.co/script.google.com만 걸러내고 나머지는 전부 통과
+      // 시키던 블랙리스트 구조 자체가, 앞으로 새 외부 서비스가 코드에
+      // 추가되면 테스트가 또 놓칠 수 있는 근본적인 취약점이었음(실제로
+      // script.google.com을 놓쳐서 실제 구글드라이브/시트가 여러 달
+      // 테스트 잔재로 오염됐던 걸 발견함). 로컬호스트(테스트 서버 자기
+      // 자신)만 허용하고 그 외 모든 외부 요청은 자동 차단하는 화이트리스트
+      // 방식으로 전환 - "깜빡하고 안 막는" 실수 자체가 구조적으로 불가능해짐.
+      req.abort();
     }
   });
 }
