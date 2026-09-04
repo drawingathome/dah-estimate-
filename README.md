@@ -29,14 +29,16 @@
 
 | 앱 | 배포 URL | HTML | CSS | JS 분리 파일 |
 |---|---|---|---|---|
-| 대시보드 | `/dashboard` | `dah-dashboard.html` | `dash-styles.css` | `dash-utils.js`, `dash-api.js`, `dash-ui-helpers.js`, `dash-memo.js`, `dash-chart.js`, `dash-calendar.js`, `dash-kanban.js`, `dash-customer-detail.js`, `dash-auth.js`, `dash-settings.js`, `dash-export.js`, `dash-search.js`, `dash-core.js`, `dash-render.js` (14개) |
-| 견적서 | `/estimate` | `dah-estimate.html` | `est-styles.css` | `est-utils.js`, `est-form-controls.js`, `est-product-calc.js`, `est-survey.js`, `est-save.js`, `est-documents.js`, `est-customer-load.js`, `est-misc.js` (8개) |
+| 대시보드 | `/dashboard` | `dah-dashboard.html` | `dash-styles.css` | `dash-utils.js`, `dash-api.js`, `dash-ui-helpers.js`, `dash-memo.js`, `dash-chart.js`, `dash-calendar.js`, `dash-kanban.js`, `dash-customer-detail.js`, `dash-customer-add.js`, `dash-customer-alim.js`, `dash-customer-order.js`, `dash-customer-pay.js`, `dash-auth.js`, `dash-supabase-auth.js`, `dash-settings.js`, `dash-export.js`, `dash-search.js`, `dash-render.js`, `dash-render-est.js`, `dash-render-search.js`, `dash-realtime.js`, `dash-sync-queue.js`, `dash-core.js` (23개) |
+| 견적서 | `/estimate` | `dah-estimate.html` | `est-styles.css` | `est-utils.js`, `est-form-controls.js`, `est-product-calc.js`, `est-survey.js`, `est-save.js`, `est-sync-queue.js`, `est-documents.js`, `est-customer-load.js`, `est-misc.js` (9개) |
 | 설문지 | `/survey` | `survey.html` | (인라인) | `survey-app.js` (React, CDN 로드) |
 
 역할:
 - **`dah-dashboard.html`**: 고객 목록(칸반/검색), 매출 대시보드, 설정(직원관리·백업), 마스터/스태프 권한 구분
 - **`dah-estimate.html`**: 커튼·블라인드 견적서 작성, 발주서/실측·시공 의뢰서 자동생성
 - **`survey.html`**: 고객용 사전 설문지 (구글시트+Supabase 이중저장)
+
+**"다시보기" 흐름(2026-09-01 근본 재설계)**: 대시보드에서 발주서/실측·시공 의뢰서를 "다시보기"할 때, 대시보드가 문서를 직접 재구성하지 않습니다(과거엔 `buildRequestFromLineItems` 등으로 두 앱에 같은 로직이 중복 구현되어 있었음 — "쌍둥이 함수" 버그의 근원). 대신 `dah-estimate.html?loadEstDbId=X&mode=view&autoDoc=install|measure|vendor`처럼 새 창을 열어 **견적서 앱 자신이 실제 최신 데이터로 문서를 만들게** 합니다. 문서 생성 로직은 `est-documents.js` 한 곳에만 존재하므로, 시공요청서 등을 고치면 대시보드도 자동으로 최신 상태가 됩니다.
 
 루트(`/`)는 `dah-dashboard`로 리다이렉트됩니다 (`vercel.json`).
 
@@ -54,8 +56,8 @@
 
 | 테이블 | 주요 컬럼 | 비고 |
 |---|---|---|
-| `customers` | `client_name, phone, addr, stage, staff_name, price, is_archived, ...` | 고객 정보 |
-| `estimates` | `customer_name, price, performance_revenue, status, data(jsonb), ...` | 견적 기록 |
+| `customers` | `client_name, phone, addr, stage, staff_name, price, is_archived, order_status(jsonb), ...` | 고객 정보. `order_status`는 카테고리별(`fabric`/`production`/`blind`/`material`/`install`) 발주 완료여부·거래처·날짜를 기록하는 발주현황판 데이터 — 견적서 앱의 "발주서" 생성시 자동 갱신됨(9번 섹션 참고) |
+| `estimates` | `customer_name, price, performance_revenue, status, data(jsonb), install_date, measure_date_tbd, install_date_tbd, ...` | 견적 기록. `measure_date_tbd`/`install_date_tbd`는 "날짜미정" 체크박스 상태(boolean) — 실측·시공일이 비어있어도 저장시 경고에 안 걸리게 함 |
 | `surveys` | `client_name, phone, addr, space, answers(jsonb), staff_name, status` | 설문 응답 (레거시 스키마, 단수형 컬럼명 주의). `status`는 제출 시 `'신규'`로 저장되고, `apps-script-survey-to-customer.js`가 처리 후 `'등록완료'`로 변경 |
 | `as_records` | (마이그레이션만 존재, 앱에서 미사용) | AS 접수 — 기능 미구현 |
 
@@ -112,11 +114,15 @@ node tests/run-all.js dah-estimate.html
 - **`!important` CSS 선언** — 대시보드/견적서 양쪽에 다수 존재. 대규모 정리를 진행했지만 완전히 0개로 만드는 것 자체가 목표는 아니며, "충돌 없이 정리된 상태"를 기준으로 판단 중. 대규모 일괄 정리는 반드시 실사용자가 화면을 직접 보며 검증할 수 있는 세션에서 진행할 것(무인 자동정리 금지 — 미묘한 시각적 회귀를 놓칠 수 있음).
 - **AS(수리) 접수 기능** — `as_records` 테이블만 존재, 실제 UI 미구현. 구축 여부 결정 대기 중.
 - **프랜차이즈 지점 분리 구조** — 현재 단일 사업자 기준 설계, 다중 지점 지원 안 됨.
-- **원단 단가 자동계산 미구현** — 아래 9번 참고.
+- **원단 단가·필요량(야드) 자동계산 미구현** — 9번 참고. "원단량" 표시 자리는 있으나 계산 로직 없음(공식 확정 대기 중).
 - **아이패드/아이폰(Safari, WebKit) 실기기 검증의 한계** — 개발 환경(Puppeteer/Chromium)은 크롬 엔진만 구동되어, 인쇄/PDF저장처럼 iOS 사파리에서만 재현되는 문제는 실기기 확인이 반드시 필요합니다.
 
-## 9. 원단·거래처 정보 (하드코딩)
+## 9. 원단·거래처 정보 (하드코딩) / 발주 흐름
 
 `dah-estimate.html`에 원단명(`fabric-list`)과 거래처명(`vendor-list`) datalist가 내장되어 있습니다. 새 거래처/원단 추가 시 해당 datalist에 직접 추가해야 합니다.
 
-원단 단가 자동계산 기능은 아직 미구현 (단가표 정리되는 대로 추가 예정).
+**⚠️ 원단명/원단거래처/컬러/레일거래처 입력창은 기본적으로 숨겨져 있습니다** (`.inner-fields{display:none!important}`, CSS 정책). 각 커튼/블라인드 행의 오른쪽 액션버튼(드래그/복사/삭제 옆) 🏢 아이콘을 눌러야 펼쳐집니다(`toggleInnerFields()`). **2026-06~2026-09 사이 이 토글 UI 자체가 존재하지 않아 몇 달간 아무도 이 값을 입력할 방법이 없었던 사고가 있었습니다** (실제 DB 확인 결과 해당 기간 견적서의 vendor/railVendor가 전부 빈 문자열). 화면에서 `display:none`으로 숨긴 입력 필드는 반드시 여는 방법(버튼/토글)이 함께 있는지 배포 전 확인할 것.
+
+**발주서 → 발주현황판 자동연결** (2026-09-04): 견적서 앱에서 "발주서(거래처별)"를 생성하면(`printForVendor()`), 각 품목의 출처(커튼원단→`fabric`, 가공소 체크시→`production`, 레일→`material`, 블라인드→`blind`)를 자동 판별해서 `customers.order_status`를 갱신합니다(`updateOrderStatusFromVendorGroups()`, est-utils.js). 대시보드에서 별도로 체크할 필요가 없습니다.
+
+원단 단가·필요량(야드/미터) 자동계산 기능은 아직 미구현 (화면에 "원단량: —" 자리만 있음, 계산 공식 확정되는 대로 추가 예정 — 8번 섹션 참고).
