@@ -48,6 +48,35 @@ function doPost(e) {
   }
 }
 
+// 2026-09-04(선혜님 지시 - "니가 할 수 있는 방법을 찾아야지"): 아래에 있는
+// cleanupJunkCustomerRows/cleanupJunkDriveDocuments(8/27에 만들어짐)는
+// 지금까지 Apps Script 편집기를 열어서 함수를 골라 "실행" 버튼을 눌러야만
+// 돌아갔음 - 그 사이 시트가 다시 심하게 오염되는 걸 실제로 확인함(3244줄
+// 중 3200줄/98.6%가 테스트 잔재였음). 브라우저에서 아래 링크 하나만 열면
+// 편집기 접근 없이 바로 실행되도록 doGet을 신설함. 이 함수 자체가 정해진
+// 이름 목록(JUNK_NAMES)과 정확히 일치하는 행/폴더만 지우는 안전한 작업이라
+// (실제 고객 데이터는 이름이 달라 절대 안 지워짐) 가벼운 키 하나로만 보호.
+//
+// 실행 방법: 아래 URL의 [배포후_실제_웹앱URL] 부분을 실제 배포 URL로
+// 바꾼 다음, 그 주소를 브라우저 주소창에 붙여넣고 엔터만 치면 끝남.
+//   [배포후_실제_웹앱URL]?action=cleanup&key=dah-cleanup-2026
+function doGet(e) {
+  var KEY = 'dah-cleanup-2026';
+  if (!e || !e.parameter || e.parameter.key !== KEY) {
+    return ContentService.createTextOutput('❌ 인증 실패 — key 파라미터가 올바르지 않습니다').setMimeType(ContentService.MimeType.TEXT);
+  }
+  if (e.parameter.action !== 'cleanup') {
+    return ContentService.createTextOutput('❌ 알 수 없는 action — 사용가능: cleanup').setMimeType(ContentService.MimeType.TEXT);
+  }
+  try {
+    cleanupJunkCustomerRows();
+    cleanupJunkDriveDocuments();
+    return ContentService.createTextOutput('✅ 정리 완료 — 자세한 내역은 Apps Script 편집기의 "실행 기록"에서 확인할 수 있어요').setMimeType(ContentService.MimeType.TEXT);
+  } catch (err) {
+    return ContentService.createTextOutput('❌ 실행 중 오류: ' + err.message).setMimeType(ContentService.MimeType.TEXT);
+  }
+}
+
 /* ══════════════ 1) 문서 자동저장 ══════════════ */
 
 function saveDocumentFile(data) {
