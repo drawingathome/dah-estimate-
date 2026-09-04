@@ -270,3 +270,92 @@ function renderCalList(customers, selectedDate) {
     listEl.appendChild(row);
   });
 }
+
+// 2026-09-04(선혜님 지시 - "달력 부분 만들어줘"): 네이티브 <input type="date">는
+// 브라우저(특히 iOS 사파리)가 직접 그리는 시스템 UI라, 날짜 셀을 탭하는
+// 순간 곧바로 확정되고 창이 닫혀버리는 걸 JS로 막을 방법이 없었음(관련
+// 문제는 confirmRow 확인/취소 버튼으로 우회했지만, "달력 자체가 계속
+// 열려있는 채로 여러 날짜를 훑어보고 싶다"는 진짜 요청은 해결 못 함).
+// 앱이 완전히 직접 그리는 작은 캘린더 팝업 - 날짜를 눌러도 선택 표시만
+// 바뀔 뿐 팝업이 안 닫히고, "확인"을 눌러야 최종 반영됨.
+function openCustomDatePicker(anchorEl, initialValue, onConfirm) {
+  var existing = document.getElementById('custom-date-picker-popup');
+  if (existing) existing.remove();
+
+  var today = new Date();
+  var initDate = initialValue ? new Date(initialValue + 'T00:00:00') : today;
+  var viewYear = initDate.getFullYear();
+  var viewMonth = initDate.getMonth(); // 0-11
+  var selected = initialValue || null; // 'YYYY-MM-DD' 아직 확정 안 된 임시 선택값
+
+  var popup = div('position:fixed;z-index:100000;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:12px;width:260px', []);
+  popup.id = 'custom-date-picker-popup';
+
+  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  function toDateStr(y, m, d) { return y + '-' + pad2(m + 1) + '-' + pad2(d); }
+
+  function render() {
+    popup.innerHTML = '';
+    var header = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:8px', []);
+    var prevBtn = el('button', {type:'button', text:'‹', style:'width:28px;height:28px;border:none;background:var(--ivory1);border-radius:6px;font-size:15px;cursor:pointer;color:var(--dark)'});
+    var label = el('div', {style:'font-size:13px;font-weight:700;color:var(--dark)', text: viewYear + '년 ' + (viewMonth + 1) + '월'});
+    var nextBtn = el('button', {type:'button', text:'›', style:'width:28px;height:28px;border:none;background:var(--ivory1);border-radius:6px;font-size:15px;cursor:pointer;color:var(--dark)'});
+    prevBtn.addEventListener('click', function(){ viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } render(); });
+    nextBtn.addEventListener('click', function(){ viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } render(); });
+    header.appendChild(prevBtn); header.appendChild(label); header.appendChild(nextBtn);
+    popup.appendChild(header);
+
+    var weekRow = div('display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px', []);
+    ['일','월','화','수','목','금','토'].forEach(function(w, i){
+      weekRow.appendChild(el('div', {style:'text-align:center;font-size:10px;color:'+(i===0?'#C0392B':i===6?'#2F6690':'var(--sub)'), text:w}));
+    });
+    popup.appendChild(weekRow);
+
+    var grid = div('display:grid;grid-template-columns:repeat(7,1fr);gap:2px', []);
+    var firstDay = new Date(viewYear, viewMonth, 1).getDay();
+    var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+    var todayStr2 = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
+    for (var i = 0; i < firstDay; i++) grid.appendChild(div('', []));
+    for (var d = 1; d <= daysInMonth; d++) {
+      var dStr = toDateStr(viewYear, viewMonth, d);
+      var isSelected = dStr === selected;
+      var isToday = dStr === todayStr2;
+      var dayOfWeek = new Date(viewYear, viewMonth, d).getDay();
+      var color = isSelected ? '#fff' : (dayOfWeek === 0 ? '#C0392B' : dayOfWeek === 6 ? '#2F6690' : 'var(--dark)');
+      var btn = el('button', {type:'button', text:String(d), style:'height:30px;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;color:'+color+';background:'+(isSelected?'var(--dark)':isToday?'var(--ivory1)':'transparent')+(isToday&&!isSelected?';border:1px solid var(--sub)':'')});
+      (function(dStrClosure){
+        btn.addEventListener('click', function(){ selected = dStrClosure; render(); });
+      })(dStr);
+      grid.appendChild(btn);
+    }
+    popup.appendChild(grid);
+
+    var actions = div('display:flex;gap:6px;margin-top:10px', []);
+    var clearBtn = el('button', {type:'button', text:'날짜 지우기', style:'flex:1;padding:8px;font-size:11px;color:var(--sub);background:var(--ivory1);border:none;border-radius:6px;cursor:pointer;font-family:inherit'});
+    var confirmBtn = el('button', {type:'button', text:'확인', style:'flex:1;padding:8px;font-size:12px;font-weight:700;color:#fff;background:var(--dark);border:none;border-radius:6px;cursor:pointer;font-family:inherit'});
+    clearBtn.addEventListener('click', function(){ selected = null; render(); });
+    confirmBtn.addEventListener('click', function(){ popup.remove(); document.removeEventListener('mousedown', outsideHandler); onConfirm(selected); });
+    actions.appendChild(clearBtn); actions.appendChild(confirmBtn);
+    popup.appendChild(actions);
+  }
+  render();
+
+  document.body.appendChild(popup);
+  var rect = anchorEl.getBoundingClientRect();
+  var top = rect.bottom + 6;
+  var left = rect.left;
+  var popupWidth = 260;
+  if (left + popupWidth > window.innerWidth - 8) left = window.innerWidth - popupWidth - 8;
+  if (left < 8) left = 8;
+  if (top + 320 > window.innerHeight) top = Math.max(8, rect.top - 320 - 6);
+  popup.style.top = top + 'px';
+  popup.style.left = left + 'px';
+
+  function outsideHandler(e) {
+    if (!popup.contains(e.target) && e.target !== anchorEl) {
+      popup.remove();
+      document.removeEventListener('mousedown', outsideHandler);
+    }
+  }
+  setTimeout(function(){ document.addEventListener('mousedown', outsideHandler); }, 0);
+}

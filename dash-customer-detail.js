@@ -793,36 +793,12 @@ function renderDetailInfoSection(c, body) {
     ]);
     if (item.key) {
       box.addEventListener('click', function(){
-        if (box.querySelector('input')) return; // 이미 편집중이면 무시
-        var valueDiv = box.children[1];
-        var originalText = valueDiv.textContent;
-        valueDiv.textContent = '';
-        var dateInp = el('input', {type:'date', style:'width:100%;border:none;background:transparent;font-size:12px;font-weight:700;color:var(--dark);text-align:center;font-family:inherit;outline:none'});
-        if (c[item.key]) dateInp.value = c[item.key];
-        valueDiv.appendChild(dateInp);
-        dateInp.focus();
-        try { dateInp.showPicker(); } catch(e) {}
-        // 2026-09-04(선혜님 지적 — "핸드폰으로 날짜가 그냥 잡히고 수정이
-        // 안돼 달력이 바로 닫혀버려"로 발견, 실제 재현 성공): iOS 사파리는
-        // 날짜 피커에서 날짜 셀을 탭하는 것 자체가 곧바로 change 이벤트를
-        // 발동시킴(별도 "확인" 버튼을 누르기 전에도) - 이 change에 저장을
-        // 바로 연결해뒀더니, 사용자가 훑어보며 고를 새도 없이 첫 번째로
-        // 탭한 날짜가 즉시 확정저장되고 입력창이 사라져(원래 텍스트로
-        // 복귀) "바로 닫혀버린다"고 느껴지고 있었음. change에서 곧바로
-        // 저장하는 대신, 작은 확인/취소 버튼을 보여줘서 사용자가 최종
-        // 확인을 누를 때까지 다시 고를 기회를 줌.
-        var confirmRow = el('div', {style:'display:flex;gap:4px;justify-content:center;margin-top:4px'});
-        var confirmBtn = el('button', {type:'button', text:'확인', style:'padding:2px 10px;font-size:10px;font-weight:700;color:#fff;background:var(--dark);border:none;border-radius:4px;cursor:pointer;font-family:inherit'});
-        var cancelBtn = el('button', {type:'button', text:'취소', style:'padding:2px 10px;font-size:10px;color:var(--sub);background:#fff;border:1px solid var(--border);border-radius:4px;cursor:pointer;font-family:inherit'});
-        confirmRow.appendChild(confirmBtn); confirmRow.appendChild(cancelBtn);
-        confirmRow.style.display = 'none';
-        box.appendChild(confirmRow);
-        function commit(){
-          var newVal = dateInp.value;
+        openCustomDatePicker(box, c[item.key] || null, function(newVal){
+          var valueDiv = box.children[1];
           var arr = loadCustomers();
           var target = findCurrentDetailCustomer(arr);
           if (target) {
-            target[item.key] = newVal;
+            target[item.key] = newVal || '';
             saveCustomers(arr);
             saveCustomerToDb(target, function(err){
               showToast(err ? '⚠️ ' + item.label + ': 로컬엔 저장됨(서버 재시도 대기)' : item.label + '이 저장됐습니다');
@@ -832,23 +808,6 @@ function renderDetailInfoSection(c, body) {
           }
           valueDiv.textContent = newVal || '—';
           valueDiv.style.color = newVal ? 'var(--dark)' : 'var(--light)';
-          confirmRow.remove();
-        }
-        function cancel(){
-          valueDiv.textContent = originalText;
-          valueDiv.style.color = originalText === '—' ? 'var(--light)' : 'var(--dark)';
-          confirmRow.remove();
-        }
-        dateInp.addEventListener('change', function(){ confirmRow.style.display = 'flex'; });
-        confirmBtn.addEventListener('click', function(e){ e.stopPropagation(); commit(); });
-        cancelBtn.addEventListener('click', function(e){ e.stopPropagation(); cancel(); });
-        dateInp.addEventListener('blur', function(){
-          // 확인/취소 버튼을 누르는 클릭 자체가 blur를 유발하므로, 그
-          // 버튼 클릭 처리가 끝난 뒤에도 여전히 편집 중(값 없음)이면
-          // 원래 텍스트로 되돌림 - 버튼 클릭 자체는 그대로 존중됨.
-          setTimeout(function(){
-            if (!dateInp.value && document.body.contains(dateInp)) cancel();
-          }, 150);
         });
       });
     }
