@@ -1065,6 +1065,21 @@ function printRequest(kind, skipPrompts) {
   calcTotal();
   var label = kind==='measure' ? '실측' : '시공';
 
+  // 2026-09-04(선혜님 지시 - "지역 미입력시 경고 바로 하자"): "지역을
+  // 선택해야만 레일 길이가 자동으로 계산된다"는 규칙이 화면 어디에도
+  // 안 써있어서, 문서를 다 만들고 나서야 "왜 레일 길이가 없지?" 하고
+  // 뒤늦게 알게 되는 문제가 있었음(오늘 발견한 gap). 문서 생성 직전에
+  // 지역이 비어있으면 미리 확인창을 띄움 - 다시보기(autoDoc, skipPrompts
+  // =true)일 땐 이미 저장된 값 그대로 자동으로 보여주는 흐름이라 경고를
+  // 건너뜀(경고가 뜨면 자동화 자체가 멈춰버림).
+  if (!skipPrompts) {
+    var regionVal = document.getElementById('c-region')?.value || '';
+    if (!regionVal) {
+      var proceedNoRegion = window.confirm('지역이 선택되지 않았어요.\n지역을 선택하지 않으면 레일 길이 등 일부 정보가 자동으로 채워지지 않을 수 있어요.\n\n그래도 계속하시겠어요?');
+      if (!proceedNoRegion) return;
+    }
+  }
+
   // 설치기사 정보는 견적서 화면에는 노출하지 않고, 의뢰서 생성 시점에만 물어봄
   var installerNameEl = document.getElementById('c-installer-name');
   var installerPhoneEl = document.getElementById('c-installer-phone');
