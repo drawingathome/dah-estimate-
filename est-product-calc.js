@@ -12,11 +12,19 @@ function addCurtainRow() {
   tr.innerHTML =
     '<td data-label="공간"><input type="text" class="space-inp" placeholder="공간" style="'+INP+';cursor:pointer;caret-color:transparent" readonly onclick="openSpacePicker(this)"></td>'+
     '<td data-label="제품명" style="padding:6px 8px">'+
-      '<input type="text" placeholder="제품명 (고객용)" class="c-display-name" style="'+INP+'">'+
+      '<div style="display:flex;align-items:center;gap:4px">'+
+        '<input type="text" placeholder="제품명 (고객용)" class="c-display-name" style="'+INP+'">'+
+        // 2026-09-04(선혜님 지시 - "필요할때만 펼치는 버튼 추가"로 해결):
+        // 원단명/거래처/컬러/레일거래처 칸(.inner-fields)이 6월부터 화면에서
+        // 완전히 숨겨진 채(display:none!important) 열 방법이 없었음(실제
+        // DB의 최근 견적 15건 전부 이 값이 비어있는 것으로 확인) - 이 문제로
+        // 발주서 기능이 몇 달째 사실상 무용지물이었음. 토글 버튼 신설.
+        '<button type="button" class="inner-toggle-btn print-hide" onclick="toggleInnerFields(this)" title="원단명·거래처·컬러 입력" style="flex-shrink:0;min-height:32px;padding:8px 8px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;font-size:11px;color:var(--sub)">거래처 ▾</button>'+
+      '</div>'+
       '<div class="inner-fields print-hide">'+
         '<div class="inner-row">'+
           '<input type="text" list="fabric-list" placeholder="원단명" class="c-fabric inner-inp">'+
-          '<input type="text" list="vendor-list" placeholder="거래처" class="c-vendor inner-inp" style="width:72px">'+
+          '<input type="text" list="vendor-list" placeholder="원단 거래처" class="c-vendor inner-inp" style="width:72px">'+
           '<label style="display:flex;align-items:center;gap:2px;font-size:11px;color:var(--sub);white-space:nowrap;cursor:pointer" title="체크하면 이 거래처 발주서에 보정된 제작사이즈(실측±보정값)가 함께 표시됩니다">'+
             '<input type="checkbox" class="vendor-is-workshop" style="margin:0;width:12px;height:12px">가공소'+
           '</label>'+
@@ -24,7 +32,7 @@ function addCurtainRow() {
           '<span class="c-yardage">원단량: —</span>'+
         '</div>'+
         '<div class="inner-row" style="margin-top:2px">'+
-          '<input type="text" list="vendor-list" placeholder="레일 거래처 (전동 등)" class="c-rail-vendor inner-inp" style="width:140px">'+
+          '<input type="text" list="vendor-list" placeholder="레일/부자재 거래처 (예: 목성)" class="c-rail-vendor inner-inp" style="width:140px">'+
         '</div>'+
       '</div>'+
     '</td>'+
@@ -245,11 +253,14 @@ function addBlindRow() {
   tr.innerHTML =
     '<td data-label="공간"><input type="text" class="space-inp" placeholder="공간" style="'+INP+';cursor:pointer;caret-color:transparent" readonly onclick="openSpacePicker(this)"></td>'+
     '<td data-label="제품명" style="padding:6px 8px">'+
-      '<input type="text" placeholder="제품명 (고객용)" class="b-display-name" style="'+INP+'">'+
+      '<div style="display:flex;align-items:center;gap:4px">'+
+        '<input type="text" placeholder="제품명 (고객용)" class="b-display-name" style="'+INP+'">'+
+        '<button type="button" class="inner-toggle-btn print-hide" onclick="toggleInnerFields(this)" title="원단명·거래처·컬러 입력" style="flex-shrink:0;min-height:32px;padding:8px 8px;border:1px solid var(--border);border-radius:4px;background:#fff;cursor:pointer;font-size:11px;color:var(--sub)">거래처 ▾</button>'+
+      '</div>'+
       '<div class="inner-fields print-hide">'+
         '<div class="inner-row">'+
           '<input type="text" list="blind-list" placeholder="원단명" class="inner-inp">'+
-          '<input type="text" list="vendor-list" placeholder="거래처" class="inner-inp" style="width:72px">'+
+          '<input type="text" list="vendor-list" placeholder="블라인드 거래처" class="inner-inp" style="width:72px">'+
           '<input type="text" placeholder="컬러" class="inner-inp" style="width:60px">'+
         '</div>'+
       '</div>'+
@@ -955,4 +966,18 @@ function _getDragAfterRow(tbody, y) {
     if (offset < 0 && offset > closest.offset) closest = { offset: offset, element: row };
   });
   return closest.element;
+}
+
+// 2026-09-04(선혜님 지시 - "필요할때만 펼치는 버튼 추가"): 원단명/거래처/
+// 컬러/레일거래처 입력창(.inner-fields)이 기본으로 숨겨져 있다가, 이
+// 버튼을 누르면 그 행에서만 펼쳐지도록 함. 버튼 텍스트/화살표도 상태에
+// 맞춰 바꿔서 지금 펼쳐진 상태인지 한눈에 알 수 있게 함.
+function toggleInnerFields(btn) {
+  var td = btn.closest('td');
+  var fields = td ? td.querySelector('.inner-fields') : null;
+  if (!fields) return;
+  var isOpen = fields.classList.toggle('expanded');
+  btn.textContent = isOpen ? '거래처 ▴' : '거래처 ▾';
+  btn.style.background = isOpen ? 'var(--dark)' : '#fff';
+  btn.style.color = isOpen ? '#fff' : 'var(--sub)';
 }

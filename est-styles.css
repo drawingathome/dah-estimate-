@@ -598,6 +598,7 @@ td.amt{
 
  
 .inner-fields{display:none!important}
+.inner-fields.expanded{display:block!important}
 .inner-row{display:flex;gap:6px;margin-top:4px}
 .inner-inp{
   flex:1;min-width:0;padding:4px 6px!important;
