@@ -521,22 +521,16 @@ function _saveEstimateInner(_onDone) {
                 // 진짜 내용 충돌이면 사용자가 새로고침해서 직접 확인하고,
                 // 아니라면(예: 다른 창에서 사소한 값만 갱신됐던 경우)
                 // 재시도가 무의미하게 반복되지 않도록 함.
-                if (lockUpdatedAt && window._editingEstDbId) {
-                  try {
-                    var xhrRefresh = new XMLHttpRequest();
-                    xhrRefresh.open('GET', SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(window._editingEstDbId) + '&select=updated_at', true);
-                    xhrRefresh.setRequestHeader('apikey', SUPABASE_KEY);
-                    xhrRefresh.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
-                    xhrRefresh.onload = function() {
-                      try {
-                        var freshRows = JSON.parse(xhrRefresh.responseText);
-                        if (freshRows[0] && freshRows[0].updated_at) {
-                          window._editingEstUpdatedAt = freshRows[0].updated_at;
-                        }
-                      } catch (eRefresh) {}
-                    };
-                    xhrRefresh.send();
-                  } catch (eRefreshOuter) {}
+                // 2026-09-05(선혜님 지적 - "전문업체라면 이 경우 어떻게
+                // 처리할까"로 발견한 구조적 문제): 이 로직을 est-save.js와
+                // dash-api.js에 각각 복사해뒀던 걸 shared-optimistic-lock.js
+                // 공용 함수로 뽑아냄 - 조회 로직 자체의 버그는 이제 고칠
+                // 곳이 한 곳뿐이라, 한쪽만 고치고 깜빡하는 실수가 구조적
+                // 으로 불가능해짐.
+                if (lockUpdatedAt && window._editingEstDbId && typeof fetchLatestUpdatedAt === 'function') {
+                  fetchLatestUpdatedAt('estimates', window._editingEstDbId, function(freshUpdatedAt) {
+                    if (freshUpdatedAt) window._editingEstUpdatedAt = freshUpdatedAt;
+                  });
                 }
                 onDone();
                 return;

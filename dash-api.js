@@ -610,27 +610,20 @@ function saveCustomerToDb(customer, callback) {
         // 자동으로 다시 조회해서, 로컬스토리지의 해당 고객 레코드에 반영 -
         // 다음 저장 시도(loadCustomers()로 다시 불러온 데이터 기준)가
         // 최신 락값을 쓰게 되어 무의미한 반복 실패를 막음.
-        if (lockUpdatedAt && customer && customer.id) {
-          try {
-            var xhrRefreshCust = new XMLHttpRequest();
-            xhrRefreshCust.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(customer.id) + '&select=updated_at', true);
-            xhrRefreshCust.setRequestHeader('apikey', SUPABASE_KEY);
-            xhrRefreshCust.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
-            xhrRefreshCust.onload = function() {
-              try {
-                var freshCustRows = JSON.parse(xhrRefreshCust.responseText);
-                if (freshCustRows[0] && freshCustRows[0].updated_at && typeof loadCustomers === 'function' && typeof saveCustomers === 'function') {
-                  var arr = loadCustomers();
-                  var target = arr.find(function(c){ return c.id === customer.id; });
-                  if (target) {
-                    target.updatedAt = freshCustRows[0].updated_at;
-                    saveCustomers(arr);
-                  }
-                }
-              } catch (eRefreshCust) {}
-            };
-            xhrRefreshCust.send();
-          } catch (eRefreshCustOuter) {}
+        // 2026-09-05(선혜님 지적 - "전문업체라면 이 경우 어떻게 처리할까"):
+        // est-save.js와 이 파일에 각각 복사돼 있던 로직을
+        // shared-optimistic-lock.js 공용 함수로 뽑아냄.
+        if (lockUpdatedAt && customer && customer.id && typeof fetchLatestUpdatedAt === 'function') {
+          fetchLatestUpdatedAt('customers', customer.id, function(freshUpdatedAt) {
+            if (freshUpdatedAt && typeof loadCustomers === 'function' && typeof saveCustomers === 'function') {
+              var arr = loadCustomers();
+              var target = arr.find(function(c){ return c.id === customer.id; });
+              if (target) {
+                target.updatedAt = freshUpdatedAt;
+                saveCustomers(arr);
+              }
+            }
+          });
         }
         if (callback) callback(err, data);
         return;
