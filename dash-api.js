@@ -601,6 +601,37 @@ function saveCustomerToDb(customer, callback) {
           reportClientError('고객정보 저장 실패(권한문제 또는 동시저장충돌) - 내용 백업됨', null,
             { customerPayload: row, reason: lockUpdatedAt ? '동시저장충돌' : '권한문제' });
         }
+        // 2026-09-05(선혜님 지시 - "쌍둥이함수"로 발견, 실제 client_error_logs
+        // 데이터에서 "김 은"/"유경진" 고객정보가 짧은 간격으로 반복 저장
+        // 실패한 패턴 확인): est-save.js에 방금 고친 것과 정확히 같은
+        // 쌍둥이 버그 - 동시저장충돌 감지 후 락값(customer.updatedAt)을
+        // 갱신하는 코드가 없어서, 재시도해도 계속 예전(불일치) 락값 그대로
+        // 재시도해 매번 같은 이유로 반복 실패하고 있었음. 최신 updated_at을
+        // 자동으로 다시 조회해서, 로컬스토리지의 해당 고객 레코드에 반영 -
+        // 다음 저장 시도(loadCustomers()로 다시 불러온 데이터 기준)가
+        // 최신 락값을 쓰게 되어 무의미한 반복 실패를 막음.
+        if (lockUpdatedAt && customer && customer.id) {
+          try {
+            var xhrRefreshCust = new XMLHttpRequest();
+            xhrRefreshCust.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(customer.id) + '&select=updated_at', true);
+            xhrRefreshCust.setRequestHeader('apikey', SUPABASE_KEY);
+            xhrRefreshCust.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+            xhrRefreshCust.onload = function() {
+              try {
+                var freshCustRows = JSON.parse(xhrRefreshCust.responseText);
+                if (freshCustRows[0] && freshCustRows[0].updated_at && typeof loadCustomers === 'function' && typeof saveCustomers === 'function') {
+                  var arr = loadCustomers();
+                  var target = arr.find(function(c){ return c.id === customer.id; });
+                  if (target) {
+                    target.updatedAt = freshCustRows[0].updated_at;
+                    saveCustomers(arr);
+                  }
+                }
+              } catch (eRefreshCust) {}
+            };
+            xhrRefreshCust.send();
+          } catch (eRefreshCustOuter) {}
+        }
         if (callback) callback(err, data);
         return;
       }
