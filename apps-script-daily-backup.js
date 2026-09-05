@@ -141,6 +141,9 @@ function dahDailyBackup() {
     Logger.log('✅ 중복 의심 건 없음');
   }
 
+  // 2026-09-05: 클라이언트 에러 로그도 매일 백업할 때마다 함께 확인
+  try { dahCheckClientErrors(); } catch (e) { Logger.log('클라이언트 에러 확인 실패: ' + e.message); }
+
   // 실패한 테이블이 있으면 이메일로 알림 (선택사항 — 본인 이메일로 변경)
   if (errors.length > 0) {
     try {
@@ -290,6 +293,60 @@ function dahDuplicateScanOnly() {
       issues.join('\n\n')
     );
   } catch (e) { Logger.log('이메일 발송 실패: ' + e.message); }
+}
+
+// 2026-09-05(선혜님 지시 - "둘 다 해", 전문업체 수준 개선점으로 지적된
+// "모니터링이 사람이 우연히 물어봐야 발견되는 방식" 문제 해결): 실제로
+// client_error_logs에 반복 저장실패(동시저장충돌) 15건이 쌓여있었는데,
+// "용량 정리할 거 있냐"는 질문이 없었으면 계속 몰랐을 뻔한 사례가 있었음.
+// 이 함수는 "마지막으로 확인한 시점 이후 새로 생긴 에러"만 조회해서,
+// 있으면 이메일로 알림 - 매일 자동백업(dahDailyBackup)에 편승해서 함께
+// 실행되므로 별도 설정 없이 매일 한 번씩 자동으로 확인됨. 마지막 확인
+// 시점은 스크립트 속성에 저장해서, 같은 에러를 중복으로 알리지 않음.
+function dahCheckClientErrors() {
+  var props = PropertiesService.getScriptProperties();
+  var lastCheck = props.getProperty('LAST_ERROR_CHECK_TIME');
+  // 최초 실행이라 마지막 확인시점이 없으면, 지난 24시간만 확인(그 이전
+  // 것까지 한꺼번에 몰아서 알리면 오히려 무슨 일인지 파악하기 어려움)
+  if (!lastCheck) {
+    lastCheck = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  }
+  var nowISO = new Date().toISOString();
+  try {
+    var url = SUPABASE_URL + '/rest/v1/client_error_logs?created_at=gt.' + encodeURIComponent(lastCheck) + '&order=created_at.asc&select=created_at,message,url';
+    var res = UrlFetchApp.fetch(url, {
+      method: 'get',
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
+      muteHttpExceptions: true
+    });
+    if (res.getResponseCode() !== 200) {
+      Logger.log('client_error_logs 조회 실패: HTTP ' + res.getResponseCode());
+      return;
+    }
+    var rows = JSON.parse(res.getContentText());
+    // 마지막 확인 시점은 조회 성공 여부와 무관하게 항상 갱신 - 조회
+    // 자체가 실패해도 다음 실행에서 "실패했던 구간"이 계속 누적되어
+    // 갑자기 수백건이 한꺼번에 몰리는 걸 방지
+    props.setProperty('LAST_ERROR_CHECK_TIME', nowISO);
+    if (rows.length === 0) {
+      Logger.log('✅ 새로운 클라이언트 에러 없음');
+      return;
+    }
+    var summary = rows.map(function(r) {
+      return '[' + r.created_at + '] ' + r.message + (r.url ? ' (' + r.url + ')' : '');
+    }).join('\n');
+    MailApp.sendEmail(
+      Session.getActiveUser().getEmail(),
+      'DAH 새 오류 ' + rows.length + '건 발생',
+      '최근 확인 이후 아래와 같은 오류가 새로 기록됐습니다.\n' +
+      '(대부분은 자동으로 로컬/서버에 백업되어 데이터 유실은 없지만, 반복적으로 발생하면 실제 사용에 불편이 있을 수 있어 확인이 필요합니다)\n\n' +
+      summary +
+      '\n\n※ 이 알림은 apps-script-daily-backup.js의 dahCheckClientErrors()에서 매일 자동 발송됩니다.'
+    );
+    Logger.log('⚠️ 새 오류 ' + rows.length + '건 이메일 발송함');
+  } catch (e) {
+    Logger.log('dahCheckClientErrors 실패: ' + e.message);
+  }
 }
 
 /**
@@ -683,7 +740,8 @@ function doGet(e) {
     else if (action === 'restoreDrill') dahRestoreDrill();
     else if (action === 'peekRawName') dahPeekRawName(e.parameter.phone || '');
     else if (action === 'duplicateScan') dahDuplicateScanOnly();
-    else return ContentService.createTextOutput('❌ 알 수 없는 action: "' + action + '"\n사용가능: dailyBackup, diagnoseSchema, cleanupTestData, restoreDrill, peekRawName, duplicateScan').setMimeType(ContentService.MimeType.TEXT);
+    else if (action === 'checkErrors') dahCheckClientErrors();
+    else return ContentService.createTextOutput('❌ 알 수 없는 action: "' + action + '"\n사용가능: dailyBackup, diagnoseSchema, cleanupTestData, restoreDrill, peekRawName, duplicateScan, checkErrors').setMimeType(ContentService.MimeType.TEXT);
   } catch (err) {
     return ContentService.createTextOutput('❌ 실행 중 오류 발생: ' + err.message + '\n' + err.stack).setMimeType(ContentService.MimeType.TEXT);
   }
