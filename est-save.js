@@ -508,6 +508,36 @@ function _saveEstimateInner(_onDone) {
                     { estPayload: estPayloadForRetry, reason: lockUpdatedAt ? '동시저장충돌' : '권한문제' }
                   );
                 }
+                // 2026-09-05(선혜님 지시 - "더 파자"로 발견, 실제 DB
+                // 로그로 재현 확인): 동시저장충돌 감지 후에도 window.
+                // _editingEstUpdatedAt(락값)을 갱신하는 코드가 없어서,
+                // 사용자가 재시도해도 계속 예전(불일치) 락값 그대로
+                // 재시도하게 되어 매번 같은 이유로 또 실패하는 반복이
+                // 있었음(실제 client_error_logs에서 6분 사이 5번, 1분
+                // 사이 3번 연속 같은 견적서 저장 실패 패턴으로 확인) -
+                // 최신 updated_at을 자동으로 다시 조회해서 락값을 갱신함.
+                // 이건 "자동으로 덮어쓰기 허용"이 아니라 - 다음 저장
+                // 시도가 최소한 최신 상태 기준으로 이루어지게 해서,
+                // 진짜 내용 충돌이면 사용자가 새로고침해서 직접 확인하고,
+                // 아니라면(예: 다른 창에서 사소한 값만 갱신됐던 경우)
+                // 재시도가 무의미하게 반복되지 않도록 함.
+                if (lockUpdatedAt && window._editingEstDbId) {
+                  try {
+                    var xhrRefresh = new XMLHttpRequest();
+                    xhrRefresh.open('GET', SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(window._editingEstDbId) + '&select=updated_at', true);
+                    xhrRefresh.setRequestHeader('apikey', SUPABASE_KEY);
+                    xhrRefresh.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+                    xhrRefresh.onload = function() {
+                      try {
+                        var freshRows = JSON.parse(xhrRefresh.responseText);
+                        if (freshRows[0] && freshRows[0].updated_at) {
+                          window._editingEstUpdatedAt = freshRows[0].updated_at;
+                        }
+                      } catch (eRefresh) {}
+                    };
+                    xhrRefresh.send();
+                  } catch (eRefreshOuter) {}
+                }
                 onDone();
                 return;
               }
