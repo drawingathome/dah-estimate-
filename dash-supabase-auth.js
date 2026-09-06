@@ -68,7 +68,18 @@ function supabaseAuthLogin(email, password, callback) {
 function sendPasswordResetEmail(email, callback) {
   var xhr = new XMLHttpRequest();
   // redirect_to를 명시하지 않으면 Supabase 프로젝트의 기본 Site URL로 가버림
-  var redirectTo = window.location.origin + '/dah-dashboard';
+  // 2026-09-06(선혜님 지시 - "해결해야지", 스테이징(GitHub Pages) 환경에서
+  // 발견): window.location.origin을 그대로 쓰면, Vercel(사이트가 도메인
+  // 루트에 있음)에선 정확히 맞지만, 스테이징(사이트가 저장소명 하위경로
+  // /dah-estimate-/에 있음)에서 실행되면 '/dah-dashboard'가 저장소명
+  // 없이 붙어서 실제로 존재하지 않는 경로를 가리키게 됨 - 비밀번호
+  // 재설정은 어차피 실사용 계정 복구용 기능이라, 어느 도메인에서
+  // 버튼을 눌렀든 항상 실제 서비스 주소로 보내는 게 맞음(스테이징
+  // 환경으로 돌아가게 할 이유가 없음). vercel.app 도메인일 때만
+  // window.location.origin을 그대로 쓰고, 그 외(스테이징 등)는 실제
+  // 서비스 주소로 고정.
+  var isKnownProductionDomain = /\.vercel\.app$/.test(window.location.hostname);
+  var redirectTo = (isKnownProductionDomain ? window.location.origin : 'https://dah-dashboard.vercel.app') + '/dah-dashboard';
   xhr.open('POST', SUPABASE_URL + '/auth/v1/recover?redirect_to=' + encodeURIComponent(redirectTo), true);
   xhr.setRequestHeader('apikey', SUPABASE_KEY);
   xhr.setRequestHeader('Content-Type', 'application/json');
