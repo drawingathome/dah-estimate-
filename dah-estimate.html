@@ -183,6 +183,7 @@
       return !!(authSess && authSess.access_token);
     } catch(e) { return false; }
   }
+  window.hasValidDashboardSession = hasValidDashboardSession; // IIFE 밖(다른 script 블록)에서도 호출 가능하도록
   var _authGateEmailInput, _authGatePwInput, _authGateErrEl, _authGateAuthBtn;
   var _authGateOnSuccess = null;
   function _wireAuthGateOnce() {
@@ -234,6 +235,11 @@
           gate.style.display = 'none';
           errEl.style.display = 'none';
           if (typeof setLastLoginEmail === 'function') setLastLoginEmail(email);
+          // 2026-09-06: DOMContentLoaded 시점엔 아직 로그인 전이라 건너뛰었던
+          // 지역요금/거래처/쿠폰 조회를 로그인 성공 직후 다시 시도.
+          if (typeof fetchRegionFeesFromCloud === 'function') { fetchRegionFeesFromCloud(); }
+          if (typeof fetchVendorListFromCloud === 'function') { fetchVendorListFromCloud(); }
+          if (typeof fetchDiscountCouponsFromCloud === 'function') { fetchDiscountCouponsFromCloud(function(){ if (typeof renderCouponList === 'function') renderCouponList(); }); }
           // 2026-08-25(선혜님 확인 요청 — "직원 로그인 때도 조용히 시도되는
           // master_email 동기화, 막아야 해??"): 여기서 무조건 setMasterEmail을
           // 불렀는데, 이 시점엔 아직 마스터인지 스태프인지 모르는 상태(항상
@@ -1282,11 +1288,20 @@ window.addEventListener('online', function(){
 
 // 입력 필드에 자동저장 이벤트 연결
 document.addEventListener('DOMContentLoaded', function() {
-  // 지역별 실측비/시공비 최신값 조회 (설정탭에서 바뀌었을 수 있으므로 매번 새로 확인)
-  if (typeof fetchRegionFeesFromCloud === 'function') { fetchRegionFeesFromCloud(); }
-  if (typeof fetchVendorListFromCloud === 'function') { fetchVendorListFromCloud(); }
-  if (typeof renderCouponList === 'function') { renderCouponList(); } // 로컬캐시로 즉시 렌더링(빈 화면 방지)
-  if (typeof fetchDiscountCouponsFromCloud === 'function') { fetchDiscountCouponsFromCloud(); }
+  // 2026-09-06(선혜님 지시 - "쌍둥이함수" 확인 후 "지금 고쳐야지"): 대시보드
+  // (dash-api.js)에서 고친 것과 정확히 같은 패턴 - app_settings 테이블은
+  // 로그인된 사용자만 조회 가능(RLS: auth.uid() IS NOT NULL)한데, 아래
+  // 4개 조회가 로그인 여부와 무관하게 항상 실행되고 있었음. 대시보드와
+  // 달리 실패해도 토스트를 안 띄워서 사용자에게 보이는 부작용은 없었지만,
+  // 로그인 화면에서 매번 어차피 실패할 요청 4개가 낭비되고 있었음 -
+  // hasValidDashboardSession()으로 세션이 있을 때만 조회하도록 함.
+  if (typeof hasValidDashboardSession === 'function' && hasValidDashboardSession()) {
+    // 지역별 실측비/시공비 최신값 조회 (설정탭에서 바뀌었을 수 있으므로 매번 새로 확인)
+    if (typeof fetchRegionFeesFromCloud === 'function') { fetchRegionFeesFromCloud(); }
+    if (typeof fetchVendorListFromCloud === 'function') { fetchVendorListFromCloud(); }
+    if (typeof fetchDiscountCouponsFromCloud === 'function') { fetchDiscountCouponsFromCloud(); }
+  }
+  if (typeof renderCouponList === 'function') { renderCouponList(); } // 로컬캐시로 즉시 렌더링(빈 화면 방지) - 세션 여부와 무관하게 항상 실행
 
   // 자동저장 인디케이터 생성
   var indicator = document.createElement('div');
