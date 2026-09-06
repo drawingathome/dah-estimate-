@@ -33,6 +33,8 @@
 | 견적서 | `/estimate` | `dah-estimate.html` | `est-styles.css` | `est-utils.js`, `est-form-controls.js`, `est-product-calc.js`, `est-survey.js`, `est-save.js`, `est-sync-queue.js`, `est-documents.js`, `est-customer-load.js`, `est-misc.js` (9개) |
 | 설문지 | `/survey` | `survey.html` | (인라인) | `survey-app.js` (React, CDN 로드) |
 
+**공용 파일** (두 앱이 동일 파일을 그대로 로드): `shared-optimistic-lock.js`(낙관적 잠금 락값 갱신 — `fetchLatestUpdatedAt`), `shared-staging-guard.js`(스테이징 쓰기차단 안전장치, 아래 12번 섹션 참고). 새로운 로직이 두 앱 모두에 필요하면, 각 앱 파일에 복사하는 대신 이런 공용 파일로 뽑아내는 것을 우선 검토할 것 — `escHtml`/`syncCustomerToSheet` 등 기존 함수들은 아직 각 앱에 복사된 채 `tests/cross-app-twin-check.js`로만 동기화를 지키고 있어, 향후 같은 방식으로 정리할 여지가 있음.
+
 역할:
 - **`dah-dashboard.html`**: 고객 목록(칸반/검색), 매출 대시보드, 설정(직원관리·백업), 마스터/스태프 권한 구분
 - **`dah-estimate.html`**: 커튼·블라인드 견적서 작성, 발주서/실측·시공 의뢰서 자동생성
@@ -78,9 +80,11 @@
 
 | 스크립트 | 트리거 방식 | 역할 |
 |---|---|---|
-| `apps-script-automation-hub.js` | 웹 앱 (앱에서 실시간 호출) | 발주서/의뢰서/견적서를 카테고리별(제작/원단/블라인드/레일외 부자재/전동/실측시공/견적서)로 구글드라이브에 저장. 고객명단 구글시트("DAH_고객명단") 현황판 동기화 |
-| `apps-script-daily-backup.js` | 시간 기반 트리거 (매일) | customers/estimates/surveys 전체를 JSON으로 구글드라이브("DAH_자동백업")에 영구 백업 |
+| `apps-script-automation-hub.js` | 웹 앱 (POST: 앱에서 실시간 호출) + `doGet` (GET: 브라우저에서 URL로 직접 실행) | 발주서/의뢰서/견적서를 카테고리별(제작/원단/블라인드/레일외 부자재/전동/실측시공/견적서)로 구글드라이브에 저장. 고객명단 구글시트("DAH_고객명단") 현황판 동기화. `?action=cleanup&key=dah-cleanup-2026`으로 `cleanupJunkCustomerRows`/`cleanupJunkDriveDocuments`(테스트 잔재 정리)를 편집기 접속 없이 바로 실행 가능(2026-09-04 신설) |
+| `apps-script-daily-backup.js` | 시간 기반 트리거 (매일) | customers/estimates/surveys 전체를 JSON으로 구글드라이브("DAH_자동백업")에 영구 백업. 매일 백업 시 `dahCheckClientErrors()`도 함께 실행되어, `client_error_logs`에 새 오류가 쌓이면 자동 이메일 알림(2026-09-05 신설, `?action=checkErrors`로 수동 테스트 가능) |
 | `apps-script-survey-to-customer.js` | 시간 기반 트리거 (분 단위, 예: 10분마다) | Supabase `surveys` 테이블에서 `status='신규'`인 설문을 찾아 `customers` 테이블에 자동 등록 후 `status='등록완료'`로 변경. ⚠️ 설치 후 `testProcessSurveys()`를 먼저 수동 실행해서 정상 동작을 확인하세요 (스크립트 상단 주석 참고) |
+
+⚠️ **GitHub의 코드 변경은 Apps Script 편집기에 자동 반영되지 않습니다.** 파일 전체를 복사해서 해당 프로젝트 편집기에 붙여넣고 저장·재배포해야 실제로 작동합니다(구글 정책상 자동화 불가능한 유일한 수동 단계).
 
 웹 앱으로 배포한 `apps-script-automation-hub.js`의 URL은 `dah-dashboard.html`과 `dah-estimate.html`의 `DRIVE_WEBHOOK_URL` 상수에 연결되어 있습니다.
 
@@ -90,6 +94,7 @@
 
 - **호스팅**: Vercel (`dah-estimate.vercel.app`)
 - **자동배포**: `main` 브랜치에 push되면 `.github/workflows/deploy.yml`이 Vercel 배포훅을 호출
+- **스테이징(2026-09-06 신설)**: `dev` 브랜치에 push되면 `.github/workflows/deploy-staging.yml`이 GitHub Pages(`gh-pages` 브랜치)에 자동 배포됨 — `https://drawingathome.github.io/dah-estimate-/dah-dashboard.html` / `dah-estimate.html`. main 병합 전에 실사용자가 눈으로 먼저 확인할 수 있는 환경. 주의사항은 10번 섹션 참고.
 - **수동배포** (비상용): 로컬에 클론된 레포에서
   ```bash
   git pull
@@ -126,3 +131,14 @@ node tests/run-all.js dah-estimate.html
 **발주서 → 발주현황판 자동연결** (2026-09-04): 견적서 앱에서 "발주서(거래처별)"를 생성하면(`printForVendor()`), 각 품목의 출처(커튼원단→`fabric`, 가공소 체크시→`production`, 레일→`material`, 블라인드→`blind`)를 자동 판별해서 `customers.order_status`를 갱신합니다(`updateOrderStatusFromVendorGroups()`, est-utils.js). 대시보드에서 별도로 체크할 필요가 없습니다.
 
 원단 단가·필요량(야드/미터) 자동계산 기능은 아직 미구현 (화면에 "원단량: —" 자리만 있음, 계산 공식 확정되는 대로 추가 예정 — 8번 섹션 참고).
+
+## 10. 스테이징 환경 (2026-09-06 신설)
+
+`dev` 브랜치에 push하면 `.github/workflows/deploy-staging.yml`이 자동으로 GitHub Pages(`gh-pages` 브랜치)에 배포합니다. `main`에 병합하기 전에 실사용자가 눈으로 직접 확인할 수 있는 환경입니다.
+
+- **URL**: `https://drawingathome.github.io/dah-estimate-/dah-dashboard.html`, `.../dah-estimate.html` (`.html` 확장자 필수 — vercel.json의 `/dashboard`, `/estimate` 같은 짧은 리라이트는 GitHub Pages에서 안 먹힘)
+- **절대경로 자동치환**: GitHub Pages는 저장소명이 붙은 하위경로(`/dah-estimate-/`)에서 서빙되는데, 원본 HTML은 절대경로(`src="/xxx.js"`)로 스크립트를 부르므로, 배포 워크플로우가 dev 원본은 건드리지 않고 **경로만 상대경로로 치환한 사본**을 `gh-pages` 브랜치에 자동 생성합니다. `manifest.json` 안의 절대경로(PWA 아이콘용)는 아직 이 치환 대상에 포함되지 않았습니다 — 일반 브라우징에는 영향 없음(낮은 우선순위).
+- **⚠️ 쓰기 차단(중요)**: 스테이징은 프로덕션과 **완전히 같은 Supabase 데이터베이스**를 그대로 사용합니다. 별도 스테이징 DB를 두지 않는 대신, `shared-staging-guard.js`가 알려진 안전한 도메인(`*.vercel.app`, `localhost`, `127.0.0.1`)이 아니면 Supabase·구글드라이브(Apps Script 웹훅)에 대한 쓰기(POST/PATCH/PUT/DELETE)를 전부 원천 차단합니다. 화면 읽기(GET)는 실제 데이터 그대로 정상 표시되고, 화면 상단에 "🧪 스테이징(읽기 전용)" 배지가 항상 보입니다. **새로운 쓰기 경로(새 API 호출, 새 웹훅 등)를 추가할 때는 이 안전장치의 차단 대상 도메인 목록(`BLOCKED_WRITE_DOMAINS`)에도 포함되는지 확인할 것** — 실제로 처음 만들 때 Supabase만 막고 구글드라이브 저장 경로(`fetch()` 기반)를 놓쳐서 뒤늦게 추가한 이력이 있음.
+- **로그인 전 화면 확인 시 주의**: 스테이징은 매번 완전히 새로운 브라우저 세션(로그인 정보 없음)으로 열리므로, 대표님이 실제 서비스에서는 로그인이 유지된 채로 안 겪는 "로그인 전" 상태의 버그를 여기서 처음 발견할 수 있습니다(실제로 2026-09-06에 이렇게 로그인 전 불필요한 API 실패 경고를 하나 발견·수정함). 이건 스테이징의 결함이 아니라 스테이징이 제 역할을 한 것.
+- **워크플로우 파일 자체는 Claude가 수정 불가**: GitHub 토큰에 `workflow` 스코프가 없어서, `.github/workflows/deploy-staging.yml` 내용을 바꾸려면 대표님이 GitHub 웹에서 직접 편집해야 합니다.
+- **저장소 Actions 권한**: 이 워크플로우가 `gh-pages` 브랜치에 push하려면 저장소 Settings → Actions → General → Workflow permissions가 "Read and write permissions"로 설정되어 있어야 합니다(이미 설정 완료됨).
