@@ -60,6 +60,11 @@ if (/dah-dashboard/.test(target)) {
   // 방지를 위해 dah-dashboard 대상일 때 한 번만 돌림(target 인자 자체는
   // 안 쓰고 dash-*.js/est-*.js 전체를 직접 스캔함).
   scripts.push(['cross-app-twin-check.js', []]);
+  // 2026-09-06(선혜님 지시 - "지금 하자", 전문업체 기준 개선점으로
+  // "새로 만든 안전장치에 영구 테스트가 없다"는 걸 해결하기 위해 추가):
+  // shared-staging-guard.js(스테이징 쓰기차단 안전장치)도 두 앱이 공유하는
+  // 파일이라 cross-app-twin-check.js와 같은 이유로 한 번만 돌림.
+  scripts.push(['staging-guard-check.js', []]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',
@@ -77,6 +82,10 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['master-vs-staff-feature-check.js', []]);
   scripts.push(['est-editing-state-reset-check.js', [target]]);
   scripts.push(['pleat-width-rounding-check.js', [target]]);
+  // 2026-09-06(선혜님 지시 - "지금 하자", 전문업체 기준 개선점 - "새로
+  // 만든 안전장치에 영구 테스트가 없다"는 걸 해결하기 위해 추가):
+  // shared-optimistic-lock.js(낙관적잠금 락값갱신 공용함수) 검증.
+  scripts.push(['optimistic-lock-check.js', []]);
 }
 
 let anyFail = false;
