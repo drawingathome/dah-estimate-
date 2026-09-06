@@ -42,6 +42,12 @@
   // 함께 감시하고, 차단 대상 도메인에 script.google.com도 추가.
   var BLOCKED_WRITE_DOMAINS = ['supabase.co', 'script.google.com'];
   function isBlockedWriteUrl(url) {
+    // 2026-09-06(전문업체 기준 개선점 점검 중 스스로 발견): client_error_logs
+    // 테이블은 실제 고객 데이터가 아니라 순수 진단용 로그라, 여기에 쓰는
+    // 것까지 막으면 정작 스테이징에서 발생한 에러 자체를 기록할 수 없게
+    // 됨(콘솔에만 보이고 DB엔 하나도 안 남음 - 나중에 "그때 뭐가 문제였지"
+    // 확인이 안 됨). 데이터 보호 목적과 무관하므로 예외로 허용.
+    if (url.indexOf('client_error_logs') !== -1) return false;
     return BLOCKED_WRITE_DOMAINS.some(function (d) { return url.indexOf(d) !== -1; });
   }
 
