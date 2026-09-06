@@ -31,6 +31,20 @@
     || window.location.hostname === '127.0.0.1';
   if (isSafeWriteDomain) return; // 실제 서비스/로컬 개발환경에서는 이 안전장치가 전혀 개입하지 않음
 
+  // 2026-09-06(선혜님 지적 - "문제는 없니??"로 발견): 처음엔 XMLHttpRequest만
+  // 감시하고 supabase.co만 차단 대상으로 삼았는데, 견적서/발주서 문서를
+  // 구글 드라이브에 저장하는 경로(saveDocumentToDrive/syncCustomerToSheet,
+  // est-utils.js)는 XMLHttpRequest가 아니라 fetch()를 쓰고, 대상 도메인도
+  // script.google.com(Apps Script 웹훅)이라 완전히 안 걸리고 있었음 -
+  // 스테이징에서 견적서를 저장하면 DB는 안전한데 실제 구글 드라이브엔
+  // 진짜 문서가 만들어지는 구멍이었음(오늘 아침 발견했던 "테스트가 실제
+  // 구글드라이브를 오염시키던 문제"가 재발할 수 있는 경로). fetch()도
+  // 함께 감시하고, 차단 대상 도메인에 script.google.com도 추가.
+  var BLOCKED_WRITE_DOMAINS = ['supabase.co', 'script.google.com'];
+  function isBlockedWriteUrl(url) {
+    return BLOCKED_WRITE_DOMAINS.some(function (d) { return url.indexOf(d) !== -1; });
+  }
+
   var WRITE_METHODS = ['POST', 'PATCH', 'PUT', 'DELETE'];
   var origOpen = XMLHttpRequest.prototype.open;
   XMLHttpRequest.prototype.open = function (method, url) {
@@ -43,9 +57,9 @@
   XMLHttpRequest.prototype.send = function (body) {
     var method = this._dahMethod || '';
     var url = this._dahUrl || '';
-    var isSupabaseWrite = url.indexOf('supabase.co') !== -1 && WRITE_METHODS.indexOf(method) !== -1;
-    if (isSupabaseWrite) {
-      console.warn('[스테이징 안전장치] 실제 DB 쓰기 요청을 차단했습니다:', method, url);
+    var isBlockedWrite = isBlockedWriteUrl(url) && WRITE_METHODS.indexOf(method) !== -1;
+    if (isBlockedWrite) {
+      console.warn('[스테이징 안전장치] 실제 쓰기 요청을 차단했습니다(XHR):', method, url);
       var self = this;
       setTimeout(function () {
         try {
@@ -64,6 +78,20 @@
     }
     return origSend.apply(this, arguments);
   };
+
+  // fetch()로 이루어지는 쓰기(구글 드라이브 저장 등)도 동일하게 차단.
+  if (window.fetch) {
+    var origFetch = window.fetch;
+    window.fetch = function (input, init) {
+      var url = (typeof input === 'string') ? input : (input && input.url) || '';
+      var method = ((init && init.method) || (typeof input === 'object' && input.method) || 'GET').toUpperCase();
+      if (isBlockedWriteUrl(url) && WRITE_METHODS.indexOf(method) !== -1) {
+        console.warn('[스테이징 안전장치] 실제 쓰기 요청을 차단했습니다(fetch):', method, url);
+        return Promise.resolve(new Response(JSON.stringify({ message: '스테이징 환경에서는 저장·수정·삭제가 차단됩니다(실제 데이터 보호)' }), { status: 403 }));
+      }
+      return origFetch.apply(this, arguments);
+    };
+  }
 
   // 화면에도 스테이징임을 명확히 표시(사용자가 착각하지 않도록)
   window.addEventListener('DOMContentLoaded', function () {
