@@ -265,6 +265,18 @@ function loadAppSettingsAsync(callback) {
       else if (row.key === 'lead_stale_days') { try { localStorage.setItem('dah_lead_stale_days', String(row.value)); } catch(e){} }
       else if (row.key === 'region_fees') { try { localStorage.setItem('dah_region_fees', JSON.stringify(row.value||{})); } catch(e){} }
     });
+    // 2026-09-06(선혜님 지시 - "하자", 스테이징 환경에서 실제로 발견):
+    // app_settings 테이블은 로그인된 사용자만 조회/저장 가능(RLS: auth.
+    // uid() IS NOT NULL)한데, 아래 "서버에 없으면 로컬값을 올려주는" 로직이
+    // 로그인 화면이 뜨기 직전(로그인 여부와 무관하게) 항상 실행되고 있었음
+    // - 로그인 전엔 이 저장 시도가 100% 실패할 수밖에 없는 구조라, 매번
+    // "설정이 서버에 저장되지 않았어요" 경고가 불필요하게 떴음(실제로는
+    // 서버에 정상적으로 값이 있는데도). 로그인 세션이 있을 때만 이 동기화
+    // 시도를 하도록 제한.
+    if (typeof getAuthSession === 'function' && !getAuthSession()) {
+      if (callback) callback();
+      return;
+    }
     // Supabase에 아직 없는 값은 이 컴퓨터에 있는 값으로 최초 1회 올려줌 (첫 동기화)
     if (!found.staff_list) { try { var sl = JSON.parse(localStorage.getItem('dah_staff_list')||'[]'); if (sl.length) sbSyncSetting('staff_list', sl); } catch(e){} }
     if (!found.settings) { try { var s = JSON.parse(localStorage.getItem('dah_settings')||'{}'); if (Object.keys(s).length) sbSyncSetting('settings', s); } catch(e){} }
