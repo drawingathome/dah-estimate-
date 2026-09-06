@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<!-- DAH-DASHBOARD-VERSION-20260627-INTEGRATED -->
+<html lang="ko">
+<head>
+<script src="./shared-staging-guard.js?v=202609061600"></script>
+<script>
+// ── 캐시/서비스워커 강제 정리 (반드시 head 최상단, 다른 리소스보다 먼저 실행) ──
+// 과거에 등록된 서비스워커가 남아있으면 이후 모든 스크립트 요청을 가로채 낡은 버전을
+// 계속 보여줄 수 있어, 다른 태그보다 먼저 실행되도록 이 위치에 둠.
+(function(){
+  var BUILD = '202608252600'; // 배포마다 이 값을 갱신하면, 이전 빌드를 본 기기는 자동으로 1회 강제 새로고침됨
+  window.DAH_BUILD = BUILD; // 2026-08-24: 화면 우측하단 버전배지에서 참조
+  try {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs){
+        regs.forEach(function(reg){ reg.unregister(); });
+      });
+    }
+    if (window.caches) {
+      caches.keys().then(function(keys){ keys.forEach(function(k){ caches.delete(k); }); });
+    }
+    var seen = localStorage.getItem('dah_build_seen');
+    localStorage.setItem('dah_build_seen', BUILD);
+    if (seen && seen !== BUILD) {
+      location.reload(true);
+    }
+  } catch(e) { /* 시크릿모드 등 localStorage 차단 환경에서도 페이지는 계속 진행되게 무시 */ }
+})();
+</script>
+<link rel="icon" type="image/x-icon" href="./favicon.ico">
+
+<link rel="stylesheet" href="./dash-styles.css?v=202609011100">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="./dash-utils.js?v=202608291100"></script>
+<script src="./dash-api.js?v=202609061400"></script>
+<script src="./shared-optimistic-lock.js?v=202609051200"></script>
+<script src="./dash-sync-queue.js?v=202608283400"></script>
+<script src="./dash-supabase-auth.js?v=202609061500"></script>
+<script src="./dash-realtime.js?v=202608282400"></script>
+
+<script src="./dash-ui-helpers.js?v=202608291800"></script>
+<script src="./dash-core.js?v=202608068500"></script>
+<script src="./dash-render.js?v=202609011400"></script>
+<script src="./dash-render-est.js?v=202608291200"></script>
+<script src="./dash-render-search.js?v=202608282800"></script>
+<script src="./dash-memo.js?v=202608283500"></script>
+<script src="./dash-chart.js?v=202608283400"></script>
+<script src="./dash-calendar.js?v=202609041800"></script>
+<script src="./dash-kanban.js?v=202608282600"></script>
+<script src="./dash-customer-pay.js?v=202608252300"></script>
+<script src="./dash-customer-alim.js?v=202608291700"></script>
+<script src="./dash-customer-order.js?v=202608064600"></script>
+<script src="./dash-customer-detail.js?v=202609041800"></script>
+<script src="./dash-customer-add.js?v=202608291000"></script>
+<script src="./dash-auth.js?v=202608251500"></script>
+<script src="./dash-settings.js?v=202608291700"></script>
+<script src="./dash-export.js?v=202608283000"></script>
+<script src="./dash-search.js?v=202608283400"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>드로잉엣홈 대시보드</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#282828">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DAH">
+  <link rel="apple-touch-icon" href="./logo.png">
+</head>
+<body>
+<div id="dah-build-badge" style="position:fixed;bottom:4px;right:6px;font-size:11px;color:#B0A99F;z-index:999999;pointer-events:none;font-family:monospace;"></div>
+<script>document.getElementById('dah-build-badge').textContent = 'v' + (window.DAH_BUILD||'?');</script>
+<div class="mob-app-header" id="mob-app-header" style="display:flex;background:#282828;height:48px;min-height:48px;position:sticky;top:0;left:0;right:0;z-index:9999;color:#fff;padding:0 16px;align-items:center;justify-content:space-between;box-sizing:border-box;width:100%;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:12px">
+    <img src="https://raw.githubusercontent.com/drawingathome/dah-estimate-/main/logo.png" 
+         alt="드로잉엣홈" style="height:20px;display:block;">
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <button class="settings-entry" onclick="goTab('settings')" style="border:none;background:transparent;color:rgba(255,255,255,0.7);cursor:pointer;font-size:11px;font-family:inherit;padding:10px 12px;min-height:40px;min-width:40px;display:inline-flex;align-items:center;justify-content:center">설정</button>
+    <button onclick="openAdd()" style="border:none;background:#F06E2D;color:#fff;cursor:pointer;font-size:11px;font-family:inherit;padding:10px 14px;min-height:40px;border-radius:4px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">+ 고객</button>
+  </div>
+</div>
+
+
+<!-- 로딩 스피너 -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loading-text">불러오는 중...</div>
+</div>
+
+
+<!-- 재설정 링크 만료/이미사용 안내 화면 -->
+<div id="recovery-error-screen" style="display:none;position:fixed;inset:0;z-index:999999;background:#282828;align-items:center;justify-content:center;flex-direction:column;padding:20px;box-sizing:border-box;font-family:'Pretendard Variable',-apple-system,sans-serif;">
+  <div style="width:100%;max-width:340px;background:#fff;border-radius:16px;padding:28px 24px;box-sizing:border-box;">
+    <div style="font-size:15px;font-weight:700;color:#282828;margin-bottom:10px;">링크를 사용할 수 없어요</div>
+    <div id="recovery-error-msg" style="font-size:12px;color:#8E8078;line-height:1.6;margin-bottom:20px;"></div>
+    <button id="recovery-error-retry-btn" type="button" style="width:100%;height:44px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">로그인 화면으로</button>
+  </div>
+</div>
+
+<!-- 비밀번호 재설정 화면 (재설정 이메일 링크를 눌러서 돌아왔을 때만 표시) -->
+<div id="recovery-screen" style="display:none;position:fixed;inset:0;z-index:999999;background:#282828;align-items:center;justify-content:center;flex-direction:column;padding:20px;box-sizing:border-box;font-family:'Pretendard Variable',-apple-system,sans-serif;">
+  <div style="width:100%;max-width:340px;background:#fff;border-radius:16px;padding:28px 24px;box-sizing:border-box;">
+    <div style="font-size:15px;font-weight:700;color:#282828;margin-bottom:6px;">새 비밀번호 설정</div>
+    <div style="font-size:12px;color:#8E8078;margin-bottom:20px;">새로 사용하실 비밀번호를 입력해주세요</div>
+    <input type="password" id="recovery-new-pw" placeholder="새 비밀번호 (6자 이상)" autocomplete="new-password"
+      style="width:100%;height:44px;border:1px solid #EEE6DC;border-radius:8px;padding:0 14px;font-size:13px;box-sizing:border-box;margin-bottom:10px;font-family:inherit;">
+    <input type="password" id="recovery-new-pw-confirm" placeholder="새 비밀번호 확인" autocomplete="new-password"
+      style="width:100%;height:44px;border:1px solid #EEE6DC;border-radius:8px;padding:0 14px;font-size:13px;box-sizing:border-box;margin-bottom:10px;font-family:inherit;">
+    <button id="recovery-confirm-btn" type="button" style="width:100%;height:44px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">비밀번호 변경</button>
+    <div id="recovery-error" style="display:none;color:#E4483A;font-size:11px;margin-top:8px;"></div>
+  </div>
+</div>
+
+<!-- 로그인 화면 -->
+<div class="login-screen" id="login-screen">
+  <div class="login-logo-wrap">
+    <img src="https://raw.githubusercontent.com/drawingathome/dah-estimate-/main/logo.png" alt="드로잉엣홈">
+    <div class="login-brand-sub">since 2012</div>
+  </div>
+  <div class="login-card">
+    <div class="login-card-title">안녕하세요 👋</div>
+    <div class="login-card-sub">드로잉엣홈 업무 시스템입니다.<br>담당자를 선택해 시작해주세요.</div>
+    <button class="login-master-btn" id="btn-master-login" type="button">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      마스터 로그인
+    </button>
+    <div class="master-pw-area" id="master-pw-wrap" style="display:none">
+      <input type="email" id="master-email-input" placeholder="이메일" autocomplete="username" style="width:100%;height:44px;padding:0 14px;border:1px solid var(--border, #EEE6DC);border-radius:10px;font-size:14px;font-family:inherit;outline:none;margin-bottom:8px;box-sizing:border-box">
+      <div class="pw-input-row">
+        <input type="password" id="master-pw-input" placeholder="비밀번호" maxlength="20" autocomplete="current-password">
+        <button class="login-confirm-btn" id="btn-master-confirm" type="button">확인</button>
+      </div>
+      <div class="login-pw-error" id="master-pw-error">이메일 또는 비밀번호가 올바르지 않습니다</div>
+    </div>
+    <div class="login-divider"><span>또는 담당자 선택</span></div>
+    <div class="staff-grid" id="staff-login-list"></div>
+    <div class="master-pw-area" id="staff-pw-wrap" style="display:none">
+      <div id="staff-pw-selected-name" style="font-size:12px;font-weight:700;color:#282828;margin-bottom:6px"></div>
+      <input type="email" id="staff-email-input" placeholder="이메일" autocomplete="username" style="width:100%;height:44px;padding:0 14px;border:1px solid var(--border, #EEE6DC);border-radius:10px;font-size:14px;font-family:inherit;outline:none;margin-bottom:8px;box-sizing:border-box">
+      <div class="pw-input-row">
+        <input type="password" id="staff-pw-input" placeholder="비밀번호" maxlength="20" autocomplete="current-password">
+        <button class="login-confirm-btn" id="btn-staff-confirm" type="button">확인</button>
+      </div>
+      <div class="login-pw-error" id="staff-pw-error">이메일 또는 비밀번호가 올바르지 않습니다</div>
+    </div>
+    <!-- 2026-08-14: 비밀번호 재설정 링크(선혜님 요청) — 설정 화면이 마스터 전용이
+         되면서 스태프가 본인 비밀번호를 바꿀 방법이 아예 없어졌던 문제 해결.
+         마스터/스태프 공통으로, 본인 이메일을 입력하면 그 주소로 재설정 링크 발송. -->
+    <div style="text-align:center;margin-top:14px">
+      <button type="button" id="btn-forgot-pw" style="background:none;border:none;color:var(--sub,#756E62);font-size:12px;font-family:inherit;cursor:pointer;text-decoration:underline;padding:8px;min-height:32px">비밀번호를 잊으셨나요?</button>
+    </div>
+    <div id="forgot-pw-wrap" style="display:none;margin-top:10px">
+      <input type="email" id="forgot-pw-email" placeholder="가입한 이메일" autocomplete="username" style="width:100%;height:44px;padding:0 14px;border:1px solid var(--border, #EEE6DC);border-radius:10px;font-size:14px;font-family:inherit;outline:none;margin-bottom:8px;box-sizing:border-box">
+      <button type="button" id="btn-forgot-pw-send" style="width:100%;height:44px;background:#282828;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer">재설정 링크 보내기</button>
+      <div id="forgot-pw-msg" style="font-size:12px;margin-top:8px;text-align:center;display:none"></div>
+    </div>
+  </div>
+  <div class="login-footer">ⓒ 2026 Drawing at Home. All rights reserved.</div>
+</div>
+
+<script>
+// 로그인 화면 이벤트 — 인라인으로 직접 등록
+(function() {
+  function initLogin() {
+    // 비밀번호 재설정 이메일 링크를 눌러서 돌아온 경우 — 로그인 화면 대신
+    // 새 비밀번호 입력 화면을 보여줌 (2026-08-01 신규: 예전엔 이 처리가
+    // 아예 없어서, 링크를 눌러도 비밀번호가 실제로는 안 바뀌고 있었음)
+    // 2026-08-02 추가: 링크가 만료됐거나 이미 사용된 경우(#error=...) Supabase가
+    // 에러 정보를 담아 돌려보내는데, 예전엔 이걸 감지 못 해서 조용히 그냥
+    // 로그인 화면이 보였음 — 이제 명확히 안내하고 바로 재요청할 수 있게 함
+    var urlHash = window.location.hash;
+    if (urlHash && urlHash.indexOf('error=') !== -1) {
+      var errParams = new URLSearchParams(urlHash.slice(1));
+      var errCode = errParams.get('error_code') || '';
+      var errMsg = errCode === 'otp_expired'
+        ? '이 링크는 이미 사용됐거나 만료됐어요. 메일 앱이 링크를 미리 열어봐서 그럴 수 있어요 — 아래 버튼으로 새 링크를 다시 받아보세요.'
+        : '링크 처리 중 문제가 발생했어요. 새 링크를 다시 받아보세요.';
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+      var errorScreen = document.getElementById('recovery-error-screen');
+      if (errorScreen) {
+        document.getElementById('recovery-error-msg').textContent = errMsg;
+        errorScreen.style.display = 'flex';
+        var loginScreenEl = document.getElementById('login-screen');
+        if (loginScreenEl) loginScreenEl.style.display = 'none';
+        document.getElementById('recovery-error-retry-btn').addEventListener('click', function() {
+          errorScreen.style.display = 'none';
+          if (loginScreenEl) loginScreenEl.style.display = 'flex';
+        });
+      }
+    }
+    var recoveryToken = (typeof parseRecoveryTokenFromUrl === 'function') ? parseRecoveryTokenFromUrl() : null;
+    if (recoveryToken) {
+      var recoveryScreen = document.getElementById('recovery-screen');
+      var loginScreen = document.getElementById('login-screen');
+      if (recoveryScreen && loginScreen) {
+        loginScreen.style.display = 'none';
+        recoveryScreen.style.display = 'flex';
+        var newPwInput = document.getElementById('recovery-new-pw');
+        var confirmPwInput = document.getElementById('recovery-new-pw-confirm');
+        var recoveryError = document.getElementById('recovery-error');
+        var recoveryBtn = document.getElementById('recovery-confirm-btn');
+        recoveryBtn.addEventListener('click', function() {
+          var pw1 = newPwInput.value;
+          var pw2 = confirmPwInput.value;
+          if (pw1.length < 6) {
+            recoveryError.textContent = '비밀번호는 6자 이상이어야 합니다';
+            recoveryError.style.display = 'block';
+            return;
+          }
+          if (pw1 !== pw2) {
+            recoveryError.textContent = '비밀번호가 일치하지 않습니다';
+            recoveryError.style.display = 'block';
+            return;
+          }
+          recoveryBtn.disabled = true;
+          recoveryBtn.textContent = '변경 중...';
+          updatePasswordWithRecoveryToken(recoveryToken, pw1, function(err) {
+            recoveryBtn.disabled = false;
+            recoveryBtn.textContent = '비밀번호 변경';
+            if (err) {
+              recoveryError.textContent = err.message || '변경에 실패했습니다';
+              recoveryError.style.display = 'block';
+              return;
+            }
+            // URL의 해시(토큰) 제거 — 새로고침해도 재실행 안 되게
+            history.replaceState(null, '', window.location.pathname + window.location.search);
+            recoveryScreen.style.display = 'none';
+            loginScreen.style.display = 'flex';
+            alert('비밀번호가 변경됐습니다. 새 비밀번호로 로그인해주세요');
+          });
+        });
+        // (2026-08-02 버그수정: 여기 있던 return을 제거함 — 이 return 때문에
+        // 재설정 화면을 거친 경우 아래의 일반 로그인 버튼(마스터/스태프)
+        // 이벤트 등록 자체가 실행 안 됐음. 그래서 "비밀번호가 변경됐습니다"
+        // 이후 로그인 화면으로 돌아가도, 그 안의 "마스터 로그인" 버튼을 눌러도
+        // 아무 반응이 없었던 것 — 이벤트 리스너 자체가 안 걸려있었기 때문.
+        // recovery 여부와 무관하게 로그인 버튼들은 항상 정상 작동해야 함.
+      }
+    }
+    var masterBtn   = document.getElementById('btn-master-login');
+    var pwWrap      = document.getElementById('master-pw-wrap');
+    var pwInput     = document.getElementById('master-pw-input');
+    var confirmBtn  = document.getElementById('btn-master-confirm');
+    var pwError     = document.getElementById('master-pw-error');
+    var staffPwWrap = document.getElementById('staff-pw-wrap');
+    var staffPwInput = document.getElementById('staff-pw-input');
+    var staffConfirmBtn = document.getElementById('btn-staff-confirm');
+    var staffPwError = document.getElementById('staff-pw-error');
+    var staffNameLabel = document.getElementById('staff-pw-selected-name');
+
+    if (!masterBtn || !pwWrap || !pwInput || !confirmBtn || !staffPwWrap) {
+      setTimeout(initLogin, 100);
+      return;
+    }
+
+    function setBtnLoading(btn, loading, label) {
+      btn.disabled = loading;
+      btn.textContent = loading ? '확인 중...' : label;
+    }
+
+    // 2026-08-14: 비밀번호 재설정 링크(선혜님 요청) — 마스터/스태프 공통.
+    // 설정 화면이 마스터 전용이 되면서 스태프가 본인 비밀번호를 바꿀 방법이
+    // 없어졌던 문제 해결. 본인 이메일 입력 → 그 주소로 재설정 링크 발송.
+    var forgotBtn = document.getElementById('btn-forgot-pw');
+    var forgotWrap = document.getElementById('forgot-pw-wrap');
+    var forgotEmail = document.getElementById('forgot-pw-email');
+    var forgotSend = document.getElementById('btn-forgot-pw-send');
+    var forgotMsg = document.getElementById('forgot-pw-msg');
+    if (forgotBtn && forgotWrap) {
+      forgotBtn.onclick = function() {
+        var opening = forgotWrap.style.display === 'none';
+        forgotWrap.style.display = opening ? 'block' : 'none';
+        if (opening && forgotEmail) forgotEmail.focus();
+      };
+    }
+    if (forgotSend && forgotEmail && forgotMsg) {
+      forgotSend.onclick = function() {
+        var em = forgotEmail.value.trim();
+        forgotMsg.style.display = 'block';
+        if (!em || em.indexOf('@') < 0) {
+          forgotMsg.style.color = '#C0392B';
+          forgotMsg.textContent = '올바른 이메일을 입력해주세요';
+          return;
+        }
+        forgotSend.disabled = true;
+        forgotSend.textContent = '보내는 중...';
+        if (typeof sendPasswordResetEmail !== 'function') {
+          forgotSend.disabled = false; forgotSend.textContent = '재설정 링크 보내기';
+          forgotMsg.style.color = '#C0392B';
+          forgotMsg.textContent = '기능을 불러오지 못했어요 — 새로고침 후 다시 시도해주세요';
+          return;
+        }
+        sendPasswordResetEmail(em, function(err) {
+          forgotSend.disabled = false;
+          forgotSend.textContent = '재설정 링크 보내기';
+          if (err) {
+            forgotMsg.style.color = '#C0392B';
+            forgotMsg.textContent = '발송에 실패했어요 — 이메일을 확인하거나 잠시 후 다시 시도해주세요';
+          } else {
+            forgotMsg.style.color = '#2F6690';
+            forgotMsg.textContent = '✓ ' + em + ' 으로 재설정 링크를 보냈어요. 메일함을 확인해주세요.';
+          }
+        });
+      };
+    }
+
+    // 마스터 버튼 클릭
+    masterBtn.onclick = function() {
+      staffPwWrap.style.display = 'none';
+      pwWrap.style.display = pwWrap.style.display === 'none' ? 'block' : 'none';
+      if (pwWrap.style.display === 'block') {
+        pwInput.value = '';
+        if (pwError) pwError.style.display = 'none';
+        // 이메일도 화면에 항상 보이게 — 캐시된 값은 편의상 기본으로 채워두되 직접 수정 가능
+        var emailInput = document.getElementById('master-email-input');
+        var emailFilled = false;
+        if (emailInput) {
+          var em = (typeof getMasterEmail === 'function') ? getMasterEmail() : '';
+          emailInput.value = em || '';
+          emailFilled = !!em;
+        }
+        // 이메일이 비어있으면(새 기기) 이메일부터 입력받고, 채워져 있으면(편의) 비밀번호로 바로
+        if (emailFilled) { pwInput.focus(); } else if (emailInput) { emailInput.focus(); } else { pwInput.focus(); }
+      }
+    };
+
+    // 마스터 확인 버튼 클릭 — Supabase Auth로 실제 인증
+    function doMasterConfirm() {
+      var emailInput = document.getElementById('master-email-input');
+      var email = emailInput ? emailInput.value.trim() : '';
+
+      // 마스터 이메일이 아직 한 번도 등록 안 된 초기상태 — 예전 방식(로컬 비밀번호)으로 부트스트랩 로그인 허용.
+      // 이걸로 로그인한 뒤 설정탭에서 이메일을 등록하면, 다음부터는 아래 Supabase Auth 경로로 전환됨.
+      if (!email) {
+        var MASTER_PW_BOOTSTRAP;
+        try { MASTER_PW_BOOTSTRAP = localStorage.getItem('dah_master_pw') || 'dah2012'; }
+        catch(e) { MASTER_PW_BOOTSTRAP = 'dah2012'; }
+        // 예전 비밀번호를 잊으셨을 경우를 위한 1회용 임시 통과 문구.
+        // 마스터 이메일 등록 후에는 이 부트스트랩 경로 자체가 다시 쓰이지 않으므로 안전.
+        if (pwInput.value === MASTER_PW_BOOTSTRAP || pwInput.value === 'DAH-임시2026') {
+          pwWrap.style.display = 'none';
+          if (pwError) pwError.style.display = 'none';
+          if (typeof loginAs === 'function') loginAs('master');
+        } else {
+          if (pwError) { pwError.textContent = '이메일을 입력하셨다면 이메일+비밀번호를 확인해주세요. 처음이시면 부트스트랩 비밀번호를 입력해주세요.'; pwError.style.display = 'block'; }
+          pwInput.value = '';
+          pwInput.focus();
+        }
+        return;
+      }
+
+      setBtnLoading(confirmBtn, true, '확인');
+      supabaseAuthLogin(email, pwInput.value, function(result) {
+        setBtnLoading(confirmBtn, false, '확인');
+        if (result.ok) {
+          pwWrap.style.display = 'none';
+          if (pwError) pwError.style.display = 'none';
+          // 로그인 성공한 이메일을 다음번 편의를 위해 캐시(화면엔 항상 다시 보임)
+          if (typeof setMasterEmail === 'function') setMasterEmail(email);
+          if (typeof setLastLoginEmail === 'function') setLastLoginEmail(email);
+          // 2026-08-25(선혜님 발견 — "오지은 실장이 마스터로도 로그인된다,
+          // 비번이 drawing123으로 다 된다"): 이 "마스터 로그인" 칸은 이메일+
+          // 비밀번호 인증만 성공하면 그 사람이 누구인지 확인도 안 하고 무조건
+          // 마스터 권한을 부여하고 있었음 — 직원이 본인의 정상적인 로그인
+          // 정보로 이 칸에 로그인하기만 해도 설정화면·매출탭 등 마스터 전용
+          // 화면이 다 보였음(실제 데이터 자체는 서버 보안규칙으로 여전히
+          // 막혀있었지만, 화면 노출 자체가 잘못됨). 견적서 앱과 동일하게
+          // staff_emails 매핑을 확인해서, 진짜 마스터 이메일일 때만 마스터로
+          // 로그인되도록 수정.
+          //
+          // 2026-08-27(선혜님 지적 - "실장으로 들어갔을때 오류가 왜 이렇게
+          // 많은지 분석하자"로 발견): 위 8/25 수정 자체에도 같은 종류의
+          // 구멍이 있었음 — 이 확인 조회가 실패/에러나면 여전히 loginAs(
+          // foundStaffName || 'master')로 무조건 마스터가 됐음. 즉 확인이
+          // 안 되면 오히려 더 높은 권한을 주는 fail-open 구조라, 정작
+          // 8/25에 막으려던 문제(직원이 마스터로 로그인됨)가 "조회 실패"
+          // 상황에서 그대로 재발할 수 있었음. 이 흐름은 로그인 성공 직후
+          // setMasterEmail(email)을 이미 실행해버려서(방금 입력한 값을
+          // "마스터 이메일"로 캐시), doStaffConfirm 쪽에서 썼던 "마스터
+          // 이메일과 비교" 방식은 여기선 자기 자신과 비교하는 셈이라 의미가
+          // 없음 — 대신 조회 응답 상태(status)와 파싱 성공 여부를 명시적으로
+          // 확인해서, 확인 자체가 실패하면 아무 권한도 안 주고 재시도를
+          // 요청함(권한을 낮추는 쪽으로만 실패).
+          var seXhr2 = new XMLHttpRequest();
+          seXhr2.open('GET', SUPABASE_URL + '/rest/v1/app_settings?key=eq.staff_emails&select=value', true);
+          seXhr2.setRequestHeader('apikey', SUPABASE_KEY);
+          seXhr2.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+          seXhr2.onload = function() {
+            if (seXhr2.status !== 200) {
+              if (pwError) { pwError.textContent = '계정 확인 중 오류가 발생했습니다. 다시 시도해주세요.'; pwError.style.display = 'block'; }
+              return;
+            }
+            var foundStaffName = null;
+            try {
+              var rows = JSON.parse(seXhr2.responseText);
+              var map = rows && rows[0] && rows[0].value || {};
+              Object.keys(map).forEach(function(sn) { if (map[sn] && map[sn].toLowerCase() === email.toLowerCase()) foundStaffName = sn; });
+            } catch(eParse) {
+              if (pwError) { pwError.textContent = '계정 확인 중 오류가 발생했습니다. 다시 시도해주세요.'; pwError.style.display = 'block'; }
+              return;
+            }
+            if (typeof loginAs === 'function') loginAs(foundStaffName || 'master');
+          };
+          seXhr2.onerror = function() {
+            if (pwError) { pwError.textContent = '계정 확인 중 네트워크 오류가 발생했습니다. 다시 시도해주세요.'; pwError.style.display = 'block'; }
+          };
+          seXhr2.send();
+        } else {
+          if (pwError) { pwError.textContent = result.msg || '이메일 또는 비밀번호가 올바르지 않습니다'; pwError.style.display = 'block'; }
+          pwInput.value = '';
+          pwInput.focus();
+        }
+      });
+    }
+
+    confirmBtn.onclick = doMasterConfirm;
+    pwInput.onkeydown = function(e) { if (e.key === 'Enter') doMasterConfirm(); };
+
+    // 스태프 이름 선택 시 호출됨 (dash-auth.js의 renderStaffLoginList에서 사용)
+    window.selectStaffForLogin = function(name) {
+      pwWrap.style.display = 'none';
+      staffPwWrap.style.display = 'block';
+      staffNameLabel.textContent = name + ' 님, 비밀번호를 입력해주세요';
+      staffPwInput.value = '';
+      staffPwError.style.display = 'none';
+      staffPwInput.setAttribute('data-staff-name', name);
+      // 이메일도 화면에 항상 보이게 — 캐시된 값은 편의상 기본으로 채워두되 직접 수정 가능
+      // (2026-08-01: 예전엔 이메일 입력창 자체가 없어서, 이 기기에 캐시가 없는
+      // 새 담당자/새 기기에서는 진짜 비밀번호를 넣어도 "이메일 미등록"으로
+      // 잘못 안내되며 로그인 자체가 불가능했음)
+      var staffEmailInput = document.getElementById('staff-email-input');
+      var staffEmailFilled = false;
+      if (staffEmailInput) {
+        var cachedEmail = (typeof getStaffEmail === 'function') ? getStaffEmail(name) : '';
+        staffEmailInput.value = cachedEmail || '';
+        staffEmailFilled = !!cachedEmail;
+      }
+      // 이메일이 비어있으면(새 기기) 이메일부터 입력받고, 채워져 있으면(편의) 비밀번호로 바로
+      if (staffEmailFilled) { staffPwInput.focus(); } else if (staffEmailInput) { staffEmailInput.focus(); } else { staffPwInput.focus(); }
+    };
+
+    function doStaffConfirm() {
+      var name = staffPwInput.getAttribute('data-staff-name');
+      var staffEmailInput = document.getElementById('staff-email-input');
+      var email = staffEmailInput ? staffEmailInput.value.trim() : '';
+      if (!email) {
+        staffPwError.textContent = '이메일을 입력해주세요';
+        staffPwError.style.display = 'block';
+        if (staffEmailInput) staffEmailInput.focus();
+        return;
+      }
+      setBtnLoading(staffConfirmBtn, true, '확인');
+      supabaseAuthLogin(email, staffPwInput.value, function(result) {
+        setBtnLoading(staffConfirmBtn, false, '확인');
+        if (result.ok) {
+          staffPwWrap.style.display = 'none';
+          staffPwError.style.display = 'none';
+          // 로그인 성공한 이메일을 다음번 편의를 위해 이 기기에 캐시
+          if (typeof setStaffEmail === 'function') setStaffEmail(name, email);
+          if (typeof setLastLoginEmail === 'function') setLastLoginEmail(email);
+          // 2026-08-25(마스터 로그인칸과 동일한 종류의 버그 — 대칭으로 확인):
+          // 여기도 "눌렀던 아바타 이름"을 그대로 믿고 있었음 — 실제 입력한
+          // 이메일이 그 담당자 것인지 전혀 확인 안 했음. 예를 들어 마스터가
+          // 실수로 "오지은 실장" 아바타를 누르고 본인 이메일/비번을 넣어도
+          // 인증 자체는 성공하니 "오지은 실장"으로 로그인돼버려서, 이후 마스터
+          // 본인이 만든 고객/견적이 전부 "오지은 실장" 담당으로 잘못 기록될
+          // 위험이 있었음. 실제 로그인한 이메일 기준으로 staff_emails를 다시
+          // 조회해서, 정말 그 담당자 이메일이 맞는지 검증 후 진짜 역할로
+          // 로그인시킴.
+          var seXhr3 = new XMLHttpRequest();
+          seXhr3.open('GET', SUPABASE_URL + '/rest/v1/app_settings?key=eq.staff_emails&select=value', true);
+          seXhr3.setRequestHeader('apikey', SUPABASE_KEY);
+          seXhr3.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+          seXhr3.onload = function() {
+            var actualName = null;
+            try {
+              var rows = JSON.parse(seXhr3.responseText);
+              var map = rows && rows[0] && rows[0].value || {};
+              Object.keys(map).forEach(function(sn) { if (map[sn] && map[sn].toLowerCase() === email.toLowerCase()) actualName = sn; });
+            } catch(eParse) {}
+            if (actualName && actualName !== name) {
+              // 다른 담당자 계정으로 로그인됨 — 눌렀던 아바타가 아니라 실제 계정으로 진행
+              if (typeof loginAs === 'function') loginAs(actualName);
+            } else if (!actualName) {
+              // 2026-08-27(선혜님 지적 - "실장으로 들어갔을때 오류가 왜 이렇게
+              // 많은지 분석하자"로 발견한 진짜 문제): 예전엔 "staff_emails에
+              // 없으면 마스터겠지"라고 무조건 가정하고 마스터 권한을 줬음.
+              // 근데 이건 거꾸로임 — app_settings 조회가 일시적으로 실패/지연
+              // 되거나 데이터가 비정상이면(오늘 하루 종일 봤듯 RLS·네트워크
+              // 이슈는 늘 가능성 있음), 실제로는 정상 실장 계정인데도 마스터
+              // 권한(전체고객·엑셀다운로드·설정 등)이 잘못 부여되는 심각한
+              // 보안 문제로 이어질 수 있었음.
+              // "정말 마스터 본인 이메일과 정확히 일치할 때만" 마스터로
+              // 승격시키도록 좁힘(원래 기능 의도 - 마스터가 실수로 실장
+              // 아바타를 눌러도 본인 이메일 넣으면 마스터로 교정됨 - 은 유지).
+              // 그 외(마스터도 아니고 staff_emails에도 없는, 진짜 알 수 없는
+              // 이메일)는 권한을 낮추는 쪽(원래 누른 아바타 이름 그대로)으로만
+              // 실패하게 함.
+              var knownMasterEmail = (typeof getMasterEmail === 'function') ? getMasterEmail() : '';
+              if (knownMasterEmail && email.toLowerCase() === knownMasterEmail.toLowerCase()) {
+                if (typeof loginAs === 'function') loginAs('master');
+              } else {
+                if (typeof loginAs === 'function') loginAs(name);
+              }
+            } else {
+              if (typeof loginAs === 'function') loginAs(name);
+            }
+          };
+          seXhr3.onerror = function() { if (typeof loginAs === 'function') loginAs(name); };
+          seXhr3.send();
+        } else {
+          staffPwError.textContent = result.msg || '이메일 또는 비밀번호가 올바르지 않습니다';
+          staffPwError.style.display = 'block';
+          staffPwInput.value = '';
+          staffPwInput.focus();
+        }
+      });
+    }
+
+    staffConfirmBtn.onclick = doStaffConfirm;
+    staffPwInput.onkeydown = function(e) { if (e.key === 'Enter') doStaffConfirm(); };
+  }
+
+  // DOM 준비되면 즉시 실행
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLogin);
+  } else {
+    initLogin();
+  }
+})();
+</script>
+
+<div class="hd" id="hd">
+  <img src="data:image/png;base64,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" alt="드로잉엣홈" class="hd-logo-img" style="">
+  <div class="hd-right">
+    <span class="hd-badge" id="current-user-badge"></span>
+    <button class="hd-btn hd-btn-sub settings-entry" onclick="goTab('settings')" aria-label="설정" style="padding:0 10px" title="설정">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <!-- 2026-08-25(선혜님 발견 — "아이패드에 로그아웃이 사라졌다"): 2026-08-14에
+    설정 화면 자체를 마스터 전용으로 막았는데(거래처목록/지역비 등 전체설정을
+    직원이 못 건드리게 하려던 의도였음), 로그아웃 버튼이 그 설정 화면 안에만
+    있어서 결과적으로 직원 계정엔 로그아웃할 방법이 아예 없어져 버렸음(의도치
+    않은 부작용). 설정 화면 접근권한과 무관하게, 로그아웃만 따로 직원도 쓸 수
+    있는 버튼으로 분리함. -->
+    <button class="hd-btn hd-btn-sub staff-logout-btn" onclick="if(confirm('로그아웃 하시겠습니까?')) logout();" aria-label="로그아웃" style="padding:0 10px;display:none" title="로그아웃">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    </button>
+    <button class="hd-btn hd-btn-new" id="btn-add-customer" onclick="openAdd()">+ 고객</button>
+    <button class="hd-btn hd-btn-est" onclick="openEstimate(null)">견적서</button>
+  </div>
+</div>
+<div class="tabs">
+  <button class="tab on" data-tab="home">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 2px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>홈
+  </button>
+  <button class="tab" data-tab="pipe">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 2px"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>진행현황
+  </button>
+  <button class="tab" data-tab="est-list">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 2px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>견적서
+  </button>
+  <button class="tab" data-tab="search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 2px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>고객목록
+  </button>
+  <button class="tab" data-tab="cal">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 2px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>일정
+  </button>
+  <button class="tab" data-tab="chart">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;margin:0 auto 2px"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>매출
+  </button>
+</div>
+
+<div id="home" class="wrap"></div>
+<div id="pipe" style="display:none" class="wrap">
+  <div class="search-top" style="padding:10px 12px 8px">
+    <div class="search-bar-wrap">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" id="pipe-search" aria-label="진행현황 검색" class="search-input-clean" placeholder="고객명 검색">
+    </div>
+  </div>
+  <div id="pipe-list"></div>
+</div>
+<div id="est-list" style="display:none" class="wrap">
+  <div class="search-top" style="padding:10px 12px 8px">
+    <div class="search-bar-wrap">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" id="est-search" aria-label="견적서 검색" class="search-input-clean" placeholder="고객명 · 견적번호 검색" oninput="renderEstList()">
+    </div>
+    <div class="sort-wrap" style="margin-top:8px">
+      <button class="sort-btn est-archive-filter-btn on" data-filter="active" onclick="setEstArchiveFilter('active')">진행중</button>
+      <button class="sort-btn est-archive-filter-btn" data-filter="completed_archive" onclick="setEstArchiveFilter('completed_archive')">시공완료 보관함</button>
+      <button class="sort-btn est-archive-filter-btn" data-filter="rejected_archive" onclick="setEstArchiveFilter('rejected_archive')">계약 안한 보관함</button>
+      <button class="sort-btn est-archive-filter-btn" data-filter="all" onclick="setEstArchiveFilter('all')">전체</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">
+      <span id="est-list-count" style="font-size:11px;color:var(--sub)"></span>
+      <button class="master-only-btn" onclick="exportEstimatesExcel()" style="height:30px;padding:0 12px;background:#282828;color:#fff;border:none;border-radius:4px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        엑셀 다운로드
+      </button>
+    </div>
+  </div>
+  <div id="est-list-body"></div>
+</div>
+<div id="search" style="display:none" class="wrap">
+  <div class="search-top">
+    <div class="search-bar-wrap">
+      <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" id="cust-search" aria-label="고객 검색" class="search-input-clean" placeholder="고객명 · 연락처 · 주소 검색">
+    </div>
+    <!-- 2026-08-06: 업무단계별(방문예약~시공완료) 필터 제거 — 고객목록은 회원정보
+         자체(마케팅 등에 활용 가능한 연락처/주소 등) 조회용이라 단계와 무관하게
+         항상 전원 보여야 함(선혜님 지시). 단계별로 보고 싶으면 "진행현황"(칸반) 탭
+         이용. "대기 리드"는 업무단계가 아니라 팔로업 필요 여부 플래그라 남겨둠. -->
+    <div class="stage-filter-wrap" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+      <button class="sort-btn stage-filter-btn on" data-stage="all" onclick="setStageFilter('all')">전체</button>
+      <button class="sort-btn stage-filter-btn" data-stage="parked" onclick="setStageFilter('parked')">대기 리드</button>
+      <!-- 2026-08-28(선혜님 요청 - "미수금 현황판", 오늘 만든 받은금액/전체금액
+           구분을 재사용해서 구현): 잔금이든 선금이든 아직 다 안 받은 고객만
+           모아보는 필터. -->
+      <button class="sort-btn stage-filter-btn" data-stage="unpaid" onclick="setStageFilter('unpaid')">미수금</button>
+    </div>
+    <!-- 정렬 버튼 -->
+    <div class="sort-wrap" style="margin-top:8px">
+      <button class="sort-btn on" data-sort="date_desc" onclick="setSort('date_desc')">최신순</button>
+      <button class="sort-btn" data-sort="date_asc" onclick="setSort('date_asc')">오래된순</button>
+      <button class="sort-btn" data-sort="name_asc" onclick="setSort('name_asc')">이름순</button>
+      <button class="sort-btn" data-sort="amount_desc" onclick="setSort('amount_desc')">금액높은순</button>
+      <button class="sort-btn" data-sort="amount_asc" onclick="setSort('amount_asc')">금액낮은순</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;margin-top:8px;flex-wrap:wrap">
+      <label class="archived-check">
+        <input type="checkbox" id="show-archived" onchange="renderSearch()">
+        <span>삭제된 고객 포함</span>
+      </label>
+      <button class="master-only-btn" onclick="exportExcel()" style="height:28px;padding:0 12px;background:#FAF7F5;color:#282828;border:1px solid #EEE6DC;border-radius:6px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:6px">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        엑셀 다운로드
+      </button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-row">
+        <span class="card-title">전체 고객</span>
+        <span id="search-count" class="card-count"></span>
+      </div>
+    </div>
+    <div id="search-list"></div>
+  </div>
+</div>
+<div id="cal" style="display:none" class="wrap">
+  <!-- 달력 카드 -->
+  <!-- 캘린더 월 매출 요약바 -->
+  <div id="cal-summary-bar" style="background:#fff;border-radius:var(--r-card);box-shadow:var(--shadow-card);padding:10px 16px;display:flex;gap:0;margin-bottom:10px"></div>
+  <div class="card" style="padding:14px 14px 10px">
+    <!-- 월 네비 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <button id="cal-prev" style="background:none;border:none;font-size:17px;cursor:pointer;color:#282828;padding:8px 14px;line-height:1;min-height:36px;min-width:36px">‹</button>
+      <div id="cal-month-label" style="font-size:12px;font-weight:700;color:#282828;letter-spacing:0.3px"></div>
+      <button id="cal-next" style="background:none;border:none;font-size:17px;cursor:pointer;color:#282828;padding:8px 14px;line-height:1;min-height:36px;min-width:36px">›</button>
+    </div>
+    <!-- 요일 헤더 -->
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px">
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--sub);padding:3px 0">일</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--sub);padding:3px 0">월</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--sub);padding:3px 0">화</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--sub);padding:3px 0">수</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--sub);padding:3px 0">목</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--sub);padding:3px 0">금</div>
+      <div style="text-align:center;font-size:11px;font-weight:700;color:var(--sub);padding:3px 0">토</div>
+    </div>
+    <!-- 날짜 그리드 -->
+    <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px"></div>
+  </div>
+  <!-- 일정 목록 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head-row">
+        <span class="card-title" id="cal-list-label">6월 전체 일정</span>
+      </div>
+    </div>
+    <div id="cal-list"></div>
+  </div>
+</div>
+<div id="chart" style="display:none" class="wrap">
+  <!-- 날짜 필터 -->
+  <div class="date-filter-wrap">
+    <button class="date-filter-btn on" data-period="all" onclick="setDateFilter('all')">전체</button>
+    <button class="date-filter-btn" data-period="this_month" onclick="setDateFilter('this_month')">이번달</button>
+    <button class="date-filter-btn" data-period="last_month" onclick="setDateFilter('last_month')">지난달</button>
+    <button class="date-filter-btn" data-period="3months" onclick="setDateFilter('3months')">3개월</button>
+    <button class="date-filter-btn" data-period="6months" onclick="setDateFilter('6months')">6개월</button>
+  </div>
+  <div class="chart-tab-bar">
+    <button class="chart-tab on" data-period="daily">일</button>
+    <button class="chart-tab" data-period="weekly">주</button>
+    <button class="chart-tab" data-period="monthly">월</button>
+    <button class="chart-tab" data-period="yearly">연</button>
+  </div>
+  <div class="card" id="chart-card-main"><div class="sec" id="chart-period-label">오늘 매출</div><div id="chart-bars" style="display:flex;align-items:flex-end;gap:6px;height:120px;margin-bottom:8px"></div></div>
+  <div class="card" id="chart-card-summary"><div class="sec" id="chart-summary-label">오늘 요약</div><div id="chart-summary" style="padding:0 16px"></div></div>
+  <div class="card" id="chart-card-staffrank"><div class="sec">이번달 담당자별 매출</div><div id="chart-staffrank" style="padding:0 16px 12px"></div></div>
+</div>
+<div id="settings" style="display:none" class="wrap">
+</div>
+
+<!-- 고객 상세 모달 -->
+<div class="overlay" id="detail-overlay" style="display:none">
+  <div class="modal-box">
+    <div class="modal-top-bar"></div>
+    <!-- 상단 헤더 -->
+    <div style="padding:16px 16px 0;border-bottom:1px solid #EEE6DC">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0">
+          <div id="detail-avatar" style="width:36px;height:36px;border-radius:50%;background:#F5E6DC;color:#B85A2E;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0"></div>
+          <div style="min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:16px;font-weight:600;color:#282828" id="detail-name"></span>
+              <span id="detail-stage-badge" style="font-size:10px;font-weight:600;color:#B85A2E;background:#FBEFE7;padding:2px 8px;border-radius:20px;white-space:nowrap"></span>
+            </div>
+            <div id="detail-addr" style="font-size:11px;color:#9A9490;margin-top:2px;display:none"></div>
+          </div>
+        </div>
+        <button onclick="closeDetail()" aria-label="닫기" style="background:none;border:none;font-size:18px;cursor:pointer;color:#C7C0B8;line-height:1.2;padding:2px 4px;flex-shrink:0;min-width:32px;min-height:32px">✕</button>
+      </div>
+      <div id="detail-summary-row" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px;font-size:11px;color:#9A9490"></div>
+      <div id="detail-current-est" style="display:none;margin:0 0 12px;padding:14px 16px;background:linear-gradient(180deg,#FFF9F4,#FFFFFF);border:1px solid #F5DDC8;border-radius:12px"></div>
+      <div id="detail-info-bar" style="display:flex;align-items:center;gap:16px;padding:0 0 12px;font-size:12px;color:#6B6560"></div>
+      <div style="display:flex;margin-top:0;overflow-x:auto">
+        <button id="dtab-info" onclick="switchDetailTab('info')" style="flex:1;min-width:0;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid #282828;color:#282828;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">정보</button>
+        <button id="dtab-pay" onclick="switchDetailTab('pay')" style="flex:1;min-width:0;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--light);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">결제</button>
+        <button id="dtab-alim" onclick="switchDetailTab('alim')" style="flex:1;min-width:0;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--light);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">소통</button>
+        <button id="dtab-order" onclick="switchDetailTab('order')" style="flex:1;min-width:0;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--light);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">발주</button>
+        <button id="dtab-est" onclick="switchDetailTab('est')" style="flex:1;min-width:0;padding:10px 0;background:none;border:none;font-family:inherit;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:var(--light);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">이력 <span id="dtab-est-cnt" style="color:#F06E2D;font-weight:700"></span></button>
+      </div>
+    </div>
+    <div style="max-height:65vh;overflow-y:auto">
+      <div id="detail-body" style="padding:16px"></div>
+      <div id="detail-pay-body" style="padding:16px;display:none"></div>
+      <div id="detail-alim-body" style="padding:16px;display:none"></div>
+      <div id="detail-order-body" style="padding:16px;display:none"></div>
+      <div id="detail-est-body" style="padding:16px;display:none"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 고객 추가 모달 -->
+<div class="overlay" id="add-overlay">
+  <div class="modal-box">
+    <!-- 헤더 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 16px;background:#fff;border-radius:14px 14px 0 0;border-bottom:1px solid #EEE6DC">
+      <div style="font-size:12px;font-weight:700;color:#282828" id="add-modal-title">고객 추가</div>
+      <button id="add-close-btn" aria-label="닫기" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--light);line-height:1.2;padding:2px 4px;min-width:32px;min-height:32px">✕</button>
+    </div>
+    <!-- 폼 본문 -->
+    <div style="padding:20px 20px 0">
+
+      <!-- 안내 -->
+      <div style="background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:#6B6B6B;line-height:1.6">
+        네이버 예약 정보만 입력하세요<br>
+        나머지 정보는 상담 후 고객 상세에서 추가할 수 있어요
+      </div>
+
+      <!-- 필수 정보 (3개만) -->
+      <div style="background:#fff;border-radius:12px;padding:16px 16px 4px;margin-bottom:12px;border:1px solid #EEE6DC">
+        <div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">예약 정보</div>
+        <div class="form-row">
+          <label class="form-label">고객명 <span class="form-required">*</span></label>
+          <input class="form-input" id="add-name" aria-label="고객명" placeholder="홍길동">
+        </div>
+        <div class="form-row">
+          <label class="form-label">연락처 <span class="form-required">*</span></label>
+          <input class="form-input" id="add-phone" aria-label="연락처" placeholder="010-0000-0000" inputmode="numeric">
+        </div>
+        <div class="form-row">
+          <label class="form-label">방문 예정일 <span class="form-required">*</span></label>
+          <input class="form-input" type="date" id="add-date" aria-label="방문예정일" style="padding:10px 8px;font-size:11px">
+        </div>
+      </div>
+
+      <!-- 담당자 -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:8px">담당자</label>
+        <div id="staff-btn-wrap" style="display:flex;gap:8px"></div>
+      </div>
+
+      <!-- 주소 (선택) -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:8px">주소 (선택)</label>
+        <div id="add-addr-recent" style="display:none;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <input class="form-input" id="add-addr" aria-label="주소" placeholder="주소 검색을 눌러주세요" readonly style="flex:1;background:var(--ivory1);cursor:pointer" onclick="openKakaoAddr('add-addr')">
+          <button type="button" onclick="openKakaoAddr('add-addr')" style="flex-shrink:0;padding:0 16px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer">주소 검색</button>
+        </div>
+        <input class="form-input" id="add-addr-detail" aria-label="상세주소" placeholder="상세주소 (동/호수 등)" style="width:100%;box-sizing:border-box">
+      </div>
+
+      <!-- 2026-08-05: 캘린더/고객목록/엑셀에 표시되는데 입력할 곳이 없던 필드 -->
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:8px">공간 (선택)</label>
+        <input class="form-input" id="add-space" aria-label="공간" placeholder="예: 거실, 안방 (견적서 저장 시 자동으로 채워져요)" style="width:100%;box-sizing:border-box">
+      </div>
+
+      <!-- 숨겨진 필드 (수정 모드용) -->
+      <input type="hidden" id="add-memo" value="">
+      <input type="hidden" id="add-stage" value="상담">
+      <input type="hidden" id="add-measure" value="">
+      <input type="hidden" id="add-install" value="">
+
+      <!-- 저장 버튼 -->
+      <button id="add-save-btn" style="width:100%;padding:14px;background:var(--terra);color:#fff;border:none;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:8px;letter-spacing:0.5px">저장 + 예약확인 알림톡 발송</button>
+      <button id="add-save-only-btn" style="width:100%;padding:12px;background:var(--ivory1);color:var(--dark);border:1px solid var(--border);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:16px">저장만 하기</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ── 견적서 할인 퍼센트 ↔ 금액 연동 ── */
+
+/* ── 메모 자주 쓰는 문구 ── */
+/* ── 목표 달성률 프로그레스 바 ── */
+
+/* ── 칸반 스테이지 변경 ── */
+
+/* ── 입금 현황 실시간 계산 ── */
+
+
+/* ── 스켈레톤 UI 렌더 ── */
+
+// saveCustomer 전 유효성 검증 통합
+var _origSaveCustomer = window.saveCustomer;
+window.saveCustomer = function() {
+  var nameEl  = document.getElementById('add-name');
+  var phoneEl = document.getElementById('add-phone');
+  var hasError = false;
+
+  if (nameEl) {
+    var nameResult = validateName(nameEl.value);
+    if (!nameResult.ok) {
+      showFieldError(nameEl, nameResult.msg);
+      hasError = true;
+    } else {
+      clearFieldError(nameEl);
+    }
+  }
+  if (phoneEl) {
+    var phoneResult = validatePhone(phoneEl.value);
+    if (!phoneResult.ok) {
+      showFieldError(phoneEl, phoneResult.msg);
+      hasError = true;
+    } else {
+      clearFieldError(phoneEl);
+      // 자동 포맷 적용
+      phoneEl.value = formatPhone(phoneEl.value);
+    }
+  }
+  var dateEl = document.getElementById('add-date');
+  if (dateEl && dateEl.value) {
+    var dateResult = validateDate(dateEl.value);
+    if (!dateResult.ok) {
+      showFieldError(dateEl, dateResult.msg);
+      hasError = true;
+    } else {
+      clearFieldError(dateEl);
+    }
+  }
+  if (hasError) return;
+
+  // 중복 고객(전화번호/이름) 체크 — 수정 모드일 때는 자기 자신과의 중복은 무시
+  if (nameEl && phoneEl && nameResult.ok && phoneResult.ok) {
+    var dupCheck = checkDuplicate(nameEl.value, phoneEl.value);
+    var isEditingSelf = typeof editingCustomerName !== 'undefined' && editingCustomerName &&
+      dupCheck.customer && dupCheck.customer.clientName === editingCustomerName;
+    if (dupCheck.isDup && !isEditingSelf) {
+      if (!confirm(dupCheck.msg)) return;
+    }
+  }
+  if (_origSaveCustomer) _origSaveCustomer.apply(this, arguments);
+};
+
+// 2026-08-29(선혜님 지시 - "이 부분도 다 확인한거니"로 이어서 발견): 이
+// 리스너(formatPhone 사용)와 아래쪽(1009번 근처, fmtPhone 사용)에 정확히
+// 같은 목적의 'input' 이벤트 리스너가 add-phone에 중복 등록되어 있었음 -
+// 타이핑할 때마다 포맷 처리가 두 번 실행되는 불필요한 중복. formatPhone과
+// fmtPhone 로직을 오늘 통일해서 결과는 같지만, 하나만 남기고 정리 -
+// fmtPhone(더 널리 쓰이고 오늘 만든 자동감시테스트 대상) 쪽만 유지.
+document.addEventListener('DOMContentLoaded', function() {
+  var phoneEl = document.getElementById('add-phone');
+  if (phoneEl) {
+    phoneEl.addEventListener('blur', function() {
+      var result = validatePhone(this.value);
+      if (!result.ok && this.value) {
+        showFieldError(this, result.msg);
+      } else {
+        clearFieldError(this);
+      }
+    });
+  }
+});
+
+/* ── 글로벌 에러 핸들러 ── */
+window.addEventListener('error', function(e) {
+  console.error('DAH 오류:', e.message, e.filename, e.lineno);
+  // 치명적 오류만 토스트 표시
+  if (e.message && !e.message.includes('Script error')) {
+    if (typeof showToast === 'function') {
+      showToast('오류가 발생했습니다. 새로고침 해주세요.');
+    }
+  }
+});
+
+window.addEventListener('unhandledrejection', function(e) {
+  console.warn('DAH 미처리 Promise 오류:', e.reason);
+});
+
+/* ── localStorage 안전 래퍼 ── */
+/* ── 견적번호 자동채번 (대시보드용) ── */
+
+/* ── 데이터 백업 ── */
+
+
+/* ── 초성 검색 ── */
+
+/* ── 매출 차트 실데이터 ── */
+/* ── 설정 화면 저장/불러오기 ── */
+
+// 설정 탭 진입 시 로드
+var _origGoTab = window.goTab;
+
+// 입력 필드 변경 시 자동 저장
+document.addEventListener('DOMContentLoaded', function() {
+  ['set-monthly-goal','set-account','set-holder'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('change', saveSettings);
+  });
+  loadSettings();
+});
+
+/* ── 고객 등록 모달 담당자 칩 ── */
+
+// openAdd 함수 후킹 — 모달 열릴 때 칩 초기화
+var _origOpenAdd = window.openAdd;
+window.openAdd = function(editName) {
+  if (_origOpenAdd) _origOpenAdd.apply(this, arguments);
+  setTimeout(function() {
+    initAddModalChips();
+    loadSettings();
+    // 입금 계좌 힌트 업데이트
+    var s = getSettings();
+    var accountHint = document.getElementById('add-account-hint');
+    if (accountHint && s.account) {
+      accountHint.textContent = '국민은행 ' + s.account + ' ' + (s.holder || '장선혜');
+    }
+  }, 100);
+};
+
+/* ── 로딩 스피너 제어 ── */
+
+// loadCustomersAsync에 로딩 스피너 연결
+var _origLoadAsync = window.loadCustomersAsync;
+window.loadCustomersAsync = function(callback) {
+  // 로그인 화면 표시 중이면 로딩 스피너 생략
+  var loginScreen = document.getElementById('login-screen');
+  var isLoggedIn = loginScreen && loginScreen.style.display === 'none';
+  if (isLoggedIn) showLoading('고객 데이터 불러오는 중...');
+  var wrappedCb = function(customers) {
+    hideLoading();
+    if (callback) callback(customers);
+  };
+  if (_origLoadAsync) _origLoadAsync.call(this, wrappedCb);
+  else { hideLoading(); if (callback) callback([]); }
+};
+
+/* ── 빈 상태 (Empty State) 헬퍼 ──────────────────── */
+
+
+
+// 2026-08-29(선혜님 지적 - "그럼 이부분은 다 했다는거야????" 정리 완료
+// 요청): MASTER_PW(설정화면 레거시 "비밀번호 변경" UI가 쓰던 전역변수,
+// MASTER_PW_BOOTSTRAP과는 완전히 별개)는 그 UI 자체를 방금 제거하면서
+// 완전히 죽은 코드가 됨 - 평문 비밀번호를 담던 전역변수라 제거.
+var currentUser = null;
+
+
+/** @param {string} msg 토스트 메시지 */
+
+
+
+// 월별 매출 계산 - 선금은 depositDate 기준, 잔금은 balanceDate 기준으로 각 월에 분산
+
+
+
+document.querySelectorAll('.tab').forEach(function(b) { b.addEventListener('click', function() { goTab(b.getAttribute('data-tab')); }); });
+document.querySelectorAll('.chart-tab').forEach(function(b) { b.addEventListener('click', function() { renderChart(b.getAttribute('data-period')); }); });
+document.getElementById('btn-add-customer').addEventListener('click', function() { openAdd(null); });
+document.getElementById('add-close-btn').addEventListener('click', closeAdd);
+document.getElementById('add-save-only-btn').addEventListener('click', function() {
+  document.getElementById('add-save-btn').click();
+});
+var _dcb=document.getElementById('detail-close-btn'); if(_dcb) _dcb.addEventListener('click', closeDetail);
+document.getElementById('add-save-btn').addEventListener('click', saveCustomer);
+document.getElementById('add-phone').addEventListener('input', function() { this.value = fmtPhone(this.value); });
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('staff-btn')) {
+    document.querySelectorAll('.staff-btn').forEach(function(b) { b.classList.remove('active'); b.style.background = '#fff'; b.style.color = '#8E8078'; b.style.borderRadius = '4px'; b.style.border = '1.5px solid #EEE6DC'; b.style.fontWeight = '400'; });
+    e.target.classList.add('active'); e.target.style.background = '#282828'; e.target.style.color = '#fff'; e.target.style.border = '1px solid #282828'; e.target.style.fontWeight = '700';
+  }
+});
+document.getElementById('pipe-search').addEventListener('input', renderPipe);
+
+document.addEventListener('click', function(e) {
+  if (e.target.id === 'cal-prev') {
+    calCurrentMonth--;
+    if (calCurrentMonth < 0) { calCurrentMonth = 11; calCurrentYear--; }
+    calSelectedDate = null;
+    var allCal2 = loadCustomers();
+    var cust2 = (currentUser && currentUser.role === 'staff') ? allCal2.filter(function(c){ return (c.staffName||'마스터')===currentUser.name; }) : allCal2;
+    renderCal();
+  }
+  if (e.target.id === 'cal-next') {
+    calCurrentMonth++;
+    if (calCurrentMonth > 11) { calCurrentMonth = 0; calCurrentYear++; }
+    calSelectedDate = null;
+    renderCal();
+  }
+});
+document.getElementById('cust-search').addEventListener('input', renderSearch);
+document.getElementById('detail-overlay').addEventListener('click', function(e) { if (e.target === this) closeDetail(); });
+document.getElementById('add-overlay').addEventListener('click', function(e) { if (e.target === this) closeAdd(); });
+
+(function() {
+  try {
+    var _rawSess = JSON.parse(localStorage.getItem('dah_session') || 'null');
+    if (_rawSess && _rawSess.loginAt && (Date.now()-_rawSess.loginAt) > 8*60*60*1000) {
+      localStorage.removeItem('dah_session'); _rawSess = null;
+    }
+    // Supabase Auth 세션이 없거나 만료됐으면(refresh_token도 없다고 간주) 자동 로그인 복원하지 않음 —
+    // dah_session만 남아있고 실제 인증 토큰이 없으면 화면은 로그인된 것처럼 보여도
+    // 모든 API 요청이 401로 실패하는 혼란스러운 상태가 되므로 방지
+    var _authSess = (typeof getAuthSession === 'function') ? getAuthSession() : null;
+    if (!_authSess || !_authSess.access_token) {
+      localStorage.removeItem('dah_session'); _rawSess = null;
+    }
+    var saved = _rawSess;
+    if (saved && saved.name && saved.role) {
+      var validStaffs = ['마스터'].concat(getStaffList());
+      if (validStaffs.indexOf(saved.name) >= 0) {
+        currentUser = saved;
+        var loginScreen = document.getElementById('login-screen'); if (loginScreen) loginScreen.style.display = 'none';
+        var badge = document.getElementById('current-user-badge'); if (badge) badge.textContent = currentUser.name;
+        // 모바일 앱헤더/하단네비/FAB — 모바일에서만 표시
+        var mobHd = document.getElementById('mob-app-header');
+        var isMobileWidth = window.innerWidth <= 640;
+        if (mobHd) { mobHd.style.display = isMobileWidth ? 'flex' : 'none'; mobHd.style.background = '#282828'; mobHd.style.minHeight = '48px'; }
+        var mobNav = document.getElementById('mob-bottom-nav');
+        if (mobNav) { mobNav.style.display = isMobileWidth ? 'flex' : 'none'; }
+        var mobFab = document.querySelector('.mob-fab');
+        if (mobFab) { mobFab.style.display = isMobileWidth ? 'flex' : 'none'; }
+        applyPermissions(); loadCustomersAsync(function(){ renderHome(true); });
+        loadAppSettingsAsync();
+        return;
+      }
+    }
+  } catch(e) {}
+  loadAppSettingsAsync(renderStaffLoginList);
+  renderStaffLoginList();
+})();
+
+(function setTabTop(){
+  var hd  = document.querySelector('.hd');
+  var tb  = document.querySelector('.tabs');
+  if (hd && tb) {
+    tb.style.top = hd.getBoundingClientRect().height + 'px';
+  }
+})();
+setTimeout(function(){
+  var hd  = document.querySelector('.hd');
+  var tb  = document.querySelector('.tabs');
+  if (hd && tb) {
+    tb.style.top = hd.getBoundingClientRect().height + 'px';
+  }
+}, 500);
+</script>
+<script>
+/* ── 모바일 탭 연동 JS (안정화) ── */
+(function() {
+  window.updateMobNav = function(activeTab) {
+  var btns = document.querySelectorAll('.mob-nav-btn');
+  btns.forEach(function(b) {
+    b.classList.toggle('on', b.getAttribute('data-mob-tab') === activeTab);
+  });
+}
+})();
+</script>
+
+<script>
+// 서비스워커 관련 정리는 head 최상단으로 이동함 (다른 리소스보다 먼저 실행되어야 하므로)
+</script>
+
+
+
+<!-- 모바일 앱 헤더 -->
+
+
+<!-- 모바일 하단 탭바 -->
+<nav class="mob-bottom-nav" id="mob-bottom-nav">
+  <div class="mob-bottom-nav-inner">
+    <button class="mob-nav-btn on" data-mob-tab="home" onclick="goTab('home')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      홈
+    </button>
+    <button class="mob-nav-btn" data-mob-tab="pipe" onclick="goTab('pipe')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      진행현황
+    </button>
+    <button class="mob-nav-btn" data-mob-tab="est-list" onclick="goTab('est-list')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+      견적서
+    </button>
+    <button class="mob-nav-btn" data-mob-tab="search" onclick="goTab('search')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+      고객목록
+    </button>
+    <button class="mob-nav-btn" data-mob-tab="cal" onclick="goTab('cal')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      일정
+    </button>
+    <button class="mob-nav-btn" data-mob-tab="chart" onclick="goTab('chart')">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      매출
+    </button>
+  </div>
+</nav>
+
+<!-- 모바일 FAB 버튼 -->
+<!-- 2026-08-06: 플로팅 + 버튼(mob-fab) 제거 — 헤더의 "+ 고객" 버튼과 완전히 동일한
+     openAdd() 함수를 호출하는 100% 중복 진입점이었음(둘 다 모든 화면에 항상 떠있음).
+     디자인 감사에서 "고객추가 진입점이 화면 하나에 3개"로 지적된 부분 중 하나 정리. -->
+
+
+<input type="file" id="restore-input" accept=".json" style="display:none">
+</body>
+</html>

@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<!-- DAH-ESTIMATE-VERSION-20260621 -->
+<html lang="ko">
+<head>
+<script src="./shared-staging-guard.js?v=202609061600"></script>
+<script>
+// ── 캐시/서비스워커 강제 정리 (반드시 head 최상단) ──
+// 대시보드에서 등록된 서비스워커가 Service-Worker-Allowed:/ 설정으로 이 페이지도
+// 덮을 수 있어 동일하게 방어함.
+(function(){
+  var BUILD = '202608252600';
+  window.DAH_BUILD = BUILD; // 2026-08-21: 다른 JS파일(est-save.js 자가진단 등)에서 참조할 수 있게 전역 노출
+  try {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs){
+        regs.forEach(function(reg){ reg.unregister(); });
+      });
+    }
+    if (window.caches) {
+      caches.keys().then(function(keys){ keys.forEach(function(k){ caches.delete(k); }); });
+    }
+    var seen = localStorage.getItem('dah_build_seen');
+    localStorage.setItem('dah_build_seen', BUILD);
+    if (seen && seen !== BUILD) {
+      location.reload(true);
+    }
+  } catch(e) {}
+})();
+</script>
+<link rel="icon" type="image/x-icon" href="./favicon.ico">
+
+<link rel="stylesheet" href="./est-styles.css?v=202609041100">
+</style>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>드로잉엣홈 견적서 v20260621</title>
+
+<style>
+</style>
+</head>
+<body>
+
+<!-- 2026-08-20: 화면 구석에 작은 버전 표시 - 스크린샷 한 장으로 최신버전인지
+     바로 확인 가능하게(캐시 문제 진단용). 인쇄물엔 안 나오게 처리. -->
+<div class="print-hide" id="dah-build-badge" style="position:fixed;bottom:4px;right:6px;font-size:11px;color:#B0A99F;z-index:999999;pointer-events:none;font-family:monospace;"></div>
+<script>document.getElementById('dah-build-badge').textContent = 'v' + (window.DAH_BUILD||'?');</script>
+<button class="print-hide" onclick="runSelfDiagnosis()" style="position:fixed;bottom:22px;right:6px;z-index:999999;background:#fff;border:1px solid #E5E1DA;border-radius:20px;padding:6px 10px;min-height:32px;font-size:11px;box-shadow:0 2px 6px rgba(0,0,0,0.1);cursor:pointer;">🔍 진단</button>
+
+<!-- 비밀번호 재설정 화면 (재설정 이메일 링크를 눌러서 돌아왔을 때만 표시) -->
+<div id="recovery-error-screen" style="display:none;position:fixed;inset:0;z-index:9999999;background:#282828;align-items:center;justify-content:center;flex-direction:column;padding:20px;box-sizing:border-box;font-family:'Pretendard Variable',-apple-system,sans-serif;">
+  <div style="width:100%;max-width:340px;background:#fff;border-radius:16px;padding:28px 24px;box-sizing:border-box;">
+    <div style="font-size:15px;font-weight:700;color:#282828;margin-bottom:10px;">링크를 사용할 수 없어요</div>
+    <div id="recovery-error-msg" style="font-size:12px;color:#8E8078;line-height:1.6;margin-bottom:20px;"></div>
+    <button id="recovery-error-retry-btn" type="button" style="width:100%;height:44px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">확인</button>
+  </div>
+</div>
+<div id="recovery-screen" style="display:none;position:fixed;inset:0;z-index:9999999;background:#282828;align-items:center;justify-content:center;flex-direction:column;padding:20px;box-sizing:border-box;font-family:'Pretendard Variable',-apple-system,sans-serif;">
+  <div style="width:100%;max-width:340px;background:#fff;border-radius:16px;padding:28px 24px;box-sizing:border-box;">
+    <div style="font-size:15px;font-weight:700;color:#282828;margin-bottom:6px;">새 비밀번호 설정</div>
+    <div style="font-size:12px;color:#8E8078;margin-bottom:20px;">새로 사용하실 비밀번호를 입력해주세요</div>
+    <input type="password" id="recovery-new-pw" placeholder="새 비밀번호 (6자 이상)" autocomplete="new-password"
+      style="width:100%;height:44px;border:1px solid #EEE6DC;border-radius:8px;padding:0 14px;font-size:13px;box-sizing:border-box;margin-bottom:10px;font-family:inherit;">
+    <input type="password" id="recovery-new-pw-confirm" placeholder="새 비밀번호 확인" autocomplete="new-password"
+      style="width:100%;height:44px;border:1px solid #EEE6DC;border-radius:8px;padding:0 14px;font-size:13px;box-sizing:border-box;margin-bottom:10px;font-family:inherit;">
+    <button id="recovery-confirm-btn" type="button" style="width:100%;height:44px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;">비밀번호 변경</button>
+    <div id="recovery-error" style="display:none;color:#E4483A;font-size:11px;margin-top:8px;"></div>
+  </div>
+</div>
+<script>
+(function() {
+  var urlHash = window.location.hash;
+  if (urlHash && urlHash.indexOf('error=') !== -1) {
+    var errParams = new URLSearchParams(urlHash.slice(1));
+    var errCode = errParams.get('error_code') || '';
+    var errMsg = errCode === 'otp_expired'
+      ? '이 링크는 이미 사용됐거나 만료됐어요. 메일 앱이 링크를 미리 열어봐서 그럴 수 있어요 — 대시보드 설정에서 새 링크를 다시 받아보세요.'
+      : '링크 처리 중 문제가 발생했어요. 새 링크를 다시 받아보세요.';
+    history.replaceState(null, '', window.location.pathname + window.location.search);
+    document.getElementById('recovery-error-msg').textContent = errMsg;
+    document.getElementById('recovery-error-screen').style.display = 'flex';
+    document.getElementById('recovery-error-retry-btn').addEventListener('click', function() {
+      document.getElementById('recovery-error-screen').style.display = 'none';
+    });
+  }
+  var recoveryToken = (function() {
+    var hash = window.location.hash;
+    if (!hash || hash.indexOf('type=recovery') === -1) return null;
+    var params = new URLSearchParams(hash.slice(1));
+    return params.get('access_token') || null;
+  })();
+  if (recoveryToken) {
+    document.getElementById('recovery-screen').style.display = 'flex';
+    function doRecoveryUpdate(retries) {
+      if (typeof updatePasswordWithRecoveryToken !== 'function') {
+        if (retries > 0) { setTimeout(function(){ doRecoveryUpdate(retries-1); }, 100); }
+        return;
+      }
+      var btn = document.getElementById('recovery-confirm-btn');
+      btn.addEventListener('click', function() {
+        var pw1 = document.getElementById('recovery-new-pw').value;
+        var pw2 = document.getElementById('recovery-new-pw-confirm').value;
+        var errEl = document.getElementById('recovery-error');
+        if (pw1.length < 6) { errEl.textContent = '비밀번호는 6자 이상이어야 합니다'; errEl.style.display = 'block'; return; }
+        if (pw1 !== pw2) { errEl.textContent = '비밀번호가 일치하지 않습니다'; errEl.style.display = 'block'; return; }
+        btn.disabled = true; btn.textContent = '변경 중...';
+        updatePasswordWithRecoveryToken(recoveryToken, pw1, function(err) {
+          btn.disabled = false; btn.textContent = '비밀번호 변경';
+          if (err) { errEl.textContent = err.message || '변경에 실패했습니다'; errEl.style.display = 'block'; return; }
+          history.replaceState(null, '', window.location.pathname + window.location.search);
+          document.getElementById('recovery-screen').style.display = 'none';
+          alert('비밀번호가 변경됐습니다. 새 비밀번호로 로그인해주세요');
+          window.location.reload();
+        });
+      });
+    }
+    doRecoveryUpdate(20);
+  }
+})();
+</script>
+
+<!-- ── 직접 접근 방지: 대시보드 세션 없으면 비밀번호 확인 ── -->
+<div id="est-auth-gate" style="display:none;position:fixed;inset:0;z-index:999999;background:#282828;align-items:center;justify-content:center;flex-direction:column;padding:20px;box-sizing:border-box;font-family:'Pretendard Variable',-apple-system,sans-serif;">
+  <div style="width:100%;max-width:320px;background:#fff;border-radius:16px;padding:32px 24px;text-align:center;">
+    <div style="font-size:15px;font-weight:700;color:#282828;margin-bottom:6px;">드로잉엣홈 견적서</div>
+    <div style="font-size:12px;color:#8E8078;margin-bottom:20px;">이메일과 비밀번호를 입력해주세요</div>
+    <input type="email" id="est-auth-email" placeholder="이메일" autocomplete="username"
+      style="width:100%;height:44px;border:1px solid #EEE6DC;border-radius:8px;padding:0 14px;font-size:13px;box-sizing:border-box;margin-bottom:10px;font-family:inherit;">
+    <input type="password" id="est-auth-pw" placeholder="비밀번호" maxlength="20" autocomplete="current-password"
+      style="width:100%;height:44px;border:1px solid #EEE6DC;border-radius:8px;padding:0 14px;font-size:13px;box-sizing:border-box;margin-bottom:10px;font-family:inherit;">
+    <button id="est-auth-btn" type="button"
+      style="width:100%;height:44px;border:none;border-radius:8px;background:#F06E2D;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">확인</button>
+    <div id="est-auth-error" style="display:none;color:#C0392B;font-size:12px;margin-top:10px;">비밀번호가 올바르지 않습니다</div>
+  </div>
+</div>
+<script>
+(function() {
+  var SESSION_VALID_MS = 8 * 60 * 60 * 1000; // 대시보드 로그인 후 8시간 이내면 자동 통과
+  // 2026-08-12: 담당자(#c-staff) 필드가 예전엔 로그인한 사람과 무관하게
+  // 항상 직접 타이핑해야 했음 - 오타/누락시 RLS 정책(staff_name 정확히
+  // 일치해야 조회 가능)에 걸려 본인이 저장한 견적서도 못 보는 위험 있었음
+  // (선혜님 확인 요청으로 발견/수정). 필드가 비어있을 때만 자동 채움 —
+  // 이미 뭔가 입력돼있으면 덮어쓰지 않음.
+  // 2026-08-12: "견적서 앱에서 열기"/"열어서 수정"/"복사"로 Supabase에서
+  // 직접 조회한 대시보드 기존 고객 정보가, 견적서 앱 로컬(dah_customers)엔
+  // 전혀 반영이 안 돼서 - 저장시 로컬 매칭(이름+전화)에 실패해 완전히
+  // 새로운 중복 고객이 POST로 생성되던 심각한 데이터 정합성 버그 발견.
+  // 조회 성공 시 로컬에도 정확히 반영(upsert)해서 저장시 기존 고객으로
+  // 인식되게 함.
+  function upsertLocalCustomer(id, clientName, phone, staffName, addr) {
+    try {
+      var arr = JSON.parse(localStorage.getItem('dah_customers') || '[]');
+      var normPhone = function(p){ return (p||'').replace(/\D/g,''); };
+      var idx = arr.findIndex(function(c){ return c.id === id; });
+      var entry = { id: id, clientName: clientName || '', phone: phone || '', staffName: staffName || '', addr: addr || '' };
+      if (idx >= 0) arr[idx] = Object.assign({}, arr[idx], entry);
+      else arr.unshift(entry);
+      localStorage.setItem('dah_customers', JSON.stringify(arr));
+    } catch(e) {}
+  }
+  window.upsertLocalCustomer = upsertLocalCustomer; // IIFE 밖(다른 script 블록)에서도 호출 가능하도록
+  function autoFillStaffField(name) {
+    function doFill() {
+      try {
+        var el = document.getElementById('c-staff');
+        if (el && !el.value.trim() && name) el.value = name;
+      } catch(e) {}
+    }
+    // 이 스크립트가 문서 초반(head 근처)에서 실행되어 #c-staff가 아직
+    // DOM에 없을 수 있음 - readyState 확인해서 안전하게 처리
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', doFill);
+    } else {
+      doFill();
+    }
+  }
+  function hasValidDashboardSession() {
+    try {
+      var s = JSON.parse(localStorage.getItem('dah_session') || 'null');
+      if (!s || !s.loginAt) return false;
+      if ((Date.now() - s.loginAt) >= SESSION_VALID_MS) return false;
+      // Supabase Auth 세션도 함께 유효해야 함 (dah_session만으로는 실제 API 인증이 안 됨)
+      var authSess = JSON.parse(localStorage.getItem('dah_auth_session') || 'null');
+      return !!(authSess && authSess.access_token);
+    } catch(e) { return false; }
+  }
+  window.hasValidDashboardSession = hasValidDashboardSession; // IIFE 밖(다른 script 블록)에서도 호출 가능하도록
+  var _authGateEmailInput, _authGatePwInput, _authGateErrEl, _authGateAuthBtn;
+  var _authGateOnSuccess = null;
+  function _wireAuthGateOnce() {
+    if (_authGateEmailInput) return; // 이미 연결됨
+    _authGateEmailInput = document.getElementById('est-auth-email');
+    _authGatePwInput = document.getElementById('est-auth-pw');
+    _authGateErrEl = document.getElementById('est-auth-error');
+    _authGateAuthBtn = document.getElementById('est-auth-btn');
+    var emailInput = _authGateEmailInput, pwInput = _authGatePwInput, errEl = _authGateErrEl, authBtn = _authGateAuthBtn;
+    // 편의상 이 기기에 이미 캐시된 이메일이 있으면 기본값으로 채워두되, 항상 직접 확인/수정 가능
+    // (2026-08-01: 예전엔 이메일 입력창 자체가 없어서, 캐시가 없는 새 기기에서는
+    // 로그인 자체가 불가능했음. 자동 클라우드조회는 RLS 때문에 항상 실패해서 무의미했으므로 제거함)
+    // dash-supabase-auth.js가 이 스크립트보다 나중에 로드되므로, getMasterEmail이
+    // 정의될 때까지 짧게 재시도함
+    (function fillCachedEmail(retries) {
+      if (typeof getMasterEmail === 'function') {
+        var cached = (typeof getLastLoginEmail === 'function' ? getLastLoginEmail() : '') || getMasterEmail() || '';
+        emailInput.value = cached;
+        // 이메일이 비어있으면(새 기기) 이메일부터, 채워져 있으면(편의) 비밀번호로 바로
+        if (cached) { pwInput.focus(); } else { emailInput.focus(); }
+      } else if (retries > 0) {
+        setTimeout(function() { fillCachedEmail(retries - 1); }, 100);
+      } else {
+        emailInput.focus();
+      }
+    })(20);
+    function tryAuth() {
+      if (typeof supabaseAuthLogin !== 'function') {
+        errEl.textContent = '페이지를 아직 불러오는 중입니다. 잠시 후 다시 시도해주세요';
+        errEl.style.display = 'block';
+        return;
+      }
+      var email = emailInput ? emailInput.value.trim() : '';
+      if (!email) {
+        errEl.textContent = '이메일을 입력해주세요';
+        errEl.style.display = 'block';
+        emailInput.focus();
+        return;
+      }
+      doAuthLogin(email);
+    }
+    function doAuthLogin(email) {
+      authBtn.disabled = true;
+      authBtn.textContent = '확인 중...';
+      supabaseAuthLogin(email, pwInput.value, function(result) {
+        authBtn.disabled = false;
+        authBtn.textContent = '확인';
+        if (result.ok) {
+          gate.style.display = 'none';
+          errEl.style.display = 'none';
+          if (typeof setLastLoginEmail === 'function') setLastLoginEmail(email);
+          // 2026-09-06: DOMContentLoaded 시점엔 아직 로그인 전이라 건너뛰었던
+          // 지역요금/거래처/쿠폰 조회를 로그인 성공 직후 다시 시도.
+          if (typeof fetchRegionFeesFromCloud === 'function') { fetchRegionFeesFromCloud(); }
+          if (typeof fetchVendorListFromCloud === 'function') { fetchVendorListFromCloud(); }
+          if (typeof fetchDiscountCouponsFromCloud === 'function') { fetchDiscountCouponsFromCloud(function(){ if (typeof renderCouponList === 'function') renderCouponList(); }); }
+          // 2026-08-25(선혜님 확인 요청 — "직원 로그인 때도 조용히 시도되는
+          // master_email 동기화, 막아야 해??"): 여기서 무조건 setMasterEmail을
+          // 불렀는데, 이 시점엔 아직 마스터인지 스태프인지 모르는 상태(항상
+          // "일단 마스터"로 가정하고 시작)라서 직원 로그인 때도 매번 직원
+          // 이메일이 "마스터 이메일"로 저장 시도되고 있었음(화면엔 영향 없지만
+          // 논리적으로 잘못된 동작). 아래 staff_emails 조회가 끝나서 진짜
+          // 마스터로 확인된 경우에만 저장하도록 이동.
+          // 2026-08-12: 예전엔 이메일과 무관하게 항상 role:'master'로 저장돼서,
+          // 스태프 계정으로 로그인해도 견적서 앱에선 늘 "마스터"로 취급됐음
+          // (권한 개념 자체가 없던 근본 원인). staff_emails 매핑을 Supabase에서
+          // 직접 조회해서(대시보드와 다른 도메인이라 localStorage 공유 안 됨,
+          // 지역출장비/거래처목록과 동일 패턴) 실제 이메일이 스태프 것인지
+          // 판별 — "고객 불러오기" 목록 필터링에 사용됨(선혜님 확인 요청).
+          window._estCurrentUser = { name: '마스터', role: 'master' };
+          autoFillStaffField('마스터');
+          // 2026-08-31(선혜님 지시 - "그 비슷한 버그를 더 찾아봐"로 발견,
+          // 신화경 사건의 진짜 근본원인으로 추정): 아래 staff_emails
+          // 조회(비동기)가 끝나야 "이 사람이 진짜 마스터인지 실장인지"가
+          // 확정되는데, 그 사이 몇백ms 동안은 담당자 필드가 일단 '마스터'
+          // 로 채워진 채로 열려있음. 이미 "값이 '마스터'로 남아있을 때만
+          // 교체"하는 방어(아래)가 있었지만, 그 교체가 실행되기 전에
+          // 사용자가 먼저 저장 버튼을 누르면 담당자가 '마스터'로 그대로
+          // 저장돼버림 - 실장이 로그인 직후 급하게 저장하면 걸릴 수 있는
+          // 레이스 컨디션. 조회가 끝날 때까지 저장 버튼을 잠깐 막아서
+          // 이 경로 자체를 차단.
+          var _saveBtnDuringAuth = document.getElementById('btn-save-estimate');
+          if (_saveBtnDuringAuth) { _saveBtnDuringAuth.disabled = true; _saveBtnDuringAuth.title = '담당자 확인 중...'; }
+          try {
+            var seXhr = new XMLHttpRequest();
+            seXhr.open('GET', SUPABASE_URL + '/rest/v1/app_settings?key=eq.staff_emails&select=value', true);
+            seXhr.setRequestHeader('apikey', SUPABASE_KEY);
+            seXhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+            seXhr.onload = function() {
+              try {
+                var rows = JSON.parse(seXhr.responseText);
+                var map = rows && rows[0] && rows[0].value || {};
+                var foundStaffName = null;
+                Object.keys(map).forEach(function(staffName) {
+                  if (map[staffName] && map[staffName].toLowerCase() === email.toLowerCase()) foundStaffName = staffName;
+                });
+                if (foundStaffName) {
+                  window._estCurrentUser = { name: foundStaffName, role: 'staff' };
+                  localStorage.setItem('dah_session', JSON.stringify({name:foundStaffName, role:'staff', loginAt: Date.now()}));
+                  // 기본값(마스터)으로 이미 자동채움된 상태일 수 있으니, 스태프로
+                  // 정확히 판별되면 그 값으로 교체(사용자가 그 사이에 직접 고치지
+                  // 않았을 때만 - "마스터"로 남아있을 때만 교체)
+                  var staffEl = document.getElementById('c-staff');
+                  if (staffEl && staffEl.value.trim() === '마스터') staffEl.value = foundStaffName;
+                } else {
+                  // 진짜 마스터로 확인됨 - 이제 저장
+                  if (typeof setMasterEmail === 'function') setMasterEmail(email);
+                }
+              } catch(eParse) {}
+              if (_saveBtnDuringAuth) { _saveBtnDuringAuth.disabled = false; _saveBtnDuringAuth.title = ''; }
+            };
+            // 2026-08-31: 네트워크 오류/타임아웃으로 onload 자체가 안 불리면
+            // 저장 버튼이 영원히 비활성화된 채로 남을 위험 - 반드시 재활성화.
+            seXhr.onerror = function() {
+              if (_saveBtnDuringAuth) { _saveBtnDuringAuth.disabled = false; _saveBtnDuringAuth.title = ''; }
+            };
+            seXhr.timeout = 8000;
+            seXhr.ontimeout = function() {
+              if (_saveBtnDuringAuth) { _saveBtnDuringAuth.disabled = false; _saveBtnDuringAuth.title = ''; }
+            };
+            seXhr.send();
+          } catch(eOuter) {
+            if (_saveBtnDuringAuth) { _saveBtnDuringAuth.disabled = false; _saveBtnDuringAuth.title = ''; }
+          }
+          // 확인 성공 시 이 창에서도 세션 갱신 (같은 브라우저에서 계속 쓸 수 있도록)
+          // staff_emails 조회가 끝나기 전까지의 기본값 — 조회 완료되면 위 콜백에서 정확한 값으로 덮어씀
+          try { localStorage.setItem('dah_session', JSON.stringify({name:'마스터', role:'master', loginAt: Date.now()})); } catch(e) {}
+          // 2026-08-25(선혜님 발견 — "로그아웃해서 새로 등록만 오늘 몇번 하니"):
+          // 재시도 큐 등이 세션 완전만료를 만났을 때, 여기까지 다시 로그인이
+          // 성공하면 대기 중이던 작업을 자동으로 이어서 실행해줌 — 로그아웃
+          // 버튼을 따로 찾아 누를 필요 없이, 그 자리에서 비밀번호만 다시
+          // 넣으면 바로 이어짐(입력 중이던 견적 내용도 그대로 유지됨).
+          if (_authGateOnSuccess) { var cb = _authGateOnSuccess; _authGateOnSuccess = null; setTimeout(cb, 300); }
+        } else {
+          errEl.textContent = result.msg || '이메일 또는 비밀번호가 올바르지 않습니다';
+          errEl.style.display = 'block';
+          pwInput.value = '';
+          pwInput.focus();
+        }
+      });
+    }
+    authBtn.onclick = tryAuth;
+    pwInput.onkeydown = function(e) { if (e.key === 'Enter') tryAuth(); };
+  }
+  // 2026-08-25: 세션이 완전히 만료된 상황(refresh_token까지 무효)을 만나면,
+  // 로그아웃 절차 없이 이 화면 그대로 비밀번호만 다시 입력해서 이어갈 수 있게
+  // 하는 진입점. onSuccess는 재로그인 성공 직후(스태프 판별까지 끝난 뒤) 실행됨.
+  window.showReloginPrompt = function(onSuccess) {
+    _wireAuthGateOnce();
+    _authGateOnSuccess = onSuccess || null;
+    var gate = document.getElementById('est-auth-gate');
+    gate.style.display = 'flex';
+    if (_authGateErrEl) _authGateErrEl.style.display = 'none';
+    if (_authGatePwInput) { _authGatePwInput.value = ''; _authGatePwInput.focus(); }
+  };
+  if (!hasValidDashboardSession()) {
+    var gate = document.getElementById('est-auth-gate');
+    gate.style.display = 'flex';
+    _wireAuthGateOnce();
+  } else {
+    // 2026-08-12: 이미 유효한 세션으로 재방문한 경우(로그인 절차 없이 바로
+    // 사용) - 저장된 dah_session에서 role/name을 읽어와야 "고객 불러오기"
+    // 필터링이 이 경로에서도 정확히 적용됨.
+    try {
+      var savedSess = JSON.parse(localStorage.getItem('dah_session') || 'null');
+      if (savedSess && savedSess.role) {
+        window._estCurrentUser = { name: savedSess.name || '마스터', role: savedSess.role };
+      } else {
+        window._estCurrentUser = { name: '마스터', role: 'master' };
+      }
+    } catch(e) { window._estCurrentUser = { name: '마스터', role: 'master' }; }
+    autoFillStaffField(window._estCurrentUser.name);
+  }
+})();
+</script>
+
+<div class="container">
+
+  <!-- 헤더 (탭 포함) -->
+  <div class="doc-header">
+    <!-- 좌상: 로고 -->
+    <div class="doc-header-logo" style="flex-direction:column;align-items:flex-start;gap:2px">
+      <img src="data:image/png;base64,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" alt="드로잉엣홈" id="hd-logo">
+      <span class="doc-date" id="hd-date" style="font-size:11px;color:rgba(255,255,255,0.4);font-weight:500"></span>
+    </div>
+    <!-- 우상: 문서 유형 -->
+    <div class="doc-header-type">
+      <div class="doc-title">ESTIMATE</div>
+      <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
+        <div class="doc-title-ko" id="hd-title">가견적서</div>
+        <!-- 2026-08-26(선혜님과 함께 진행 — "확정 탭 위치가 애매하다"): 원래
+             탭줄에 있던 액션버튼(toggleConfirmEstimate 호출)을 여기 제목 옆
+             배지로 옮김(A안). 미확정 상태에도 항상 보이게 해서(예전 배지는
+             확정 전엔 display:none으로 아예 숨어 클릭할 게 없었음), 이 배지
+             하나가 "지금 상태 표시"와 "클릭해서 토글"을 겸함. -->
+        <button id="hd-confirm-badge" class="print-hide" onclick="toggleConfirmEstimate()"
+          style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.5);background:transparent;border:1px solid rgba(255,255,255,0.25);padding:3px 10px;border-radius:20px;letter-spacing:0.3px;cursor:pointer;font-family:inherit;white-space:nowrap;min-height:32px;display:inline-flex;align-items:center;box-sizing:border-box">✓ 확정</button>
+      </div>
+      <div id="hd-header-meta" style="font-size:11px;color:rgba(255,255,255,0.4);font-weight:500;display:flex;gap:6px;justify-content:flex-end;margin-top:1px"><span>No. <strong id="hd-no-display" style="color:rgba(255,255,255,0.6)">—</strong></span><span>담당자 <strong id="hd-staff-display" style="color:rgba(255,255,255,0.6)">장선혜</strong></span></div>
+    </div>
+    <!-- 구분선 -->
+    <div class="doc-header-divider"></div>
+    <!-- 탭바 -->
+    <div class="doc-header-tabbar-wrap print-hide">
+    <div class="doc-header-tabbar">
+      <div class="doc-header-tabbar-left">
+        <button class="est-status-btn on" id="status-ga" onclick="setStatus('ga')">가견적서</button>
+        <button class="est-status-btn" id="status-final" onclick="setStatus('final')">최종 견적서</button>
+      </div>
+      <div class="doc-header-tabbar-right">
+        <button class="cust-type-btn on" id="type-new" onclick="setCustType('new')">신규</button>
+        <button class="cust-type-btn" id="type-rebuy" onclick="setCustType('rebuy')">재구매</button>
+        <button class="cust-type-btn" id="type-as" onclick="setCustType('as')">AS · 수선</button>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <!-- 고객 정보 -->
+  <div class="section">
+    <div class="sec-label"><span class="sec-title">고객 정보</span><div style="display:flex;gap:6px"><button type="button" onclick="openCustomerLoad()" class="load-cust-btn print-hide">🔍 고객 불러오기</button><button type="button" onclick="loadSurveyFromSheet()" class="load-cust-btn print-hide" id="btn-load-survey">📋 설문 불러오기</button></div></div>
+    <div class="info-grid">
+      <div class="info-item">
+        <label class="info-label">고객명</label>
+        <input type="text" id="c-name" placeholder="홍길동">
+      </div>
+      <div class="info-item">
+        <label class="info-label">연락처</label>
+        <input type="text" id="c-phone" placeholder="010-0000-0000" oninput="fmtPhone(this)">
+      </div>
+      <div class="info-item">
+        <label class="info-label">주소</label>
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+          <input type="text" id="c-addr" placeholder="서울 서초구 반포동" style="flex:1;min-width:0">
+          <button type="button" onclick="openKakaoAddr('c-addr')"
+            style="padding:6px 12px;min-height:32px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0">
+            🔍 검색
+          </button>
+        </div>
+        <input type="text" id="c-addr2" placeholder="상세주소 (동·호수 등)" style="width:100%">
+      </div>
+      <input type="hidden" id="c-date">
+    </div>
+    <div class="info-grid" style="margin-top:8px;padding-top:8px;border-top:1px dashed #EEE6DC">
+      <div class="info-item">
+        <label class="info-label">실측 예정일</label>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <input type="date" id="c-measure" style="letter-spacing:0.3px;flex:1;min-width:140px">
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--sub);white-space:nowrap;cursor:pointer">
+            <input type="checkbox" id="c-measure-tbd" onchange="toggleDateTbd('c-measure')" style="width:16px;height:16px;cursor:pointer">날짜미정
+          </label>
+        </div>
+      </div>
+      <div class="info-item">
+        <label class="info-label">시공 예정일</label>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <input type="date" id="c-install" style="letter-spacing:0.3px;flex:1;min-width:140px">
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--sub);white-space:nowrap;cursor:pointer">
+            <input type="checkbox" id="c-install-tbd" onchange="toggleDateTbd('c-install')" style="width:16px;height:16px;cursor:pointer">날짜미정
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="info-grid print-hide" style="margin-top:10px; display:none">
+      <div class="info-item">
+        <label class="info-label">설치기사명 (실측/시공 의뢰서용)</label>
+        <input type="text" id="c-installer-name" placeholder="예: 유지철 팀장님">
+      </div>
+      <div class="info-item">
+        <label class="info-label">설치기사 연락처</label>
+        <input type="text" id="c-installer-phone" placeholder="예: 010-4464-7463" oninput="fmtPhone(this)">
+      </div>
+    </div>
+    <div class="region-row print-hide">
+      <label>시공 지역</label>
+      <select id="c-region" onchange="autoAddSvcFee()">
+        <option value="">시공 안함 (배송)</option>
+        <option value="서울">서울 — 실측 40,000 + 시공 50,000원</option>
+        <option value="경기">경기 — 실측 60,000 + 시공 80,000원</option>
+        <option value="기타">기타지역 (직접입력)</option>
+      </select>
+      <input type="number" id="c-region-price" placeholder="0" onchange="autoAddSvcFee()"
+        style="width:100px;display:none">
+      <span class="region-hint" id="region-hint"></span>
+    </div>
+    <!-- 내부정보 -->
+    <div class="info-toggle print-hide" onclick="toggleInternal(this)">
+      <span class="toggle-label">내부 정보</span>
+      <span class="toggle-arrow">▼</span>
+    </div>
+    <div class="info-internal print-hide">
+      <div class="info-item">
+        <label class="info-label">담당자</label>
+        <input type="text" id="c-staff" placeholder="장선혜">
+      </div>
+      <input type="hidden" id="c-type" value="신규">
+      <div class="info-item">
+        <label>견적 번호</label>
+        <input type="text" id="c-no" readonly>
+      </div>
+      <div class="info-item">
+        <label class="info-label">메모</label>
+        <input type="text" id="c-memo" placeholder="내부 메모">
+      </div>
+    </div>
+  </div>
+
+  <!-- 설문 응답 -->
+  <div class="section" id="survey-card">
+    <div class="sec-label">
+      <span class="sec-title">사전 설문 응답</span>
+      <span class="sec-badge">자동 수신</span>
+    </div>
+    <div id="survey-data"></div>
+  </div>
+
+  <!-- AS 접수 폼 -->
+  <div class="section" id="as-form-section" style="display:none">
+    <div class="sec-label"><span class="sec-title">AS · 수선 접수</span></div>
+    <div class="info-grid">
+      <div class="info-item">
+        <label>시공 일자</label>
+        <input type="date" id="as-install-date">
+      </div>
+      <div class="info-item">
+        <label>AS 유형</label>
+        <select id="as-type-sel" style="width:100%;border:none;background:transparent;font-size:11px;font-weight:600;font-family:inherit;outline:none;color:#282828">
+          <option>커튼 수선</option><option>블라인드 수선</option>
+          <option>레일 교체</option><option>재시공</option><option>기타</option>
+        </select>
+      </div>
+    </div>
+    <div class="info-item" style="margin-top:14px;padding-top:14px;border-top:1px dashed #EEE6DC">
+      <label>증상 · 요청 내용</label>
+      <textarea id="as-symptom" placeholder="예) 커튼 한쪽이 레일에서 빠짐..." style="width:100%;margin-top:6px;padding:10px 12px;border:1.5px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;outline:none;resize:vertical;min-height:80px;color:#282828;background:#FAF7F5"></textarea>
+    </div>
+    <div class="info-item" style="margin-top:12px">
+      <label>사진 메모</label>
+      <input type="text" id="as-photo-memo" placeholder="사진 수량, 특이사항 등" style="width:100%;border:none;border-bottom:1.5px solid #EEE6DC;font-size:11px;font-family:inherit;outline:none;padding:4px 0;background:transparent">
+    </div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #EEE6DC;display:flex;align-items:center;gap:16px">
+      <span style="font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:0.8px;text-transform:uppercase">AS 비용</span>
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#282828;cursor:pointer"><input type="radio" name="as-fee" value="free" checked onchange="setAsFee(this)"> 무상 (하자)</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#282828;cursor:pointer"><input type="radio" name="as-fee" value="paid" onchange="setAsFee(this)"> 유상 (고객 변심)</label>
+      <span id="as-fee-note" style="font-size:11px;color:#B0A99F">무상 처리</span>
+    </div>
+  </div>
+
+  <!-- 커튼 · 블라인드 -->
+  <div class="section wide-section">
+    <div class="sec-label">
+      <span class="sec-title">커튼 · 블라인드</span>
+    </div>
+
+    <!-- 커튼 -->
+    <div class="tbl-outer"><div class="tbl-wrap">
+      <table id="curtain-table">
+        <colgroup>
+          <col style="min-width:48px;width:9%">
+          <col style="min-width:80px;width:18%">
+          <col style="min-width:44px;width:8%">
+          <col style="min-width:40px;width:7%">
+          <col style="min-width:44px;width:8%">
+          <col style="min-width:52px;width:9%">
+          <col style="min-width:52px;width:9%">
+          <col style="min-width:36px;width:6%">
+          <col style="min-width:80px;width:10%">
+          <col style="min-width:56px;width:10%">
+          <col style="min-width:56px;width:10%">
+          <col style="min-width:28px;width:6%">
+        </colgroup>
+        <thead>
+          <tr><th colspan="12" style="text-align:left;padding-left:0;letter-spacing:3px;font-size:11px;color:#8E8078;padding-bottom:6px;border-bottom:1px solid #EEE6DC">CURTAIN</th></tr>
+          <tr>
+            <th>공간</th><th>제품명</th>
+            <th>주름</th><th>개폐</th><th>시접</th>
+            <th>가로</th><th>높이</th>
+            <th>폭</th><th>보정</th><th>단가</th><th>금액</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="curtain-body"></tbody>
+      </table>
+    </div></div>
+
+    <!-- 블라인드 -->
+    <div class="tbl-outer"><div class="tbl-wrap">
+      <table id="blind-table">
+        <colgroup>
+          <col style="min-width:48px;width:9%">
+          <col style="min-width:80px;width:17%">
+          <col style="min-width:52px;width:9%">
+          <col style="min-width:40px;width:7%">
+          <col style="min-width:52px;width:9%">
+          <col style="min-width:52px;width:9%">
+          <col style="min-width:60px;width:11%">
+          <col style="min-width:60px;width:11%">
+          <col style="min-width:60px;width:12%">
+          <col style="min-width:28px;width:6%">
+        </colgroup>
+        <thead>
+          <tr><th colspan="10" style="text-align:left;padding-left:0;letter-spacing:3px;font-size:11px;color:#8E8078;padding-bottom:6px;border-bottom:1px solid #EEE6DC">BLIND</th></tr>
+          <tr>
+            <th>공간</th><th>제품명</th>
+            <th>종류</th><th>손잡이</th>
+            <th>가로</th><th>높이</th>
+            <th>옵션</th><th>단가</th><th>금액</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="blind-body"></tbody>
+      </table>
+    </div>
+    <!-- 빈 상태 안내 -->
+    <div id="empty-hint" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 16px;gap:10px">
+      <div style="font-size:22px;opacity:0.25">🪟</div>
+      <div style="font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:0.3px">아래 버튼으로 제품을 추가해주세요</div>
+    </div>
+    <div class="add-row-btns print-hide">
+      <button class="add-btn" onclick="addCurtainRow()">+ 커튼 추가</button>
+      <button class="add-btn add-btn-blind" onclick="addBlindRow()">+ 블라인드 추가</button>
+    </div>
+  </div>
+  </div>
+
+  <!-- 레일 · 시공비 -->
+  <div class="section">
+    <div class="sec-label">
+      <span class="sec-title">레일 · 시공비 · 기타</span>
+    </div>
+    <div id="svc-summary-card" style="background:#F5F2EE;border-radius:8px;padding:12px 16px;margin-bottom:8px"></div>
+    <button type="button" class="print-hide" id="svc-detail-toggle" onclick="toggleSvcDetail()" style="width:100%;padding:8px 0;background:none;border:1px dashed #D8CFC3;border-radius:6px;color:#8E8078;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:8px">상세 항목 펼치기 ▾</button>
+    <div id="svc-detail-wrap" style="display:none">
+    <div class="tbl-outer"><div class="tbl-wrap">
+      <table id="svc-table">
+        <colgroup>
+          <col style="width:12%"><col style="width:38%">
+          <col style="width:16%"><col style="width:10%">
+          <col style="width:18%"><col style="width:6%">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>구분</th><th>내용</th><th>단가(원)</th>
+            <th>수량</th><th>금액(원)</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="svc-body"></tbody>
+      </table>
+    </div>
+    <div class="add-row-btns print-hide">
+      <button class="add-btn" onclick="addSvcRow()">+ 항목 추가</button>
+    </div>
+    </div>
+  </div>
+
+  <!-- 합계 -->
+  <div class="summary-section">
+    <div class="summary-inner">
+      <div class="sum-row">
+        <span class="lbl">제품 소계</span>
+        <span class="val" id="sum-curtain">0원</span>
+      </div>
+      <div class="sum-row print-hide" style="flex-direction:column;align-items:stretch;gap:6px">
+        <span class="lbl">할인</span>
+        <!-- 2026-08-14: 쿠폰 다중선택 방식(선혜님 확인) - 등록된 쿠폰들을 체크해서
+             여러개 동시 적용 가능(순차: 앞쿠폰 뺀 금액에서 다음 쿠폰 적용),
+             직접입력도 그 뒤에 이어서 적용됨. 쿠폰 목록은 설정에서 마스터가 관리. -->
+        <div id="coupon-list" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        <span class="discount-wrap">
+          <select id="discount-type" onchange="calcTotal()">
+            <option value="won">원</option>
+            <option value="pct">%</option>
+          </select>
+          <input type="number" id="discount" value="0" min="0" oninput="calcTotal()" placeholder="직접입력">
+        </span>
+      </div>
+      <div class="sum-row print-hide">
+        <span class="lbl"></span>
+        <span class="val" id="sum-discount">-0원</span>
+      </div>
+      <div id="discount-breakdown" class="print-hide" style="font-size:11px;color:var(--sub)"></div>
+      <div class="sum-row">
+        <span class="lbl">레일 · 시공비</span>
+        <span class="val" id="sum-svc">0원</span>
+      </div>
+    </div>
+    <!-- 최종합계 다크 블록 -->
+    <div class="summary-total-block">
+      <div class="summary-total-label">TOTAL ESTIMATE</div>
+      <div class="summary-total-amount" id="sum-total">0원</div>
+      <div class="summary-total-sub">
+        <div class="summary-deposit-row">
+          <span class="summary-sub-label">계약금</span>
+          <span class="summary-sub-amount orange" id="sum-deposit-disp">—</span>
+        </div>
+        <div style="width:1px;background:rgba(255,255,255,0.1);align-self:stretch"></div>
+        <div class="summary-balance-row" style="text-align:right">
+          <span class="summary-sub-label">잔금</span>
+          <span class="summary-sub-amount" id="sum-balance-disp">—</span>
+        </div>
+      </div>
+    </div>
+    <!-- 숨김 행 (JS calcTotal에서 사용) -->
+    <div class="sum-row total" style="display:none"><span class="lbl"></span><span class="val" id="sum-total-hidden"></span></div>
+    <div class="sum-row deposit">
+      <span class="lbl">계약금 <span class="sum-sub">계약 시 납부</span></span>
+      <span class="val deposit-inp-wrap">
+        <input type="text" inputmode="numeric" id="deposit-input"
+          placeholder="금액 입력"
+          oninput="fmtPrice(this);calcDeposit()"
+          style="width:110px;padding:4px 8px;border:1.5px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;text-align:right;outline:none;background:#FAF7F5">
+        <button onclick="setDepositAuto(50)" style="padding:8px 12px;min-height:32px;font-size:11px;background:#FAF7F5;border:1px solid #EEE6DC;border-radius:4px;cursor:pointer;font-family:inherit;margin-left:4px">50%</button>
+
+      </span>
+    </div>
+    <div class="sum-row">
+      <span class="lbl">잔금 <span class="sum-sub">실측 후 납부</span></span>
+      <span class="val" id="sum-balance">0원</span>
+    </div>
+    <div class="sum-row perf print-hide" style="display:none">
+      <span class="lbl">성과매출 (내부)</span>
+      <span class="val" id="sum-perf">0원</span>
+    </div>
+  </div>
+
+  <!-- 액션 버튼 -->
+  <div class="action-bar print-hide">
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button onclick="location.href='dah-dashboard.html'"
+        style="flex:1;height:44px;background:#FAF7F5;color:#282828;border:1.5px solid #EEE6DC;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;letter-spacing:-0.3px">
+        ← 대시보드
+      </button>
+      <button class="btn-new" onclick="newEstimate()" style="flex:2;height:44px">새 견적서</button>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+      <span style="font-size:11px;color:#B0A99F;letter-spacing:-0.2px">✔ 출력 시 내부 정보 자동 제거</span>
+      <button id="load-draft-btn" onclick="loadDraft()" style="display:none;padding:4px 10px;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0">
+        💾 임시저장 불러오기
+      </button>
+    </div>
+    <div class="action-main">
+      <div class="btn-row" style="display:flex;gap:10px;width:100%"><button class="btn-print" style="flex:1" onclick="printForCustomer()">🖨 고객용 출력</button>
+      <button class="btn-save" id="btn-save-estimate" style="flex:1" onclick="saveEstimate()">💾 저장</button></div>
+      <!-- 2026-08-06: 아래 4개 버튼(엑셀/발주서/실측/시공)이 세로로 4줄 쌓여있어서
+           위계 없이 "일단 다 넣은" 느낌이었음(디자인 감사로 발견). "문서 자료" 라는
+           작은 그룹 라벨을 붙이고 2x2 격자로 묶어서 하나의 유틸리티 묶음으로 보이게 함. -->
+      <div style="margin-top:14px;font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.04em">문서 자료</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+        <button onclick="exportAllEstimatesExcel()" style="padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📊 엑셀 다운로드</button>
+        <button onclick="printForVendor()" style="padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📦 발주서 (거래처별)</button>
+        <button onclick="printRequest('measure')" style="padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📋 실측 의뢰서</button>
+        <button onclick="printRequest('install')" style="padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">🔧 시공 의뢰서</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- 공간 선택 팝업 -->
+<div id="space-picker" onclick="closeSpacePicker(event)">
+  <div id="space-picker-box" onclick="event.stopPropagation()">
+    <div style="font-size:11px;font-weight:700;color:#B0A99F;letter-spacing:0.5px;margin-bottom:12px">공간 선택</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="space-btns"></div>
+    <!-- 2026-09-04(선혜님 지시 - "내가 추가로 쓸 수 있게 되었으면 하는데"):
+         고정 버튼(거실/안방/자녀방/서재/주방/욕실/기타)에 없는 공간(드레스룸,
+         펜트리, 다용도실 등)을 자유롭게 쓸 수 있는 직접입력 칸 신설. -->
+    <div style="display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <input type="text" id="space-custom-input" placeholder="직접 입력 (예: 드레스룸)" style="flex:1;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit" onkeydown="if(event.key==='Enter'){event.preventDefault();pickCustomSpace();}">
+      <button type="button" onclick="pickCustomSpace()" style="padding:8px 14px;background:var(--dark);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">확인</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="toast" id="toast"></div>
+
+<datalist id="vendor-list">
+  <option value="캔가공소">캔가공소</option>
+  <option value="디테라">디테라</option>
+  <option value="아이엔티">아이엔티</option>
+  <option value="예원">예원</option>
+  <option value="크바드라트">크바드라트</option>
+  <option value="이지패브릭">이지패브릭</option>
+  <option value="리더스">리더스</option>
+  <option value="유니밋">유니밋</option>
+  <option value="지오데코">지오데코</option>
+  <option value="윈텍">윈텍</option>
+  <option value="덱스터">덱스터</option>
+  <option value="헌터더글라스">헌터더글라스</option>
+  <option value="솜피">솜피</option>
+  <option value="목성">목성</option>
+</datalist>
+<!-- 원단 자동완성 -->
+<datalist id="fabric-list">
+  <option value="린넨룩 No.1">린넨룩 No.1</option>
+  <option value="린넨룩 No.2">린넨룩 No.2</option>
+  <option value="린넨룩 No.3">린넨룩 No.3</option>
+  <option value="린넨룩 No.4">린넨룩 No.4</option>
+  <option value="린넨룩 No.5">린넨룩 No.5</option>
+  <option value="시어커튼 No.1">시어커튼 No.1</option>
+  <option value="시어커튼 No.2">시어커튼 No.2</option>
+  <option value="암막커튼 No.1">암막커튼 No.1</option>
+  <option value="암막커튼 No.2">암막커튼 No.2</option>
+  <option value="로만쉐이드 No.1">로만쉐이드 No.1</option>
+  <option value="로만쉐이드 No.2">로만쉐이드 No.2</option>
+</datalist>
+<datalist id="blind-list">
+  <option value="롤스크린 No.1">롤스크린 No.1</option>
+  <option value="롤스크린 No.2">롤스크린 No.2</option>
+  <option value="롤스크린 No.3">롤스크린 No.3</option>
+  <option value="우드블라인드 No.1">우드블라인드 No.1</option>
+  <option value="우드블라인드 No.2">우드블라인드 No.2</option>
+  <option value="허니콤 No.1">허니콤 No.1</option>
+  <option value="알루미늄 No.1">알루미늄 No.1</option>
+</datalist>
+<script src="./est-utils.js?v=202609042000"></script>
+<script src="./shared-optimistic-lock.js?v=202609051200"></script>
+<script src="./est-sync-queue.js?v=202608291500"></script>
+<script src="./dash-supabase-auth.js?v=202609061500"></script>
+<script src="./est-form-controls.js?v=202609041600"></script>
+<script src="./est-product-calc.js?v=202609041300"></script>
+<script src="./est-survey.js?v=202608190049"></script>
+<script src="./est-save.js?v=202609051000"></script>
+<script src="./est-documents.js?v=202609042200"></script>
+<script src="./est-customer-load.js?v=202609041000"></script>
+<script src="./est-misc.js?v=202608283500"></script>
+<script>
+var currentTab = 'ga';
+
+(function(){
+  var d = new Date();
+  document.getElementById('c-date').value = d.toISOString().slice(0,10);
+  
+  function syncHeaderMeta() {
+    var no = document.getElementById('c-no')?.value||'—';
+    var staff = document.getElementById('c-staff')?.value||'장선혜';
+    var hdNo = document.getElementById('hd-no-display');
+    var hdStaff = document.getElementById('hd-staff-display');
+    if(hdNo) hdNo.textContent = no;
+    if(hdStaff) hdStaff.textContent = staff || '장선혜';
+  }
+  setInterval(syncHeaderMeta, 800);
+  document.getElementById('hd-date').textContent =
+    d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';
+  document.getElementById('c-no').value =
+    (function(){
+      var base='DAH-'+d.getFullYear()+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1)+(d.getDate()<10?'0':'')+d.getDate()+'-';
+      try{var saved=JSON.parse(localStorage.getItem('dah_saved')||'[]');
+        var nums=saved.filter(function(e){return(e.no||'').indexOf(base)===0;}).map(function(e){return parseInt((e.no||'').slice(-2))||0;});
+        var next=(nums.length>0?Math.max.apply(null,nums):0)+1;
+        return base+(next<10?'0'+next:String(next));
+      }catch(e){return base+'01';}}())
+  addCurtainRow();
+
+  // 2026-08-28(선혜님 지시 — "같은 종류 버그가 또 생길 가능성 자체를
+  // 줄이는 작업": 오늘 실측일/시공일/계약금 동기화를 loadCustId 경로와
+  // loadEstDbId 경로에 따로따로 짜다가, 정확히 같은 개념이 3~4곳에
+  // 복제되는 걸 스스로 발견함. 앞으로 이 로직을 다시 고칠 일이 생겨도
+  // 한 곳만 고치면 되도록, 여기 공용 함수 하나로 합침.
+  //
+  // 우선순위: 이 견적서 자체에 저장된 값(estDate/estInstallDate)이 있으면
+  // 그걸 최우선(가장 구체적인 값이므로). 없으면 고객 레코드값으로 채움.
+  // 계약금은 항상 고객의 실제 입금액(customerRow.deposit_amount)을
+  // 최우선으로 하고(자동계산된 50%보다 항상 우선), applyFrozenBreakdown이
+  // 나중에(즉시+3.5초 뒤 2차례) 계산값으로 덮어써도 최종적으로는 실제
+  // 입금액이 남도록 4초 뒤에 한 번 더 확정 적용함.
+  function applyScheduleAndDepositToForm(customerRow, estDate, estInstallDate, measureTbd, installTbd) {
+    var measureVal = estDate || (customerRow && customerRow.measure_date) || '';
+    var installVal = estInstallDate || (customerRow && customerRow.install_date) || '';
+    if (measureVal && document.getElementById('c-measure')) {
+      document.getElementById('c-measure').value = measureVal;
+    }
+    if (installVal && document.getElementById('c-install')) {
+      document.getElementById('c-install').value = installVal;
+    }
+    // 2026-09-04(선혜님 요청 - "날짜미정 체크박스"): 저장 당시 미정으로
+    // 체크해뒀던 상태를 다시 열었을 때도 그대로 복원 - 날짜입력을
+    // 비활성화하는 toggleDateTbd()를 그대로 재사용.
+    if (measureTbd && document.getElementById('c-measure-tbd')) {
+      document.getElementById('c-measure-tbd').checked = true;
+      if (typeof toggleDateTbd === 'function') toggleDateTbd('c-measure');
+    }
+    if (installTbd && document.getElementById('c-install-tbd')) {
+      document.getElementById('c-install-tbd').checked = true;
+      if (typeof toggleDateTbd === 'function') toggleDateTbd('c-install');
+    }
+    if (customerRow && Number(customerRow.deposit_amount) > 0) {
+      var applyDeposit = function() {
+        var depInp = document.getElementById('deposit-input');
+        if (depInp) {
+          depInp.value = Number(customerRow.deposit_amount).toLocaleString();
+          depInp.dataset.raw = String(customerRow.deposit_amount);
+          depInp.dataset.manualEdit = '1';
+        }
+      };
+      applyDeposit();
+      setTimeout(applyDeposit, 4000);
+    }
+  }
+
+  try {
+    var urlParams = new URLSearchParams(window.location.search);
+    var loadCustId = urlParams.get('loadCustId');
+    var loadCustName = urlParams.get('loadCustName');
+    if (loadCustId || loadCustName) {
+      // 2026-09-04(선혜님 지적 — "새로고침을 하면 왜 그대로 안되고 새페이지로
+      // 넘어가지??"로 발견, 실제 재현 성공): 원래 "새로고침해도 중복 조회
+      // 안 되도록" URL에서 쿼리스트링(loadCustId 등)을 지우고 있었는데,
+      // 이 때문에 새로고침하면 브라우저가 파라미터 없는 빈 URL을 다시
+      // 불러와서 완전히 새(빈) 견적서 화면이 되어버리는 훨씬 심각한
+      // 문제가 있었음 - "중복 조회 방지"보다 "새로고침해도 보던 견적서가
+      // 그대로 유지되는 것"이 훨씬 중요하므로, URL을 지우지 않고 그대로 둠.
+      var custUrl = loadCustId
+        ? SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(loadCustId) + '&select=*'
+        : SUPABASE_URL + '/rest/v1/customers?client_name=eq.' + encodeURIComponent(loadCustName) + '&select=*&limit=1';
+      var cxhr = new XMLHttpRequest();
+      cxhr.open('GET', custUrl, true);
+      cxhr.setRequestHeader('apikey', SUPABASE_KEY);
+      cxhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+      cxhr.onload = function() {
+        try {
+          var rows = JSON.parse(cxhr.responseText);
+          var c = rows && rows[0];
+          if (!c) return;
+          // 2026-08-25(선혜님 발견 — "이름을 이라리로 바꿔도 오지은으로 뜬다"):
+          // 이 경로로 기존 고객을 불러오면서도 window._estSaveCustomerId를 여기서
+          // 세팅 안 하고 있었음 — 저장할 때 이름+전화번호로 다시 매칭해야 했는데,
+          // 이름을 바꾸는 상황(정확히 이 경우)에서는 그 매칭이 항상 실패해서
+          // 수정이 아니라 매번 새 고객으로 만들어지고 있었음. 불러온 시점에
+          // 이미 알고 있는 진짜 id를 바로 세팅해서, 이름을 바꿔도 "그 고객"으로
+          // 정확히 인식되게 함.
+          window._estSaveCustomerId = c.id;
+          if (c.client_name) document.getElementById('c-name').value = c.client_name;
+          if (c.phone) document.getElementById('c-phone').value = c.phone;
+          if (c.addr) document.getElementById('c-addr').value = c.addr;
+          if (c.staff_name) document.getElementById('c-staff').value = c.staff_name;
+          if (c.memo) document.getElementById('c-memo').value = c.memo;
+          // 2026-08-28: 이 시점엔 아직 견적서(e)를 못 받아왔으니 고객
+          // 레코드값만으로 우선 적용 - 아래에서 견적서를 받아오면
+          // applyScheduleAndDepositToForm을 한 번 더 불러서 견적서
+          // 자체값이 있으면 그걸로 덮어씀(공용함수 우선순위 로직).
+          applyScheduleAndDepositToForm(c, null, null);
+          upsertLocalCustomer(c.id, c.client_name, c.phone, c.staff_name, c.addr);
+          // 최신 견적서도 같이 조회해서 lineItems/지역 복원
+          var estUrl = SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(c.id) + '&order=created_at.desc&limit=1&select=*';
+          var exhr = new XMLHttpRequest();
+          exhr.open('GET', estUrl, true);
+          exhr.setRequestHeader('apikey', SUPABASE_KEY);
+          exhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+          exhr.onload = function() {
+            try {
+              var erows = JSON.parse(exhr.responseText);
+              var e = erows && erows[0];
+              var loadedItems = false;
+              if (e && e.line_items && typeof restoreLineItemsToForm === 'function') {
+                loadedItems = restoreLineItemsToForm(e.line_items, e.product);
+              }
+              // 2026-08-28: 이 견적서 자체에 저장된 실측일/시공일이 있으면
+              // (고객 레코드값보다 더 구체적이므로) 공용함수로 우선 반영.
+              applyScheduleAndDepositToForm(c, e && e.date, e && e.install_date, e && e.measure_date_tbd, e && e.install_date_tbd);
+              // 2026-08-29(선혜님 지적 - "확정견적서를 눌러도 왜 계속
+              // 다시 가견적서로 돌아가니", 오늘 계속 발견한 것과 정확히
+              // 같은 패턴): currentTab(가견적/확정 상태 변수)에 값을
+              // 대입하는 곳이 페이지 최초 로드시 초기화('ga' 고정) 딱
+              // 한 곳뿐이었음 - 견적서를 "열어서 수정"할 때 저장된
+              // estimate_status를 읽어서 반영하는 코드가 통째로 없어서,
+              // 확정견적을 열어도 항상 가견적 상태로 보이고, 그 상태에서
+              // 뭔가 하나만 고쳐도 저장시 estimate_status가 다시
+              // 'ga'로 저장되어 확정견적이 가견적으로 되돌아가고 있었음.
+              if (e && e.estimate_status === 'final' && typeof setStatus === 'function') {
+                setStatus('final', true);
+              }
+              if (e && e.region && document.getElementById('c-region')) {
+                document.getElementById('c-region').value = e.region;
+                document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
+              }
+              function afterDiscountRestoreCustPath() {
+                // 2026-08-24: 저장 당시 금액으로 고정 — 위에서 쿠폰/품목을 복원하면서
+                // calcTotal이 최신 설정으로 다시 계산해버린 걸, 저장된 스냅샷으로 덮어씀.
+                if (e && e.price_breakdown && typeof applyFrozenBreakdown === 'function') {
+                  applyFrozenBreakdown(e.price_breakdown);
+                }
+              }
+              if (e && e.applied_discounts && typeof restoreAppliedDiscounts === 'function') {
+                restoreAppliedDiscounts(e.applied_discounts, undefined, afterDiscountRestoreCustPath);
+              } else {
+                afterDiscountRestoreCustPath();
+              }
+              if (e && e.cust_type && typeof setCustType === 'function') {
+                setCustType(e.cust_type);
+                if (e.cust_type === 'as') {
+                  if (e.as_install_date && document.getElementById('as-install-date')) document.getElementById('as-install-date').value = e.as_install_date;
+                  if (e.as_type && document.getElementById('as-type-sel')) document.getElementById('as-type-sel').value = e.as_type;
+                  if (e.as_symptom && document.getElementById('as-symptom')) document.getElementById('as-symptom').value = e.as_symptom;
+                  if (e.as_photo_memo && document.getElementById('as-photo-memo')) document.getElementById('as-photo-memo').value = e.as_photo_memo;
+                  if (e.as_fee_type) {
+                    var feeRadio3 = document.querySelector('input[name="as-fee"][value="' + e.as_fee_type + '"]');
+                    if (feeRadio3) feeRadio3.checked = true;
+                  }
+                }
+              }
+              // 2026-08-29(선혜님 지적 - "확정견적서가 계속 가견적서로
+              // 돌아간다"로 재점검 중 발견): confirmed_at(확정 시각)
+              // 복원이 loadEstDbId 경로(아래쪽)에만 있고, 이 경로(신규/
+              // 견적없는 고객 진입점, 최신 견적을 함께 불러오는 부분)엔
+              // 빠져있었음 - 같은 원인의 또 다른 사각지대.
+              if (e && e.confirmed_at) {
+                window._estimateConfirmedAt = e.confirmed_at;
+                if (typeof renderConfirmBadge === 'function') renderConfirmBadge();
+              }
+              showToast(''+(c.client_name||'')+' 고객 정보 불러옴'+(loadedItems ? ' (이전 견적 품목 포함)' : ''));
+            } catch(e3) {}
+          };
+          exhr.onerror = function() { showToast(''+(c.client_name||'')+' 고객 정보 불러옴 (이전 견적 조회 실패)'); };
+          exhr.send();
+        } catch(e2) {}
+      };
+      cxhr.onerror = function() { showToast('⚠️ 고객 정보를 불러오지 못했어요 — 네트워크를 확인해주세요'); };
+      cxhr.send();
+    }
+
+    // 2026-08-12: 견적서 이력에서 "열어서 수정" / "복사해서 새로 만들기" —
+    // 특정 견적서(uuid)를 직접 조회. estimates 테이블 자체에 customer_name/
+    // phone이 있어서 고객 조회를 따로 안 해도 됨. mode=edit이면
+    // window._editingEstDbId를 세팅해서 저장시 PATCH(같은 레코드 갱신)로
+    // 동작하게 하고, mode=copy(또는 생략)면 세팅 안 해서 기존처럼 새 견적서로
+    // 저장되게 함(c-no는 항상 새로 발급되므로 자연히 복사가 됨).
+    var loadEstDbId = urlParams.get('loadEstDbId');
+    var loadMode = urlParams.get('mode') || 'copy';
+    if (loadEstDbId) {
+      // 2026-09-04: 위 loadCustId 경로와 동일한 이유로 URL을 지우지 않고 유지.
+      var estOneUrl = SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(loadEstDbId) + '&select=*';
+      var eoxhr = new XMLHttpRequest();
+      eoxhr.open('GET', estOneUrl, true);
+      eoxhr.setRequestHeader('apikey', SUPABASE_KEY);
+      eoxhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+      eoxhr.onload = function() {
+        try {
+          var erows = JSON.parse(eoxhr.responseText);
+          var e = erows && erows[0];
+          if (!e) { showToast('⚠️ 해당 견적서를 찾을 수 없어요'); return; }
+          // 2026-08-25: loadCustId 경로와 동일한 이유 — 이 경로도 window._estSaveCustomerId를
+          // 여기서 세팅 안 하고 있었음. 이름을 바꿔서 저장해도 정확히 "그 고객"
+          // 수정으로 인식되도록, 불러온 시점에 이미 알고 있는 client_id를 바로 세팅.
+          if (e.client_id) window._estSaveCustomerId = e.client_id;
+          if (e.customer_name) document.getElementById('c-name').value = e.customer_name;
+          if (e.phone) document.getElementById('c-phone').value = e.phone;
+          if (e.memo) document.getElementById('c-memo').value = e.memo;
+          if (e.client_id) upsertLocalCustomer(e.client_id, e.customer_name, e.phone, null, null);
+          // 2026-08-24: loadEstDbId 경로는 estimates 테이블만 조회해서 주소(addr)가
+          // 없음(estimates에는 주소 컬럼 자체가 없음) — 이제 openEstimate()가
+          // "이어서 수정"일 때 이 경로로 오게 바뀌면서, 예전 loadCustId에서는
+          // 항상 채워지던 주소가 여기선 비어보이는 회귀가 생길 뻔했음. client_id로
+          // 고객 주소만 별도로 채워옴.
+          if (e.client_id) {
+            var addrUrl = SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(e.client_id) + '&select=addr,measure_date,install_date,deposit_amount';
+            var axhr = new XMLHttpRequest();
+            axhr.open('GET', addrUrl, true);
+            axhr.setRequestHeader('apikey', SUPABASE_KEY);
+            axhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+            axhr.onload = function() {
+              try {
+                var arows = JSON.parse(axhr.responseText);
+                var cRow = arows && arows[0];
+                if (cRow && cRow.addr && document.getElementById('c-addr')) {
+                  document.getElementById('c-addr').value = cRow.addr;
+                }
+                // 2026-08-28(선혜님 지적 — "실측일 넣고 선금을 넣어도
+                // 견적서에는 적용이 안돼!!", 유경진 사례): 대시보드↔견적서
+                // 동기화를 loadCustId 경로(완전 신규/견적없는 고객)에만
+                // 넣어놨는데, openEstimate()는 기존 견적이 있는 고객이면
+                // 전부 이 loadEstDbId 경로로 오게 되어있어서(2026-08-24
+                // 변경), 이미 견적서가 있는 대부분의 실사용 케이스에서
+                // 정작 동기화가 전혀 적용 안 되고 있었음. 공용함수로
+                // "이 견적서 자체값이 있으면 우선, 없으면 고객값" 반영.
+                applyScheduleAndDepositToForm(cRow, e.date, e.install_date, e.measure_date_tbd, e.install_date_tbd);
+              } catch(eAddr) {}
+            };
+            axhr.send();
+          }
+          var loadedItems = false;
+          if (e.line_items && typeof restoreLineItemsToForm === 'function') {
+            loadedItems = restoreLineItemsToForm(e.line_items, e.product);
+          }
+          // 2026-08-29(선혜님 지적 - "확정견적서를 눌러도 왜 계속
+          // 다시 가견적서로 돌아가니"): loadCustId 경로와 정확히 같은
+          // 원인/같은 수정 - 여기(기존 견적이 있는 고객을 여는 경로,
+          // 오늘 대부분의 실사용 케이스가 여기를 탐)에도 상태 복원이
+          // 빠져있었음.
+          if (e.estimate_status === 'final' && typeof setStatus === 'function') {
+            setStatus('final', true);
+          }
+          // 2026-08-28: 여기서 견적서 자체값(e.date/e.install_date)을 먼저
+          // 즉시 반영해두는 이유 — 아래에서 고객 레코드를 별도로 조회해서
+          // applyScheduleAndDepositToForm을 한 번 더 부르긴 하지만, 그
+          // 조회가 느리거나 실패해도 최소한 "이 견적서 자체에 저장된 값"
+          // 만큼은 항상 즉시 보이도록 하는 안전장치임(나쁜 중복이 아니라
+          // 의도된 2단계 설계 — 뒤에서 고객값까지 반영되면 자연히 갱신됨).
+          if (e.date && document.getElementById('c-measure')) {
+            document.getElementById('c-measure').value = e.date;
+          }
+          if (e.install_date && document.getElementById('c-install')) {
+            document.getElementById('c-install').value = e.install_date;
+          }
+          if (e.region && document.getElementById('c-region')) {
+            document.getElementById('c-region').value = e.region;
+            document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
+          }
+          // 2026-09-01(선혜님 지시 - "니가 오늘 가장 크게 손댔 곳 버그를 한번
+          // 더 파보자"로 발견, 실제 재현 성공): c-staff(담당자) 복원이
+          // loadCustId 경로에만 있고 loadEstDbId 경로(대시보드 "다시보기"가
+          // 항상 이 경로를 씀)엔 없었음 - 그래서 담당자 필드가 항상 비어있는
+          // 채로 남고, 문서 생성시 기본값('장선혜', 대표님 본인)으로 폴백되어,
+          // 다른 담당자(예: 오지은 실장)의 견적서를 "다시보기"해도 시공요청서/
+          // 실측요청서/발주서에 항상 잘못된 담당자 이름이 찍혀 나가고 있었음.
+          if (e.staff_name && document.getElementById('c-staff')) {
+            document.getElementById('c-staff').value = e.staff_name;
+          }
+          // 2026-09-04(선혜님 지시 - "다시보기 속도 개선 바로 하자"): 아래
+          // printForCustomer/runAutoDoc를 예전엔 항상 고정 3600ms 뒤에
+          // 실행했음 - 이건 "쿠폰 복원이 최악의 경우(느린 네트워크) 최대
+          // 8초까지 걸릴 수 있다"는 걸 감안해 넉넉히 잡은 값인데, 실제로는
+          // 쿠폰이 없는 견적서나 빠른 네트워크에서도 항상 이 고정 시간을
+          // 다 기다려야 했음. restoreAppliedDiscounts가 실제로 끝나는
+          // 시점(콜백)에 맞춰 실행하도록 바꿔서, 빠른 경우 체감 속도가
+          // 크게 개선됨(쿠폰 없으면 거의 즉시, 있어도 실제 로딩시간만큼만).
+          function afterDiscountRestore() {
+            // 2026-08-24: 저장 당시 금액으로 고정(위 loadCustId 경로와 동일 이유 — 2번 덮어씀)
+            if (e.price_breakdown && typeof applyFrozenBreakdown === 'function') {
+              window._viewingFrozenEstimate = true;
+              applyFrozenBreakdown(e.price_breakdown);
+            }
+            // 2026-08-24(선혜님 요청 — "세부내용 보기 팝업은 의미없다, 대신
+            // 고객용 견적서를 보여줘"): mode=view면 불러오자마자 실제 고객용
+            // 문서를 자동으로 띄움.
+            // 2026-09-01(선혜님 지적 - "실측요청서 그 거 클릭하면 되는거야??"
+            // 로 발견): autoDoc이 지정된 경우(대시보드에서 시공/실측/발주서
+            // 다시보기)엔 이 printForCustomer()를 실행하면 안 됨 - 둘 다
+            // 같은 타이밍에 실행되면서, 먼저 만든 pv-overlay를 나중 것이
+            // 덮어쓰거나 충돌해서 원하는 문서가 아예 안 뜨고 있었음(실측요청서
+            // 재현시 실제로 재현됨). autoDoc이 없을 때만 실행하도록 명확히 분리.
+            var autoDoc = urlParams.get('autoDoc');
+            if (loadMode === 'view' && !autoDoc) {
+              if (typeof printForCustomer === 'function') printForCustomer();
+            }
+            // 2026-09-01(선혜님 지시 - "왜 2개를 만드니", 대시보드가 저장된
+            // lineItems로 문서를 따로 재구성하던 buildRequestFromLineItems/
+            // buildVendorOrderFromLineItems(오늘 발견한 "쌍둥이 함수" 패턴의
+            // 새로운 사례)를 없애기 위한 근본 해결책): 대시보드는 이제 문서를
+            // 직접 안 만들고, 이 견적서 앱을 새 창으로 열어서 "네가 진짜
+            // 데이터로 만들어줘"라고 시키기만 함 - autoDoc 파라미터로 어떤
+            // 문서를 열지 지정하면, 로드 완료 후 조용히(설치기사 정보 재확인
+            // 안 물어보고, "다시보기" 목적이니) 자동으로 그 문서를 띄움.
+            // 이러면 문서 생성 로직이 이 파일 한 곳에만 존재하게 되어, 앞으로
+            // 시공요청서를 고치면 대시보드도 자동으로 최신 상태가 됨.
+            if (autoDoc) {
+              function runAutoDoc() {
+                if ((autoDoc === 'install' || autoDoc === 'measure') && typeof printRequest === 'function') {
+                  printRequest(autoDoc, true); // true = 설치기사 정보 재확인 prompt 건너뜀
+                } else if (autoDoc === 'vendor' && typeof printForVendor === 'function') {
+                  printForVendor(true); // true = 추가메모 prompt 건너뜀
+                }
+              }
+              runAutoDoc();
+              // 2026-09-01(선혜님 지시 - "다른건 없니??"로 재점검 중 발견,
+              // 실제 재현 성공): 거래처목록(window._dahVendorListRaw, "캔가공소"
+              // 자동조합에 씀)은 DOMContentLoaded 시점에 별도로 비동기 조회가
+              // 시작되는데, 느린 네트워크에서 이 시점보다 늦게 도착하면
+              // "캔가공소"가 안 붙은 채로 문서가 만들어져버림 - 재현
+              // 테스트로 실제 확인함. 처음엔 fetchVendorListFromCloud를 또
+              // 호출해서 재확인하려 했는데, 이러면 완전히 새로운 요청을 또
+              // 만들어서 오히려 원래 요청보다 더 늦게 끝나는 역효과가 있었음
+              // (재현 테스트로 이것도 발견) - 새 요청 대신, 이미 DOMContentLoaded
+              // 시점에 시작된 원래 요청이 끝나길 짧은 간격(200ms)으로 확인만
+              // 하다가, 채워지는 순간 정확한 정보로 한 번 더 재실행함.
+              if (!Array.isArray(window._dahVendorListRaw)) {
+                var pollCount = 0;
+                var pollTimer = setInterval(function(){
+                  pollCount++;
+                  if (Array.isArray(window._dahVendorListRaw)) {
+                    clearInterval(pollTimer);
+                    runAutoDoc();
+                  } else if (pollCount >= 25) { // 최대 5초(200ms×25)까지만 재시도
+                    clearInterval(pollTimer);
+                  }
+                }, 200);
+              }
+            }
+          }
+          if (e.applied_discounts && typeof restoreAppliedDiscounts === 'function') {
+            restoreAppliedDiscounts(e.applied_discounts, undefined, afterDiscountRestore);
+          } else {
+            afterDiscountRestore();
+          }
+          // 2026-08-12: cust_type(신규/재구매/AS) 복원 누락 발견 - AS 견적서를
+          // 열어서 수정/복사해도 AS 폼으로 전환 안 되고 증상/유형 등이 전혀
+          // 안 채워지던 문제. "열어서 수정/복사" 기능 만들면서 같이 발견.
+          if (e.cust_type && typeof setCustType === 'function') {
+            setCustType(e.cust_type);
+            if (e.cust_type === 'as') {
+              if (e.as_install_date && document.getElementById('as-install-date')) document.getElementById('as-install-date').value = e.as_install_date;
+              if (e.as_type && document.getElementById('as-type-sel')) document.getElementById('as-type-sel').value = e.as_type;
+              if (e.as_symptom && document.getElementById('as-symptom')) document.getElementById('as-symptom').value = e.as_symptom;
+              if (e.as_photo_memo && document.getElementById('as-photo-memo')) document.getElementById('as-photo-memo').value = e.as_photo_memo;
+              if (e.as_fee_type) {
+                var feeRadio2 = document.querySelector('input[name="as-fee"][value="' + e.as_fee_type + '"]');
+                if (feeRadio2) feeRadio2.checked = true;
+              }
+            }
+          }
+          // 2026-09-01(선혜님 지시 - "좀 더 파보자"로 발견, 실제 재현 성공):
+          // _editingEstDbId/_editingEstUpdatedAt 세팅이 loadMode==='edit'일
+          // 때만 됐었음 - 대시보드 "다시보기"(mode=view)로 연 화면은 실제로는
+          // 완전히 편집 가능한 화면인데, 이 안전장치가 없어서 사용자가 거기서
+          // 실수로 뭔가 고치고 저장하면 편집대상 id가 없어 새 레코드(POST)가
+          // 만들어질 위험이 있었음(오늘 아침 발견한 확정견적 중복생성과 정확히
+          // 같은 메커니즘). "복사해서 새로 만들기"(mode=copy)만 새 견적서가
+          // 맞으므로 제외 - edit과 view 둘 다 "기존 견적서"를 다루는 것이므로 포함.
+          if (loadMode === 'edit' || loadMode === 'view') {
+            window._editingEstDbId = e.id;
+            // 2026-08-13: 동시편집 충돌 감지(낙관적 잠금)를 위해 불러온 시점의
+            // updated_at을 캡처 - 저장시 이 값이 그 사이 바뀌었으면(다른 곳에서
+            // 먼저 저장했다는 뜻) 조용히 덮어쓰지 않고 경고를 띄움(2번 "확신
+            // 못하는 부분"에서 기록만 해뒀다가 실제로 구현함).
+            window._editingEstUpdatedAt = e.updated_at || null;
+            // 2026-08-12: 확정된 견적서를 "열어서 수정"으로 열면 화면엔
+            // 확정 안 된 것처럼 보이고, 그 상태로 아무것도 안 건드리고
+            // 재저장하면 확정 상태가 null로 덮어써져 사라지던 버그(다양한
+            // 상황 재검토 중 발견). "복사해서 새로 만들기"는 새 견적서라
+            // 확정 안 된 채로 시작하는 게 맞아서 이 복원은 edit/view모드에만 적용.
+            if (e.confirmed_at) {
+              window._estimateConfirmedAt = e.confirmed_at;
+              if (typeof renderConfirmBadge === 'function') renderConfirmBadge();
+            }
+            if (loadMode === 'edit') {
+              showToast('✏️ '+(e.customer_name||'')+' 견적서를 불러왔어요 — 수정 후 저장하면 이 견적서가 갱신돼요');
+            }
+          } else {
+            showToast('📋 '+(e.customer_name||'')+' 견적서를 복사했어요 — 저장하면 새 견적서로 만들어져요');
+          }
+        } catch(e2) { showToast('⚠️ 견적서를 불러오는 중 문제가 발생했어요'); }
+      };
+      eoxhr.onerror = function() { showToast('⚠️ 견적서를 불러오지 못했어요 — 네트워크를 확인해주세요'); };
+      eoxhr.send();
+    }
+  } catch(e) {}
+})();
+
+
+
+
+
+
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape') closePdfModal();
+});
+
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape') closeCustLoad();
+});
+
+
+window.addEventListener('load', function() {
+  var _logoEl = document.getElementById('hd-logo');
+  if(_logoEl) _logoEl.src = DAH_LOGO_B64;
+  renderEmptyState();
+  // 불러오기 버튼: 실제 자동저장 시스템(dah_estimate_draft) 기준으로 유효한 초안이 있으면만 표시
+  try {
+    var raw = localStorage.getItem('dah_estimate_draft');
+    var btn = document.getElementById('load-draft-btn');
+    if (raw && btn) {
+      var d = JSON.parse(raw);
+      var diffMin = (Date.now() - new Date(d.savedAt).getTime()) / 60000;
+      if (diffMin <= 60) btn.style.display = 'inline-block';
+    }
+  } catch(e) {}
+});
+
+
+window.addEventListener('beforeunload', function(e) {
+  var name = document.getElementById('c-name')?.value?.trim();
+  var saved = document.getElementById('c-name')?.dataset?.saved;
+  if(name && !saved) {
+    // 자동저장 시스템(dah_estimate_draft)에 마감 직전 동기 저장
+    try {
+      localStorage.setItem('dah_estimate_draft', JSON.stringify({
+        data: collectFormData(),
+        savedAt: new Date().toISOString(),
+        version: '1.0'
+      }));
+    } catch(err) {}
+    e.preventDefault(); e.returnValue = '';
+  }
+});
+
+window.addEventListener('offline', function(){
+  showToast('⚠️ 인터넷 연결이 끊겼습니다. 저장한 데이터는 기기에 보존됩니다.', 'error');
+});
+window.addEventListener('online', function(){
+  showToast('인터넷에 다시 연결됐습니다.');
+});
+
+
+// 입력 필드에 자동저장 이벤트 연결
+document.addEventListener('DOMContentLoaded', function() {
+  // 2026-09-06(선혜님 지시 - "쌍둥이함수" 확인 후 "지금 고쳐야지"): 대시보드
+  // (dash-api.js)에서 고친 것과 정확히 같은 패턴 - app_settings 테이블은
+  // 로그인된 사용자만 조회 가능(RLS: auth.uid() IS NOT NULL)한데, 아래
+  // 4개 조회가 로그인 여부와 무관하게 항상 실행되고 있었음. 대시보드와
+  // 달리 실패해도 토스트를 안 띄워서 사용자에게 보이는 부작용은 없었지만,
+  // 로그인 화면에서 매번 어차피 실패할 요청 4개가 낭비되고 있었음 -
+  // hasValidDashboardSession()으로 세션이 있을 때만 조회하도록 함.
+  if (typeof hasValidDashboardSession === 'function' && hasValidDashboardSession()) {
+    // 지역별 실측비/시공비 최신값 조회 (설정탭에서 바뀌었을 수 있으므로 매번 새로 확인)
+    if (typeof fetchRegionFeesFromCloud === 'function') { fetchRegionFeesFromCloud(); }
+    if (typeof fetchVendorListFromCloud === 'function') { fetchVendorListFromCloud(); }
+    if (typeof fetchDiscountCouponsFromCloud === 'function') { fetchDiscountCouponsFromCloud(); }
+  }
+  if (typeof renderCouponList === 'function') { renderCouponList(); } // 로컬캐시로 즉시 렌더링(빈 화면 방지) - 세션 여부와 무관하게 항상 실행
+
+  // 자동저장 인디케이터 생성
+  var indicator = document.createElement('div');
+  indicator.id = 'auto-save-indicator';
+  indicator.style.cssText = 'position:fixed;bottom:80px;right:16px;background:#282828;color:#fff;padding:6px 12px;border-radius:4px;font-size:11px;font-weight:600;opacity:0;transition:opacity 0.3s;z-index:9999;pointer-events:none;font-family:inherit';
+  document.body.appendChild(indicator);
+
+  // 2026-08-26(선혜님과 함께 진행한 "내부견적서 한눈에 안 들어옴" 개선 2단계):
+  // 품목을 입력하는 동안엔 화면 맨 아래(TOTAL ESTIMATE 블록)까지 스크롤해야만
+  // 지금 총액이 얼마인지 보였음. 이 총액 고정바는 계산을 새로 하지 않고,
+  // 이미 계산이 끝난 #sum-total의 값을 그대로 옮겨 보여주기만 함(계산
+  // 로직은 est-product-calc.js의 calcTotal() 그대로 유지, 안 건드림).
+  // 실제 총액 블록(.summary-total-block)이 화면에 보이는 동안엔 중복이라
+  // 안 보이게 하고, 그 블록이 스크롤에서 벗어났을 때만 나타남.
+  (function setupStickyTotalBar() {
+    var bar = document.createElement('div');
+    bar.id = 'sticky-total-bar';
+    bar.className = 'print-hide';
+    bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;background:#1A1A1A;color:#fff;'+
+      'padding:10px 20px;display:flex;justify-content:space-between;align-items:center;'+
+      'z-index:500;transform:translateY(100%);transition:transform 0.2s ease;'+
+      'box-shadow:0 -2px 12px rgba(0,0,0,0.15);font-family:inherit';
+    bar.innerHTML =
+      '<span style="font-size:12px;color:#B0A99F;letter-spacing:0.5px">TOTAL ESTIMATE</span>'+
+      '<span id="sticky-total-amount" style="font-size:17px;font-weight:700;color:#fff">0원</span>';
+    document.body.appendChild(bar);
+
+    var totalEl = document.getElementById('sum-total');
+    var stickyAmountEl = document.getElementById('sticky-total-amount');
+    var totalBlockEl = document.querySelector('.summary-total-block');
+    if (!totalEl || !stickyAmountEl || !totalBlockEl) return;
+
+    // #sum-total 텍스트가 바뀔 때마다(=calcTotal()이 재계산할 때마다)
+    // 고정바의 표시값도 그대로 따라가게 함 - 값 자체를 다시 계산하지 않고
+    // 그저 "지금 이미 계산된 값을 하나 더 보여주는" 거울 역할만 함.
+    var mo = new MutationObserver(function() {
+      stickyAmountEl.textContent = totalEl.textContent;
+    });
+    mo.observe(totalEl, { childList: true, characterData: true, subtree: true });
+    stickyAmountEl.textContent = totalEl.textContent;
+
+    // 실제 총액 블록이 화면에 보이는 동안엔 고정바를 숨기고, 스크롤로
+    // 벗어나면 고정바가 나타남(중복 표시 방지).
+    var buildBadge = document.getElementById('dah-build-badge');
+    var diagBtn = document.querySelector('button[onclick="runSelfDiagnosis()"]');
+    var io = new IntersectionObserver(function(entries) {
+      var isVisible = entries[0].isIntersecting;
+      bar.style.transform = isVisible ? 'translateY(100%)' : 'translateY(0)';
+      // 고정바가 화면에 뜨면 우측 하단의 버전배지/진단버튼과 겹치므로 위로 밀어올림
+      if (buildBadge) buildBadge.style.bottom = isVisible ? '4px' : '50px';
+      if (diagBtn) diagBtn.style.bottom = isVisible ? '22px' : '68px';
+    }, { threshold: 0 });
+    io.observe(totalBlockEl);
+  })();
+
+
+  // 입력 필드들에 이벤트 연결
+  var fields = ['c-name','c-phone','c-addr','c-addr2','c-measure','c-install','c-region','c-memo'];
+  fields.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', autoSave);
+  });
+
+  // 2026-08-10: 커튼/블라인드 표는 행이 동적으로 추가/삭제되므로, 개별
+  // input에 리스너를 매번 붙이는 대신 표 전체(이벤트 위임)에 걸어서
+  // 새로 추가된 행에도 자동으로 적용되게 함 — 임시저장이 고객정보만
+  // 저장되고 실제 견적 내용은 저장 안 되던 문제의 핵심 수정.
+  var curtainTable = document.getElementById('curtain-table');
+  var blindTable = document.getElementById('blind-table');
+  if (curtainTable) curtainTable.addEventListener('input', autoSave);
+  if (blindTable) blindTable.addEventListener('input', autoSave);
+  
+  // 2026-08-13: 페이지 로드시 자동으로 loadDraft()를 호출하던 것을 제거함 —
+  // 여러 탭에서 서로 다른 고객을 동시에 작업할 때, 새 탭을 열면 다른 탭에서
+  // 진행 중이던 미완성 작업이 자동으로 화면에 나타나서 심각하게 혼란스러운
+  // 문제가 있었음(다양한 상황 재검토 중 발견 및 재현). "임시저장 불러오기"
+  // 버튼은 그대로 있어서(위 window.load 리스너에서 60분 이내 draft 있으면
+  // 표시) 데이터 손실은 없음 — 자동복원이 아니라 사용자가 원할 때만
+  // 명시적으로 불러오는 방식으로 변경.
+  // setTimeout(loadDraft, 500); // 자동복원 제거됨 - 버튼으로만 복원
+
+  // 날짜 입력 필드(달력 아이콘이 작아 클릭하기 불편하다는 피드백) —
+  // 필드 어디를 클릭해도 달력이 바로 열리도록 개선
+  document.querySelectorAll('input[type="date"]').forEach(function(dateInput) {
+    dateInput.addEventListener('click', function() {
+      try { this.showPicker(); } catch (e) { /* showPicker 미지원 브라우저는 기본 동작(직접 아이콘 클릭)으로 폴백 */ }
+    });
+    // 2026-08-08: date input은 ::placeholder가 안 먹혀서 빈 상태("년-월-일")가
+    // 다른 입력창 플레이스홀더보다 진하고 굵게 보이던 문제 — 값 유무로 직접 판단해
+    // is-empty 클래스를 토글해서 색/굵기를 통일함
+    function syncEmptyState() { dateInput.classList.toggle('is-empty', !dateInput.value); }
+    syncEmptyState();
+    dateInput.addEventListener('input', syncEmptyState);
+    dateInput.addEventListener('change', syncEmptyState);
+  });
+});
+</script>
+<div id="pdf-size-modal">
+  <div id="pdf-size-box">
+    <div class="pdf-modal-title">PDF 사이즈를 선택해주세요!</div>
+    <div class="pdf-modal-sub">출력 목적에 맞게 선택하세요</div>
+    <div class="pdf-modal-options">
+      <div class="pdf-opt selected" id="pdf-opt-fit" onclick="selectPdfOpt('fit')">
+        <div class="pdf-opt-icon">
+          <div style="height:18px"></div>
+          <div style="height:12px;width:80%"></div>
+          <div style="height:10px;width:70%"></div>
+          <div style="height:10px;width:60%"></div>
+          <div style="height:8px;width:50%"></div>
+        </div>
+        <div class="pdf-opt-label">견적 길이에 맞추기</div>
+        <div class="pdf-opt-desc">작성된 견적서 길이에 맞춰<br>1장의 PDF로 추출돼요.</div>
+      </div>
+      <div class="pdf-opt" id="pdf-opt-a4" onclick="selectPdfOpt('a4')">
+        <div class="pdf-opt-icon a4">
+          <div style="height:14px"></div>
+          <div style="height:10px;width:80%"></div>
+          <div style="height:8px;width:70%"></div>
+          <div style="height:6px;margin-top:4px"></div>
+          <div style="height:6px;width:60%"></div>
+        </div>
+        <div class="pdf-opt-label">A4 사이즈로 자르기</div>
+        <div class="pdf-opt-desc">A4 세로 사이즈에 맞춰<br>N장의 PDF로 추출돼요.</div>
+      </div>
+    </div>
+    <div class="pdf-modal-btns">
+      <button class="pdf-modal-cancel" onclick="closePdfModal()">취소</button>
+      <button class="pdf-modal-confirm" onclick="confirmPdfPrint()">인쇄 / PDF 저장</button>
+    </div>
+  </div>
+</div>
+
+<div id="cust-load-overlay">
+  <div id="cust-load-box">
+    <div class="cust-load-hd">
+      <span>고객 불러오기</span>
+      <button onclick="closeCustLoad()">✕</button>
+    </div>
+    <div class="cust-load-search">
+      <input type="text" id="cust-load-query" placeholder="이름 또는 전화번호 검색" oninput="filterCustLoad()">
+    </div>
+    <div id="cust-load-list"></div>
+  </div>
+</div>
+
+<!-- 카카오 주소 검색 -->
+
+<!-- 2026-08-20(선혜님 - 아이패드 저장 안되는 문제 1회 진단용)에 넣었던
+     임시 진단 코드는 그 문제가 이미 해결돼서 목적을 다함 + 사소한 JS
+     오류에도 무서운 alert가 뜨는 위험이 더 커서, 2026-08-29(선혜님 확인
+     - "지우자") 제거함. -->
+
+</body>
+</html>
