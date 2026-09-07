@@ -33,7 +33,7 @@ function renderPaySection(c, payBody) {
   var paySec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
   paySec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'결제 관리'}));
 
-  function savePayData(pd) {
+  function savePayData(pd, callback) {
     if (typeof logEvent === 'function') logEvent('payment_save', { hasDeposit: Number(pd.depositAmount) > 0, hasBalance: Number(pd.balanceAmount) > 0 });
     // 2026-08-25(선혜님 발견 — "오지은 실장이 119만원 입금했는데 목표가 그대로"):
     // 매출(목표달성률) 계산은 customers.price/performance_revenue를 기준으로
@@ -82,9 +82,22 @@ function renderPaySection(c, payBody) {
         balance_receipt: pd.balanceReceipt||false
       };
       if (priceWasEmpty && paidTotal > 0) { patchBody.price = paidTotal; patchBody.performance_revenue = paidTotal; }
+      // 2026-09-06(선혜님 지적 — "선금이 입금되었고 실측준비중인데 왜 결제
+      // 처리 목록에 안 뜨지"로 발견, 실제 DB로 재현 확인): 이 PATCH는
+      // 곧바로 다음 줄에서(콜백을 안 기다리고) changeStage()가 호출되면서
+      // changeStage() 내부의 saveCustomerToDb()(낙관적 잠금 사용)와 거의
+      // 동시에 서버로 나가고 있었음 - 이 PATCH가 먼저 서버에 도착해
+      // updated_at을 갱신시키면, 뒤이은 saveCustomerToDb()가 오래된
+      // updated_at을 락값으로 들고 있어 "동시저장충돌"로 조용히 실패하는
+      // 경우가 있었음(실제로 deposit_amount는 반영됐는데 stage는 '가견적'
+      // 그대로 남은 고객을 DB에서 발견함). 콜백을 추가해서, 이 PATCH가
+      // 끝난 뒤에만 changeStage()가 실행되도록 순서를 보장함.
       sbXHR('PATCH', 'customers?id=eq.'+c.id, patchBody, function(err){
         if (err) showToast('⚠️ 결제정보가 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요');
+        if (callback) callback();
       });
+    } else {
+      if (callback) callback();
     }
   }
 
@@ -167,12 +180,13 @@ function renderPaySection(c, payBody) {
       newPd.depositAmount  = depAmt.value.replace(/[^0-9]/g,'');
       newPd.depositDate    = depDate.value;
       newPd.depositReceipt = depReceiptChk.checked;
-      savePayData(newPd);
       clearPayDraft('dep');
-      // 2026-08-05: 0원인데도 무조건 다음 단계로 넘어가던 버그 수정 —
-      // 실제로 입금액이 0보다 클 때만 "선금결제 완료"로 간주해 단계 전환
-      if (inputAmt > 0 && ['방문예약','상담','가견적'].indexOf(c.stage) >= 0) changeStage('선금결제');
-      closeDetail(); openDetail(c.clientName, c.id);
+      savePayData(newPd, function(){
+        // 2026-08-05: 0원인데도 무조건 다음 단계로 넘어가던 버그 수정 —
+        // 실제로 입금액이 0보다 클 때만 "선금결제 완료"로 간주해 단계 전환
+        if (inputAmt > 0 && ['방문예약','상담','가견적'].indexOf(c.stage) >= 0) changeStage('선금결제');
+        closeDetail(); openDetail(c.clientName, c.id);
+      });
     });
     depForm.appendChild(depMethod); depForm.appendChild(depAmt); depForm.appendChild(depDate); depForm.appendChild(depReceipt);
     depSec.appendChild(depForm); depSec.appendChild(depSave);
@@ -241,18 +255,19 @@ function renderPaySection(c, payBody) {
       newPd.balanceAmount  = balAmt.value.replace(/[^0-9]/g,'');
       newPd.balanceDate    = balDate.value;
       newPd.balanceReceipt = balReceiptChk.checked;
-      savePayData(newPd);
       clearPayDraft('bal');
-      // 2026-08-05: 0원인데도 무조건 다음 단계로 넘어가던 버그 수정 —
-      // 실제로 입금액이 0보다 클 때만 "잔금결제 완료"로 간주해 단계 전환
-      // 2026-08-05: 자동전환 조건이 '실측준비중/확정견적/잔금결제' 딱 3개 단계에서만
-      // 작동해서, 아직 '선금결제'에 머문 채로 바로 잔금부터 받으면(중간 단계를
-      // 하나씩 안 거치는 실제 업무 흐름) 전환이 안 걸리는 버그가 있었음(선혜님이
-      // 실제 화면에서 발견). 특정 단계 목록이 아니라 "시공준비중보다 앞선 단계면
-      // 전부" 전환되도록 STAGE_NUM 순서 비교로 일반화.
-      var stageIsBeforeInstallPrep = (typeof STAGE_NUM !== 'undefined') && STAGE_NUM[c.stage] && STAGE_NUM[c.stage] < STAGE_NUM['시공준비중'];
-      if (inputAmt > 0 && stageIsBeforeInstallPrep) changeStage('시공준비중');
-      closeDetail(); openDetail(c.clientName, c.id);
+      savePayData(newPd, function(){
+        // 2026-08-05: 0원인데도 무조건 다음 단계로 넘어가던 버그 수정 —
+        // 실제로 입금액이 0보다 클 때만 "잔금결제 완료"로 간주해 단계 전환
+        // 2026-08-05: 자동전환 조건이 '실측준비중/확정견적/잔금결제' 딱 3개 단계에서만
+        // 작동해서, 아직 '선금결제'에 머문 채로 바로 잔금부터 받으면(중간 단계를
+        // 하나씩 안 거치는 실제 업무 흐름) 전환이 안 걸리는 버그가 있었음(선혜님이
+        // 실제 화면에서 발견). 특정 단계 목록이 아니라 "시공준비중보다 앞선 단계면
+        // 전부" 전환되도록 STAGE_NUM 순서 비교로 일반화.
+        var stageIsBeforeInstallPrep = (typeof STAGE_NUM !== 'undefined') && STAGE_NUM[c.stage] && STAGE_NUM[c.stage] < STAGE_NUM['시공준비중'];
+        if (inputAmt > 0 && stageIsBeforeInstallPrep) changeStage('시공준비중');
+        closeDetail(); openDetail(c.clientName, c.id);
+      });
     });
     balForm.appendChild(balMethod); balForm.appendChild(balAmt); balForm.appendChild(balDate); balForm.appendChild(balReceipt);
     balSec.appendChild(balForm); balSec.appendChild(balSave);
