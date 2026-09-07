@@ -127,6 +127,16 @@ function fetchDiscountCouponsFromCloud(callback) {
 function renderCouponList() {
   var wrap = document.getElementById('coupon-list');
   if (!wrap) return;
+  // 2026-09-06(선혜님 지적 - "할인 쿠폰이 적용이 되었다가 안됐다가 하는데
+  // 그때그때 달라"로 발견, 실제 재현 성공): renderCouponList가 최소 2번
+  // 호출됨(로컬캐시로 즉시 1차 렌더링 → 서버에서 최신 쿠폰목록 도착 후
+  // 2차 재렌더링) - 이 두 렌더링 사이의 시간(느린 네트워크일수록 길어짐)
+  // 동안 사용자가 쿠폰 체크박스를 눌렀다면, 재렌더링이 체크박스를 통째로
+  // 새로 만들면서 방금 체크한 상태가 조용히 사라지고 있었음. 재네더링
+  // 직전에 현재 체크되어 있던 쿠폰 id들을 기억해뒀다가, 새로 그린 뒤
+  // 그대로 복원함.
+  var previouslyChecked = {};
+  wrap.querySelectorAll('.coupon-check:checked').forEach(function(cb) { previouslyChecked[cb.dataset.id] = true; });
   var coupons = [];
   try { coupons = JSON.parse(localStorage.getItem('dah_discount_coupons') || '[]'); } catch(e) {}
   // 2026-08-14: 쿠폰 기간(시작일/종료일) 필터링 - 설정화면에서 기간만료
@@ -151,6 +161,7 @@ function renderCouponList() {
     cb.dataset.name = c.name;
     cb.dataset.type = c.type;
     cb.dataset.value = c.value;
+    cb.checked = !!previouslyChecked[c.id];
     cb.style.cssText = 'margin:0;width:14px;height:14px';
     cb.onchange = function() {
       // 2026-08-14: 쿠폰을 해제해서 금액이 바뀌면 안내 토스트 표시(선혜님 요청).
@@ -171,6 +182,10 @@ function renderCouponList() {
     label.appendChild(cb); label.appendChild(span);
     wrap.appendChild(label);
   });
+  // 위에서 cb.checked를 프로그래밍적으로 설정한 건 onchange 이벤트가
+  // 자동으로 발생하지 않으므로, 체크 상태를 복원한 경우 금액도 최신
+  // 상태로 맞춰지도록 명시적으로 재계산.
+  if (Object.keys(previouslyChecked).length > 0 && typeof calcTotal === 'function') calcTotal();
 }
 // 2026-08-14: 불러오기(견적서앱에서열기/열어서수정/복사) 시 저장된
 // applied_discounts를 정확히 복원 — 쿠폰목록이 클라우드에서 아직 로딩중일
