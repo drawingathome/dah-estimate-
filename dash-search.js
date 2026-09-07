@@ -19,10 +19,20 @@ function searchMatch(customer, query) {
   var name  = (customer.clientName || '').toLowerCase();
   var phone = (customer.phone || '').replace(/-/g, '');
   var addr  = (customer.addr || '').toLowerCase();
-  
+
   // 일반 검색
   if (name.includes(q) || phone.includes(q) || addr.includes(q)) return true;
-  
+
+  // 2026-09-06(선혜님 지적 - "김 은 외자이름일 경우 김은 으로 하면 검색이
+  // 안되고 김 은 으로 띄워야 검색이 되는데 둘 다 뜨게 해야 하는거 아니야??"):
+  // 외자 이름(예: "김 은")을 등록할 때 성과 이름 사이에 공백을 넣어
+  // 저장한 경우, "김은"(공백없이)으로 검색하면 단순 포함검사(includes)가
+  // 정확히 안 맞아서 못 찾고 있었음 - 이름/검색어 양쪽에서 공백을 제거한
+  // 버전으로도 비교해서, 공백을 넣든 안 넣든 항상 찾아지도록 함.
+  var nameNoSpace = name.replace(/\s/g, '');
+  var qNoSpace = q.replace(/\s/g, '');
+  if (qNoSpace && nameNoSpace.includes(qNoSpace)) return true;
+
   // 초성 검색
   if (/^[ㄱ-ㅎ]+$/.test(q)) {
     var nameChosung = getChosung(customer.clientName || '');
