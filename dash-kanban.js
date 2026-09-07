@@ -33,30 +33,29 @@ function changeStageByName(customerName, newStage, id) {
 
     var oldStage = customers[idx].stage;
     customers[idx].stage = newStage;
-    customers[idx].updatedAt = new Date().toISOString();
-    // 2026-08-10: 칸반 드래그로 전환할 때도 확정일 기록 (changeStage와 동일 로직)
+    // 2026-09-06(선혜님 지시 - "비슷한 오루 더 찾아"로 발견, "김 은" 사례와
+    // 정확히 같은 근본원인의 쌍둥이): 예전엔 여기서 updatedAt을 현재시각으로
+    // 직접 덮어쓴 뒤, saveCustomerToDb()를 거치지 않고 자체 sbXHR('PATCH')를
+    // 직접 호출하고 있었음 - 이러면 (1) saveCustomerToDb에 이미 있는
+    // 고객단위 저장 직렬화 큐(8/31 도입, 같은 고객에 대한 저장을 순서대로
+    // 처리)의 보호를 못 받고, (2) 임의로 만든 updatedAt은 실제 서버 값이
+    // 아니라서 낙관적 잠금 비교 자체가 부정확해짐. 칸반 드래그는 실제로
+    // 자주 쓰이는 기능이라 다른 화면(결제/발주 등)에서의 저장과 거의
+    // 동시에 발생할 위험이 실제로 있음. saveCustomerToDb()를 쓰도록 바꿔서
+    // 직렬화 큐/자동재시도(fetchLatestUpdatedAt)/사용자 토스트 안내를
+    // 전부 자동으로 적용받게 함 - updatedAt은 임의로 덮어쓰지 않고 로드
+    // 시점의 원본 값을 그대로 락값으로 사용.
     if (newStage === '확정견적' && !customers[idx].confirmDate) {
       customers[idx].confirmDate = todayStr();
     }
     saveCustomers(customers);
 
-    // Supabase 동기화 (2026-08-04 버그수정: 예전엔 path 앞에 불필요한 슬래시가
-    // 붙어있고(SUPABASE_URL+'/rest/v1/'+path 조합에서 이중슬래시가 됨), 콜백도
-    // sbXHR가 기대하는 (err,data) 단일콜백 방식과 안 맞게 두 개로 나눠 넘겨서
-    // 실제로는 클라우드 저장이 조용히 실패하고 있었음 — 화면엔 "이동됨" 토스트가
-    // 떠서 성공한 것처럼 보였지만 새로고침하면 원래대로 돌아가 있었음)
-    if (customers[idx].id) {
-      var patchBody = { stage: newStage };
-      if (newStage === '확정견적' && customers[idx].confirmDate) patchBody.confirm_date = customers[idx].confirmDate;
-      sbXHR('PATCH', 'customers?id=eq.' + customers[idx].id,
-        patchBody,
-        function(err) {
-          if (err) {
-            console.warn('스테이지 동기화 실패:', err);
-            showToast('⚠️ 단계 이동이 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요');
-          }
-        }
-      );
+    if (customers[idx].id && typeof saveCustomerToDb === 'function') {
+      saveCustomerToDb(customers[idx], function(err) {
+        if (err) console.warn('스테이지 동기화 실패:', err);
+        // 실패시 사용자 안내(권한문제/동시저장충돌 구분 포함)는
+        // saveCustomerToDb 내부에서 이미 showToast로 처리됨.
+      });
     }
     showToast(customerName + ' → ' + newStage);
     renderPipe(loadCustomers());
