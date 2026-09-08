@@ -766,9 +766,27 @@ function _findSameSpaceInsertPoint(tr) {
   }
   return insertAfter;
 }
+// 2026-09-08(선혜님 발견 - "처음 견적서에는 5센치 되어있는것도 다 리드로
+// 바뀌어있는걸 확인했어" → 유경진 사례로 재현): 커튼/블라인드/서비스
+// "복사" 버튼(copyCurtainRow/copyBlindRow/copySvcRow)이 전부
+// cloneNode(true)로 행을 복제하는데, cloneNode는 HTML의 <option selected>
+// 속성은 복제하지만, 사용자가 JS로 프로그래밍적으로 바꾼 select의 "현재
+// 선택값"(value property, HTML 속성이 아님)은 복제하지 못하는 잘 알려진
+// DOM 함정임 - 그래서 시접을 "5cm"로 바꾼 행을 복사하면, 복사본은 항상
+// 첫 번째 옵션("리드")으로 리셋되고 있었음(재현 테스트로 실제 확인함).
+// cloneNode 직후 원본의 모든 select 값을 복사본에 명시적으로 다시
+// 대입해주는 공용 헬퍼 - 세 복사 함수 모두에서 재사용.
+function _copySelectValues(original, clone) {
+  var origSelects = original.querySelectorAll('select');
+  var cloneSelects = clone.querySelectorAll('select');
+  for (var i = 0; i < origSelects.length; i++) {
+    if (cloneSelects[i]) cloneSelects[i].value = origSelects[i].value;
+  }
+}
 function copyCurtainRow(btn) {
   var tr=btn.closest('tr');
   var clone=tr.cloneNode(true);
+  _copySelectValues(tr, clone);
   clone.dataset.rowId='c'+Date.now();
   // 2026-08-14: cloneNode가 dataset.rowUid까지 그대로 복사해버려서, 복사한
   // 행을 수정하면 원본 행의 레일을 침범할 위험이 있었음(rowUid 도입 부수
@@ -786,6 +804,7 @@ function copyCurtainRow(btn) {
 function copyBlindRow(btn) {
   var tr=btn.closest('tr');
   var clone=tr.cloneNode(true);
+  _copySelectValues(tr, clone);
   clone.dataset.rowId='b'+Date.now();
   clone.querySelectorAll('input[data-raw]').forEach(function(inp){
     inp.setAttribute('data-raw',inp.getAttribute('data-raw'));
@@ -806,6 +825,7 @@ function copyBlindRow(btn) {
 function copySvcRow(btn) {
   var tr=btn.closest('tr');
   var clone=tr.cloneNode(true);
+  _copySelectValues(tr, clone);
   clone.dataset.rowId='s'+Date.now();
   clone.querySelectorAll('input[data-raw]').forEach(function(inp){
     inp.setAttribute('data-raw',inp.getAttribute('data-raw'));
