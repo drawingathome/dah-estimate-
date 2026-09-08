@@ -28,7 +28,7 @@
  * ══════════════════════════════════════════════════
  */
 
-var ROOT_FOLDER_ID = '여기에_공용드라이브_DAH_문서보관_폴더ID_붙여넣기';
+var ROOT_FOLDER_ID = '1YzxLS8aibtCwuO63adcD8jNwCcHnXXAH';
 var CUSTOMER_SHEET_NAME = 'DAH_고객명단';
 
 function doPost(e) {
