@@ -147,12 +147,18 @@ function saveCustomer() {
     // 서버에 직접 "이 전화번호로 이미 등록된 고객이 있는지" 한 번 더 확인한
     // 뒤에 진행하도록 함.
     var phoneNorm = (phone||'').replace(/\D/g,'');
+    // 2026-09-08(선혜님 발견 — "황남주 내가 입력한 고객인데 오지은 실장님쪽
+    // 에서 또 입력이 되는데?!", 실제 DB로 재현 확인): 기존엔 customers 테이블을
+    // 직접(GET customers?phone=eq...) 조회해서 중복을 확인했는데, RLS 정책상
+    // 스태프는 본인이 담당자인 고객만 조회할 수 있어서 - 마스터가 등록한
+    // "황남주"가 오지은 실장 권한으로는 아예 안 보여 "중복 없음"으로 잘못
+    // 판단되고 완전히 별개의 새 레코드로 등록되고 있었음(RLS 보안정책과
+    // 중복방지 기능이 서로 충돌하던 구조적 문제). 담당자 제한 없이 "이
+    // 전화번호가 이미 있는지/누구 담당인지"만 확인해주는 RPC(SECURITY
+    // DEFINER, 다른 민감정보는 노출 안 함)를 새로 만들어 사용.
     if (typeof sbXHR === 'function' && phoneNorm) {
-      sbXHR('GET', 'customers?phone=eq.' + encodeURIComponent(phone) + '&is_archived=eq.false&select=id,client_name,phone', null, function(err, rows) {
-        var serverMatch = null;
-        if (!err && Array.isArray(rows)) {
-          serverMatch = rows.find(function(r) { return (r.phone||'').replace(/\D/g,'') === phoneNorm; });
-        }
+      sbXHR('POST', 'rpc/check_phone_duplicate', { phone_input: phone }, function(err, rows) {
+        var serverMatch = (!err && Array.isArray(rows) && rows[0] && rows[0].exists_flag) ? { client_name: name, phone: phone, staff_name: rows[0].staff_name } : null;
         _saveNewCustomerActual(name, phone, arr, serverMatch);
       });
       return;
@@ -175,10 +181,17 @@ function _saveNewCustomerActual(name, phone, arr, serverMatch) {
     // 라는 혼란스러운 경고가 보관된(이미 지운) 고객 때문에 떴었음 - 정확히
     // 같은 종류의 버그가 서로 다른 두 곳에 따로 있던 사례(체크리스트 24번).
     var samePersonExisting = arr.find(function(c) { return !c.is_archived && c.clientName === name && (c.phone||'').replace(/\D/g,'') === (phone||'').replace(/\D/g,''); })
-      || (serverMatch ? { clientName: serverMatch.client_name, phone: serverMatch.phone, visitCount: 1 } : null);
+      || (serverMatch ? { clientName: serverMatch.client_name, phone: serverMatch.phone, staffName: serverMatch.staff_name, visitCount: 1 } : null);
     var sameNameDiffPhone = !samePersonExisting && arr.find(function(c) { return !c.is_archived && c.clientName === name; });
     if (samePersonExisting) {
-      if (!confirm('"' + name + '"(' + phone + ') 고객이 이미 있습니다.\n재구매 고객으로 업데이트할까요?')) return;
+      // 2026-09-08(선혜님 발견 — "황남주" 사례로 위 RPC를 새로 만든 김에
+      // 함께 개선): 담당자가 나와 다르면 "재구매 고객으로 업데이트"라는
+      // 표현이 오해를 줄 수 있음(실제로는 다른 담당자의 고객을 내 담당으로
+      // 가져오는 것) - 담당자 이름을 명확히 보여줘서 인지하고 결정하게 함.
+      var myName = (currentUser && currentUser.role === 'staff') ? currentUser.name : '마스터';
+      var otherStaffNote = (samePersonExisting.staffName && samePersonExisting.staffName !== myName)
+        ? ('\n\n⚠️ 현재 담당자: ' + samePersonExisting.staffName) : '';
+      if (!confirm('"' + name + '"(' + phone + ') 고객이 이미 있습니다.' + otherStaffNote + '\n재구매 고객으로 업데이트할까요?')) return;
     } else if (sameNameDiffPhone) {
       if (!confirm('"' + name + '" 이름의 다른 고객이 이미 있습니다(연락처: ' + (sameNameDiffPhone.phone||'미입력') + ').\n동명이인으로 보이는데, 별도의 새 고객으로 등록할까요?')) return;
     }
