@@ -86,6 +86,11 @@ if (/dah-estimate/.test(target)) {
   // 만든 안전장치에 영구 테스트가 없다"는 걸 해결하기 위해 추가):
   // shared-optimistic-lock.js(낙관적잠금 락값갱신 공용함수) 검증.
   scripts.push(['optimistic-lock-check.js', []]);
+  // 2026-09-08(선혜님 지적 - "얼렁뚱땅 넘어가지 마... 이래서 너를
+  // 믿겠니??"로 발견된 신뢰 문제 해결): 같은 종류의 select값 유실
+  // 버그가 세 번 재발했음(8/29, 9/8 1차 오진단, 9/8 2차) - 말이 아니라
+  // 테스트로 다음 재발을 잡도록 영구 등록.
+  scripts.push(['curtain-select-value-integrity-check.js', []]);
 }
 
 let anyFail = false;
