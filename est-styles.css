@@ -1,0 +1,1717 @@
+/* ══════════════════════════════════════════════════
+   DAH 견적서 앱 전체 스타일시트
+   원래 dah-estimate.html 안에 <style> 태그로 내장되어 있던 CSS를
+   분리한 파일입니다. 기능 변경 없음 — 순수 위치 이동만 수행함.
+   ══════════════════════════════════════════════════ */
+
+/* ── Pretendard 직접 내장 (CDN 불필요) ── */
+@font-face {
+  font-family: 'Pretendard Variable';
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+  src: url('/pretendard-variable.woff2') format('woff2-variations');
+}
+
+html, body, input, button, select, textarea {
+  font-family: 'Pretendard Variable', Pretendard, -apple-system,
+    BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ════════════════════════════════════════════════════════
+   DAH 폰트 위계 시스템 — 전 페이지 일괄 적용 2026.07.07
+   ════════════════════════════════════════════════════════
+   페이지 타이틀  22px / 700 / #282828
+   KPI 숫자      36px / 700 / #282828
+   KPI 단위      13px / 400 / #756E62
+   KPI 라벨      11px / 700 / #756E62 (uppercase)
+   섹션 타이틀   12px / 700 / #756E62 (uppercase)
+   본문          15px / 400 / #282828
+   서브텍스트    12px / 400 / #756E62
+   버튼          13px / 700
+   탭 라벨       12px / 500(off) 700(on)
+   날짜/보조     11px / 400 / #756E62
+   ════════════════════════════════════════════════════════ */
+
+/* ── 전역 기본 ── */
+html { font-size: 15px; }
+body {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #282828;
+  background: var(--ivory2);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+* { -webkit-font-smoothing: antialiased; }
+
+/* ── KPI 숫자 36px ── */
+
+
+
+/* ── KPI 라벨 11px ── */
+
+
+/* ── 섹션 타이틀 12px ── */
+
+
+/* ── 버튼 13px ── */
+button {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  font-family: inherit !important;
+  cursor: pointer !important;
+}
+/* 탭 버튼 예외 */
+.tab, .tab-item, .tabs button,
+.est-tab, .est-status-btn {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+.tab.on, .tab.active, .tab-item.on,
+.tabs button.on, .tabs button.active,
+.est-tab.on, .est-status-btn.on {
+  font-weight: 700 !important;
+}
+
+/* ── 입력창 15px ── */
+input, select, textarea {
+  font-size: 15px !important;
+  font-family: inherit !important;
+}
+input::placeholder, textarea::placeholder {
+  font-size: 13px !important;
+  color: #C8C2BA !important;
+  font-weight: 400 !important;
+}
+
+/* ── 날짜/보조 11px ── */
+
+
+/* ── 서브텍스트 12px ── */
+
+
+/* ── 홈 칩 28px 높이 ── */
+
+
+/* ── 칸반 스테이지 12px ── */
+
+
+
+/* ── 카드 본문 ── */
+
+
+
+/* ── 모바일 진행현황 2열 ── */
+@media (max-width: 640px) {
+  #pipe .pipe-cols,
+  #pipe .kanban-cols {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    padding: 12px !important;
+  }
+  #pipe .pipe-col:last-child,
+  #pipe .kanban-col:last-child {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+/* ── 매출 탭 active 강화 ── */
+
+
+#chart .period-tabs button.on,
+#chart .period-tabs button.active,
+.chart-period-tabs button.on {
+  background: #fff !important;
+  color: #282828 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 4px rgba(40,40,40,0.12) !important;
+}
+
+#chart .view-tabs button.on,
+.chart-view-tabs button.on {
+  color: #F06E2D !important;
+  font-weight: 700 !important;
+  border-bottom-color: #F06E2D !important;
+}
+
+/* ── 견적서 ── */
+
+
+
+
+
+ 
+:root {
+  /* ── 브랜드 컬러 ── */
+  --orange:   #F06E2D;
+  --dark:     #282828;
+  --ivory1:   #FAF7F5;
+  --ivory2:   #F5F2EE;
+  --border:   #EEE6DC;
+  --sub:      #756E62;
+  --danger:   #C0392B;
+  --bg-org:   #FFF3EE;
+  --bg-red:   #FDECEA;
+
+  /* ── 스테이지 컬러 ── */
+  --stage-orange: #F06E2D;   /* 계약금·실측 */
+  --stage-dark:   #282828;   /* 잔금·시공 */
+  --stage-sub:    #756E62;   /* 상담 */
+  --stage-done:   #EEE6DC;   /* 완료 */
+
+  /* ── Border Radius ── */
+  --r-btn:    4px;    /* 버튼·뱃지·태그 */
+  --r-input:  8px;    /* 입력창·검색바 */
+  --r-card:   12px;   /* 카드·테이블 */
+  --r-icon:   14px;   /* 빠른액션 아이콘 */
+  --r-modal:  16px;   /* 모달 */
+
+  /* ── 여백 (4px 기반) ── */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px;
+  --sp-5:20px; --sp-6:24px; --sp-8:32px; --sp-10:40px; --sp-12:48px;
+
+  /* ── 하위 호환 ── */
+  --terra:    #F06E2D;
+  --mid:      #756E62;
+  --light:    #756E62;
+  --green:    #2F6690;
+  --blue:     #282828;
+  --terra-dark:#D4601F;
+}
+
+ 
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{font-family:var(--font-base);background:#FAF7F5;margin:0;padding:0;color:#282828;-webkit-text-size-adjust:100%}
+
+ 
+
+ 
+.container{max-width:100%;padding:0 0 32px}
+@media (min-width: 1024px) {
+  .container{max-width:900px;margin:0 auto}
+  /* 2026-08-27(선혜님 지적 - "PC도 같이 평가해야지", 실제 확인 결과 "금액"
+     칸이 표 영역 부족으로 처음부터 화면 밖에 있었음): 전체 컨테이너는
+     900px로 좁게 유지하되(다른 섹션들은 읽기 편한 폭이 나음), 커튼·블라인드
+     품목 표 섹션만 예외적으로 더 넓게 써서 표 내용(약 1100px)이 스크롤 없이
+     한 번에 들어오게 함. 1200px 폭으로 확장(900px 기준 좌우 150px씩 더 씀),
+     너무 넓어지는 아주 큰 화면(1300px 미만 뷰포트)에서는 안전하게 원래
+     900px로 되돌아가도록 min-width 조건을 별도로 둠. */
+  .section.wide-section{
+    max-width:1200px;
+    margin-left:-150px;margin-right:-150px;
+  }
+}
+@media (min-width:1024px) and (max-width:1299px){
+  .section.wide-section{max-width:900px;margin-left:auto;margin-right:auto}
+}
+
+ 
+.doc-header{
+  background:#282828;
+  padding:8px 16px 0;
+  overflow:visible;
+  display:grid;
+  grid-template-columns:1fr auto;
+  grid-template-rows:auto 1px auto;
+  gap:0;
+  border-radius:0 10px 0 0
+}
+ 
+.doc-header-logo{
+  grid-column:1;grid-row:1;
+  display:flex;align-items:center;
+  padding-bottom:6px
+}
+.doc-header-logo img{height:26px;display:block;object-fit:contain;filter:brightness(0) invert(1);opacity:0.95}
+ 
+.doc-header-type{
+  grid-column:2;grid-row:1;
+  display:flex;flex-direction:column;align-items:flex-end;
+  padding-bottom:6px
+}
+.doc-title{
+  font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);
+  letter-spacing:4px;text-transform:uppercase;
+  margin-bottom:4px
+}
+.doc-title-ko{
+  font-size:22px;font-weight:800;color:#FAF7F5;
+  letter-spacing:0;line-height:1
+}
+ 
+.doc-header-divider{
+  grid-column:1/-1;grid-row:2;
+  background:rgba(255,255,255,0.1);
+  margin:0;height:1px
+}
+ 
+.doc-header-bottom{
+  grid-column:1/-1;grid-row:3;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:4px 0
+}
+.doc-date{
+  font-size:11px;color:rgba(255,255,255,0.4);
+  letter-spacing:0.5px
+}
+.doc-header-meta{
+  display:flex;flex-direction:column;align-items:flex-end;gap:2px
+}
+.doc-header-meta span{
+  font-size:11px;color:rgba(255,255,255,0.3);
+  letter-spacing:0.3px
+}
+.doc-header-meta strong{
+  font-size:11px;color:rgba(255,255,255,0.65);
+  font-weight:600
+}
+ 
+.doc-header-tabbar-wrap{
+  grid-column:1/-1;grid-row:3;
+  position:relative;
+}
+/* 2026-08-05: 가로스크롤해야 보이는 탭(AS·수선 등)이 있다는 걸 알려주는
+   힌트가 전혀 없어서, 좁은 화면에서 탭 존재 자체를 못 알아채던 문제.
+   오른쪽 끝에 은은한 그림자로 "더 있다"는 걸 시각적으로 알려줌 */
+.doc-header-tabbar-wrap::after{
+  content:'';position:absolute;top:0;right:0;bottom:1px;width:24px;
+  background:linear-gradient(to right, rgba(40,40,40,0), rgba(40,40,40,0.85));
+  pointer-events:none;
+}
+.doc-header-tabbar{
+  display:flex;flex-wrap:nowrap;align-items:flex-end;
+  gap:2px;padding-top:4px;
+  overflow-x:auto;overflow-y:visible;
+  scrollbar-width:none;-ms-overflow-style:none;
+  padding-bottom:1px
+}
+.doc-header-tabbar::-webkit-scrollbar{display:none}
+.doc-header-tabbar-left{
+  display:flex;gap:2px;align-items:flex-end;order:1;flex-shrink:0
+}
+/* 2026-08-08: 문서상태(가견적서/최종견적서/확정)와 작업유형(신규/재구매/
+   AS수선)은 서로 다른 성격의 선택 UI라 의도적으로 다른 패턴(밑줄 vs
+   버튼)을 씀. 근데 둘이 바로 붙어있어서 하나의 뒤섞인 툴바처럼 보이던
+   문제 - 구분선+간격으로 "의도적으로 다른 그룹"임을 명확히 함 */
+.doc-header-tabbar-right{
+  display:flex;gap:1px;align-items:flex-end;order:2;flex-shrink:0;
+  margin-left:14px;padding-left:14px;
+  border-left:1px solid rgba(255,255,255,0.15);
+}
+
+.section{
+  background:#fff;
+  border-radius:12px;
+  padding:13px;
+  margin:0 12px 8px;
+  box-shadow: 0 1px 2px rgba(40,32,24,0.04), 0 4px 16px rgba(40,32,24,0.06);
+}
+
+/* 2026-08-27(선혜님 발견 - "위치 바꾸는게 잘 안 되는데? 하나는 옮겼는데
+   그 이후로는 옮겨지지 않아"): 드래그 손잡이(⠿)가 22×28px로, 프로젝트
+   자체 최소 터치타겟 기준(32px)에도 못 미치고 있었음 - 어제 액션버튼
+   (복사/삭제)을 단가/금액과 같은 줄로 합치면서 손잡이가 눌려 좁아진
+   것으로 보임. 실제 손가락으로 정확히 잡기 어려워서 "한 번은 되고 그
+   다음은 안 되는" 것처럼 느껴졌을 가능성이 높음 - 최소 크기를 명시적으로
+   보장함. */
+.row-drag-handle{
+  min-width:32px!important;min-height:32px!important;
+  display:inline-flex!important;align-items:center;justify-content:center;
+  font-size:15px;
+}
+.sec-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px}
+.sec-title{
+  font-size:11px;font-weight:800;color:#756E62;
+  letter-spacing:2.5px;text-transform:uppercase;
+  white-space:nowrap
+}
+.sec-badge{
+  font-size:11px;font-weight:700;color:#282828;
+  background:#F5F2EE;padding:3px 10px;border-radius:4px
+}
+
+
+ 
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+.info-item{
+  padding:9px 0;
+  border-bottom:1px solid #EEE6DC;
+  margin-bottom:0
+}
+.info-item.date-item{
+  padding:6px 0
+}
+.info-item:last-child{border-bottom:none}
+.info-item label{
+  font-size:11px;color:#756E62;font-weight:700;
+  display:block;margin-bottom:4px;
+  letter-spacing:1.5px;text-transform:uppercase
+}
+.info-item input,.info-item select{
+  width:100%;border:none;background:transparent;
+  padding:0;font-size:11px;font-weight:600;
+  color:#282828;font-family:inherit;outline:none;
+  -webkit-appearance:none;appearance:none
+}
+.info-item input::placeholder{color:#756E62;font-weight:400;font-size:11px}
+.info-item input[readonly]{color:#756E62}
+/* 2026-08-08: date input은 ::placeholder가 네이티브 특성상 안 먹혀서(브라우저가
+   "년-월-일" 빈 상태 텍스트를 placeholder 색이 아니라 입력값 색으로 렌더링함)
+   다른 플레이스홀더(연한 회색)와 색/굵기가 달라 보이던 문제 - JS로 값 유무 판단해
+   .is-empty 클래스 토글하는 방식으로 통일 */
+.info-item input[type="date"].is-empty{color:#C8C2BA!important;font-weight:400!important}
+@media (min-width: 1024px) {
+  .info-item input[type="date"] { max-width: 180px; }
+  #c-name, #c-phone { max-width: 320px; }
+}
+
+ 
+.region-row{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  margin-top:8px;padding-top:8px;border-top:1px dashed #EEE6DC
+}
+.region-row label{
+  font-size:11px;font-weight:700;color:#756E62;
+  letter-spacing:0.8px;text-transform:uppercase;white-space:nowrap
+}
+.region-row select,.region-row input{
+  padding:12px 0 8px;border:none;
+  border-bottom:1.5px solid #EEE6DC;
+  font-size:11px;font-weight:600;font-family:inherit;
+  outline:none;background:transparent
+}
+.region-row select:focus,.region-row input:focus{border-bottom-color:#282828}
+.region-row .region-hint{font-size:11px;color:#756E62}
+
+ 
+.info-toggle{
+  display:flex;align-items:center;gap:10px;
+  margin-top:8px;padding-top:8px;padding-bottom:2px;min-height:32px;box-sizing:border-box;
+  cursor:pointer;user-select:none;border-top:1px dashed #EEE6DC
+}
+.info-toggle .toggle-label{
+  font-size:11px;font-weight:700;color:#756E62;
+  letter-spacing:0.8px;text-transform:uppercase
+}
+.info-toggle .toggle-arrow{font-size:11px;color:#756E62;transition:transform 0.2s;margin-left:auto}
+.info-toggle.open .toggle-arrow{transform:rotate(180deg)}
+.info-internal{max-height:none!important;display:none!important}
+.info-internal.open{max-height:200px;display:block!important}
+
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0;border-radius:8px}
+/* 2026-08-22: 드래그 중인 행 시각 피드백(전엔 아예 없었음) */
+#curtain-body tr.dragging-row,#blind-body tr.dragging-row{opacity:0.45;background:#F5F2EE}
+.tbl-wrap table{min-width:1100px!important}
+table{width:100%;border-collapse:collapse;font-size:11px;min-width:0!important}
+
+thead th{
+  font-size:11px;font-weight:800;color:#282828;
+  letter-spacing:0.5px;padding:9px 4px;
+  background:#EEE6DC;
+  text-align:center;white-space:nowrap;
+  background:#FAF7F5;border-bottom:2px solid #EEE6DC
+}
+td{
+  padding:9px 5px;font-size:11px;color:#282828;
+  vertical-align:middle;border-bottom:1px solid #EEE6DC;
+  line-height:1.5
+}
+td input{
+  border:none!important;background:transparent!important;
+  padding:0!important;font-size:11px!important;
+  font-family:inherit;width:100%;outline:none;
+  color:#282828
+}
+td select{
+  border:none;background:transparent;
+  font-size:11px;font-family:inherit;
+  outline:none;color:#282828;
+  max-width:100%;cursor:pointer
+}
+td input::placeholder{color:#756E62;font-size:11px}
+td input:focus,td select:focus{outline:none}
+td.amt{
+  text-align:right;white-space:nowrap;
+  font-size:11px;font-weight:700;
+  color:#282828;letter-spacing:-0.3px
+}
+.r{text-align:right}
+.c-display-name{font-weight:600!important}
+.sub-size{display:block;font-size:11px;color:#F06E2D;font-weight:600;margin-top:2px;white-space:nowrap}
+
+/* 2026-08-26(선혜님과 함께 진행한 "내부견적서 한눈에 안 들어옴" 개선 1단계):
+   지금까지 제품명/가격/부가옵션이 전부 INP/SEL 변수(11px, 같은 색)로 통일돼
+   있어서 정보 위계가 없었음. 여기서 로직은 하나도 안 건드리고, "이미 화면에
+   그려진 걸 CSS로만" 강조/약화시킴(inline style보다 나중에 로드되는 CSS가
+   !important로 덮어씀 - HTML/JS 생성 코드는 그대로 유지). */
+/* 2026-08-26 재조정(선혜님 지적 - "낱개 금액을 그렇게 크게 강조하는 게
+   의미가 있냐, 전체 총액만 제대로 보이면 된다"): 1단계에서 낱개 제품명/
+   금액을 15px+오렌지색으로 크게 강조했었는데, 실제 작업 흐름(여러 품목을
+   빠르게 훑어보는 것)엔 오히려 시선만 분산시켰음. 강조는 전체 총액
+   (.summary-total-block, 32px 오렌지)에만 남기고, 낱개는 다시 수수하게
+   되돌림 - 대신 "안 보이던" 예전 문제로 돌아가지 않게 sticky 고정(1단계에서
+   만든 것)은 그대로 유지해서 "안 보임"과 "과한 강조" 둘 다 피함.*/
+#curtain-body .c-display-name,
+#blind-body .c-display-name{
+  font-size:13px!important;
+  color:#282828!important;
+}
+#curtain-body td.amt,
+#blind-body td.amt{
+  font-size:13px!important;
+  color:#282828!important;
+}
+/* 부가옵션(주름/개폐/시접)은 값은 필요하지만 시선을 덜 끌어도 되는 정보라 옅게 */
+#curtain-body .pleat-type,
+#curtain-body .open-type,
+#curtain-body .hem-type{
+  color:#8E8078!important;
+  font-size:11px!important;
+}
+
+/* 2026-08-26 추가: "단가/금액 컬럼이 표를 옆으로 스크롤해야만 보이는" 문제
+   발견 - 표 안에서 어디까지 스크롤하든 단가/금액/삭제버튼만은 항상 오른쪽에
+   고정되게 함(엑셀 "틀 고정"과 같은 원리). 커튼표(11컬럼)/블라인드표(10컬럼)
+   전부 :nth-last-child로 지정하면 컬럼 총개수가 달라도 "끝에서부터 3개"
+   기준이라 그대로 재사용 가능함.
+   2026-08-26 추가 수정(선혜님 발견 - "카드 폭을 넓히면 높이를 더 줄일 수
+   있지 않겠냐"는 질문에서 디버깅): 이 sticky 규칙들이 PC용으로 만든
+   건데 모바일(카드형)에도 그대로 적용되면서, 카드 레이아웃의 td
+   width/position:static 설정과 명세우선순위가 충돌해 카드가 내용물
+   크기만큼만 좁게 쪼그라드는 원인이 됐었음. 표 자체가 있는 PC에서만
+   의미가 있는 기능이므로 PC 전용(641px 이상)으로 명확히 분리함. */
+@media (min-width:641px){
+#curtain-table td:nth-last-child(-n+3),
+#curtain-table th:nth-last-child(-n+3){
+  position:sticky;background:#fff;z-index:2;
+}
+#curtain-table td:nth-last-child(1),#curtain-table th:nth-last-child(1){right:0;width:28px}
+#curtain-table td:nth-last-child(2),#curtain-table th:nth-last-child(2){right:28px;width:56px}
+#curtain-table td:nth-last-child(3),#curtain-table th:nth-last-child(3){right:84px;width:56px}
+#curtain-body tr:hover td:nth-last-child(-n+3){background:#F5F2EE}
+
+#blind-table td:nth-last-child(-n+3),
+#blind-table th:nth-last-child(-n+3){
+  position:sticky;background:#fff;z-index:2;
+}
+#blind-table td:nth-last-child(1),#blind-table th:nth-last-child(1){right:0;width:28px}
+#blind-table td:nth-last-child(2),#blind-table th:nth-last-child(2){right:28px;width:60px}
+#blind-table td:nth-last-child(3),#blind-table th:nth-last-child(3){right:88px;width:60px}
+#blind-body tr:hover td:nth-last-child(-n+3){background:#F5F2EE}
+/* 왼쪽에서 스크롤되어 오는 다른 컬럼과 겹칠 때 구분선으로 경계를 명확히 */
+#curtain-table td:nth-last-child(3),#curtain-table th:nth-last-child(3),
+#blind-table td:nth-last-child(3),#blind-table th:nth-last-child(3){
+  border-left:1px solid #EEE6DC;
+}
+}
+
+/* 2026-08-26(선혜님과 함께 진행한 "내부견적서 한눈에 안 들어옴" 개선 3단계):
+   모바일에서 커튼/블라인드 표를 카드형으로 재배치. B방식(로직/데이터 구조는
+   그대로, CSS로만 모양을 바꿈) - <tr>/<td> 그대로 유지하고, flex+order로
+   시각적 순서만 재배치. data-label 속성(est-product-calc.js에서 추가)을
+   ::before로 표시해서 헤더(thead) 숨긴 자리를 대신함. */
+@media (max-width:640px){
+  /* 2026-08-26(선혜님과 함께 발견): .tbl-wrap table{min-width:1100px!important}
+     라는 PC용 안전장치(표가 안 찌그러지게 하는 규칙, 380번째 줄)가 모바일
+     카드형에도 그대로 걸려서 카드가 내용물 크기(약 161px)로만 좁게 쪼그라들고
+     있었음 - 지금까지 "카드가 화면 폭을 다 못 쓰고 있던" 근본 원인이 바로 이거
+     였음. 모바일에서는 카드형이라 표 가로스크롤 자체가 필요 없으므로 여기서
+     풀어줌. */
+  .tbl-wrap table{min-width:0!important}
+
+  #curtain-table thead,#blind-table thead{display:none}
+  #curtain-table,#blind-table{display:block}
+  #curtain-body,#blind-body{display:block}
+  #curtain-body tr,#blind-body tr{
+    display:flex!important;flex-wrap:wrap;align-items:flex-start;
+    width:100%!important;box-sizing:border-box;
+    border:1px solid #EEE6DC;border-radius:12px;
+    padding:12px 10px;margin-bottom:10px;background:#fff;
+  }
+  #curtain-body td,#blind-body td{
+    display:block!important;position:static!important;
+    padding:4px 6px!important;border:none!important;background:transparent!important;
+  }
+  #curtain-body td:before,#blind-body td:before{
+    content:attr(data-label);display:block;font-size:10px;color:#B0A99F;margin-bottom:2px;
+  }
+  /* 공간/제품명 - 카드 맨 위, 전체폭 */
+  #curtain-body td[data-label="공간"],#blind-body td[data-label="공간"]{order:1;width:26%;padding-bottom:0!important}
+  #curtain-body td[data-label="공간"]:before,#blind-body td[data-label="공간"]:before{display:none}
+  #curtain-body td[data-label="공간"] .space-inp,#blind-body td[data-label="공간"] .space-inp{font-size:11px;color:#8E8078;font-weight:700}
+  #curtain-body td[data-label="제품명"],#blind-body td[data-label="제품명"]{order:2;width:74%}
+  #curtain-body td[data-label="제품명"]:before,#blind-body td[data-label="제품명"]:before{display:none}
+
+  /* 2026-08-26 재작업(선혜님 지적 - "접으면 하나씩 펴봐야 해서 비효율적,
+     다른 방법 찾아"): 가로/높이(숫자)/폭을 한 줄로 합침. 측정해보니 예전엔
+     가로+폭(45px) 줄과 높이+보정버튼(80px) 줄이 따로 있어서 125px이었는데,
+     보정버튼(-3/일반/전동)을 별도 td로 분리해서 숫자 셋(가로/높이/폭)만
+     한 줄에 합치면 그 줄은 45px로 끝나고, 보정버튼은 전체폭 한 줄(약 40px)
+     로 따로 둠 - 합계 85px로, 버튼을 압축하지 않고도(정상 크기 유지) 40px
+     절약. 버튼을 억지로 줄였던 첫 시도(패딩/폰트 축소)는 오히려 버튼 3개가
+     세로로 쌓이며 117px까지 늘어나 실패 - 제거함. */
+  #curtain-body td[data-label="가로"],#curtain-body td[data-label="높이"],#curtain-body td[data-label="폭"],
+  #blind-body td[data-label="가로"],#blind-body td[data-label="높이"]{order:3;width:33.33%;box-sizing:border-box}
+  #blind-body td[data-label="옵션"]{order:3;width:33.33%;box-sizing:border-box}
+  #curtain-body td[data-label="보정"]{order:4;width:44%;box-sizing:border-box}
+  #curtain-body td[data-label="보정"]:before{display:none}
+
+  /* 부가옵션 그룹(주름/개폐/시접 또는 종류/손잡이) - 옅은 톤으로 한 줄
+     2026-08-26: 카드 폭이 실제로 340px까지 넓어진 걸 확인하고(예전엔
+     min-width:1100px!important 규칙 충돌로 161px에 불과했음), 그 여유를
+     활용해 "보정" 버튼줄과 같은 줄로 합쳐봄(선혜님 제안). */
+  #curtain-body td[data-label="주름"],#curtain-body td[data-label="개폐"],#curtain-body td[data-label="시접"]{order:4;width:18.6%;box-sizing:border-box}
+  #blind-body td[data-label="종류"],#blind-body td[data-label="손잡이"]{order:5;width:50%;box-sizing:border-box}
+
+  /* 단가/금액/액션버튼 - 한 줄로 합침(2026-08-26 재조정 - "스크롤 줄이기")
+     예전엔 액션버튼(복사/삭제)이 구분선까지 그어가며 별도 줄을 차지했는데,
+     단가/금액과 같은 줄에 넣어서 한 줄 통째로 절약함.
+     블라인드는 단가칸 안에 "옵션추가금" 입력까지 2줄로 들어있어서 좁은
+     칸에 넣으면 겹침 - 단가만 전체폭 유지, 금액+액션만 합침. */
+  #curtain-body td[data-label="단가"]{order:6;width:38%;box-sizing:border-box}
+  #curtain-body td.amt{order:6;width:32%;box-sizing:border-box;text-align:right!important}
+  #curtain-body td:last-child{order:6;width:30%;box-sizing:border-box;text-align:right;padding-top:8px!important}
+
+  #blind-body td[data-label="단가"]{order:6;width:100%;box-sizing:border-box}
+  #blind-body td.amt{order:7;width:60%;box-sizing:border-box;text-align:right!important}
+  #blind-body td:last-child{order:7;width:40%;box-sizing:border-box;text-align:right;padding-top:8px!important}
+
+  /* 2026-08-26 추가(선혜님 지적 - "빈 카드와 채워진 카드가 구분이 안 됨"):
+     제품명이 아직 비어있는(placeholder만 보이는) 카드는 점선 테두리 +
+     살짝 다른 배경으로 시각적으로 구분되게 함. */
+  #curtain-body tr:has(.c-display-name:placeholder-shown),
+  #blind-body tr:has(.b-display-name:placeholder-shown){
+    border-style:dashed;background:#FAF8F5;
+  }
+}
+
+ 
+#curtain-body tr:hover td,#blind-body tr:hover td{background:#F5F2EE}
+
+ 
+#blind-table{margin-top:12px}
+#curtain-table.tbl-hidden,#blind-table.tbl-hidden{display:none!important}
+.bsqm{display:none}
+
+ 
+.inner-fields{display:none!important}
+.inner-fields.expanded{display:block!important}
+.inner-row{display:flex;gap:6px;margin-top:4px}
+.inner-inp{
+  flex:1;min-width:0;padding:4px 6px!important;
+  border:none!important;
+  border-bottom:1px solid #EEE6DC!important;
+  font-size:11px!important;background:transparent!important;
+  color:var(--sub)!important;font-family:inherit
+}
+.inner-inp:focus{border-bottom-color:#282828!important}
+.c-yardage{display:none!important}
+
+ 
+.add-row-btns{display:flex;gap:16px;margin-top:8px;padding-top:4px}
+.add-btn{
+  padding:8px 0;border:none;min-height:32px;
+  display:inline-flex;align-items:center;
+  background:transparent;
+  font-size:11px;font-weight:500;font-family:inherit;
+  color:#756E62;cursor:pointer;letter-spacing:0.2px
+}
+.add-btn:hover{
+  color:#282828
+}
+.del-btn,.copy-btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:28px;height:28px;background:#FAF7F5;
+  border:1px solid #EEE6DC;border-radius:8px;
+  color:var(--sub);cursor:pointer;transition:all 0.15s;font-size:11px
+}
+.del-btn:hover{background:#F06E2D;color:#fff;border-color:#F06E2D}
+.copy-btn:hover{background:#282828;color:#fff;border-color:#282828}
+
+ 
+
+.sum-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 0;border-bottom:1px solid #EEE6DC
+}
+.sum-row:last-child{border-bottom:none}
+.sum-row .lbl{font-size:11px;color:var(--sub);font-weight:500}
+.sum-row .val{font-size:11px;font-weight:600;color:#282828}
+
+.sum-row.total{margin-top:8px}
+.sum-row.total 
+.sum-row.total 
+.sum-row.deposit 
+.sum-row.deposit 
+.sum-row.perf{border-top:1px dashed #EEE6DC;display:none}
+.sum-row.perf 
+.sum-row.perf 
+.sum-sub{font-size:11px;font-weight:400;color:#756E62;margin-left:6px}
+.discount-wrap{
+  display:inline-flex;align-items:center;gap:6px;
+  background:#FAF7F5;border:1px solid #EEE6DC;
+  border-radius:8px;padding:4px 10px;margin-left:10px
+}
+.discount-wrap select{
+  padding:2px 4px;border:none;font-size:11px;
+  font-family:inherit;outline:none;background:transparent
+}
+.discount-wrap input{
+  border:none!important;background:transparent!important;
+  padding:0!important;width:60px;font-size:11px;
+  font-family:inherit;outline:none
+}
+
+ 
+#survey-card{display:none;border:1px solid #EEE6DC;
+  border-radius:8px;overflow:hidden;
+  margin-bottom:16px
+}
+.summary-inner{
+  padding:16px 16px 0
+}
+.summary-total-block{
+  background:#282828;
+  padding:16px 20px 15px;
+  margin-top:12px
+}
+.summary-total-label{
+  font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);
+  letter-spacing:3px;text-transform:uppercase;margin-bottom:4px
+}
+.summary-total-amount{
+  font-size:36px;font-weight:900;color:#fff;
+  letter-spacing:-2px;line-height:1;
+  margin-top:2px
+}
+.summary-total-sub{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:12px;padding-top:11px;
+  border-top:1px solid rgba(255,255,255,0.1)
+}
+.summary-deposit-row, .summary-balance-row{
+  display:flex;flex-direction:column;gap:2px
+}
+.summary-sub-label{font-size:11px;font-weight:500;color:rgba(255,255,255,0.55);letter-spacing:0.5px}
+.summary-sub-amount{font-size:17px;font-weight:700;color:#fff;letter-spacing:-0.3px}
+.summary-sub-amount.orange{color:#fff;font-size:17px;font-weight:700}
+.action-bar{background:#fff;border-top:2px solid #EEE6DC;padding:14px 16px 20px;display:flex;flex-direction:column;gap:8px}
+.action-bar button{font-size:11px;font-family:inherit;font-weight:700;border-radius:4px;cursor:pointer;transition:all 0.15s}
+.action-main{display:flex;flex-direction:column;gap:10px;max-width:520px;margin:0 auto;width:100%}
+.btn-new{background:transparent;color:#756E62;border:1.5px solid #EEE6DC}
+.btn-new:hover{color:#282828;border-color:#282828}
+
+
+
+
+.btn-print{padding:14px 0;background:#fff;color:#282828;border:1.5px solid #282828;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px}
+/* (.btn-print:hover는 뒤쪽에 이미 정의되어 중복 제거함) */
+.btn-save{padding:14px 0;background:#282828;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px}
+
+ 
+#space-picker{
+  display:none;position:fixed;inset:0;
+  z-index:800;background:rgba(0,0,0,0.4)
+}
+#space-picker-box{
+  position:fixed!important;top:50%!important;left:50%!important;
+  transform:translate(-50%,-50%);
+  width:calc(100vw - 40px);max-width:320px;
+  background:#fff;border-radius:12px;padding:16px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.18)
+}
+.space-btn{
+  padding:10px 8px;background:#FAF7F5;
+  border:1.5px solid #EEE6DC;font-size:11px;
+  font-family:inherit;cursor:pointer;color:#282828;
+  text-align:center;transition:all 0.15s;border-radius:8px
+}
+.space-btn:hover{border-color:#282828;color:#282828}
+.space-btn.cust-type-btn.on{background:#282828;color:#fff;border-color:#282828}
+.space-inp{
+  text-align:center;cursor:pointer;caret-color:transparent;
+  font-size:11px;font-weight:600;color:#282828;
+  background:#F5F2EE;border:1.5px solid #EEE6DC;
+  border-radius:8px;padding:5px 3px;width:100%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  outline:none;min-width:54px;min-height:32px;box-sizing:border-box
+}
+.space-inp:not(:placeholder-shown){background:#282828;color:#FAF7F5;border-color:#282828}
+
+.pv-wrap{
+  word-break:keep-all;
+  font-family:var(--font-base)var(--font-base);
+  background:#fff;color:#282828;
+  max-width:680px;margin:0 auto;
+  border-radius:12px;overflow:hidden;
+  border:1px solid #EEE6DC
+}
+.pv-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media (max-width:600px){
+  .pv-table-scroll{width:100%}
+  .pv-table-scroll .pv-prod-table{width:520px!important}
+  .pv-table-scroll-wrap{position:relative}
+  .pv-table-scroll-wrap::after{
+    content:'\203a';color:#B0A99F;font-size:14px;font-weight:700;
+    position:absolute;top:0;right:0;bottom:0;width:26px;
+    display:flex;align-items:center;justify-content:flex-end;padding-right:2px;
+    background:linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,0.97) 60%);
+    box-shadow:-6px 0 8px -6px rgba(0,0,0,0.15);
+    pointer-events:none;transition:opacity 0.2s;
+  }
+  .pv-table-scroll-wrap.scrolled-end::after{opacity:0}
+
+/* 2026-08-19: 카톡공유 PDF 생성(html2canvas) 전용 - html2canvas는 @media print를
+   평가하지 않아 화면용 스크롤힌트(화살표)가 그대로 캡처되던 문제 발견·수정.
+   표가 가로스크롤 상태(잘린 상태)로 캡처되는 것도 함께 방지(인쇄용과 동일하게 전체노출). */
+.pv-pdf-capture .pv-table-scroll-wrap::after{display:none!important}
+.pv-pdf-capture .pv-table-scroll{overflow:visible!important}
+.pv-pdf-capture .pv-table-scroll .pv-prod-table{width:auto!important}
+}
+ 
+.pv-meta{
+  display:flex;gap:28px;padding:8px 40px;
+  background:#FAF7F5;border-bottom:1px solid #EEE6DC;
+  font-size:11px;color:#282828
+}
+.pv-meta span strong{color:#282828;font-weight:700}
+ 
+.pv-parties{
+  display:grid;grid-template-columns:1fr 1fr;
+  border-bottom:1px solid #EEE6DC
+}
+.pv-party{padding:18px 28px}
+.pv-party:first-child{border-right:1px solid #EEE6DC}
+.pv-party-label{
+  font-size:11px;font-weight:700;color:#756E62;
+  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px
+}
+.pv-party-name{font-size:11px;font-weight:700;color:#282828;margin-bottom:8px}
+.pv-party-info{font-size:11px;color:var(--sub);line-height:1.8}
+.pv-party-info span{display:block}
+ 
+.pv-schedule-bar{
+  display:flex;gap:0;border-bottom:1px solid #EEE6DC
+}
+.pv-sch-item{
+  flex:1;padding:12px 20px;
+  border-right:1px solid #EEE6DC
+}
+.pv-sch-item:last-child{border-right:none}
+ 
+.pv-prod-table{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
+.pv-list-header{display:flex;justify-content:space-between;border-top:1px solid #282828;border-bottom:1px solid #282828;padding:6px 0;font-size:10px;letter-spacing:0.5px;color:var(--sub);font-weight:600;margin-bottom:6px}
+.pv-space-head{font-size:12px;font-weight:700;letter-spacing:1.5px;color:#282828;margin:16px 0 8px 0}
+.pv-space-head:first-child{margin-top:0}
+.pv-item-row{padding:10px 0;border-bottom:1px solid #F0EEE9}
+.pv-item-main{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.pv-item-name{font-size:13px;font-weight:600;color:#282828}
+.pv-item-amt{font-size:13px;font-weight:700;color:#282828;white-space:nowrap}
+.pv-item-sub{font-size:10.5px;color:var(--sub);margin-top:4px;line-height:1.5}
+.pv-prod-table thead th{
+  font-size:11px;font-weight:700;color:var(--sub);
+  padding:8px 10px;background:#FAF7F5;
+  border-bottom:1.5px solid #EEE6DC;
+  white-space:nowrap;letter-spacing:0.3px
+}
+.pv-prod-table tbody td{
+  padding:10px 6px;font-size:11px;
+  border-bottom:1px solid #EEE6DC;
+  vertical-align:top;line-height:1.5;
+  word-break:keep-all;overflow-wrap:break-word
+}
+.pv-prod-table tbody td.space{
+  font-size:11px;color:var(--sub);white-space:nowrap;width:40px
+}
+.pv-prod-table tbody td.sz{
+  font-size:11px;color:#756E62;white-space:nowrap
+}
+.pv-prod-table tbody td.name{font-weight:600;color:#282828;width:auto}
+.pv-prod-table tbody td.spec-col{font-size:11px;color:var(--sub)}
+.pv-prod-table tbody td.r{text-align:right}
+.pv-prod-table .sub-head td{background:#fff;color:#282828;font-size:11px;font-weight:900;letter-spacing:3px;border-top:1.5px solid #282828;border-bottom:1px solid #EEE6DC}
+ 
+.pv-summary-divider{border-top:1px solid #282828;margin:14px 0 10px 0}
+.pv-sum-table{width:100%;font-size:11px}
+.pv-sum-table td{padding:8px 28px}
+.pv-sum-table td.sum-val{text-align:right}
+.pv-sum-table .total-row td{
+  padding:16px 28px;font-size:11px;font-weight:800;
+  background:#fff;border-top:2px solid #282828;border-bottom:2px solid #282828
+}
+.pv-sum-table .total-row .sum-lbl{color:var(--sub)!important;font-weight:500;font-size:11px}
+.pv-sum-table .total-row .sum-val{font-size:22px!important;font-weight:900!important;color:#282828!important;letter-spacing:-0.5px;text-align:right}
+ 
+.pv-notes{
+  padding:16px 28px;background:#F5F2EE;
+  border-top:1px solid #EEE6DC;
+  border-bottom:1px solid #EEE6DC;
+  font-size:11px;color:#282828;line-height:1.9
+}
+.pv-notes-title{
+  font-size:11px;font-weight:800;color:#756E62;
+  letter-spacing:1.5px;text-transform:uppercase;
+  margin-bottom:8px
+}
+.pv-notes-item{display:flex;gap:8px}
+.pv-notes-item::before{content:"";width:4px;height:4px;background:#1A1A1A;flex-shrink:0;margin-top:6px}
+.pv-header{
+  background:#fff;
+  padding:20px 28px 18px;
+  display:flex;justify-content:space-between;align-items:flex-end;
+  border-bottom:2px solid #282828
+}
+.pv-logo{height:32px;display:block;object-fit:contain;object-position:left}
+.pv-header-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.pv-doc-label{
+  font-size:11px;font-weight:700;color:#756E62;
+  letter-spacing:3px;text-transform:uppercase
+}
+.pv-doc-title{
+  font-size:22px;font-weight:900;color:#282828;
+  letter-spacing:-0.5px;line-height:1
+}
+
+
+ 
+
+
+
+
+.pv-sch-label{
+  font-size:11px;font-weight:700;color:#756E62;
+  letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px
+}
+.pv-sch-val{font-size:11px;font-weight:600;color:#282828}
+
+ 
+.pv-section{padding:20px 28px;border-bottom:1px solid #EEE6DC}
+
+
+
+
+ 
+
+
+
+.pv-table tbody td.b{font-weight:600;color:#282828}
+.pv-table tbody td.g{color:var(--sub);font-size:11px}
+
+ 
+
+
+
+
+
+ 
+
+
+
+
+ 
+
+
+
+
+ 
+.pv-payment-split{
+  display:grid;grid-template-columns:1fr 1fr;
+  border-bottom:1px solid #EEE6DC
+}
+.pv-payment-item{padding:18px 28px}
+.pv-payment-item:first-child{border-right:1.5px solid #EEE6DC}
+.pv-payment-label{
+  font-size:11px;font-weight:700;color:var(--sub);
+  letter-spacing:0.5px;margin-bottom:4px
+}
+.pv-payment-sub{font-size:10px;font-weight:400;color:#756E62}
+.pv-payment-amount{font-size:16px;font-weight:700;color:#282828;margin-top:4px}
+
+ 
+.pv-process{padding:20px 28px;border-bottom:1px solid #EEE6DC}
+.pv-process-title{
+  font-size:11px;font-weight:700;color:#756E62;
+  letter-spacing:0.5px;margin-bottom:16px
+}
+.pv-process-step{
+  display:flex;gap:14px;padding:12px 0;
+  border-bottom:1px solid #F5F2EE
+}
+.pv-process-step:last-child{border-bottom:none}
+.pv-step-num{
+  width:20px;height:20px;background:#282828;
+  color:#fff;border-radius:50%;font-size:11px;
+  font-weight:800;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;margin-top:1px;
+  border:2px solid #282828
+}
+.pv-step-title{font-size:11px;font-weight:700;color:#282828;display:block;margin-bottom:4px}
+.pv-step-desc{font-size:11px;color:var(--sub);line-height:1.6;display:block}
+
+ 
+.pv-section-title{padding:12px 20px 8px;font-size:17px;font-weight:700;color:#282828;letter-spacing:0.5px;display:flex;align-items:center}
+
+/* 최종견적 독립 강조블록 */
+.pv-total-block{display:flex;align-items:baseline;justify-content:space-between;padding:16px 0;border-top:2px solid #282828;border-bottom:1.5px solid #282828;margin-bottom:16px}
+.pv-total-label{font-size:13px;letter-spacing:0.5px;color:var(--sub)}
+.pv-total-value{font-family:'Noto Serif CJK KR',Georgia,serif;font-size:26px;font-weight:600;color:#F06E2D}
+
+/* PROCESS 타임라인 */
+.pv-timeline{padding:0 20px}
+.pv-tl-step{position:relative;padding-left:24px;padding-bottom:8px}
+.pv-tl-line{display:block;position:absolute;left:7px;top:18px;bottom:0;width:2px;background:#B0A99F}
+.pv-tl-dot{position:absolute;left:0;top:0;width:16px;height:16px;border-radius:50%;border:1.5px solid #282828;background:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#282828;line-height:1}
+.pv-tl-text{font-size:11px;line-height:1.5;color:var(--sub);padding-top:1px}
+.pv-tl-text strong{color:#282828;font-weight:700}
+
+.pv-footer{
+  padding:14px 28px;background:#fff;
+  font-size:11px;color:#282828;line-height:1.7;
+  border-top:2px solid #282828
+}
+.pv-footer strong{color:#282828}
+.pv-supplier-line{font-size:10px;color:var(--sub);margin-bottom:10px;line-height:1.6}
+
+/* 2026-08-15: 시그니처 요소 - 커튼 주름을 추상화한 얇은 세로선 리듬 */
+/* 2026-08-15: 시그니처 주름패턴 제거됨 - 있으나마나한 미묘함이라 판단 */
+
+/* 수신자 - 공급자와 비교되던 2열 구조 폐기, 고객 이름을 세리프로 크게 */
+.pv-recipient{padding:18px 28px;border-top:1px solid #EEE6DC;border-bottom:1px solid #EEE6DC}
+.pv-recipient-label{font-size:10px;letter-spacing:3px;color:var(--sub);font-weight:600;margin-bottom:8px;text-transform:uppercase}
+.pv-recipient-name{font-family:'Noto Serif CJK KR',Georgia,serif;font-size:22px;font-weight:600;color:#282828;margin-bottom:6px;letter-spacing:-0.3px}
+.pv-recipient-info{font-size:11px;color:var(--sub)}
+
+ 
+@media print{
+  /* 숨길 요소 - 작업화면 UI(버튼/탭바 등)가 인쇄물에 찍히지 않도록. 원본에 있던 규칙인데
+     오늘 세션 중 인쇄CSS를 여러 번 재작성하면서 실수로 누락됐던 걸 반영 직전 발견해 복원함. */
+  .doc-header-tabbar, .action-bar, .add-btn, .add-row-btns,
+  .del-btn, .copy-btn, .btn-preview, .over243-wrap,
+  .discount-wrap select, .sec-badge, .sec-tip,
+  .info-toggle, .region-row,
+  #survey-card, #space-picker { display:none!important; }
+
+  /* 섹션 카드 / 표 기본 / 페이지나눔 - 작업화면 자체를 직접 인쇄할 때를 위한 안전장치.
+     오늘 세션에서 새로 안 건드린 부분이라 원본 그대로 보존 */
+  .section, .summary-section {
+    box-shadow:none!important;
+    border:1px solid #EEE6DC!important;
+    break-inside:avoid;
+    margin-bottom:8px!important;
+  }
+  thead { display:table-header-group; }
+  tr { break-inside:avoid; }
+  .page-break { page-break-before:always; }
+  /* 2026-08-22: 참고사항+PROCESS+결제계좌를 한 덩어리로 묶어서, 페이지에
+     다 못 들어가면 통째로 다음 페이지로 넘어가게 함(결제계좌 한 줄만
+     혼자 다음 페이지로 떨어지던 문제 수정). padding-top은 .pv-wrap의
+     페이지 상단 여백(10mm)과 맞춰서, 다음 페이지로 넘어갔을 때 1페이지
+     맨 위(헤더)와 같은 여백으로 보이게 함 — 안 넘어가고 1페이지에 그대로
+     있을 때도 앞 섹션과의 구분감이 자연스러워서 무해함. */
+  .pv-tail-group { break-inside:avoid; page-break-inside:avoid; padding-top:10mm; }
+
+  html, body { background:#fff!important; }
+  .container, .quicknav, .print-hide { display:none!important; }
+  body.preview-open .container { display:none!important; }
+  body.preview-open #pv-overlay {
+    display:block!important; position:static!important; width:100%!important;
+    height:auto!important; overflow:visible!important; background:#fff!important;
+  }
+  #pv-overlay .pv-nav { display:none!important; }
+  #pv-overlay .pv-wrap { box-shadow:none!important; border-radius:0!important; max-width:none!important; margin:0!important; border:none!important; }
+  @page { size:A4; margin:14mm 16mm; }
+
+  /* ══════════════════════════════════════════════
+     2026-08-15 v2 — 간격 체계 통일(선혜님 지적: "간격이 서로
+     안 맞다"). 임의의 숫자를 여기저기 조금씩 깎는 대신, 딱
+     3단계 간격만 사용: S=6px(같은 블록 내부) / M=10px(관련
+     섹션 사이) / L=14px(완전히 다른 섹션 전환). 모든 여백은
+     이 세 값 중 하나만 쓴다 — 예외 없음.
+     ══════════════════════════════════════════════ */
+
+  #pv-overlay, #pv-overlay * { color:#1A1A1A!important; }
+
+  .pv-header {
+    background:#fff!important;
+    border-bottom:1px solid #1A1A1A!important;
+    padding:0 0 6px 0!important;
+    margin-bottom:8px!important;
+    display:flex!important; justify-content:space-between!important; align-items:flex-start!important;
+  }
+  .pv-logo { filter:grayscale(1) contrast(1.3)!important; height:30px!important; }
+  .pv-brand { display:none!important; }
+  .pv-doc-label { display:none!important; }
+  .pv-doc-title { font-family:'Noto Serif CJK KR',Georgia,serif!important; font-size:21px!important; color:#1A1A1A!important; font-weight:600!important; letter-spacing:-0.3px!important; }
+
+  .pv-meta { padding:0!important; margin-bottom:12px!important; font-size:11px!important; color:#8A8378!important; border:none!important; background:#fff!important; }
+  .pv-meta span strong { color:#1A1A1A!important; font-weight:600!important; }
+
+  /* 시그니처 주름 패턴 — 헤더 안에 이미 배치, 별도 여백 불필요 */
+  /* 2026-08-15: 시그니처 주름패턴 제거됨 */
+
+  .pv-recipient { padding:0!important; margin-bottom:12px!important; border:none!important; }
+  .pv-recipient-label { font-size:9px!important; letter-spacing:2px!important; color:#8A8378!important; font-weight:600!important; margin-bottom:5px!important; }
+  .pv-recipient-name { font-family:'Noto Serif CJK KR',Georgia,serif!important; font-size:19px!important; font-weight:600!important; color:#1A1A1A!important; margin-bottom:5px!important; }
+  .pv-recipient-info { font-size:11px!important; color:#5C5648!important; }
+
+  .pv-schedule-bar { border:none!important; margin-bottom:12px!important; }
+  .pv-sch-item { padding:0!important; border:none!important; }
+  .pv-sch-item:first-child { padding-left:16px!important; padding-right:16px!important; }
+  .pv-sch-item:last-child { padding-left:16px!important; padding-right:16px!important; }
+  .pv-sch-label { font-size:9px!important; letter-spacing:2px!important; color:#8A8378!important; font-weight:600!important; margin-bottom:5px!important; }
+  .pv-sch-val { font-size:12px!important; font-weight:700!important; color:#1A1A1A!important; }
+
+  .pv-supplier-line { font-size:9px!important; color:#8A8378!important; margin-bottom:8px!important; padding-bottom:0!important; }
+
+  .pv-section { background:#fff!important; padding:0!important; margin-bottom:12px!important; border:none!important; }
+  .pv-section-title { font-size:15px!important; letter-spacing:1px!important; color:#1A1A1A!important; font-weight:700!important; margin-bottom:8px!important; padding-bottom:0!important; border-bottom:none!important; text-transform:none; display:flex!important; align-items:center!important; }
+
+  .pv-table-scroll { overflow:visible!important; }
+  .pv-table-scroll-wrap::after { display:none!important; }
+  .pv-table { border-collapse:collapse!important; }
+  .pv-table th {
+    background:#fff!important; border-top:1px solid #1A1A1A!important; border-bottom:1px solid #1A1A1A!important;
+    font-size:9px!important; letter-spacing:0.5px!important; color:#8A8378!important; font-weight:600!important;
+    padding:4px 4px!important;
+  }
+  .pv-table td { border-bottom:none!important; padding:5px 4px!important; font-size:11px!important; }
+  .pv-table tbody tr:last-child td { border-bottom:none!important; }
+  .pv-table th, .pv-prod-table th {
+    background:#fff!important; border-top:1px solid #1A1A1A!important; border-bottom:1px solid #1A1A1A!important;
+    font-size:9px!important; letter-spacing:0.5px!important; color:#8A8378!important; font-weight:600!important;
+    padding:4px 4px!important;
+  }
+  .pv-prod-table td { border-bottom:1px solid #F0EEE9!important; padding:5px 4px!important; font-size:11px!important; vertical-align:top!important; }
+  .pv-prod-table tr.pv-group-first td { border-top:1px solid #E5E1DA!important; padding-top:8px!important; }
+  .pv-prod-table tbody tr:first-child.pv-group-first td { border-top:none!important; padding-top:5px!important; }
+  .pv-prod-table tbody tr:last-child td { border-bottom:none!important; }
+  .pv-prod-table tbody td.name { color:#1A1A1A!important; font-weight:600!important; }
+  .pv-prod-table tbody td.space-cell { color:#B0A99F!important; font-weight:400!important; border-right:1.5px solid #B0A99F!important; vertical-align:middle!important; text-align:left!important; line-height:1!important; }
+  .pv-prod-table tbody td.space-cell .space-cell-text { position:relative!important; top:-8px!important; display:inline-block!important; }
+  .pv-prod-table tbody td.sz { color:#B0A99F!important; }
+  .pv-cell-sub { font-size:9px!important; font-weight:400!important; color:#8A8378!important; margin-top:2px!important; }
+  .r { text-align:right!important; }
+  .amt { font-weight:700!important; text-align:right!important; }
+
+  .pv-summary-divider { border-top:1px solid #1A1A1A!important; margin:18px 0 8px 0!important; }
+  .pv-sum-table { margin-top:0!important; }
+  .pv-sum-indent { margin-left:90px!important; width:calc(100% - 90px)!important; }
+  .pv-sum-table td { padding:5px 4px!important; font-size:12px!important; border:none!important; }
+  .pv-sum-table td.sum-lbl { padding-left:0!important; }
+  .pv-sum-table td.sum-val { text-align:right!important; font-weight:700!important; }
+  .pv-total-block {
+    display:flex!important; align-items:baseline!important; justify-content:space-between!important;
+    padding:12px 4px 18px 0!important;
+    margin-left:90px!important;
+    border-top:2px solid #1A1A1A!important;
+    border-bottom:1.5px solid #1A1A1A!important;
+    margin-bottom:12px!important;
+  }
+  .pv-total-label { font-size:14px!important; letter-spacing:1px!important; color:#1A1A1A!important; font-weight:600!important; }
+  .pv-total-value { font-family:'Noto Serif CJK KR',Georgia,serif!important; font-size:26px!important; font-weight:700!important; color:#1A1A1A!important; }
+  #pv-overlay .pv-total-value { color:#F06E2D!important; }
+
+  .pv-payment-split {
+    border:none!important; margin:0 0 12px 0!important;
+    margin-left:90px!important; width:calc(100% - 90px)!important;
+  }
+  .pv-payment-split > div { background:#fff!important; padding:0!important; padding-left:4px!important; padding-right:16px!important; border:none!important; }
+  .pv-payment-split > div:last-child { border-right:none!important; }
+  .pv-payment-label { font-size:11px!important; font-weight:700!important; color:#1A1A1A!important; margin-bottom:5px!important; }
+  .pv-payment-sub { font-size:9px!important; font-weight:400!important; color:#8A8378!important; }
+  .pv-payment-amount { font-size:13px!important; font-weight:700!important; }
+
+  .pv-notes { background:#fff!important; padding:0!important; border:none!important; margin:0 0 8px 0!important; }
+  .pv-notes-title { font-size:9px!important; letter-spacing:2px!important; color:#8A8378!important; margin-bottom:5px!important; font-weight:600!important; }
+  .pv-notes-item { font-size:10px!important; line-height:1.25!important; color:#5C5648!important; display:flex!important; gap:6px!important; }
+  .pv-notes-item::before { content:''!important; width:3px!important; height:3px!important; background:#1A1A1A!important; flex-shrink:0!important; margin-top:4px!important; }
+
+  .pv-process { background:#fff!important; padding:0!important; margin:0 0 6px 0!important; border:none!important; }
+  .pv-process-title { font-size:9px!important; letter-spacing:2px!important; color:#8A8378!important; margin-bottom:5px!important; font-weight:600!important; }
+  .pv-timeline { padding:0!important; }
+  .pv-tl-step { position:relative!important; padding-left:18px!important; padding-bottom:2px!important; }
+  .pv-tl-line {
+    display:block!important; position:absolute!important; left:5.5px!important; top:15px!important; bottom:0!important;
+    width:1.5px!important; background:#B0A99F!important;
+  }
+  .pv-tl-dot {
+    position:absolute!important; left:0!important; top:0!important; width:11px!important; height:11px!important;
+    border-radius:50%!important; border:1px solid #1A1A1A!important; background:#fff!important;
+    display:flex!important; align-items:center!important; justify-content:center!important;
+    font-size:7.5px!important; font-weight:700!important; color:#1A1A1A!important; line-height:1!important;
+  }
+  .pv-tl-text { font-size:10px!important; line-height:1.3!important; color:#5C5648!important; padding-bottom:0!important; padding-top:1px!important; }
+  .pv-tl-text strong { color:#1A1A1A!important; font-weight:700!important; }
+
+  .pv-footer { background:#fff!important; padding:5px 0 0 0!important; border-top:1px solid #1A1A1A!important; margin:0!important; font-size:9px!important; color:#8A8378!important; }
+  .pv-footer strong { color:#1A1A1A!important; }
+
+  .pv-total-box { background:#fff!important; border:none!important; }
+  .pv-bank { background:#fff!important; }
+}
+
+ 
+#discount{width:60px!important}
+#svc-table td:first-child select{color:#282828}
+.inner-fields .inner-inp::placeholder{color:#756E62}
+.deposit-inp-wrap{display:flex;align-items:center;gap:6px}
+.cprice{text-align:right}
+
+.print-hide{}
+
+ 
+#pdf-size-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:none;align-items:center;justify-content:center}
+#pdf-size-modal.open{display:flex}
+#pdf-size-box{background:#fff;border-radius:16px;padding:28px 24px 24px;width:400px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.pdf-modal-title{font-size:11px;font-weight:800;color:#282828;margin-bottom:8px;letter-spacing:-0.3px}
+.pdf-modal-sub{font-size:11px;color:#756E62;margin-bottom:16px}
+.pdf-modal-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.pdf-opt{border:2px solid #EEE6DC;border-radius:12px;padding:18px 14px;cursor:pointer;text-align:center;transition:all 0.15s;background:#fff}
+.pdf-opt:hover{border-color:#282828;background:#FAF7F5}
+.pdf-opt.selected{border-color:#282828;background:#FAF7F5}
+.pdf-opt-icon{width:60px;height:76px;margin:0 auto 12px;border-radius:4px;background:#FAF7F5;display:flex;flex-direction:column;gap:4px;padding:8px 6px;border:1.5px solid rgba(100,80,200,0.2)}
+.pdf-opt-icon div{background:rgba(100,80,200,0.25);border-radius:2px}
+.pdf-opt-icon.a4{background:#FAF7F5;border-color:rgba(50,100,200,0.2)}
+.pdf-opt-icon.a4 div{background:rgba(50,100,200,0.25)}
+.pdf-opt-label{font-size:11px;font-weight:700;color:#282828;margin-bottom:4px}
+.pdf-opt-desc{font-size:11px;color:var(--sub);line-height:1.5}
+.pdf-modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.pdf-modal-cancel{padding:9px 18px;background:#FAF7F5;border:none;border-radius:8px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;color:var(--sub)}
+.pdf-modal-confirm{padding:9px 22px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer}
+.pdf-modal-confirm:hover{background:#282828}
+.load-cust-btn:hover{background:#F5F2EE;border-color:#756E62}
+ 
+#cust-load-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;display:none;align-items:center;justify-content:center}
+#cust-load-overlay.open{display:flex}
+#cust-load-box{background:#fff;border-radius:12px;padding:0;width:440px;max-width:90vw;max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.cust-load-hd{padding:18px 20px 14px;border-bottom:1px solid #EEE6DC;display:flex;justify-content:space-between;align-items:center}
+.cust-load-hd span{font-size:11px;font-weight:700;color:#282828}
+.cust-load-hd button{background:none;border:none;font-size:11px;color:var(--sub);cursor:pointer;line-height:1}
+.cust-load-search{padding:12px 20px;border-bottom:1px solid #F5F2EE;display:flex;gap:8px}
+.cust-load-search input{flex:1;padding:9px 12px;border:1.5px solid #EEE6DC;border-radius:8px;font-size:11px;font-family:inherit;outline:none}
+.cust-load-search input:focus{border-color:#282828}
+#cust-load-list{overflow-y:auto;max-height:360px}
+.cust-load-item{padding:13px 20px;border-bottom:1px solid #EEE6DC;cursor:pointer;transition:background 0.1s}
+.cust-load-item:hover{background:#FAF7F5}
+.cust-load-name{font-size:11px;font-weight:700;color:#282828;margin-bottom:2px}
+.cust-load-info{font-size:11px;color:#756E62}
+.cust-load-empty{padding:32px 20px;text-align:center;font-size:11px;color:#756E62}
+ 
+ 
+@media(max-width:768px){
+  
+  /* 2026-08-26(선혜님과 함께 진행 - "고객정보 섹션이 725px나 차지해서
+     너무 길다" 발견): 실측/시공 예정일 2칸이 모바일에서 세로로 쌓이게
+     되어 있었음(1fr 1칸). 날짜 입력창 폭 155px에서도 안 잘리는 것 확인
+     하고 2열 유지로 되돌림 - 이 한 줄로 카드 개수와 무관하게 고정으로
+     차지하던 세로 공간을 약 80px 절약. */
+  
+  .doc-header-divider{margin:0}
+  .doc-title-ko{font-size:11px;letter-spacing:0}
+  
+  .doc-header-tabbar-left,.doc-header-tabbar-right{gap:2px}
+  
+}
+@media(max-width:480px){
+  
+  .doc-header-tabbar-right{margin-top:2px;margin-left:8px;padding-left:8px}
+}
+ 
+.row-curtain td{padding:6px 4px;vertical-align:middle}
+
+ 
+
+.action-btn:active,.hd-btn:active,.est-status-btn:active,.cust-type-btn:active{
+  transform:scale(0.96);transition:transform 0.08s
+}
+
+ 
+
+
+
+
+ 
+
+
+
+
+
+
+ 
+input:focus{border-bottom-color:#282828}
+input:focus::placeholder{color:transparent}
+select:focus{outline:2px solid #282828;outline-offset:2px;border-radius:4px}
+textarea:focus{border-color:#282828}
+
+@keyframes fadeInUp{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+ 
+.btn-row{display:flex;gap:10px}
+.btn-row .btn-print,.btn-row .btn-save{padding:14px 0;background:#282828;color:#fff;border:none;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px}
+
+ 
+
+ 
+.tbl-outer{position:relative}
+.tbl-outer::after{
+  content:'';position:absolute;top:0;right:0;
+  width:32px;height:100%;
+  background:linear-gradient(to right,transparent,rgba(240,235,229,0.9));
+  pointer-events:none;border-radius:0 6px 6px 0
+}
+.tbl-outer.no-scroll::after{display:none}
+
+
+
+ 
+.info-item input,.info-item textarea{
+  font-size:11px;font-weight:700;color:#282828;
+  padding:6px 0 10px;width:100%
+}
+.info-item label.info-label{
+  font-size:11px;font-weight:700;color:#756E62;
+  letter-spacing:1.5px;text-transform:uppercase;
+  margin-bottom:4px;display:block;padding-top:4px
+}
+
+ 
+.expiry-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;font-weight:700;padding:3px 8px;
+  border-radius:12px;margin-left:8px
+}
+.expiry-badge.ok{background:#F5F2EE;color:#2F6690}
+.expiry-badge.warn{background:#FFF3EE;color:#F06E2D}
+.expiry-badge.over{background:#FDECEA;color:#C0392B}
+
+ 
+.pv-photos{margin-top:16px;padding-top:16px;border-top:1px solid #EEE6DC}
+.pv-photos-title{font-size:11px;font-weight:700;color:#756E62;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+.pv-photos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pv-photos-grid img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px}
+
+ 
+
+ 
+/* (button transition은 뒤쪽에 이미 정의되어 중복 제거함) */
+button:active{opacity:0.85}
+
+ 
+.btn-save:active{transform:scale(0.97);box-shadow:0 1px 4px rgba(0,0,0,0.2)}
+.btn-print:active{transform:scale(0.97)}
+
+
+ 
+
+
+
+
+
+ 
+
+.tab{transition:color 0.15s ease}
+.tab.on::after{transition:width 0.2s ease}
+
+ 
+
+.info-item:focus-within{background:#FAF7F5}
+input,select,textarea{transition:border-color 0.15s ease}
+
+ 
+@keyframes fadeSlideUp{
+  
+  
+}
+.section{animation:fadeSlideUp 0.25s ease both}
+.card{animation:fadeSlideUp 0.2s ease both}
+
+ 
+@keyframes numPulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.04)}
+  100%{transform:scale(1)}
+}
+.summary-total-amount.updated{animation:numPulse 0.3s ease}
+
+ 
+@keyframes fadeInUp{
+  
+  
+}
+@keyframes fadeOutDown{
+  
+  
+}
+
+ 
+
+
+
+ 
+
+ 
+
+.rev-bar-fill{transition:width 0.6s cubic-bezier(0.4,0,0.2,1)}
+
+ 
+
+
+
+
+
+.copy-btn,.del-btn{min-width:35px!important;min-height:35px!important;padding:6px 8px!important}
+
+/* ── 견적서 탭 active ── */
+.est-tab.on {
+  color: #F06E2D !important;
+  border-bottom: 2px solid #F06E2D !important;
+  font-weight: 700 !important;
+}
+
+
+
+
+/* ── 견적서 입력창 radius 8px ── */
+#curtain-body input, #blind-body input, #svc-body input,
+input.mw, input.mh, input.pnum, input.unit-price, input.space-name, input.prod-name {
+  border-radius: 8px !important;
+}
+
+
+
+/* ── (버그였던 10px 일괄 강제 블록 제거됨 — 아래 확정 타입스케일만 사용) ── */
+
+
+
+/* 견적서 확정 타입스케일 */
+html, body { font-size: 15px; }
+label, th, td { font-size: 13px; }
+
+
+/* (Pretendard 폰트 지정은 파일 상단에 이미 정의되어 있어 중복 제거함) */
+
+
+/* ══════════════════════════════════════════
+   견적서 인터랙션 시스템
+   ══════════════════════════════════════════ */
+button { transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease; cursor: pointer; }
+
+/* 2026-07-19 추가: 클래스 없이 id/onclick만으로 만들어진 버튼(확인/검색/임시저장
+   불러오기/엑셀다운로드/발주서출력/실측·시공의뢰서/닫기 등 29개 중 10개)은
+   위쪽 개별 :hover 규칙이 하나도 안 걸려서 호버 피드백이 없었음.
+   filter로 배경색 종류 상관없이 전부 커버. 개별 :hover가 있는 버튼은
+   그쪽이 더 구체적이라 자연스럽게 우선 적용됨. */
+button:hover:not(:disabled) { filter: brightness(0.95); }
+button:active:not(:disabled) { filter: brightness(0.9); }
+
+/* 탭 */
+
+/* 입력창 */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #F06E2D !important;
+  box-shadow: 0 0 0 3px rgba(240,110,45,0.12) !important;
+}
+
+/* 행 hover */
+#curtain-body tr:hover, #blind-body tr:hover, #svc-body tr:hover {
+  background: #FFF3EE;
+  transition: background 0.1s ease;
+}
+
+/* 버튼 */
+.btn-print:hover { background: #1A1A1A !important; box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important; }
+.btn-save:hover  { background: #D4601F !important; box-shadow: 0 2px 8px rgba(240,110,45,0.3) !important; }
+
+/* + 추가 버튼 */
+[onclick*="addCurtain"]:hover, [onclick*="addBlind"]:hover {
+  color: #F06E2D !important;
+  background: #FFF3EE !important;
+}
+
+/* 에러 */
+input.error { border-color: #C0392B !important; box-shadow: 0 0 0 3px rgba(192,57,43,0.12) !important; }
+
+
+/* 토스트 */
+.toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #282828; color: #fff;
+  padding: 12px 20px; border-radius: 8px;
+  font-size: 13px; font-weight: 500;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  z-index: 9999; opacity: 0;
+  transition: all 0.25s ease; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { background: #2F6690; }
+.toast.error   { background: #C0392B; }
+
+
+/* ── 견적서 상태 탭 확정 ── */
+/* 미계약/계약됨 뱃지 */
+#contract-status-badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 4px;
+  font-size: 12px; font-weight: 700;
+}
+#contract-status-badge.none { background:#F5F2EE; color:#756E62; border:1px solid #EEE6DC; }
+#contract-status-badge.done { background:#FFF3EE; color:#F06E2D; border:1px solid #F06E2D; }
+
+
+/* ── 폰트 통일 ── */
+body, input, button, select, textarea {
+  font-family: 'Pretendard Variable', Pretendard, -apple-system,
+    BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
+/* 대·소 제목 */
+h1, h2, h3 { font-weight: 700; }
+
+
+/* ══════════════════════════════════════════════════
+   견적서 디자인 시스템 완전 확정
+   타입스케일: 10/12/13/15/17/22/36px
+   버튼 radius: 4px
+   ══════════════════════════════════════════════════ */
+
+/* ── 1. 상태 탭 (가견적서/최종견적서) ── */
+.est-status-btn {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border-radius: 0 !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-bottom: 2px solid transparent !important;
+  padding: 8px 14px !important;
+  background: transparent !important;
+  color: #756E62 !important;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+.est-status-btn.on {
+  background: transparent !important;
+  color: #F06E2D !important;
+  border-bottom: 2px solid #F06E2D !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.3px;
+}
+.est-status-btn:hover:not(.on) {
+  color: #F06E2D !important;
+  opacity: 0.7;
+}
+
+/* ── 2. 고객유형 탭 (신규/재구매/AS·수선) ── */
+.cust-type-btn {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
+  padding: 5px 12px !important;
+  min-height: 32px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  border: 1px solid #EEE6DC !important;
+  background: transparent !important;
+  color: #756E62 !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+}
+.cust-type-btn.on {
+  background: #F06E2D !important;
+  color: #fff !important;
+  border-color: #F06E2D !important;
+  font-weight: 700 !important;
+}
+
+/* ── 3. 고객 불러오기 / 설문 불러오기 버튼 ── */
+/* 2026-08-05: 예전엔 [class*="cust-load"]로 너무 넓게 잡아서, 팝업 안의
+   목록 항목(.cust-load-item/-name/-info)까지 전부 32px로 눌려 텍스트가
+   겹쳐 보이던 심각한 버그였음. 실제 버튼 클래스(load-cust-btn)만 정확히 지정. */
+.load-cust-btn {
+  font-size: 13px !important;
+  height: 32px !important;
+  padding: 0 12px !important;
+  border-radius: 4px !important;
+  border: 1px solid #EEE6DC !important;
+  background: #fff !important;
+  color: #282828 !important;
+  font-weight: 600;
+}
+
+/* ── 4. 주소 검색 버튼 ── */
+
+
+/* ── 5. 복제(⧉) / 삭제(✕) 버튼 ── */
+button[onclick*="copy"], button[onclick*="remove"],
+button[onclick*="del"] {
+  border-radius: 4px !important;
+  width: 28px !important;
+  height: 28px !important;
+  font-size: 12px !important;
+}
+
+/* ── 6. + 커튼 추가 / + 블라인드 추가 / + 항목 추가 ── */
+button[onclick*="addCurtain"], button[onclick*="addBlind"],
+button[onclick*="addSvc"] {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #F06E2D !important;
+  border-radius: 4px !important;
+  padding: 6px 12px !important;
+  height: auto !important;
+}
+
+/* ── 7. 하단 버튼 3종 완전 확정 ── */
+/* 2026-08-08: 예전엔 button[onclick*="printCustomer"]처럼 onclick 텍스트를
+   부분매칭하는 방식이었는데, 실제 onclick은 printForCustomer()라 매칭이
+   실패해서 "고객용 출력"만 스타일이 안 먹혔음(저장 버튼과 폰트크기 15px vs
+   13px로 달라 보이던 원인). 클래스 기반으로 바꿔서 둘 다 정확히 동일하게 적용. */
+/* 고객용 출력 — Primary Dark */
+#btn-print-customer,
+.btn-print {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  height: 52px !important;
+  border-radius: 4px !important;
+  background: #282828 !important;
+  color: #fff !important;
+  border: none !important;
+  letter-spacing: -0.3px;
+}
+
+/* 저장 — Primary Orange */
+#btn-save,
+.btn-save {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  height: 52px !important;
+  border-radius: 4px !important;
+  background: #F06E2D !important;
+  color: #fff !important;
+  border: none !important;
+}
+
+/* 엑셀 다운로드 — Secondary */
+button[onclick*="exportAll"],
+button[onclick*="Excel"] {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  height: 40px !important;
+  border-radius: 4px !important;
+  background: #FAF7F5 !important;
+  color: #282828 !important;
+  border: 1px solid #EEE6DC !important;
+}
+
+/* ← 대시보드 / 새 견적서 */
+button[onclick*="dashboard"],
+button[onclick*="newEst"],
+button[onclick*="location"] {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  height: 44px !important;
+  border-radius: 4px !important;
+  background: #FAF7F5 !important;
+  color: #282828 !important;
+  border: 1px solid #EEE6DC !important;
+}
+
+/* ── 8. 테이블 헤더/셀 폰트 ── */
+/* (헤더 폰트규칙은 아래쪽 "견적서 테이블 헤더 통일"에 이미 있어서 중복 제거함) */
+#curtain-body td,
+#blind-body td,
+#svc-body td {
+  font-size: 13px !important;
+}
+#curtain-body input,
+#blind-body input,
+#svc-body input,
+#curtain-body select,
+#blind-body select,
+#svc-body select {
+  font-size: 13px !important;
+  border-radius: 4px !important;
+}
+
+/* ── 9. 합계 섹션 ── */
+.summary-section {
+  font-size: 13px;
+  background:#fff;
+  border-radius:12px;
+  padding:16px;
+  margin:0 12px 10px;
+  box-shadow: 0 1px 2px rgba(40,32,24,0.04), 0 4px 16px rgba(40,32,24,0.06);
+}
+/* 총 견적금액 */
+
+
+/* 계약금/잔금 */
+
+
+
+/* ── 10. 섹션 라벨 ── */
+
+
+/* ── 11. 고객정보 필드 ── */
+
+
+
+/* ── 12. 모든 버튼 기본 transition ── */
+button {
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s !important;
+  /* cursor, font-family는 위쪽 button 규칙에 이미 동일값으로 정의되어 있어 중복 제거함 */
+}
+button:active { transform: scale(0.97) !important; }
+
+
+/* ── 남은 버튼 radius 확정 ── */
+button[onclick*="loadSurvey"] {
+  border-radius: 4px !important;
+}
+/* 고객용 출력 */
+button:not(.est-status-btn):not(.cust-type-btn) {
+  border-radius: 4px !important;
+}
+/* 탭 버튼은 제외 */
+
+
+/* ━━ 견적서 검색 버튼 Secondary ━━ */
+
+button[onclick*="search"][onclick*="addr"]:hover {
+  background: #F0ECE8 !important;
+}
+
+/* ━━ 견적서 테이블 헤더 통일 ━━ */
+#curtain-head th,
+#blind-head th,
+#svc-head th {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  color: #756E62 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  padding: 10px 8px !important;
+  border-bottom: 2px solid #EEE6DC !important;
+}
+
+/* ━━ 견적서 행 hover ━━ */
+#curtain-body tr:hover td,
+#blind-body tr:hover td,
+#svc-body tr:hover td {
+  background: #FFF3EE !important;
+  transition: background 0.1s !important;
+}
+
