@@ -226,12 +226,25 @@ function cleanupJunkCustomerRows() {
   if (lastRow < 2) { Logger.log('삭제할 데이터 없음'); return; }
   var names = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
   var deletedCount = 0;
-  // 아래에서 위로 지워야 인덱스가 안 밀림
-  for (var i = names.length - 1; i >= 0; i--) {
+  // 2026-09-08(선혜님 지적 - "다음 스크립트 함수(doGet)를 찾을 수 없습니다"
+  // → 재배포 후 "해당 행이 범위를 벗어납니다" 오류로 발견): 지울 행이
+  // 실제로 3000줄이 넘는 상황(테스트 잔재 축적)에서, sheet.deleteRow()를
+  // 한 줄씩 개별 호출(=수천 번의 개별 API 요청)하다가 실행시간/요청빈도
+  // 제한에 걸려 도중에 멈추고 있었음 - 연속된 삭제 대상 행들을 구간으로
+  // 묶어서(batch) sheet.deleteRows(시작행, 개수)로 한 번에 처리하도록
+  // 변경. 예: 5,6,7번 행을 따로 3번 지우는 대신 deleteRows(5,3) 한 번으로
+  // 처리 - 호출 횟수가 수천 번에서 수십~수백 번으로 크게 줄어듦.
+  var i = names.length - 1;
+  while (i >= 0) {
     if (JUNK_NAMES.indexOf(names[i][0]) > -1) {
-      sheet.deleteRow(i + 2);
-      deletedCount++;
+      var rangeEnd = i;
+      while (i > 0 && JUNK_NAMES.indexOf(names[i - 1][0]) > -1) { i--; }
+      var rangeStart = i;
+      var count = rangeEnd - rangeStart + 1;
+      sheet.deleteRows(rangeStart + 2, count); // +2: 1-index + 헤더행
+      deletedCount += count;
     }
+    i--;
   }
   Logger.log('삭제된 잔재 행 수: ' + deletedCount);
 }
