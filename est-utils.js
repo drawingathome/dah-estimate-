@@ -40,7 +40,18 @@ function fmtPriceFocus(inp) {
   if(raw) inp.value = raw;
 }
 var INP = 'width:100%;padding:2px 0;border:none;font-size:11px;font-family:inherit;outline:none;background:transparent;color:#282828';
-var SEL = 'width:100%;padding:2px 0;border:none;font-size:11px;font-family:inherit;outline:none;background:transparent;color:#282828;cursor:pointer';
+// 2026-09-08(선혜님 지적 - "견적서를 새로 누르면 왜 자꾸 기본 세트가
+// 리드밴드로 올라가지?? 양개 편개도 이제 못믿겠는데" → 실제 유경진
+// 고객 견적서로 재현 확인): 서로 다른 커튼 6개 항목이 전부 개폐형/시접
+// 값이 기본값(양개형/리드) 그대로 저장되어 있었음 - select 자체가
+// 숨겨져 있던 건 아니었지만(재현 확인), 터치 영역이 세로 19px밖에 안
+// 돼서(최소 터치 타겟 기준 32px에 크게 못 미침) 실제로 정확히 탭해서
+// 바꾸기 어려웠고, 배경도 투명(transparent)이라 "여기 선택할 게
+// 있다"는 시각적 신호도 약했음 - 이미 기본값이 채워져 있어 숫자
+// 입력창(비어있으면 눈에 띔)과 달리 놓치기 훨씬 쉬운 구조였음.
+// 터치영역 확대(패딩) + 옅은 테두리/배경으로 시각적으로 더 눈에
+// 띄게 개선.
+var SEL = 'width:100%;padding:8px 4px;min-height:32px;border:1px solid #EEE6DC;border-radius:6px;font-size:11px;font-family:inherit;outline:none;background:#fff;color:#282828;cursor:pointer;box-sizing:border-box';
 
 function getPriceVal(el) {
   if(!el) return 0;
