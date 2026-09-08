@@ -91,6 +91,7 @@ if (/dah-estimate/.test(target)) {
   // 버그가 세 번 재발했음(8/29, 9/8 1차 오진단, 9/8 2차) - 말이 아니라
   // 테스트로 다음 재발을 잡도록 영구 등록.
   scripts.push(['curtain-select-value-integrity-check.js', []]);
+  scripts.push(['field-parity-check.js', []]);
 }
 
 let anyFail = false;
