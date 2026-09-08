@@ -92,8 +92,23 @@ function renderPaySection(c, payBody) {
       // 경우가 있었음(실제로 deposit_amount는 반영됐는데 stage는 '가견적'
       // 그대로 남은 고객을 DB에서 발견함). 콜백을 추가해서, 이 PATCH가
       // 끝난 뒤에만 changeStage()가 실행되도록 순서를 보장함.
-      sbXHR('PATCH', 'customers?id=eq.'+c.id, patchBody, function(err){
-        if (err) showToast('⚠️ 결제정보가 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요');
+      sbXHR('PATCH', 'customers?id=eq.'+c.id, patchBody, function(err, data){
+        if (err) {
+          showToast('⚠️ 결제정보가 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요');
+        } else if (data && data[0] && data[0].updated_at) {
+          // 2026-09-08(선혜님 지적 - "너가 이런데이터를 만들기만 하고
+          // 방치한게 꽤 되는걸로 아는데" → 실제 client_error_logs에서
+          // 오늘 발생한 "손현영" 고객 저장실패로 재발 확인): 어제(9/6)
+          // savePayData→changeStage 순서는 보장했지만, savePayData의
+          // PATCH 성공 후 로컬스토리지의 락값(updatedAt)을 갱신하는 걸
+          // 빠뜨렸음 - 그래서 곧바로 이어지는 changeStage()가 여전히
+          // 낡은 updatedAt으로 saveCustomerToDb()를 호출해 "동시저장충돌"
+          // (0건 매칭)로 실패하고 있었음. 서버 응답의 최신 updated_at을
+          // 로컬에 반영해서, 뒤이은 changeStage()가 최신 락값을 쓰게 함.
+          var arr = loadCustomers();
+          var localC = arr.find(function(x){ return x.id === c.id; });
+          if (localC) { localC.updatedAt = data[0].updated_at; saveCustomers(arr); }
+        }
         if (callback) callback();
       });
     } else {
