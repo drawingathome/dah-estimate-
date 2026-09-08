@@ -70,7 +70,7 @@ function addCurtainRow() {
   // 레일 / 레일 시공비는 가로(mw) 입력 시 autoUpdateRail()에서 자동 생성/계산됨
 }
 
-function calcCurtainRow(el) {
+function calcCurtainRow(el, skipPnumReset) {
   var tr = el.closest('tr');
   // 2026-08-24(선혜님 발견 — "폭수를 한 폭 줄이거나 늘릴 때도 있는데 수정이
   // 안 된다"): 폭수(.pnum) 칸 자체를 직접 고쳐도, 곧바로 아래 자동계산 로직이
@@ -80,9 +80,18 @@ function calcCurtainRow(el) {
   // 가로(mw)/세로(mh)/주름(pleat)을 바꾸면 다시 자동계산으로 돌아감(원래
   // 자동계산이 도움이 되는 경우가 더 많아서, 치수를 다시 잡을 땐 새로
   // 제안받는 게 자연스러움).
+  // 2026-09-08(선혜님 지시 - 전수감사 중 발견): restoreLineItemsToForm/
+  // loadDraft가 "가로길이 입력창(mw)"을 인자로 이 함수를 불러서 금액 등
+  // 부수계산을 트리거하는데, 이게 정확히 "사용자가 가로길이를 방금
+  // 수정했다"는 신호와 똑같이 취급되어, 방금 복원한 저장된 폭수(pnum)의
+  // manual 표시를 무조건 지워버리고 자동계산값으로 덮어쓰고 있었음 -
+  // 견적서를 다시 열 때마다 저장된 정확한 폭수가 조용히 바뀌는 심각한
+  // 버그(재현: pnum=5로 저장했는데 다시 열면 자동계산값 7로 바뀜).
+  // skipPnumReset=true로 부르면(복원 상황 전용) 이 "가로길이 변경 감지"를
+  // 건너뛰어 이미 복원된 pnum이 안전하게 유지됨.
   if (el.classList && el.classList.contains('pnum')) {
     el.dataset.manual = '1';
-  } else if (el.classList && (el.classList.contains('mw') || el.classList.contains('mh') || el.classList.contains('pleat-type'))) {
+  } else if (!skipPnumReset && el.classList && (el.classList.contains('mw') || el.classList.contains('mh') || el.classList.contains('pleat-type'))) {
     var pnumEl0 = tr.querySelector('.pnum');
     if (pnumEl0) delete pnumEl0.dataset.manual;
   }

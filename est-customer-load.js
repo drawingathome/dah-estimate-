@@ -433,9 +433,16 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       var ha = ctr.querySelector('.height-adjust'); if (ha) ha.value = (it.heightAdjust !== undefined && it.heightAdjust !== null) ? it.heightAdjust : -3;
       var mw = ctr.querySelector('.mw'); if (mw) mw.value = it.mw || '';
       var mh = ctr.querySelector('.mh'); if (mh) mh.value = it.mh || '';
-      var pn = ctr.querySelector('.pnum'); if (pn && it.pnum) pn.value = it.pnum;
+      var pn = ctr.querySelector('.pnum'); if (pn && it.pnum) { pn.value = it.pnum; pn.dataset.manual = '1'; }
+      // 2026-09-08(선혜님 지시 - "전문업체면 이 상태에 뭘 하겠니" 요청으로
+      // 저장/복원 필드 전수대조 중 발견): pnum(폭수)을 복원해도, 바로 다음
+      // calcCurtainRow(mw) 호출이 "가로길이가 바뀐 것"으로 취급해서 manual
+      // 플래그 없는 pnum을 자동계산값으로 덮어쓰고 있었음 - 견적서를 다시
+      // 열 때마다(재구매 불러오기 포함) 저장된 정확한 폭수가 조용히
+      // 자동계산값으로 바뀌는 심각한 버그였음(재현: pnum=5로 저장했는데
+      // 다시 열면 7로 바뀜). manual 플래그를 함께 설정해 방지.
       var cp = ctr.querySelector('.cprice'); if (cp && it.price) { cp.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(cp); }
-      if (typeof calcCurtainRow === 'function') calcCurtainRow(mw);
+      if (typeof calcCurtainRow === 'function') calcCurtainRow(mw, true);
     }
   });
   if (typeof calcTotal === 'function') calcTotal();

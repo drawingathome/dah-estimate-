@@ -269,9 +269,15 @@ function loadDraft() {
             if (tr.querySelector('.hem-type')) tr.querySelector('.hem-type').value = item.hemType || '';
             if (tr.querySelector('.mw')) tr.querySelector('.mw').value = item.mw || '';
             if (tr.querySelector('.mh')) tr.querySelector('.mh').value = item.mh || '';
+            // 2026-09-08(선혜님 지시 - "전문업체면 이 상태에 뭘 하겠니" 요청으로
+            // 저장(collectLineItems)/복원(restoreLineItemsToForm)/이 함수(loadDraft)
+            // 3곳의 필드 목록을 전수 대조하다 발견): 수량(pnum) 복원이 통째로
+            // 빠져있었음 - 정확히 8/29의 hemType 누락과 같은 유형의 버그.
+            // 임시저장 초안을 나중에 불러오면 수량이 사라지는 실제 데이터 손실.
+            if (tr.querySelector('.pnum')) { tr.querySelector('.pnum').value = item.pnum || ''; if (item.pnum) tr.querySelector('.pnum').dataset.manual = '1'; }
             if (tr.querySelector('.cprice')) tr.querySelector('.cprice').value = item.price || '';
             var mwEl = tr.querySelector('.mw');
-            if (mwEl && typeof calcCurtainRow === 'function') calcCurtainRow(mwEl);
+            if (mwEl && typeof calcCurtainRow === 'function') calcCurtainRow(mwEl, true);
           } else if (item.type === 'blind') {
             addBlindRow();
             var btr = blindBody.lastElementChild;
