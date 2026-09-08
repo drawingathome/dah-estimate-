@@ -288,6 +288,29 @@ function _saveEstimateInner(_onDone) {
       // (신규 고객이면 addr가 비어있어도 그냥 빈 값으로 시작하는 게 맞아서 그대로 포함)
       var addrCombined = addr+(addr2?' '+addr2:'');
       if (addrCombined || !isUpdate) custPayload.addr = addrCombined;
+      // 2026-09-08(선혜님 지시 - "날짜 단일화" 논의 중 "각자 다 다르잖아"로
+      // 발견: 재구매 고객은 견적서마다 실측일/시공일이 다름(실제 사례:
+      // 김명석 고객이 8/4·8/22에 서로 다른 프로젝트로 2건 견적) - 그래서
+      // "고객 레코드에 날짜 하나만"으로 단일화하면 재구매시 이전 견적의
+      // 날짜 정보가 사라지는 데이터 손실 위험이 있어 그 방향은 폐기함.
+      // 대신: 각 견적서는 그대로 자기만의 날짜를 유지하되(estimates 테이블,
+      // 이미 저장되고 있음), 이 견적서를 저장하는 시점에 customers 테이블
+      // 에도 "최신 상태"로 함께 반영 - 대시보드가 항상 가장 최근 견적
+      // 기준의 실측/시공 일정을 보여주게 됨. addr와 동일한 패턴(이 화면에서
+      // 값을 안 건드렸으면(빈 값) payload에서 아예 빼서 기존 값 유지,
+      // 값이 있으면 갱신)으로 안전하게 처리 - 실수로 날짜를 지우는 걸 방지.
+      var measureDateVal = document.getElementById('c-measure')?.value || '';
+      var installDateVal = document.getElementById('c-install')?.value || '';
+      var measureTbdVal = document.getElementById('c-measure-tbd')?.checked || false;
+      var installTbdVal = document.getElementById('c-install-tbd')?.checked || false;
+      if (measureDateVal || measureTbdVal) {
+        custPayload.measure_date = measureDateVal || null;
+        custPayload.measure_date_tbd = measureTbdVal;
+      }
+      if (installDateVal || installTbdVal) {
+        custPayload.install_date = installDateVal || null;
+        custPayload.install_date_tbd = installTbdVal;
+      }
       // 확정견적일 때만 고객 실적에 금액 동기화 (2026-08-04 신규) — 예전엔
       // 견적서를 아무리 저장해도 customers.price/performance_revenue가
       // 영구히 0으로 남아서, 신규로 발생하는 모든 고객이 매출탭 계산에
