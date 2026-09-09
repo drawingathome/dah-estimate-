@@ -160,7 +160,17 @@ function confirmPdfPrint() {
   if(old) old.remove();
   var s = document.createElement('style');
   s.id = styleId;
-  s.textContent = '@media print { @page { size: A4 portrait; margin: 0; } .pv-wrap { padding:10mm 12mm!important; box-sizing:border-box!important; } }';
+  // 2026-09-08(선혜님 지적 - "A4로 자르기로 선택을 했는데 저렇게 나온거야"
+  // → "페이지 안의 여백이나 배치가 여유가 너무 없다고 느끼는거야"): 여백을
+  // .pv-wrap(콘텐츠 전체를 감싸는 통 하나)의 padding으로 주고 있었는데,
+  // 이러면 콘텐츠가 여러 페이지로 나뉠 때 이 패딩은 전체 콘텐츠의 맨
+  // 처음/맨 끝에만 적용되고, 페이지가 넘어가는 경계 지점(1페이지 끝~
+  // 2페이지 시작)에는 여백이 전혀 안 생김 - 2페이지 이상으로 나뉘는
+  // 문서일수록 여백이 없어 보이던 정확한 원인. @page margin(브라우저가
+  // 몇 장으로 나뉘든 매 페이지마다 자동으로 적용)으로 되돌림 - 8/19에
+  // 이미 이 방식이었다가, 이후(9/3 "견적 길이에 맞추기" 재설계 과정
+  // 추정) 지금 방식으로 바뀌어 있었음.
+  s.textContent = '@media print { @page { size: A4 portrait; margin: 10mm 12mm; } }';
   document.head.appendChild(s);
 
   _setPrintTitleAndPrint();
