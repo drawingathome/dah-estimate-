@@ -175,8 +175,40 @@ function renderPaySection(c, payBody) {
     depAmt.addEventListener('input', saveDepDraft);
     depDate.addEventListener('change', saveDepDraft);
     depReceiptChk.addEventListener('change', saveDepDraft);
+    // 2026-09-08(선혜님 지시 - "카드든 현금이든 나눠서 할 경우 추가할 수
+    // 있게 해줘"): 결제방법을 카드/현금 중 하나만 고를 수 있어서, 나눠서
+    // 입금됐을 때(예: 일부는 카드, 일부는 현금) 기록할 방법이 없었음.
+    // 기존 한 줄(방법+금액)은 그대로 두고, "+ 결제수단 추가" 버튼으로
+    // 같은 형태의 줄을 더 붙일 수 있게 함 - 저장시 모든 줄의 금액을
+    // 합산하고, 방법들은 " + "로 조합한 문자열로 저장(예: "카드 500,000원
+    // + 현금 500,000원"). DB 스키마(deposit_amount 단일 숫자 컬럼) 변경
+    // 없이 처리 가능해 다른 곳(매출계산, 단계전환 등)에 영향 없음.
+    var depExtraWrap = div('display:flex;flex-direction:column;gap:6px;width:100%', []);
+    var depExtraRows = [];
+    function addDepExtraRow() {
+      var row = div('display:flex;flex-wrap:wrap;gap:6px;width:100%', []);
+      var m = el('select', {style:'flex:1;min-width:80px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit;background:#fff'});
+      ['카드','현금'].forEach(function(mm){ var o=el('option',{}); o.value=mm; o.textContent=mm; m.appendChild(o); });
+      var a = el('input', {type:'text', placeholder:'추가 금액', style:'flex:2;min-width:90px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit'});
+      var rm = btn('padding:6px 10px;background:var(--ivory1);color:#6B6B6B;border:none;border-radius:12px;font-size:11px;font-family:inherit;cursor:pointer', '×', function(){
+        depExtraWrap.removeChild(row);
+        depExtraRows = depExtraRows.filter(function(r){ return r !== rowObj; });
+      });
+      row.appendChild(m); row.appendChild(a); row.appendChild(rm);
+      depExtraWrap.appendChild(row);
+      var rowObj = { method: m, amount: a };
+      depExtraRows.push(rowObj);
+    }
+    var depAddBtn = btn('padding:6px 10px;background:transparent;color:var(--terra);border:1px dashed var(--terra);border-radius:12px;font-size:11px;font-family:inherit;cursor:pointer;width:100%', '+ 결제수단 추가(나눠 받은 경우)', addDepExtraRow);
     var depSave = btn('width:100%;padding:9px;background:var(--dark);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:var(--sp-1)', '선금 저장', function(){
       var inputAmt = Number(depAmt.value.replace(/[^0-9]/g,'')) || 0;
+      // 추가된 줄들의 금액을 합산 및 방법 조합
+      var methodParts = [];
+      if (inputAmt > 0) methodParts.push(depMethod.value + ' ' + inputAmt.toLocaleString() + '원');
+      depExtraRows.forEach(function(r){
+        var amt = Number(r.amount.value.replace(/[^0-9]/g,'')) || 0;
+        if (amt > 0) { inputAmt += amt; methodParts.push(r.method.value + ' ' + amt.toLocaleString() + '원'); }
+      });
       if (inputAmt > 0 && !depDate.value) {
         alert('입금 날짜를 입력해주세요.');
         depDate.focus();
@@ -191,8 +223,8 @@ function renderPaySection(c, payBody) {
         if (!proceed) return;
       }
       var newPd = Object.assign({}, payData);
-      newPd.depositMethod  = depMethod.value;
-      newPd.depositAmount  = depAmt.value.replace(/[^0-9]/g,'');
+      newPd.depositMethod  = methodParts.length > 1 ? methodParts.join(' + ') : depMethod.value;
+      newPd.depositAmount  = String(inputAmt);
       newPd.depositDate    = depDate.value;
       newPd.depositReceipt = depReceiptChk.checked;
       clearPayDraft('dep');
@@ -204,7 +236,7 @@ function renderPaySection(c, payBody) {
       });
     });
     depForm.appendChild(depMethod); depForm.appendChild(depAmt); depForm.appendChild(depDate); depForm.appendChild(depReceipt);
-    depSec.appendChild(depForm); depSec.appendChild(depSave);
+    depSec.appendChild(depForm); depSec.appendChild(depExtraWrap); depSec.appendChild(depAddBtn); depSec.appendChild(depSave);
   }
   paySec.appendChild(depSec);
 
@@ -250,8 +282,34 @@ function renderPaySection(c, payBody) {
     balAmt.addEventListener('input', saveBalDraft);
     balDate.addEventListener('change', saveBalDraft);
     balReceiptChk.addEventListener('change', saveBalDraft);
+    // 2026-09-08(선혜님 지시 - "카드든 현금이든 나눠서 할 경우 추가할 수
+    // 있게 해줘"): 선금과 동일한 방식 - 나눠서 입금됐을 때 줄을 추가해서
+    // 각각 기록, 저장시 합산+조합 문자열로 처리.
+    var balExtraWrap = div('display:flex;flex-direction:column;gap:6px;width:100%', []);
+    var balExtraRows = [];
+    function addBalExtraRow() {
+      var row = div('display:flex;flex-wrap:wrap;gap:6px;width:100%', []);
+      var m = el('select', {style:'flex:1;min-width:80px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit;background:#fff'});
+      ['카드','현금'].forEach(function(mm){ var o=el('option',{}); o.value=mm; o.textContent=mm; m.appendChild(o); });
+      var a = el('input', {type:'text', placeholder:'추가 금액', style:'flex:2;min-width:90px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit'});
+      var rm = btn('padding:6px 10px;background:var(--ivory1);color:#6B6B6B;border:none;border-radius:12px;font-size:11px;font-family:inherit;cursor:pointer', '×', function(){
+        balExtraWrap.removeChild(row);
+        balExtraRows = balExtraRows.filter(function(r){ return r !== rowObj; });
+      });
+      row.appendChild(m); row.appendChild(a); row.appendChild(rm);
+      balExtraWrap.appendChild(row);
+      var rowObj = { method: m, amount: a };
+      balExtraRows.push(rowObj);
+    }
+    var balAddBtn = btn('padding:6px 10px;background:transparent;color:var(--terra);border:1px dashed var(--terra);border-radius:12px;font-size:11px;font-family:inherit;cursor:pointer;width:100%', '+ 결제수단 추가(나눠 받은 경우)', addBalExtraRow);
     var balSave = btn('width:100%;padding:9px;background:var(--dark);color:#fff;border:none;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:var(--sp-1)', '잔금 저장', function(){
       var inputAmt = Number(balAmt.value.replace(/[^0-9]/g,'')) || 0;
+      var methodParts = [];
+      if (inputAmt > 0) methodParts.push(balMethod.value + ' ' + inputAmt.toLocaleString() + '원');
+      balExtraRows.forEach(function(r){
+        var amt = Number(r.amount.value.replace(/[^0-9]/g,'')) || 0;
+        if (amt > 0) { inputAmt += amt; methodParts.push(r.method.value + ' ' + amt.toLocaleString() + '원'); }
+      });
       if (inputAmt > 0 && !balDate.value) {
         alert('입금 날짜를 입력해주세요.');
         balDate.focus();
@@ -266,8 +324,8 @@ function renderPaySection(c, payBody) {
         if (!proceed) return;
       }
       var newPd = Object.assign({}, payData);
-      newPd.balanceMethod  = balMethod.value;
-      newPd.balanceAmount  = balAmt.value.replace(/[^0-9]/g,'');
+      newPd.balanceMethod  = methodParts.length > 1 ? methodParts.join(' + ') : balMethod.value;
+      newPd.balanceAmount  = String(inputAmt);
       newPd.balanceDate    = balDate.value;
       newPd.balanceReceipt = balReceiptChk.checked;
       clearPayDraft('bal');
@@ -285,7 +343,7 @@ function renderPaySection(c, payBody) {
       });
     });
     balForm.appendChild(balMethod); balForm.appendChild(balAmt); balForm.appendChild(balDate); balForm.appendChild(balReceipt);
-    balSec.appendChild(balForm); balSec.appendChild(balSave);
+    balSec.appendChild(balForm); balSec.appendChild(balExtraWrap); balSec.appendChild(balAddBtn); balSec.appendChild(balSave);
   }
   paySec.appendChild(balSec);
   if (payBody) payBody.appendChild(paySec);
