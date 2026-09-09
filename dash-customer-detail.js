@@ -161,6 +161,25 @@ function renderDetailEstTabInner(estEl) {
   var CONTRACT_BG    = {pending:'#F5F2EE', contracted:'#EEF5F2', rejected:'#FDECEA'};
   var CONTRACT_COLOR = {pending:'var(--sub)', contracted:'#2F6690', rejected:'#C0392B'};
   var STATUS_KO      = {ga:'가견적서', final:'최종견적서'};
+  // 2026-09-08(선혜님 지적 - "지금 단계는 제대로 들어갔어(칸반) 근데
+  // 위에 가견적이 나오는게 맞아?? 현재단계가 나와야 할꺼 같은데"): 이
+  // 카드는 estimates.contract_status(가견적/계약됨/미계약 - 대시보드에서
+  // 사람이 직접 배지를 눌러야만 바뀌는 별도 필드)를 보여주고 있었는데,
+  // 정작 고객의 실제 진행상태는 customers.stage(칸반보드와 동일한
+  // 소스, 결제 저장 등에 따라 이미 자동으로 갱신됨)가 훨씬 정확했음.
+  // 별도 수동 필드 대신 실제 현재단계를 그대로 보여주도록 변경 - 칸반
+  // 보드의 3그룹 색상 로직(dash-render.js)과 동일하게 맞춤.
+  var currentCustomerStage = '';
+  try {
+    var custArr = loadCustomers();
+    var thisCust = custArr.find(function(x){ return currentDetailId ? x.id === currentDetailId : x.clientName === currentDetailName; });
+    if (thisCust) currentCustomerStage = thisCust.stage || '';
+  } catch(eStage) {}
+  function stageColorFor(stage) {
+    if (['방문예약','상담','가견적'].indexOf(stage) >= 0) return '#8A8378';
+    if (stage === '시공완료') return '#2F6690';
+    return 'var(--terra)';
+  }
 
   // 재구매 여부 - 계약된 견적이 2개 이상이면 재구매
   var contractedCount = ests.filter(function(e){ return e.contractStatus === 'contracted'; }).length;
@@ -175,7 +194,10 @@ function renderDetailEstTabInner(estEl) {
   ests.forEach(function(e, i) {
     var cs = e.contractStatus || 'pending';
     var isFinal = e.status === 'final';
-    var isContracted = cs === 'contracted';
+    // 2026-09-08: isContracted도 위와 같은 이유로 stage 기준으로 통일 -
+    // 배지(현재단계)와 카드 배경색이 서로 다른 기준을 쓰면 오히려 더
+    // 헷갈림(예: 배지는 "시공준비중"인데 카드는 흰색/미계약 배경).
+    var isContracted = ['선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'].indexOf(currentCustomerStage) >= 0;
 
     var card = div(
       'border:1px solid '+(isContracted?'#B0D4B0':'var(--border)')+';border-radius:12px;padding:14px;margin-bottom:10px;' +
@@ -195,7 +217,7 @@ function renderDetailEstTabInner(estEl) {
     if (e.confirmedAt) {
       topItems.push(el('span', {style:'font-size:11px;font-weight:700;color:#fff;background:var(--dark);padding:2px 8px;border-radius:20px', text:'✓ 확정'}));
     }
-    topItems.push(el('span', {style:'margin-left:auto;font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px;background:'+CONTRACT_BG[cs]+';color:'+CONTRACT_COLOR[cs], text: CONTRACT_KO[cs]}));
+    topItems.push(el('span', {style:'margin-left:auto;font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px;background:#F5F2EE;color:'+stageColorFor(currentCustomerStage), text: currentCustomerStage || '—'}));
     var top = div('display:flex;align-items:center;gap:6px;margin-bottom:10px', topItems);
 
     // 금액 크게
