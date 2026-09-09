@@ -21,19 +21,23 @@ function setStatus(s, isRestoring) {
   // 뜨고, 고객명이 비어있는 특정 상황에선 localStorage의 다른 가견적
   // 항목으로 고객정보를 덮어쓸 위험까지 있었음. isRestoring=true로
   // 부르면 이 전환 로직 전체를 건너뛰고 상태표시만 조용히 갱신함.
+  // 2026-09-08(선혜님 지적 - "김 은 고객님꺼 확정하고 최종견적서
+  // 눌렀는데 다시 누르니 가견적서가 뜨네" → 실제 DB 데이터와 재현
+  // 테스트로 근본원인 확인): 이름이 비어있을 때 "로컬에 저장된 아무
+  // 가견적 항목이나(entry, 완전히 다른 고객일 수도 있음)" 가져와서
+  // 폼 전체를 덮어쓰는 로직이 있었음 - 이게 실행되면 그 항목의 상태
+  // (대부분 'ga')까지 함께 화면에 반영되어, 방금 최종견적서로 바꿨는데
+  // 곧바로 가견적서로 되돌아가는 것처럼 보였음. 이름이 화면에 아직
+  // 안 채워진 특정 순간(로딩 타이밍 등)에 이 탭을 누르면 트리거됐던
+  // 것으로 추정. "다른 고객 정보로 조용히 덮어쓰기"는 그 자체로 위험한
+  // 부작용이라(대표님이 지금 작성 중인 내용이 사라짐), 자동 채우기 없이
+  // 안내만 하도록 안전하게 변경.
   if(!isRestoring && prev==='ga' && s==='final'){
     var cName = document.getElementById('c-name')?.value?.trim();
     if(cName){
-      
       showToast('가견적 내용 기반으로 최종견적서를 작성합니다 🙂');
     } else {
-      
-      try {
-        var saved = JSON.parse(localStorage.getItem('dah_saved')||'[]');
-        var gaEntry = saved.find(function(e){ return e.status==='ga'; });
-        if(gaEntry){ loadEstimateEntry(gaEntry); showToast('고객 정보를 불러왔습니다. 제품 목록은 다시 입력해주세요 🙂'); }
-        else { showToast('가견적 내용을 기반으로 최종견적서를 작성합니다 🙂'); }
-      } catch(e){ showToast('가견적 내용을 기반으로 최종견적서를 작성합니다 🙂'); }
+      showToast('고객명을 먼저 입력해주세요 🙂');
     }
   }
   triggerSumPulse();
