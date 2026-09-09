@@ -4,6 +4,27 @@
    고객 추가/수정, 견적서 이력 표시.
    ══════════════════════════════════════════════════ */
 
+// 2026-09-08(선혜님 지적 - "지금 단계는 제대로 들어갔어(칸반) 근데 위에
+// 가견적이 나오는게 맞아?? 현재단계가 나와야 할꺼 같은데"로 처음 발견,
+// "이전부터 계속 말했던 오류 아니니"로 재발 확인): 견적서 카드에 계약
+// 상태(contract_status - 사람이 직접 배지를 눌러야만 바뀌는 별도 필드)를
+// 보여주는 로직이 renderDetailEstTabInner()와 renderEstimateHistory()
+// 두 곳에 독립적으로 존재했음(쌍둥이 함수 패턴) - 처음엔 앞의 것만 고쳐서
+// "고객상세 > 정보 탭"(renderEstimateHistory가 그리는 화면)에서는 여전히
+// 예전 계약상태 배지가 남아있었음. 두 곳 모두 이 전역 헬퍼를 쓰도록 통일.
+function getCustomerCurrentStage(clientName, clientId) {
+  try {
+    var custArr = loadCustomers();
+    var thisCust = custArr.find(function(x){ return clientId ? x.id === clientId : x.clientName === clientName; });
+    return thisCust ? (thisCust.stage || '') : '';
+  } catch(eStage) { return ''; }
+}
+function stageColorFor(stage) {
+  if (['방문예약','상담','가견적'].indexOf(stage) >= 0) return '#8A8378';
+  if (stage === '시공완료') return '#2F6690';
+  return 'var(--terra)';
+}
+
 var STAGES = ['방문예약','상담','가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'];
 // 2026-08-05: STAGES_ALL(옛 6단계 이름 배열)은 코드베이스 어디서도 참조되지 않는
 // 죽은 코드였고 이름까지 옛것이라 혼동 소지가 있어 제거함
@@ -169,17 +190,7 @@ function renderDetailEstTabInner(estEl) {
   // 소스, 결제 저장 등에 따라 이미 자동으로 갱신됨)가 훨씬 정확했음.
   // 별도 수동 필드 대신 실제 현재단계를 그대로 보여주도록 변경 - 칸반
   // 보드의 3그룹 색상 로직(dash-render.js)과 동일하게 맞춤.
-  var currentCustomerStage = '';
-  try {
-    var custArr = loadCustomers();
-    var thisCust = custArr.find(function(x){ return currentDetailId ? x.id === currentDetailId : x.clientName === currentDetailName; });
-    if (thisCust) currentCustomerStage = thisCust.stage || '';
-  } catch(eStage) {}
-  function stageColorFor(stage) {
-    if (['방문예약','상담','가견적'].indexOf(stage) >= 0) return '#8A8378';
-    if (stage === '시공완료') return '#2F6690';
-    return 'var(--terra)';
-  }
+  var currentCustomerStage = getCustomerCurrentStage(currentDetailName, currentDetailId);
 
   // 재구매 여부 - 계약된 견적이 2개 이상이면 재구매
   var contractedCount = ests.filter(function(e){ return e.contractStatus === 'contracted'; }).length;
@@ -1057,8 +1068,8 @@ function renderEstimateHistory(container, clientName, clientId) {
     return;
   }
 
+  var currentCustomerStageForHistory = getCustomerCurrentStage(clientName, clientId);
   estimates.forEach(function(e, ei) {
-    var cs = e.contractStatus || 'pending';
     var isLast = ei === estimates.length - 1;
     var card = el('div', {style:
       'border:1px solid var(--border);border-radius:12px;padding:12px 14px;' +
@@ -1081,55 +1092,11 @@ function renderEstimateHistory(container, clientName, clientId) {
     }
 
     
-    var contractBadge = el('button', {style:
-      'font-size:12px;font-weight:700;border:none;cursor:pointer;' +
-      'padding:3px 10px;border-radius:6px;font-family:inherit;min-height:32px;' +
-      'background:' + (cs==='contracted'?'var(--dark)':'var(--ivory1)') + ';' +
-      'color:' + (cs==='contracted'?'#fff':'#6B6B6B'),
-      text: CONTRACT_LABELS[cs]||'가견적'
+    var contractBadge = el('span', {style:
+      'font-size:12px;font-weight:700;padding:3px 10px;border-radius:6px;' +
+      'background:#F5F2EE;color:' + stageColorFor(currentCustomerStageForHistory),
+      text: currentCustomerStageForHistory || '—'
     });
-    var csArr = ['pending','contracted','rejected'];
-    (function(entry, badge){
-      badge.addEventListener('click', function(ev){
-        ev.stopPropagation();
-        var cur = entry.contractStatus || 'pending';
-        // 2026-08-24(선혜님 요청 — "한번만 눌러도 왔다갔다 되게"): 예전엔
-        // 가견적→계약됨→미계약→가견적...으로 3단계를 순서대로만 돌아서,
-        // 미계약에서 계약됨으로 되돌리려면 두 번 눌러야 했음. 이제 가견적
-        // 상태에서만 첫 클릭이 계약됨으로 가고, 계약됨↔미계약은 클릭 한 번
-        // 으로 바로 왔다갔다 하도록 변경.
-        var next = cur === 'rejected' ? 'contracted'
-                 : cur === 'contracted' ? 'rejected'
-                 : 'contracted';
-        // 2026-08-24(선혜님 요청 — "확인창이 한번 더 떠야 전문성이 있지"):
-        // 매출 집계에도 영향을 주는 값이라, 실수로 잘못 눌러 바뀌는 걸
-        // 막기 위해 바꾸기 전에 한 번 확인받도록 함.
-        var label = entry.clientName || '이 고객';
-        if (!confirm(label + ' 님을 "' + CONTRACT_LABELS[next] + '"(으)로 변경할까요?')) return;
-        entry.contractStatus = next;
-
-        try {
-          var arr = JSON.parse(localStorage.getItem('dah_saved')||'[]');
-          var idx = arr.findIndex(function(x){ return x.id === entry.id || x.no === entry.no; });
-          if (idx>=0) { arr[idx].contractStatus = next; localStorage.setItem('dah_saved', JSON.stringify(arr)); }
-        } catch(ex2){}
-        // 2026-08-24(선혜님 질문 — "계약을 안 할 수도 있는데 이런 경우 어떻게
-        // 잡으면 좋을까"): 이 배지가 로컬(그 브라우저)에만 저장되고 서버엔
-        // 전혀 안 남고 있었음 — 다른 기기에서 보거나, 클라우드에서 다시
-        // 동기화되면 "미계약" 표시가 사라짐(estimates 테이블에 이 상태를
-        // 저장할 컬럼 자체가 없었음). contract_status 컬럼을 새로 만들고
-        // 여기서 서버에도 저장하도록 함 — 이제부터 이 배지를 누르면
-        // 기기/새로고침과 무관하게 유지됨.
-        if (entry.id && typeof entry.id === 'string' && entry.id.length > 20 && typeof sbXHR === 'function') {
-          sbXHR('PATCH', 'estimates?id=eq.' + entry.id, { contract_status: next }, function(err){
-            if (err) console.warn('계약상태 서버 저장 실패:', err);
-          });
-        }
-        badge.textContent = CONTRACT_LABELS[next];
-        badge.style.background = next==='contracted'?'var(--dark)':'var(--ivory1)';
-        badge.style.color = next==='contracted'?'#fff':'#6B6B6B';
-      });
-    })(e, contractBadge);
 
     top.appendChild(noEl); top.appendChild(contractBadge);
     card.appendChild(top);
