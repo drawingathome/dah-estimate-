@@ -29,7 +29,7 @@
 </script>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
-<link rel="stylesheet" href="/est-styles.css?v=202609082000">
+<link rel="stylesheet" href="/est-styles.css?v=202609082100">
 </style>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -404,7 +404,7 @@
   </div>
 
   <!-- 고객 정보 -->
-  <div class="section">
+  <div class="section" id="lockable-customer-info">
     <div class="sec-label"><span class="sec-title">고객 정보</span><div style="display:flex;gap:6px"><button type="button" onclick="openCustomerLoad()" class="load-cust-btn print-hide">🔍 고객 불러오기</button><button type="button" onclick="loadSurveyFromSheet()" class="load-cust-btn print-hide" id="btn-load-survey">📋 설문 불러오기</button></div></div>
     <div class="info-grid">
       <div class="info-item">
@@ -534,7 +534,7 @@
   </div>
 
   <!-- 커튼 · 블라인드 -->
-  <div class="section wide-section">
+  <div class="section wide-section" id="lockable-products">
     <div class="sec-label">
       <span class="sec-title">커튼 · 블라인드</span>
     </div>
@@ -609,7 +609,7 @@
   </div>
 
   <!-- 레일 · 시공비 -->
-  <div class="section">
+  <div class="section" id="lockable-rail-svc">
     <div class="sec-label">
       <span class="sec-title">레일 · 시공비 · 기타</span>
     </div>
@@ -803,7 +803,7 @@
 <script src="/shared-optimistic-lock.js?v=202609051200"></script>
 <script src="/est-sync-queue.js?v=202608291500"></script>
 <script src="/dash-supabase-auth.js?v=202609061500"></script>
-<script src="/est-form-controls.js?v=202609041600"></script>
+<script src="/est-form-controls.js?v=202609082100"></script>
 <script src="/est-product-calc.js?v=202609081500"></script>
 <script src="/est-survey.js?v=202608190049"></script>
 <script src="/est-save.js?v=202609081200"></script>

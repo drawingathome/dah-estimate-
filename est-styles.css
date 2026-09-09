@@ -1715,3 +1715,21 @@ button[onclick*="search"][onclick*="addr"]:hover {
   transition: background 0.1s !important;
 }
 
+
+/* 2026-09-08: 견적 확정시 잠긴 섹션의 시각적 표시 - 흐리게 처리하고
+   커서를 not-allowed로 바꿔서 "지금 수정 안 되는 상태"임을 명확히 보여줌 */
+.estimate-locked {
+  position: relative;
+}
+.estimate-locked input:disabled,
+.estimate-locked select:disabled,
+.estimate-locked textarea:disabled {
+  background: #F5F2EE !important;
+  color: #999 !important;
+  cursor: not-allowed !important;
+  opacity: 0.75;
+}
+.estimate-locked button:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}

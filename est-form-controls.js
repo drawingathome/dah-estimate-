@@ -192,15 +192,54 @@ function fmtPhone(el) {
 // 계약상태는 "고객이 계약금을 냈는지", 이 확정은 "견적 세부내용이 확정됐는지"를 나타냄.
 // (선혜님 워크플로우: 실측 후 확정견적서를 고객과 조율 → 더 안 바뀌면 [확정] 클릭)
 var _estimateConfirmedAt = null;
+// 2026-09-08(선혜님 지적 - "확정이 되더라도 수정이 되고, 수정후 저장을
+// 해도 확정이 풀리지 않는다는거야 확정이 되면 수정이 안되어야 하는거
+// 아니야" → "확정이 되면 아예 수정이 안되게 막아주고 수정을 원하면 확정을
+// 한번 더 클릭해서 풀리면 수정이 되게"): 원래(8/19 이전)는 수정하면 확정이
+// 조용히 자동으로 풀리는 방식이었는데, 그때 선혜님이 "수정해도 확정 표시는
+// 유지"로 결정하시면서 감시 로직 자체를 제거함 - 근데 확정 버튼의 안내
+// 문구는 그대로 "수정하면 확정이 자동으로 취소됩니다"로 남아있어서 실제
+// 동작과 정반대인 채로 방치되어 있었음(진짜 버그). 이번엔 "확정하면 아예
+// 수정 자체를 막고, 확정을 다시 눌러야 풀리는" 더 엄격한 방식으로 확정
+// 지음 - 고객정보/커튼·블라인드/레일·시공비/AS폼 섹션 전체의 입력창·
+// 선택창·버튼(추가/복사/삭제 등)을 disabled 처리.
+function lockEstimateForm(locked) {
+  var lockableIds = ['lockable-customer-info', 'lockable-products', 'lockable-rail-svc', 'as-form-section'];
+  lockableIds.forEach(function(id) {
+    var section = document.getElementById(id);
+    if (!section) return;
+    section.querySelectorAll('input, select, button, textarea').forEach(function(el) {
+      el.disabled = locked;
+    });
+    section.classList.toggle('estimate-locked', locked);
+  });
+  // 2026-09-08: lockable-rail-svc 섹션 안에 저장/출력/문서자료/새견적서/
+  // 대시보드이동 버튼들(.action-bar 전체)이 같이 들어있어서, 위 순회에서
+  // 이 버튼들까지 잠겨버렸음(확정된 견적서도 저장·출력·새 견적서 시작은
+  // 당연히 가능해야 하는데 막혀버린 버그를 재현테스트로 발견함 - 처음엔
+  // .action-main만 예외처리했다가, 그 바로 위의 "새 견적서" 버튼이 여전히
+  // 잠겨있는 걸 재확인 과정에서 추가로 발견해 상위 .action-bar 전체로 확장).
+  // 이 버튼들은 확정 여부와 무관하게 항상 눌려야 하므로 다시 활성화.
+  var actionBar = document.querySelector('.action-bar');
+  if (actionBar) {
+    actionBar.querySelectorAll('input, select, button, textarea').forEach(function(el) {
+      el.disabled = false;
+    });
+    actionBar.classList.remove('estimate-locked');
+  }
+}
+
 function toggleConfirmEstimate() {
   if (window._estimateConfirmedAt) {
     if (!confirm('확정을 취소할까요? (다시 수정 가능한 상태로 돌아갑니다)')) return;
     window._estimateConfirmedAt = null;
+    lockEstimateForm(false);
     showToast('견적 확정이 취소됐습니다 — 다시 수정 가능합니다');
   } else {
-    if (!confirm('이 견적 내용(사이즈·금액)을 확정할까요?\n확정 후에도 수정할 수 있지만, 수정하면 확정이 자동으로 취소됩니다.')) return;
+    if (!confirm('이 견적 내용(사이즈·금액)을 확정할까요?\n확정하면 수정할 수 없게 잠깁니다. 다시 수정하려면 확정을 한번 더 눌러 해제하세요.')) return;
     window._estimateConfirmedAt = new Date().toISOString();
-    showToast('견적이 확정됐습니다');
+    lockEstimateForm(true);
+    showToast('견적이 확정됐습니다 — 수정하려면 확정을 다시 눌러 해제하세요');
   }
   renderConfirmBadge();
   if (typeof calcTotal === 'function') calcTotal(); // 저장 전이라도 상태를 즉시 반영
@@ -210,6 +249,10 @@ function renderConfirmBadge() {
   // 2026-08-26: 예전엔 배지(표시 전용, 확정시에만 보임)와 버튼(탭줄의
   // 액션, 항상 보임)이 따로 있었는데, 이제 hd-confirm-badge 하나가 표시+
   // 클릭 액션을 겸함(A안). 미확정=연한 테두리만, 확정=진한 배경으로 채움.
+  // 2026-09-08: 견적서를 불러오는 모든 지점(4곳)에서 renderConfirmBadge가
+  // 호출되니, 잠금 처리도 여기 한 곳에 포함시켜서 이미 확정된 견적서를
+  // 열었을 때 바로 잠긴 상태로 보이게 함 - 호출부마다 따로 안 챙겨도 됨.
+  if (typeof lockEstimateForm === 'function') lockEstimateForm(!!window._estimateConfirmedAt);
   var badge = document.getElementById('hd-confirm-badge');
   if (!badge) return;
   if (window._estimateConfirmedAt) {
