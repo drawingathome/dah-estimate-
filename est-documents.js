@@ -1208,6 +1208,15 @@ function printRequest(kind, skipPrompts) {
       // 있으니, 파일명 구분자에서는 빼고 label(실측/시공)만 남김.
       var cStaffForDrive3 = document.getElementById('c-staff')?.value || '';
       saveDocumentToDrive('실측시공', cNameForDrive, label, finalHtml, cStaffForDrive3);
+      // 2026-09-09: 발주(order_status.fabric/production/material/blind)는
+      // 이미 자동 기록되고 있었는데, 실측/시공은 전혀 기록이 안 되고
+      // 있었음 - "업무처리" 통합 탭에서 세 가지 진행상태를 보여주려면
+      // 여기도 똑같이 기록해야 함. kind가 'measure'/'install' 그대로
+      // order_status의 카테고리 키가 됨(기존 install 카테고리 이름과 일치).
+      var installerNameForStatus = document.getElementById('c-installer-name')?.value || '';
+      var statusUpdate = {};
+      statusUpdate[kind] = { done: true, vendor: installerNameForStatus, orderDate: new Date().toISOString().slice(0, 10) };
+      if (typeof updateOrderStatus === 'function') updateOrderStatus(statusUpdate);
     } catch(e) { console.warn('의뢰서 드라이브 저장 실패:', e); }
     openPdfModal();
   };

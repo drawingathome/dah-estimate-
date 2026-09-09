@@ -338,20 +338,17 @@ function vendorCategory(vendor) {
 // 그 안의 각 항목(orderCategory: fabric/material/blind/production)과 거래처명을
 // 모아서, customers.order_status(jsonb)를 자동으로 갱신함 - 기존 다른 카테고리
 // (예: install)를 실수로 지우지 않도록 먼저 현재 값을 읽어와 병합한 뒤 저장.
-function updateOrderStatusFromVendorGroups(groups) {
+// 2026-09-09(선혜님 지시 - "실측/시공/발주가 다 따로 되어있다"는 지적으로
+// "업무처리" 통합 탭을 만들기로 함): order_status(GET→병합→PATCH) 로직을
+// 범용 헬퍼로 분리 - 발주(fabric/production/material/blind)뿐 아니라
+// 실측(measure)/시공(install)도 이 하나의 함수로 기록하도록 함. 지금까지
+// order_status에는 발주 카테고리만 기록되고, 실측/시공 완료 여부는 전혀
+// 추적이 안 되고 있었음(printRequest 성공시 이 함수를 부르는 곳 자체가
+// 없었음) - "업무처리" 탭에서 셋 다의 진행상태를 보여주려면 이 공백부터
+// 메워야 함.
+function updateOrderStatus(updates) {
   if (!window._estSaveCustomerId || typeof SUPABASE_URL === 'undefined') return;
-  var todayISO = new Date().toISOString().slice(0, 10);
-  var updates = {};
-  Object.keys(groups).forEach(function(vendor){
-    if (vendor === '미지정') return;
-    (groups[vendor] || []).forEach(function(item){
-      var cat = item.orderCategory;
-      if (!cat) return;
-      updates[cat] = { done: true, vendor: vendor, orderDate: todayISO };
-    });
-  });
-  if (Object.keys(updates).length === 0) return;
-
+  if (!updates || Object.keys(updates).length === 0) return;
   try {
     var xhrGet = new XMLHttpRequest();
     xhrGet.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estSaveCustomerId) + '&select=order_status', true);
@@ -363,7 +360,6 @@ function updateOrderStatusFromVendorGroups(groups) {
         var rows = JSON.parse(xhrGet.responseText);
         if (rows[0] && rows[0].order_status) current = rows[0].order_status;
       } catch (e) {}
-      // 같은 카테고리에 이미 dueDate 등 기존 값이 있었으면 그것도 함께 보존
       Object.keys(updates).forEach(function(cat){
         if (current[cat] && typeof current[cat] === 'object' && current[cat].dueDate) {
           updates[cat].dueDate = current[cat].dueDate;
@@ -378,15 +374,28 @@ function updateOrderStatusFromVendorGroups(groups) {
         xhrPatch.setRequestHeader('Content-Type', 'application/json');
         xhrPatch.onload = function() {
           if (xhrPatch.status < 300 && typeof showToast === 'function') {
-            showToast('📋 발주 현황판에도 자동으로 기록됐어요');
+            showToast('📋 업무 현황판에도 자동으로 기록됐어요');
           }
         };
         xhrPatch.send(JSON.stringify({ order_status: merged }));
-      } catch (e) { console.warn('발주현황 자동갱신 실패:', e); }
+      } catch (e) { console.warn('현황 자동갱신 실패:', e); }
     };
-    xhrGet.onerror = function() { console.warn('발주현황 자동갱신 실패(조회 실패)'); };
+    xhrGet.onerror = function() { console.warn('현황 자동갱신 실패(조회 실패)'); };
     xhrGet.send();
-  } catch (e) { console.warn('발주현황 자동갱신 실패:', e); }
+  } catch (e) { console.warn('현황 자동갱신 실패:', e); }
+}
+function updateOrderStatusFromVendorGroups(groups) {
+  var todayISO = new Date().toISOString().slice(0, 10);
+  var updates = {};
+  Object.keys(groups).forEach(function(vendor){
+    if (vendor === '미지정') return;
+    (groups[vendor] || []).forEach(function(item){
+      var cat = item.orderCategory;
+      if (!cat) return;
+      updates[cat] = { done: true, vendor: vendor, orderDate: todayISO };
+    });
+  });
+  updateOrderStatus(updates);
 }
 
 // 구글드라이브에 문서 저장 (실패해도 조용히 무시 — 화면 흐름을 절대 막지 않음)
