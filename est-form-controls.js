@@ -43,6 +43,11 @@ function setStatus(s, isRestoring) {
    ※ 커튼/블라인드 제품행 상세정보는 저장 데이터 구조상 애초에 저장되지 않아 복원 불가 */
 function loadEstimateEntry(entry) {
   if (!entry) return;
+  // 2026-09-08(전수조사 중 발견 - 8/29에 다른 두 경로(loadCustId,
+  // loadEstDbId)는 이미 고쳐져 있었는데, 이 경로(가견적→최종 전환시
+  // 고객명이 비어있어 예전 가견적 항목에서 정보를 가져오는 특수
+  // 케이스)만 estimate_status 복원 자체가 빠져있었음.
+  if (entry.status && typeof setStatus === 'function') setStatus(entry.status, true);
   var nameEl = document.getElementById('c-name');
   if (nameEl && entry.clientName) nameEl.value = entry.clientName;
   var phoneEl = document.getElementById('c-phone');
