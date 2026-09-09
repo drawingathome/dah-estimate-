@@ -1015,7 +1015,18 @@ function buildRequestHTML(kind, extraNote) {
     // 2026-09-08(선혜님 지시 - "고객견적서에 있는 공간 순서대로 정리해주면
     // 될꺼 같고"): 9/4에는 "공간별로 나오게 해줘"라는 요청으로 가나다순
     // 정렬을 추가했었는데, 이번엔 견적서에 입력한 순서 그대로가 낫다는
-    // 요구로 바뀜 - 정렬 로직 제거(입력 순서 그대로 사용).
+    // 요구로 바뀌어 정렬 로직을 제거했었음 - 근데 이러면 같은 공간에
+    // 커튼과 블라인드가 둘 다 있을 때, 커튼 전체(모든 공간)가 먼저,
+    // 블라인드 전체(모든 공간)가 나중에 오는 구조(rows는 커튼 배열 뒤에
+    // 블라인드 배열을 이어붙인 것)라서, 같은 공간이 서로 뚝 떨어진 두
+    // 그룹으로 쪼개져 나오는 새 문제가 생김("시륵 시공 정리할때 공간별로
+    // 묶어달라고!!!"로 재발견). 가나다순은 아니면서도 같은 공간은 붙어
+    // 있어야 하므로, "이 공간이 rows 안에서 처음 나온 위치" 기준으로
+    // 안정정렬 - 공간 그룹의 순서는 입력 순서를 그대로 따르고, 그 안에서
+    // 커튼/블라인드가 섞여도 같은 공간끼리는 항상 붙어서 나옴.
+    var spaceFirstOrder = {};
+    rows.forEach(function(r, i) { if (!(r.space in spaceFirstOrder)) spaceFirstOrder[r.space] = i; });
+    rows.sort(function(a, b) { return spaceFirstOrder[a.space] - spaceFirstOrder[b.space]; });
 
     if(rows.length === 0) {
       out += '<div style="padding:30px 0;text-align:center;color:#B0A99F;font-size:12px">입력된 공간/제품이 없습니다.</div>';
