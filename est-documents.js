@@ -605,22 +605,35 @@ function collectVendorGroups() {
     var pnum   = tr.querySelector('.pnum')?.value || '';
     var pleat  = (tr.querySelector('.pleat-type')?.value || '').replace('형','');
     var open   = (tr.querySelector('.open-type')?.value || '').replace('형','');
-    var isWorkshop = tr.querySelector('.vendor-is-workshop')?.checked || false;
     var heightAdjust = parseFloat(tr.querySelector('.height-adjust')?.value);
     if (isNaN(heightAdjust)) heightAdjust = -3;
     var fh = (mh && parseFloat(mh) > 0) ? (parseFloat(mh) + heightAdjust) : null;
+    // 2026-09-09(선혜님 지시 - "커튼은 무조건 제작을 해애해 담만 가공소는
+    // 차 후에 바꿀 수 있어"): 예전엔 "가공소" 체크박스로 이 항목이
+    // 원단(fabric) 발주인지 제작(production) 발주인지 양자택일로
+    // 나눴는데, 실제로는 커튼 하나가 원단 매입 + 제작 의뢰 둘 다 항상
+    // 필요한 별개의 두 발주임 - 체크박스 없이, 원단거래처가 있으면
+    // 원단 발주를, 등록된 가공소가 있으면 제작 발주를 각각 독립적으로 생성.
     if (fabric || vendor) {
       items.push({
         space: space||'—', product: fabric||'—', color: color||'—',
-        // 2026-08-05: 원단(커튼) 거래처는 야드 단위로 구매하는 거라 사이즈 자체가 불필요.
-        // 가공소로 체크된 경우에만 실측+제작사이즈를 보여줌. (블라인드는 업체가 직접
-        // 사이즈에 맞춰 재단해서 나오는 제품이라 아래 블라인드 쪽은 별도로 계속 표시함)
-        size: isWorkshop ? ((mw&&mh)?(mw+'×'+mh):'—') : '—',
-        fabSize: (isWorkshop && mw && fh!==null) ? (mw+'×'+fh.toFixed(1).replace(/\.0$/,'')) : null,
+        size: '—', fabSize: null,
         content:[pleat, open].filter(Boolean).join(' ')||'—',
         qty: pnum?(pnum+'폭'):'—',
         vendor: vendor,
-        orderCategory: isWorkshop ? 'production' : 'fabric'
+        orderCategory: 'fabric'
+      });
+    }
+    var autoProductionVendor = getAutoProductionVendorName();
+    if (autoProductionVendor) {
+      items.push({
+        space: space||'—', product: fabric||'—', color: color||'—',
+        size: (mw&&mh)?(mw+'×'+mh):'—',
+        fabSize: (mw && fh!==null) ? (mw+'×'+fh.toFixed(1).replace(/\.0$/,'')) : null,
+        content:[pleat, open].filter(Boolean).join(' ')||'—',
+        qty: pnum?(pnum+'폭'):'—',
+        vendor: autoProductionVendor,
+        orderCategory: 'production'
       });
     }
     // 2026-08-10: 레일(전동 등) 거래처가 매번 다를 수 있어 견적서마다 입력
@@ -928,13 +941,10 @@ function buildRequestHTML(kind, extraNote) {
     // 단독으로 나왔는데, 실제 문서는 항상 "캔가공소(제작)/거래처" 조합으로
     // 나옴 - production(제작) 카테고리 거래처를 1곳뿐이면 자동으로 앞에
     // 붙이는 패턴을 printRequest()의 기존 install업체 자동선택과 동일하게 적용.
-    var productionVendorName = '';
-    if (Array.isArray(window._dahVendorListRaw)) {
-      var prodVendors = window._dahVendorListRaw.filter(function(v) {
-        return v && Array.isArray(v.categories) && v.categories.indexOf('production') >= 0;
-      });
-      if (prodVendors.length === 1) productionVendorName = prodVendors[0].name || '';
-    }
+    // 2026-09-09: 아래 계산은 이제 전역 헬퍼 getAutoProductionVendorName()로
+    // 옮김 - collectVendorGroups()(발주서)에서도 재사용해야 해서(가공소가
+    // 이제 체크박스 없이 모든 커튼에 자동 적용되므로).
+    var productionVendorName = getAutoProductionVendorName();
     function withProduction(etc, isWorkshop) {
       // 2026-09-08(선혜님 지적 - "거래처도 여전히 안되네", 실제 최시내
       // 고객 데이터로 재현 확인): 이 함수가 각 항목이 실제로 "가공소"를

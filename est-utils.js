@@ -349,6 +349,19 @@ function vendorCategory(vendor) {
 // 추적이 안 되고 있었음(printRequest 성공시 이 함수를 부르는 곳 자체가
 // 없었음) - "업무처리" 탭에서 셋 다의 진행상태를 보여주려면 이 공백부터
 // 메워야 함.
+// 2026-09-09(선혜님 지시 - "커튼은 무조건 제작을 해애해 담만 가공소는
+// 차 후에 바꿀 수 있어"로, 가공소를 항목별 체크박스 없이 자동 적용하기로
+// 결정): 등록된 production(가공소) 카테고리 거래처가 정확히 1곳이면
+// 자동으로 그 이름을 반환 - 이 값이 있으면 모든 커튼에 무조건 적용됨.
+// 나중에 2곳 이상 등록되면(설치업체 자동선택과 같은 패턴) 빈 문자열을
+// 반환해서, 그때부터는 선택 UI가 필요하다는 신호가 됨.
+function getAutoProductionVendorName() {
+  if (!Array.isArray(window._dahVendorListRaw)) return '';
+  var prodVendors = window._dahVendorListRaw.filter(function(v) {
+    return v && Array.isArray(v.categories) && v.categories.indexOf('production') >= 0;
+  });
+  return prodVendors.length === 1 ? (prodVendors[0].name || '') : '';
+}
 function updateOrderStatus(updates) {
   if (!window._estSaveCustomerId || typeof SUPABASE_URL === 'undefined') return;
   if (!updates || Object.keys(updates).length === 0) return;

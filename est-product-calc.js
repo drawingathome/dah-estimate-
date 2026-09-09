@@ -17,9 +17,12 @@ function addCurtainRow() {
         '<div class="inner-row">'+
           '<input type="text" list="fabric-list" placeholder="원단명" class="c-fabric inner-inp">'+
           '<input type="text" list="vendor-list" placeholder="원단 거래처" class="c-vendor inner-inp" style="width:72px">'+
-          '<label style="display:flex;align-items:center;gap:2px;font-size:11px;color:var(--sub);white-space:nowrap;cursor:pointer" title="체크하면 이 거래처 발주서에 보정된 제작사이즈(실측±보정값)가 함께 표시됩니다">'+
-            '<input type="checkbox" class="vendor-is-workshop" style="margin:0;width:12px;height:12px">가공소'+
-          '</label>'+
+          // 2026-09-09(선혜님 확인 - "커튼은 무조건 제작을 해애해") - 이
+          // 체크박스(가공소 여부를 항목마다 표시하던 것) 제거. 커튼은
+          // 예외 없이 항상 제작(가공소)을 거치므로, collectVendorGroups()가
+          // 체크 여부와 무관하게 모든 커튼 항목에 자동으로 가공소 발주
+          // 라인을 추가함(등록된 가공소가 1곳일 때) - 사람이 매번 체크할
+          // 필요 없어짐.
           '<input type="text" placeholder="컬러" class="c-color inner-inp" style="width:60px">'+
           '<span class="c-yardage">원단량: —</span>'+
         '</div>'+
