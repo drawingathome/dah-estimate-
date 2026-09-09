@@ -213,13 +213,23 @@ function lockEstimateForm(locked) {
     });
     section.classList.toggle('estimate-locked', locked);
   });
-  // 2026-09-08: lockable-rail-svc 섹션 안에 저장/출력/문서자료/새견적서/
-  // 대시보드이동 버튼들(.action-bar 전체)이 같이 들어있어서, 위 순회에서
-  // 이 버튼들까지 잠겨버렸음(확정된 견적서도 저장·출력·새 견적서 시작은
-  // 당연히 가능해야 하는데 막혀버린 버그를 재현테스트로 발견함 - 처음엔
-  // .action-main만 예외처리했다가, 그 바로 위의 "새 견적서" 버튼이 여전히
-  // 잠겨있는 걸 재확인 과정에서 추가로 발견해 상위 .action-bar 전체로 확장).
-  // 이 버튼들은 확정 여부와 무관하게 항상 눌려야 하므로 다시 활성화.
+  // 2026-09-08(선혜님 발견 - "발주서는 아예 쓸 수가 없는 구조야" 논의 중
+  // "실제로 원단/거래처는 계약(확정견적)된 후에야 정해진다"는 실제 업무
+  // 흐름 확인): 원단명/거래처/가공소/컬러/레일거래처(.inner-fields) 칸은
+  // 애초에 print-hide(고객용 견적서 출력물엔 안 보이는 순수 내부 발주용
+  // 정보)로 설계되어 있었음 - 확정 버튼의 문구("이 견적 내용(사이즈·금액)을
+  // 확정할까요")도 정확히 "고객에게 보여줄 견적 내용"을 잠그는 것이지
+  // "내부 발주정보"까지 포함하는 게 아니었는데, 방금 전(같은 세션) 만든
+  // 잠금 로직이 실수로 이 내부정보 칸까지 같이 잠가버려서 - 확정(계약) 후에
+  // 원단/거래처를 정하는 실제 업무 흐름 자체가 막히는 정반대 상황이 될
+  // 뻔했음. 견적 확정 여부와 무관하게 항상 입력 가능해야 하므로 잠금
+  // 대상에서 제외.
+  document.querySelectorAll('.inner-fields').forEach(function(wrap) {
+    wrap.querySelectorAll('input, select, button, textarea').forEach(function(el) {
+      el.disabled = false;
+    });
+  });
+  // 위 action-bar 예외처리와 마찬가지로, action-bar도 계속 활성 유지.
   var actionBar = document.querySelector('.action-bar');
   if (actionBar) {
     actionBar.querySelectorAll('input, select, button, textarea').forEach(function(el) {
