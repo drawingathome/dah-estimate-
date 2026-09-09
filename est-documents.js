@@ -523,7 +523,13 @@ function printForCustomer() {
 }
 
 function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, today) {
-  var out = '<div class="pv-wrap" style="max-width:720px;margin:0 auto;background:#fff;padding:36px 32px">';
+  // 2026-09-09(선혜님 지시 - "모든 발주서에는 하단에 비고 칸을 만들어서
+  // 코멘트 남길 수 있게 하자" + "발주 페이지 자체를 수정할 수 있게":
+  // data-vendor로 이 문서가 어느 거래처 것인지 표시해서, 인쇄 버튼을
+  // 눌러 최종 저장할 때 화면에서 이 블록을 다시 찾아 수정된 내용
+  // 그대로(비고 포함) 저장할 수 있게 함 - 실측/시공 의뢰서가 이미 쓰던
+  // "미리보기에서 고친 뒤 인쇄 버튼 눌러야 최종 저장" 방식과 동일.
+  var out = '<div class="pv-wrap" data-vendor="'+escHtml(vendor)+'" style="max-width:720px;margin:0 auto;background:#fff;padding:36px 32px">';
 
   out += '<div style="text-align:center;margin-bottom:6px">'
       +'<div style="font-size:22px;font-weight:700;letter-spacing:1.5px;color:#282828">DRAWING at HOME</div>'
@@ -568,9 +574,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   });
   out += '</tbody></table>';
 
-  if(extraNote) {
-    out += '<div style="margin-top:var(--sp-6);text-align:center;font-size:13px;color:#E4483A;font-weight:600;line-height:1.7;white-space:pre-wrap">'+escHtml(extraNote)+'</div>';
-  }
+  out += '<div class="pv-vendor-note-editable" contenteditable="true" style="margin-top:var(--sp-6);text-align:center;font-size:13px;color:#E4483A;font-weight:600;line-height:1.7;white-space:pre-wrap;outline:none;border:1px dashed #F0C9C4;border-radius:8px;padding:8px" data-placeholder="비고(클릭해서 직접 입력)">'+escHtml(extraNote||'')+'</div>';
 
   out += '</div>';
   return out;
@@ -698,17 +702,16 @@ function printForVendor(skipPrompts) {
   calcTotal();
   var extraNote = skipPrompts ? '' : window.prompt('발주서에 남길 추가 메모가 있으면 입력해주세요 (없으면 취소 또는 빈칸으로 확인)', '');
   var html = buildVendorHTML(extraNote);
-
-  // 구글드라이브에 거래처별로 각각 저장 (카테고리 자동 분류)
-  var collected = collectVendorGroups();
-  if (collected.itemCount > 0) {
-    var todayStr = (function(){ var d=new Date(); return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일'; })();
-    Object.keys(collected.groups).forEach(function(vendor){
-      var oneDoc = buildVendorDocForOne(vendor, collected.groups[vendor], collected.cName, collected.cStaff, extraNote, todayStr);
-      saveDocumentToDrive(vendorCategory(vendor), collected.cName || '미지정고객', vendor, oneDoc, collected.cStaff);
-    });
-    updateOrderStatusFromVendorGroups(collected.groups);
-  }
+  // 2026-09-09(선혜님 지시 - "발주 페이지 자체를 수정할 수 있게도
+  // 적용이 되어있니??" → "이제 발주서도 보기 화면에서 직접 고칠 수
+  // 있게(실측/시공과 동일하게)"): 예전엔 미리보기가 뜨기도 전에 이
+  // 시점(함수 시작 직후)에 구글드라이브 저장 + order_status 갱신이
+  // 이미 끝나버려서, 미리보기에서 비고를 고쳐도 이미 저장된 파일엔
+  // 반영이 안 됐음(고칠 수도 없었음 - contenteditable 자체가 없었음).
+  // 실측/시공 의뢰서가 이미 8/26에 이렇게 개선됐던 것과 동일하게,
+  // 저장을 "인쇄/PDF저장" 버튼을 실제로 눌러 최종 확정하는 시점으로
+  // 미룸(아래 printBtn.onclick 참고) - 그때 화면에 떠 있는(수정됐을
+  // 수 있는) 최신 내용을 그대로 저장.
 
   var existing = document.getElementById('pv-overlay');
   if(existing) existing.remove();
@@ -744,7 +747,19 @@ function printForVendor(skipPrompts) {
   closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap;flex-shrink:0';
   var printBtn = document.createElement('button');
   printBtn.textContent = '인쇄 / PDF 저장';
-  printBtn.onclick = openPdfModal;
+  printBtn.onclick = function() {
+    try {
+      var collected2 = collectVendorGroups();
+      if (collected2.itemCount > 0) {
+        inner.querySelectorAll('[data-vendor]').forEach(function(vendorBlock){
+          var vendor = vendorBlock.getAttribute('data-vendor');
+          saveDocumentToDrive(vendorCategory(vendor), collected2.cName || '미지정고객', vendor, vendorBlock.outerHTML, collected2.cStaff);
+        });
+        updateOrderStatusFromVendorGroups(collected2.groups);
+      }
+    } catch (eSaveVendor) { console.warn('발주서 드라이브 저장 실패:', eSaveVendor); }
+    openPdfModal();
+  };
   printBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;flex-shrink:0';
   navBtns.appendChild(closeBtn);
   navBtns.appendChild(printBtn);
