@@ -920,7 +920,15 @@ function buildRequestHTML(kind, extraNote) {
       });
       if (prodVendors.length === 1) productionVendorName = prodVendors[0].name || '';
     }
-    function withProduction(etc) {
+    function withProduction(etc, isWorkshop) {
+      // 2026-09-08(선혜님 지적 - "거래처도 여전히 안되네", 실제 최시내
+      // 고객 데이터로 재현 확인): 이 함수가 각 항목이 실제로 "가공소"를
+      // 썼는지(vendorIsWorkshop 체크 여부)는 전혀 확인 안 하고, 시스템
+      // 전체에 production 카테고리 거래처가 1곳뿐이면 무조건 그 이름을
+      // 붙이고 있었음 - 실제로 모든 항목이 vendorIsWorkshop:false(가공소
+      // 체크 안 함, 원단 거래처도 비어있음)인데도 "캔가공소"가 무조건
+      // 표시되던 명백한 오류. 실제로 가공소를 쓴 항목일 때만 붙도록 수정.
+      if (!isWorkshop) return etc || '—';
       if (!etc || etc === '—') return productionVendorName || '—';
       return productionVendorName ? (productionVendorName + '/' + etc) : etc;
     }
@@ -965,6 +973,7 @@ function buildRequestHTML(kind, extraNote) {
       var space  = tr.querySelector('.space-inp')?.value || '';
       var vendor = tr.querySelector('.c-vendor')?.value || '';
       var railVendor = tr.querySelector('.c-rail-vendor')?.value || '';
+      var isWorkshop = tr.querySelector('.vendor-is-workshop')?.checked || false;
       var mw = tr.querySelector('.mw')?.value || '';
       var mh = tr.querySelector('.mh')?.value || '';
       var pleat = (tr.querySelector('.pleat-type')?.value || '').replace('형','');
@@ -985,7 +994,7 @@ function buildRequestHTML(kind, extraNote) {
         // 2026-08-13: 원단거래처(vendor)는 시공기사가 알 필요없는 내부정보라
         // 노출하지 않고, 대신 레일거래처(railVendor)를 노출 - 레일은 브랜드별로
         // (전동레일 등) 시공방식이 달라서 기사님이 반드시 알아야 함(선혜님 확인)
-        etc: withProduction(railVendor)
+        etc: withProduction(railVendor, isWorkshop)
       });
     });
     document.querySelectorAll('#blind-body tr').forEach(function(tr){
