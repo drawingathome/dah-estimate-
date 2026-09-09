@@ -304,6 +304,9 @@ function fetchVendorListFromCloud(callback) {
               dl.appendChild(opt);
             });
           }
+          // 2026-09-09: 거래처 목록이 방금 로드/갱신됐으니, 블라인드
+          // 거래처 필수선택 드롭다운들도 최신 목록으로 채움.
+          if (typeof refreshBlindVendorOptions === 'function') refreshBlindVendorOptions();
         }
       }
     } catch(e) {}

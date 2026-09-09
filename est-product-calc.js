@@ -265,7 +265,13 @@ function addBlindRow() {
       '<div class="inner-fields print-hide">'+
         '<div class="inner-row">'+
           '<input type="text" list="blind-list" placeholder="원단명" class="inner-inp">'+
-          '<input type="text" list="vendor-list" placeholder="블라인드 거래처" class="inner-inp" style="width:72px">'+
+          // 2026-09-09(선혜님 지시 - "블라인드도 윈텍과 덱스터중 한 곳이
+          // 되어야 해"): 자유입력(자동완성)이었던 걸 필수 선택 드롭다운으로
+          // 변경 - 오타/누락 없이 반드시 등록된 거래처 중 하나를 고르게 함.
+          // 처음엔 빈 채로 만들고, 거래처 목록이 로드되면(설정에서 blind
+          // 카테고리로 등록된 곳들) refreshBlindVendorOptions()가 채움 -
+          // 새 업체가 나중에 추가되면 코드 수정 없이 자동으로 선택지에 반영됨.
+          '<select class="inner-inp b-vendor" required style="width:72px"><option value="">거래처 선택</option></select>'+
           '<input type="text" placeholder="컬러" class="inner-inp" style="width:60px">'+
         '</div>'+
       '</div>'+
@@ -296,6 +302,27 @@ function addBlindRow() {
   setupRowDragReorder('blind-body');
   autoAddBlindSvc();
   renderEmptyState();
+  if (typeof refreshBlindVendorOptions === 'function') refreshBlindVendorOptions();
+}
+
+// 2026-09-09: 블라인드 거래처 select들을 전부(새 행 포함) 최신 거래처
+// 목록(blind 카테고리)으로 채움 - 설정탭에서 거래처가 추가/변경될 때마다
+// 다시 호출하면 항상 최신 상태 유지. 기존 선택값은 목록에 남아있으면
+// 그대로 보존.
+function refreshBlindVendorOptions() {
+  if (!Array.isArray(window._dahVendorListRaw)) return;
+  var blindVendors = window._dahVendorListRaw.filter(function(v) {
+    return v && Array.isArray(v.categories) && v.categories.indexOf('blind') >= 0;
+  });
+  document.querySelectorAll('.b-vendor').forEach(function(sel) {
+    var prevValue = sel.value;
+    var optsHtml = '<option value="">거래처 선택</option>';
+    blindVendors.forEach(function(v) {
+      optsHtml += '<option value="'+String(v.name||'').replace(/"/g,'&quot;')+'">'+String(v.name||'')+'</option>';
+    });
+    sel.innerHTML = optsHtml;
+    if (prevValue && blindVendors.some(function(v){ return v.name === prevValue; })) sel.value = prevValue;
+  });
 }
 
 // 2026-08-09: 블라인드 최소면적 규칙 — 원래 calcBlindRow/calcTotal 두 곳에
