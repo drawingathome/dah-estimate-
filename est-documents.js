@@ -1217,6 +1217,26 @@ function printRequest(kind, skipPrompts) {
       var statusUpdate = {};
       statusUpdate[kind] = { done: true, vendor: installerNameForStatus, orderDate: new Date().toISOString().slice(0, 10) };
       if (typeof updateOrderStatus === 'function') updateOrderStatus(statusUpdate);
+      // 2026-09-09(선혜님 지시 - "실측/시공/발주가 다 따로 되어있다" →
+      // 업무처리 통합탭 기획 중 "이 정보가 왜 저장이 안 되지" 확인):
+      // 설치기사 이름/연락처가 지금까지 DB에 전혀 저장이 안 되고 있었음 -
+      // 같은 견적서를 다른 날 다시 열면(예: 실측 때 입력한 정보를 나중에
+      // 시공의뢰서 만들 때 재사용) 완전히 사라져서 매번 새로 입력해야
+      // 했음. estimates.installer_name/installer_phone 컬럼 신설,
+      // 발주상태 기록과 같은 시점(실제 저장 확정 시점)에 즉시 DB 반영 -
+      // 견적서 "저장" 버튼을 따로 안 눌러도 남도록.
+      if (window._editingEstDbId && typeof SUPABASE_URL !== 'undefined') {
+        var installerPhoneForSave = document.getElementById('c-installer-phone')?.value || '';
+        try {
+          var xhrInstaller = new XMLHttpRequest();
+          xhrInstaller.open('PATCH', SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(window._editingEstDbId), true);
+          xhrInstaller.setRequestHeader('apikey', SUPABASE_KEY);
+          xhrInstaller.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+          xhrInstaller.setRequestHeader('Content-Type', 'application/json');
+          xhrInstaller.onerror = function() { console.warn('설치기사 정보 저장 실패'); };
+          xhrInstaller.send(JSON.stringify({ installer_name: installerNameForStatus, installer_phone: installerPhoneForSave }));
+        } catch (eInstaller) { console.warn('설치기사 정보 저장 실패:', eInstaller); }
+      }
     } catch(e) { console.warn('의뢰서 드라이브 저장 실패:', e); }
     openPdfModal();
   };
