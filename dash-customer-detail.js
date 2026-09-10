@@ -617,7 +617,6 @@ function renderDetailStageSection(c, body, isMaster) {
   var progressBar = div('display:flex;gap:3px;margin-bottom:10px', []);
   STAGES.forEach(function(s) {
     var done = STAGE_NUM[s] <= STAGE_NUM[c.stage];
-    var cur  = s === c.stage;
     var seg  = div(
       'flex:1;height:3px;border-radius:2px;background:'+(done?'var(--dark)':'var(--border)'),[]
     );

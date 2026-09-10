@@ -66,7 +66,6 @@ function getPriceVal(el) {
   return m ? parseInt(m[0]) : 0;
 }
 
-const LOGO_SRC = 'logo.png';
 const SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
 function escHtml(s) {
   return String(s == null ? '' : s)

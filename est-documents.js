@@ -173,7 +173,6 @@ function buildCustomerHTML() {
     // "시공 서비스" 표 자체에 4줄(값 있는 것만)로 정리해서 보여줌
     // (기존엔 표는 한 줄로 뭉뚱그리고 세부내역을 참고사항에 텍스트로
     // 넣었었는데, 선혜님 정정으로 "시공서비스 표 안에" 정리하는 것으로 변경).
-    var svcTotal = 0;
     // 2026-08-15: 참고사항을 4줄 고정 구조로 재구성(선혜님 요청):
     // ①실측+시공비(지역별) ②레일 ③전동 및 부자재 ④기타 옵션(블라인드옵션 외)
     var measureInstallSum = 0;
@@ -187,7 +186,6 @@ function buildCustomerHTML() {
       var qty = parseFloat(tds[3]?.querySelector('input')?.value) || 1;
       var amt = price * qty;
       if (!desc || !amt) return;
-      svcTotal += amt;
       var isRailMaterial = tr.hasAttribute('data-rail-src');
       var isRailInstall = tr.hasAttribute('data-railcost-src');
       var isRegionInstall = tr.hasAttribute('data-install-base');
@@ -1053,7 +1051,10 @@ function printForVendor() {
   document.body.classList.add('preview-open');
 }
 
-var _selectedPdfOpt = 'fit';
+// 2026-09-10(eslint로 발견): _selectedPdfOpt가 est-customer-load.js에
+// 이미 선언되어 있는데(실제 로직도 거기서 관리됨) 여기서도 동일하게
+// 중복 선언되고 있었음 - 두 파일이 같은 페이지에서 함께 로드되므로
+// 전역 변수가 두 곳에서 따로 초기화되는 혼란스러운 구조였음. 중복 제거.
 
 function buildRequestHTML(kind, extraNote) {
   // kind: 'measure' (실측 의뢰서) or 'install' (시공 의뢰서)
@@ -1518,7 +1519,6 @@ function _showRequestPreview(kind, label, extraNote) {
   var html = buildRequestHTML(kind, extraNote);
 
   var cNameForDrive = document.getElementById('c-name')?.value || '미지정고객';
-  var instNameForDrive = document.getElementById('c-installer-name')?.value || '';
   // 2026-08-26(선혜님 발견 — "자동으로 적히지만 수정할 부분이 있을 수도 있는데,
   // 마지막 발송전에 수정할 수 있게 가능하니"): 예전엔 미리보기가 뜨기도 전에
   // 이 시점(생성 직후)에 구글드라이브 저장이 먼저 끝나버려서, 그 뒤 미리보기에서
