@@ -620,7 +620,27 @@ function openVendorInfoModal() {
   closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap';
   var nextBtn = document.createElement('button');
   nextBtn.textContent = '발주서 보기 →';
-  nextBtn.onclick = function(){ ov.remove(); printForVendor(false); };
+  nextBtn.onclick = function(){
+    // 2026-09-09(선혜님 - "니가 전문업체인데 시뮬레이션 돌려봐" 요청으로
+    // 발견): 블라인드 거래처를 <select required>로 만들었지만, <form>
+    // 태그 없이 버튼 클릭으로 저장하는 구조라 required 속성이 실제로는
+    // 아무 효력이 없었음(브라우저가 강제 안 함) - 저장 시점(가견적 단계,
+    // 아직 거래처를 모를 수 있는 정상적인 상황)엔 막으면 안 되므로, 대신
+    // 여기(발주서를 실제로 보려는 시점)에서 명시적으로 검증.
+    var missingVendorSpaces = [];
+    document.querySelectorAll('#blind-body tr').forEach(function(tr){
+      var vendorSel = tr.querySelector('.b-vendor');
+      var fabric = tr.querySelector('.b-fabric')?.value || '';
+      if (vendorSel && !vendorSel.value && fabric) {
+        missingVendorSpaces.push(tr.querySelector('.space-inp')?.value || '(위치 미입력)');
+      }
+    });
+    if (missingVendorSpaces.length > 0) {
+      alert('블라인드 거래처를 아직 선택 안 한 항목이 있어요: ' + missingVendorSpaces.join(', ') + '\n거래처를 선택해주세요.');
+      return;
+    }
+    ov.remove(); printForVendor(false);
+  };
   nextBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap';
   navBtns.appendChild(closeBtn);
   navBtns.appendChild(nextBtn);
