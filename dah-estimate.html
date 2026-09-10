@@ -831,7 +831,7 @@
 <script src="/est-product-calc.js?v=202609091100"></script>
 <script src="/est-survey.js?v=202608190049"></script>
 <script src="/est-save.js?v=202609091000"></script>
-<script src="/est-documents.js?v=202609091200"></script>
+<script src="/est-documents.js?v=202609091300"></script>
 <script src="/est-customer-load.js?v=202609091100"></script>
 <script src="/est-misc.js?v=202609091100"></script>
 <script>
@@ -1179,7 +1179,7 @@ var currentTab = 'ga';
                 if ((autoDoc === 'install' || autoDoc === 'measure') && typeof printRequest === 'function') {
                   printRequest(autoDoc, true); // true = 설치기사 정보 재확인 prompt 건너뜀
                 } else if (autoDoc === 'vendor' && typeof printForVendor === 'function') {
-                  printForVendor(true); // true = 추가메모 prompt 건너뜀
+                  printForVendor(); // 2026-09-09: prompt 자체를 없애서 인자 불필요해짐
                 }
               }
               runAutoDoc();

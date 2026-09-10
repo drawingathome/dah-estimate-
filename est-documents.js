@@ -639,7 +639,7 @@ function openVendorInfoModal() {
       alert('블라인드 거래처를 아직 선택 안 한 항목이 있어요: ' + missingVendorSpaces.join(', ') + '\n거래처를 선택해주세요.');
       return;
     }
-    ov.remove(); printForVendor(false);
+    ov.remove(); printForVendor();
   };
   nextBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap';
   navBtns.appendChild(closeBtn);
@@ -910,9 +910,17 @@ function buildVendorHTML(extraNote) {
   return out;
 }
 
-function printForVendor(skipPrompts) {
+function printForVendor() {
   calcTotal();
-  var extraNote = skipPrompts ? '' : window.prompt('발주서에 남길 추가 메모가 있으면 입력해주세요 (없으면 취소 또는 빈칸으로 확인)', '');
+  // 2026-09-09(선혜님 지적 - "이거는 왜 이렇게 미리 알림으로 띄우는거야??
+  // ... 니가 디테일하게 보지 않은거 같애!!"): 실측/시공(printRequest)은
+  // 큰 팝업으로 개선했으면서, 발주서(printForVendor)는 예전 window.prompt()
+  // 방식이 그대로 남아있었음 - 게다가 이미 각 거래처 문서마다 직접 수정
+  // 가능한 비고 칸(.pv-vendor-note-editable, 발주서 페이지 자체 수정
+  // 개선 때 만듦)이 있어서 이 prompt는 완전히 중복이었음. 미리보기가
+  // 뜨기도 전에 불쑥 끼어드는 것도 방금 만든 팝업→미리보기 흐름을
+  // 방해했음 - 완전 제거.
+  var extraNote = '';
   var html = buildVendorHTML(extraNote);
   // 2026-09-09(선혜님 지시 - "발주 페이지 자체를 수정할 수 있게도
   // 적용이 되어있니??" → "이제 발주서도 보기 화면에서 직접 고칠 수
