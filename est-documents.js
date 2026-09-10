@@ -1137,7 +1137,12 @@ function buildRequestHTML(kind, extraNote) {
       var space  = tr.querySelector('.space-inp')?.value || '';
       var vendor = tr.querySelector('.c-vendor')?.value || '';
       var railVendor = tr.querySelector('.c-rail-vendor')?.value || '';
-      var isWorkshop = tr.querySelector('.vendor-is-workshop')?.checked || false;
+      // 2026-09-09(오늘 만든 4단계 - "커튼은 무조건 제작을 해애해"로
+      // 가공소 체크박스를 없앴는데, 이 함수(실측/시공 문서용)는 그
+      // 체크박스를 여전히 읽고 있어서 항상 false가 되던 회귀버그를
+      // 코드정리 중 발견 - collectVendorGroups()(발주서용)와 동일하게
+      // 자동배정 여부로 판단하도록 통일.
+      var isWorkshop = !!getAutoProductionVendorName();
       var mw = tr.querySelector('.mw')?.value || '';
       var mh = tr.querySelector('.mh')?.value || '';
       var pleat = (tr.querySelector('.pleat-type')?.value || '').replace('형','');

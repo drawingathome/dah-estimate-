@@ -96,7 +96,9 @@ function collectLineItems() {
       type: 'curtain', space: space, displayName: displayName, fabric: fabric,
       vendor: tr.querySelector('.c-vendor')?.value||'', color: tr.querySelector('.c-color')?.value||'',
       railVendor: tr.querySelector('.c-rail-vendor')?.value||'',
-      vendorIsWorkshop: tr.querySelector('.vendor-is-workshop')?.checked || false,
+      // 2026-09-09(코드정리 중 발견): vendorIsWorkshop 저장 제거 - 4단계
+      // 개선으로 가공소 체크박스 자체가 없어져서(항상 자동배정), 이 필드는
+      // 이제 항상 무의미한 false만 저장되고 있었음(죽은 코드).
       pleatType: tr.querySelector('.pleat-type')?.value||'', openType: tr.querySelector('.open-type')?.value||'',
       heightAdjust: tr.querySelector('.height-adjust')?.value||'-3',
       hemType: tr.querySelector('.hem-type')?.value||'', mw: tr.querySelector('.mw')?.value||'',
@@ -262,7 +264,6 @@ function loadDraft() {
             if (tr.querySelector('.c-vendor')) tr.querySelector('.c-vendor').value = item.vendor || '';
             if (tr.querySelector('.c-rail-vendor')) tr.querySelector('.c-rail-vendor').value = item.railVendor || '';
             if (tr.querySelector('.c-color')) tr.querySelector('.c-color').value = item.color || '';
-            if (tr.querySelector('.vendor-is-workshop')) tr.querySelector('.vendor-is-workshop').checked = !!item.vendorIsWorkshop;
             if (tr.querySelector('.pleat-type')) tr.querySelector('.pleat-type').value = item.pleatType || '';
             if (tr.querySelector('.open-type')) tr.querySelector('.open-type').value = item.openType || '';
             if (tr.querySelector('.height-adjust')) tr.querySelector('.height-adjust').value = item.heightAdjust || '-3';

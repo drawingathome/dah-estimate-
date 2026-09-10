@@ -67,8 +67,6 @@ function renderEstList() {
 
   if (cntEl) cntEl.textContent = '총 ' + list.length + '건';
 
-  var CONTRACT_KO = {pending:'가견적', contracted:'계약됨', rejected:'미계약'};
-  var CONTRACT_COLOR = {pending:'var(--sub)', contracted:'#2F6690', rejected:'#C0392B'};
   var STATUS_KO = {ga:'가견적서', final:'최종견적서'};
 
   if (list.length === 0) {
@@ -86,10 +84,13 @@ function renderEstList() {
 
   list.forEach(function(e, i) {
     var isLast = i === list.length - 1;
-    // contractStatus가 비어있으면(예전 이관데이터 등) status 기준으로 유추
-    // — "최종견적서"인데 "가견적" 배지가 붙는 모순을 방지 (2026-08-04)
-    var cs = e.contractStatus || (e.status === 'final' ? 'contracted' : 'pending');
+    // 2026-09-09(코드정리 중 발견 - 오늘 세 번째로 찾은 쌍둥이 함수):
+    // renderDetailEstTabInner/renderEstimateHistory와 정확히 같은 문제
+    // (계약상태 contract_status를 보여주고 있었는데, 이건 사람이 직접
+    // 눌러야만 바뀌는 별도 필드라 실제 진행상황과 어긋나기 쉬움) - 이
+    // 목록 화면에도 독립적으로 존재하고 있었음. 실제 현재단계로 통일.
     var isFinal = e.status === 'final';
+    var currentStage = (typeof getCustomerCurrentStage === 'function') ? getCustomerCurrentStage(e.clientName, e.clientId) : '';
 
     var row = el('div', {class: 'est-list-item', style:
       'padding:12px 16px;border-bottom:' + (isLast?'none':'1px solid var(--border)') + ';' +
@@ -112,40 +113,10 @@ function renderEstList() {
     typeTag.textContent = STATUS_KO[e.status] || '가견적서';
 
     var csBadge = el('span', {style:
-      'margin-left:auto;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;cursor:pointer;' +
-      'background:' + (cs==='contracted'?'#EEF5F2':cs==='rejected'?'#FDECEA':'#F5F2EE') + ';' +
-      'color:' + CONTRACT_COLOR[cs]
+      'margin-left:auto;font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;' +
+      'background:#F5F2EE;color:' + (typeof stageColorFor === 'function' ? stageColorFor(currentStage) : 'var(--sub)')
     });
-    csBadge.textContent = CONTRACT_KO[cs] || '가견적';
-    // 2026-08-24(선혜님 발견 — "확정 미계약 이런 부분은 안보인다"): 고객상세
-    // 화면의 배지는 눌러서 바뀌는데, 이 메인 견적서 목록 화면의 배지는 그냥
-    // 보여주기만 하는 텍스트라 눌러도 아무 반응이 없었음. 똑같이 클릭해서
-    // 바뀌도록(계약됨↔미계약 한번에 토글) 추가.
-    (function(entry, badge){
-      badge.addEventListener('click', function(ev){
-        ev.stopPropagation(); // row 클릭(고객상세 이동)으로 안 번지게
-        var cur = entry.contractStatus || (entry.status === 'final' ? 'contracted' : 'pending');
-        var next = cur === 'rejected' ? 'contracted' : cur === 'contracted' ? 'rejected' : 'contracted';
-        // 2026-08-24(선혜님 요청 — "확인창이 한번 더 떠야 전문성이 있지"):
-        // 고객상세 화면과 동일하게, 바꾸기 전 한 번 확인받도록 함.
-        var label = entry.clientName || '이 고객';
-        if (!confirm(label + ' 님을 "' + CONTRACT_KO[next] + '"(으)로 변경할까요?')) return;
-        entry.contractStatus = next;
-        try {
-          var arr = JSON.parse(localStorage.getItem('dah_saved')||'[]');
-          var idx = arr.findIndex(function(x){ return x.id === entry.id || x.no === entry.no; });
-          if (idx>=0) { arr[idx].contractStatus = next; localStorage.setItem('dah_saved', JSON.stringify(arr)); }
-        } catch(ex2){}
-        if (entry.id && typeof entry.id === 'string' && entry.id.length > 20 && typeof sbXHR === 'function') {
-          sbXHR('PATCH', 'estimates?id=eq.' + entry.id, { contract_status: next }, function(err){
-            if (err) console.warn('계약상태 서버 저장 실패:', err);
-          });
-        }
-        badge.textContent = CONTRACT_KO[next];
-        badge.style.background = next==='contracted'?'#EEF5F2':next==='rejected'?'#FDECEA':'#F5F2EE';
-        badge.style.color = CONTRACT_COLOR[next];
-      });
-    })(e, csBadge);
+    csBadge.textContent = currentStage || '—';
 
     top.appendChild(noSpan); top.appendChild(typeTag);
     if (e.custType === 'rebuy') {

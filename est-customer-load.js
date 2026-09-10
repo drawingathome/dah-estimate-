@@ -427,7 +427,6 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       var fb = ctr.querySelector('.c-fabric'); if (fb) fb.value = it.fabric || '';
       var vd = ctr.querySelector('.c-vendor'); if (vd) vd.value = it.vendor || '';
       var rvd = ctr.querySelector('.c-rail-vendor'); if (rvd) rvd.value = it.railVendor || '';
-      var vw = ctr.querySelector('.vendor-is-workshop'); if (vw) vw.checked = !!it.vendorIsWorkshop;
       var cl = ctr.querySelector('.c-color'); if (cl) cl.value = it.color || '';
       var pt = ctr.querySelector('.pleat-type'); if (pt && it.pleatType) pt.value = it.pleatType;
       var ot = ctr.querySelector('.open-type'); if (ot && it.openType) ot.value = it.openType;
