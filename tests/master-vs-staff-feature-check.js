@@ -104,14 +104,30 @@ async function testRoleAndViewport(role, vw, label, port) {
   if (estPostCount > 0) findings.push(`[중복방지] 새로 생성(POST)됨(0이어야 정상) POST=${estPostCount}`);
   if (estPatchCount < 1) findings.push(`[중복방지] 기존 레코드로 PATCH 안 됨`);
 
-  // 2) 설치기사 자동입력
+  // 2) 설치기사 자동입력 (2026-09-09: window.prompt() 3연발이 큰 팝업
+  // 화면으로 바뀌면서, printRequest() 호출 직후엔 이 팝업이 먼저 뜸 -
+  // 팝업 안 입력창에 자동조회된 값이 미리 채워져 있는지 확인하고,
+  // "확인" 버튼을 눌러야 그 다음 실제 미리보기(pv-overlay)로 넘어감.)
   await page.evaluate(() => { printRequest('measure'); });
   await new Promise(r => setTimeout(r, 600));
-  const instName = await page.evaluate(() => document.getElementById('c-installer-name')?.value);
-  const instPhone = await page.evaluate(() => document.getElementById('c-installer-phone')?.value);
+  const instName = await page.evaluate(() => {
+    var modal = document.getElementById('installer-info-modal');
+    return modal ? modal.querySelectorAll('input')[0]?.value : null;
+  });
+  const instPhone = await page.evaluate(() => {
+    var modal = document.getElementById('installer-info-modal');
+    return modal ? modal.querySelectorAll('input')[1]?.value : null;
+  });
   if (instName !== '역할검증설치기사' || instPhone !== '010-9999-0000') {
     findings.push(`[설치기사자동입력] 실패 - 이름="${instName}" 연락처="${instPhone}"`);
   }
+  // 팝업의 "확인" 버튼을 눌러 실제 미리보기로 진행
+  await page.evaluate(() => {
+    var modal = document.getElementById('installer-info-modal');
+    var confirmBtn = modal ? Array.from(modal.querySelectorAll('button')).find(b => b.textContent.includes('확인')) : null;
+    if (confirmBtn) confirmBtn.click();
+  });
+  await new Promise(r => setTimeout(r, 600));
 
   // 3) 의뢰서 편집 가능 여부
   const editableExists = await page.evaluate(() => {

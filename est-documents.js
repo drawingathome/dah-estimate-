@@ -1295,21 +1295,98 @@ function printRequest(kind, skipPrompts) {
       currentInstallerPhone = installVendors[0].phone || '';
     }
   }
-  // 2026-09-01(선혜님 지시 - "왜 2개를 만드니"로 만든 대시보드 "다시보기"
-  // 자동실행 경로): 이미 저장된 견적을 그냥 다시 열어보는 거라, 매번
-  // 설치기사 정보를 재확인하는 창을 띄우면 성가심 - skipPrompts가 true면
-  // 조용히 넘어가고(기존 저장값 또는 자동조회값 그대로), 추가메모도 안 물어봄.
-  var newInstallerName = currentInstallerName, newInstallerPhone = currentInstallerPhone, extraNote = '';
+  // 2026-09-09(선혜님 지시 - "실측/시공을 어떻게 하는지" 논의에서 확정 -
+  // "지금 창(설치기사명/연락처 묻는 것)을 발주서처럼 큰 팝업 화면으로
+  // 개선하기"): window.prompt() 3연발(이름→연락처→비고, 한 번에 하나씩만
+  // 물어봐서 어수선함)을 발주정보 팝업과 같은 스타일의 큰 화면 하나로
+  // 교체. 실제 미리보기 표시 로직은 _showRequestPreview()로 분리해서,
+  // 팝업의 "확인" 콜백에서 호출하도록 함(skipPrompts 경로는 팝업 없이
+  // 바로 호출).
   if (!skipPrompts) {
-    newInstallerName = window.prompt(label+' 담당 설치기사명을 입력해주세요 (없으면 빈칸으로 확인)', currentInstallerName);
-    if (newInstallerName !== null && installerNameEl) installerNameEl.value = newInstallerName;
-    newInstallerPhone = window.prompt(label+' 담당 설치기사 연락처를 입력해주세요 (없으면 빈칸으로 확인)', currentInstallerPhone);
-    if (newInstallerPhone !== null && installerPhoneEl) installerPhoneEl.value = newInstallerPhone;
-    extraNote = window.prompt(label+' 담당자에게 남길 추가 메모가 있으면 입력해주세요 (없으면 취소 또는 빈칸으로 확인)', '');
-  } else {
-    if (installerNameEl) installerNameEl.value = currentInstallerName;
-    if (installerPhoneEl) installerPhoneEl.value = currentInstallerPhone;
+    openInstallerInfoModal(label, currentInstallerName, currentInstallerPhone, function(name, phone, note) {
+      if (installerNameEl) installerNameEl.value = name;
+      if (installerPhoneEl) installerPhoneEl.value = phone;
+      _showRequestPreview(kind, label, note);
+    });
+    return;
   }
+  if (installerNameEl) installerNameEl.value = currentInstallerName;
+  if (installerPhoneEl) installerPhoneEl.value = currentInstallerPhone;
+  _showRequestPreview(kind, label, '');
+}
+
+// 2026-09-09: 설치기사명/연락처/비고를 한 화면에서 입력받는 팝업 -
+// 발주정보 입력 팝업과 같은 스타일. 확인을 누르면 onConfirm(name, phone,
+// note)를 호출하고, 취소/닫기를 누르면 아무 것도 안 하고 닫힘.
+function openInstallerInfoModal(label, currentName, currentPhone, onConfirm) {
+  var existing = document.getElementById('installer-info-modal');
+  if (existing) existing.remove();
+
+  var ov = document.createElement('div');
+  ov.id = 'installer-info-modal';
+  ov.className = 'print-hide';
+  ov.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#F5F2EE;z-index:10000;overflow-y:auto;display:flex;flex-direction:column';
+
+  var nav = document.createElement('div');
+  nav.style.cssText = 'position:sticky;top:0;z-index:10001;background:#282828;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;flex-shrink:0';
+  var navLabel = document.createElement('span');
+  navLabel.textContent = label + ' 담당자 정보';
+  navLabel.style.cssText = 'color:rgba(255,255,255,0.9);font-size:13px;font-weight:700;white-space:nowrap';
+  var closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕ 닫기';
+  closeBtn.onclick = function(){ ov.remove(); };
+  closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap';
+  nav.appendChild(navLabel);
+  nav.appendChild(closeBtn);
+
+  var content = document.createElement('div');
+  content.style.cssText = 'flex:1;padding:24px 16px 60px;display:flex;justify-content:center';
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'width:100%;max-width:420px;background:#fff;border-radius:12px;padding:20px';
+
+  function makeField(labelText, placeholder, value) {
+    var fieldWrap = document.createElement('div');
+    fieldWrap.style.cssText = 'margin-bottom:14px';
+    var lbl = document.createElement('div');
+    lbl.textContent = labelText;
+    lbl.style.cssText = 'font-size:12px;font-weight:700;color:#282828;margin-bottom:6px';
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = placeholder;
+    input.value = value || '';
+    input.style.cssText = 'width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box';
+    fieldWrap.appendChild(lbl); fieldWrap.appendChild(input);
+    wrap.appendChild(fieldWrap);
+    return input;
+  }
+
+  var nameInput = makeField('설치기사명', '이름을 입력하세요', currentName);
+  var phoneInput = makeField('연락처', '010-0000-0000', currentPhone);
+
+  var noteLbl = document.createElement('div');
+  noteLbl.textContent = '비고 (선택)';
+  noteLbl.style.cssText = 'font-size:12px;font-weight:700;color:#282828;margin-bottom:6px';
+  var noteInput = document.createElement('textarea');
+  noteInput.placeholder = '담당자에게 남길 메모가 있으면 입력하세요';
+  noteInput.style.cssText = 'width:100%;min-height:80px;padding:11px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;resize:vertical';
+  wrap.appendChild(noteLbl); wrap.appendChild(noteInput);
+
+  var confirmBtn = document.createElement('button');
+  confirmBtn.textContent = '확인 → ' + label + '요청서 보기';
+  confirmBtn.style.cssText = 'width:100%;padding:12px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:6px';
+  confirmBtn.onclick = function(){
+    ov.remove();
+    onConfirm(nameInput.value, phoneInput.value, noteInput.value);
+  };
+  wrap.appendChild(confirmBtn);
+
+  content.appendChild(wrap);
+  ov.appendChild(nav);
+  ov.appendChild(content);
+  document.body.appendChild(ov);
+}
+
+function _showRequestPreview(kind, label, extraNote) {
   var html = buildRequestHTML(kind, extraNote);
 
   var cNameForDrive = document.getElementById('c-name')?.value || '미지정고객';
