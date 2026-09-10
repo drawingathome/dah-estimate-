@@ -522,7 +522,7 @@ function printForCustomer() {
   });
 }
 
-function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, today) {
+function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, today, arrivalDate) {
   // 2026-09-09(선혜님 지시 - "모든 발주서에는 하단에 비고 칸을 만들어서
   // 코멘트 남길 수 있게 하자" + "발주 페이지 자체를 수정할 수 있게":
   // data-vendor로 이 문서가 어느 거래처 것인지 표시해서, 인쇄 버튼을
@@ -539,12 +539,19 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   out += '<div style="display:flex;gap:var(--sp-6);margin-top:var(--sp-6);padding-top:16px;border-top:1px solid #282828;font-size:13px">'
       +'<div style="flex:1">'
         +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">요청일</span><strong>'+today+'</strong></div>'
+        // 2026-09-10(선혜님 지적 - "도착일 / 도착 장소가 없어"): 언제까지
+        // 받고 싶은지(희망 도착일)를 전혀 표시 안 하고 있었음 - 발주정보
+        // 팝업에서 입력받은 값을 여기 표시(입력 안 하면 "협의" 표시).
+        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">도착일</span><strong>'+(arrivalDate||'협의')+'</strong></div>'
         +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">업체명</span><strong>드로잉엣홈</strong></div>'
         +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">담당자</span><strong>'+(cStaff||'—')+'</strong></div>'
       +'</div>'
       +'<div style="flex:1">'
         +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">받는곳</span><strong>'+escHtml(vendor)+'</strong></div>'
-        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">수령지</span><strong>드로잉엣홈으로 보내주세요</strong></div>'
+        // 2026-09-10: "수령지: 드로잉엣홈으로 보내주세요"라는 안내
+        // 문구만 있고 실제 주소가 없었음 - 실제 주소(견적서 상단에 이미
+        // 쓰는 것과 동일)로 명확히 교체.
+        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">도착 장소</span><strong style="text-align:right">서울 서초구 사평대로 53길 64 1층<br>드로잉엣홈</strong></div>'
       +'</div>'
       +'</div>';
 
@@ -555,7 +562,11 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
       +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
       +'<th style="text-align:left;padding:8px 6px">위치</th>'
       +'<th style="text-align:left;padding:8px 6px">품명</th>'
-      +'<th style="text-align:left;padding:8px 6px">컬러</th>'
+      // 2026-09-10(선혜님 지적 - "컬러-> 제품정보 로 수정해주고"): 실제
+      // 값이 순수 색상명이 아니라 제품코드/세부사양(예: "AL25-8274L",
+      // "Amalfi RM-01번 화이트 + 뒷면: HK-3022FR 아이보리")이라 "컬러"
+      // 보다 "제품정보"가 정확한 표현.
+      +'<th style="text-align:left;padding:8px 6px">제품정보</th>'
       +'<th style="text-align:center;padding:8px 6px">사이즈</th>'
       +'<th style="text-align:left;padding:8px 6px">내용</th>'
       +'<th style="text-align:right;padding:8px 6px">수량</th>'
@@ -652,6 +663,23 @@ function openVendorInfoModal() {
   var wrap = document.createElement('div');
   wrap.style.cssText = 'width:100%;max-width:720px';
   content.appendChild(wrap);
+
+  // 2026-09-10(선혜님 지적 - "도착일 / 도착 장소가 없어"): 발주서에
+  // 표시할 희망 도착일을 여기서 한 번에 입력받음(거래처 여러 곳에
+  // 공통으로 적용).
+  var arrivalCard = document.createElement('div');
+  arrivalCard.style.cssText = 'background:#fff;border-radius:12px;padding:16px;margin-bottom:16px';
+  var arrivalLbl = document.createElement('div');
+  arrivalLbl.textContent = '희망 도착일';
+  arrivalLbl.style.cssText = 'font-size:12px;font-weight:700;color:#8E8078;margin-bottom:6px';
+  var arrivalInput = document.createElement('input');
+  arrivalInput.type = 'date';
+  var arrivalDateEl = document.getElementById('c-order-arrival-date');
+  arrivalInput.value = arrivalDateEl ? arrivalDateEl.value : '';
+  arrivalInput.style.cssText = 'width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box';
+  arrivalInput.addEventListener('input', function(){ if (arrivalDateEl) arrivalDateEl.value = arrivalInput.value; });
+  arrivalCard.appendChild(arrivalLbl); arrivalCard.appendChild(arrivalInput);
+  wrap.appendChild(arrivalCard);
 
   // 2026-09-09(선혜님 지적 - "끈길이 넣을 공간도 없구만!!!!", 실제
   // 모바일 화면(390px)으로 스크린샷 찍어서 재현 확인): 표(가로 여러
@@ -889,7 +917,7 @@ function collectVendorGroups() {
   return { groups: groups, cName: cName, cStaff: cStaff, itemCount: items.length };
 }
 
-function buildVendorHTML(extraNote) {
+function buildVendorHTML(extraNote, arrivalDate) {
   function today(){
     var d=new Date();
     return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';
@@ -901,11 +929,12 @@ function buildVendorHTML(extraNote) {
   }
 
   var todayStr = today();
+  var arrivalDateStr = arrivalDate ? (function(){ var d=new Date(arrivalDate+'T00:00:00'); return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일'; })() : '';
   var vendors = Object.keys(collected.groups);
   var out = '';
   vendors.forEach(function(vendor, i){
     out += '<div style="' + (i > 0 ? 'page-break-before:always;margin-top:40px;' : '') + '">';
-    out += buildVendorDocForOne(vendor, collected.groups[vendor], collected.cName, collected.cStaff, i === vendors.length - 1 ? extraNote : null, todayStr);
+    out += buildVendorDocForOne(vendor, collected.groups[vendor], collected.cName, collected.cStaff, i === vendors.length - 1 ? extraNote : null, todayStr, arrivalDateStr);
     out += '</div>';
   });
   return out;
@@ -922,7 +951,8 @@ function printForVendor() {
   // 뜨기도 전에 불쑥 끼어드는 것도 방금 만든 팝업→미리보기 흐름을
   // 방해했음 - 완전 제거.
   var extraNote = '';
-  var html = buildVendorHTML(extraNote);
+  var arrivalDate = document.getElementById('c-order-arrival-date')?.value || '';
+  var html = buildVendorHTML(extraNote, arrivalDate);
   // 2026-09-09(선혜님 지시 - "발주 페이지 자체를 수정할 수 있게도
   // 적용이 되어있니??" → "이제 발주서도 보기 화면에서 직접 고칠 수
   // 있게(실측/시공과 동일하게)"): 예전엔 미리보기가 뜨기도 전에 이
