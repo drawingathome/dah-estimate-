@@ -721,12 +721,6 @@ function openVendorInfoModal() {
     });
     wrap.appendChild(section);
   }
-  function fieldLabel(text) {
-    var lbl = document.createElement('div');
-    lbl.textContent = text;
-    lbl.style.cssText = 'font-size:11px;font-weight:700;color:#8E8078;margin:10px 0 4px';
-    return lbl;
-  }
   function bigInput(placeholder, origEl, defaultValue) {
     var input = document.createElement('input');
     input.type = 'text';
@@ -736,6 +730,28 @@ function openVendorInfoModal() {
     input.addEventListener('input', function(){ if (origEl) origEl.value = input.value; });
     if (origEl && !origEl.value && input.value) origEl.value = input.value;
     return input;
+  }
+  // 2026-09-10(선혜님 지적 - "발주입력이 번거롭다 세로로 되어있어서
+  // 번거로워 기존의 방식이 훨씬 편하지"): 모든 필드를 한 줄씩 세로로
+  // 쌓으니 항목 하나당 화면을 너무 많이 차지해서 스크롤이 길어짐 -
+  // 그렇다고 예전 표(가로 6칸)처럼 다시 돌아가면 모바일에서 또 입력칸이
+  // 찌그러지는 문제가 재발함(9/9에 실제로 겪음). 절충안: 카드 안에서
+  // 2칸씩 나란히 배치 - 각 입력칸이 여전히 화면 절반 너비(모바일에서도
+  // 충분히 타이핑 가능)를 유지하면서, 세로 길이는 기존 대비 절반으로 줄어듦.
+  function fieldPairRow(label1, input1, label2, input2) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px';
+    function oneCol(label, input) {
+      var col = document.createElement('div');
+      var lbl = document.createElement('div');
+      lbl.textContent = label;
+      lbl.style.cssText = 'font-size:11px;font-weight:700;color:#8E8078;margin-bottom:4px';
+      col.appendChild(lbl); col.appendChild(input);
+      return col;
+    }
+    row.appendChild(oneCol(label1, input1));
+    row.appendChild(oneCol(label2, input2));
+    return row;
   }
 
   if (curtainTrs.length > 0) {
@@ -755,22 +771,18 @@ function openVendorInfoModal() {
       card.appendChild(head);
       var nameEl = document.createElement('div');
       nameEl.textContent = name;
-      nameEl.style.cssText = 'font-size:12px;color:#B0A99F;margin-bottom:6px';
+      nameEl.style.cssText = 'font-size:12px;color:#B0A99F;margin-bottom:2px';
       card.appendChild(nameEl);
 
-      card.appendChild(fieldLabel('원단 거래처'));
       var vendorInput = bigInput('원단 거래처', origVendorInput);
       vendorInput.setAttribute('list', 'vendor-list');
-      card.appendChild(vendorInput);
-
       // 2026-09-09(선혜님 지적 - "레일 발주는 어떻게 하라는건지....") -
       // 레일거래처(.c-rail-vendor)는 안내 문구와 달리 실제로는 자동
       // 처리가 아니라 여전히 커튼 행마다 개별 입력해야 하는데, 이 팝업에
       // 입력할 곳 자체가 없었음.
-      card.appendChild(fieldLabel('레일 거래처'));
       var railInput = bigInput('레일 거래처', origRailVendorInput);
       railInput.setAttribute('list', 'vendor-list');
-      card.appendChild(railInput);
+      card.appendChild(fieldPairRow('원단 거래처', vendorInput, '레일 거래처', railInput));
     });
   }
 
@@ -797,22 +809,17 @@ function openVendorInfoModal() {
       // 화면엔 이미 제품명이 들어있는 것처럼 보여서, 실제로는 입력을
       // 안 해도 "이미 채워져 있네"라고 착각하고 그냥 넘어가게 만드는
       // 심각한 착시였음. 실제 값(value)으로 채워야 진짜로 저장됨.
-      card.appendChild(fieldLabel('품명'));
-      card.appendChild(bigInput('품명', origFabricInput, displayName));
+      var fabricInput = bigInput('품명', origFabricInput, displayName);
+      var colorInput = bigInput('컬러', origColorInput);
+      card.appendChild(fieldPairRow('품명', fabricInput, '컬러', colorInput));
 
-      card.appendChild(fieldLabel('컬러'));
-      card.appendChild(bigInput('컬러', origColorInput));
-
-      card.appendChild(fieldLabel('끈길이'));
-      card.appendChild(bigInput('끈길이 (예: 150cm)', origCordInput));
-
-      card.appendChild(fieldLabel('거래처 (필수)'));
+      var cordInput = bigInput('끈길이 (예: 150cm)', origCordInput);
       var select = document.createElement('select');
       select.style.cssText = 'width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box;background:#fff';
       select.innerHTML = origVendorSelect ? origVendorSelect.innerHTML : '<option value="">거래처 선택</option>';
       select.value = origVendorSelect ? origVendorSelect.value : '';
       select.addEventListener('change', function(){ if (origVendorSelect) { origVendorSelect.value = select.value; origVendorSelect.dispatchEvent(new Event('change')); } });
-      card.appendChild(select);
+      card.appendChild(fieldPairRow('끈길이', cordInput, '거래처 (필수)', select));
     });
   }
 
