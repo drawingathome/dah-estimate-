@@ -465,6 +465,15 @@ function loadCustByIdx(el) {
   try { customers = JSON.parse(localStorage.getItem('dah_customers')||'[]'); } catch(e){}
   var c = customers[idx];
   if(!c) return;
+  // 2026-09-10(전체 재검토 중 발견 — newEstimate()와 정확히 같은 유형의
+  // 재발): "고객 불러오기"로 다른 고객으로 전환할 때, 라인아이템/이름/
+  // 전화번호는 새 고객 것으로 바뀌는데 희망도착일/설치기사명은 이전
+  // 고객 값이 그대로 남아있었음 - 재구매 고객 처리 등에서 자주 쓰이는
+  // 기능이라 실무에 실제로 영향을 줄 수 있는 버그. 먼저 비워두고
+  // 시작(이 함수 자체가 설치기사 정보를 복원하는 별도 로직은 없음).
+  document.getElementById('c-order-arrival-date').value = '';
+  document.getElementById('c-installer-name').value = '';
+  document.getElementById('c-installer-phone').value = '';
   if(c.clientName && document.getElementById('c-name')) document.getElementById('c-name').value=c.clientName;
   if(c.phone && document.getElementById('c-phone')) document.getElementById('c-phone').value=c.phone;
   if(c.addr && document.getElementById('c-addr')) document.getElementById('c-addr').value=c.addr;
