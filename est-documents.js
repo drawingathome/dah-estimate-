@@ -580,6 +580,145 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   return out;
 }
 
+// 2026-09-09(선혜님 지시 - "발주서 버튼 누르고 발주정보 입력하는건 좋아"로
+// 확정된 설계): 지금까지 원단명/거래처/컬러 칸이 커튼 행마다 작고 촘촘하게
+// 우겨넣어져 있어서(inner-fields, 클릭해서 펼쳐야 보임) 실제로 아무도
+// 안 채우고 있었음(오늘 하루 여러 번 재현·확인된 문제) - "발주서" 버튼을
+// 누르면 이 별도의 큰 팝업이 먼저 뜨고, 시공요청서와 같은 표 형태로
+// 위치/사이즈/제품명을 보여주면서 원단·블라인드 거래처만 크고 편하게
+// 입력받음. 핵심 설계 원칙: 이 팝업은 별도 데이터 구조가 아니라, 견적서
+// 화면(같은 DOM)의 실제 입력창(.c-vendor, .b-vendor)에 직접 연결된
+// "창구"일 뿐 - 여기서 입력하는 즉시 원본 값이 갱신되므로, 발주서를
+// 실제로 만드는 코드(collectVendorGroups 등)는 전혀 안 건드려도 그대로
+// 작동함.
+function openVendorInfoModal() {
+  var curtainTrs = Array.from(document.querySelectorAll('#curtain-body tr'));
+  var blindTrs = Array.from(document.querySelectorAll('#blind-body tr'));
+  if (curtainTrs.length === 0 && blindTrs.length === 0) {
+    alert('입력된 커튼·블라인드 항목이 없어요. 먼저 항목을 추가해주세요.');
+    return;
+  }
+
+  var existing = document.getElementById('vendor-info-modal');
+  if (existing) existing.remove();
+
+  var ov = document.createElement('div');
+  ov.id = 'vendor-info-modal';
+  ov.className = 'print-hide';
+  ov.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#F5F2EE;z-index:10000;overflow-y:auto;overflow-x:auto;display:flex;flex-direction:column';
+
+  var nav = document.createElement('div');
+  nav.style.cssText = 'position:sticky;top:0;z-index:10001;background:#282828;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;flex-shrink:0';
+  var navLabel = document.createElement('span');
+  navLabel.textContent = '발주 정보 입력';
+  navLabel.style.cssText = 'color:rgba(255,255,255,0.9);font-size:13px;font-weight:700;white-space:nowrap';
+  var navBtns = document.createElement('div');
+  navBtns.style.cssText = 'display:flex;gap:8px;flex-shrink:0';
+  var closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕ 닫기';
+  closeBtn.onclick = function(){ ov.remove(); };
+  closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap';
+  var nextBtn = document.createElement('button');
+  nextBtn.textContent = '발주서 보기 →';
+  nextBtn.onclick = function(){ ov.remove(); printForVendor(false); };
+  nextBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap';
+  navBtns.appendChild(closeBtn);
+  navBtns.appendChild(nextBtn);
+  nav.appendChild(navLabel);
+  nav.appendChild(navBtns);
+
+  var content = document.createElement('div');
+  content.style.cssText = 'flex:1;padding:24px 16px 60px;display:flex;justify-content:center';
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'width:100%;max-width:720px';
+  content.appendChild(wrap);
+
+  function buildTable(title, hintText, trs, buildRow) {
+    var section = document.createElement('div');
+    section.style.cssText = 'background:#fff;border-radius:12px;padding:16px;margin-bottom:16px';
+    var titleEl = document.createElement('div');
+    titleEl.textContent = title;
+    titleEl.style.cssText = 'font-size:13px;font-weight:700;color:#282828;margin-bottom:4px';
+    var hintEl = document.createElement('div');
+    hintEl.textContent = hintText;
+    hintEl.style.cssText = 'font-size:11px;color:#B0A99F;margin-bottom:10px';
+    var table = document.createElement('table');
+    table.style.cssText = 'width:100%;border-collapse:collapse;font-size:12px';
+    var thead = document.createElement('thead');
+    thead.innerHTML = '<tr style="border-bottom:1.5px solid #282828">'
+      + '<th style="text-align:left;padding:8px 4px">위치</th>'
+      + '<th style="text-align:center;padding:8px 4px;white-space:nowrap">사이즈</th>'
+      + '<th style="text-align:left;padding:8px 4px">제품명</th>'
+      + '<th style="text-align:left;padding:8px 4px;min-width:120px">거래처</th>'
+      + '</tr>';
+    var tbody = document.createElement('tbody');
+    trs.forEach(function(tr){ tbody.appendChild(buildRow(tr)); });
+    table.appendChild(thead); table.appendChild(tbody);
+    section.appendChild(titleEl); section.appendChild(hintEl); section.appendChild(table);
+    wrap.appendChild(section);
+  }
+
+  if (curtainTrs.length > 0) {
+    buildTable('커튼', '원단 거래처는 커튼마다 다를 수 있어 직접 입력해주세요. (제작·레일 발주는 자동으로 처리돼요)', curtainTrs, function(tr) {
+      var space = tr.querySelector('.space-inp')?.value || '—';
+      var mw = tr.querySelector('.mw')?.value || '';
+      var mh = tr.querySelector('.mh')?.value || '';
+      var size = (mw && mh) ? (mw + '×' + mh) : '—';
+      var name = tr.querySelector('.c-display-name')?.value || '—';
+      var origVendorInput = tr.querySelector('.c-vendor');
+
+      var row = document.createElement('tr');
+      row.style.cssText = 'border-bottom:1px solid #EEE6DC';
+      row.innerHTML = '<td style="padding:10px 4px;font-weight:700">'+escHtml(space)+'</td>'
+        + '<td style="padding:10px 4px;text-align:center;white-space:nowrap">'+escHtml(size)+'</td>'
+        + '<td style="padding:10px 4px">'+escHtml(name)+'</td>';
+      var td = document.createElement('td');
+      td.style.cssText = 'padding:6px 4px';
+      var input = document.createElement('input');
+      input.type = 'text';
+      input.setAttribute('list', 'vendor-list');
+      input.placeholder = '원단 거래처';
+      input.value = origVendorInput ? origVendorInput.value : '';
+      input.style.cssText = 'width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box';
+      input.addEventListener('input', function(){ if (origVendorInput) origVendorInput.value = input.value; });
+      td.appendChild(input);
+      row.appendChild(td);
+      return row;
+    });
+  }
+
+  if (blindTrs.length > 0) {
+    buildTable('블라인드', '거래처는 반드시 선택해주세요.', blindTrs, function(tr) {
+      var space = tr.querySelector('.space-inp')?.value || '—';
+      var bmw = tr.querySelector('.bmw')?.value || '';
+      var bmh = tr.querySelector('.bmh')?.value || '';
+      var size = (bmw && bmh) ? (bmw + '×' + bmh) : '—';
+      var name = tr.querySelector('.b-display-name')?.value || '—';
+      var origVendorSelect = tr.querySelector('.b-vendor');
+
+      var row = document.createElement('tr');
+      row.style.cssText = 'border-bottom:1px solid #EEE6DC';
+      row.innerHTML = '<td style="padding:10px 4px;font-weight:700">'+escHtml(space)+'</td>'
+        + '<td style="padding:10px 4px;text-align:center;white-space:nowrap">'+escHtml(size)+'</td>'
+        + '<td style="padding:10px 4px">'+escHtml(name)+'</td>';
+      var td = document.createElement('td');
+      td.style.cssText = 'padding:6px 4px';
+      var select = document.createElement('select');
+      select.style.cssText = 'width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box;background:#fff';
+      select.innerHTML = origVendorSelect ? origVendorSelect.innerHTML : '<option value="">거래처 선택</option>';
+      select.value = origVendorSelect ? origVendorSelect.value : '';
+      select.addEventListener('change', function(){ if (origVendorSelect) { origVendorSelect.value = select.value; origVendorSelect.dispatchEvent(new Event('change')); } });
+      td.appendChild(select);
+      row.appendChild(td);
+      return row;
+    });
+  }
+
+  ov.appendChild(nav);
+  ov.appendChild(content);
+  document.body.appendChild(ov);
+}
+
 function collectVendorGroups() {
   var cName  = escHtml(document.getElementById('c-name')?.value||'');
   var cStaff = escHtml(document.getElementById('c-staff')?.value||'장선혜');
