@@ -458,13 +458,26 @@ function updateOrderStatus(updates) {
 function updateOrderStatusFromVendorGroups(groups) {
   var todayISO = new Date().toISOString().slice(0, 10);
   var updates = {};
+  // 2026-09-10(전문업체 관점 종합 시뮬레이션으로 발견): 같은 발주
+  // 종류(orderCategory)에 거래처가 여러 곳이면(예: 블라인드를 윈텍+
+  // 덱스터 두 곳에 나눠 발주), 마지막 거래처가 이전 거래처 정보를
+  // 그대로 덮어써서 먼저 처리된 거래처 정보가 조용히 사라지고 있었음 -
+  // 실제 발주서 문서(구글드라이브)는 거래처별로 전부 정확히 저장되고
+  // 있었지만, 이 요약 정보(order_status)만 부정확했음. vendor를 배열로
+  // 모아서 전부 남기도록 수정.
   Object.keys(groups).forEach(function(vendor){
     if (vendor === '미지정') return;
     (groups[vendor] || []).forEach(function(item){
       var cat = item.orderCategory;
       if (!cat) return;
-      updates[cat] = { done: true, vendor: vendor, orderDate: todayISO };
+      if (!updates[cat]) updates[cat] = { done: true, vendors: [], orderDate: todayISO };
+      if (updates[cat].vendors.indexOf(vendor) < 0) updates[cat].vendors.push(vendor);
     });
+  });
+  // vendor(단일, 예전 형식과의 호환) 필드도 함께 채워서 기존 코드가
+  // 안 깨지게 함 - 여러 곳이면 쉼표로 이어붙임.
+  Object.keys(updates).forEach(function(cat){
+    updates[cat].vendor = updates[cat].vendors.join(', ');
   });
   updateOrderStatus(updates);
 }
