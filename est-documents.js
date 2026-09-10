@@ -37,8 +37,7 @@ function buildCustomerHTML() {
     return d||'—';
   }
   function today(){
-    var d=new Date();
-    return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';
+    return formatKoreanDate();
   }
 
   
@@ -939,8 +938,7 @@ function collectVendorGroups() {
 
 function buildVendorHTML(extraNote, arrivalDate) {
   function today(){
-    var d=new Date();
-    return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';
+    return formatKoreanDate();
   }
   var collected = collectVendorGroups();
 
@@ -949,7 +947,7 @@ function buildVendorHTML(extraNote, arrivalDate) {
   }
 
   var todayStr = today();
-  var arrivalDateStr = arrivalDate ? (function(){ var d=new Date(arrivalDate+'T00:00:00'); return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일'; })() : '';
+  var arrivalDateStr = arrivalDate ? formatKoreanDate(new Date(arrivalDate+'T00:00:00')) : '';
   var vendors = Object.keys(collected.groups);
   var out = '';
   vendors.forEach(function(vendor, i){
@@ -1058,10 +1056,6 @@ function printForVendor() {
 
 function buildRequestHTML(kind, extraNote) {
   // kind: 'measure' (실측 의뢰서) or 'install' (시공 의뢰서)
-  function today(){
-    var d=new Date();
-    return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';
-  }
   function infoRow(label, val) {
     return '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px">'
         +'<span style="color:#8E8078">'+label+'</span>'

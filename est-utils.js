@@ -67,6 +67,15 @@ function getPriceVal(el) {
 }
 
 const SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
+// 2026-09-10(선혜님 지시 - "쌍둥이함수찾아"로 발견): "YYYY년 M월 D일"
+// 형태로 날짜를 포맷하는 지역함수 today()가 buildCustomerHTML/
+// buildVendorHTML/buildRequestHTML 세 곳에 완전히 동일한 코드로 각자
+// 독립 구현되어 있었음 - 날짜 형식을 바꿔야 할 때 한 곳만 고치고
+// 나머지를 놓치기 쉬운 구조. 전역 헬퍼로 통일.
+function formatKoreanDate(d) {
+  d = d || new Date();
+  return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';
+}
 function escHtml(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;')
