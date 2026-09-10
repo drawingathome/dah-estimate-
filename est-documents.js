@@ -547,7 +547,11 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">담당자</span><strong>'+(cStaff||'—')+'</strong></div>'
       +'</div>'
       +'<div style="flex:1">'
-        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">받는곳</span><strong>'+escHtml(vendor)+'</strong></div>'
+        // 2026-09-10(선혜님 지적 - "받는곳이라고 하면 헷갈릴꺼 같은데"):
+        // 바로 옆에 "도착 장소"(우리 회사 주소)가 나란히 있어서, "받는곳"
+        // 이 거래처 이름인데도 "어디로 보내는지" 목적지처럼 헷갈릴 수
+        // 있었음 - 이 발주서를 보내는 거래처임을 명확히 하는 "발주처"로 교체.
+        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">발주처</span><strong>'+escHtml(vendor)+'</strong></div>'
         // 2026-09-10: "수령지: 드로잉엣홈으로 보내주세요"라는 안내
         // 문구만 있고 실제 주소가 없었음 - 실제 주소(견적서 상단에 이미
         // 쓰는 것과 동일)로 명확히 교체.
