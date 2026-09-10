@@ -362,6 +362,61 @@ function getAutoProductionVendorName() {
   });
   return prodVendors.length === 1 ? (prodVendors[0].name || '') : '';
 }
+// 2026-09-09(선혜님 지시 - "업무처리" 통합탭 마지막 단계): 현재 고객의
+// order_status를 조회하는 전용 헬퍼 - 업무처리 카드가 실측/발주/시공
+// 각각의 완료 여부를 보여줄 때 사용.
+// 2026-09-09(업무처리 통합탭 마지막 단계): 발주/실측/시공 세 카드의
+// 진행상태를 order_status 기준으로 채움. 발주는 4개 카테고리
+// (fabric/production/material/blind) 중 완료된 것 개수로 표시 -
+// 사용자가 커튼만 있는지 블라인드만 있는지에 따라 필요한 카테고리
+// 수가 다르므로, "전부 완료"보다는 "몇 건 완료"가 더 정직한 표현.
+function renderWorkStatusCards() {
+  if (typeof getCustomerOrderStatus !== 'function') return;
+  getCustomerOrderStatus(function(status) {
+    var orderEl = document.getElementById('work-order-status');
+    var measureEl = document.getElementById('work-measure-status');
+    var installEl = document.getElementById('work-install-status');
+
+    if (orderEl) {
+      var orderCats = ['fabric', 'production', 'material', 'blind'].filter(function(c){ return status[c] && status[c].done; });
+      if (orderCats.length > 0) {
+        orderEl.textContent = orderCats.length + '건 완료';
+        orderEl.style.color = '#2F6690';
+      } else {
+        orderEl.textContent = '아직 없음';
+      }
+    }
+    [['measure', measureEl], ['install', installEl]].forEach(function(pair){
+      var key = pair[0], el = pair[1];
+      if (!el) return;
+      if (status[key] && status[key].done) {
+        el.textContent = (status[key].orderDate || '완료') + ' 완료';
+        el.style.color = '#2F6690';
+      } else {
+        el.textContent = '아직 없음';
+      }
+    });
+  });
+}
+
+function getCustomerOrderStatus(callback) {
+  if (!window._estSaveCustomerId || typeof SUPABASE_URL === 'undefined') { callback({}); return; }
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estSaveCustomerId) + '&select=order_status', true);
+    xhr.setRequestHeader('apikey', SUPABASE_KEY);
+    xhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+    xhr.onload = function() {
+      try {
+        var rows = JSON.parse(xhr.responseText);
+        callback((rows[0] && rows[0].order_status) || {});
+      } catch (e) { callback({}); }
+    };
+    xhr.onerror = function() { callback({}); };
+    xhr.send();
+  } catch (e) { callback({}); }
+}
+
 function updateOrderStatus(updates) {
   if (!window._estSaveCustomerId || typeof SUPABASE_URL === 'undefined') return;
   if (!updates || Object.keys(updates).length === 0) return;

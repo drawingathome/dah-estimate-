@@ -729,15 +729,35 @@
       <!-- 2026-08-06: 아래 4개 버튼(엑셀/발주서/실측/시공)이 세로로 4줄 쌓여있어서
            위계 없이 "일단 다 넣은" 느낌이었음(디자인 감사로 발견). "문서 자료" 라는
            작은 그룹 라벨을 붙이고 2x2 격자로 묶어서 하나의 유틸리티 묶음으로 보이게 함. -->
+      <!-- 2026-09-09(선혜님 지시 - "실측 시공 발주가 다 따로 되어있다"
+           지적으로 만든 업무처리 통합 UI): 각 버튼에 현재 진행상태를
+           함께 보여줌(id=work-*-status) - renderWorkStatusCards()가
+           order_status를 조회해서 채움. 클릭 동작 자체는 기존과 동일. -->
+      <div style="margin-top:14px;font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.04em">업무 처리</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+        <button onclick="openVendorInfoModal()" style="padding:12px 14px;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px;display:flex;justify-content:space-between;align-items:center;width:100%">
+          <span>📦 발주서 (거래처별)</span><span class="work-status" id="work-order-status" style="font-size:11px;font-weight:600;color:var(--sub)">—</span>
+        </button>
+        <button onclick="printRequest('measure')" style="padding:12px 14px;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px;display:flex;justify-content:space-between;align-items:center;width:100%">
+          <span>📋 실측 의뢰서</span><span class="work-status" id="work-measure-status" style="font-size:11px;font-weight:600;color:var(--sub)">—</span>
+        </button>
+        <button onclick="printRequest('install')" style="padding:12px 14px;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px;display:flex;justify-content:space-between;align-items:center;width:100%">
+          <span>🔧 시공 의뢰서</span><span class="work-status" id="work-install-status" style="font-size:11px;font-weight:600;color:var(--sub)">—</span>
+        </button>
+      </div>
       <div style="margin-top:14px;font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.04em">문서 자료</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-top:6px">
         <button onclick="exportAllEstimatesExcel()" style="padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📊 엑셀 다운로드</button>
-        <button onclick="openVendorInfoModal()" style="padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📦 발주서 (거래처별)</button>
-        <button onclick="printRequest('measure')" style="padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📋 실측 의뢰서</button>
-        <button onclick="printRequest('install')" style="padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">🔧 시공 의뢰서</button>
       </div>
     </div>
   </div>
+  <script>
+    // 2026-09-09: 업무처리 카드 상태를 한 번(페이지 로드 시점) 채움 -
+    // order_status는 자주 안 바뀌니 실시간 폴링 없이 최초 1회로 충분.
+    setTimeout(function() {
+      if (typeof renderWorkStatusCards === 'function') renderWorkStatusCards();
+    }, 1500);
+  </script>
 
 </div>
 </div>
@@ -799,7 +819,7 @@
   <option value="허니콤 No.1">허니콤 No.1</option>
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
-<script src="/est-utils.js?v=202609090500"></script>
+<script src="/est-utils.js?v=202609090800"></script>
 <script src="/shared-optimistic-lock.js?v=202609051200"></script>
 <script src="/est-sync-queue.js?v=202608291500"></script>
 <script src="/dash-supabase-auth.js?v=202609061500"></script>
