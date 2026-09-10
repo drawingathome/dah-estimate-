@@ -744,20 +744,31 @@ function openVendorInfoModal() {
       // 하는데 그게 안되네"): 이 팝업엔 "거래처"만 있고 품명/컬러/끈길이
       // 입력창 자체가 없었음 - 커튼과 똑같은 문제(작은 칸에 갇혀서 아무도
       // 못 채움)가 블라인드에 그대로 남아있었음. 3개 다 추가.
-      function makeSmallInput(placeholder, origEl, extraStyle) {
+      // 2026-09-09(선혜님 지적 - "바뀐게 없음", 재현해서 진짜 원인 발견):
+      // 품명 칸을 "placeholder(회색 안내글자)"로만 채웠었음 - 화면엔
+      // 이미 제품명이 들어있는 것처럼 보여서, 실제로는 입력을 안 해도
+      // "이미 채워져 있네"라고 착각하고 그냥 넘어가게 만드는 심각한
+      // 착시였음. 실제 값(value)으로 채워야 진짜로 저장됨 - 원단명이
+      // 비어있으면 고객용 제품명(대부분 같은 내용, 예: "허니콤 블라인드
+      // 실크")으로 자동 채우되 여전히 수정 가능하게.
+      function makeSmallInput(placeholder, origEl, defaultValue, extraStyle) {
         var td = document.createElement('td'); td.style.cssText = 'padding:6px 4px';
         var input = document.createElement('input');
         input.type = 'text';
         input.placeholder = placeholder;
-        input.value = origEl ? origEl.value : '';
+        input.value = (origEl && origEl.value) ? origEl.value : (defaultValue || '');
         input.style.cssText = 'width:100%;padding:9px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box' + (extraStyle||'');
         input.addEventListener('input', function(){ if (origEl) origEl.value = input.value; });
+        // 2026-09-09: 자동으로 채운 기본값도 실제 원본 필드에 즉시 반영 -
+        // 사용자가 이 칸을 아예 안 건드리고 넘어가도(수정할 필요를 못
+        // 느껴서) 저장은 되도록.
+        if (origEl && !origEl.value && input.value) origEl.value = input.value;
         td.appendChild(input);
         return td;
       }
-      row.appendChild(makeSmallInput(displayName ? displayName : '품명', origFabricInput));
-      row.appendChild(makeSmallInput('컬러', origColorInput, ';max-width:80px'));
-      row.appendChild(makeSmallInput('끈길이', origCordInput, ';max-width:80px'));
+      row.appendChild(makeSmallInput('품명', origFabricInput, displayName));
+      row.appendChild(makeSmallInput('컬러', origColorInput, '', ';max-width:80px'));
+      row.appendChild(makeSmallInput('끈길이', origCordInput, '', ';max-width:80px'));
 
       var td = document.createElement('td');
       td.style.cssText = 'padding:6px 4px';
