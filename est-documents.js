@@ -653,31 +653,50 @@ function openVendorInfoModal() {
   wrap.style.cssText = 'width:100%;max-width:720px';
   content.appendChild(wrap);
 
-  function buildTable(title, hintText, headers, trs, buildRow) {
+  // 2026-09-09(선혜님 지적 - "끈길이 넣을 공간도 없구만!!!!", 실제
+  // 모바일 화면(390px)으로 스크린샷 찍어서 재현 확인): 표(가로 여러
+  // 컬럼) 형태는 데스크톱에선 괜찮아 보였지만, 실제 사용 환경인 좁은
+  // 모바일 화면에서는 컬럼 6개가 우겨넣어져서 "끈길이" 같은 칸이
+  // 사실상 입력 불가능한 크기로 찌그러져 있었음 - 데스크톱만 확인하고
+  // 실제 환경(모바일)을 안 본 게 원인. 표를 완전히 버리고, 항목 하나당
+  // 카드 하나로 만들어서 각 필드를 세로로 큼직하게 배치.
+  function buildCards(title, hintText, items, buildCardBody) {
     var section = document.createElement('div');
-    section.style.cssText = 'background:#fff;border-radius:12px;padding:16px;margin-bottom:16px';
+    section.style.cssText = 'margin-bottom:20px';
     var titleEl = document.createElement('div');
     titleEl.textContent = title;
-    titleEl.style.cssText = 'font-size:13px;font-weight:700;color:#282828;margin-bottom:4px';
+    titleEl.style.cssText = 'font-size:14px;font-weight:700;color:#282828;margin-bottom:2px';
     var hintEl = document.createElement('div');
     hintEl.textContent = hintText;
     hintEl.style.cssText = 'font-size:11px;color:#B0A99F;margin-bottom:10px';
-    var table = document.createElement('table');
-    table.style.cssText = 'width:100%;border-collapse:collapse;font-size:12px';
-    var thead = document.createElement('thead');
-    var theadRow = '<tr style="border-bottom:1.5px solid #282828">';
-    headers.forEach(function(h){ theadRow += '<th style="text-align:left;padding:8px 4px;white-space:nowrap">'+h+'</th>'; });
-    theadRow += '</tr>';
-    thead.innerHTML = theadRow;
-    var tbody = document.createElement('tbody');
-    trs.forEach(function(tr){ tbody.appendChild(buildRow(tr)); });
-    table.appendChild(thead); table.appendChild(tbody);
-    section.appendChild(titleEl); section.appendChild(hintEl); section.appendChild(table);
+    section.appendChild(titleEl); section.appendChild(hintEl);
+    items.forEach(function(tr){
+      var card = document.createElement('div');
+      card.style.cssText = 'background:#fff;border-radius:12px;padding:16px;margin-bottom:10px';
+      buildCardBody(tr, card);
+      section.appendChild(card);
+    });
     wrap.appendChild(section);
+  }
+  function fieldLabel(text) {
+    var lbl = document.createElement('div');
+    lbl.textContent = text;
+    lbl.style.cssText = 'font-size:11px;font-weight:700;color:#8E8078;margin:10px 0 4px';
+    return lbl;
+  }
+  function bigInput(placeholder, origEl, defaultValue) {
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = placeholder;
+    input.value = (origEl && origEl.value) ? origEl.value : (defaultValue || '');
+    input.style.cssText = 'width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box';
+    input.addEventListener('input', function(){ if (origEl) origEl.value = input.value; });
+    if (origEl && !origEl.value && input.value) origEl.value = input.value;
+    return input;
   }
 
   if (curtainTrs.length > 0) {
-    buildTable('커튼', '원단·레일 거래처는 커튼마다 다를 수 있어 직접 입력해주세요. (제작 발주만 자동으로 처리돼요)', ['위치','사이즈','제품명','원단 거래처','레일 거래처'], curtainTrs, function(tr) {
+    buildCards('커튼', '원단·레일 거래처는 커튼마다 다를 수 있어 직접 입력해주세요. (제작 발주만 자동으로 처리돼요)', curtainTrs, function(tr, card) {
       var space = tr.querySelector('.space-inp')?.value || '—';
       var mw = tr.querySelector('.mw')?.value || '';
       var mh = tr.querySelector('.mh')?.value || '';
@@ -686,44 +705,34 @@ function openVendorInfoModal() {
       var origVendorInput = tr.querySelector('.c-vendor');
       var origRailVendorInput = tr.querySelector('.c-rail-vendor');
 
-      var row = document.createElement('tr');
-      row.style.cssText = 'border-bottom:1px solid #EEE6DC';
-      row.innerHTML = '<td style="padding:10px 4px;font-weight:700">'+escHtml(space)+'</td>'
-        + '<td style="padding:10px 4px;text-align:center;white-space:nowrap">'+escHtml(size)+'</td>'
-        + '<td style="padding:10px 4px">'+escHtml(name)+'</td>';
-      var td = document.createElement('td');
-      td.style.cssText = 'padding:6px 4px';
-      var input = document.createElement('input');
-      input.type = 'text';
-      input.setAttribute('list', 'vendor-list');
-      input.placeholder = '원단 거래처';
-      input.value = origVendorInput ? origVendorInput.value : '';
-      input.style.cssText = 'width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box';
-      input.addEventListener('input', function(){ if (origVendorInput) origVendorInput.value = input.value; });
-      td.appendChild(input);
-      row.appendChild(td);
+      var head = document.createElement('div');
+      head.style.cssText = 'display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px';
+      head.innerHTML = '<span style="font-size:14px;font-weight:700">'+escHtml(space)+'</span>'
+        + '<span style="font-size:12px;color:#8E8078">'+escHtml(size)+'</span>';
+      card.appendChild(head);
+      var nameEl = document.createElement('div');
+      nameEl.textContent = name;
+      nameEl.style.cssText = 'font-size:12px;color:#B0A99F;margin-bottom:6px';
+      card.appendChild(nameEl);
+
+      card.appendChild(fieldLabel('원단 거래처'));
+      var vendorInput = bigInput('원단 거래처', origVendorInput);
+      vendorInput.setAttribute('list', 'vendor-list');
+      card.appendChild(vendorInput);
 
       // 2026-09-09(선혜님 지적 - "레일 발주는 어떻게 하라는건지....") -
       // 레일거래처(.c-rail-vendor)는 안내 문구와 달리 실제로는 자동
       // 처리가 아니라 여전히 커튼 행마다 개별 입력해야 하는데, 이 팝업에
-      // 입력할 곳 자체가 없었음. 원단 거래처와 나란히 추가.
-      var railTd = document.createElement('td');
-      railTd.style.cssText = 'padding:6px 4px';
-      var railInput = document.createElement('input');
-      railInput.type = 'text';
+      // 입력할 곳 자체가 없었음.
+      card.appendChild(fieldLabel('레일 거래처'));
+      var railInput = bigInput('레일 거래처', origRailVendorInput);
       railInput.setAttribute('list', 'vendor-list');
-      railInput.placeholder = '레일 거래처';
-      railInput.value = origRailVendorInput ? origRailVendorInput.value : '';
-      railInput.style.cssText = 'width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box';
-      railInput.addEventListener('input', function(){ if (origRailVendorInput) origRailVendorInput.value = railInput.value; });
-      railTd.appendChild(railInput);
-      row.appendChild(railTd);
-      return row;
+      card.appendChild(railInput);
     });
   }
 
   if (blindTrs.length > 0) {
-    buildTable('블라인드', '품명·컬러·끈길이를 입력하고, 거래처는 반드시 선택해주세요.', ['위치','사이즈','품명','컬러','끈길이','거래처'], blindTrs, function(tr) {
+    buildCards('블라인드', '품명·컬러·끈길이를 입력하고, 거래처는 반드시 선택해주세요.', blindTrs, function(tr, card) {
       var space = tr.querySelector('.space-inp')?.value || '—';
       var bmw = tr.querySelector('.bmw')?.value || '';
       var bmh = tr.querySelector('.bmh')?.value || '';
@@ -734,52 +743,33 @@ function openVendorInfoModal() {
       var origCordInput = tr.querySelector('.b-cord-length');
       var origVendorSelect = tr.querySelector('.b-vendor');
 
-      var row = document.createElement('tr');
-      row.style.cssText = 'border-bottom:1px solid #EEE6DC';
-      row.innerHTML = '<td style="padding:10px 4px;font-weight:700">'+escHtml(space)+'</td>'
-        + '<td style="padding:10px 4px;text-align:center;white-space:nowrap">'+escHtml(size)+'</td>';
+      var head = document.createElement('div');
+      head.style.cssText = 'display:flex;justify-content:space-between;align-items:baseline';
+      head.innerHTML = '<span style="font-size:14px;font-weight:700">'+escHtml(space)+'</span>'
+        + '<span style="font-size:12px;color:#8E8078">'+escHtml(size)+'</span>';
+      card.appendChild(head);
 
-      // 2026-09-09(선혜님 지적 - "블라인드는 품명이랑 컬러를 적을 수 있게
-      // 해야 하는데 수정이 안되네" + "끈길이도 적을 수 있게 해줘야
-      // 하는데 그게 안되네"): 이 팝업엔 "거래처"만 있고 품명/컬러/끈길이
-      // 입력창 자체가 없었음 - 커튼과 똑같은 문제(작은 칸에 갇혀서 아무도
-      // 못 채움)가 블라인드에 그대로 남아있었음. 3개 다 추가.
       // 2026-09-09(선혜님 지적 - "바뀐게 없음", 재현해서 진짜 원인 발견):
-      // 품명 칸을 "placeholder(회색 안내글자)"로만 채웠었음 - 화면엔
-      // 이미 제품명이 들어있는 것처럼 보여서, 실제로는 입력을 안 해도
-      // "이미 채워져 있네"라고 착각하고 그냥 넘어가게 만드는 심각한
-      // 착시였음. 실제 값(value)으로 채워야 진짜로 저장됨 - 원단명이
-      // 비어있으면 고객용 제품명(대부분 같은 내용, 예: "허니콤 블라인드
-      // 실크")으로 자동 채우되 여전히 수정 가능하게.
-      function makeSmallInput(placeholder, origEl, defaultValue, extraStyle) {
-        var td = document.createElement('td'); td.style.cssText = 'padding:6px 4px';
-        var input = document.createElement('input');
-        input.type = 'text';
-        input.placeholder = placeholder;
-        input.value = (origEl && origEl.value) ? origEl.value : (defaultValue || '');
-        input.style.cssText = 'width:100%;padding:9px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box' + (extraStyle||'');
-        input.addEventListener('input', function(){ if (origEl) origEl.value = input.value; });
-        // 2026-09-09: 자동으로 채운 기본값도 실제 원본 필드에 즉시 반영 -
-        // 사용자가 이 칸을 아예 안 건드리고 넘어가도(수정할 필요를 못
-        // 느껴서) 저장은 되도록.
-        if (origEl && !origEl.value && input.value) origEl.value = input.value;
-        td.appendChild(input);
-        return td;
-      }
-      row.appendChild(makeSmallInput('품명', origFabricInput, displayName));
-      row.appendChild(makeSmallInput('컬러', origColorInput, '', ';max-width:80px'));
-      row.appendChild(makeSmallInput('끈길이', origCordInput, '', ';max-width:80px'));
+      // 품명 칸을 예전엔 "placeholder(회색 안내글자)"로만 채웠었음 -
+      // 화면엔 이미 제품명이 들어있는 것처럼 보여서, 실제로는 입력을
+      // 안 해도 "이미 채워져 있네"라고 착각하고 그냥 넘어가게 만드는
+      // 심각한 착시였음. 실제 값(value)으로 채워야 진짜로 저장됨.
+      card.appendChild(fieldLabel('품명'));
+      card.appendChild(bigInput('품명', origFabricInput, displayName));
 
-      var td = document.createElement('td');
-      td.style.cssText = 'padding:6px 4px';
+      card.appendChild(fieldLabel('컬러'));
+      card.appendChild(bigInput('컬러', origColorInput));
+
+      card.appendChild(fieldLabel('끈길이'));
+      card.appendChild(bigInput('끈길이 (예: 150cm)', origCordInput));
+
+      card.appendChild(fieldLabel('거래처 (필수)'));
       var select = document.createElement('select');
-      select.style.cssText = 'width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box;background:#fff';
+      select.style.cssText = 'width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box;background:#fff';
       select.innerHTML = origVendorSelect ? origVendorSelect.innerHTML : '<option value="">거래처 선택</option>';
       select.value = origVendorSelect ? origVendorSelect.value : '';
       select.addEventListener('change', function(){ if (origVendorSelect) { origVendorSelect.value = select.value; origVendorSelect.dispatchEvent(new Event('change')); } });
-      td.appendChild(select);
-      row.appendChild(td);
-      return row;
+      card.appendChild(select);
     });
   }
 
