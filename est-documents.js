@@ -1025,6 +1025,12 @@ function printForVendor() {
           saveDocumentToDrive(vendorCategory(vendor), collected2.cName || '미지정고객', vendor, vendorBlock.outerHTML, collected2.cStaff);
         });
         updateOrderStatusFromVendorGroups(collected2.groups);
+        // 2026-09-10(선혜님 - "예상되는 부분을 좀 더 파볼까??"로 발견):
+        // 발주를 실제로 완료해도 화면의 "업무처리" 카드가 페이지를
+        // 새로고침하기 전까지 "아직 없음"으로 그대로 남아있었음 -
+        // renderWorkStatusCards()가 페이지 로드시 딱 한 번만 실행되고
+        // 있었음. 서버 저장이 비동기라 살짝 지연 후 다시 그림.
+        if (typeof renderWorkStatusCards === 'function') setTimeout(renderWorkStatusCards, 800);
       }
     } catch (eSaveVendor) { console.warn('발주서 드라이브 저장 실패:', eSaveVendor); }
     openPdfModal();
@@ -1580,6 +1586,9 @@ function _showRequestPreview(kind, label, extraNote) {
       var statusUpdate = {};
       statusUpdate[kind] = { done: true, vendor: installerNameForStatus, orderDate: new Date().toISOString().slice(0, 10) };
       if (typeof updateOrderStatus === 'function') updateOrderStatus(statusUpdate);
+      // 2026-09-10: 발주와 동일하게, 실측/시공 완료 직후에도 업무처리
+      // 카드를 다시 그려서 새로고침 없이 바로 반영되게 함.
+      if (typeof renderWorkStatusCards === 'function') setTimeout(renderWorkStatusCards, 800);
       // 2026-09-09(선혜님 지시 - "실측/시공/발주가 다 따로 되어있다" →
       // 업무처리 통합탭 기획 중 "이 정보가 왜 저장이 안 되지" 확인):
       // 설치기사 이름/연락처가 지금까지 DB에 전혀 저장이 안 되고 있었음 -
