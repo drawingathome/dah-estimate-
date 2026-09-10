@@ -1032,7 +1032,7 @@ function printForVendor() {
         // 있었음. 서버 저장이 비동기라 살짝 지연 후 다시 그림.
         if (typeof renderWorkStatusCards === 'function') setTimeout(renderWorkStatusCards, 800);
       }
-    } catch (eSaveVendor) { console.warn('발주서 드라이브 저장 실패:', eSaveVendor); }
+    } catch (eSaveVendor) { console.warn('발주서 드라이브 저장 실패:', eSaveVendor); typeof reportClientError==='function' && reportClientError('발주서 드라이브 저장 실패: ' + (eSaveVendor && eSaveVendor.message || eSaveVendor), eSaveVendor && eSaveVendor.stack); }
     openPdfModal();
   };
   printBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;flex-shrink:0';
@@ -1605,11 +1605,11 @@ function _showRequestPreview(kind, label, extraNote) {
           xhrInstaller.setRequestHeader('apikey', SUPABASE_KEY);
           xhrInstaller.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
           xhrInstaller.setRequestHeader('Content-Type', 'application/json');
-          xhrInstaller.onerror = function() { console.warn('설치기사 정보 저장 실패'); };
+          xhrInstaller.onerror = function() { console.warn('설치기사 정보 저장 실패'); typeof reportClientError==='function' && reportClientError('설치기사 정보 저장 실패'); };
           xhrInstaller.send(JSON.stringify({ installer_name: installerNameForStatus, installer_phone: installerPhoneForSave }));
-        } catch (eInstaller) { console.warn('설치기사 정보 저장 실패:', eInstaller); }
+        } catch (eInstaller) { console.warn('설치기사 정보 저장 실패:', eInstaller); typeof reportClientError==='function' && reportClientError('설치기사 정보 저장 실패: ' + (eInstaller && eInstaller.message || eInstaller), eInstaller && eInstaller.stack); }
       }
-    } catch(e) { console.warn('의뢰서 드라이브 저장 실패:', e); }
+    } catch(e) { console.warn('의뢰서 드라이브 저장 실패:', e); typeof reportClientError==='function' && reportClientError('의뢰서 드라이브 저장 실패: ' + (e && e.message || e), e && e.stack); }
     openPdfModal();
   };
   printBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;flex-shrink:0';

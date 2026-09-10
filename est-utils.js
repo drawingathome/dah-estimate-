@@ -76,6 +76,13 @@ function formatKoreanDate(d) {
   d = d || new Date();
   return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';
 }
+// 2026-09-10(선혜님 - "전문업체는 그롷게 안하잖아"로 에러 자동기록을
+// 만들려다 발견): 처음엔 새로 만들려고 했으나, 이 파일 아래쪽(약 550번
+// 줄)에 이미 reportClientError()라는 훨씬 성숙한 시스템이 있었음(build
+// 번호, 로그인한 사용자 role/name까지 포함, unhandledrejection도 커버) -
+// 이걸 몰라서 진짜로 쌍둥이를 만들 뻔한 사례. 아래는 그 기존 시스템을
+// 그대로 재사용.
+
 function escHtml(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;')
@@ -457,11 +464,11 @@ function updateOrderStatus(updates) {
           }
         };
         xhrPatch.send(JSON.stringify({ order_status: merged }));
-      } catch (e) { console.warn('현황 자동갱신 실패:', e); }
+      } catch (e) { console.warn('현황 자동갱신 실패:', e); typeof reportClientError==='function' && reportClientError('업무현황 자동갱신 실패: ' + (e && e.message || e), e && e.stack); }
     };
-    xhrGet.onerror = function() { console.warn('현황 자동갱신 실패(조회 실패)'); };
+    xhrGet.onerror = function() { console.warn('현황 자동갱신 실패(조회 실패)'); typeof reportClientError==='function' && reportClientError('업무현황 자동갱신 실패(조회)'); };
     xhrGet.send();
-  } catch (e) { console.warn('현황 자동갱신 실패:', e); }
+  } catch (e) { console.warn('현황 자동갱신 실패:', e); typeof reportClientError==='function' && reportClientError('업무현황 자동갱신 실패: ' + (e && e.message || e), e && e.stack); }
 }
 function updateOrderStatusFromVendorGroups(groups) {
   var todayISO = new Date().toISOString().slice(0, 10);
@@ -499,8 +506,8 @@ function saveDocumentToDrive(category, customerName, vendor, htmlContent, staffN
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' }, // Apps Script는 text/plain이 CORS 프리플라이트 없이 가장 안정적
       body: JSON.stringify({ action: 'saveDocument', category: category, customerName: customerName, vendor: vendor || '', estimateNo: estimateNo, htmlContent: htmlContent, staffName: staffName || '' })
-    }).catch(function(e) { console.warn('구글드라이브 저장 실패:', e); });
-  } catch (e) { console.warn('구글드라이브 저장 실패:', e); }
+    }).catch(function(e) { console.warn('구글드라이브 저장 실패:', e); typeof reportClientError==='function' && reportClientError('구글드라이브 저장 실패: ' + (e && e.message || e), e && e.stack); });
+  } catch (e) { console.warn('구글드라이브 저장 실패:', e); typeof reportClientError==='function' && reportClientError('구글드라이브 저장 실패: ' + (e && e.message || e), e && e.stack); }
 }
 
 // 고객명단 구글시트 동기화 (실패해도 조용히 무시)
@@ -511,8 +518,8 @@ function syncCustomerToSheet(customer) {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ action: 'syncCustomer', clientName: customer.clientName, phone: customer.phone, addr: customer.addr, staffName: customer.staffName, stage: customer.stage, price: customer.price, performanceRevenue: customer.performanceRevenue, date: customer.date, measureDate: customer.measureDate, installDate: customer.installDate, memo: customer.memo })
-    }).catch(function(e) { console.warn('고객명단 동기화 실패:', e); });
-  } catch (e) { console.warn('고객명단 동기화 실패:', e); }
+    }).catch(function(e) { console.warn('고객명단 동기화 실패:', e); typeof reportClientError==='function' && reportClientError('고객명단 동기화 실패: ' + (e && e.message || e), e && e.stack); });
+  } catch (e) { console.warn('고객명단 동기화 실패:', e); typeof reportClientError==='function' && reportClientError('고객명단 동기화 실패: ' + (e && e.message || e), e && e.stack); }
 }
 
 // ══════════════════════════════════════════════════
