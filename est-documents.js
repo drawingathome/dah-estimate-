@@ -559,7 +559,14 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         // 2026-09-10: "수령지: 드로잉엣홈으로 보내주세요"라는 안내
         // 문구만 있고 실제 주소가 없었음 - 실제 주소(견적서 상단에 이미
         // 쓰는 것과 동일)로 명확히 교체.
-        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">도착 장소</span><strong style="text-align:right">서울 서초구 사평대로 53길 64 1층<br>드로잉엣홈</strong></div>'
+        // 2026-09-10(선혜님 지적 - "최종적으로 도착해야 할 곳, 즉 저희
+        // 회사 아니고 가공소로 도착되게 해야 해"): 원단은 저희 회사가
+        // 아니라 가공소로 바로 배송되는 경우가 있는 등, 발주 종류/거래처에
+        // 따라 실제 도착지가 달라질 수 있음 - 회사주소로 고정하지 않고
+        // 직접 클릭해서 고칠 수 있게 함(도착일/발주처와 동일한 방식).
+        // 기본값은 회사주소로 두되, 필요하면 그 자리에서 가공소 주소 등
+        // 실제 도착지로 바로 수정 가능.
+        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">도착 장소</span><strong contenteditable="true" class="pv-editable-field" style="outline:none;border-bottom:1px dashed #DDD5CB;text-align:right">서울 서초구 사평대로 53길 64 1층<br>드로잉엣홈</strong></div>'
       +'</div>'
       +'</div>';
 
