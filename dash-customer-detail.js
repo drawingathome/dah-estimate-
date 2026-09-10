@@ -178,9 +178,6 @@ function renderDetailEstTabInner(estEl) {
     return;
   }
 
-  var CONTRACT_KO    = {pending:'가견적', contracted:'계약됨', rejected:'미계약'};
-  var CONTRACT_BG    = {pending:'#F5F2EE', contracted:'#EEF5F2', rejected:'#FDECEA'};
-  var CONTRACT_COLOR = {pending:'var(--sub)', contracted:'#2F6690', rejected:'#C0392B'};
   var STATUS_KO      = {ga:'가견적서', final:'최종견적서'};
   // 2026-09-08(선혜님 지적 - "지금 단계는 제대로 들어갔어(칸반) 근데
   // 위에 가견적이 나오는게 맞아?? 현재단계가 나와야 할꺼 같은데"): 이
@@ -1050,7 +1047,6 @@ function openEstimate(name, id) {
 
 
 
-var CONTRACT_LABELS = {pending:'가견적', contracted:'계약됨', rejected:'미계약'};
 var STATUS_LABELS = {ga:'가견적서', final:'최종견적서'};
 
 function renderEstimateHistory(container, clientName, clientId) {
