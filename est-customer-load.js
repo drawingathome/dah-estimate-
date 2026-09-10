@@ -390,10 +390,11 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       var tr = document.getElementById('blind-body').lastElementChild;
       var sp = tr.querySelector('.space-inp'); if (sp) sp.value = it.space || '';
       var bdn = tr.querySelector('.b-display-name'); if (bdn) bdn.value = it.displayName || '';
-      var inns = tr.querySelectorAll('.inner-row .inner-inp');
-      if (inns[0]) inns[0].value = it.fabric || '';
-      if (inns[1]) inns[1].value = it.vendor || '';
-      if (inns[2]) inns[2].value = it.color || '';
+      var fabricEl = tr.querySelector('.b-fabric'); if (fabricEl) fabricEl.value = it.fabric || '';
+      var vendorEl = tr.querySelector('.b-vendor'); if (vendorEl) vendorEl.value = it.vendor || '';
+      var colorEl = tr.querySelector('.b-color'); if (colorEl) colorEl.value = it.color || '';
+      // 2026-09-09: 끈길이 복원 추가.
+      var cordEl = tr.querySelector('.b-cord-length'); if (cordEl) cordEl.value = it.cordLength || '';
       var kindEl = tr.querySelector('.blind-kind'); if (kindEl) kindEl.value = it.kind || kindEl.value;
       var handleEl = tr.querySelector('.handle-dir'); if (handleEl && it.handle) handleEl.value = it.handle;
       var bmw = tr.querySelector('.bmw'); if (bmw) bmw.value = it.bmw || '';

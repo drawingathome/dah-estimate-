@@ -633,7 +633,7 @@ function openVendorInfoModal() {
   wrap.style.cssText = 'width:100%;max-width:720px';
   content.appendChild(wrap);
 
-  function buildTable(title, hintText, trs, buildRow) {
+  function buildTable(title, hintText, headers, trs, buildRow) {
     var section = document.createElement('div');
     section.style.cssText = 'background:#fff;border-radius:12px;padding:16px;margin-bottom:16px';
     var titleEl = document.createElement('div');
@@ -645,12 +645,10 @@ function openVendorInfoModal() {
     var table = document.createElement('table');
     table.style.cssText = 'width:100%;border-collapse:collapse;font-size:12px';
     var thead = document.createElement('thead');
-    thead.innerHTML = '<tr style="border-bottom:1.5px solid #282828">'
-      + '<th style="text-align:left;padding:8px 4px">위치</th>'
-      + '<th style="text-align:center;padding:8px 4px;white-space:nowrap">사이즈</th>'
-      + '<th style="text-align:left;padding:8px 4px">제품명</th>'
-      + '<th style="text-align:left;padding:8px 4px;min-width:120px">거래처</th>'
-      + '</tr>';
+    var theadRow = '<tr style="border-bottom:1.5px solid #282828">';
+    headers.forEach(function(h){ theadRow += '<th style="text-align:left;padding:8px 4px;white-space:nowrap">'+h+'</th>'; });
+    theadRow += '</tr>';
+    thead.innerHTML = theadRow;
     var tbody = document.createElement('tbody');
     trs.forEach(function(tr){ tbody.appendChild(buildRow(tr)); });
     table.appendChild(thead); table.appendChild(tbody);
@@ -659,13 +657,14 @@ function openVendorInfoModal() {
   }
 
   if (curtainTrs.length > 0) {
-    buildTable('커튼', '원단 거래처는 커튼마다 다를 수 있어 직접 입력해주세요. (제작·레일 발주는 자동으로 처리돼요)', curtainTrs, function(tr) {
+    buildTable('커튼', '원단·레일 거래처는 커튼마다 다를 수 있어 직접 입력해주세요. (제작 발주만 자동으로 처리돼요)', ['위치','사이즈','제품명','원단 거래처','레일 거래처'], curtainTrs, function(tr) {
       var space = tr.querySelector('.space-inp')?.value || '—';
       var mw = tr.querySelector('.mw')?.value || '';
       var mh = tr.querySelector('.mh')?.value || '';
       var size = (mw && mh) ? (mw + '×' + mh) : '—';
       var name = tr.querySelector('.c-display-name')?.value || '—';
       var origVendorInput = tr.querySelector('.c-vendor');
+      var origRailVendorInput = tr.querySelector('.c-rail-vendor');
 
       var row = document.createElement('tr');
       row.style.cssText = 'border-bottom:1px solid #EEE6DC';
@@ -683,24 +682,63 @@ function openVendorInfoModal() {
       input.addEventListener('input', function(){ if (origVendorInput) origVendorInput.value = input.value; });
       td.appendChild(input);
       row.appendChild(td);
+
+      // 2026-09-09(선혜님 지적 - "레일 발주는 어떻게 하라는건지....") -
+      // 레일거래처(.c-rail-vendor)는 안내 문구와 달리 실제로는 자동
+      // 처리가 아니라 여전히 커튼 행마다 개별 입력해야 하는데, 이 팝업에
+      // 입력할 곳 자체가 없었음. 원단 거래처와 나란히 추가.
+      var railTd = document.createElement('td');
+      railTd.style.cssText = 'padding:6px 4px';
+      var railInput = document.createElement('input');
+      railInput.type = 'text';
+      railInput.setAttribute('list', 'vendor-list');
+      railInput.placeholder = '레일 거래처';
+      railInput.value = origRailVendorInput ? origRailVendorInput.value : '';
+      railInput.style.cssText = 'width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box';
+      railInput.addEventListener('input', function(){ if (origRailVendorInput) origRailVendorInput.value = railInput.value; });
+      railTd.appendChild(railInput);
+      row.appendChild(railTd);
       return row;
     });
   }
 
   if (blindTrs.length > 0) {
-    buildTable('블라인드', '거래처는 반드시 선택해주세요.', blindTrs, function(tr) {
+    buildTable('블라인드', '품명·컬러·끈길이를 입력하고, 거래처는 반드시 선택해주세요.', ['위치','사이즈','품명','컬러','끈길이','거래처'], blindTrs, function(tr) {
       var space = tr.querySelector('.space-inp')?.value || '—';
       var bmw = tr.querySelector('.bmw')?.value || '';
       var bmh = tr.querySelector('.bmh')?.value || '';
       var size = (bmw && bmh) ? (bmw + '×' + bmh) : '—';
-      var name = tr.querySelector('.b-display-name')?.value || '—';
+      var displayName = tr.querySelector('.b-display-name')?.value || '';
+      var origFabricInput = tr.querySelector('.b-fabric');
+      var origColorInput = tr.querySelector('.b-color');
+      var origCordInput = tr.querySelector('.b-cord-length');
       var origVendorSelect = tr.querySelector('.b-vendor');
 
       var row = document.createElement('tr');
       row.style.cssText = 'border-bottom:1px solid #EEE6DC';
       row.innerHTML = '<td style="padding:10px 4px;font-weight:700">'+escHtml(space)+'</td>'
-        + '<td style="padding:10px 4px;text-align:center;white-space:nowrap">'+escHtml(size)+'</td>'
-        + '<td style="padding:10px 4px">'+escHtml(name)+'</td>';
+        + '<td style="padding:10px 4px;text-align:center;white-space:nowrap">'+escHtml(size)+'</td>';
+
+      // 2026-09-09(선혜님 지적 - "블라인드는 품명이랑 컬러를 적을 수 있게
+      // 해야 하는데 수정이 안되네" + "끈길이도 적을 수 있게 해줘야
+      // 하는데 그게 안되네"): 이 팝업엔 "거래처"만 있고 품명/컬러/끈길이
+      // 입력창 자체가 없었음 - 커튼과 똑같은 문제(작은 칸에 갇혀서 아무도
+      // 못 채움)가 블라인드에 그대로 남아있었음. 3개 다 추가.
+      function makeSmallInput(placeholder, origEl, extraStyle) {
+        var td = document.createElement('td'); td.style.cssText = 'padding:6px 4px';
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = placeholder;
+        input.value = origEl ? origEl.value : '';
+        input.style.cssText = 'width:100%;padding:9px 8px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;box-sizing:border-box' + (extraStyle||'');
+        input.addEventListener('input', function(){ if (origEl) origEl.value = input.value; });
+        td.appendChild(input);
+        return td;
+      }
+      row.appendChild(makeSmallInput(displayName ? displayName : '품명', origFabricInput));
+      row.appendChild(makeSmallInput('컬러', origColorInput, ';max-width:80px'));
+      row.appendChild(makeSmallInput('끈길이', origCordInput, ';max-width:80px'));
+
       var td = document.createElement('td');
       td.style.cssText = 'padding:6px 4px';
       var select = document.createElement('select');
@@ -789,10 +827,10 @@ function collectVendorGroups() {
   });
 
   document.querySelectorAll('#blind-body tr').forEach(function(tr){
-    var innerInps = tr.querySelectorAll('.inner-row .inner-inp');
-    var fabric = innerInps[0]?.value || '';
-    var vendor = innerInps[1]?.value || '';
-    var color  = innerInps[2]?.value || '';
+    var fabric = tr.querySelector('.b-fabric')?.value || '';
+    var vendor = tr.querySelector('.b-vendor')?.value || '';
+    var color  = tr.querySelector('.b-color')?.value || '';
+    var cordLength = tr.querySelector('.b-cord-length')?.value || '';
     if(!fabric && !vendor) return;
     var space = tr.querySelector('.space-inp')?.value || '';
     var bmw   = tr.querySelector('.bmw')?.value || '';
@@ -802,7 +840,9 @@ function collectVendorGroups() {
     items.push({
       space: space||'—', product: fabric||'—', color: color||'—',
       size:(bmw&&bmh)?(bmw+'×'+bmh):'—',
-      content: [handle ? (handle==='기타'?'기타':handle+'잡이') : '', opt].filter(Boolean).join(' / ')||'—',
+      // 2026-09-09(선혜님 지적 - "블라인드는 끈길이도 적을 수 있게
+      // 해줘야 하는데 그게 안되네"): 끈길이 정보를 내용 칸에 함께 표시.
+      content: [handle ? (handle==='기타'?'기타':handle+'잡이') : '', opt, cordLength ? ('끈길이 '+cordLength) : ''].filter(Boolean).join(' / ')||'—',
       qty: '1개',
       vendor: vendor,
       orderCategory: 'blind'
@@ -1036,8 +1076,7 @@ function buildRequestHTML(kind, extraNote) {
       var space  = tr.querySelector('.space-inp')?.value || '';
       var kind2  = tr.querySelector('.blind-kind')?.value || '블라인드';
       var name   = tr.querySelector('.b-display-name')?.value || '';
-      var innerInps = tr.querySelectorAll('.inner-row .inner-inp');
-      var fabric = innerInps[0]?.value || '';
+      var fabric = tr.querySelector('.b-fabric')?.value || '';
       if(!space && !fabric && !name) return;
       var g = getGroup(space, extractSubLoc(name));
       g.parts[kind2] = (g.parts[kind2]||0) + 1;
@@ -1168,18 +1207,21 @@ function buildRequestHTML(kind, extraNote) {
     });
     document.querySelectorAll('#blind-body tr').forEach(function(tr){
       var space  = tr.querySelector('.space-inp')?.value || '';
-      var innerInps = tr.querySelectorAll('.inner-row .inner-inp');
-      var vendor = innerInps[1]?.value || '';
+      var vendor = tr.querySelector('.b-vendor')?.value || '';
       var bname  = tr.querySelector('.b-display-name')?.value || '';
       var bmw = tr.querySelector('.bmw')?.value || '';
       var bmh = tr.querySelector('.bmh')?.value || '';
       var handle = tr.querySelector('.handle-dir')?.value || '';
       var blindKind = tr.querySelector('.blind-kind')?.value || '';
+      var cordLength = tr.querySelector('.b-cord-length')?.value || '';
       if(!space && !bmw && !vendor && !bname) return;
       rows.push({
         space: space||'—',
         size: (bmw&&bmh) ? (bmw+'×'+bmh) : '—',
-        content: [blindKind, handle ? (handle==='기타'?'기타':handle+'잡이') : ''].filter(Boolean).join(' — ')||'—',
+        // 2026-09-09(선혜님 지적 - "블라인드는 끈길이도 적을 수 있게
+        // 해줘야 하는데 그게 안되네"): 끈길이 정보를 내용 칸에 추가 -
+        // 시공기사님이 실제 끈길이를 알아야 정확히 시공 가능.
+        content: [blindKind, handle ? (handle==='기타'?'기타':handle+'잡이') : '', cordLength ? ('끈길이 '+cordLength) : ''].filter(Boolean).join(' — ')||'—',
         // 2026-09-08(선혜님 지적 - "블라인드도 지금은 가공소로 들어가있어",
         // 직접 수정한 파일과 비교해 발견): 블라인드는 완제품을 그대로
         // 구매하는 거라 원단을 재단하는 "가공소" 공정 자체가 없는데,

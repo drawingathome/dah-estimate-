@@ -267,7 +267,7 @@ function addBlindRow() {
       '<input type="text" placeholder="제품명 (고객용)" class="b-display-name" style="'+INP+'">'+
       '<div class="inner-fields print-hide">'+
         '<div class="inner-row">'+
-          '<input type="text" list="blind-list" placeholder="원단명" class="inner-inp">'+
+          '<input type="text" list="blind-list" placeholder="원단명" class="inner-inp b-fabric">'+
           // 2026-09-09(선혜님 지시 - "블라인드도 윈텍과 덱스터중 한 곳이
           // 되어야 해"): 자유입력(자동완성)이었던 걸 필수 선택 드롭다운으로
           // 변경 - 오타/누락 없이 반드시 등록된 거래처 중 하나를 고르게 함.
@@ -275,7 +275,11 @@ function addBlindRow() {
           // 카테고리로 등록된 곳들) refreshBlindVendorOptions()가 채움 -
           // 새 업체가 나중에 추가되면 코드 수정 없이 자동으로 선택지에 반영됨.
           '<select class="inner-inp b-vendor" required style="width:72px"><option value="">거래처 선택</option></select>'+
-          '<input type="text" placeholder="컬러" class="inner-inp" style="width:60px">'+
+          '<input type="text" placeholder="컬러" class="inner-inp b-color" style="width:60px">'+
+          // 2026-09-09(선혜님 지적 - "블라인드는 끈길이도 적을 수 있게
+          // 해줘야 하는데 그게 안되네"): 새 필드 신설 - 실제 발주서
+          // "내용" 칸에 손잡이 방향과 함께 표시됨.
+          '<input type="text" placeholder="끈길이" class="inner-inp b-cord-length" style="width:60px">'+
         '</div>'+
       '</div>'+
     '</td>'+

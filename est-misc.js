@@ -108,15 +108,17 @@ function collectLineItems() {
   });
   document.querySelectorAll('#blind-body tr').forEach(function(tr){
     var space = tr.querySelector('.space-inp')?.value||'';
-    var innerInps = tr.querySelectorAll('.inner-row .inner-inp');
-    var fabric = innerInps[0]?.value||'';
+    var fabric = tr.querySelector('.b-fabric')?.value||'';
     var bmwVal = tr.querySelector('.bmw')?.value||'';
     var bmhVal = tr.querySelector('.bmh')?.value||'';
     if (!space && !fabric && !bmwVal && !bmhVal) return;
     lineItems.push({
       type: 'blind', space: space, fabric: fabric,
       displayName: tr.querySelector('.b-display-name')?.value||'',
-      vendor: innerInps[1]?.value||'', color: innerInps[2]?.value||'',
+      vendor: tr.querySelector('.b-vendor')?.value||'', color: tr.querySelector('.b-color')?.value||'',
+      // 2026-09-09(선혜님 지적 - "블라인드는 끈길이도 적을 수 있게
+      // 해줘야 하는데 그게 안되네"): 끈길이 필드 신설.
+      cordLength: tr.querySelector('.b-cord-length')?.value||'',
       kind: tr.querySelector('.blind-kind')?.value||'', handle: tr.querySelector('.handle-dir')?.value||'',
       bmw: tr.querySelector('.bmw')?.value||'', bmh: tr.querySelector('.bmh')?.value||'',
       opt: tr.querySelector('.blind-opt')?.value||'',
@@ -285,10 +287,10 @@ function loadDraft() {
             if (!btr) return;
             if (btr.querySelector('.space-inp')) btr.querySelector('.space-inp').value = item.space || '';
             if (btr.querySelector('.b-display-name')) btr.querySelector('.b-display-name').value = item.displayName || '';
-            var innerInps = btr.querySelectorAll('.inner-row .inner-inp');
-            if (innerInps[0]) innerInps[0].value = item.fabric || '';
-            if (innerInps[1]) innerInps[1].value = item.vendor || '';
-            if (innerInps[2]) innerInps[2].value = item.color || '';
+            if (btr.querySelector('.b-fabric')) btr.querySelector('.b-fabric').value = item.fabric || '';
+            if (btr.querySelector('.b-vendor')) btr.querySelector('.b-vendor').value = item.vendor || '';
+            if (btr.querySelector('.b-color')) btr.querySelector('.b-color').value = item.color || '';
+            if (btr.querySelector('.b-cord-length')) btr.querySelector('.b-cord-length').value = item.cordLength || '';
             if (btr.querySelector('.blind-kind')) btr.querySelector('.blind-kind').value = item.kind || '';
             if (btr.querySelector('.handle-dir')) btr.querySelector('.handle-dir').value = item.handle || '';
             if (btr.querySelector('.bmw')) btr.querySelector('.bmw').value = item.bmw || '';
