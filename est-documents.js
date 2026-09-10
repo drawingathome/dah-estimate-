@@ -542,7 +542,11 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         // 2026-09-10(선혜님 지적 - "도착일 / 도착 장소가 없어"): 언제까지
         // 받고 싶은지(희망 도착일)를 전혀 표시 안 하고 있었음 - 발주정보
         // 팝업에서 입력받은 값을 여기 표시(입력 안 하면 "협의" 표시).
-        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">도착일</span><strong>'+(arrivalDate||'협의')+'</strong></div>'
+        // 2026-09-10(선혜님 지적 - "도착일 과 받는 곳은 수정이 되게 쫌
+        // 해"): 팝업까지 다시 돌아가지 않아도, 이미 만들어진 발주서
+        // 화면에서 직접 클릭해서 바로 고칠 수 있게 함 - 비고 칸에 이미
+        // 적용된 것과 동일한 방식(contenteditable).
+        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">도착일</span><strong contenteditable="true" class="pv-editable-field" style="outline:none;border-bottom:1px dashed #DDD5CB;min-width:80px;text-align:right">'+(arrivalDate||'협의')+'</strong></div>'
         +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">업체명</span><strong>드로잉엣홈</strong></div>'
         +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">담당자</span><strong>'+(cStaff||'—')+'</strong></div>'
       +'</div>'
@@ -551,7 +555,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         // 바로 옆에 "도착 장소"(우리 회사 주소)가 나란히 있어서, "받는곳"
         // 이 거래처 이름인데도 "어디로 보내는지" 목적지처럼 헷갈릴 수
         // 있었음 - 이 발주서를 보내는 거래처임을 명확히 하는 "발주처"로 교체.
-        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">발주처</span><strong>'+escHtml(vendor)+'</strong></div>'
+        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">발주처</span><strong contenteditable="true" class="pv-editable-field" style="outline:none;border-bottom:1px dashed #DDD5CB;min-width:80px;text-align:right">'+escHtml(vendor)+'</strong></div>'
         // 2026-09-10: "수령지: 드로잉엣홈으로 보내주세요"라는 안내
         // 문구만 있고 실제 주소가 없었음 - 실제 주소(견적서 상단에 이미
         // 쓰는 것과 동일)로 명확히 교체.
