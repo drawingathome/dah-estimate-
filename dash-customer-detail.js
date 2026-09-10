@@ -192,18 +192,26 @@ function renderDetailEstTabInner(estEl) {
   // 보드의 3그룹 색상 로직(dash-render.js)과 동일하게 맞춤.
   var currentCustomerStage = getCustomerCurrentStage(currentDetailName, currentDetailId);
 
-  // 재구매 여부 - 계약된 견적이 2개 이상이면 재구매
-  var contractedCount = ests.filter(function(e){ return e.contractStatus === 'contracted'; }).length;
-  if (contractedCount > 1) {
+  // 2026-09-09(선혜님 지시 - "니가 전문업체면 어떻게 하는게 낫겠니?"로
+  // 확정): "계약된 견적이 2개 이상"(contractStatus==='contracted', 사람이
+  // 직접 배지를 눌러야만 바뀌는 수동 필드) 기준은, 안 누르면 절대 재구매로
+  // 안 잡히는 부정확한 방식이었음 - 실제 재구매 고객(김명석, 8/4·8/22 두
+  // 프로젝트)으로 검증해본 결과, "서로 다른 날짜에 견적서가 만들어졌는지"
+  // (createdAt, 자동으로 정확히 기록됨)가 훨씬 신뢰할 수 있고 실제로도
+  // 정확히 재구매를 잡아냄 - 같은 날 여러 번 저장(가견적→최종 전환 등)은
+  // 같은 프로젝트로 안 세고, 진짜 다른 날 다시 왔을 때만 재구매로 판단.
+  var distinctDays = {};
+  ests.forEach(function(e){ if (e.createdAt) distinctDays[String(e.createdAt).slice(0,10)] = true; });
+  var repeatVisitCount = Object.keys(distinctDays).length;
+  if (repeatVisitCount > 1) {
     var rebuyBanner = div('background:#FFF3EE;border:1px solid var(--terra);border-radius:12px;padding:10px 14px;margin-bottom:var(--sp-3);display:flex;align-items:center;gap:var(--sp-2)', [
       el('span', {style:'font-size:11px', text:'🔄'}),
-      el('span', {style:'font-size:12px;font-weight:700;color:var(--terra)', text:'재구매 고객 — 계약 '+contractedCount+'회'})
+      el('span', {style:'font-size:12px;font-weight:700;color:var(--terra)', text:'재구매 고객 — '+repeatVisitCount+'회 방문'})
     ]);
     estEl.appendChild(rebuyBanner);
   }
 
   ests.forEach(function(e, i) {
-    var cs = e.contractStatus || 'pending';
     var isFinal = e.status === 'final';
     // 2026-09-08: isContracted도 위와 같은 이유로 stage 기준으로 통일 -
     // 배지(현재단계)와 카드 배경색이 서로 다른 기준을 쓰면 오히려 더

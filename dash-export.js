@@ -120,20 +120,22 @@ function _exportEstimatesExcelInner() {
 
     if (!estimates || estimates.length === 0) { showToast('내보낼 견적서 데이터가 없습니다'); return; }
 
-    var CONTRACT_KO = {pending:'가견적', contracted:'계약됨', rejected:'미계약'};
     var STATUS_KO   = {ga:'가견적서', final:'최종견적서'};
 
     var headers = [
-      '견적번호','구분','계약상태','고객명','공간',
+      '견적번호','구분','현재단계','고객명','공간',
       '제품','품목수',
       '금액(원)','원단거래처','블라인드거래처','담당자','견적일','저장일','메모'
     ];
 
     var rows = estimates.map(function(e) {
+      // 2026-09-09(선혜님 - "니가 전문업체면 어떻게 하는게 낫겠니?"):
+      // 계약상태(contract_status, 수동)를 실제 현재단계(customers.stage,
+      // 자동 관리)로 교체 - 오늘 정리한 대시보드 배지들과 같은 방향.
       return [
         e.no             || '',
         STATUS_KO[e.status] || '가견적서',
-        CONTRACT_KO[e.contractStatus] || '가견적',
+        (typeof getCustomerCurrentStage === 'function' ? getCustomerCurrentStage(e.clientName, e.clientId) : '') || '—',
         e.clientName     || '',
         e.space          || '',
         e.fabric         || '',

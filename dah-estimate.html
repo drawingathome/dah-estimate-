@@ -710,13 +710,12 @@
 
   <!-- 액션 버튼 -->
   <div class="action-bar print-hide">
-    <div style="display:flex;gap:8px;margin-bottom:8px">
-      <button onclick="location.href='dah-dashboard.html'"
-        style="flex:1;height:44px;background:#FAF7F5;color:#282828;border:1.5px solid #EEE6DC;border-radius:12px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;letter-spacing:-0.3px">
-        ← 대시보드
-      </button>
-      <button class="btn-new" onclick="newEstimate()" style="flex:2;height:44px">새 견적서</button>
-    </div>
+    <!-- 2026-09-09(선혜님 지적 - "대시보드/새견적서가 눈에 잘 보여" →
+         전문업체 관점 평가 요청): "나가기"/"새로 시작"(드물게 쓰고,
+         새 견적서는 지금 작성 중인 내용을 버리는 동작이라 위험할 수
+         있음)이 "저장"/"고객용 출력"(자주 쓰고 안전한 핵심 동작)보다
+         먼저·크게 보이던 순서를 뒤집음 - 핵심 동작을 위로, 네비게이션은
+         아래로. -->
     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
       <span style="font-size:11px;color:#B0A99F;letter-spacing:-0.2px">✔ 출력 시 내부 정보 자동 제거</span>
       <button id="load-draft-btn" onclick="loadDraft()" style="display:none;padding:4px 10px;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;flex-shrink:0">
@@ -726,9 +725,6 @@
     <div class="action-main">
       <div class="btn-row" style="display:flex;gap:10px;width:100%"><button class="btn-print" style="flex:1" onclick="printForCustomer()">🖨 고객용 출력</button>
       <button class="btn-save" id="btn-save-estimate" style="flex:1" onclick="saveEstimate()">💾 저장</button></div>
-      <!-- 2026-08-06: 아래 4개 버튼(엑셀/발주서/실측/시공)이 세로로 4줄 쌓여있어서
-           위계 없이 "일단 다 넣은" 느낌이었음(디자인 감사로 발견). "문서 자료" 라는
-           작은 그룹 라벨을 붙이고 2x2 격자로 묶어서 하나의 유틸리티 묶음으로 보이게 함. -->
       <!-- 2026-09-09(선혜님 지시 - "실측 시공 발주가 다 따로 되어있다"
            지적으로 만든 업무처리 통합 UI): 각 버튼에 현재 진행상태를
            함께 보여줌(id=work-*-status) - renderWorkStatusCards()가
@@ -745,9 +741,17 @@
           <span>🔧 시공 의뢰서</span><span class="work-status" id="work-install-status" style="font-size:11px;font-weight:600;color:var(--sub)">—</span>
         </button>
       </div>
-      <div style="margin-top:14px;font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.04em">문서 자료</div>
-      <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-top:6px">
-        <button onclick="exportAllEstimatesExcel()" style="padding:12px 0;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px">📊 엑셀 다운로드</button>
+      <!-- 2026-09-09: "문서 자료 > 엑셀 다운로드"(전체 견적서 다운로드)
+           섹션 제거 - 대시보드(dash-export.js)에 이미 완전히 동일한
+           기능이 있어서, 개별 견적서 작성 화면에 있는 게 위치도 안 맞고
+           중복이었음(전문업체 관점 평가로 발견). -->
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <button onclick="location.href='dah-dashboard.html'"
+          style="flex:1;height:40px;background:transparent;color:#B0A99F;border:1px solid #EEE6DC;border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;letter-spacing:-0.3px">
+          ← 대시보드
+        </button>
+        <button class="btn-new" onclick="newEstimate()" style="flex:1;height:40px;font-size:12px">새 견적서</button>
+      </div>
       </div>
     </div>
   </div>
@@ -826,7 +830,7 @@
 <script src="/est-form-controls.js?v=202609082700"></script>
 <script src="/est-product-calc.js?v=202609090500"></script>
 <script src="/est-survey.js?v=202608190049"></script>
-<script src="/est-save.js?v=202609081200"></script>
+<script src="/est-save.js?v=202609091000"></script>
 <script src="/est-documents.js?v=202609090900"></script>
 <script src="/est-customer-load.js?v=202609090900"></script>
 <script src="/est-misc.js?v=202609090900"></script>

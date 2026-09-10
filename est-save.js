@@ -809,6 +809,15 @@ function _saveEstimateInner(_onDone) {
 // 재시도까지 막아버리는 회귀를 자체 테스트로 발견해 제거함 - idempotency
 // key 재사용만으로 이미 충분한 방어였음.)
 function saveEstimate() {
+  // 2026-09-08(선혜님 지적 - "저장 후 대시보드를 클릭하면 사이트에서
+  // 나갈까요? 저장되지 않을 수 있습니다가 무조건 알림이 떠 저장이
+  // 됐으면 안떠야지"): dah-estimate.html의 beforeunload 핸들러가
+  // c-name의 dataset.saved를 확인해서 경고 여부를 정하는데, 정작 이
+  // dataset.saved를 '설정'하는 코드 자체가 어디에도 없었음(전수검색으로
+  // 확인) - 그래서 저장을 아무리 성공해도 saved는 항상 undefined로
+  // 남아, 이름만 입력되어 있으면 무조건 나가기 경고가 뜨고 있었음.
+  // 저장 흐름이 끝나는 시점(reenable, 성공/로컬저장/실패 무관하게 항상
+  // 호출됨)에 플래그를 설정.
   // 2026-09-04(선혜님 요청 - "우리가 채워야 하는 부분... 안채워지면
   // 견적서 저장할때 따로 알림이 뜨게 해줘"): 저장 직전에 주소/실측일/
   // 시공일이 비어있는지 확인 - "날짜미정" 체크박스가 되어있으면 그
@@ -832,6 +841,8 @@ function saveEstimate() {
   }
   function reenable() {
     if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+    var nameEl = document.getElementById('c-name');
+    if (nameEl) nameEl.dataset.saved = '1';
   }
   try {
     _saveEstimateInner(reenable);
@@ -918,68 +929,11 @@ function runSelfDiagnosis() {
   check('현재 페이지 버전', true, 'v' + (window.DAH_BUILD||'?'));
 }
 
-function exportAllEstimatesExcel() {
-  try {
-    var estimates = [];
-    try { estimates = JSON.parse(localStorage.getItem('dah_saved') || '[]'); } catch(ex) {}
-    if (!estimates || estimates.length === 0) { showToast('저장된 견적서가 없습니다'); return; }
-
-    var CONTRACT_KO = {pending:'가견적', contracted:'계약됨', rejected:'미계약'};
-    var STATUS_KO   = {ga:'가견적서', final:'최종견적서'};
-
-    var headers = [
-      '견적번호','구분','계약상태','고객명','연락처','주소','공간',
-      '제품/원단','금액(원)','성과매출(원)',
-      '담당자','실측일','시공일','저장일','메모'
-    ];
-
-    var rows = estimates.map(function(e) {
-      return [
-        e.no                               || '',
-        STATUS_KO[e.status]                || '가견적서',
-        CONTRACT_KO[e.contractStatus]      || '가견적',
-        e.clientName                       || '',
-        e.phone                            || '',
-        e.addr                             || '',
-        e.space                            || '',
-        e.fabric                           || '',
-        Number(e.price)                    || 0,
-        Number(e.performanceRevenue)       || 0,
-        e.staffName                        || '',
-        e.date                             || '',
-        e.installDate                      || '',
-        e.savedAt ? e.savedAt.slice(0,10)  : '',
-        e.memo                             || ''
-      ];
-    });
-
-    var BOM = '\uFEFF';
-    var csv = BOM + [headers].concat(rows).map(function(row) {
-      return row.map(function(cell) {
-        var s = String(cell);
-        if (s.indexOf(',') >= 0 || s.indexOf('\n') >= 0 || s.indexOf('"') >= 0) {
-          s = '"' + s.replace(/"/g, '""') + '"';
-        }
-        return s;
-      }).join(',');
-    }).join('\r\n');
-
-    var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-    var url  = URL.createObjectURL(blob);
-    var a    = document.createElement('a');
-    var d    = new Date();
-    var pad  = function(n){ return String(n).padStart(2,'0'); };
-    a.href     = url;
-    a.download = '드로잉엣홈_견적서목록_' + d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate()) + '.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast('견적서 엑셀 저장 완료 (' + estimates.length + '건)');
-  } catch(e) {
-    alert('내보내기 실패: ' + e.message);
-  }
-}
+// 2026-09-09(선혜님 - "저게 있는게 맞을까?? 전문업체 관점에서 평가해봐"):
+// exportAllEstimatesExcel()(전체 견적서 엑셀 다운로드) 함수를 여기서
+// 완전히 제거함 - 대시보드(dash-export.js의 _exportEstimatesExcelInner)에
+// 완전히 동일한 기능이 이미 있었음. "개별 견적서 작성 화면"에 "전체
+// 견적서 목록" 다운로드 버튼이 있는 건 위치도 안 맞고 순수 중복이었음.
 
 function showToast(msg) {
   var t=document.getElementById('toast');
