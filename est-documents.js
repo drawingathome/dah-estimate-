@@ -533,39 +533,39 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
       +'<div style="font-size:11px;color:#B0A99F;letter-spacing:3px;margin-top:6px">발 주 서</div>'
       +'</div>';
 
-  out += '<div style="display:flex;gap:var(--sp-6);margin-top:var(--sp-6);padding-top:16px;border-top:1px solid #282828;font-size:13px">'
-      +'<div style="flex:1">'
-        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">요청일</span><strong>'+today+'</strong></div>'
-        // 2026-09-10(선혜님 지적 - "도착일 / 도착 장소가 없어"): 언제까지
-        // 받고 싶은지(희망 도착일)를 전혀 표시 안 하고 있었음 - 발주정보
-        // 팝업에서 입력받은 값을 여기 표시(입력 안 하면 "협의" 표시).
-        // 2026-09-10(선혜님 지적 - "도착일 과 받는 곳은 수정이 되게 쫌
-        // 해"): 팝업까지 다시 돌아가지 않아도, 이미 만들어진 발주서
-        // 화면에서 직접 클릭해서 바로 고칠 수 있게 함 - 비고 칸에 이미
-        // 적용된 것과 동일한 방식(contenteditable).
-        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">도착일</span><strong contenteditable="true" class="pv-editable-field" style="outline:none;border-bottom:1px dashed #DDD5CB;min-width:80px;text-align:right">'+(arrivalDate||'협의')+'</strong></div>'
-        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">업체명</span><strong>드로잉엣홈</strong></div>'
-        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">담당자</span><strong>'+(cStaff||'—')+'</strong></div>'
-      +'</div>'
-      +'<div style="flex:1">'
+  // 2026-09-11(선혜님 지적 - "발주서 포멧이 마음에 안들어 그냥 길게
+  // 하지 말고 표를 만든상태서 수정을 하게 하는건 어때??"): 세로로 6줄
+  // 쌓이던 flexbox 나열 방식을 실제 테두리 있는 표(3행 2열)로 재구성 -
+  // 훨씬 컴팩트하고, 처음 참고로 보여주신 실제 발주서 양식과도 더
+  // 비슷한 형태. 각 값 칸은 여전히 클릭해서 직접 수정 가능(contenteditable).
+  function infoTableRow(label1, val1, editable1, label2, val2, editable2) {
+    var cellStyle = 'padding:8px 10px;border:1px solid #EEE6DC;font-size:13px';
+    var labelStyle = cellStyle + ';background:#FAF7F5;color:#8E8078;white-space:nowrap;width:1%';
+    var valStyle = cellStyle + ';font-weight:700';
+    return '<tr>'
+      + '<td style="'+labelStyle+'">'+label1+'</td>'
+      + '<td style="'+valStyle+'"'+(editable1?' contenteditable="true" class="pv-editable-field"':'')+'>'+val1+'</td>'
+      + '<td style="'+labelStyle+'">'+label2+'</td>'
+      + '<td style="'+valStyle+'"'+(editable2?' contenteditable="true" class="pv-editable-field"':'')+'>'+val2+'</td>'
+      + '</tr>';
+  }
+  out += '<table style="width:100%;border-collapse:collapse;margin-top:var(--sp-6);padding-top:16px">'
+      + infoTableRow('요청일', today, false, '발주처', escHtml(vendor), true)
+      // 2026-09-10(선혜님 지적 - "도착일 / 도착 장소가 없어" → "수정이
+      // 되게" → "거래처마다 달라야"): 발주정보 팝업에서 거래처별로
+      // 입력받은 값을 여기 표시(입력 안 하면 "협의" 표시), 클릭해서도
+      // 직접 수정 가능.
+      + infoTableRow('도착일', arrivalDate||'협의', true,
         // 2026-09-10(선혜님 지적 - "받는곳이라고 하면 헷갈릴꺼 같은데"):
-        // 바로 옆에 "도착 장소"(우리 회사 주소)가 나란히 있어서, "받는곳"
-        // 이 거래처 이름인데도 "어디로 보내는지" 목적지처럼 헷갈릴 수
-        // 있었음 - 이 발주서를 보내는 거래처임을 명확히 하는 "발주처"로 교체.
-        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">발주처</span><strong contenteditable="true" class="pv-editable-field" style="outline:none;border-bottom:1px dashed #DDD5CB;min-width:80px;text-align:right">'+escHtml(vendor)+'</strong></div>'
-        // 2026-09-10: "수령지: 드로잉엣홈으로 보내주세요"라는 안내
-        // 문구만 있고 실제 주소가 없었음 - 실제 주소(견적서 상단에 이미
-        // 쓰는 것과 동일)로 명확히 교체.
-        // 2026-09-10(선혜님 지적 - "최종적으로 도착해야 할 곳, 즉 저희
-        // 회사 아니고 가공소로 도착되게 해야 해"): 원단은 저희 회사가
-        // 아니라 가공소로 바로 배송되는 경우가 있는 등, 발주 종류/거래처에
-        // 따라 실제 도착지가 달라질 수 있음 - 회사주소로 고정하지 않고
-        // 직접 클릭해서 고칠 수 있게 함(도착일/발주처와 동일한 방식).
-        // 기본값은 회사주소로 두되, 필요하면 그 자리에서 가공소 주소 등
-        // 실제 도착지로 바로 수정 가능.
-        +'<div style="display:flex;justify-content:space-between;padding:4px 0"><span style="color:#8E8078">도착 장소</span><strong contenteditable="true" class="pv-editable-field" style="outline:none;border-bottom:1px dashed #DDD5CB;text-align:right">서울 서초구 사평대로 53길 64 1층<br>드로잉엣홈</strong></div>'
-      +'</div>'
-      +'</div>';
+        // "발주처"(위 칸)와 나란히 두면 둘 다 "어디로 가는지"처럼 헷갈릴
+        // 수 있어 "도착 장소"로 구분.
+        // 2026-09-10(선혜님 지적 - "가공소로 도착되게 해야 해"): 원단은
+        // 저희 회사가 아니라 가공소로 바로 배송되는 경우가 있는 등,
+        // 발주 종류/거래처에 따라 실제 도착지가 달라질 수 있어 고정
+        // 값이 아니라 직접 클릭해서 고칠 수 있게 함.
+        '도착 장소', '서울 서초구 사평대로 53길 64 1층 드로잉엣홈', true)
+      + infoTableRow('업체명', '드로잉엣홈', false, '담당자', cStaff||'—', false)
+      + '</table>';
 
   out += '<div style="margin-top:10px;font-size:11px;color:#B0A99F">*아래와 같이 발주 합니다.</div>';
 
