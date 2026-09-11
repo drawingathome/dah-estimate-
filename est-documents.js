@@ -543,10 +543,10 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   // 쌓이던 flexbox 나열 방식을 실제 테두리 있는 표(3행 2열)로 재구성 -
   // 훨씬 컴팩트하고, 처음 참고로 보여주신 실제 발주서 양식과도 더
   // 비슷한 형태. 각 값 칸은 여전히 클릭해서 직접 수정 가능(contenteditable).
-  function infoTableRow(label1, val1, editable1, label2, val2, editable2, emphasize) {
+  function infoTableRow(label1, val1, editable1, label2, val2, editable2, emphasize, extraClass2) {
     var cellStyle = 'padding:8px 10px;border:1px solid #EEE6DC;font-size:13px';
     var labelStyle = cellStyle + ';background:#FAF7F5;color:#8E8078;white-space:nowrap;width:1%';
-    // 2026-09-11(선혜님 지시 - "도착일과 도착장소는 굵은 폰트를 사용해주고"):
+    // 2026-09-11(선혜님 지적 - "도착일과 도착장소는 굵은 폰트를 사용해주고"):
     // 실제로 가장 중요한 정보(언제·어디로 보내야 하는지)만 굵게 강조하고
     // 나머지(요청일/발주처/업체명/담당자)는 일반 굵기로 낮춰서 대비를 줌.
     var valStyle = cellStyle + (emphasize ? ';font-weight:700' : ';font-weight:400');
@@ -554,9 +554,20 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
       + '<td style="'+labelStyle+'">'+label1+'</td>'
       + '<td style="'+valStyle+'"'+(editable1?' contenteditable="true" class="pv-editable-field"':'')+'>'+val1+'</td>'
       + '<td style="'+labelStyle+'">'+label2+'</td>'
-      + '<td style="'+valStyle+'"'+(editable2?' contenteditable="true" class="pv-editable-field"':'')+'>'+val2+'</td>'
+      + '<td style="'+valStyle+'"'+(editable2?' contenteditable="true" class="pv-editable-field'+(extraClass2?' '+extraClass2:'')+'"':'')+'>'+val2+'</td>'
       + '</tr>';
   }
+  out += '<table style="width:100%;border-collapse:collapse;margin-top:var(--sp-6);padding-top:16px">'
+      // 2026-09-11(선혜님 지시 - "모든 발주서 요청일자나 도착일자 도착
+      // 장소는 기본적으로 수정할 수 있게 해줘"): 요청일만 유일하게 고정
+      // 값(editable=false)이었음 - 도착일/도착장소/발주처와 동일하게
+      // 수정 가능하도록 통일.
+      // 2026-09-11(선혜님 지적 - "미지정을 고쳐도 원본엔 저장이 안 된다"):
+      // "발주처" 칸에 pv-vendor-name-field 클래스를 붙여서, 이 칸을 고치면
+      // 실제 견적서 행(원단/레일/블라인드 거래처 칸)까지 값이 반영되도록 함
+      // (printForVendor의 wireVendorNameEdit 참고).
+      + infoTableRow('요청일', today, true, '발주처', escHtml(vendor), true, false, 'pv-vendor-name-field')
+      // 2026-09-10(선혜님 지적 - "도착일 / 도착 장소가 없어" → "수정이
   out += '<table style="width:100%;border-collapse:collapse;margin-top:var(--sp-6);padding-top:16px">'
       // 2026-09-11(선혜님 지시 - "모든 발주서 요청일자나 도착일자 도착
       // 장소는 기본적으로 수정할 수 있게 해줘"): 요청일만 유일하게 고정
@@ -872,7 +883,8 @@ function collectVendorGroups(categoryFilter) {
       content:[pleat, open].filter(Boolean).join(' ')||'—',
       qty: qtyDisplay,
       vendor: vendor,
-      orderCategory: 'fabric'
+      orderCategory: 'fabric',
+      sourceRow: tr, vendorField: '.c-vendor'
     });
     var autoProductionVendor = getAutoProductionVendorName();
     if (autoProductionVendor) {
@@ -892,6 +904,10 @@ function collectVendorGroups(categoryFilter) {
         hemType: hemType || '—',
         shapeProcess: shapeProcess,
         fabricInfo: [vendor||'캔', fabric, yardage].filter(Boolean).join(' ') || '—'
+        // 2026-09-11: 캔가공소(제작) 거래처는 견적서 행마다 고르는 게 아니라
+        // 거래처 설정에서 등록한 전역 값(getAutoProductionVendorName)이라
+        // sourceRow를 안 붙임 - 문서에서 편집해도 어느 행을 고쳐야 할지
+        // 알 수 없고, 설정에서 고치는 게 맞는 값이라 편집 대상에서 제외.
       });
     }
     // 2026-08-10: 레일(전동 등) 거래처가 매번 다를 수 있어 견적서마다 입력
@@ -918,7 +934,8 @@ function collectVendorGroups(categoryFilter) {
         space: space||'—', product: (railJa ? railJa+'자 ' : '') + '조절레일(타공형)' + (heightAdjust <= -5 ? ' (전동)' : ''), color: '—',
         size: '—', fabSize: null,
         content: '—', qty: '1개', vendor: railVendor,
-        orderCategory: 'material'
+        orderCategory: 'material',
+        sourceRow: tr, vendorField: '.c-rail-vendor'
       });
     }
   });
@@ -967,7 +984,8 @@ function collectVendorGroups(categoryFilter) {
       comment: [opt, comment].filter(Boolean).join(' / ')||'—',
       qty: '1개',
       vendor: vendor,
-      orderCategory: 'blind'
+      orderCategory: 'blind',
+      sourceRow: tr, vendorField: '.b-vendor', vendorIsSelect: true
     });
   });
 
@@ -1187,6 +1205,13 @@ function printForVendor(categoryFilter) {
   inner.style.cssText = 'width:100%;max-width:640px';
   inner.innerHTML = html;
   content.appendChild(inner);
+  // 2026-09-11(선혜님 지적 - "미지정을 고쳐도 원본엔 저장이 안 된다" +
+  // "이게 베스트니?? 전문업체 기준으로" 평가 후 1순위로 확정): 발주서
+  // 문서의 "발주처" 칸을 고치면, 화면(인쇄용)만 바뀌는 게 아니라 그
+  // 항목들이 나온 실제 견적서 행(원단/레일 거래처 입력칸, 블라인드
+  // 거래처 선택칸)까지 값이 반영되도록 연결. 이래야 다음에 다시 열어도
+  // "미지정"으로 되돌아가지 않음.
+  wireVendorNameEdit(inner, precollected.groups);
 
   ov.appendChild(nav);
   ov.appendChild(content);
@@ -1195,7 +1220,69 @@ function printForVendor(categoryFilter) {
   document.body.classList.add('preview-open');
 }
 
-// 2026-09-10(eslint로 발견): _selectedPdfOpt가 est-customer-load.js에
+// 2026-09-11(선혜님 지적 - "미지정을 고쳐도 원본엔 저장이 안 된다" +
+// "전문업체 기준으로 업무효율성 평가해봐" 후 1순위 개선사항으로 확정):
+// 발주서 문서의 "발주처" 칸은 지금까지 contenteditable이긴 해도 화면
+// 표시만 바뀌고 실제 데이터(견적서의 원단/레일 거래처 입력칸, 블라인드
+// 거래처 선택칸)에는 반영이 안 됐음 - 다음에 다시 열면 도로 "미지정"으로
+// 나오는 원인이었음. groups(collectVendorGroups가 만든, 각 항목의
+// 원본 행(sourceRow)까지 담고 있는 객체)를 받아서, "발주처" 칸을 실제로
+// 고치면 그 그룹에 속한 모든 항목의 원본 행까지 값을 밀어넣어줌.
+function wireVendorNameEdit(container, groups) {
+  var fields = container.querySelectorAll('.pv-vendor-name-field');
+  fields.forEach(function(field){
+    var block = field.closest('[data-vendor]');
+    if (!block) return;
+    var vendorKey = block.getAttribute('data-vendor');
+    var groupItems = groups[vendorKey];
+    if (!groupItems || !groupItems.length) return;
+    // 캔가공소(제작)처럼 거래처가 견적서 행이 아니라 설정에서 오는
+    // 항목은 여기서 고쳐도 반영할 곳이 없음 - 편집 자체를 막고 안내.
+    var editableItems = groupItems.filter(function(it){ return it.sourceRow && it.vendorField; });
+    if (editableItems.length === 0) {
+      field.setAttribute('contenteditable', 'false');
+      field.style.cursor = 'not-allowed';
+      field.title = '이 거래처는 [설정 > 거래처 관리]에서 등록된 값이라 여기서는 못 고쳐요.';
+      return;
+    }
+    field.addEventListener('blur', function(){
+      var newVal = field.textContent.trim();
+      if (newVal === vendorKey || (vendorKey.indexOf('미지정') === 0 && newVal === '')) return;
+      var applied = 0, rejected = 0;
+      editableItems.forEach(function(it){
+        var input = it.sourceRow.querySelector(it.vendorField);
+        if (!input) return;
+        if (it.vendorIsSelect) {
+          // 2026-09-11: <select>는 등록된 거래처 중 하나로만 값을 바꿀 수
+          // 있음 - 목록에 없는 이름을 적으면 선택이 풀려버려서(빈 값)
+          // 오히려 원본을 망칠 수 있으므로, 등록된 옵션과 정확히 일치할
+          // 때만 반영하고 아니면 거부.
+          var matched = Array.from(input.options).some(function(opt){ return opt.value === newVal; });
+          if (matched) { input.value = newVal; applied++; } else { rejected++; }
+        } else {
+          input.value = newVal;
+          applied++;
+        }
+      });
+      if (rejected > 0 && applied === 0) {
+        alert('"' + newVal + '"은(는) 등록된 블라인드 거래처가 아니에요.\n거래처 관리에 먼저 등록하거나, 등록된 이름 그대로 입력해주세요.');
+        field.textContent = vendorKey.indexOf('미지정') === 0 ? '' : vendorKey;
+        return;
+      }
+      // 2026-09-11: 여기서 값을 바꾸는 건 "지금 열려있는 견적서 화면"까지만
+      // 이고, Supabase 저장은 아직 안 된 상태 - 견적서 저장 버튼을 눌러야
+      // 최종 반영됨을 명확히 알림(조용히 사라지는 변경이 되지 않도록).
+      var toast = document.createElement('div');
+      toast.className = 'print-hide';
+      toast.textContent = '✅ 이 견적서의 거래처 칸에 "' + newVal + '"(으)로 반영했어요. 견적서를 저장해야 최종 저장돼요.';
+      toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#282828;color:#fff;padding:10px 16px;border-radius:20px;font-size:12px;z-index:10001';
+      document.body.appendChild(toast);
+      setTimeout(function(){ toast.remove(); }, 3500);
+    });
+  });
+}
+
+
 // 이미 선언되어 있는데(실제 로직도 거기서 관리됨) 여기서도 동일하게
 // 중복 선언되고 있었음 - 두 파일이 같은 페이지에서 함께 로드되므로
 // 전역 변수가 두 곳에서 따로 초기화되는 혼란스러운 구조였음. 중복 제거.
