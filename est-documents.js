@@ -1064,6 +1064,11 @@ function collectVendorGroups() {
     var vendor = tr.querySelector('.c-vendor')?.value || '';
     var color  = tr.querySelector('.c-color')?.value || '';
     var railVendorCheck = tr.querySelector('.c-rail-vendor')?.value || '';
+    var space  = tr.querySelector('.space-inp')?.value || '';
+    var mw     = tr.querySelector('.mw')?.value || '';
+    var mh     = tr.querySelector('.mh')?.value || '';
+    var pnum   = tr.querySelector('.pnum')?.value || '';
+    var displayNameCheck = tr.querySelector('.c-display-name')?.value || '';
     // 2026-09-01(선혜님 지적 — "발주서(거래처별) 클릭하고 목성을 적으니
     // '거래처 또는 원단명이 입력된 항목이 없습니다'가 뜬다"로 발견, 실제
     // 프로덕션 재현): 목성은 실제로 원단(fabric)이 아니라 레일/부자재
@@ -1072,11 +1077,16 @@ function collectVendorGroups() {
     // 채운 행은 이 시점에 통째로 걸러져(return) 그 아래(611번대)에 이미
     // 있던 railVendor 처리 코드에 도달하지도 못하고 있었음 - 조건에
     // railVendor도 포함해서 이 행이 계속 처리되게 함.
-    if(!fabric && !vendor && !railVendorCheck) return;
-    var space  = tr.querySelector('.space-inp')?.value || '';
-    var mw     = tr.querySelector('.mw')?.value || '';
-    var mh     = tr.querySelector('.mh')?.value || '';
-    var pnum   = tr.querySelector('.pnum')?.value || '';
+    // 2026-09-11(선혜님 발견 - 손현영님 사례: "왜 발주서에는 거실 2개
+    // 안방 2개 되지??" 확인 과정에서 실제로는 정반대의 더 심각한 문제를
+    // 발견함): 원단거래처를 아직 안 정했거나 고객이 직접 원단을 대는
+    // 경우(fabric/vendor 둘 다 빈값), 캔가공소 제작 발주는 원단거래처와
+    // 무관하게 항상 필요한데도 이 조건 때문에 행 자체가 통째로 걸러져서
+    // 캔가공소 발주서에서 완전히 빠지고 있었음 - "커튼은 무조건 제작을
+    // 해야 한다"는 원래 설계 의도(위 2026-09-09 참고)와 어긋남. 실제
+    // 커튼이 입력된 행인지(제품명/사이즈 존재)까지 조건에 포함해서, 원단
+    // 거래처가 비어있어도 제작 발주는 정상적으로 생성되게 함.
+    if(!fabric && !vendor && !railVendorCheck && !displayNameCheck && !mw && !mh) return;
     var pleat  = (tr.querySelector('.pleat-type')?.value || '').replace('형','');
     var open   = (tr.querySelector('.open-type')?.value || '').replace('형','');
     var heightAdjust = parseFloat(tr.querySelector('.height-adjust')?.value);
@@ -1088,7 +1098,7 @@ function collectVendorGroups() {
     // 나눴는데, 실제로는 커튼 하나가 원단 매입 + 제작 의뢰 둘 다 항상
     // 필요한 별개의 두 발주임 - 체크박스 없이, 원단거래처가 있으면
     // 원단 발주를, 등록된 가공소가 있으면 제작 발주를 각각 독립적으로 생성.
-    var displayName = tr.querySelector('.c-display-name')?.value || '';
+    var displayName = displayNameCheck;
     var hemType = tr.querySelector('.hem-type')?.value || '';
     var yardage = tr.querySelector('.c-yardage')?.value || '';
     var shapeProcess = tr.querySelector('.c-shape-process')?.checked || false;
