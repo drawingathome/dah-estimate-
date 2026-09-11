@@ -519,7 +519,7 @@ function printForCustomer() {
   });
 }
 
-function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, today, arrivalDate) {
+function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, today, arrivalDate, arrivalLocation) {
   // 2026-09-09(선혜님 지시 - "모든 발주서에는 하단에 비고 칸을 만들어서
   // 코멘트 남길 수 있게 하자" + "발주 페이지 자체를 수정할 수 있게":
   // data-vendor로 이 문서가 어느 거래처 것인지 표시해서, 인쇄 버튼을
@@ -568,7 +568,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         // 저희 회사가 아니라 가공소로 바로 배송되는 경우가 있는 등,
         // 발주 종류/거래처에 따라 실제 도착지가 달라질 수 있어 고정
         // 값이 아니라 직접 클릭해서 고칠 수 있게 함.
-        '도착 장소', '서울 서초구 사평대로 53길 64 1층 드로잉엣홈', true)
+        '도착 장소', escHtml(arrivalLocation||'서울 서초구 사평대로 53길 64 1층 드로잉엣홈'), true)
       + infoTableRow('업체명', '드로잉엣홈', false, '담당자', cStaff||'—', false)
       + '</table>';
 
@@ -921,18 +921,50 @@ function openVendorArrivalDateModal() {
   wrap.appendChild(hint);
 
   window._vendorArrivalDates = window._vendorArrivalDates || {};
+  // 2026-09-11(선혜님 지시 - "기본 세트는 내가 하나하나 정리해주고
+  // 수정도 되게 할까?? 보통은 잘 안바뀌는데 바뀌는 경우도 있어서"):
+  // 거래처 관리 화면에서 등록한 기본 도착 소요일수/기본 도착장소를
+  // 자동으로 채워주되, 이미 값이 있으면(이번 발주에서 이미 입력했으면)
+  // 그 값을 우선시하고, 그때그때 바뀌면 여기서 직접 수정 가능.
+  window._vendorArrivalLocations = window._vendorArrivalLocations || {};
+  var DEFAULT_LOCATION = '서울 서초구 사평대로 53길 64 1층 드로잉엣홈';
+  function findVendorMeta(name) {
+    if (!Array.isArray(window._dahVendorListRaw)) return null;
+    return window._dahVendorListRaw.find(function(v){ return v && v.name === name; }) || null;
+  }
   vendorNames.forEach(function(vendor){
+    var meta = findVendorMeta(vendor);
+    if (!window._vendorArrivalDates[vendor] && meta && meta.defaultArrivalDays) {
+      var d = new Date();
+      d.setDate(d.getDate() + parseInt(meta.defaultArrivalDays, 10));
+      window._vendorArrivalDates[vendor] = d.toISOString().slice(0, 10);
+    }
+    if (!window._vendorArrivalLocations[vendor]) {
+      window._vendorArrivalLocations[vendor] = (meta && meta.defaultLocation) || DEFAULT_LOCATION;
+    }
     var card = document.createElement('div');
     card.style.cssText = 'background:#fff;border-radius:12px;padding:16px;margin-bottom:10px';
     var lbl = document.createElement('div');
     lbl.textContent = vendor === '미지정' ? '거래처 미지정 항목' : vendor;
     lbl.style.cssText = 'font-size:14px;font-weight:700;margin-bottom:8px';
+    var dateLbl = document.createElement('div');
+    dateLbl.textContent = '희망 도착일';
+    dateLbl.style.cssText = 'font-size:11px;font-weight:700;color:#8E8078;margin-bottom:4px';
     var input = document.createElement('input');
     input.type = 'date';
     input.value = window._vendorArrivalDates[vendor] || '';
     input.style.cssText = 'width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box';
     input.addEventListener('input', function(){ window._vendorArrivalDates[vendor] = input.value; });
-    card.appendChild(lbl); card.appendChild(input);
+    var locLbl = document.createElement('div');
+    locLbl.textContent = '도착 장소';
+    locLbl.style.cssText = 'font-size:11px;font-weight:700;color:#8E8078;margin:10px 0 4px';
+    var locInput = document.createElement('input');
+    locInput.type = 'text';
+    locInput.value = window._vendorArrivalLocations[vendor] || '';
+    locInput.style.cssText = 'width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box';
+    locInput.addEventListener('input', function(){ window._vendorArrivalLocations[vendor] = locInput.value; });
+    card.appendChild(lbl); card.appendChild(dateLbl); card.appendChild(input);
+    card.appendChild(locLbl); card.appendChild(locInput);
     wrap.appendChild(card);
   });
 
@@ -979,18 +1011,21 @@ function collectVendorGroups() {
     var hemType = tr.querySelector('.hem-type')?.value || '';
     var yardage = tr.querySelector('.c-yardage')?.value || '';
     var shapeProcess = tr.querySelector('.c-shape-process')?.checked || false;
+    var fabricUnitPrice = tr.querySelector('.c-fabric-unit-price')?.value || '';
     if (fabric || vendor) {
-      // 2026-09-11(선혜님 지적 - "위에서 말한 발주들이 제대로 들어간거
-      // 같애?????"로 재검토 중 발견): 원단업체(디테라 등)에 보내는 발주
-      // 수량 칸에 "폭수"(pnum, 제작/재단 정보)가 들어가고 있었음 - 원단
-      // 업체는 폭수가 아니라 실제 필요한 원단량(마수)을 알아야 하는데,
-      // 방금 새로 만든 yardage(원단량) 필드가 정작 이 자리엔 안 쓰이고
-      // 캔가공소용 fabricInfo 조합 문자열에만 쓰이고 있었음 - 누락 수정.
+      // 2026-09-11(선혜님 지시 - "관련되게 원단 발주서까지도 그 가격이
+      // 뜨게 해야 하는데"): 원단량(마수)에 단가를 곱한 총액을 수량 칸에
+      // 함께 표시 - 원단업체 발주서에서 바로 예상 금액을 확인할 수 있게.
+      var yardageNum = parseFloat(String(yardage).replace(/[^0-9.]/g, ''));
+      var unitPriceNum = parseFloat(String(fabricUnitPrice).replace(/[^0-9.]/g, ''));
+      var fabricTotal = (yardageNum && unitPriceNum) ? Math.round(yardageNum * unitPriceNum) : null;
+      var qtyDisplay = yardage || (pnum?(pnum+'폭'):'—');
+      if (fabricTotal !== null) qtyDisplay += ' (' + fabricTotal.toLocaleString() + '원)';
       items.push({
         space: space||'—', product: fabric||'—', color: color||'—',
         size: '—', fabSize: null,
         content:[pleat, open].filter(Boolean).join(' ')||'—',
-        qty: yardage || (pnum?(pnum+'폭'):'—'),
+        qty: qtyDisplay,
         vendor: vendor,
         orderCategory: 'fabric'
       });
@@ -1075,7 +1110,7 @@ function collectVendorGroups() {
   return { groups: groups, cName: cName, cStaff: cStaff, itemCount: items.length };
 }
 
-function buildVendorHTML(extraNote, arrivalDatesByVendor) {
+function buildVendorHTML(extraNote, arrivalDatesByVendor, arrivalLocationsByVendor) {
   function today(){
     return formatKoreanDate();
   }
@@ -1091,8 +1126,9 @@ function buildVendorHTML(extraNote, arrivalDatesByVendor) {
   vendors.forEach(function(vendor, i){
     var vendorArrivalRaw = arrivalDatesByVendor ? arrivalDatesByVendor[vendor] : '';
     var vendorArrivalStr = vendorArrivalRaw ? formatKoreanDate(new Date(vendorArrivalRaw+'T00:00:00')) : '';
+    var vendorLocation = arrivalLocationsByVendor ? arrivalLocationsByVendor[vendor] : '';
     out += '<div style="' + (i > 0 ? 'page-break-before:always;margin-top:40px;' : '') + '">';
-    out += buildVendorDocForOne(vendor, collected.groups[vendor], collected.cName, collected.cStaff, i === vendors.length - 1 ? extraNote : null, todayStr, vendorArrivalStr);
+    out += buildVendorDocForOne(vendor, collected.groups[vendor], collected.cName, collected.cStaff, i === vendors.length - 1 ? extraNote : null, todayStr, vendorArrivalStr, vendorLocation);
     out += '</div>';
   });
   return out;
@@ -1112,7 +1148,7 @@ function printForVendor() {
   // 2026-09-11: 거래처마다 도착일이 다르므로(원단/가공소/레일/블라인드
   // 각각 실제 완료·도착 시점이 다름), 단일 값이 아니라 거래처별 맵을
   // 넘김 - openVendorArrivalDateModal에서 채워짐.
-  var html = buildVendorHTML(extraNote, window._vendorArrivalDates || {});
+  var html = buildVendorHTML(extraNote, window._vendorArrivalDates || {}, window._vendorArrivalLocations || {});
   // 2026-09-09(선혜님 지시 - "발주 페이지 자체를 수정할 수 있게도
   // 적용이 되어있니??" → "이제 발주서도 보기 화면에서 직접 고칠 수
   // 있게(실측/시공과 동일하게)"): 예전엔 미리보기가 뜨기도 전에 이

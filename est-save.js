@@ -79,6 +79,7 @@ function newEstimate() {
   // 아까(9/10) 겪었던 "새 필드 초기화 누락"과 같은 실수를 반복 안 하려고
   // 미리 넣어둠.
   window._vendorArrivalDates = {};
+  window._vendorArrivalLocations = {};
   document.getElementById('c-installer-name').value='';
   document.getElementById('c-installer-phone').value='';
   var d=new Date();

@@ -413,6 +413,42 @@ function renderSettings() {
     });
     phoneRow.appendChild(phoneInput);
     row.appendChild(phoneRow);
+    // 2026-09-11(선혜님 지시 - "도착일/도착장소는 조율을 해야 해... 기본
+    // 세트는 내가 하나하나 정리해주고 수정도 되게 할까?? 보통은 잘
+    // 안바뀌는데 바뀌는 경우도 있어서"): 연락처와 정확히 같은 이유(매번
+    // 손으로 입력하지 않아도 되게) - 거래처마다 기본 도착 소요일수/기본
+    // 도착장소를 여기서 한 번만 등록해두면, 발주정보 팝업에서 자동으로
+    // 채워지고, 그때그때 바뀌면 팝업에서 그대로 수정 가능.
+    var arrivalRow = div('display:flex;align-items:center;gap:8px;margin-top:8px', [
+      span('font-size:11px;color:var(--sub);flex-shrink:0;white-space:nowrap', '기본 도착')
+    ]);
+    var leadDaysInput = el('input', {
+      type: 'number', placeholder: '소요일수(예: 5)', value: v.defaultArrivalDays || '',
+      style: 'width:110px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box'
+    });
+    leadDaysInput.addEventListener('change', function() {
+      var list = getVendorList();
+      var target = list.find(function(x){ return x.name === v.name; });
+      if (!target) return;
+      target.defaultArrivalDays = leadDaysInput.value.trim();
+      setVendorList(list);
+      showToast(v.name + ' 기본 도착 소요일수가 저장됐습니다');
+    });
+    var locationInput = el('input', {
+      type: 'text', placeholder: '기본 도착장소(비우면 회사주소)', value: v.defaultLocation || '',
+      style: 'flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;outline:none;box-sizing:border-box'
+    });
+    locationInput.addEventListener('change', function() {
+      var list = getVendorList();
+      var target = list.find(function(x){ return x.name === v.name; });
+      if (!target) return;
+      target.defaultLocation = locationInput.value.trim();
+      setVendorList(list);
+      showToast(v.name + ' 기본 도착장소가 저장됐습니다');
+    });
+    arrivalRow.appendChild(leadDaysInput);
+    arrivalRow.appendChild(locationInput);
+    row.appendChild(arrivalRow);
     vendorListWrap.appendChild(row);
   });
   if (vendorList.length === 0) {

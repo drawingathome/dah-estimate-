@@ -30,6 +30,10 @@ function addCurtainRow() {
           // 여부(O/X)도 발주서에 필요한데 이 개념 자체가 없었음 - 체크박스로
           // 신설(체크=O=형상가공 함).
           '<input type="text" placeholder="원단량(예: 10.2마)" class="c-yardage inner-inp" style="width:100px">'+
+          // 2026-09-11(선혜님 지시 - "관련되게 원단 발주서까지도 그
+          // 가격이 뜨게 해야 하는데"): 원단량(마수)에 단가를 곱해서
+          // 원단발주서에 총액을 표시하려면 단가가 필요함.
+          '<input type="text" inputmode="numeric" placeholder="마당 단가" class="c-fabric-unit-price inner-inp" style="width:80px">'+
           '<label style="display:flex;align-items:center;gap:2px;font-size:11px;color:var(--sub);white-space:nowrap"><input type="checkbox" class="c-shape-process" style="width:14px;height:14px">형상가공</label>'+
         '</div>'+
         '<div class="inner-row" style="margin-top:2px">'+

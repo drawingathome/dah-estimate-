@@ -434,6 +434,7 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       // 하는" 유형이라, 저장 추가할 때 바로 여기도 함께 넣음(놓치는 걸 방지).
       var yd = ctr.querySelector('.c-yardage'); if (yd) yd.value = it.yardage || '';
       var sp = ctr.querySelector('.c-shape-process'); if (sp) sp.checked = !!it.shapeProcess;
+      var fup = ctr.querySelector('.c-fabric-unit-price'); if (fup) fup.value = it.fabricUnitPrice || '';
       var pt = ctr.querySelector('.pleat-type'); if (pt && it.pleatType) pt.value = it.pleatType;
       var ot = ctr.querySelector('.open-type'); if (ot && it.openType) ot.value = it.openType;
       // 2026-08-29(선혜님 지적 - "주름은 나비주름/개폐는 양개형/시접은
@@ -477,6 +478,7 @@ function loadCustByIdx(el) {
   // 기능이라 실무에 실제로 영향을 줄 수 있는 버그. 먼저 비워두고
   // 시작(이 함수 자체가 설치기사 정보를 복원하는 별도 로직은 없음).
   window._vendorArrivalDates = {};
+  window._vendorArrivalLocations = {};
   document.getElementById('c-installer-name').value = '';
   document.getElementById('c-installer-phone').value = '';
   if(c.clientName && document.getElementById('c-name')) document.getElementById('c-name').value=c.clientName;
