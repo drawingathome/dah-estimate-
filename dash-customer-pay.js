@@ -109,6 +109,39 @@ function renderPaySection(c, payBody) {
           var localC = arr.find(function(x){ return x.id === c.id; });
           if (localC) { localC.updatedAt = data[0].updated_at; saveCustomers(arr); }
         }
+        // 2026-09-11(선혜님 지적 - "선금이 2,170,000원이라서 대시보드에서
+        // 적용을 했어 그러면 계약금도 그렇게 나와야 하는데 견적서의
+        // 계약금(50%)... 이라고 나온다고"): 실측/시공일 동기화와 정확히
+        // 같은 유형의 누락 - 결제탭에서 실제로 받은 선금을 입력해도,
+        // 연결된 견적서의 price_breakdown.deposit(자동계산된 50% 계획값)은
+        // 전혀 안 바뀌고 있었음. price_breakdown은 JSON 통째 컬럼이라
+        // 먼저 최신 견적서를 조회해서 기존 값과 병합한 뒤 다시 저장.
+        if (!err && typeof SUPABASE_URL !== 'undefined' && c.id) {
+          try {
+            var findEstXhr = new XMLHttpRequest();
+            findEstXhr.open('GET', SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(c.id) + '&order=created_at.desc&limit=1&select=id,price_breakdown', true);
+            findEstXhr.setRequestHeader('apikey', SUPABASE_KEY);
+            findEstXhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+            findEstXhr.onload = function() {
+              try {
+                var estRows = JSON.parse(findEstXhr.responseText);
+                var estRow = estRows && estRows[0];
+                if (estRow && estRow.price_breakdown) {
+                  var pb = Object.assign({}, estRow.price_breakdown);
+                  pb.deposit = newDep;
+                  pb.balance = (Number(pb.finalTotal) || 0) - newDep;
+                  var patchEstXhr = new XMLHttpRequest();
+                  patchEstXhr.open('PATCH', SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(estRow.id), true);
+                  patchEstXhr.setRequestHeader('apikey', SUPABASE_KEY);
+                  patchEstXhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+                  patchEstXhr.setRequestHeader('Content-Type', 'application/json');
+                  patchEstXhr.send(JSON.stringify({ price_breakdown: pb }));
+                }
+              } catch (eEstFind) {}
+            };
+            findEstXhr.send();
+          } catch (eEstOuter) {}
+        }
         if (callback) callback();
       });
     } else {
