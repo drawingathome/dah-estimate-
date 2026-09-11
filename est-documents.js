@@ -543,10 +543,13 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   // 쌓이던 flexbox 나열 방식을 실제 테두리 있는 표(3행 2열)로 재구성 -
   // 훨씬 컴팩트하고, 처음 참고로 보여주신 실제 발주서 양식과도 더
   // 비슷한 형태. 각 값 칸은 여전히 클릭해서 직접 수정 가능(contenteditable).
-  function infoTableRow(label1, val1, editable1, label2, val2, editable2) {
+  function infoTableRow(label1, val1, editable1, label2, val2, editable2, emphasize) {
     var cellStyle = 'padding:8px 10px;border:1px solid #EEE6DC;font-size:13px';
     var labelStyle = cellStyle + ';background:#FAF7F5;color:#8E8078;white-space:nowrap;width:1%';
-    var valStyle = cellStyle + ';font-weight:700';
+    // 2026-09-11(선혜님 지시 - "도착일과 도착장소는 굵은 폰트를 사용해주고"):
+    // 실제로 가장 중요한 정보(언제·어디로 보내야 하는지)만 굵게 강조하고
+    // 나머지(요청일/발주처/업체명/담당자)는 일반 굵기로 낮춰서 대비를 줌.
+    var valStyle = cellStyle + (emphasize ? ';font-weight:700' : ';font-weight:400');
     return '<tr>'
       + '<td style="'+labelStyle+'">'+label1+'</td>'
       + '<td style="'+valStyle+'"'+(editable1?' contenteditable="true" class="pv-editable-field"':'')+'>'+val1+'</td>'
@@ -559,7 +562,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
       // 장소는 기본적으로 수정할 수 있게 해줘"): 요청일만 유일하게 고정
       // 값(editable=false)이었음 - 도착일/도착장소/발주처와 동일하게
       // 수정 가능하도록 통일.
-      + infoTableRow('요청일', today, true, '발주처', escHtml(vendor), true)
+      + infoTableRow('요청일', today, true, '발주처', escHtml(vendor), true, false)
       // 2026-09-10(선혜님 지적 - "도착일 / 도착 장소가 없어" → "수정이
       // 되게" → "거래처마다 달라야"): 발주정보 팝업에서 거래처별로
       // 입력받은 값을 여기 표시(입력 안 하면 "협의" 표시), 클릭해서도
@@ -572,13 +575,17 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         // 저희 회사가 아니라 가공소로 바로 배송되는 경우가 있는 등,
         // 발주 종류/거래처에 따라 실제 도착지가 달라질 수 있어 고정
         // 값이 아니라 직접 클릭해서 고칠 수 있게 함.
-        '도착 장소', escHtml(arrivalLocation||'서울 서초구 사평대로 53길 64 1층 드로잉엣홈'), true)
-      + infoTableRow('업체명', '드로잉엣홈', false, '담당자', cStaff||'—', false)
+        '도착 장소', escHtml(arrivalLocation||'서울 서초구 사평대로 53길 64 1층 드로잉엣홈'), true, true)
+      + infoTableRow('업체명', '드로잉엣홈', false, '담당자', cStaff||'—', false, false)
       + '</table>';
 
   out += '<div style="margin-top:10px;font-size:11px;color:#B0A99F">*아래와 같이 발주 합니다.</div>';
 
-  out += '<div style="margin-top:var(--sp-5);padding:8px 14px;background:#F5F2EE;font-size:13px;font-weight:700;color:#282828">거래처: '+escHtml(vendor)+'</div>';
+  // 2026-09-11(선혜님 지시 - "화면 자체를 없애고 최종 발주서에서 바로
+  // 수정"): 거래처를 아직 안 정한 항목("미지정")을 화면 전환 없이도
+  // 바로 알아챌 수 있도록 경고 색으로 눈에 띄게 표시.
+  var isUnassigned = (vendor === '미지정' || !vendor);
+  out += '<div style="margin-top:var(--sp-5);padding:8px 14px;background:'+(isUnassigned?'#FBEAE7':'#F5F2EE')+';font-size:13px;font-weight:700;color:'+(isUnassigned?'#C0392B':'#282828')+'">'+(isUnassigned?'⚠️ 거래처 미지정 — 아래 항목의 거래처를 정해주세요':'거래처: '+escHtml(vendor))+'</div>';
   // 2026-09-11(선혜님이 실제 캔가공소 발주서 양식 확인해주심): 원단/
   // 부자재/블라인드는 공통 테이블(위치·품명·제품정보·사이즈·내용·수량·
   // 고객명)로 충분한데, 캔가공소(제작) 발주는 완전히 다른 정보(제작
@@ -591,31 +598,39 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   // 내용은 항상 "—"(빈 값)만 나오는 무의미한 칸이었음 - 위치/품명/
   // 수량/고객명만 남긴 축소된 테이블로 분기.
   var isMaterial = groupItems.length > 0 && groupItems[0].orderCategory === 'material';
+  var isBlind = groupItems.length > 0 && groupItems[0].orderCategory === 'blind';
   if (isProduction) {
-    out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+    // 2026-09-11(발주서 하나하나 점검하다 발견 - 8개 칸짜리 캔가공소 표가
+    // 모바일 실사용 폭(390px)보다 넓어서 "고객"/"원단정보" 칸이 화면
+    // 밖으로 밀려 안 보이던 문제): 칸 안쪽 여백/글자크기를 살짝 줄이고,
+    // 그래도 안 들어가는 경우를 대비해 표만 좌우로 스크롤되는 감싸는 칸을
+    // 추가(제목·비고 등 나머지 화면은 그대로 고정).
+    out += '<div class="pv-order-table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch">';
+    out += '<table style="width:100%;border-collapse:collapse;font-size:11px">'
         +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
-        +'<th style="text-align:left;padding:8px 6px">공간</th>'
-        +'<th style="text-align:left;padding:8px 6px">원단(품명)</th>'
-        +'<th style="text-align:center;padding:8px 6px">제작사이즈</th>'
-        +'<th style="text-align:center;padding:8px 6px">형상가공</th>'
-        +'<th style="text-align:center;padding:8px 6px">하단시접</th>'
-        +'<th style="text-align:left;padding:8px 6px">내용</th>'
-        +'<th style="text-align:left;padding:8px 6px">고객</th>'
-        +'<th style="text-align:left;padding:8px 6px">원단정보</th>'
+        +'<th style="text-align:left;padding:6px 4px">공간</th>'
+        +'<th style="text-align:left;padding:6px 4px">원단(품명)</th>'
+        +'<th style="text-align:center;padding:6px 4px">제작사이즈</th>'
+        +'<th style="text-align:center;padding:6px 4px">형상가공</th>'
+        +'<th style="text-align:center;padding:6px 4px">하단시접</th>'
+        +'<th style="text-align:left;padding:6px 4px">내용</th>'
+        +'<th style="text-align:left;padding:6px 4px">고객</th>'
+        +'<th style="text-align:left;padding:6px 4px">원단정보</th>'
         +'</tr></thead><tbody>';
     groupItems.forEach(function(it){
       out += '<tr style="border-bottom:1px solid #EEE6DC">'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.space)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.product)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:center;font-weight:700">'+escHtml(it.fabSize||it.size)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:center">'+(it.shapeProcess?'O':'X')+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:center">'+escHtml(it.hemType||'—')+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.content)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.fabricInfo||'—')+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.space)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.product)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center;font-weight:700">'+escHtml(it.fabSize||it.size)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+(it.shapeProcess?'O':'X')+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.hemType||'—')+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.content)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.fabricInfo||'—')+'</td>'
           +'</tr>';
     });
-    out += '</tbody></table>';
+    out += '</tbody></table></div>';
+    out += '<div class="print-hide" style="font-size:11px;color:#B0A99F;margin-top:2px">← 표를 옆으로 밀면 나머지 항목(고객/원단정보)이 보입니다</div>';
   } else if (isMaterial) {
     out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
         +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
@@ -633,33 +648,76 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
           +'</tr>';
     });
     out += '</tbody></table>';
+  } else if (isBlind) {
+    // 2026-09-11(선혜님이 실제 윈텍/덱스터 발주서 양식 보여주심 - "넣을
+    // 부분이 보이지??"): 실제 거래처 발주서엔 시스템(블라인드 종류)/
+    // 손잡이방향/끈길이/하단바/코멘트가 각자 칸으로 나뉘어 있는데, 지금까진
+    // 원단(커튼) 표를 그대로 재사용해서 "제품정보"(색상)만 있고 저 다섯
+    // 정보는 "내용" 한 칸에 뭉쳐서 나가거나 아예 빠져있었음 - 블라인드
+    // 전용 표로 분리해서 실제 양식과 동일한 칸 구성으로 재구성.
+    out += '<div class="pv-order-table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch">';
+    out += '<table style="width:100%;border-collapse:collapse;font-size:11px">'
+        +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
+        +'<th style="text-align:left;padding:6px 4px">위치</th>'
+        +'<th style="text-align:left;padding:6px 4px">원단명</th>'
+        +'<th style="text-align:left;padding:6px 4px">시스템</th>'
+        +'<th style="text-align:center;padding:6px 4px">사이즈</th>'
+        +'<th style="text-align:center;padding:6px 4px">손잡이방향</th>'
+        +'<th style="text-align:center;padding:6px 4px">끈길이</th>'
+        +'<th style="text-align:center;padding:6px 4px">하단바</th>'
+        +'<th style="text-align:left;padding:6px 4px">코멘트</th>'
+        +'<th style="text-align:right;padding:6px 4px">수량</th>'
+        +'<th style="text-align:left;padding:6px 4px">고객명</th>'
+        +'</tr></thead><tbody>';
+    groupItems.forEach(function(it){
+      out += '<tr style="border-bottom:1px solid #EEE6DC">'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.space)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.product)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.kind)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.size)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.handle)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.cordLength)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.bottomBar)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.comment)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
+          +'</tr>';
+    });
+    out += '</tbody></table></div>';
+    out += '<div class="print-hide" style="font-size:11px;color:#B0A99F;margin-top:2px">← 표를 옆으로 밀면 나머지 항목(끈길이/하단바/코멘트/수량/고객명)이 보입니다</div>';
   } else {
-  out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+  // 2026-09-11(발주서 하나하나 점검하다 발견 - 원단 7칸짜리 표가 모바일
+  // 실사용 폭보다 넓어서 "수량"/"고객명" 칸이 안 보이던 문제; 블라인드는
+  // 같은 날 별도로 전용 표(isBlind)로 분리됨): 캔가공소 표와 동일하게
+  // 여백/글자크기 축소 + 좌우 스크롤 감싸는 칸.
+  out += '<div class="pv-order-table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch">';
+  out += '<table style="width:100%;border-collapse:collapse;font-size:11px">'
       +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
-      +'<th style="text-align:left;padding:8px 6px">위치</th>'
-      +'<th style="text-align:left;padding:8px 6px">품명</th>'
+      +'<th style="text-align:left;padding:6px 4px">위치</th>'
+      +'<th style="text-align:left;padding:6px 4px">품명</th>'
       // 2026-09-10(선혜님 지적 - "컬러-> 제품정보 로 수정해주고"): 실제
       // 값이 순수 색상명이 아니라 제품코드/세부사양(예: "AL25-8274L",
       // "Amalfi RM-01번 화이트 + 뒷면: HK-3022FR 아이보리")이라 "컬러"
       // 보다 "제품정보"가 정확한 표현.
-      +'<th style="text-align:left;padding:8px 6px">제품정보</th>'
-      +'<th style="text-align:center;padding:8px 6px">사이즈</th>'
-      +'<th style="text-align:left;padding:8px 6px">내용</th>'
-      +'<th style="text-align:right;padding:8px 6px">수량</th>'
-      +'<th style="text-align:left;padding:8px 6px">고객명</th>'
+      +'<th style="text-align:left;padding:6px 4px">제품정보</th>'
+      +'<th style="text-align:center;padding:6px 4px">사이즈</th>'
+      +'<th style="text-align:left;padding:6px 4px">내용</th>'
+      +'<th style="text-align:right;padding:6px 4px">수량</th>'
+      +'<th style="text-align:left;padding:6px 4px">고객명</th>'
       +'</tr></thead><tbody>';
   groupItems.forEach(function(it){
     out += '<tr style="border-bottom:1px solid #EEE6DC">'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.space)+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.product)+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.color)+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:center">'+escHtml(it.size)+(it.fabSize?('<br><span style="font-size:11px;color:#F06E2D;font-weight:700">제작 '+escHtml(it.fabSize)+'</span>'):'')+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.content)+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.space)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.product)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.color)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.size)+(it.fabSize?('<br><span style="font-size:11px;color:#F06E2D;font-weight:700">제작 '+escHtml(it.fabSize)+'</span>'):'')+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.content)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
         +'</tr>';
   });
-  out += '</tbody></table>';
+  out += '</tbody></table></div>';
+  out += '<div class="print-hide" style="font-size:11px;color:#B0A99F;margin-top:2px">← 표를 옆으로 밀면 나머지 항목(수량/고객명)이 보입니다</div>';
   }
 
   out += '<div class="pv-vendor-note-editable" contenteditable="true" style="margin-top:var(--sp-6);text-align:center;font-size:13px;color:#E4483A;font-weight:600;line-height:1.7;white-space:pre-wrap;outline:none;border:1px dashed #F0C9C4;border-radius:8px;padding:8px" data-placeholder="비고(클릭해서 직접 입력)">'+escHtml(extraNote||'')+'</div>';
@@ -679,287 +737,52 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
 // "창구"일 뿐 - 여기서 입력하는 즉시 원본 값이 갱신되므로, 발주서를
 // 실제로 만드는 코드(collectVendorGroups 등)는 전혀 안 건드려도 그대로
 // 작동함.
-function openVendorInfoModal() {
-  var curtainTrs = Array.from(document.querySelectorAll('#curtain-body tr'));
-  var blindTrs = Array.from(document.querySelectorAll('#blind-body tr'));
-  if (curtainTrs.length === 0 && blindTrs.length === 0) {
-    alert('입력된 커튼·블라인드 항목이 없어요. 먼저 항목을 추가해주세요.');
-    return;
-  }
-
-  var existing = document.getElementById('vendor-info-modal');
-  if (existing) existing.remove();
-
-  var ov = document.createElement('div');
-  ov.id = 'vendor-info-modal';
-  ov.className = 'print-hide';
-  ov.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#F5F2EE;z-index:10000;overflow-y:auto;overflow-x:auto;display:flex;flex-direction:column';
-
-  var nav = document.createElement('div');
-  nav.style.cssText = 'position:sticky;top:0;z-index:10001;background:#282828;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;flex-shrink:0';
-  var navLabel = document.createElement('span');
-  navLabel.textContent = '발주 정보 입력';
-  navLabel.style.cssText = 'color:rgba(255,255,255,0.9);font-size:13px;font-weight:700;white-space:nowrap';
-  var navBtns = document.createElement('div');
-  navBtns.style.cssText = 'display:flex;gap:8px;flex-shrink:0';
-  var closeBtn = document.createElement('button');
-  closeBtn.textContent = '✕ 닫기';
-  closeBtn.onclick = function(){ ov.remove(); };
-  closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap';
-  var nextBtn = document.createElement('button');
-  nextBtn.textContent = '발주서 보기 →';
-  nextBtn.onclick = function(){
-    // 2026-09-09(선혜님 - "니가 전문업체인데 시뮬레이션 돌려봐" 요청으로
-    // 발견): 블라인드 거래처를 <select required>로 만들었지만, <form>
-    // 태그 없이 버튼 클릭으로 저장하는 구조라 required 속성이 실제로는
-    // 아무 효력이 없었음(브라우저가 강제 안 함) - 저장 시점(가견적 단계,
-    // 아직 거래처를 모를 수 있는 정상적인 상황)엔 막으면 안 되므로, 대신
-    // 여기(발주서를 실제로 보려는 시점)에서 명시적으로 검증.
-    var missingVendorSpaces = [];
-    document.querySelectorAll('#blind-body tr').forEach(function(tr){
-      var vendorSel = tr.querySelector('.b-vendor');
-      var fabric = tr.querySelector('.b-fabric')?.value || '';
-      if (vendorSel && !vendorSel.value && fabric) {
-        missingVendorSpaces.push(tr.querySelector('.space-inp')?.value || '(위치 미입력)');
+// 2026-09-11(선혜님 지시 - "화면 자체를 없애고 최종 발주서에서 바로
+// 수정"): "발주 정보 입력"/"거래처별 희망 도착일" 두 중간 화면을 완전히
+// 없앰 - 이미 발주서 문서 자체가 전부 클릭해서 바로 수정 가능(요청일/
+// 도착일/도착장소/품목/비고 전부)하기 때문에, 확인 화면을 거치지 않고
+// 발주서 버튼을 누르면 바로 최종 문서로 이동. 거래처 미지정 항목은
+// 문서에서 빨간색으로 눈에 띄게 표시되고, 원단거래처 오입력은 문서 상단
+// 배너로 알려줌(printForVendor 참고) - 화면 전환이 없어졌다고 확인 기능
+// 자체가 없어진 게 아니라, 확인을 "가로막는 별도 화면"에서 "결과물 위에
+// 바로 보이는 표시"로 옮긴 것.
+function getVendorInfoIssues() {
+  var missingVendorSpaces = [];
+  document.querySelectorAll('#blind-body tr').forEach(function(tr){
+    var vendorSel = tr.querySelector('.b-vendor');
+    var fabric = tr.querySelector('.b-fabric')?.value || '';
+    if (vendorSel && !vendorSel.value && fabric) {
+      missingVendorSpaces.push(tr.querySelector('.space-inp')?.value || '(위치 미입력)');
+    }
+  });
+  var confusedFabricSpaces = [];
+  if (Array.isArray(window._dahVendorListRaw)) {
+    var productionNames = window._dahVendorListRaw.filter(function(v){
+      return v && Array.isArray(v.categories) && v.categories.indexOf('production') >= 0;
+    }).map(function(v){ return v.name; });
+    document.querySelectorAll('#curtain-body tr').forEach(function(tr){
+      var vendorVal = tr.querySelector('.c-vendor')?.value || '';
+      if (vendorVal && productionNames.indexOf(vendorVal) >= 0) {
+        confusedFabricSpaces.push(tr.querySelector('.space-inp')?.value || '(위치 미입력)');
       }
     });
-    if (missingVendorSpaces.length > 0) {
-      alert('블라인드 거래처를 아직 선택 안 한 항목이 있어요: ' + missingVendorSpaces.join(', ') + '\n거래처를 선택해주세요.');
-      return;
-    }
-    // 2026-09-11(선혜님 지적 - "그걸 진작 말해야지 오류 체크해"): 원단
-    // 거래처 칸에 실제로는 가공소(production) 카테고리로 등록된
-    // 거래처명(예: "캔가공소")을 잘못 입력하는 실수가 실제로 발생함 -
-    // 미리 확인해서 경고.
-    var confusedFabricSpaces = [];
-    if (Array.isArray(window._dahVendorListRaw)) {
-      var productionNames = window._dahVendorListRaw.filter(function(v){
-        return v && Array.isArray(v.categories) && v.categories.indexOf('production') >= 0;
-      }).map(function(v){ return v.name; });
-      document.querySelectorAll('#curtain-body tr').forEach(function(tr){
-        var vendorVal = tr.querySelector('.c-vendor')?.value || '';
-        if (vendorVal && productionNames.indexOf(vendorVal) >= 0) {
-          confusedFabricSpaces.push(tr.querySelector('.space-inp')?.value || '(위치 미입력)');
-        }
-      });
-    }
-    if (confusedFabricSpaces.length > 0) {
-      if (!confirm('원단 거래처 칸에 가공소 이름이 입력된 항목이 있어요: ' + confusedFabricSpaces.join(', ') + '\n가공소는 자동으로 처리되니 원단 거래처 칸에는 실제 원단 매입처를 입력해야 해요.\n그대로 진행할까요?')) return;
-    }
-    ov.remove();
-    openVendorArrivalDateModal();
-  };
-  nextBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap';
-  navBtns.appendChild(closeBtn);
-  navBtns.appendChild(nextBtn);
-  nav.appendChild(navLabel);
-  nav.appendChild(navBtns);
-
-  var content = document.createElement('div');
-  content.style.cssText = 'flex:1;padding:24px 16px 60px;display:flex;justify-content:center';
-  var wrap = document.createElement('div');
-  wrap.style.cssText = 'width:100%;max-width:720px';
-  content.appendChild(wrap);
-
-  // 2026-09-11(선혜님 지적 - "도착일이 다 달라 원단도착일이 다르고
-  // 가공소 제작일이 다르고 블라인드 제작일이 다른데 이렇게 만들면
-  // 어떻하니"): 여기 있던 "공통 희망 도착일 하나" 방식은 완전히 잘못된
-  // 설계였음 - 원단/가공소/레일/블라인드 각각 실제 완료·도착 시점이
-  // 다른데 전부 같은 날짜를 찍어버렸음. 거래처별로 각각 입력받도록
-  // 재설계(아래 openVendorArrivalDateModal 참고) - 이 자리의 공통
-  // 입력창은 완전히 제거.
-
-  // 2026-09-09(선혜님 지적 - "끈길이 넣을 공간도 없구만!!!!", 실제
-  // 모바일 화면(390px)으로 스크린샷 찍어서 재현 확인): 표(가로 여러
-  // 컬럼) 형태는 데스크톱에선 괜찮아 보였지만, 실제 사용 환경인 좁은
-  // 모바일 화면에서는 컬럼 6개가 우겨넣어져서 "끈길이" 같은 칸이
-  // 사실상 입력 불가능한 크기로 찌그러져 있었음 - 데스크톱만 확인하고
-  // 실제 환경(모바일)을 안 본 게 원인. 표를 완전히 버리고, 항목 하나당
-  // 카드 하나로 만들어서 각 필드를 세로로 큼직하게 배치.
-  function buildCards(title, hintText, items, buildCardBody) {
-    var section = document.createElement('div');
-    section.style.cssText = 'margin-bottom:20px';
-    var titleEl = document.createElement('div');
-    titleEl.textContent = title;
-    titleEl.style.cssText = 'font-size:14px;font-weight:700;color:#282828;margin-bottom:2px';
-    var hintEl = document.createElement('div');
-    hintEl.textContent = hintText;
-    hintEl.style.cssText = 'font-size:11px;color:#B0A99F;margin-bottom:10px';
-    section.appendChild(titleEl); section.appendChild(hintEl);
-    items.forEach(function(tr){
-      var card = document.createElement('div');
-      card.style.cssText = 'background:#fff;border-radius:12px;padding:16px;margin-bottom:10px';
-      buildCardBody(tr, card);
-      section.appendChild(card);
-    });
-    wrap.appendChild(section);
   }
-  function bigInput(placeholder, origEl, defaultValue) {
-    var input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = placeholder;
-    input.value = (origEl && origEl.value) ? origEl.value : (defaultValue || '');
-    input.style.cssText = 'width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box';
-    input.addEventListener('input', function(){ if (origEl) origEl.value = input.value; });
-    if (origEl && !origEl.value && input.value) origEl.value = input.value;
-    return input;
-  }
-  // 2026-09-10(선혜님 지적 - "발주입력이 번거롭다 세로로 되어있어서
-  // 번거로워 기존의 방식이 훨씬 편하지"): 모든 필드를 한 줄씩 세로로
-  // 쌓으니 항목 하나당 화면을 너무 많이 차지해서 스크롤이 길어짐 -
-  // 그렇다고 예전 표(가로 6칸)처럼 다시 돌아가면 모바일에서 또 입력칸이
-  // 찌그러지는 문제가 재발함(9/9에 실제로 겪음). 절충안: 카드 안에서
-  // 2칸씩 나란히 배치 - 각 입력칸이 여전히 화면 절반 너비(모바일에서도
-  // 충분히 타이핑 가능)를 유지하면서, 세로 길이는 기존 대비 절반으로 줄어듦.
-  function fieldPairRow(label1, input1, label2, input2) {
-    var row = document.createElement('div');
-    row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px';
-    function oneCol(label, input) {
-      var col = document.createElement('div');
-      var lbl = document.createElement('div');
-      lbl.textContent = label;
-      lbl.style.cssText = 'font-size:11px;font-weight:700;color:#8E8078;margin-bottom:4px';
-      col.appendChild(lbl); col.appendChild(input);
-      return col;
-    }
-    row.appendChild(oneCol(label1, input1));
-    row.appendChild(oneCol(label2, input2));
-    return row;
-  }
-
-  if (curtainTrs.length > 0) {
-    buildCards('커튼', '원단·레일 거래처는 커튼마다 다를 수 있어 직접 입력해주세요. (제작 발주만 자동으로 처리돼요)', curtainTrs, function(tr, card) {
-      var space = tr.querySelector('.space-inp')?.value || '—';
-      var mw = tr.querySelector('.mw')?.value || '';
-      var mh = tr.querySelector('.mh')?.value || '';
-      var size = (mw && mh) ? (mw + '×' + mh) : '—';
-      var name = tr.querySelector('.c-display-name')?.value || '—';
-      var origVendorInput = tr.querySelector('.c-vendor');
-      var origRailVendorInput = tr.querySelector('.c-rail-vendor');
-
-      var head = document.createElement('div');
-      head.style.cssText = 'display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px';
-      head.innerHTML = '<span style="font-size:14px;font-weight:700">'+escHtml(space)+'</span>'
-        + '<span style="font-size:12px;color:#8E8078">'+escHtml(size)+'</span>';
-      card.appendChild(head);
-      var nameEl = document.createElement('div');
-      nameEl.textContent = name;
-      nameEl.style.cssText = 'font-size:12px;color:#B0A99F;margin-bottom:2px';
-      card.appendChild(nameEl);
-
-      var vendorInput = bigInput('원단 거래처', origVendorInput);
-      vendorInput.setAttribute('list', 'vendor-list');
-      // 2026-09-09(선혜님 지적 - "레일 발주는 어떻게 하라는건지....") -
-      // 레일거래처(.c-rail-vendor)는 안내 문구와 달리 실제로는 자동
-      // 처리가 아니라 여전히 커튼 행마다 개별 입력해야 하는데, 이 팝업에
-      // 입력할 곳 자체가 없었음.
-      var railInput = bigInput('레일 거래처', origRailVendorInput);
-      railInput.setAttribute('list', 'vendor-list');
-      card.appendChild(fieldPairRow('원단 거래처', vendorInput, '레일 거래처', railInput));
-    });
-  }
-
-  if (blindTrs.length > 0) {
-    buildCards('블라인드', '품명·컬러·끈길이를 입력하고, 거래처는 반드시 선택해주세요.', blindTrs, function(tr, card) {
-      var space = tr.querySelector('.space-inp')?.value || '—';
-      var bmw = tr.querySelector('.bmw')?.value || '';
-      var bmh = tr.querySelector('.bmh')?.value || '';
-      var size = (bmw && bmh) ? (bmw + '×' + bmh) : '—';
-      var displayName = tr.querySelector('.b-display-name')?.value || '';
-      var origFabricInput = tr.querySelector('.b-fabric');
-      var origColorInput = tr.querySelector('.b-color');
-      var origCordInput = tr.querySelector('.b-cord-length');
-      var origVendorSelect = tr.querySelector('.b-vendor');
-
-      var head = document.createElement('div');
-      head.style.cssText = 'display:flex;justify-content:space-between;align-items:baseline';
-      head.innerHTML = '<span style="font-size:14px;font-weight:700">'+escHtml(space)+'</span>'
-        + '<span style="font-size:12px;color:#8E8078">'+escHtml(size)+'</span>';
-      card.appendChild(head);
-
-      // 2026-09-09(선혜님 지적 - "바뀐게 없음", 재현해서 진짜 원인 발견):
-      // 품명 칸을 예전엔 "placeholder(회색 안내글자)"로만 채웠었음 -
-      // 화면엔 이미 제품명이 들어있는 것처럼 보여서, 실제로는 입력을
-      // 안 해도 "이미 채워져 있네"라고 착각하고 그냥 넘어가게 만드는
-      // 심각한 착시였음. 실제 값(value)으로 채워야 진짜로 저장됨.
-      var fabricInput = bigInput('품명', origFabricInput, displayName);
-      var colorInput = bigInput('컬러', origColorInput);
-      card.appendChild(fieldPairRow('품명', fabricInput, '컬러', colorInput));
-
-      var cordInput = bigInput('끈길이 (예: 150cm)', origCordInput);
-      var select = document.createElement('select');
-      select.style.cssText = 'width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box;background:#fff';
-      select.innerHTML = origVendorSelect ? origVendorSelect.innerHTML : '<option value="">거래처 선택</option>';
-      select.value = origVendorSelect ? origVendorSelect.value : '';
-      select.addEventListener('change', function(){ if (origVendorSelect) { origVendorSelect.value = select.value; origVendorSelect.dispatchEvent(new Event('change')); } });
-      card.appendChild(fieldPairRow('끈길이', cordInput, '거래처 (필수)', select));
-    });
-  }
-
-  ov.appendChild(nav);
-  ov.appendChild(content);
-  document.body.appendChild(ov);
+  return { missingVendorSpaces: missingVendorSpaces, confusedFabricSpaces: confusedFabricSpaces };
 }
 
-// 2026-09-11(선혜님 지적 - "도착일이 다 달라 원단도착일이 다르고
-// 가공소 제작일이 다르고 블라인드 제작일이 다른데 이렇게 만들면
-// 어떻하니"): 원단/가공소(제작)/레일/블라인드 각각 실제 완료·도착
-// 시점이 다른데, 발주 전체에 공통 날짜 하나만 있었던 게 잘못된
-// 설계였음 - 발주서를 실제로 만드는 거래처 각각(collectVendorGroups
-// 결과와 정확히 동일한 기준)마다 별도의 도착일을 입력받도록 재설계.
-function openVendorArrivalDateModal() {
-  var collected = collectVendorGroups();
-  var vendorNames = Object.keys(collected.groups);
-
-  var ov = document.createElement('div');
-  ov.id = 'vendor-arrival-modal';
-  ov.className = 'print-hide';
-  ov.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#F5F2EE;z-index:10000;overflow-y:auto;display:flex;flex-direction:column';
-
-  var nav = document.createElement('div');
-  nav.style.cssText = 'position:sticky;top:0;z-index:10001;background:#282828;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;flex-shrink:0';
-  var navLabel = document.createElement('span');
-  navLabel.textContent = '거래처별 희망 도착일';
-  navLabel.style.cssText = 'color:rgba(255,255,255,0.9);font-size:13px;font-weight:700;white-space:nowrap';
-  var navBtns = document.createElement('div');
-  navBtns.style.cssText = 'display:flex;gap:8px;flex-shrink:0';
-  var closeBtn = document.createElement('button');
-  closeBtn.textContent = '✕ 닫기';
-  closeBtn.onclick = function(){ ov.remove(); };
-  closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap';
-  var nextBtn = document.createElement('button');
-  nextBtn.textContent = '발주서 보기 →';
-  nextBtn.onclick = function(){ ov.remove(); printForVendor(); };
-  nextBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap';
-  navBtns.appendChild(closeBtn);
-  navBtns.appendChild(nextBtn);
-  nav.appendChild(navLabel);
-  nav.appendChild(navBtns);
-
-  var content = document.createElement('div');
-  content.style.cssText = 'flex:1;padding:24px 16px 60px;display:flex;justify-content:center';
-  var wrap = document.createElement('div');
-  wrap.style.cssText = 'width:100%;max-width:720px';
-  content.appendChild(wrap);
-
-  var hint = document.createElement('div');
-  hint.textContent = '거래처마다 실제 도착·완료 시점이 다를 수 있어 각각 따로 입력해주세요. (선택사항 - 비워두면 "협의"로 표시돼요)';
-  hint.style.cssText = 'font-size:11px;color:#B0A99F;margin-bottom:12px';
-  wrap.appendChild(hint);
-
+// 거래처별 기본 도착 소요일수/기본 도착장소(거래처 관리 화면에서 등록)를
+// 자동으로 채움 - 원래 "거래처별 희망 도착일" 화면이 열릴 때 하던 일을
+// 화면 없이 그대로 수행. 이미 이번 발주에서 값이 있으면(직접 수정했으면)
+// 그 값을 우선시함.
+function applyVendorArrivalDefaults(vendorNames) {
   window._vendorArrivalDates = window._vendorArrivalDates || {};
-  // 2026-09-11(선혜님 지시 - "기본 세트는 내가 하나하나 정리해주고
-  // 수정도 되게 할까?? 보통은 잘 안바뀌는데 바뀌는 경우도 있어서"):
-  // 거래처 관리 화면에서 등록한 기본 도착 소요일수/기본 도착장소를
-  // 자동으로 채워주되, 이미 값이 있으면(이번 발주에서 이미 입력했으면)
-  // 그 값을 우선시하고, 그때그때 바뀌면 여기서 직접 수정 가능.
   window._vendorArrivalLocations = window._vendorArrivalLocations || {};
   var DEFAULT_LOCATION = '서울 서초구 사평대로 53길 64 1층 드로잉엣홈';
   function findVendorMeta(name) {
     if (!Array.isArray(window._dahVendorListRaw)) return null;
     return window._dahVendorListRaw.find(function(v){ return v && v.name === name; }) || null;
   }
-  vendorNames.forEach(function(vendor){
+  (vendorNames || []).forEach(function(vendor){
     var meta = findVendorMeta(vendor);
     if (!window._vendorArrivalDates[vendor] && meta && meta.defaultArrivalDays) {
       var d = new Date();
@@ -969,35 +792,7 @@ function openVendorArrivalDateModal() {
     if (!window._vendorArrivalLocations[vendor]) {
       window._vendorArrivalLocations[vendor] = (meta && meta.defaultLocation) || DEFAULT_LOCATION;
     }
-    var card = document.createElement('div');
-    card.style.cssText = 'background:#fff;border-radius:12px;padding:16px;margin-bottom:10px';
-    var lbl = document.createElement('div');
-    lbl.textContent = vendor === '미지정' ? '거래처 미지정 항목' : vendor;
-    lbl.style.cssText = 'font-size:14px;font-weight:700;margin-bottom:8px';
-    var dateLbl = document.createElement('div');
-    dateLbl.textContent = '희망 도착일';
-    dateLbl.style.cssText = 'font-size:11px;font-weight:700;color:#8E8078;margin-bottom:4px';
-    var input = document.createElement('input');
-    input.type = 'date';
-    input.value = window._vendorArrivalDates[vendor] || '';
-    input.style.cssText = 'width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box';
-    input.addEventListener('input', function(){ window._vendorArrivalDates[vendor] = input.value; });
-    var locLbl = document.createElement('div');
-    locLbl.textContent = '도착 장소';
-    locLbl.style.cssText = 'font-size:11px;font-weight:700;color:#8E8078;margin:10px 0 4px';
-    var locInput = document.createElement('input');
-    locInput.type = 'text';
-    locInput.value = window._vendorArrivalLocations[vendor] || '';
-    locInput.style.cssText = 'width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box';
-    locInput.addEventListener('input', function(){ window._vendorArrivalLocations[vendor] = locInput.value; });
-    card.appendChild(lbl); card.appendChild(dateLbl); card.appendChild(input);
-    card.appendChild(locLbl); card.appendChild(locInput);
-    wrap.appendChild(card);
   });
-
-  ov.appendChild(nav);
-  ov.appendChild(content);
-  document.body.appendChild(ov);
 }
 
 function collectVendorGroups() {
@@ -1010,6 +805,11 @@ function collectVendorGroups() {
     var vendor = tr.querySelector('.c-vendor')?.value || '';
     var color  = tr.querySelector('.c-color')?.value || '';
     var railVendorCheck = tr.querySelector('.c-rail-vendor')?.value || '';
+    var space  = tr.querySelector('.space-inp')?.value || '';
+    var mw     = tr.querySelector('.mw')?.value || '';
+    var mh     = tr.querySelector('.mh')?.value || '';
+    var pnum   = tr.querySelector('.pnum')?.value || '';
+    var displayNameCheck = tr.querySelector('.c-display-name')?.value || '';
     // 2026-09-01(선혜님 지적 — "발주서(거래처별) 클릭하고 목성을 적으니
     // '거래처 또는 원단명이 입력된 항목이 없습니다'가 뜬다"로 발견, 실제
     // 프로덕션 재현): 목성은 실제로 원단(fabric)이 아니라 레일/부자재
@@ -1018,11 +818,16 @@ function collectVendorGroups() {
     // 채운 행은 이 시점에 통째로 걸러져(return) 그 아래(611번대)에 이미
     // 있던 railVendor 처리 코드에 도달하지도 못하고 있었음 - 조건에
     // railVendor도 포함해서 이 행이 계속 처리되게 함.
-    if(!fabric && !vendor && !railVendorCheck) return;
-    var space  = tr.querySelector('.space-inp')?.value || '';
-    var mw     = tr.querySelector('.mw')?.value || '';
-    var mh     = tr.querySelector('.mh')?.value || '';
-    var pnum   = tr.querySelector('.pnum')?.value || '';
+    // 2026-09-11(선혜님 발견 - 손현영님 사례: "왜 발주서에는 거실 2개
+    // 안방 2개 되지??" 확인 과정에서 실제로는 정반대의 더 심각한 문제를
+    // 발견함): 원단거래처를 아직 안 정했거나 고객이 직접 원단을 대는
+    // 경우(fabric/vendor 둘 다 빈값), 캔가공소 제작 발주는 원단거래처와
+    // 무관하게 항상 필요한데도 이 조건 때문에 행 자체가 통째로 걸러져서
+    // 캔가공소 발주서에서 완전히 빠지고 있었음 - "커튼은 무조건 제작을
+    // 해야 한다"는 원래 설계 의도(위 2026-09-09 참고)와 어긋남. 실제
+    // 커튼이 입력된 행인지(제품명/사이즈 존재)까지 조건에 포함해서, 원단
+    // 거래처가 비어있어도 제작 발주는 정상적으로 생성되게 함.
+    if(!fabric && !vendor && !railVendorCheck && !displayNameCheck && !mw && !mh) return;
     var pleat  = (tr.querySelector('.pleat-type')?.value || '').replace('형','');
     var open   = (tr.querySelector('.open-type')?.value || '').replace('형','');
     var heightAdjust = parseFloat(tr.querySelector('.height-adjust')?.value);
@@ -1034,7 +839,7 @@ function collectVendorGroups() {
     // 나눴는데, 실제로는 커튼 하나가 원단 매입 + 제작 의뢰 둘 다 항상
     // 필요한 별개의 두 발주임 - 체크박스 없이, 원단거래처가 있으면
     // 원단 발주를, 등록된 가공소가 있으면 제작 발주를 각각 독립적으로 생성.
-    var displayName = tr.querySelector('.c-display-name')?.value || '';
+    var displayName = displayNameCheck;
     var hemType = tr.querySelector('.hem-type')?.value || '';
     var yardage = tr.querySelector('.c-yardage')?.value || '';
     var shapeProcess = tr.querySelector('.c-shape-process')?.checked || false;
@@ -1100,18 +905,27 @@ function collectVendorGroups() {
     var vendor = tr.querySelector('.b-vendor')?.value || '';
     var color  = tr.querySelector('.b-color')?.value || '';
     var cordLength = tr.querySelector('.b-cord-length')?.value || '';
+    // 2026-09-11(선혜님이 실제 윈텍/덱스터 발주서 양식 보여주심 - "넣을
+    // 부분이 보이지??"): 실제 발주서엔 시스템(종류)/손잡이방향/끈길이/
+    // 하단바/코멘트가 전부 각자 칸으로 나뉘어 있는데, 지금까지는 "내용"
+    // 한 칸에 뭉쳐서 표시하고 있었음 - 각 칸을 그대로 살려서 전달.
+    var bottomBar = tr.querySelector('.b-bottom-bar')?.value || '';
+    var comment = tr.querySelector('.b-comment')?.value || '';
     if(!fabric && !vendor) return;
     var space = tr.querySelector('.space-inp')?.value || '';
     var bmw   = tr.querySelector('.bmw')?.value || '';
     var bmh   = tr.querySelector('.bmh')?.value || '';
     var handle= tr.querySelector('.handle-dir')?.value || '';
+    var kind  = tr.querySelector('.blind-kind')?.value || '';
     var opt   = tr.querySelector('.blind-opt')?.value || '';
     items.push({
       space: space||'—', product: fabric||'—', color: color||'—',
       size:(bmw&&bmh)?(bmw+'×'+bmh):'—',
-      // 2026-09-09(선혜님 지적 - "블라인드는 끈길이도 적을 수 있게
-      // 해줘야 하는데 그게 안되네"): 끈길이 정보를 내용 칸에 함께 표시.
-      content: [handle ? (handle==='기타'?'기타':handle+'잡이') : '', opt, cordLength ? ('끈길이 '+cordLength) : ''].filter(Boolean).join(' / ')||'—',
+      kind: kind||'—',
+      handle: handle ? (handle==='기타'?'기타':handle+'잡이') : '—',
+      cordLength: cordLength||'—',
+      bottomBar: bottomBar||'—',
+      comment: [opt, comment].filter(Boolean).join(' / ')||'—',
       qty: '1개',
       vendor: vendor,
       orderCategory: 'blind'
@@ -1172,9 +986,12 @@ function printForVendor() {
   // 뜨기도 전에 불쑥 끼어드는 것도 방금 만든 팝업→미리보기 흐름을
   // 방해했음 - 완전 제거.
   var extraNote = '';
-  // 2026-09-11: 거래처마다 도착일이 다르므로(원단/가공소/레일/블라인드
-  // 각각 실제 완료·도착 시점이 다름), 단일 값이 아니라 거래처별 맵을
-  // 넘김 - openVendorArrivalDateModal에서 채워짐.
+  // 2026-09-11(선혜님 지시 - "화면 자체를 없애고 최종 발주서에서 바로
+  // 수정"): 예전엔 "거래처별 희망 도착일" 화면에서 사람이 확인 버튼을
+  // 눌러야 기본값이 채워졌는데, 이제 그 화면이 없어졌으니 문서를 만들기
+  // 직전에 여기서 바로 기본값을 채움.
+  var precollected = collectVendorGroups();
+  applyVendorArrivalDefaults(Object.keys(precollected.groups));
   var html = buildVendorHTML(extraNote, window._vendorArrivalDates || {}, window._vendorArrivalLocations || {});
   // 2026-09-09(선혜님 지시 - "발주 페이지 자체를 수정할 수 있게도
   // 적용이 되어있니??" → "이제 발주서도 보기 화면에서 직접 고칠 수
@@ -1247,7 +1064,20 @@ function printForVendor() {
   nav.appendChild(navBtns);
 
   var content = document.createElement('div');
-  content.style.cssText = 'flex:1;padding:32px 20px 60px;display:flex;justify-content:center';
+  content.style.cssText = 'flex:1;padding:32px 20px 60px;display:flex;flex-direction:column;align-items:center';
+  // 2026-09-11(선혜님 지시 - "화면 자체를 없애고 최종 발주서에서 바로
+  // 수정"): 예전엔 "원단 거래처 칸에 가공소 이름을 넣었다" 같은 실수를
+  // 별도 확인화면에서 confirm()으로 막았는데, 그 화면을 없앤 대신 문서
+  // 맨 위에 눈에 띄는 배너로 알려줌 - 막지는 않되(발주서는 그대로 보임)
+  // 바로 알아채고 고칠 수 있게.
+  var issues = getVendorInfoIssues();
+  if (issues.confusedFabricSpaces.length > 0) {
+    var warnBanner = document.createElement('div');
+    warnBanner.className = 'print-hide';
+    warnBanner.style.cssText = 'width:100%;max-width:640px;background:#FBEAE7;border:1px solid #E4483A;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:12px;color:#C0392B;line-height:1.6';
+    warnBanner.textContent = '⚠️ 원단 거래처 칸에 가공소 이름이 들어간 항목이 있어요: ' + issues.confusedFabricSpaces.join(', ') + ' — 가공소는 자동으로 처리되니, 원단 거래처 칸에는 실제 원단 매입처를 입력해주세요.';
+    content.appendChild(warnBanner);
+  }
   var inner = document.createElement('div');
   inner.style.cssText = 'width:100%;max-width:640px';
   inner.innerHTML = html;

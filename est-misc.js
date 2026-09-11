@@ -123,6 +123,10 @@ function collectLineItems() {
       // 2026-09-09(선혜님 지적 - "블라인드는 끈길이도 적을 수 있게
       // 해줘야 하는데 그게 안되네"): 끈길이 필드 신설.
       cordLength: tr.querySelector('.b-cord-length')?.value||'',
+      // 2026-09-11(선혜님이 실제 블라인드 거래처 발주서 양식 보여주심):
+      // 하단바(마감방식)/코멘트(자유메모) 필드 신설.
+      bottomBar: tr.querySelector('.b-bottom-bar')?.value||'',
+      comment: tr.querySelector('.b-comment')?.value||'',
       kind: tr.querySelector('.blind-kind')?.value||'', handle: tr.querySelector('.handle-dir')?.value||'',
       bmw: tr.querySelector('.bmw')?.value||'', bmh: tr.querySelector('.bmh')?.value||'',
       opt: tr.querySelector('.blind-opt')?.value||'',
@@ -298,6 +302,8 @@ function loadDraft() {
             if (btr.querySelector('.b-vendor')) btr.querySelector('.b-vendor').value = item.vendor || '';
             if (btr.querySelector('.b-color')) btr.querySelector('.b-color').value = item.color || '';
             if (btr.querySelector('.b-cord-length')) btr.querySelector('.b-cord-length').value = item.cordLength || '';
+            if (btr.querySelector('.b-bottom-bar')) btr.querySelector('.b-bottom-bar').value = item.bottomBar || '';
+            if (btr.querySelector('.b-comment')) btr.querySelector('.b-comment').value = item.comment || '';
             if (btr.querySelector('.blind-kind')) btr.querySelector('.blind-kind').value = item.kind || '';
             if (btr.querySelector('.handle-dir')) btr.querySelector('.handle-dir').value = item.handle || '';
             if (btr.querySelector('.bmw')) btr.querySelector('.bmw').value = item.bmw || '';

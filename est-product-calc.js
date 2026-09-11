@@ -289,6 +289,12 @@ function addBlindRow() {
           // 해줘야 하는데 그게 안되네"): 새 필드 신설 - 실제 발주서
           // "내용" 칸에 손잡이 방향과 함께 표시됨.
           '<input type="text" placeholder="끈길이" class="inner-inp b-cord-length" style="width:60px">'+
+          // 2026-09-11(선혜님이 실제 블라인드 거래처 발주서 양식(윈텍/덱스터)
+          // 보여주심 - "넣을 부분이 보이지??": 실제 양식엔 있는데 지금 앱엔
+          // 아예 없던 두 정보, "하단바"(하단감쌈 등 마감방식)와 "코멘트"
+          // (원코드 원기둥형 투명 같은 자유 메모)를 신설.
+          '<input type="text" placeholder="하단바" class="inner-inp b-bottom-bar" style="width:60px">'+
+          '<input type="text" placeholder="코멘트" class="inner-inp b-comment" style="width:90px">'+
         '</div>'+
       '</div>'+
     '</td>'+
