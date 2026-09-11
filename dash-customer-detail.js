@@ -840,6 +840,40 @@ function renderDetailInfoSection(c, body) {
             saveCustomerToDb(target, function(err){
               showToast(err ? '⚠️ ' + item.label + ': 로컬엔 저장됨(서버 재시도 대기)' : item.label + '이 저장됐습니다');
             });
+            // 2026-09-11(선혜님 지적 - "고객이 확정된 뒤에 시공일자를
+            // 바꾸면 견적서에는 수정이 또 안되네 심지어 대시보드에
+            // 수정해도 변경이 안되고 반영도 안되네"): 지금까지 견적서를
+            // 저장할 때 그 안의 날짜가 고객 레코드로 동기화되는 방향만
+            // 있었고, 반대(대시보드에서 고객 날짜를 고치면 견적서에도
+            // 반영)는 없었음 - 실제 시공일정은 계약 후에도 바뀌는 게
+            // 정상인데, 대시보드에서 고쳐도 견적서를 다시 열면 예전
+            // 날짜가 그대로 보이던 원인. 이 고객의 가장 최근 견적서도
+            // 함께 갱신.
+            if (typeof SUPABASE_URL !== 'undefined' && target.id) {
+              var estField = item.key === 'installDate' ? 'install_date' : 'measure_date';
+              try {
+                var findXhr = new XMLHttpRequest();
+                findXhr.open('GET', SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(target.id) + '&order=created_at.desc&limit=1&select=id', true);
+                findXhr.setRequestHeader('apikey', SUPABASE_KEY);
+                findXhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+                findXhr.onload = function() {
+                  try {
+                    var rows = JSON.parse(findXhr.responseText);
+                    if (rows && rows[0] && rows[0].id) {
+                      var patchXhr = new XMLHttpRequest();
+                      patchXhr.open('PATCH', SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(rows[0].id), true);
+                      patchXhr.setRequestHeader('apikey', SUPABASE_KEY);
+                      patchXhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+                      patchXhr.setRequestHeader('Content-Type', 'application/json');
+                      var patchBody = {};
+                      patchBody[estField] = newVal || null;
+                      patchXhr.send(JSON.stringify(patchBody));
+                    }
+                  } catch (eFind) {}
+                };
+                findXhr.send();
+              } catch (eOuter) {}
+            }
           } else {
             showToast(item.label + '이 저장됐습니다');
           }

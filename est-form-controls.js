@@ -238,6 +238,17 @@ function lockEstimateForm(locked) {
       el.disabled = false;
     });
   });
+  // 2026-09-11(선혜님 지적 - "고객이 확정된 뒤에 시공일자를 바꾸면
+  // 견적서에는 수정이 또 안되네"): 실측/시공 예정일도 원단/거래처와
+  // 정확히 같은 이유(계약 확정 후에도 실제 일정은 얼마든지 바뀔 수
+  // 있음 - 일정 변경, 지연 등)로 잠금 대상에서 빠져야 하는데, 확정
+  // 잠금 섹션(lockable-customer-info) 안에 함께 있어서 실수로 같이
+  // 잠기고 있었음.
+  document.querySelectorAll('.schedule-fields').forEach(function(wrap) {
+    wrap.querySelectorAll('input, select, button, textarea').forEach(function(el) {
+      el.disabled = false;
+    });
+  });
   // 위 action-bar 예외처리와 마찬가지로, action-bar도 계속 활성 유지.
   var actionBar = document.querySelector('.action-bar');
   if (actionBar) {
