@@ -130,8 +130,7 @@ function renderOrderSection(c, orderBody) {
       var label = span('font-size:12px;color:var(--dark)', item.label);
       var checkbox = el('input', { type: 'checkbox' });
       checkbox.checked = isDone;
-      checkbox.style.cssText = 'width:20px;height:20px;cursor:pointer';
-
+      checkbox.style.cssText = 'width:20px;height:20px;cursor:default';
       // 업체명·발주일·도착예정일 간단 입력 (2026-07-21 신규) — 체크하면 나타남, 이미 값 있으면 미리 채워짐
       var detailWrap = div('flex-direction:column;gap:6px;margin-top:6px', []);
       detailWrap.style.display = isDone ? 'flex' : 'none';
@@ -182,10 +181,19 @@ function renderOrderSection(c, orderBody) {
         if (typeof logEvent === 'function') logEvent('order_check', { item: item.key, checked: checkbox.checked });
       }
 
-      checkbox.addEventListener('change', function() {
-        detailWrap.style.display = checkbox.checked ? 'flex' : 'none';
-        saveOrderState();
-        showToast(item.label + (checkbox.checked ? ' 완료 처리됐습니다' : ' 완료 취소됐습니다'));
+      checkbox.addEventListener('click', function(e) {
+        // 2026-09-11(선혜님 - "전문업체 기준으로 업무효율성 평가해봐" 요청에
+        // 2순위로 나온 개선사항: "완료 표시를 하나로 통일"): 지금까지
+        // 이 체크박스를 손으로 직접 체크/해제할 수 있어서, 실제로 발주서를
+        // 만들어 보내지 않고도 체크만 하거나, 반대로 발주서는 보냈는데
+        // 체크를 깜박하는 등 표시와 실제 상태가 어긋날 수 있었음. 이제
+        // 완료 표시는 오직 실제 발주서(printForVendor)/시공의뢰서
+        // (printRequest)를 "인쇄/PDF저장"했을 때만 자동으로 남도록
+        // 통일 - 이 체크박스는 그 결과를 보여주는 용도로만 남기고,
+        // 직접 클릭해서 바꾸는 건 막음. 업체명/발주일/도착예정일 메모
+        // 칸은 완료 여부와 무관하게 여전히 직접 적어둘 수 있음(그대로 유지).
+        e.preventDefault();
+        showToast('이 표시는 자동으로 남아요 — "상세보기 →"에서 발주서를 인쇄/PDF저장하면 자동으로 완료 처리돼요.');
       });
       vendorInput.addEventListener('change', saveOrderState);
       orderDateInput.addEventListener('change', saveOrderState);
