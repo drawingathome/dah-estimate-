@@ -585,7 +585,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   // 수정"): 거래처를 아직 안 정한 항목("미지정")을 화면 전환 없이도
   // 바로 알아챌 수 있도록 경고 색으로 눈에 띄게 표시.
   var isUnassigned = (!vendor || vendor.indexOf('미지정') === 0);
-  out += '<div style="margin-top:var(--sp-5);padding:8px 14px;background:'+(isUnassigned?'#FBEAE7':'#F5F2EE')+';font-size:13px;font-weight:700;color:'+(isUnassigned?'#C0392B':'#282828')+'">'+(isUnassigned?'⚠️ 거래처 미지정 — 아래 항목의 거래처를 정해주세요':'거래처: '+escHtml(vendor))+'</div>';
+  out += '<div style="margin-top:var(--sp-5);padding:8px 14px;background:'+(isUnassigned?'#FBEAE7':'#F5F2EE')+';font-size:13px;font-weight:700;color:'+(isUnassigned?'#C0392B':'#282828')+'">'+(isUnassigned?'⚠️ '+escHtml(vendor||'거래처 미지정')+' — 아래 항목의 거래처를 정해주세요':'거래처: '+escHtml(vendor))+'</div>';
   // 2026-09-11(선혜님이 실제 캔가공소 발주서 양식 확인해주심): 원단/
   // 부자재/블라인드는 공통 테이블(위치·품명·제품정보·사이즈·내용·수량·
   // 고객명)로 충분한데, 캔가공소(제작) 발주는 완전히 다른 정보(제작
