@@ -1172,7 +1172,12 @@ var currentTab = 'ga';
                 if ((autoDoc === 'install' || autoDoc === 'measure') && typeof printRequest === 'function') {
                   printRequest(autoDoc, true); // true = 설치기사 정보 재확인 prompt 건너뜀
                 } else if (autoDoc === 'vendor' && typeof printForVendor === 'function') {
-                  printForVendor(); // 2026-09-09: prompt 자체를 없애서 인자 불필요해짐
+                  // 2026-09-11(선혜님 지시 - 대시보드 "발주 현황" 체크리스트
+                  // 항목을 하나씩 눌러 그 카테고리만 담긴 발주서로 연결):
+                  // onlyCategory가 있으면(체크리스트에서 옴) 그 카테고리만,
+                  // 없으면(견적서 앱 안의 기존 "발주서" 버튼) 기존처럼 전부 다.
+                  var onlyCategory = urlParams.get('onlyCategory');
+                  printForVendor(onlyCategory || undefined);
                 }
               }
               runAutoDoc();

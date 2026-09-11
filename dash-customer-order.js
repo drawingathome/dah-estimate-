@@ -198,7 +198,32 @@ function renderOrderSection(c, orderBody) {
       detailWrap.appendChild(vendorInput);
       detailWrap.appendChild(vendorDatalist);
       detailWrap.appendChild(dateRow);
-      row.appendChild(label);
+      // 2026-09-11(선혜님 지시 - "발주 하는 이 부분이 정말 신경이 많이
+      // 쓰이는데 이 방법이 최선인지는 모르겠어" + 이 체크리스트 캡처
+      // 보여주시며 하나씩 누르면 상세 발주서가 나오는 게 낫지 않냐는
+      // 방향 확인): 지금까지 이 체크리스트는 체크박스+수동 입력만 있고
+      // 실제 견적 데이터로 만든 발주서 문서와 완전히 분리돼 있었음 -
+      // 각 항목을 누르면 그 카테고리만 담긴 실제 발주서(원단이면 원단만,
+      // 제작이면 제작만)가 새 창으로 바로 뜨도록 연결. "시공 발주"는
+      // 발주서가 아니라 기존 시공의뢰서(printRequest) 흐름으로 연결.
+      // label만 있던 왼쪽을 label+상세보기 묶음으로 바꿔서, row 전체의
+      // justify-content:space-between(왼쪽/오른쪽 2묶음 기준)이 그대로 유지되게 함.
+      var leftGroup = div('display:flex;align-items:center;gap:4px', [label]);
+      if (latestEst3 && latestEst3.dbId) {
+        var detailBtn = document.createElement('button');
+        detailBtn.type = 'button';
+        detailBtn.textContent = '상세보기 →';
+        detailBtn.style.cssText = 'font-size:11px;color:var(--sub);background:none;border:none;padding:4px 8px;cursor:pointer;font-family:inherit;flex-shrink:0';
+        detailBtn.onclick = function(){
+          if (item.key === 'install') {
+            if (typeof showRequestFromEstimate === 'function') showRequestFromEstimate('install', latestEst3);
+          } else if (typeof showVendorOrderFromEstimate === 'function') {
+            showVendorOrderFromEstimate(latestEst3, item.key);
+          }
+        };
+        leftGroup.appendChild(detailBtn);
+      }
+      row.appendChild(leftGroup);
       row.appendChild(checkbox);
       rowWrap.appendChild(row);
       rowWrap.appendChild(detailWrap);

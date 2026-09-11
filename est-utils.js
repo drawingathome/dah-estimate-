@@ -520,7 +520,13 @@ function updateOrderStatusFromVendorGroups(groups) {
   // 있었지만, 이 요약 정보(order_status)만 부정확했음. vendor를 배열로
   // 모아서 전부 남기도록 수정.
   Object.keys(groups).forEach(function(vendor){
-    if (vendor === '미지정') return;
+    // 2026-09-11(선혜님이 오늘 발주서 카테고리 전부 노출되도록 바꾸면서
+    // 새로 생긴 위험 - 발견해서 미리 막음): 거래처를 아직 안 정한
+    // "미지정(원단)" 같은 항목도 인쇄/PDF저장을 누르면 여기 걸려서
+    // "발주 완료"로 잘못 체크될 뻔했음. 예전엔 정확히 "미지정" 문자열만
+    // 걸렀는데 이제 "미지정(원단)"/"미지정(레일)" 등으로 이름이 바뀌어서
+    // 이 필터를 그대로 두면 통과해버림 - 접두어로 검사하도록 수정.
+    if (vendor === '미지정' || vendor.indexOf('미지정(') === 0) return;
     (groups[vendor] || []).forEach(function(item){
       var cat = item.orderCategory;
       if (!cat) return;

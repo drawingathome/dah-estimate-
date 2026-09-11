@@ -804,7 +804,7 @@ function applyVendorArrivalDefaults(groups) {
   });
 }
 
-function collectVendorGroups() {
+function collectVendorGroups(categoryFilter) {
   var cName  = escHtml(document.getElementById('c-name')?.value||'');
   var cStaff = escHtml(document.getElementById('c-staff')?.value||'장선혜');
 
@@ -979,7 +979,13 @@ function collectVendorGroups() {
   // 한쪽 항목이 엉뚱한 칸 구성으로 깨져 보임 - 카테고리별로 별도의
   // "미지정(카테고리)" 그룹으로 분리.
   var CATEGORY_LABEL = { production: '제작', material: '레일', blind: '블라인드', fabric: '원단' };
-  items.forEach(function(it){
+  // 2026-09-11(선혜님 지시 - "발주 하는 이 부분이 정말 신경이 많이 쓰이는데
+  // 이 방법이 최선인지는 모르겠어" + 대시보드 "발주 현황" 체크리스트 캡처
+  // 보여주심): 원단/제작/블라인드/자재(레일)를 한 번에 다 쏟아내는 대신,
+  // 체크리스트 항목 하나를 눌러 그 카테고리만 볼 수 있도록 필터 지원.
+  // categoryFilter가 없으면(기존 "발주서" 버튼) 전부 다 보여주는 기존 동작 유지.
+  var filteredItems = categoryFilter ? items.filter(function(it){ return it.orderCategory === categoryFilter; }) : items;
+  filteredItems.forEach(function(it){
     var key = it.vendor || ('미지정(' + (CATEGORY_LABEL[it.orderCategory] || '기타') + ')');
     if(!groups[key]) groups[key] = [];
     groups[key].push(it);
@@ -994,17 +1000,19 @@ function collectVendorGroups() {
     });
   });
 
-  return { groups: groups, cName: cName, cStaff: cStaff, itemCount: items.length };
+  return { groups: groups, cName: cName, cStaff: cStaff, itemCount: filteredItems.length };
 }
 
-function buildVendorHTML(extraNote, arrivalDatesByVendor, arrivalLocationsByVendor) {
+function buildVendorHTML(extraNote, arrivalDatesByVendor, arrivalLocationsByVendor, categoryFilter) {
   function today(){
     return formatKoreanDate();
   }
-  var collected = collectVendorGroups();
+  var collected = collectVendorGroups(categoryFilter);
 
   if(collected.itemCount === 0) {
-    return '<div class="pv-wrap" style="max-width:720px;margin:0 auto;padding:60px 20px;text-align:center;color:#B0A99F;font-size:13px">거래처 또는 원단명이 입력된 항목이 없습니다.<br>커튼/블라인드 입력창의 "거래처" 필드를 채운 후 다시 시도해주세요.</div>';
+    var emptyMsgByCategory = { fabric: '원단', production: '캔가공소(제작)', material: '레일', blind: '블라인드' };
+    var emptyMsg = categoryFilter ? (emptyMsgByCategory[categoryFilter] || '해당') + ' 발주가 필요한 항목이 없어요.' : '거래처 또는 원단명이 입력된 항목이 없습니다.<br>커튼/블라인드 입력창의 "거래처" 필드를 채운 후 다시 시도해주세요.';
+    return '<div class="pv-wrap" style="max-width:720px;margin:0 auto;padding:60px 20px;text-align:center;color:#B0A99F;font-size:13px">'+emptyMsg+'</div>';
   }
 
   var todayStr = today();
@@ -1021,7 +1029,7 @@ function buildVendorHTML(extraNote, arrivalDatesByVendor, arrivalLocationsByVend
   return out;
 }
 
-function printForVendor() {
+function printForVendor(categoryFilter) {
   calcTotal();
   // 2026-09-09(선혜님 지적 - "이거는 왜 이렇게 미리 알림으로 띄우는거야??
   // ... 니가 디테일하게 보지 않은거 같애!!"): 실측/시공(printRequest)은
@@ -1036,9 +1044,15 @@ function printForVendor() {
   // 수정"): 예전엔 "거래처별 희망 도착일" 화면에서 사람이 확인 버튼을
   // 눌러야 기본값이 채워졌는데, 이제 그 화면이 없어졌으니 문서를 만들기
   // 직전에 여기서 바로 기본값을 채움.
-  var precollected = collectVendorGroups();
+  // 2026-09-11(선혜님 지시 - "발주 하는 이 부분이 정말 신경이 많이
+  // 쓰이는데 이 방법이 최선인지는 모르겠어" + 대시보드 "발주 현황"
+  // 체크리스트와 연결하기로 결정): categoryFilter가 있으면(체크리스트에서
+  // "원단 발주"처럼 카테고리 하나를 눌러서 들어온 경우) 그 카테고리만
+  // 걸러서 보여줌 - 없으면(견적서 앱 안의 기존 "발주서" 버튼) 전부 다 보여주는
+  // 기존 동작 그대로 유지.
+  var precollected = collectVendorGroups(categoryFilter);
   applyVendorArrivalDefaults(precollected.groups);
-  var html = buildVendorHTML(extraNote, window._vendorArrivalDates || {}, window._vendorArrivalLocations || {});
+  var html = buildVendorHTML(extraNote, window._vendorArrivalDates || {}, window._vendorArrivalLocations || {}, categoryFilter);
   // 2026-09-09(선혜님 지시 - "발주 페이지 자체를 수정할 수 있게도
   // 적용이 되어있니??" → "이제 발주서도 보기 화면에서 직접 고칠 수
   // 있게(실측/시공과 동일하게)"): 예전엔 미리보기가 뜨기도 전에 이
@@ -1070,7 +1084,8 @@ function printForVendor() {
     'height:52px;flex-shrink:0'
   ].join(';');
   var navLabel = document.createElement('span');
-  navLabel.textContent = '발주서 — 거래처별 원단 발주 목록';
+  var CATEGORY_TITLE = { fabric: '원단 발주서', production: '캔가공소(제작) 발주서', material: '레일·자재 발주서', blind: '블라인드 발주서' };
+  navLabel.textContent = categoryFilter ? (CATEGORY_TITLE[categoryFilter] || '발주서') : '발주서 — 거래처별 원단 발주 목록';
   navLabel.style.cssText = 'color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;letter-spacing:0.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto;margin-right:8px';
   var navBtns = document.createElement('div');
   navBtns.style.cssText = 'display:flex;gap:var(--sp-2);flex-shrink:0';
@@ -1086,7 +1101,7 @@ function printForVendor() {
   printBtn.textContent = '인쇄 / PDF 저장';
   printBtn.onclick = function() {
     try {
-      var collected2 = collectVendorGroups();
+      var collected2 = collectVendorGroups(categoryFilter);
       if (collected2.itemCount > 0) {
         inner.querySelectorAll('[data-vendor]').forEach(function(vendorBlock){
           var vendor = vendorBlock.getAttribute('data-vendor');

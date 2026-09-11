@@ -1026,9 +1026,16 @@ function showRequestFromEstimate(kind, e) {
   if (!e.dbId) { showToast('이 견적은 세부 데이터가 없어서 다시 만들 수 없어요'); return; }
   window.open('dah-estimate.html?loadEstDbId=' + encodeURIComponent(e.dbId) + '&mode=view&autoDoc=' + encodeURIComponent(kind), '_blank');
 }
-function showVendorOrderFromEstimate(e) {
+// 2026-09-11(선혜님 지시 - "발주 하는 이 부분이 정말 신경이 많이
+// 쓰이는데 이 방법이 최선인지는 모르겠어" + 대시보드 "발주 현황"
+// 체크리스트를 보여주시며 하나씩 누르면 상세 발주서가 나오는 게 낫지
+// 않냐는 방향 확인): category를 주면 그 카테고리(원단/제작/레일/블라인드)
+// 만 걸러서 보여줌 - 안 주면(견적서 앱 안의 "발주서" 버튼) 기존처럼 전부 다.
+function showVendorOrderFromEstimate(e, category) {
   if (!e.dbId) { showToast('이 견적은 세부 데이터가 없어서 다시 만들 수 없어요'); return; }
-  window.open('dah-estimate.html?loadEstDbId=' + encodeURIComponent(e.dbId) + '&mode=view&autoDoc=vendor', '_blank');
+  var url = 'dah-estimate.html?loadEstDbId=' + encodeURIComponent(e.dbId) + '&mode=view&autoDoc=vendor';
+  if (category) url += '&onlyCategory=' + encodeURIComponent(category);
+  window.open(url, '_blank');
 }
 
 function openEstimate(name, id) {
