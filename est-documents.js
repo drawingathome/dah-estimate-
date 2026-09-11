@@ -980,11 +980,17 @@ function collectVendorGroups() {
     var yardage = tr.querySelector('.c-yardage')?.value || '';
     var shapeProcess = tr.querySelector('.c-shape-process')?.checked || false;
     if (fabric || vendor) {
+      // 2026-09-11(선혜님 지적 - "위에서 말한 발주들이 제대로 들어간거
+      // 같애?????"로 재검토 중 발견): 원단업체(디테라 등)에 보내는 발주
+      // 수량 칸에 "폭수"(pnum, 제작/재단 정보)가 들어가고 있었음 - 원단
+      // 업체는 폭수가 아니라 실제 필요한 원단량(마수)을 알아야 하는데,
+      // 방금 새로 만든 yardage(원단량) 필드가 정작 이 자리엔 안 쓰이고
+      // 캔가공소용 fabricInfo 조합 문자열에만 쓰이고 있었음 - 누락 수정.
       items.push({
         space: space||'—', product: fabric||'—', color: color||'—',
         size: '—', fabSize: null,
         content:[pleat, open].filter(Boolean).join(' ')||'—',
-        qty: pnum?(pnum+'폭'):'—',
+        qty: yardage || (pnum?(pnum+'폭'):'—'),
         vendor: vendor,
         orderCategory: 'fabric'
       });
