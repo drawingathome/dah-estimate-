@@ -662,7 +662,27 @@ function openVendorInfoModal() {
       alert('블라인드 거래처를 아직 선택 안 한 항목이 있어요: ' + missingVendorSpaces.join(', ') + '\n거래처를 선택해주세요.');
       return;
     }
-    ov.remove(); printForVendor();
+    // 2026-09-11(선혜님 지적 - "그걸 진작 말해야지 오류 체크해"): 원단
+    // 거래처 칸에 실제로는 가공소(production) 카테고리로 등록된
+    // 거래처명(예: "캔가공소")을 잘못 입력하는 실수가 실제로 발생함 -
+    // 미리 확인해서 경고.
+    var confusedFabricSpaces = [];
+    if (Array.isArray(window._dahVendorListRaw)) {
+      var productionNames = window._dahVendorListRaw.filter(function(v){
+        return v && Array.isArray(v.categories) && v.categories.indexOf('production') >= 0;
+      }).map(function(v){ return v.name; });
+      document.querySelectorAll('#curtain-body tr').forEach(function(tr){
+        var vendorVal = tr.querySelector('.c-vendor')?.value || '';
+        if (vendorVal && productionNames.indexOf(vendorVal) >= 0) {
+          confusedFabricSpaces.push(tr.querySelector('.space-inp')?.value || '(위치 미입력)');
+        }
+      });
+    }
+    if (confusedFabricSpaces.length > 0) {
+      if (!confirm('원단 거래처 칸에 가공소 이름이 입력된 항목이 있어요: ' + confusedFabricSpaces.join(', ') + '\n가공소는 자동으로 처리되니 원단 거래처 칸에는 실제 원단 매입처를 입력해야 해요.\n그대로 진행할까요?')) return;
+    }
+    ov.remove();
+    openVendorArrivalDateModal();
   };
   nextBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap';
   navBtns.appendChild(closeBtn);
@@ -676,22 +696,13 @@ function openVendorInfoModal() {
   wrap.style.cssText = 'width:100%;max-width:720px';
   content.appendChild(wrap);
 
-  // 2026-09-10(선혜님 지적 - "도착일 / 도착 장소가 없어"): 발주서에
-  // 표시할 희망 도착일을 여기서 한 번에 입력받음(거래처 여러 곳에
-  // 공통으로 적용).
-  var arrivalCard = document.createElement('div');
-  arrivalCard.style.cssText = 'background:#fff;border-radius:12px;padding:16px;margin-bottom:16px';
-  var arrivalLbl = document.createElement('div');
-  arrivalLbl.textContent = '희망 도착일';
-  arrivalLbl.style.cssText = 'font-size:12px;font-weight:700;color:#8E8078;margin-bottom:6px';
-  var arrivalInput = document.createElement('input');
-  arrivalInput.type = 'date';
-  var arrivalDateEl = document.getElementById('c-order-arrival-date');
-  arrivalInput.value = arrivalDateEl ? arrivalDateEl.value : '';
-  arrivalInput.style.cssText = 'width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box';
-  arrivalInput.addEventListener('input', function(){ if (arrivalDateEl) arrivalDateEl.value = arrivalInput.value; });
-  arrivalCard.appendChild(arrivalLbl); arrivalCard.appendChild(arrivalInput);
-  wrap.appendChild(arrivalCard);
+  // 2026-09-11(선혜님 지적 - "도착일이 다 달라 원단도착일이 다르고
+  // 가공소 제작일이 다르고 블라인드 제작일이 다른데 이렇게 만들면
+  // 어떻하니"): 여기 있던 "공통 희망 도착일 하나" 방식은 완전히 잘못된
+  // 설계였음 - 원단/가공소/레일/블라인드 각각 실제 완료·도착 시점이
+  // 다른데 전부 같은 날짜를 찍어버렸음. 거래처별로 각각 입력받도록
+  // 재설계(아래 openVendorArrivalDateModal 참고) - 이 자리의 공통
+  // 입력창은 완전히 제거.
 
   // 2026-09-09(선혜님 지적 - "끈길이 넣을 공간도 없구만!!!!", 실제
   // 모바일 화면(390px)으로 스크린샷 찍어서 재현 확인): 표(가로 여러
@@ -825,6 +836,73 @@ function openVendorInfoModal() {
   document.body.appendChild(ov);
 }
 
+// 2026-09-11(선혜님 지적 - "도착일이 다 달라 원단도착일이 다르고
+// 가공소 제작일이 다르고 블라인드 제작일이 다른데 이렇게 만들면
+// 어떻하니"): 원단/가공소(제작)/레일/블라인드 각각 실제 완료·도착
+// 시점이 다른데, 발주 전체에 공통 날짜 하나만 있었던 게 잘못된
+// 설계였음 - 발주서를 실제로 만드는 거래처 각각(collectVendorGroups
+// 결과와 정확히 동일한 기준)마다 별도의 도착일을 입력받도록 재설계.
+function openVendorArrivalDateModal() {
+  var collected = collectVendorGroups();
+  var vendorNames = Object.keys(collected.groups);
+
+  var ov = document.createElement('div');
+  ov.id = 'vendor-arrival-modal';
+  ov.className = 'print-hide';
+  ov.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#F5F2EE;z-index:10000;overflow-y:auto;display:flex;flex-direction:column';
+
+  var nav = document.createElement('div');
+  nav.style.cssText = 'position:sticky;top:0;z-index:10001;background:#282828;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;flex-shrink:0';
+  var navLabel = document.createElement('span');
+  navLabel.textContent = '거래처별 희망 도착일';
+  navLabel.style.cssText = 'color:rgba(255,255,255,0.9);font-size:13px;font-weight:700;white-space:nowrap';
+  var navBtns = document.createElement('div');
+  navBtns.style.cssText = 'display:flex;gap:8px;flex-shrink:0';
+  var closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕ 닫기';
+  closeBtn.onclick = function(){ ov.remove(); };
+  closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap';
+  var nextBtn = document.createElement('button');
+  nextBtn.textContent = '발주서 보기 →';
+  nextBtn.onclick = function(){ ov.remove(); printForVendor(); };
+  nextBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap';
+  navBtns.appendChild(closeBtn);
+  navBtns.appendChild(nextBtn);
+  nav.appendChild(navLabel);
+  nav.appendChild(navBtns);
+
+  var content = document.createElement('div');
+  content.style.cssText = 'flex:1;padding:24px 16px 60px;display:flex;justify-content:center';
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'width:100%;max-width:720px';
+  content.appendChild(wrap);
+
+  var hint = document.createElement('div');
+  hint.textContent = '거래처마다 실제 도착·완료 시점이 다를 수 있어 각각 따로 입력해주세요. (선택사항 - 비워두면 "협의"로 표시돼요)';
+  hint.style.cssText = 'font-size:11px;color:#B0A99F;margin-bottom:12px';
+  wrap.appendChild(hint);
+
+  window._vendorArrivalDates = window._vendorArrivalDates || {};
+  vendorNames.forEach(function(vendor){
+    var card = document.createElement('div');
+    card.style.cssText = 'background:#fff;border-radius:12px;padding:16px;margin-bottom:10px';
+    var lbl = document.createElement('div');
+    lbl.textContent = vendor === '미지정' ? '거래처 미지정 항목' : vendor;
+    lbl.style.cssText = 'font-size:14px;font-weight:700;margin-bottom:8px';
+    var input = document.createElement('input');
+    input.type = 'date';
+    input.value = window._vendorArrivalDates[vendor] || '';
+    input.style.cssText = 'width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;box-sizing:border-box';
+    input.addEventListener('input', function(){ window._vendorArrivalDates[vendor] = input.value; });
+    card.appendChild(lbl); card.appendChild(input);
+    wrap.appendChild(card);
+  });
+
+  ov.appendChild(nav);
+  ov.appendChild(content);
+  document.body.appendChild(ov);
+}
+
 function collectVendorGroups() {
   var cName  = escHtml(document.getElementById('c-name')?.value||'');
   var cStaff = escHtml(document.getElementById('c-staff')?.value||'장선혜');
@@ -936,7 +1014,7 @@ function collectVendorGroups() {
   return { groups: groups, cName: cName, cStaff: cStaff, itemCount: items.length };
 }
 
-function buildVendorHTML(extraNote, arrivalDate) {
+function buildVendorHTML(extraNote, arrivalDatesByVendor) {
   function today(){
     return formatKoreanDate();
   }
@@ -947,12 +1025,13 @@ function buildVendorHTML(extraNote, arrivalDate) {
   }
 
   var todayStr = today();
-  var arrivalDateStr = arrivalDate ? formatKoreanDate(new Date(arrivalDate+'T00:00:00')) : '';
   var vendors = Object.keys(collected.groups);
   var out = '';
   vendors.forEach(function(vendor, i){
+    var vendorArrivalRaw = arrivalDatesByVendor ? arrivalDatesByVendor[vendor] : '';
+    var vendorArrivalStr = vendorArrivalRaw ? formatKoreanDate(new Date(vendorArrivalRaw+'T00:00:00')) : '';
     out += '<div style="' + (i > 0 ? 'page-break-before:always;margin-top:40px;' : '') + '">';
-    out += buildVendorDocForOne(vendor, collected.groups[vendor], collected.cName, collected.cStaff, i === vendors.length - 1 ? extraNote : null, todayStr, arrivalDateStr);
+    out += buildVendorDocForOne(vendor, collected.groups[vendor], collected.cName, collected.cStaff, i === vendors.length - 1 ? extraNote : null, todayStr, vendorArrivalStr);
     out += '</div>';
   });
   return out;
@@ -969,8 +1048,10 @@ function printForVendor() {
   // 뜨기도 전에 불쑥 끼어드는 것도 방금 만든 팝업→미리보기 흐름을
   // 방해했음 - 완전 제거.
   var extraNote = '';
-  var arrivalDate = document.getElementById('c-order-arrival-date')?.value || '';
-  var html = buildVendorHTML(extraNote, arrivalDate);
+  // 2026-09-11: 거래처마다 도착일이 다르므로(원단/가공소/레일/블라인드
+  // 각각 실제 완료·도착 시점이 다름), 단일 값이 아니라 거래처별 맵을
+  // 넘김 - openVendorArrivalDateModal에서 채워짐.
+  var html = buildVendorHTML(extraNote, window._vendorArrivalDates || {});
   // 2026-09-09(선혜님 지시 - "발주 페이지 자체를 수정할 수 있게도
   // 적용이 되어있니??" → "이제 발주서도 보기 화면에서 직접 고칠 수
   // 있게(실측/시공과 동일하게)"): 예전엔 미리보기가 뜨기도 전에 이

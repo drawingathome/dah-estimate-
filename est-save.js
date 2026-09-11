@@ -73,7 +73,12 @@ function newEstimate() {
   // 초기화 목록에 빠져있어서, "새 견적서" 버튼을 눌러도 이전 고객의
   // 값이 그대로 남아있었음 - 실제로 다른 고객의 발주서/실측시공 문서에
   // 엉뚱한 도착일·설치기사 정보가 섞여 나갈 수 있는 심각한 문제.
-  document.getElementById('c-order-arrival-date').value='';
+  // 2026-09-11(선혜님 지적으로 거래처별 도착일 방식으로 재설계 -
+  // c-order-arrival-date 필드 자체는 폐기됨): 대신 새로 만든
+  // window._vendorArrivalDates(거래처별 맵)를 여기서 반드시 초기화 -
+  // 아까(9/10) 겪었던 "새 필드 초기화 누락"과 같은 실수를 반복 안 하려고
+  // 미리 넣어둠.
+  window._vendorArrivalDates = {};
   document.getElementById('c-installer-name').value='';
   document.getElementById('c-installer-phone').value='';
   var d=new Date();

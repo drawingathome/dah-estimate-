@@ -471,7 +471,7 @@ function loadCustByIdx(el) {
   // 고객 값이 그대로 남아있었음 - 재구매 고객 처리 등에서 자주 쓰이는
   // 기능이라 실무에 실제로 영향을 줄 수 있는 버그. 먼저 비워두고
   // 시작(이 함수 자체가 설치기사 정보를 복원하는 별도 로직은 없음).
-  document.getElementById('c-order-arrival-date').value = '';
+  window._vendorArrivalDates = {};
   document.getElementById('c-installer-name').value = '';
   document.getElementById('c-installer-phone').value = '';
   if(c.clientName && document.getElementById('c-name')) document.getElementById('c-name').value=c.clientName;
