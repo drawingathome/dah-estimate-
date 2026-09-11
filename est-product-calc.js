@@ -359,18 +359,17 @@ function refreshBlindVendorOptions() {
 // 전체 규칙(선혜님 확인, 2026-08-09): 모든 블라인드 종류에 최소면적이 있음
 // - 로만쉐이드, 롤스크린: 2.0㎡
 // - 우드, 허니콤, 알루미늄, 기타: 1.5㎡
+// 2026-09-11(선혜님 지적 - "더블 블라인드 최소회배가 롤블라인드와
+// 동일하게 2회배리고~ 너는 다르게 해석했지??"): "회배"는 가격에 곱하는
+// 배수가 아니라, 바로 이 최소면적 기준(1.5㎡ 그룹/2.0㎡ 그룹)을 가리키는
+// 말이었음 - 처음엔 "원단이 2겹이라 가격도 2배"로 잘못 해석해서
+// getBlindMultiplier()라는 별도 가격배수 함수를 만들었었는데, 완전히
+// 틀린 해석이었음(제거함). 더블 롤블라인드는 그냥 롤스크린과 같은
+// 최소면적 그룹(2.0㎡)에 속할 뿐, 가격 계산 자체는 다른 블라인드와
+// 동일(price*sqm).
 function getBlindMinSqm(kind) {
-  if (kind === '로만쉐이드' || kind === '롤스크린') return 2.0;
+  if (kind === '로만쉐이드' || kind === '롤스크린' || kind === '더블 롤블라인드') return 2.0;
   return 1.5;
-}
-// 2026-09-11(선혜님 지시 - "더블 롤블라인드 회배계산은 2회배로 해주면
-// 됨"): 위 getBlindMinSqm과 동일한 이유(원래 calcBlindRow/calcTotal
-// 두 곳에 계산이 따로 있어 규칙이 바뀔 때 한쪽만 고치면 어긋날 위험)로
-// 처음부터 공용 함수로 만듦 - 더블 롤블라인드는 원단이 2겹이라 실제
-// 소요면적이 2배(2회배)이므로 가격도 2배로 계산.
-function getBlindMultiplier(kind) {
-  if (kind === '더블 롤블라인드') return 2;
-  return 1;
 }
 
 function calcBlindRow(el) {
@@ -399,7 +398,7 @@ function calcBlindRow(el) {
   }
   if(bmwEl) bmwEl.style.borderBottom = bw>200 ? '2px solid #F06E2D' : '';
   if(bwWarnEl) bwWarnEl.style.display = bw>200 ? 'block' : 'none';
-  var amt = Math.round(price*sqm*getBlindMultiplier(kind));
+  var amt = Math.round(price*sqm);
   tr.querySelector('.bamt').textContent = amt>0 ? amt.toLocaleString()+'원' : '—';
   recalcBlindOptionExtras();
   calcTotal();
@@ -637,7 +636,7 @@ function calcTotal() {
     var minSqm=getBlindMinSqm(kind);
     if(sqmRaw<minSqm&&sqmRaw>0) sqmRaw=minSqm;
     var sqm=Math.ceil(sqmRaw*10)/10;
-    curtainTotal+=Math.round(price*sqm*getBlindMultiplier(kind));
+    curtainTotal+=Math.round(price*sqm);
   });
   var svcTotal=0;
   document.querySelectorAll('#svc-body tr').forEach(function(tr){
