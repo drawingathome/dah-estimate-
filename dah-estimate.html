@@ -731,7 +731,7 @@
            order_status를 조회해서 채움. 클릭 동작 자체는 기존과 동일. -->
       <div style="margin-top:14px;font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.04em">업무 처리</div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
-        <button onclick="printForVendor()" style="padding:12px 14px;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px;display:flex;justify-content:space-between;align-items:center;width:100%">
+        <button onclick="openVendorOrderPicker()" style="padding:12px 14px;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px;display:flex;justify-content:space-between;align-items:center;width:100%">
           <span>📦 발주서 (거래처별)</span><span class="work-status" id="work-order-status" style="font-size:11px;font-weight:600;color:var(--sub)">—</span>
         </button>
         <button onclick="printRequest('measure')" style="padding:12px 14px;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px;display:flex;justify-content:space-between;align-items:center;width:100%">
@@ -831,7 +831,7 @@
 <script src="/est-product-calc.js?v=202609112500"></script>
 <script src="/est-survey.js?v=202608190049"></script>
 <script src="/est-save.js?v=202609111600"></script>
-<script src="/est-documents.js?v=202609112800"></script>
+<script src="/est-documents.js?v=202609112900"></script>
 <script src="/est-customer-load.js?v=202609112000"></script>
 <script src="/est-misc.js?v=202609111900"></script>
 <script>

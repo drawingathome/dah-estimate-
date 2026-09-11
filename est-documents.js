@@ -1029,6 +1029,50 @@ function buildVendorHTML(extraNote, arrivalDatesByVendor, arrivalLocationsByVend
   return out;
 }
 
+// 2026-09-11(선혜님 지적 - "견적서 앱에서 하단에 발주서를 누르면 똑같애
+// 위에 이미지랑 루트가 완전히 다른데 둘 중 하나만 살리던가 연결되게
+// 하던가"): 대시보드 "발주 현황"에서는 카테고리 하나씩 골라 상세 발주서로
+// 들어가는데, 견적서 앱 안의 이 버튼만 예전처럼 전부 다 한 번에 보여주는
+// 별개 경로로 남아있었음 - 서로 다른 두 입구가 서로 다른 결과를 주는
+// 상태였음. 이 버튼도 똑같이 "어떤 발주서를 볼지" 먼저 고르게 해서
+// 대시보드 체크리스트와 똑같은 사고방식으로 통일 - 다만 "전체 보기"
+// 선택지는 남겨서, 정말 한 번에 다 보고 싶을 때(급한 발주 등)는 여전히
+// 가능하게 함.
+function openVendorOrderPicker() {
+  var existing = document.getElementById('vendor-order-picker');
+  if (existing) existing.remove();
+  var ov = document.createElement('div');
+  ov.id = 'vendor-order-picker';
+  ov.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:9998;display:flex;align-items:flex-end;justify-content:center';
+  ov.onclick = function(e){ if (e.target === ov) ov.remove(); };
+  var sheet = document.createElement('div');
+  sheet.style.cssText = 'background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:20px;box-sizing:border-box';
+  sheet.innerHTML = '<div style="font-size:15px;font-weight:700;margin-bottom:14px">어떤 발주서를 보시겠어요?</div>';
+  var options = [
+    { key: 'fabric', label: '원단 발주서' },
+    { key: 'production', label: '캔가공소(제작) 발주서' },
+    { key: 'material', label: '레일·자재 발주서' },
+    { key: 'blind', label: '블라인드 발주서' },
+    { key: null, label: '전체 보기 (다 같이)' }
+  ];
+  options.forEach(function(opt){
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = opt.label;
+    btn.style.cssText = 'display:block;width:100%;text-align:left;padding:14px 12px;background:none;border:none;border-bottom:1px solid #EEE6DC;font-size:14px;font-family:inherit;cursor:pointer;color:#282828';
+    btn.onclick = function(){ ov.remove(); printForVendor(opt.key || undefined); };
+    sheet.appendChild(btn);
+  });
+  var cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.textContent = '취소';
+  cancelBtn.style.cssText = 'display:block;width:100%;text-align:center;padding:14px 12px;background:none;border:none;font-size:14px;font-family:inherit;cursor:pointer;color:#B0A99F;margin-top:6px';
+  cancelBtn.onclick = function(){ ov.remove(); };
+  sheet.appendChild(cancelBtn);
+  ov.appendChild(sheet);
+  document.body.appendChild(ov);
+}
+
 function printForVendor(categoryFilter) {
   calcTotal();
   // 2026-09-09(선혜님 지적 - "이거는 왜 이렇게 미리 알림으로 띄우는거야??
