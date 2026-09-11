@@ -9,6 +9,12 @@ function addCurtainRow() {
   var tbody = document.getElementById('curtain-body');
   var tr = document.createElement('tr');
   tr.className = 'row-curtain';
+  // 2026-09-11(선혜님 확인 - "우리는 거의 모든 제품이 형상가공 들어가기
+  // 때문에 기본이 O 야"): 매번 체크해야 했던 형상가공 칸을 기본 체크된
+  // 상태로 시작 - 캔가공소 거래처 설정에 defaultShapeProcess를 false로
+  // 등록해두면(예외적으로 형상가공 안 하는 경우가 생기면) 그 설정을
+  // 따르고, 등록 안 돼있으면(대부분의 경우) 기본값인 O(체크됨)로 시작.
+  var shapeProcessChecked = getDefaultShapeProcessChecked() ? ' checked' : '';
   tr.innerHTML =
     '<td data-label="공간"><input type="text" class="space-inp" placeholder="공간" style="'+INP+';cursor:pointer;caret-color:transparent" readonly onclick="openSpacePicker(this)"></td>'+
     '<td data-label="제품명" style="padding:6px 8px">'+
@@ -34,7 +40,7 @@ function addCurtainRow() {
           // 가격이 뜨게 해야 하는데"): 원단량(마수)에 단가를 곱해서
           // 원단발주서에 총액을 표시하려면 단가가 필요함.
           '<input type="text" inputmode="numeric" placeholder="마당 단가" class="c-fabric-unit-price inner-inp" style="width:80px">'+
-          '<label style="display:flex;align-items:center;gap:2px;font-size:11px;color:var(--sub);white-space:nowrap"><input type="checkbox" class="c-shape-process" style="width:14px;height:14px">형상가공</label>'+
+          '<label style="display:flex;align-items:center;gap:2px;font-size:11px;color:var(--sub);white-space:nowrap"><input type="checkbox" class="c-shape-process"'+shapeProcessChecked+' style="width:14px;height:14px">형상가공</label>'+
         '</div>'+
         '<div class="inner-row" style="margin-top:2px">'+
           '<input type="text" list="vendor-list" placeholder="레일/부자재 거래처 (예: 목성)" class="c-rail-vendor inner-inp" style="width:140px">'+

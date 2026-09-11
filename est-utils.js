@@ -404,6 +404,18 @@ function getAutoProductionVendorName() {
   });
   return prodVendors.length === 1 ? (prodVendors[0].name || '') : '';
 }
+// 2026-09-11(선혜님 확인 - "우리는 거의 모든 제품이 형상가공 들어가기
+// 때문에 기본이 O 야"): 캔가공소 거래처 설정에 등록해둔 기본값을 따름 -
+// 명시적으로 false로 등록해두지 않았으면(대부분의 경우) 기본 O.
+function getDefaultShapeProcessChecked() {
+  if (Array.isArray(window._dahVendorListRaw)) {
+    var prodVendors = window._dahVendorListRaw.filter(function(v) {
+      return v && Array.isArray(v.categories) && v.categories.indexOf('production') >= 0;
+    });
+    if (prodVendors.length === 1 && prodVendors[0].defaultShapeProcess === false) return false;
+  }
+  return true;
+}
 // 2026-09-09(선혜님 지시 - "업무처리" 통합탭 마지막 단계): 현재 고객의
 // order_status를 조회하는 전용 헬퍼 - 업무처리 카드가 실측/발주/시공
 // 각각의 완료 여부를 보여줄 때 사용.

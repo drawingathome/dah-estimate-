@@ -774,7 +774,11 @@ function getVendorInfoIssues() {
 // 자동으로 채움 - 원래 "거래처별 희망 도착일" 화면이 열릴 때 하던 일을
 // 화면 없이 그대로 수행. 이미 이번 발주에서 값이 있으면(직접 수정했으면)
 // 그 값을 우선시함.
-function applyVendorArrivalDefaults(vendorNames) {
+// 2026-09-11(선혜님 지시 - "주소는 기본적으로 캔가공소야"): 원단(fabric)
+// 발주는 어느 원단업체에서 사입하든 실제로는 항상 캔가공소로 바로
+// 배송돼야 함(DAH 사무실이 아니라 제작하는 곳으로) - 원단 그룹은 그
+// 원단업체 자신의 기본주소가 아니라 캔가공소의 등록된 주소를 기본값으로 씀.
+function applyVendorArrivalDefaults(groups) {
   window._vendorArrivalDates = window._vendorArrivalDates || {};
   window._vendorArrivalLocations = window._vendorArrivalLocations || {};
   var DEFAULT_LOCATION = '서울 서초구 사평대로 53길 64 1층 드로잉엣홈';
@@ -782,15 +786,20 @@ function applyVendorArrivalDefaults(vendorNames) {
     if (!Array.isArray(window._dahVendorListRaw)) return null;
     return window._dahVendorListRaw.find(function(v){ return v && v.name === name; }) || null;
   }
-  (vendorNames || []).forEach(function(vendor){
+  Object.keys(groups || {}).forEach(function(vendor){
+    var groupItems = groups[vendor] || [];
+    var isFabricGroup = groupItems.length > 0 && groupItems[0].orderCategory === 'fabric';
     var meta = findVendorMeta(vendor);
+    var productionMeta = isFabricGroup ? findVendorMeta(getAutoProductionVendorName()) : null;
     if (!window._vendorArrivalDates[vendor] && meta && meta.defaultArrivalDays) {
       var d = new Date();
       d.setDate(d.getDate() + parseInt(meta.defaultArrivalDays, 10));
       window._vendorArrivalDates[vendor] = d.toISOString().slice(0, 10);
     }
     if (!window._vendorArrivalLocations[vendor]) {
-      window._vendorArrivalLocations[vendor] = (meta && meta.defaultLocation) || DEFAULT_LOCATION;
+      window._vendorArrivalLocations[vendor] = (isFabricGroup && productionMeta && productionMeta.defaultLocation)
+        || (meta && meta.defaultLocation)
+        || DEFAULT_LOCATION;
     }
   });
 }
@@ -1028,7 +1037,7 @@ function printForVendor() {
   // 눌러야 기본값이 채워졌는데, 이제 그 화면이 없어졌으니 문서를 만들기
   // 직전에 여기서 바로 기본값을 채움.
   var precollected = collectVendorGroups();
-  applyVendorArrivalDefaults(Object.keys(precollected.groups));
+  applyVendorArrivalDefaults(precollected.groups);
   var html = buildVendorHTML(extraNote, window._vendorArrivalDates || {}, window._vendorArrivalLocations || {});
   // 2026-09-09(선혜님 지시 - "발주 페이지 자체를 수정할 수 있게도
   // 적용이 되어있니??" → "이제 발주서도 보기 화면에서 직접 고칠 수

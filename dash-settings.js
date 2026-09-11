@@ -449,6 +449,33 @@ function renderSettings() {
     arrivalRow.appendChild(leadDaysInput);
     arrivalRow.appendChild(locationInput);
     row.appendChild(arrivalRow);
+    // 2026-09-11(선혜님 확인 - "우리는 거의 모든 제품이 형상가공 들어가기
+    // 때문에 기본이 O 야"): 캔가공소(제작) 거래처에만 의미 있는 설정이라
+    // production 카테고리가 켜진 거래처에만 노출. 기본은 항상 O(체크됨) -
+    // 예외적으로 형상가공을 안 하는 경우가 생기면 여기서 꺼두면 됨.
+    if (v.categories.indexOf('production') >= 0) {
+      var shapeProcessRow = div('display:flex;align-items:center;gap:8px;margin-top:8px', []);
+      var shapeProcessLabel = el('label', {
+        style: 'display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dark);cursor:pointer'
+      });
+      var shapeProcessCheckbox = el('input', {
+        type: 'checkbox',
+        style: 'width:16px;height:16px'
+      });
+      shapeProcessCheckbox.checked = v.defaultShapeProcess !== false;
+      shapeProcessCheckbox.addEventListener('change', function() {
+        var list = getVendorList();
+        var target = list.find(function(x){ return x.name === v.name; });
+        if (!target) return;
+        target.defaultShapeProcess = shapeProcessCheckbox.checked;
+        setVendorList(list);
+        showToast(v.name + ' 기본 형상가공이 ' + (shapeProcessCheckbox.checked ? 'O' : 'X') + '로 저장됐습니다');
+      });
+      shapeProcessLabel.appendChild(shapeProcessCheckbox);
+      shapeProcessLabel.appendChild(span('', '커튼 추가 시 기본 형상가공 O'));
+      shapeProcessRow.appendChild(shapeProcessLabel);
+      row.appendChild(shapeProcessRow);
+    }
     vendorListWrap.appendChild(row);
   });
   if (vendorList.length === 0) {
