@@ -305,10 +305,10 @@ function addBlindRow() {
       '</div>'+
     '</td>'+
     '<td data-label="종류"><select class="blind-kind" onchange="calcBlindRow(this)" style="'+SEL+'">'+
-      '<option>롤스크린</option><option>알루미늄</option><option>우드</option>'+
+      '<option>롤스크린</option><option>더블 롤블라인드</option><option>알루미늄</option><option>우드</option>'+
       '<option>허니콤</option><option>로만쉐이드</option><option>기타</option>'+
     '</select></td>'+
-    '<td data-label="손잡이"><select class="handle-dir" style="'+SEL+'"><option>좌손</option><option>우손</option><option>기타</option></select></td>'+
+    '<td data-label="손잡이"><select class="handle-dir" style="'+SEL+'"><option>좌손</option><option>우손</option><option>노코드</option><option>기타</option></select></td>'+
 
     '<td data-label="가로"><input type="text" inputmode="numeric" placeholder="cm" class="bmw" oninput="fmtPrice(this);calcBlindRow(this)" style="'+INP+'"></td>'+
     '<td data-label="높이"><input type="text" inputmode="numeric" placeholder="cm" class="bmh" oninput="fmtPrice(this);calcBlindRow(this)" style="'+INP+'"></td>'+
@@ -363,6 +363,15 @@ function getBlindMinSqm(kind) {
   if (kind === '로만쉐이드' || kind === '롤스크린') return 2.0;
   return 1.5;
 }
+// 2026-09-11(선혜님 지시 - "더블 롤블라인드 회배계산은 2회배로 해주면
+// 됨"): 위 getBlindMinSqm과 동일한 이유(원래 calcBlindRow/calcTotal
+// 두 곳에 계산이 따로 있어 규칙이 바뀔 때 한쪽만 고치면 어긋날 위험)로
+// 처음부터 공용 함수로 만듦 - 더블 롤블라인드는 원단이 2겹이라 실제
+// 소요면적이 2배(2회배)이므로 가격도 2배로 계산.
+function getBlindMultiplier(kind) {
+  if (kind === '더블 롤블라인드') return 2;
+  return 1;
+}
 
 function calcBlindRow(el) {
   var tr = el.closest('tr');
@@ -390,7 +399,7 @@ function calcBlindRow(el) {
   }
   if(bmwEl) bmwEl.style.borderBottom = bw>200 ? '2px solid #F06E2D' : '';
   if(bwWarnEl) bwWarnEl.style.display = bw>200 ? 'block' : 'none';
-  var amt = Math.round(price*sqm);
+  var amt = Math.round(price*sqm*getBlindMultiplier(kind));
   tr.querySelector('.bamt').textContent = amt>0 ? amt.toLocaleString()+'원' : '—';
   recalcBlindOptionExtras();
   calcTotal();
@@ -628,7 +637,7 @@ function calcTotal() {
     var minSqm=getBlindMinSqm(kind);
     if(sqmRaw<minSqm&&sqmRaw>0) sqmRaw=minSqm;
     var sqm=Math.ceil(sqmRaw*10)/10;
-    curtainTotal+=Math.round(price*sqm);
+    curtainTotal+=Math.round(price*sqm*getBlindMultiplier(kind));
   });
   var svcTotal=0;
   document.querySelectorAll('#svc-body tr').forEach(function(tr){

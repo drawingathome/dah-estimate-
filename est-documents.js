@@ -961,7 +961,7 @@ function collectVendorGroups() {
       space: space||'—', product: fabric||displayNameCheck||'—', color: color||'—',
       size:(bmw&&bmh)?(bmw+'×'+bmh):'—',
       kind: kind||'—',
-      handle: handle ? (handle==='기타'?'기타':handle+'잡이') : '—',
+      handle: handle ? ((handle==='기타'||handle==='노코드')?handle:handle+'잡이') : '—',
       cordLength: cordLength||'—',
       bottomBar: bottomBar||'—',
       comment: [opt, comment].filter(Boolean).join(' / ')||'—',
@@ -1384,7 +1384,7 @@ function buildRequestHTML(kind, extraNote) {
         // 2026-09-09(선혜님 지적 - "블라인드는 끈길이도 적을 수 있게
         // 해줘야 하는데 그게 안되네"): 끈길이 정보를 내용 칸에 추가 -
         // 시공기사님이 실제 끈길이를 알아야 정확히 시공 가능.
-        content: [blindKind, handle ? (handle==='기타'?'기타':handle+'잡이') : '', cordLength ? ('끈길이 '+cordLength) : ''].filter(Boolean).join(' — ')||'—',
+        content: [blindKind, handle ? ((handle==='기타'||handle==='노코드')?handle:handle+'잡이') : '', cordLength ? ('끈길이 '+cordLength) : ''].filter(Boolean).join(' — ')||'—',
         // 2026-09-08(선혜님 지적 - "블라인드도 지금은 가공소로 들어가있어",
         // 직접 수정한 파일과 비교해 발견): 블라인드는 완제품을 그대로
         // 구매하는 거라 원단을 재단하는 "가공소" 공정 자체가 없는데,
