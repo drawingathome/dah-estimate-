@@ -543,10 +543,13 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   // 쌓이던 flexbox 나열 방식을 실제 테두리 있는 표(3행 2열)로 재구성 -
   // 훨씬 컴팩트하고, 처음 참고로 보여주신 실제 발주서 양식과도 더
   // 비슷한 형태. 각 값 칸은 여전히 클릭해서 직접 수정 가능(contenteditable).
-  function infoTableRow(label1, val1, editable1, label2, val2, editable2) {
+  function infoTableRow(label1, val1, editable1, label2, val2, editable2, emphasize) {
     var cellStyle = 'padding:8px 10px;border:1px solid #EEE6DC;font-size:13px';
     var labelStyle = cellStyle + ';background:#FAF7F5;color:#8E8078;white-space:nowrap;width:1%';
-    var valStyle = cellStyle + ';font-weight:700';
+    // 2026-09-11(선혜님 지시 - "도착일과 도착장소는 굵은 폰트를 사용해주고"):
+    // 실제로 가장 중요한 정보(언제·어디로 보내야 하는지)만 굵게 강조하고
+    // 나머지(요청일/발주처/업체명/담당자)는 일반 굵기로 낮춰서 대비를 줌.
+    var valStyle = cellStyle + (emphasize ? ';font-weight:700' : ';font-weight:400');
     return '<tr>'
       + '<td style="'+labelStyle+'">'+label1+'</td>'
       + '<td style="'+valStyle+'"'+(editable1?' contenteditable="true" class="pv-editable-field"':'')+'>'+val1+'</td>'
@@ -559,7 +562,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
       // 장소는 기본적으로 수정할 수 있게 해줘"): 요청일만 유일하게 고정
       // 값(editable=false)이었음 - 도착일/도착장소/발주처와 동일하게
       // 수정 가능하도록 통일.
-      + infoTableRow('요청일', today, true, '발주처', escHtml(vendor), true)
+      + infoTableRow('요청일', today, true, '발주처', escHtml(vendor), true, false)
       // 2026-09-10(선혜님 지적 - "도착일 / 도착 장소가 없어" → "수정이
       // 되게" → "거래처마다 달라야"): 발주정보 팝업에서 거래처별로
       // 입력받은 값을 여기 표시(입력 안 하면 "협의" 표시), 클릭해서도
@@ -572,8 +575,8 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         // 저희 회사가 아니라 가공소로 바로 배송되는 경우가 있는 등,
         // 발주 종류/거래처에 따라 실제 도착지가 달라질 수 있어 고정
         // 값이 아니라 직접 클릭해서 고칠 수 있게 함.
-        '도착 장소', escHtml(arrivalLocation||'서울 서초구 사평대로 53길 64 1층 드로잉엣홈'), true)
-      + infoTableRow('업체명', '드로잉엣홈', false, '담당자', cStaff||'—', false)
+        '도착 장소', escHtml(arrivalLocation||'서울 서초구 사평대로 53길 64 1층 드로잉엣홈'), true, true)
+      + infoTableRow('업체명', '드로잉엣홈', false, '담당자', cStaff||'—', false, false)
       + '</table>';
 
   out += '<div style="margin-top:10px;font-size:11px;color:#B0A99F">*아래와 같이 발주 합니다.</div>';
@@ -592,30 +595,37 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   // 수량/고객명만 남긴 축소된 테이블로 분기.
   var isMaterial = groupItems.length > 0 && groupItems[0].orderCategory === 'material';
   if (isProduction) {
-    out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+    // 2026-09-11(발주서 하나하나 점검하다 발견 - 8개 칸짜리 캔가공소 표가
+    // 모바일 실사용 폭(390px)보다 넓어서 "고객"/"원단정보" 칸이 화면
+    // 밖으로 밀려 안 보이던 문제): 칸 안쪽 여백/글자크기를 살짝 줄이고,
+    // 그래도 안 들어가는 경우를 대비해 표만 좌우로 스크롤되는 감싸는 칸을
+    // 추가(제목·비고 등 나머지 화면은 그대로 고정).
+    out += '<div class="pv-order-table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch">';
+    out += '<table style="width:100%;border-collapse:collapse;font-size:11px">'
         +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
-        +'<th style="text-align:left;padding:8px 6px">공간</th>'
-        +'<th style="text-align:left;padding:8px 6px">원단(품명)</th>'
-        +'<th style="text-align:center;padding:8px 6px">제작사이즈</th>'
-        +'<th style="text-align:center;padding:8px 6px">형상가공</th>'
-        +'<th style="text-align:center;padding:8px 6px">하단시접</th>'
-        +'<th style="text-align:left;padding:8px 6px">내용</th>'
-        +'<th style="text-align:left;padding:8px 6px">고객</th>'
-        +'<th style="text-align:left;padding:8px 6px">원단정보</th>'
+        +'<th style="text-align:left;padding:6px 4px">공간</th>'
+        +'<th style="text-align:left;padding:6px 4px">원단(품명)</th>'
+        +'<th style="text-align:center;padding:6px 4px">제작사이즈</th>'
+        +'<th style="text-align:center;padding:6px 4px">형상가공</th>'
+        +'<th style="text-align:center;padding:6px 4px">하단시접</th>'
+        +'<th style="text-align:left;padding:6px 4px">내용</th>'
+        +'<th style="text-align:left;padding:6px 4px">고객</th>'
+        +'<th style="text-align:left;padding:6px 4px">원단정보</th>'
         +'</tr></thead><tbody>';
     groupItems.forEach(function(it){
       out += '<tr style="border-bottom:1px solid #EEE6DC">'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.space)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.product)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:center;font-weight:700">'+escHtml(it.fabSize||it.size)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:center">'+(it.shapeProcess?'O':'X')+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:center">'+escHtml(it.hemType||'—')+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.content)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.fabricInfo||'—')+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.space)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.product)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center;font-weight:700">'+escHtml(it.fabSize||it.size)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+(it.shapeProcess?'O':'X')+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.hemType||'—')+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.content)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.fabricInfo||'—')+'</td>'
           +'</tr>';
     });
-    out += '</tbody></table>';
+    out += '</tbody></table></div>';
+    out += '<div class="print-hide" style="font-size:11px;color:#B0A99F;margin-top:2px">← 표를 옆으로 밀면 나머지 항목(고객/원단정보)이 보입니다</div>';
   } else if (isMaterial) {
     out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
         +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
@@ -634,32 +644,37 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
     });
     out += '</tbody></table>';
   } else {
-  out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+  // 2026-09-11(발주서 하나하나 점검하다 발견 - 원단/블라인드 7칸짜리 표가
+  // 모바일 실사용 폭보다 넓어서 "수량"/"고객명" 칸이 안 보이던 문제):
+  // 위 캔가공소 표와 동일하게 여백/글자크기 축소 + 좌우 스크롤 감싸는 칸.
+  out += '<div class="pv-order-table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch">';
+  out += '<table style="width:100%;border-collapse:collapse;font-size:11px">'
       +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
-      +'<th style="text-align:left;padding:8px 6px">위치</th>'
-      +'<th style="text-align:left;padding:8px 6px">품명</th>'
+      +'<th style="text-align:left;padding:6px 4px">위치</th>'
+      +'<th style="text-align:left;padding:6px 4px">품명</th>'
       // 2026-09-10(선혜님 지적 - "컬러-> 제품정보 로 수정해주고"): 실제
       // 값이 순수 색상명이 아니라 제품코드/세부사양(예: "AL25-8274L",
       // "Amalfi RM-01번 화이트 + 뒷면: HK-3022FR 아이보리")이라 "컬러"
       // 보다 "제품정보"가 정확한 표현.
-      +'<th style="text-align:left;padding:8px 6px">제품정보</th>'
-      +'<th style="text-align:center;padding:8px 6px">사이즈</th>'
-      +'<th style="text-align:left;padding:8px 6px">내용</th>'
-      +'<th style="text-align:right;padding:8px 6px">수량</th>'
-      +'<th style="text-align:left;padding:8px 6px">고객명</th>'
+      +'<th style="text-align:left;padding:6px 4px">제품정보</th>'
+      +'<th style="text-align:center;padding:6px 4px">사이즈</th>'
+      +'<th style="text-align:left;padding:6px 4px">내용</th>'
+      +'<th style="text-align:right;padding:6px 4px">수량</th>'
+      +'<th style="text-align:left;padding:6px 4px">고객명</th>'
       +'</tr></thead><tbody>';
   groupItems.forEach(function(it){
     out += '<tr style="border-bottom:1px solid #EEE6DC">'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.space)+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.product)+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.color)+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:center">'+escHtml(it.size)+(it.fabSize?('<br><span style="font-size:11px;color:#F06E2D;font-weight:700">제작 '+escHtml(it.fabSize)+'</span>'):'')+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.content)+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.space)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.product)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.color)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.size)+(it.fabSize?('<br><span style="font-size:11px;color:#F06E2D;font-weight:700">제작 '+escHtml(it.fabSize)+'</span>'):'')+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.content)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
         +'</tr>';
   });
-  out += '</tbody></table>';
+  out += '</tbody></table></div>';
+  out += '<div class="print-hide" style="font-size:11px;color:#B0A99F;margin-top:2px">← 표를 옆으로 밀면 나머지 항목(수량/고객명)이 보입니다</div>';
   }
 
   out += '<div class="pv-vendor-note-editable" contenteditable="true" style="margin-top:var(--sp-6);text-align:center;font-size:13px;color:#E4483A;font-weight:600;line-height:1.7;white-space:pre-wrap;outline:none;border:1px dashed #F0C9C4;border-radius:8px;padding:8px" data-placeholder="비고(클릭해서 직접 입력)">'+escHtml(extraNote||'')+'</div>';

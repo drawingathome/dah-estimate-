@@ -985,6 +985,13 @@ td.amt{
 .pv-recipient-info{font-size:11px;color:var(--sub)}
 
  
+/* 2026-09-11(발주서 화면 점검 중 발견 - 선혜님 요청으로 발주서 4종 하나하나
+   확인하다가 찾음): 발주서/실측·시공 의뢰서 미리보기가 열려있는 동안에도
+   우측 하단 "🔍 진단" 버튼(z-index:999999)이 미리보기 위에 그대로 겹쳐
+   보이고 클릭도 되던 문제. 미리보기 열림 표시인 body.preview-open일 때는
+   화면에서도(인쇄 때뿐 아니라) 숨김. */
+body.preview-open #self-diag-btn { display:none!important; }
+
 @media print{
   /* 숨길 요소 - 작업화면 UI(버튼/탭바 등)가 인쇄물에 찍히지 않도록. 원본에 있던 규칙인데
      오늘 세션 중 인쇄CSS를 여러 번 재작성하면서 실수로 누락됐던 걸 반영 직전 발견해 복원함. */
@@ -1022,6 +1029,9 @@ td.amt{
   }
   #pv-overlay .pv-nav { display:none!important; }
   #pv-overlay .pv-wrap { box-shadow:none!important; border-radius:0!important; max-width:none!important; margin:0!important; border:none!important; }
+  /* 2026-09-11: 화면에서만 좌우 스크롤이 필요한 표(.pv-order-table-scroll) —
+     인쇄/PDF에서는 스크롤 개념이 없어 잘리므로 전체가 보이도록 원복. */
+  .pv-order-table-scroll { overflow:visible!important; }
   @page { size:A4; margin:14mm 16mm; }
 
   /* ══════════════════════════════════════════════

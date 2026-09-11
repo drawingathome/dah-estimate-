@@ -20,11 +20,22 @@ async function run() {
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
   // 1) 알림톡: 방문예약 단계 -> 지금 보낼 알림톡에 관련 항목 뜨는지
+  // 2026-08-28: openDetail이 서버에서 최신 견적목록을 먼저 받아온 뒤(비동기)
+  // 렌더링하도록 바뀌었는데(유경진 사례 버그 수정 - role-permission-check.js는
+  // 그때 같이 고쳐졌음), 이 테스트는 그 변경 이전(2026-08-28 이전)에 이미
+  // 작성돼 있어서 반영이 누락됨 - openDetail 호출 직후 곧바로 DOM을 읽어서,
+  // 실제로는 잘 뜨는 알림톡탭을 "렌더링 전 빈 화면"으로 오판(false negative)
+  // 하고 있었음. role-permission-check.js와 동일하게 Promise+setTimeout으로
+  // 완료를 기다리도록 수정.
   let r = await page.evaluate(() => {
     saveCustomers([{ id: 6000, clientName: '알림확인고객', phone: '01077778888', stage: '방문예약', staffName: '마스터', date: todayStr(), price: 1000000 }]);
-    openDetail('알림확인고객', 6000, 'alim');
-    var text = document.getElementById('detail-alim-body') ? document.getElementById('detail-alim-body').textContent : '';
-    return { hasSendSection: text.includes('지금 보낼 알림톡'), hasSendButton: Array.from(document.querySelectorAll('#detail-alim-body span')).some(s => s.textContent.trim() === '발송') };
+    return new Promise((resolve) => {
+      openDetail('알림확인고객', 6000, 'alim');
+      setTimeout(() => {
+        var text = document.getElementById('detail-alim-body') ? document.getElementById('detail-alim-body').textContent : '';
+        resolve({ hasSendSection: text.includes('지금 보낼 알림톡'), hasSendButton: Array.from(document.querySelectorAll('#detail-alim-body span')).some(s => s.textContent.trim() === '발송') });
+      }, 500);
+    });
   });
   ok('1. 알림톡탭 - 지금보낼알림톡 섹션 표시', r.hasSendSection === true, JSON.stringify(r));
   ok('2. 알림톡탭 - 발송 버튼 존재', r.hasSendButton === true);
