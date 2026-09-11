@@ -733,11 +733,48 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
 // "창구"일 뿐 - 여기서 입력하는 즉시 원본 값이 갱신되므로, 발주서를
 // 실제로 만드는 코드(collectVendorGroups 등)는 전혀 안 건드려도 그대로
 // 작동함.
+// 2026-09-11(선혜님 지적 - "내가 발주서 양식 이렇게 하는게 번거롭다고
+// 몇번 말했니??"): 이미 다 채워져 있어서 고칠 게 하나도 없어도, 발주서
+// 버튼을 누르면 매번 이 "발주 정보 입력" 화면부터 거쳐야 했음(닫기 전엔
+// 발주서를 못 봄). 실제로 확인이 필요한 경우(블라인드 거래처 누락,
+// 원단 거래처 칸에 가공소 이름 오입력)만 화면을 띄우고, 문제가 없으면
+// 이 화면 자체를 건너뛰고 바로 다음 단계로 넘어가도록 함. 검증 로직은
+// 기존 nextBtn과 동일한 걸 그대로 재사용(따로 만들면 쌍둥이 함수가 됨).
+function getVendorInfoIssues() {
+  var missingVendorSpaces = [];
+  document.querySelectorAll('#blind-body tr').forEach(function(tr){
+    var vendorSel = tr.querySelector('.b-vendor');
+    var fabric = tr.querySelector('.b-fabric')?.value || '';
+    if (vendorSel && !vendorSel.value && fabric) {
+      missingVendorSpaces.push(tr.querySelector('.space-inp')?.value || '(위치 미입력)');
+    }
+  });
+  var confusedFabricSpaces = [];
+  if (Array.isArray(window._dahVendorListRaw)) {
+    var productionNames = window._dahVendorListRaw.filter(function(v){
+      return v && Array.isArray(v.categories) && v.categories.indexOf('production') >= 0;
+    }).map(function(v){ return v.name; });
+    document.querySelectorAll('#curtain-body tr').forEach(function(tr){
+      var vendorVal = tr.querySelector('.c-vendor')?.value || '';
+      if (vendorVal && productionNames.indexOf(vendorVal) >= 0) {
+        confusedFabricSpaces.push(tr.querySelector('.space-inp')?.value || '(위치 미입력)');
+      }
+    });
+  }
+  return { missingVendorSpaces: missingVendorSpaces, confusedFabricSpaces: confusedFabricSpaces };
+}
+
 function openVendorInfoModal() {
   var curtainTrs = Array.from(document.querySelectorAll('#curtain-body tr'));
   var blindTrs = Array.from(document.querySelectorAll('#blind-body tr'));
   if (curtainTrs.length === 0 && blindTrs.length === 0) {
     alert('입력된 커튼·블라인드 항목이 없어요. 먼저 항목을 추가해주세요.');
+    return;
+  }
+
+  var issues = getVendorInfoIssues();
+  if (issues.missingVendorSpaces.length === 0 && issues.confusedFabricSpaces.length === 0) {
+    openVendorArrivalDateModal();
     return;
   }
 
@@ -769,36 +806,17 @@ function openVendorInfoModal() {
     // 아무 효력이 없었음(브라우저가 강제 안 함) - 저장 시점(가견적 단계,
     // 아직 거래처를 모를 수 있는 정상적인 상황)엔 막으면 안 되므로, 대신
     // 여기(발주서를 실제로 보려는 시점)에서 명시적으로 검증.
-    var missingVendorSpaces = [];
-    document.querySelectorAll('#blind-body tr').forEach(function(tr){
-      var vendorSel = tr.querySelector('.b-vendor');
-      var fabric = tr.querySelector('.b-fabric')?.value || '';
-      if (vendorSel && !vendorSel.value && fabric) {
-        missingVendorSpaces.push(tr.querySelector('.space-inp')?.value || '(위치 미입력)');
-      }
-    });
-    if (missingVendorSpaces.length > 0) {
-      alert('블라인드 거래처를 아직 선택 안 한 항목이 있어요: ' + missingVendorSpaces.join(', ') + '\n거래처를 선택해주세요.');
+    var issues = getVendorInfoIssues();
+    if (issues.missingVendorSpaces.length > 0) {
+      alert('블라인드 거래처를 아직 선택 안 한 항목이 있어요: ' + issues.missingVendorSpaces.join(', ') + '\n거래처를 선택해주세요.');
       return;
     }
     // 2026-09-11(선혜님 지적 - "그걸 진작 말해야지 오류 체크해"): 원단
     // 거래처 칸에 실제로는 가공소(production) 카테고리로 등록된
     // 거래처명(예: "캔가공소")을 잘못 입력하는 실수가 실제로 발생함 -
     // 미리 확인해서 경고.
-    var confusedFabricSpaces = [];
-    if (Array.isArray(window._dahVendorListRaw)) {
-      var productionNames = window._dahVendorListRaw.filter(function(v){
-        return v && Array.isArray(v.categories) && v.categories.indexOf('production') >= 0;
-      }).map(function(v){ return v.name; });
-      document.querySelectorAll('#curtain-body tr').forEach(function(tr){
-        var vendorVal = tr.querySelector('.c-vendor')?.value || '';
-        if (vendorVal && productionNames.indexOf(vendorVal) >= 0) {
-          confusedFabricSpaces.push(tr.querySelector('.space-inp')?.value || '(위치 미입력)');
-        }
-      });
-    }
-    if (confusedFabricSpaces.length > 0) {
-      if (!confirm('원단 거래처 칸에 가공소 이름이 입력된 항목이 있어요: ' + confusedFabricSpaces.join(', ') + '\n가공소는 자동으로 처리되니 원단 거래처 칸에는 실제 원단 매입처를 입력해야 해요.\n그대로 진행할까요?')) return;
+    if (issues.confusedFabricSpaces.length > 0) {
+      if (!confirm('원단 거래처 칸에 가공소 이름이 입력된 항목이 있어요: ' + issues.confusedFabricSpaces.join(', ') + '\n가공소는 자동으로 처리되니 원단 거래처 칸에는 실제 원단 매입처를 입력해야 해요.\n그대로 진행할까요?')) return;
     }
     ov.remove();
     openVendorArrivalDateModal();
