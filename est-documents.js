@@ -594,6 +594,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   // 내용은 항상 "—"(빈 값)만 나오는 무의미한 칸이었음 - 위치/품명/
   // 수량/고객명만 남긴 축소된 테이블로 분기.
   var isMaterial = groupItems.length > 0 && groupItems[0].orderCategory === 'material';
+  var isBlind = groupItems.length > 0 && groupItems[0].orderCategory === 'blind';
   if (isProduction) {
     // 2026-09-11(발주서 하나하나 점검하다 발견 - 8개 칸짜리 캔가공소 표가
     // 모바일 실사용 폭(390px)보다 넓어서 "고객"/"원단정보" 칸이 화면
@@ -643,10 +644,48 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
           +'</tr>';
     });
     out += '</tbody></table>';
+  } else if (isBlind) {
+    // 2026-09-11(선혜님이 실제 윈텍/덱스터 발주서 양식 보여주심 - "넣을
+    // 부분이 보이지??"): 실제 거래처 발주서엔 시스템(블라인드 종류)/
+    // 손잡이방향/끈길이/하단바/코멘트가 각자 칸으로 나뉘어 있는데, 지금까진
+    // 원단(커튼) 표를 그대로 재사용해서 "제품정보"(색상)만 있고 저 다섯
+    // 정보는 "내용" 한 칸에 뭉쳐서 나가거나 아예 빠져있었음 - 블라인드
+    // 전용 표로 분리해서 실제 양식과 동일한 칸 구성으로 재구성.
+    out += '<div class="pv-order-table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch">';
+    out += '<table style="width:100%;border-collapse:collapse;font-size:11px">'
+        +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
+        +'<th style="text-align:left;padding:6px 4px">위치</th>'
+        +'<th style="text-align:left;padding:6px 4px">원단명</th>'
+        +'<th style="text-align:left;padding:6px 4px">시스템</th>'
+        +'<th style="text-align:center;padding:6px 4px">사이즈</th>'
+        +'<th style="text-align:center;padding:6px 4px">손잡이방향</th>'
+        +'<th style="text-align:center;padding:6px 4px">끈길이</th>'
+        +'<th style="text-align:center;padding:6px 4px">하단바</th>'
+        +'<th style="text-align:left;padding:6px 4px">코멘트</th>'
+        +'<th style="text-align:right;padding:6px 4px">수량</th>'
+        +'<th style="text-align:left;padding:6px 4px">고객명</th>'
+        +'</tr></thead><tbody>';
+    groupItems.forEach(function(it){
+      out += '<tr style="border-bottom:1px solid #EEE6DC">'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.space)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.product)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.kind)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.size)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.handle)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.cordLength)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.bottomBar)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.comment)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
+          +'</tr>';
+    });
+    out += '</tbody></table></div>';
+    out += '<div class="print-hide" style="font-size:11px;color:#B0A99F;margin-top:2px">← 표를 옆으로 밀면 나머지 항목(끈길이/하단바/코멘트/수량/고객명)이 보입니다</div>';
   } else {
-  // 2026-09-11(발주서 하나하나 점검하다 발견 - 원단/블라인드 7칸짜리 표가
-  // 모바일 실사용 폭보다 넓어서 "수량"/"고객명" 칸이 안 보이던 문제):
-  // 위 캔가공소 표와 동일하게 여백/글자크기 축소 + 좌우 스크롤 감싸는 칸.
+  // 2026-09-11(발주서 하나하나 점검하다 발견 - 원단 7칸짜리 표가 모바일
+  // 실사용 폭보다 넓어서 "수량"/"고객명" 칸이 안 보이던 문제; 블라인드는
+  // 같은 날 별도로 전용 표(isBlind)로 분리됨): 캔가공소 표와 동일하게
+  // 여백/글자크기 축소 + 좌우 스크롤 감싸는 칸.
   out += '<div class="pv-order-table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch">';
   out += '<table style="width:100%;border-collapse:collapse;font-size:11px">'
       +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
@@ -1115,18 +1154,27 @@ function collectVendorGroups() {
     var vendor = tr.querySelector('.b-vendor')?.value || '';
     var color  = tr.querySelector('.b-color')?.value || '';
     var cordLength = tr.querySelector('.b-cord-length')?.value || '';
+    // 2026-09-11(선혜님이 실제 윈텍/덱스터 발주서 양식 보여주심 - "넣을
+    // 부분이 보이지??"): 실제 발주서엔 시스템(종류)/손잡이방향/끈길이/
+    // 하단바/코멘트가 전부 각자 칸으로 나뉘어 있는데, 지금까지는 "내용"
+    // 한 칸에 뭉쳐서 표시하고 있었음 - 각 칸을 그대로 살려서 전달.
+    var bottomBar = tr.querySelector('.b-bottom-bar')?.value || '';
+    var comment = tr.querySelector('.b-comment')?.value || '';
     if(!fabric && !vendor) return;
     var space = tr.querySelector('.space-inp')?.value || '';
     var bmw   = tr.querySelector('.bmw')?.value || '';
     var bmh   = tr.querySelector('.bmh')?.value || '';
     var handle= tr.querySelector('.handle-dir')?.value || '';
+    var kind  = tr.querySelector('.blind-kind')?.value || '';
     var opt   = tr.querySelector('.blind-opt')?.value || '';
     items.push({
       space: space||'—', product: fabric||'—', color: color||'—',
       size:(bmw&&bmh)?(bmw+'×'+bmh):'—',
-      // 2026-09-09(선혜님 지적 - "블라인드는 끈길이도 적을 수 있게
-      // 해줘야 하는데 그게 안되네"): 끈길이 정보를 내용 칸에 함께 표시.
-      content: [handle ? (handle==='기타'?'기타':handle+'잡이') : '', opt, cordLength ? ('끈길이 '+cordLength) : ''].filter(Boolean).join(' / ')||'—',
+      kind: kind||'—',
+      handle: handle ? (handle==='기타'?'기타':handle+'잡이') : '—',
+      cordLength: cordLength||'—',
+      bottomBar: bottomBar||'—',
+      comment: [opt, comment].filter(Boolean).join(' / ')||'—',
       qty: '1개',
       vendor: vendor,
       orderCategory: 'blind'

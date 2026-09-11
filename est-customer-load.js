@@ -395,6 +395,9 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       var colorEl = tr.querySelector('.b-color'); if (colorEl) colorEl.value = it.color || '';
       // 2026-09-09: 끈길이 복원 추가.
       var cordEl = tr.querySelector('.b-cord-length'); if (cordEl) cordEl.value = it.cordLength || '';
+      // 2026-09-11: 하단바/코멘트 복원 추가.
+      var bottomBarEl = tr.querySelector('.b-bottom-bar'); if (bottomBarEl) bottomBarEl.value = it.bottomBar || '';
+      var commentEl = tr.querySelector('.b-comment'); if (commentEl) commentEl.value = it.comment || '';
       var kindEl = tr.querySelector('.blind-kind'); if (kindEl) kindEl.value = it.kind || kindEl.value;
       var handleEl = tr.querySelector('.handle-dir'); if (handleEl && it.handle) handleEl.value = it.handle;
       var bmw = tr.querySelector('.bmw'); if (bmw) bmw.value = it.bmw || '';
