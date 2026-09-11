@@ -605,14 +605,14 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         +'</tr></thead><tbody>';
     groupItems.forEach(function(it){
       out += '<tr style="border-bottom:1px solid #EEE6DC">'
-          +'<td style="padding:8px 6px">'+escHtml(it.space)+'</td>'
-          +'<td style="padding:8px 6px">'+escHtml(it.product)+'</td>'
-          +'<td style="padding:8px 6px;text-align:center;font-weight:700">'+escHtml(it.fabSize||it.size)+'</td>'
-          +'<td style="padding:8px 6px;text-align:center">'+(it.shapeProcess?'O':'X')+'</td>'
-          +'<td style="padding:8px 6px;text-align:center">'+escHtml(it.hemType||'—')+'</td>'
-          +'<td style="padding:8px 6px">'+escHtml(it.content)+'</td>'
-          +'<td style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
-          +'<td style="padding:8px 6px">'+escHtml(it.fabricInfo||'—')+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.space)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.product)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:center;font-weight:700">'+escHtml(it.fabSize||it.size)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:center">'+(it.shapeProcess?'O':'X')+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:center">'+escHtml(it.hemType||'—')+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.content)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.fabricInfo||'—')+'</td>'
           +'</tr>';
     });
     out += '</tbody></table>';
@@ -626,10 +626,10 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         +'</tr></thead><tbody>';
     groupItems.forEach(function(it){
       out += '<tr style="border-bottom:1px solid #EEE6DC">'
-          +'<td style="padding:8px 6px">'+escHtml(it.space)+'</td>'
-          +'<td style="padding:8px 6px">'+escHtml(it.product)+'</td>'
-          +'<td style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
-          +'<td style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.space)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.product)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
           +'</tr>';
     });
     out += '</tbody></table>';
@@ -650,13 +650,13 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
       +'</tr></thead><tbody>';
   groupItems.forEach(function(it){
     out += '<tr style="border-bottom:1px solid #EEE6DC">'
-        +'<td style="padding:8px 6px">'+escHtml(it.space)+'</td>'
-        +'<td style="padding:8px 6px">'+escHtml(it.product)+'</td>'
-        +'<td style="padding:8px 6px">'+escHtml(it.color)+'</td>'
-        +'<td style="padding:8px 6px;text-align:center">'+escHtml(it.size)+(it.fabSize?('<br><span style="font-size:11px;color:#F06E2D;font-weight:700">제작 '+escHtml(it.fabSize)+'</span>'):'')+'</td>'
-        +'<td style="padding:8px 6px">'+escHtml(it.content)+'</td>'
-        +'<td style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
-        +'<td style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.space)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.product)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.color)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:center">'+escHtml(it.size)+(it.fabSize?('<br><span style="font-size:11px;color:#F06E2D;font-weight:700">제작 '+escHtml(it.fabSize)+'</span>'):'')+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.content)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
         +'</tr>';
   });
   out += '</tbody></table>';
