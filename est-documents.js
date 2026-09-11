@@ -1181,7 +1181,27 @@ function printForVendor(categoryFilter) {
     openPdfModal();
   };
   printBtn.style.cssText = 'padding:7px 18px;background:#282828;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;flex-shrink:0';
+  // 2026-09-11(선혜님 - "근데 발주는 바로 캡쳐해서 처리하는데"로 발견):
+  // 방금 "완료 표시는 인쇄/PDF저장 눌렀을 때만 자동으로"라고 통일했는데,
+  // 실제로는 이 화면을 캡쳐(스크린샷)해서 카톡 등으로 바로 보내는 게
+  // 실제 업무 방식이라 "인쇄/PDF저장" 버튼 자체를 거의 안 쓰는 경우가
+  // 많았음 - 그러면 체크박스를 손으로 못 누르게 막아놓은 상태에서
+  // 완료 표시할 방법이 아예 없어짐. "인쇄/PDF저장"과 똑같이 완료 처리만
+  // 해주는 별도 버튼을 추가 - 캡쳐로 보내고 나서 이 버튼 하나만 누르면 됨.
+  var doneBtn = document.createElement('button');
+  doneBtn.textContent = '✓ 발주완료 표시';
+  doneBtn.onclick = function() {
+    var collected3 = collectVendorGroups(categoryFilter);
+    if (collected3.itemCount === 0) { if (typeof showToast === 'function') showToast('완료 처리할 항목이 없어요'); return; }
+    updateOrderStatusFromVendorGroups(collected3.groups);
+    if (typeof renderWorkStatusCards === 'function') setTimeout(renderWorkStatusCards, 800);
+    doneBtn.textContent = '✓ 완료 처리됨';
+    doneBtn.disabled = true;
+    doneBtn.style.opacity = '0.6';
+  };
+  doneBtn.style.cssText = 'padding:7px 14px;background:none;color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;white-space:nowrap;flex-shrink:0';
   navBtns.appendChild(closeBtn);
+  navBtns.appendChild(doneBtn);
   navBtns.appendChild(printBtn);
   nav.appendChild(navLabel);
   nav.appendChild(navBtns);

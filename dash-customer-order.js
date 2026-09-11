@@ -193,7 +193,7 @@ function renderOrderSection(c, orderBody) {
         // 직접 클릭해서 바꾸는 건 막음. 업체명/발주일/도착예정일 메모
         // 칸은 완료 여부와 무관하게 여전히 직접 적어둘 수 있음(그대로 유지).
         e.preventDefault();
-        showToast('이 표시는 자동으로 남아요 — "상세보기 →"에서 발주서를 인쇄/PDF저장하면 자동으로 완료 처리돼요.');
+        showToast('이 표시는 자동으로 남아요 — "상세보기 →"에서 "✓ 발주완료 표시"를 누르거나 인쇄/PDF저장하면 자동으로 완료 처리돼요.');
       });
       vendorInput.addEventListener('change', saveOrderState);
       orderDateInput.addEventListener('change', saveOrderState);
