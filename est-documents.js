@@ -844,24 +844,27 @@ function collectVendorGroups() {
     var yardage = tr.querySelector('.c-yardage')?.value || '';
     var shapeProcess = tr.querySelector('.c-shape-process')?.checked || false;
     var fabricUnitPrice = tr.querySelector('.c-fabric-unit-price')?.value || '';
-    if (fabric || vendor) {
-      // 2026-09-11(선혜님 지시 - "관련되게 원단 발주서까지도 그 가격이
-      // 뜨게 해야 하는데"): 원단량(마수)에 단가를 곱한 총액을 수량 칸에
-      // 함께 표시 - 원단업체 발주서에서 바로 예상 금액을 확인할 수 있게.
-      var yardageNum = parseFloat(String(yardage).replace(/[^0-9.]/g, ''));
-      var unitPriceNum = parseFloat(String(fabricUnitPrice).replace(/[^0-9.]/g, ''));
-      var fabricTotal = (yardageNum && unitPriceNum) ? Math.round(yardageNum * unitPriceNum) : null;
-      var qtyDisplay = yardage || (pnum?(pnum+'폭'):'—');
-      if (fabricTotal !== null) qtyDisplay += ' (' + fabricTotal.toLocaleString() + '원)';
-      items.push({
-        space: space||'—', product: fabric||'—', color: color||'—',
-        size: '—', fabSize: null,
-        content:[pleat, open].filter(Boolean).join(' ')||'—',
-        qty: qtyDisplay,
-        vendor: vendor,
-        orderCategory: 'fabric'
-      });
-    }
+    // 2026-09-11(선혜님 확인 - "원단도 레일처럼 항상 DAH가 사입해서
+    // 발주하지"): 캔가공소(제작)/레일과 동일하게, 원단도 거래처를 아직
+    // 안 정했어도 실제 커튼이면 항상 발주가 나가야 함 - 예전엔 원단
+    // 거래처를 입력해야만 이 블록 자체가 실행됐는데, 이제 항상 실행하고
+    // 거래처가 없으면 "미지정(원단)"으로 표시.
+    // 2026-09-11(선혜님 지시 - "관련되게 원단 발주서까지도 그 가격이
+    // 뜨게 해야 하는데"): 원단량(마수)에 단가를 곱한 총액을 수량 칸에
+    // 함께 표시 - 원단업체 발주서에서 바로 예상 금액을 확인할 수 있게.
+    var yardageNum = parseFloat(String(yardage).replace(/[^0-9.]/g, ''));
+    var unitPriceNum = parseFloat(String(fabricUnitPrice).replace(/[^0-9.]/g, ''));
+    var fabricTotal = (yardageNum && unitPriceNum) ? Math.round(yardageNum * unitPriceNum) : null;
+    var qtyDisplay = yardage || (pnum?(pnum+'폭'):'—');
+    if (fabricTotal !== null) qtyDisplay += ' (' + fabricTotal.toLocaleString() + '원)';
+    items.push({
+      space: space||'—', product: fabric||displayName||'—', color: color||'—',
+      size: '—', fabSize: null,
+      content:[pleat, open].filter(Boolean).join(' ')||'—',
+      qty: qtyDisplay,
+      vendor: vendor,
+      orderCategory: 'fabric'
+    });
     var autoProductionVendor = getAutoProductionVendorName();
     if (autoProductionVendor) {
       // 2026-09-11(선혜님이 실제 캔가공소 발주서 양식 확인해주심): 지금까지
