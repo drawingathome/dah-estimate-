@@ -147,8 +147,8 @@ function syncCustomerToSheet(customer) {
         date: customer.date, measureDate: customer.measureDate, installDate: customer.installDate,
         memo: customer.memo
       })
-    }).catch(function(e) { console.warn('고객명단 동기화 실패:', e); });
-  } catch (e) { console.warn('고객명단 동기화 실패:', e); }
+    }).catch(function(e) { console.warn('고객명단 동기화 실패:', e); typeof reportClientError==='function' && reportClientError('고객명단 동기화 실패: ' + (e && e.message || e), e && e.stack); });
+  } catch (e) { console.warn('고객명단 동기화 실패:', e); typeof reportClientError==='function' && reportClientError('고객명단 동기화 실패: ' + (e && e.message || e), e && e.stack); }
 }
 
 function sbXHR(method, path, data, callback) {
