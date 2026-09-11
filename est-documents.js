@@ -555,7 +555,11 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
       + '</tr>';
   }
   out += '<table style="width:100%;border-collapse:collapse;margin-top:var(--sp-6);padding-top:16px">'
-      + infoTableRow('요청일', today, false, '발주처', escHtml(vendor), true)
+      // 2026-09-11(선혜님 지시 - "모든 발주서 요청일자나 도착일자 도착
+      // 장소는 기본적으로 수정할 수 있게 해줘"): 요청일만 유일하게 고정
+      // 값(editable=false)이었음 - 도착일/도착장소/발주처와 동일하게
+      // 수정 가능하도록 통일.
+      + infoTableRow('요청일', today, true, '발주처', escHtml(vendor), true)
       // 2026-09-10(선혜님 지적 - "도착일 / 도착 장소가 없어" → "수정이
       // 되게" → "거래처마다 달라야"): 발주정보 팝업에서 거래처별로
       // 입력받은 값을 여기 표시(입력 안 하면 "협의" 표시), 클릭해서도
@@ -581,6 +585,12 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   // 사이즈, 형상가공 여부, 하단시접, 원단정보-거래처+코드+마수)가
   // 필요해서 별도 테이블 구조로 분기.
   var isProduction = groupItems.length > 0 && groupItems[0].orderCategory === 'production';
+  // 2026-09-11(선혜님 지시 - "목성은 제품정도 / 사이즈 / 내용 빼도
+  // 될꺼 같은데??"): 레일(material) 항목은 product 칸에 이미 "N자
+  // 조절레일(타공형)"로 필요한 정보가 다 들어있고, 제품정보/사이즈/
+  // 내용은 항상 "—"(빈 값)만 나오는 무의미한 칸이었음 - 위치/품명/
+  // 수량/고객명만 남긴 축소된 테이블로 분기.
+  var isMaterial = groupItems.length > 0 && groupItems[0].orderCategory === 'material';
   if (isProduction) {
     out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
         +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
@@ -603,6 +613,23 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
           +'<td style="padding:8px 6px">'+escHtml(it.content)+'</td>'
           +'<td style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
           +'<td style="padding:8px 6px">'+escHtml(it.fabricInfo||'—')+'</td>'
+          +'</tr>';
+    });
+    out += '</tbody></table>';
+  } else if (isMaterial) {
+    out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+        +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
+        +'<th style="text-align:left;padding:8px 6px">위치</th>'
+        +'<th style="text-align:left;padding:8px 6px">품명</th>'
+        +'<th style="text-align:right;padding:8px 6px">수량</th>'
+        +'<th style="text-align:left;padding:8px 6px">고객명</th>'
+        +'</tr></thead><tbody>';
+    groupItems.forEach(function(it){
+      out += '<tr style="border-bottom:1px solid #EEE6DC">'
+          +'<td style="padding:8px 6px">'+escHtml(it.space)+'</td>'
+          +'<td style="padding:8px 6px">'+escHtml(it.product)+'</td>'
+          +'<td style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
+          +'<td style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
           +'</tr>';
     });
     out += '</tbody></table>';
