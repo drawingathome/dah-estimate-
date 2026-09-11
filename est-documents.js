@@ -911,15 +911,31 @@ function collectVendorGroups() {
     // 한 칸에 뭉쳐서 표시하고 있었음 - 각 칸을 그대로 살려서 전달.
     var bottomBar = tr.querySelector('.b-bottom-bar')?.value || '';
     var comment = tr.querySelector('.b-comment')?.value || '';
-    if(!fabric && !vendor) return;
-    var space = tr.querySelector('.space-inp')?.value || '';
     var bmw   = tr.querySelector('.bmw')?.value || '';
     var bmh   = tr.querySelector('.bmh')?.value || '';
+    var displayNameCheck = tr.querySelector('.b-display-name')?.value || '';
+    // 2026-09-11(선혜님 발견 - "지금은 캔가공소만 뜨잖아": 커튼과 완전히
+    // 같은 모양의 문제가 블라인드에도 있었음. 손현영님 실제 데이터로
+    // 재확인 - 블라인드 4개 항목 전부 fabric/vendor가 비어있어서
+    // (제품명/사이즈는 있는데) 이 조기 return에 걸려 발주서에서 통째로
+    // 빠지고 있었음. 커튼의 "제작은 원단거래처와 무관하게 항상 필요"와는
+    // 다른 이유지만 결과는 같음 - 거래처를 아직 안 정했어도 실제 블라인드
+    // 항목(제품명/사이즈 존재)이면 일단 "미지정" 그룹으로 발주서에 나오게
+    // 해서, 방금 만든 "⚠️ 거래처 미지정" 경고로 눈에 띄게 하고 그 자리에서
+    // 거래처를 채워 넣을 수 있게 함(지금까진 아예 안 보여서 채울 기회조차
+    // 없었음).
+    if(!fabric && !vendor && !displayNameCheck && !bmw && !bmh) return;
+    var space = tr.querySelector('.space-inp')?.value || '';
     var handle= tr.querySelector('.handle-dir')?.value || '';
     var kind  = tr.querySelector('.blind-kind')?.value || '';
     var opt   = tr.querySelector('.blind-opt')?.value || '';
     items.push({
-      space: space||'—', product: fabric||'—', color: color||'—',
+      // 2026-09-11(선혜님 발견 - "지금은 캔가공소만 뜨잖아" 확인 과정에서
+      // 함께 발견): 원단명(fabric) 칸이 비어있으면 품명 자체가 "—"로만
+      // 나와서 뭘 주문해야 하는지조차 안 보였음 - 캔가공소 표가 이미
+      // displayName(고객용 제품명)으로 이 문제를 해결했던 것과 동일하게,
+      // fabric이 비어있으면 displayName으로 대신 보여줌.
+      space: space||'—', product: fabric||displayNameCheck||'—', color: color||'—',
       size:(bmw&&bmh)?(bmw+'×'+bmh):'—',
       kind: kind||'—',
       handle: handle ? (handle==='기타'?'기타':handle+'잡이') : '—',
