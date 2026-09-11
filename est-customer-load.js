@@ -429,6 +429,11 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       var vd = ctr.querySelector('.c-vendor'); if (vd) vd.value = it.vendor || '';
       var rvd = ctr.querySelector('.c-rail-vendor'); if (rvd) rvd.value = it.railVendor || '';
       var cl = ctr.querySelector('.c-color'); if (cl) cl.value = it.color || '';
+      // 2026-09-11(선혜님이 실제 캔가공소 발주서 양식 확인해주심): 원단량/
+      // 형상가공 복원 추가 - 8/29와 같은 "복원 함수마다 각각 챙겨야
+      // 하는" 유형이라, 저장 추가할 때 바로 여기도 함께 넣음(놓치는 걸 방지).
+      var yd = ctr.querySelector('.c-yardage'); if (yd) yd.value = it.yardage || '';
+      var sp = ctr.querySelector('.c-shape-process'); if (sp) sp.checked = !!it.shapeProcess;
       var pt = ctr.querySelector('.pleat-type'); if (pt && it.pleatType) pt.value = it.pleatType;
       var ot = ctr.querySelector('.open-type'); if (ot && it.openType) ot.value = it.openType;
       // 2026-08-29(선혜님 지적 - "주름은 나비주름/개폐는 양개형/시접은

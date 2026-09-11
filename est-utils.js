@@ -72,6 +72,15 @@ const SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
 // buildVendorHTML/buildRequestHTML 세 곳에 완전히 동일한 코드로 각자
 // 독립 구현되어 있었음 - 날짜 형식을 바꿔야 할 때 한 곳만 고치고
 // 나머지를 놓치기 쉬운 구조. 전역 헬퍼로 통일.
+// 2026-09-11(선혜님이 알려주신 실제 레일 계산 방식 - "우리가 레일
+// 계산할때 -자 조절레일로 적는거 아니야?"): 원단 폭(cm)을 자(尺)
+// 단위로 환산 - est-product-calc.js(견적 화면 표시용)와
+// est-documents.js(발주서용) 둘 다 이 계산이 필요해서 전역 헬퍼로 통일.
+function calcRailJa(mwCm) {
+  var ja = mwCm / 30, jaR = Math.ceil(ja);
+  if (jaR % 2 !== 0) jaR++;
+  return jaR;
+}
 function formatKoreanDate(d) {
   d = d || new Date();
   return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';

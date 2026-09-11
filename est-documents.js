@@ -575,6 +575,38 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   out += '<div style="margin-top:10px;font-size:11px;color:#B0A99F">*아래와 같이 발주 합니다.</div>';
 
   out += '<div style="margin-top:var(--sp-5);padding:8px 14px;background:#F5F2EE;font-size:13px;font-weight:700;color:#282828">거래처: '+escHtml(vendor)+'</div>';
+  // 2026-09-11(선혜님이 실제 캔가공소 발주서 양식 확인해주심): 원단/
+  // 부자재/블라인드는 공통 테이블(위치·품명·제품정보·사이즈·내용·수량·
+  // 고객명)로 충분한데, 캔가공소(제작) 발주는 완전히 다른 정보(제작
+  // 사이즈, 형상가공 여부, 하단시접, 원단정보-거래처+코드+마수)가
+  // 필요해서 별도 테이블 구조로 분기.
+  var isProduction = groupItems.length > 0 && groupItems[0].orderCategory === 'production';
+  if (isProduction) {
+    out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
+        +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
+        +'<th style="text-align:left;padding:8px 6px">공간</th>'
+        +'<th style="text-align:left;padding:8px 6px">원단(품명)</th>'
+        +'<th style="text-align:center;padding:8px 6px">제작사이즈</th>'
+        +'<th style="text-align:center;padding:8px 6px">형상가공</th>'
+        +'<th style="text-align:center;padding:8px 6px">하단시접</th>'
+        +'<th style="text-align:left;padding:8px 6px">내용</th>'
+        +'<th style="text-align:left;padding:8px 6px">고객</th>'
+        +'<th style="text-align:left;padding:8px 6px">원단정보</th>'
+        +'</tr></thead><tbody>';
+    groupItems.forEach(function(it){
+      out += '<tr style="border-bottom:1px solid #EEE6DC">'
+          +'<td style="padding:8px 6px">'+escHtml(it.space)+'</td>'
+          +'<td style="padding:8px 6px">'+escHtml(it.product)+'</td>'
+          +'<td style="padding:8px 6px;text-align:center;font-weight:700">'+escHtml(it.fabSize||it.size)+'</td>'
+          +'<td style="padding:8px 6px;text-align:center">'+(it.shapeProcess?'O':'X')+'</td>'
+          +'<td style="padding:8px 6px;text-align:center">'+escHtml(it.hemType||'—')+'</td>'
+          +'<td style="padding:8px 6px">'+escHtml(it.content)+'</td>'
+          +'<td style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
+          +'<td style="padding:8px 6px">'+escHtml(it.fabricInfo||'—')+'</td>'
+          +'</tr>';
+    });
+    out += '</tbody></table>';
+  } else {
   out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
       +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
       +'<th style="text-align:left;padding:8px 6px">위치</th>'
@@ -601,6 +633,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         +'</tr>';
   });
   out += '</tbody></table>';
+  }
 
   out += '<div class="pv-vendor-note-editable" contenteditable="true" style="margin-top:var(--sp-6);text-align:center;font-size:13px;color:#E4483A;font-weight:600;line-height:1.7;white-space:pre-wrap;outline:none;border:1px dashed #F0C9C4;border-radius:8px;padding:8px" data-placeholder="비고(클릭해서 직접 입력)">'+escHtml(extraNote||'')+'</div>';
 
@@ -942,6 +975,10 @@ function collectVendorGroups() {
     // 나눴는데, 실제로는 커튼 하나가 원단 매입 + 제작 의뢰 둘 다 항상
     // 필요한 별개의 두 발주임 - 체크박스 없이, 원단거래처가 있으면
     // 원단 발주를, 등록된 가공소가 있으면 제작 발주를 각각 독립적으로 생성.
+    var displayName = tr.querySelector('.c-display-name')?.value || '';
+    var hemType = tr.querySelector('.hem-type')?.value || '';
+    var yardage = tr.querySelector('.c-yardage')?.value || '';
+    var shapeProcess = tr.querySelector('.c-shape-process')?.checked || false;
     if (fabric || vendor) {
       items.push({
         space: space||'—', product: fabric||'—', color: color||'—',
@@ -954,23 +991,36 @@ function collectVendorGroups() {
     }
     var autoProductionVendor = getAutoProductionVendorName();
     if (autoProductionVendor) {
+      // 2026-09-11(선혜님이 실제 캔가공소 발주서 양식 확인해주심): 지금까지
+      // "품명" 자리에 원단코드(fabric)를 넣고 있었는데, 실제 양식은 제품명
+      // (displayName)이 들어가야 함 - 원단코드는 거래처+마수와 함께 별도
+      // "원단정보" 칸으로 빠짐(fabricInfo). 하단시접(hemType)/형상가공
+      // (shapeProcess)도 실제 양식에 필요한 정보라 추가.
       items.push({
-        space: space||'—', product: fabric||'—', color: color||'—',
+        space: space||'—', product: displayName||'—', color: color||'—',
         size: (mw&&mh)?(mw+'×'+mh):'—',
         fabSize: (mw && fh!==null) ? (mw+'×'+fh.toFixed(1).replace(/\.0$/,'')) : null,
         content:[pleat, open].filter(Boolean).join(' ')||'—',
         qty: pnum?(pnum+'폭'):'—',
         vendor: autoProductionVendor,
-        orderCategory: 'production'
+        orderCategory: 'production',
+        hemType: hemType || '—',
+        shapeProcess: shapeProcess,
+        fabricInfo: [vendor||'캔', fabric, yardage].filter(Boolean).join(' ') || '—'
       });
     }
     // 2026-08-10: 레일(전동 등) 거래처가 매번 다를 수 있어 견적서마다 입력
     // 가능하게 함 - 원단과 별개 항목으로 발주서에 반영(선혜님 확인).
     var railVendor = tr.querySelector('.c-rail-vendor')?.value || '';
     if (railVendor) {
+      // 2026-09-11(선혜님 - "우리가 레일 계산할때 -자 조절레일로 적는거
+      // 아니야? 그 내용을 적으면 되잖아"): 발주서에 "레일"이라고만 막연히
+      // 적던 것을, 실제로 시공비 계산에 이미 쓰던 것과 정확히 같은 방식
+      // (자 단위 환산 + "조절레일(타공형)")으로 통일.
+      var railJa = mw ? calcRailJa(parseFloat(mw)) : null;
       items.push({
-        space: space||'—', product: '레일' + (heightAdjust <= -5 ? '(전동)' : ''), color: '—',
-        size: mw ? (mw+'cm') : '—', fabSize: null,
+        space: space||'—', product: (railJa ? railJa+'자 ' : '') + '조절레일(타공형)' + (heightAdjust <= -5 ? ' (전동)' : ''), color: '—',
+        size: '—', fabSize: null,
         content: '—', qty: '1개', vendor: railVendor,
         orderCategory: 'material'
       });

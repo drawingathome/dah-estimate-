@@ -24,7 +24,13 @@ function addCurtainRow() {
           // 라인을 추가함(등록된 가공소가 1곳일 때) - 사람이 매번 체크할
           // 필요 없어짐.
           '<input type="text" placeholder="컬러" class="c-color inner-inp" style="width:60px">'+
-          '<span class="c-yardage">원단량: —</span>'+
+          // 2026-09-11(선혜님이 실제 캔가공소 발주서 양식 확인해주심):
+          // 원단량(마수)은 자동계산이 아니라 직접 입력 - 예전엔 표시전용
+          // span("원단량: —")이라 실제로 입력할 방법이 없었음. 형상가공
+          // 여부(O/X)도 발주서에 필요한데 이 개념 자체가 없었음 - 체크박스로
+          // 신설(체크=O=형상가공 함).
+          '<input type="text" placeholder="원단량(예: 10.2마)" class="c-yardage inner-inp" style="width:100px">'+
+          '<label style="display:flex;align-items:center;gap:2px;font-size:11px;color:var(--sub);white-space:nowrap"><input type="checkbox" class="c-shape-process" style="width:14px;height:14px">형상가공</label>'+
         '</div>'+
         '<div class="inner-row" style="margin-top:2px">'+
           '<input type="text" list="vendor-list" placeholder="레일/부자재 거래처 (예: 목성)" class="c-rail-vendor inner-inp" style="width:140px">'+
@@ -199,8 +205,7 @@ function autoUpdateRail(curtainTr) {
   }
 
   var space = curtainTr.querySelector('.space-inp')?.value||'';
-  var ja = mw/30, jaR = Math.ceil(ja);
-  if(jaR%2!==0) jaR++;
+  var jaR = calcRailJa(mw);
 
   // 2026-08-05: 레일단가(1,600원)를 변수로 추출 — 예전엔 아래 두 분기(기존행 수정/신규행 생성)에
   // 리터럴 '1600'이 각각 따로 있어서, 나중에 단가가 바뀌면 한쪽만 고치고 다른쪽을 놓칠 위험이 있었음.

@@ -103,6 +103,9 @@ function collectLineItems() {
       heightAdjust: tr.querySelector('.height-adjust')?.value||'-3',
       hemType: tr.querySelector('.hem-type')?.value||'', mw: tr.querySelector('.mw')?.value||'',
       mh: tr.querySelector('.mh')?.value||'', pnum: tr.querySelector('.pnum')?.value||'',
+      // 2026-09-11(선혜님이 실제 캔가공소 발주서 양식 확인해주심 - 원단량/
+      // 형상가공 필요): 발주서(캔가공소용)에 실제로 필요한 정보라 저장.
+      yardage: tr.querySelector('.c-yardage')?.value||'', shapeProcess: tr.querySelector('.c-shape-process')?.checked||false,
       price: getPriceVal(tr.querySelector('.cprice')), amt: tr.querySelector('.camt')?.textContent||''
     });
   });
@@ -266,6 +269,8 @@ function loadDraft() {
             if (tr.querySelector('.c-vendor')) tr.querySelector('.c-vendor').value = item.vendor || '';
             if (tr.querySelector('.c-rail-vendor')) tr.querySelector('.c-rail-vendor').value = item.railVendor || '';
             if (tr.querySelector('.c-color')) tr.querySelector('.c-color').value = item.color || '';
+            if (tr.querySelector('.c-yardage')) tr.querySelector('.c-yardage').value = item.yardage || '';
+            if (tr.querySelector('.c-shape-process')) tr.querySelector('.c-shape-process').checked = !!item.shapeProcess;
             if (tr.querySelector('.pleat-type')) tr.querySelector('.pleat-type').value = item.pleatType || '';
             if (tr.querySelector('.open-type')) tr.querySelector('.open-type').value = item.openType || '';
             if (tr.querySelector('.height-adjust')) tr.querySelector('.height-adjust').value = item.heightAdjust || '-3';
