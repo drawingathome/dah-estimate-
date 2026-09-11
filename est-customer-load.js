@@ -484,6 +484,26 @@ function loadCustByIdx(el) {
   window._vendorArrivalLocations = {};
   document.getElementById('c-installer-name').value = '';
   document.getElementById('c-installer-phone').value = '';
+  // 2026-09-11(선혜님 지적 - "이 오류가 다음에 또 나올 수도 있니??"):
+  // 로컬 캐시(dah_customers)의 depositAmount는 오래됐을 수 있어서
+  // 즉시 반영 후에도, 서버에서 최신 값을 다시 조회해서 한 번 더 정확하게
+  // 채움(URL기반 로드 경로와 동일한 안전장치, applyRealDepositToForm 재사용).
+  if (Number(c.depositAmount) > 0) applyRealDepositToForm(c.depositAmount);
+  if (c.id && typeof SUPABASE_URL !== 'undefined') {
+    try {
+      var depXhr = new XMLHttpRequest();
+      depXhr.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(c.id) + '&select=deposit_amount', true);
+      depXhr.setRequestHeader('apikey', SUPABASE_KEY);
+      depXhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+      depXhr.onload = function() {
+        try {
+          var rows = JSON.parse(depXhr.responseText);
+          if (rows && rows[0]) applyRealDepositToForm(rows[0].deposit_amount);
+        } catch (eDepParse) {}
+      };
+      depXhr.send();
+    } catch (eDepOuter) {}
+  }
   if(c.clientName && document.getElementById('c-name')) document.getElementById('c-name').value=c.clientName;
   if(c.phone && document.getElementById('c-phone')) document.getElementById('c-phone').value=c.phone;
   if(c.addr && document.getElementById('c-addr')) document.getElementById('c-addr').value=c.addr;

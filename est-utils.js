@@ -81,6 +81,24 @@ function calcRailJa(mwCm) {
   if (jaR % 2 !== 0) jaR++;
   return jaR;
 }
+// 2026-09-11(선혜님 지적 - "이 오류가 다음에 또 나올 수도 있니?? 이
+// 오류는 심각한거야 돈을 덜 받을 수 있었어"로 재검토 중 발견): 계약금
+// 입력창은 "직접 수정했다"는 표시(data-manualEdit)가 없으면 저장할
+// 때마다 총액의 50%로 자동 재계산됨 - 결제탭에서 실제 입금액으로 DB만
+// 동기화해봐야, 이 견적서를 나중에 다시 열어서(특히 "고객 불러오기"로,
+// URL로 여는 경로엔 이미 있었지만 이 경로엔 이 안전장치가 아예 없었음)
+// 뭔가 고치고 저장하면 실제 입금액이 다시 50%로 조용히 덮어써질 수
+// 있었음 - 실제로 재현 확인된 진짜 재발 위험. 전역 헬퍼로 통일해서
+// 앞으로 "견적서를 불러오는" 새 경로가 생겨도 이것만 호출하면 안전하게.
+function applyRealDepositToForm(depositAmount) {
+  if (!(Number(depositAmount) > 0)) return;
+  var depInp = document.getElementById('deposit-input');
+  if (!depInp) return;
+  depInp.value = Number(depositAmount).toLocaleString();
+  depInp.dataset.raw = String(depositAmount);
+  depInp.dataset.manualEdit = '1';
+}
+
 function formatKoreanDate(d) {
   d = d || new Date();
   return d.getFullYear()+'년 '+(d.getMonth()+1)+'월 '+d.getDate()+'일';
