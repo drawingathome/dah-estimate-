@@ -529,7 +529,12 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   var out = '<div class="pv-wrap" data-vendor="'+escHtml(vendor)+'" style="max-width:720px;margin:0 auto;background:#fff;padding:36px 32px">';
 
   out += '<div style="text-align:center;margin-bottom:6px">'
-      +'<div style="font-size:22px;font-weight:700;letter-spacing:1.5px;color:#282828">DRAWING at HOME</div>'
+      // 2026-09-11(선혜님 지적 - "모든 작지서의 상단에 우리 로고
+      // 이미지 가지고 있잖아 그걸로 바꿔줘 그냥 폰트 영어로 치지
+      // 말고"): 고객용 견적서는 이미 실제 로고 이미지(DAH_LOGO_B64)를
+      // 쓰고 있었는데, 발주서/실측시공의뢰서는 텍스트로 흉내만 내고
+      // 있었음 - 동일한 이미지로 통일.
+      +'<img class="pv-logo" style="height:36px;display:block;object-fit:contain;margin:0 auto" src="'+DAH_LOGO_B64+'" alt="드로잉엣홈">'
       +'<div style="font-size:11px;color:#B0A99F;letter-spacing:3px;margin-top:6px">발 주 서</div>'
       +'</div>';
 
@@ -1163,7 +1168,7 @@ function buildRequestHTML(kind, extraNote) {
 
   // 상단 로고/타이틀
   out += '<div style="text-align:center;margin-bottom:6px">'
-      +'<div style="font-size:22px;font-weight:700;letter-spacing:1.5px;color:#282828">DRAWING at HOME</div>'
+      +'<img class="pv-logo" style="height:36px;display:block;object-fit:contain;margin:0 auto" src="'+DAH_LOGO_B64+'" alt="드로잉엣홈">'
       +'<div style="font-size:11px;color:#B0A99F;letter-spacing:3px;margin-top:6px">'+label+' 의 뢰 서</div>'
       +'</div>';
 
