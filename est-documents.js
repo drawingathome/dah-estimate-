@@ -584,7 +584,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   // 2026-09-11(선혜님 지시 - "화면 자체를 없애고 최종 발주서에서 바로
   // 수정"): 거래처를 아직 안 정한 항목("미지정")을 화면 전환 없이도
   // 바로 알아챌 수 있도록 경고 색으로 눈에 띄게 표시.
-  var isUnassigned = (vendor === '미지정' || !vendor);
+  var isUnassigned = (!vendor || vendor.indexOf('미지정') === 0);
   out += '<div style="margin-top:var(--sp-5);padding:8px 14px;background:'+(isUnassigned?'#FBEAE7':'#F5F2EE')+';font-size:13px;font-weight:700;color:'+(isUnassigned?'#C0392B':'#282828')+'">'+(isUnassigned?'⚠️ 거래처 미지정 — 아래 항목의 거래처를 정해주세요':'거래처: '+escHtml(vendor))+'</div>';
   // 2026-09-11(선혜님이 실제 캔가공소 발주서 양식 확인해주심): 원단/
   // 부자재/블라인드는 공통 테이블(위치·품명·제품정보·사이즈·내용·수량·
@@ -884,8 +884,19 @@ function collectVendorGroups() {
     }
     // 2026-08-10: 레일(전동 등) 거래처가 매번 다를 수 있어 견적서마다 입력
     // 가능하게 함 - 원단과 별개 항목으로 발주서에 반영(선혜님 확인).
+    // 2026-09-11(선혜님 지적 - "우리 실측시공할때 그 부분 넣는데?? 견적서에
+    // 이미 떠있잖아 레일이 얼마나 필요한지"): 레일거래처를 직접 입력해야만
+    // 발주가 뜨던 기존 방식은 캔가공소(제작)와 똑같은 문제였음 - 레일도
+    // 커튼을 달려면 항상 필요한데, 거래처를 아직 안 정했다고 발주서에서
+    // 아예 빠지고 있었음. 다만 "시공 안함(배송)"을 선택한 경우(지역
+    // 미선택)엔 원래도 레일/레일시공비 자체를 계산에서 뺐던 기존 규칙이
+    // 있어(est-product-calc.js 참고 - 배송만 하는 건은 레일도 DAH가
+    // 사는 게 아니라서) 이 경우는 그대로 제외. 지역이 선택돼 있으면
+    // (시공 서비스 있음) 레일거래처가 비어있어도 "미지정"으로 발주서에
+    // 나오게 해서, 캔가공소/블라인드와 동일하게 눈에 띄게 함.
+    var hasInstallService = (document.getElementById('c-region')?.value || '') !== '';
     var railVendor = tr.querySelector('.c-rail-vendor')?.value || '';
-    if (railVendor) {
+    if (hasInstallService) {
       // 2026-09-11(선혜님 - "우리가 레일 계산할때 -자 조절레일로 적는거
       // 아니야? 그 내용을 적으면 되잖아"): 발주서에 "레일"이라고만 막연히
       // 적던 것을, 실제로 시공비 계산에 이미 쓰던 것과 정확히 같은 방식
@@ -949,8 +960,15 @@ function collectVendorGroups() {
   });
 
   var groups = {};
+  // 2026-09-11(선혜님 지적으로 발견 - 레일도 캔가공소처럼 거래처 없어도
+  // "미지정"으로 뜨게 하면서 생긴 문제): 블라인드와 레일이 동시에 거래처
+  // 미지정이면 둘 다 같은 "미지정" 그룹에 섞여 들어가는데, buildVendorDocForOne이
+  // 그룹의 첫 항목 orderCategory 하나로만 표 형태를 정하기 때문에 섞이면
+  // 한쪽 항목이 엉뚱한 칸 구성으로 깨져 보임 - 카테고리별로 별도의
+  // "미지정(카테고리)" 그룹으로 분리.
+  var CATEGORY_LABEL = { production: '제작', material: '레일', blind: '블라인드', fabric: '원단' };
   items.forEach(function(it){
-    var key = it.vendor || '미지정';
+    var key = it.vendor || ('미지정(' + (CATEGORY_LABEL[it.orderCategory] || '기타') + ')');
     if(!groups[key]) groups[key] = [];
     groups[key].push(it);
   });
