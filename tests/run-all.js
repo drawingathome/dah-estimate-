@@ -51,7 +51,9 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['alim_excel_calendar_check.js', []]);
   // 2026-08-29: 알림톡 v3 재작성(체크리스트 25번 - 새 외부시스템 붙이기 전
   // 검증 습관화) - 22개 문구 존재/변수치환누락/고아항목/결제링크UI 검증
-  scripts.push(['alim_v3_rewrite_check.js', []]);
+  // 2026-09-11: 22개→13개 통합 재작성으로 옛 alim_v3_rewrite_check.js가
+  // 참조하던 키(t43_deposit_card 등)가 전부 없어져서 폐기, 신규 테스트로 교체
+  scripts.push(['alim_13_rewrite_check.js', []]);
   // 2026-08-29(선혜님 제안 - "1번도 2번도 아니고 자동 감시 테스트를
   // 만들자"): 대시보드/견적서 앱은 서로 다른 도메인이라 코드 공유가
   // 안 되고, 같은 목적의 로직이 양쪽에 따로 구현되면서 한쪽만 고치면

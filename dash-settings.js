@@ -305,6 +305,46 @@ function renderSettings() {
     span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:var(--sp-1)', '담당자 관리'),
     span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '로그인용 이메일과 비밀번호는 Supabase 대시보드(Authentication)에서 먼저 계정을 만든 뒤, 아래에 그 이메일을 연결해주세요.')
   ]);
+  // 2026-09-11(선혜님 지시 — 퇴사 시 고객 일괄이관): 기존엔 "삭제" 버튼이
+  // 로그인 계정만 끊고 고객은 그대로 그 이름에 남아, 마스터 말고는 아무도
+  // 못 보는 상태로 방치됐음(자동화 대상에서도 소외됨). 그동안 쌓인 매출은
+  // 그 실장 실적으로 그대로 두고(소급 안 함), "이후 담당자"만 일괄로 옮기고,
+  // 인수인계 메모 없이는 진행 못 하게 강제. customers/estimates 둘 다 옮김.
+  function startStaffOffboarding(name) {
+    sbXHR('GET', 'customers?staff_name=eq.' + encodeURIComponent(name) + '&select=id', null, function(err, rows) {
+      var count = (!err && Array.isArray(rows)) ? rows.length : 0;
+      if (count === 0) {
+        if (!confirm(name + ' 담당자를 삭제할까요? (담당 중인 고객 없음)')) return;
+        finishStaffRemoval(name);
+        return;
+      }
+      var otherStaff = getStaffList().filter(function(s) { return s !== name; });
+      var targetChoices = ['마스터'].concat(otherStaff);
+      var target = targetChoices.length === 1 ? targetChoices[0]
+        : prompt(name + ' 담당 고객 ' + count + '명을 누구에게 이관할까요?\n(' + targetChoices.join(' / ') + ')', targetChoices[0]);
+      if (!target || targetChoices.indexOf(target) === -1) { showToast('이관 대상이 올바르지 않아 취소했습니다'); return; }
+      var note = prompt(name + ' → ' + target + '로 ' + count + '명 이관합니다.\n인수인계 메모를 남겨주세요(필수) — 예: "미결정 사항, 진행 중인 클레임 등"');
+      if (!note || !note.trim()) { showToast('인수인계 메모 없이는 이관할 수 없습니다'); return; }
+      if (!confirm(name + ' 담당 고객·견적 ' + count + '건을 ' + target + '로 이관하고 로그인을 차단합니다.\n(그동안의 매출 실적은 ' + name + ' 것으로 그대로 유지됩니다)\n진행할까요?')) return;
+      sbXHR('PATCH', 'customers?staff_name=eq.' + encodeURIComponent(name), { staff_name: target }, function(err2, rows2) {
+        var custMoved = (!err2 && Array.isArray(rows2)) ? rows2.length : 0;
+        sbXHR('PATCH', 'estimates?staff_name=eq.' + encodeURIComponent(name), { staff_name: target }, function(err3, rows3) {
+          var estMoved = (!err3 && Array.isArray(rows3)) ? rows3.length : 0;
+          if (typeof logEvent === 'function') logEvent('staff_offboard', { from: name, to: target, customerCount: custMoved, estimateCount: estMoved, note: note.trim() });
+          finishStaffRemoval(name);
+          showToast(name + ' → ' + target + ' 이관 완료 (고객 ' + custMoved + '명, 견적 ' + estMoved + '건), 로그인 차단됨');
+        });
+      });
+    });
+  }
+  function finishStaffRemoval(name) {
+    var list = getStaffList().filter(function(s){ return s !== name; });
+    try { localStorage.setItem('dah_staff_list', JSON.stringify(list)); } catch(e){}
+    sbSyncSetting('staff_list', list);
+    removeStaffEmail(name);
+    renderSettings();
+  }
+
   var staffList = getStaffList();
   staffList.forEach(function(name) {
     var emailInput = el('input', {type:'email', placeholder:'로그인용 이메일', value: getStaffEmail(name), style:'width:100%;padding:6px 8px;border:1px solid var(--border);font-size:11px;font-family:inherit;outline:none;margin-top:var(--sp-1);box-sizing:border-box'});
@@ -315,13 +355,8 @@ function renderSettings() {
     var row = div('padding:8px 0;border-bottom:1px solid var(--border)', [
       div('display:flex;justify-content:space-between;align-items:center', [
         span('font-size:12px;font-weight:700', name),
-        btn('font-size:11px;color:#E4483A;background:none;border:none;cursor:pointer;font-family:inherit', '삭제', function() {
-          if(!confirm(name + ' 담당자를 삭제할까요?')) return;
-          var list = getStaffList().filter(function(s){ return s !== name; });
-          try { localStorage.setItem('dah_staff_list', JSON.stringify(list)); } catch(e){}
-          sbSyncSetting('staff_list', list);
-          removeStaffEmail(name);
-          renderSettings(); showToast(name + ' 담당자가 삭제됐습니다');
+        btn('font-size:11px;color:#E4483A;background:none;border:none;cursor:pointer;font-family:inherit', '퇴사 처리', function() {
+          startStaffOffboarding(name);
         })
       ]),
       emailInput

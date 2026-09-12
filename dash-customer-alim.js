@@ -81,23 +81,58 @@ function renderAlimSection(c, alimBody) {
 }
 
 // ── 아래부터는 dash-customer-detail.js에서 이동됨 (2026-07-19, 파일명과 책임 일치시키기 위함) ──
-// 2026-08-29: v3 문서의 #{변수} 형식(카카오 알림톡 실제 템플릿 변수 표기와 동일)에 맞춰
-// 여러 변수를 한번에 치환. 값이 없으면 '미정'/안내문구로 대체해 빈칸 발송을 방지.
+// 2026-09-11: 13개 통합안 반영. A(방문전날)/B(일정확정)/C(결제안내)/D(취소안내)는
+// 옛 여러 문구를 하나로 합친 대신 상황별 변수(#{방문유형} 등)가 생겼음. 아직
+// 트리거감지 함수가 없어서(다음 단계) 지금은 고객의 현재 단계(c.stage)로 최선의
+// 기본값을 추정해서 채워두고, 발송 전 미리보기에서 사람이 확인·수정할 수 있게 함
+// — 자동추정이 틀려도 발송 사고로 이어지지 않도록 항상 사람 확인을 거치는 구조.
+function guessContextVars(c) {
+  var stage = c.stage || '';
+  var visitType, visitDate, scheduleType, scheduleDate, amountType, amount, refundNote;
+
+  if (['시공준비중','시공완료'].indexOf(stage) >= 0) { visitType = '시공'; visitDate = c.installDate; }
+  else if (['선금결제','실측준비중'].indexOf(stage) >= 0) { visitType = '실측'; visitDate = c.measureDate; }
+  else { visitType = '쇼룸'; visitDate = c.date; }
+
+  if (['잔금결제','시공준비중'].indexOf(stage) >= 0) { scheduleType = '시공'; scheduleDate = c.installDate; }
+  else { scheduleType = '실측'; scheduleDate = c.measureDate; }
+
+  if (['확정견적','잔금결제','시공준비중'].indexOf(stage) >= 0) {
+    amountType = '잔금';
+    amount = Math.max((Number(c.price)||0) - (Number(c.depositAmount)||0), 0) || c.balanceAmount;
+  } else {
+    amountType = '계약금';
+    amount = c.depositAmount;
+  }
+
+  refundNote = (['실측준비중','확정견적','잔금결제','시공준비중','시공완료'].indexOf(stage) >= 0 && c.measureDate)
+    ? '실측 진행 후 취소의 경우 실측 수수료 10만원을 제외한 금액을 환불해드려요.'
+    : '계약금 전액을 환불해드릴게요.';
+
+  return { visitType: visitType, visitDate: visitDate, scheduleType: scheduleType, scheduleDate: scheduleDate, amountType: amountType, amount: amount, refundNote: refundNote };
+}
+
 function fillAlimTemplate(tpl, c) {
   var fmt = function(n) { return (Number(n) || 0).toLocaleString('ko-KR'); };
+  var ctx = guessContextVars(c || {});
   var map = {
     '고객명': c.clientName || '',
     '방문일시': c.date || '미정',
-    '실측일시': c.measureDate || '미정',
-    '시공일시': c.installDate || '미정',
-    'AS일시': c.asDate || '미정', // 2026-08-29: as_records UI 미구현 — 값 저장처가 아직 없음, 항상 '미정'
-    '계약금': fmt(c.depositAmount),
-    '잔금': fmt(c.balanceAmount),
+    '방문유형': ctx.visitType,
+    '일정': ctx.visitDate || ctx.scheduleDate || '미정',
+    '일정유형': ctx.scheduleType,
+    '금액유형': ctx.amountType,
+    '금액': fmt(ctx.amount),
+    '공간': c.space ? (c.space + ' ') : '',
+    '환불안내': ctx.refundNote,
     '결제링크': c.paymentLink || '(결제링크 미등록 — 고객상세에서 먼저 입력해주세요)'
   };
-  return (tpl || '').replace(/#\{([^}]+)\}/g, function(_, key) {
+  var filled = (tpl || '').replace(/#\{([^}]+)\}/g, function(_, key) {
     return (key in map) ? map[key] : ('#{' + key + '}');
   });
+  // #{공간}처럼 빈 값이 될 수 있는 변수가 문장 중간에 있으면 공백이 두 번
+  // 겹치는 경우가 생김(예: "님,  상담") — 줄 단위로 중복 공백만 정리
+  return filled.split('\n').map(function(line) { return line.replace(/ {2,}/g, ' '); }).join('\n');
 }
 
 function sendAlimtalk(key) {
@@ -121,6 +156,7 @@ function _openAlimtalkPreview(meta, key, c, initialMsg) {
   box.innerHTML =
     '<div style="font-size:12px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:var(--sp-1)">' + escHtml(meta.tag) + ' · ' + escHtml(meta.desc) + '</div>' +
     '<div style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:var(--sp-3)">' + escHtml(meta.label) + '</div>' +
+    (meta.button ? '<div style="font-size:11px;color:var(--sub);background:var(--ivory1);padding:6px 10px;border-radius:8px;margin-bottom:var(--sp-2)">🔘 딜러사 등록 시 버튼: ' + escHtml(meta.button) + '</div>' : '') +
     '<textarea id="alimtalk-msg-textarea" style="width:100%;min-height:140px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:12px;font-family:inherit;box-sizing:border-box;resize:vertical;outline:none"></textarea>' +
     '<div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-3)">' +
       '<button id="alimtalk-cancel-btn" style="flex:1;padding:11px;background:#fff;border:1px solid var(--border);border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;color:var(--dark)">취소</button>' +

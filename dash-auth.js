@@ -71,9 +71,30 @@ function applyPermissions() {
   }, 300);
 }
 
+// 2026-09-11(선혜님 지적 — "로그아웃해도 고객데이터 캐시가 남는 거 아니냐"):
+// 세션만 지우고 고객 개인정보 캐시는 그대로 남아있던 보안 구멍. 공용기기나
+// 퇴사자 기기에 이전 로그인의 고객명/연락처/결제내역이 남아있으면 안 되므로,
+// 로그아웃 시 개인정보를 담는 캐시를 전부 지움. 앱 설정류(dah_settings,
+// dah_staff_list, dah_webhook_url 등)는 기기 자체의 설정이라 남겨둠(다음
+// 로그인 때 다시 설정할 필요 없게).
+function clearCustomerDataCache() {
+  try {
+    localStorage.removeItem('dah_customers');
+    localStorage.removeItem('dah_kakao_log');
+    localStorage.removeItem('dah_failed_customer_saves');
+    var toRemove = [];
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf('dah_pay_') === 0) toRemove.push(k);
+    }
+    toRemove.forEach(function(k) { localStorage.removeItem(k); });
+  } catch(e) {}
+}
+
 function logout() {
   currentUser = null;
   try { localStorage.removeItem('dah_session'); } catch(e){}
+  clearCustomerDataCache();
   if (typeof clearAuthSession === 'function') clearAuthSession();
   var ls = document.getElementById('login-screen');
   if(ls) ls.style.display = 'flex';
