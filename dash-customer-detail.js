@@ -109,10 +109,10 @@ function findCurrentDetailCustomer(arr) {
 }
 
 
-var DETAIL_TABS = ['info', 'pay', 'alim', 'order', 'est'];
+var DETAIL_TABS = ['info', 'pay', 'alim', 'order', 'est', 'as'];
 function switchDetailTab(tab) {
-  var panels = { info:'detail-body', pay:'detail-pay-body', alim:'detail-alim-body', order:'detail-order-body', est:'detail-est-body' };
-  var tabBtns = { info:'dtab-info', pay:'dtab-pay', alim:'dtab-alim', order:'dtab-order', est:'dtab-est' };
+  var panels = { info:'detail-body', pay:'detail-pay-body', alim:'detail-alim-body', order:'detail-order-body', est:'detail-est-body', as:'detail-as-body' };
+  var tabBtns = { info:'dtab-info', pay:'dtab-pay', alim:'dtab-alim', order:'dtab-order', est:'dtab-est', as:'dtab-as' };
   var anyMissing = DETAIL_TABS.some(function(t){ return !document.getElementById(panels[t]); });
   if (anyMissing) return;
   DETAIL_TABS.forEach(function(t) {
@@ -127,6 +127,7 @@ function switchDetailTab(tab) {
     }
   });
   if (tab === 'est') renderDetailEstTab();
+  if (tab === 'as') { var c = findCurrentDetailCustomer(loadCustomers()); if (c) renderASSection(c, document.getElementById('detail-as-body')); }
 }
 
 function renderDetailEstTab() {

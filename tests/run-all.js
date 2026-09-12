@@ -60,6 +60,8 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['unassigned_claim_check.js', []]);
   // 2026-09-11: 감사로그(변경이력) 조회 화면 검증
   scripts.push(['audit_log_check.js', []]);
+  // 2026-09-11: AS 관리 화면(GitHub 이슈#4) — 접수 등록/상태변경 검증
+  scripts.push(['as_management_check.js', []]);
   // 2026-08-29(선혜님 제안 - "1번도 2번도 아니고 자동 감시 테스트를
   // 만들자"): 대시보드/견적서 앱은 서로 다른 도메인이라 코드 공유가
   // 안 되고, 같은 목적의 로직이 양쪽에 따로 구현되면서 한쪽만 고치면
