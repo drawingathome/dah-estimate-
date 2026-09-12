@@ -26,6 +26,33 @@ function renderGoalProgress(currentAmount) {
 
 // 홈 화면 "처리 필요" 목록에서 오래된 리드를 "대기 중인 리드"로 보관 처리
 // (2026-08-02 신규) — 삭제가 아니라, 목록만 정리하고 고객목록에서는 계속 찾을 수 있음.
+// 2026-09-11: 신규리드 선착순 배정 — "내가 담당할게요" 클릭 시 서버에
+// staff_name=eq.미배정 조건을 그대로 걸어서 PATCH. 이미 다른 실장이
+// 먼저 가져갔으면(그 사이 staff_name이 바뀌어 조건 불일치) sbXHR가
+// 0건 반영을 실패로 처리하는 기존 안전장치에 그대로 걸림 — 이 함수는
+// 그 실패를 "이미 배정됨" 안내로 바꿔서 보여주기만 하면 됨.
+function claimUnassignedCustomer(btnEl) {
+  var cid = btnEl.getAttribute('data-cid');
+  var cname = btnEl.getAttribute('data-cname');
+  if (!cid) return;
+  var myName = (currentUser && currentUser.role === 'staff') ? currentUser.name : '마스터';
+  if (!confirm(cname + ' 고객을 담당하시겠어요?')) return;
+  btnEl.disabled = true; btnEl.textContent = '처리 중...';
+  sbXHR('PATCH', 'customers?id=eq.' + encodeURIComponent(cid) + '&staff_name=eq.' + encodeURIComponent('미배정'), { staff_name: myName }, function(err, rows) {
+    if (err) {
+      showToast(err.zeroRows ? (cname + ' 님은 이미 다른 담당자가 가져갔어요') : '처리 중 오류가 발생했어요');
+      renderHome();
+      return;
+    }
+    var all = loadCustomers();
+    var target = all.find(function(c) { return String(c.id) === String(cid); });
+    if (target) { target.staffName = myName; saveCustomers(all); }
+    if (typeof logEvent === 'function') logEvent('claim_unassigned', { customerId: cid, name: cname, by: myName });
+    showToast(cname + ' 님 담당이 확정됐어요');
+    renderHome();
+  });
+}
+
 function parkLeadFromHome(btnEl) {
   var cname = btnEl.getAttribute('data-cname');
   var cid = btnEl.getAttribute('data-cid');
@@ -264,6 +291,37 @@ function renderHome(skipServerFetch) {
       // grid 2열에 배치하고 내부는 일반 흐름(세로로 자연스럽게 쌓임)을
       // 쓰게 함 - 왼쪽 컬럼과 완전히 독립적으로 높이가 정해짐.
       '<div id="home-right-col">',
+
+      // 2026-09-11(선혜님 지시 — 신규리드 선착순 배정): staff_name이
+      // '미배정'인 고객을 전체 실장에게 노출하고, 먼저 "내가 담당할게요"를
+      // 누른 사람이 담당자가 됨(RLS: 미배정 상태는 전체 조회/수정 허용하도록
+      // 정책 변경 완료). PATCH 시 staff_name=eq.미배정 조건을 그대로 걸어서,
+      // 두 사람이 거의 동시에 눌러도 먼저 반영된 한 명만 성공(낙관적 락 —
+      // optimistic-lock-check.js와 같은 원리). 아직 실제 알림(웹훅/알림톡)
+      // 채널이 없어서 "30분 경과"는 카톡 알림 대신 화면에서 빨간 강조로 대체.
+      (function() {
+        var unassigned = customers.filter(function(c) { return c.staffName === '미배정' && !c.is_archived; });
+        if (unassigned.length === 0) return '';
+        var nowTs = Date.now();
+        var rows = unassigned.map(function(c) {
+          var createdTs = c.createdAt ? new Date(c.createdAt).getTime() : null;
+          var overdue = createdTs && (nowTs - createdTs) > 30 * 60 * 1000;
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-bottom:1px solid var(--border)' + (overdue ? ';background:#FFF3F0' : '') + '">' +
+            '<div style="min-width:0">' +
+              '<div style="font-size:12px;font-weight:700;color:var(--dark)">' + escHtml(c.clientName||'') + (overdue ? ' <span style="color:#E4483A;font-size:10px;font-weight:700">30분 경과</span>' : '') + '</div>' +
+              '<div style="font-size:11px;color:var(--sub)">' + escHtml(c.phone||'') + '</div>' +
+            '</div>' +
+            '<button data-cid="' + escHtml(c.id||'') + '" data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" onclick="claimUnassignedCustomer(this)" ' +
+              'style="flex-shrink:0;padding:7px 12px;min-height:32px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">내가 담당할게요</button>' +
+          '</div>';
+        }).join('');
+        return '<div id="sec-unassigned" style="background:#fff;border-bottom:1px solid var(--border)">' +
+          '<div style="padding:14px 20px 10px;display:flex;align-items:center;justify-content:space-between">' +
+            '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">미배정 고객</span>' +
+            '<span style="font-size:12px;font-weight:700;color:var(--terra);background:var(--bg-org);padding:2px 8px;border-radius:10px">' + unassigned.length + '명</span>' +
+          '</div>' + rows +
+        '</div>';
+      })(),
 
       // 4. 지금 챙길 것 (처리필요 + 오늘/내일 일정을 하나로 병합)
       '<div id="sec-todo" style="background:#fff;border-bottom:1px solid var(--border)">',

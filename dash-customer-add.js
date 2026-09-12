@@ -26,7 +26,7 @@ function openAdd(editName) {
   var staffWrap = document.getElementById('staff-btn-wrap');
   if (staffWrap) {
     staffWrap.innerHTML = '';
-    var staffList2 = ['마스터'].concat(getStaffList());
+    var staffList2 = ['마스터'].concat(getStaffList()).concat(['미배정']);
     staffList2.forEach(function(sn) {
       var isActive = sn === defaultStaff;
       var sb = document.createElement('button');
