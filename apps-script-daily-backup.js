@@ -313,7 +313,7 @@ function dahCheckClientErrors() {
   }
   var nowISO = new Date().toISOString();
   try {
-    var url = SUPABASE_URL + '/rest/v1/client_error_logs?created_at=gt.' + encodeURIComponent(lastCheck) + '&order=created_at.asc&select=created_at,message,url';
+    var url = SUPABASE_URL + '/rest/v1/client_error_logs?created_at=gt.' + encodeURIComponent(lastCheck) + '&order=created_at.asc&select=created_at,message,url,extra';
     var res = UrlFetchApp.fetch(url, {
       method: 'get',
       headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
@@ -332,18 +332,79 @@ function dahCheckClientErrors() {
       Logger.log('✅ 새로운 클라이언트 에러 없음');
       return;
     }
-    var summary = rows.map(function(r) {
+    // 2026-09-12(선혜님 - "그럼 문제가 없는데 이렇게 메일이 온다는거야??"):
+    // "저장 실패(동시저장충돌) - 내용 백업됨" 종류는 실패한 그 순간만
+    // 기록될 뿐, 나중에 재시도가 성공했는지는 전혀 확인 안 하고 있었음 -
+    // 그래서 1분 뒤 저절로 잘 저장돼도 똑같이 "오류 발생" 메일이 나감.
+    // 이제 그런 종류(견적서/고객정보 저장 실패)는 지금 실제 DB 값과
+    // 백업해둔 값을 비교해서, 이미 일치하면(자동 복구됨) "확인 필요"에서
+    // 빼고 별도로 가볍게만 표시함 - 실제로 지금도 다른 값이면(진짜 미해결)
+    // 그대로 "확인 필요"에 남김.
+    function isSaveConflictRow(r) {
+      return /저장 실패\(권한문제 또는 동시저장충돌\)/.test(r.message);
+    }
+    function checkResolved(r) {
+      try {
+        var extra = r.extra || {};
+        if (extra.estPayload) {
+          var ep = extra.estPayload;
+          if (!ep.client_id) return false;
+          var eurl = SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + ep.client_id + '&select=price,line_items&order=updated_at.desc&limit=1';
+          var eres = UrlFetchApp.fetch(eurl, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
+          if (eres.getResponseCode() !== 200) return false;
+          var erows = JSON.parse(eres.getContentText());
+          if (erows.length === 0) return false;
+          var cur = erows[0];
+          var curItemCount = Array.isArray(cur.line_items) ? cur.line_items.length : -1;
+          var backedUpItemCount = Array.isArray(ep.line_items) ? ep.line_items.length : -2;
+          return String(cur.price) === String(ep.price) && curItemCount === backedUpItemCount;
+        }
+        if (extra.customerPayload) {
+          var cp = extra.customerPayload;
+          if (!cp.phone) return false;
+          var curl = SUPABASE_URL + '/rest/v1/customers?phone=eq.' + encodeURIComponent(cp.phone) + '&select=price,stage&order=updated_at.desc&limit=1';
+          var cres = UrlFetchApp.fetch(curl, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
+          if (cres.getResponseCode() !== 200) return false;
+          var crows = JSON.parse(cres.getContentText());
+          if (crows.length === 0) return false;
+          return String(crows[0].price) === String(cp.price) && crows[0].stage === cp.stage;
+        }
+      } catch (e) { /* 비교 자체가 실패하면 안전하게 "미해결"로 취급 */ }
+      return false;
+    }
+
+    var needsAttention = [];
+    var autoResolved = [];
+    rows.forEach(function(r) {
+      if (isSaveConflictRow(r) && checkResolved(r)) {
+        autoResolved.push(r);
+      } else {
+        needsAttention.push(r);
+      }
+    });
+
+    if (needsAttention.length === 0) {
+      Logger.log('✅ 저장 실패 ' + autoResolved.length + '건 있었지만 전부 자동 복구 확인됨 - 메일 생략');
+      return;
+    }
+
+    var summary = needsAttention.map(function(r) {
       return '[' + r.created_at + '] ' + r.message + (r.url ? ' (' + r.url + ')' : '');
     }).join('\n');
+    var resolvedNote = autoResolved.length > 0
+      ? ('\n\n(참고 - 아래 ' + autoResolved.length + '건은 저장 실패 기록은 있었지만 지금 확인해보니 이미 정상 저장되어 있어 별도 확인 불필요합니다: ' +
+         autoResolved.map(function(r){ return r.created_at; }).join(', ') + ')')
+      : '';
     MailApp.sendEmail(
       Session.getActiveUser().getEmail(),
-      'DAH 새 오류 ' + rows.length + '건 발생',
-      '최근 확인 이후 아래와 같은 오류가 새로 기록됐습니다.\n' +
+      'DAH 새 오류 ' + needsAttention.length + '건 발생',
+      '최근 확인 이후 아래와 같은 오류가 새로 기록됐고, 확인해봐도 아직 해결 안 된 것들입니다.\n' +
       '(대부분은 자동으로 로컬/서버에 백업되어 데이터 유실은 없지만, 반복적으로 발생하면 실제 사용에 불편이 있을 수 있어 확인이 필요합니다)\n\n' +
       summary +
+      resolvedNote +
       '\n\n※ 이 알림은 apps-script-daily-backup.js의 dahCheckClientErrors()에서 매일 자동 발송됩니다.'
     );
-    Logger.log('⚠️ 새 오류 ' + rows.length + '건 이메일 발송함');
+    Logger.log('⚠️ 확인 필요 ' + needsAttention.length + '건 이메일 발송함 (자동복구 ' + autoResolved.length + '건 제외)');
   } catch (e) {
     Logger.log('dahCheckClientErrors 실패: ' + e.message);
   }
