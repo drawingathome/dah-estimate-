@@ -244,7 +244,7 @@ function _openAlimtalkPreview(meta, key, c, initialMsg) {
       });
       localStorage.setItem('dah_kakao_log', JSON.stringify(logs.slice(0,200)));
     } catch(e){}
-    if (typeof logEvent === 'function') logEvent('alimtalk_send', { type: key });
+    if (typeof logEvent === 'function') logEvent('alimtalk_send', { type: key, label: meta.label, customerId: c.id, customerName: c.clientName });
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(finalMsg).then(function(){ showToast('['+meta.label+'] 메시지가 복사됐어요 — 카카오톡에 붙여넣기 하세요'); });

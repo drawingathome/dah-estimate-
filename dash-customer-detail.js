@@ -918,7 +918,7 @@ function changeStage(stage) {
     target.confirmDate = todayStr();
   }
   saveCustomers(arr);
-  if (typeof logEvent === 'function') logEvent('stage_change', { from: fromStage, to: stage });
+  if (typeof logEvent === 'function') logEvent('stage_change', { from: fromStage, to: stage, customerId: target.id, customerName: target.clientName });
   renderHome(true); openDetail(currentDetailName, target.id);
   saveCustomerToDb(target, function(err){
     showToast(err ? ('⚠️ "' + stage + '"으로 변경(로컬만) — 서버 재시도 대기중') : ('"' + stage + '"으로 변경됐습니다'));

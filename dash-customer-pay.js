@@ -34,7 +34,7 @@ function renderPaySection(c, payBody) {
   paySec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'결제 관리'}));
 
   function savePayData(pd, callback) {
-    if (typeof logEvent === 'function') logEvent('payment_save', { hasDeposit: Number(pd.depositAmount) > 0, hasBalance: Number(pd.balanceAmount) > 0 });
+    if (typeof logEvent === 'function') logEvent('payment_save', { hasDeposit: Number(pd.depositAmount) > 0, hasBalance: Number(pd.balanceAmount) > 0, customerId: c.id, customerName: c.clientName });
     // 2026-08-25(선혜님 발견 — "오지은 실장이 119만원 입금했는데 목표가 그대로"):
     // 매출(목표달성률) 계산은 customers.price/performance_revenue를 기준으로
     // 하는데, 이 두 필드는 오직 견적서를 저장할 때만 채워지고 있었음. 견적서

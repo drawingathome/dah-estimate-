@@ -378,6 +378,11 @@ function renderSettings() {
     renderSettings(); showToast(name + ' 담당자가 추가됐습니다 — 로그인하려면 이메일도 등록해주세요');
   }));
   staffCard.appendChild(addStaffWrap);
+  staffCard.appendChild(div('margin-top:10px;padding-top:10px;border-top:1px solid var(--border)', [
+    btn('font-size:12px;font-weight:700;color:var(--dark);background:none;border:none;cursor:pointer;font-family:inherit;padding:0', '📋 변경 이력 보기', function() {
+      showAuditLogModal();
+    })
+  ]));
 
   var groupAccount = makeGroup('sec-set-account', '계정 · 보안', [masterEmailCard, pwCard, staffCard], false);
   wrap.appendChild(groupAccount);
@@ -851,3 +856,57 @@ function renderSettings() {
 }
 
 function labelDiv(text) { return span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:var(--sp-2)', text); }
+
+// 2026-09-11(선혜님 지시 — 감사로그/변경이력 조회 화면): 오늘 만든 기능들
+// (퇴사이관/선착순배정)과 기존 핵심 변경(단계변경/결제/알림톡발송)을
+// 한 화면에서 시간순으로 볼 수 있게 함 — "왜 이렇게 됐지?"를 나중에
+// 추적할 유일한 단서. tab_view/detail_open/order_check처럼 사용성
+// 분석용 로그는 여기선 노이즈라 제외하고, 책임소재가 걸리는 5종류만 표시.
+var AUDIT_EVENT_TYPES = ['stage_change','payment_save','alimtalk_send','claim_unassigned','staff_offboard'];
+function formatAuditEvent(ev) {
+  var d = ev.event_detail || {};
+  switch (ev.event_type) {
+    case 'stage_change':
+      return (d.customerName || '고객') + ' 단계 변경: ' + (d.from||'?') + ' → ' + (d.to||'?');
+    case 'payment_save':
+      return (d.customerName || '고객') + ' 결제정보 저장 (계약금:' + (d.hasDeposit?'있음':'없음') + ', 잔금:' + (d.hasBalance?'있음':'없음') + ')';
+    case 'alimtalk_send':
+      return (d.customerName || '고객') + '에게 [' + (d.label||d.type||'') + '] 발송';
+    case 'claim_unassigned':
+      return (d.name || '고객') + ' 담당 확정 (' + (d.by||'') + ')';
+    case 'staff_offboard':
+      return (d.from||'') + ' → ' + (d.to||'') + ' 이관 (고객 ' + (d.customerCount||0) + '명, 견적 ' + (d.estimateCount||0) + '건)' + (d.note ? ' — 메모: ' + d.note : '');
+    default:
+      return ev.event_type;
+  }
+}
+function showAuditLogModal() {
+  var existing = document.getElementById('audit-log-overlay');
+  if (existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'audit-log-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99998;display:flex;align-items:center;justify-content:center';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:12px;padding:var(--sp-5);width:380px;max-width:90vw;max-height:80vh;overflow-y:auto';
+  box.innerHTML = '<div style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:var(--sp-3)">📋 변경 이력</div><div id="audit-log-list" style="font-size:12px;color:var(--sub)">불러오는 중...</div>' +
+    '<button id="audit-log-close-btn" style="margin-top:var(--sp-3);width:100%;padding:11px;background:#fff;border:1px solid var(--border);border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;color:var(--dark)">닫기</button>';
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  document.getElementById('audit-log-close-btn').addEventListener('click', function(){ overlay.remove(); });
+
+  var filterParam = 'event_type=in.(' + AUDIT_EVENT_TYPES.join(',') + ')';
+  sbXHR('GET', 'analytics_events?' + filterParam + '&order=created_at.desc&limit=100', null, function(err, rows) {
+    var listEl = document.getElementById('audit-log-list');
+    if (!listEl) return; // 로딩 중 모달 닫힘
+    if (err || !Array.isArray(rows)) { listEl.textContent = '불러오지 못했어요. 다시 시도해주세요.'; return; }
+    if (rows.length === 0) { listEl.textContent = '아직 기록된 변경 이력이 없어요.'; return; }
+    listEl.innerHTML = rows.map(function(ev) {
+      var dt = new Date(ev.created_at);
+      var dateStr = (dt.getMonth()+1) + '/' + dt.getDate() + ' ' + dt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+      return '<div style="padding:8px 0;border-bottom:1px solid var(--ivory1)">' +
+        '<div style="font-size:11px;color:var(--sub);margin-bottom:2px">' + escHtml(dateStr) + ' · ' + escHtml(ev.staff_name||'') + '</div>' +
+        '<div style="font-size:12px;color:var(--dark)">' + escHtml(formatAuditEvent(ev)) + '</div>' +
+      '</div>';
+    }).join('');
+  });
+}

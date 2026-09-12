@@ -58,6 +58,8 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['alim_trigger_timing_check.js', []]);
   // 2026-09-11: 신규리드 선착순 배정(미배정 풀 + 클릭해서 담당) 검증
   scripts.push(['unassigned_claim_check.js', []]);
+  // 2026-09-11: 감사로그(변경이력) 조회 화면 검증
+  scripts.push(['audit_log_check.js', []]);
   // 2026-08-29(선혜님 제안 - "1번도 2번도 아니고 자동 감시 테스트를
   // 만들자"): 대시보드/견적서 앱은 서로 다른 도메인이라 코드 공유가
   // 안 되고, 같은 목적의 로직이 양쪽에 따로 구현되면서 한쪽만 고치면
