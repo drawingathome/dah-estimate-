@@ -3,6 +3,61 @@
    ══════════════════════════════════════════════════
    dash-customer-detail.js에서 분리됨 (2026-07-17). */
 
+// 2026-09-11(선혜님 지시 — 트리거감지 1단계): 기존엔 "이 단계면 무조건
+// 지금 보낼 것"으로만 판단해서, 방문예약 단계에 들어오자마자 "내일 방문
+// 예정" 문구(D-1용)가 실제로는 열흘 뒤 방문인데도 떠버리는 문제가 있었음.
+// 오늘 정한 9개 정책 중 시점 계산이 필요한 5개(자동 태그: t01,tA,t04,t11,
+// t12)만 이 규칙으로 걸러내고, 나머지 8개(즉시성 항목)는 기존처럼 "단계
+// 진입 즉시 할 일"로 그대로 둠. 아직 자동발송 채널이 없어 실제 발송은
+// 여전히 사람이 클릭해야 하지만, "지금 진짜 보낼 때가 됐는지"는 이제
+// 정확히 계산됨.
+function daysBetween(dateStr, now) {
+  if (!dateStr) return null;
+  var d = new Date(dateStr + 'T00:00:00');
+  if (isNaN(d.getTime())) return null;
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((d - today) / 86400000);
+}
+var TIMED_ALIM_RULES = {
+  // 정책: 예약 확인 30분~1시간 후 — 정확한 시각 대신 생성시각(createdAt)으로 판단,
+  // 없는 예전 데이터는 판단 불가하니 그냥 즉시 노출(구데이터 호환)
+  t01_survey: function(c, sent, now) {
+    if (!c.createdAt) return true;
+    var created = new Date(c.createdAt);
+    if (isNaN(created.getTime())) return true;
+    return (now - created) >= 30 * 60 * 1000;
+  },
+  // 정책: 방문일 D-1, 단 당일/익일 촉박 예약이면 D-1을 기다리지 않고 즉시.
+  // 일정이 재조정되면(재예약 등) forDate가 달라져서 자동으로 다시 떠오름 —
+  // 별도의 "초기화" 로직 없이 날짜비교 자체로 재예약 케이스가 해결됨.
+  tA_visit_dday: function(c, sent, now) {
+    var ctx = guessContextVars(c);
+    var d = daysBetween(ctx.visitDate, now);
+    if (d === null) return false;
+    if (sent && sent.forDate === ctx.visitDate) return false;
+    return d <= 1;
+  },
+  // 정책: 상담 3일 후, 단 그 시점에 "아직 미결제인지" 매번 재확인(예약이 아니라 재검사)
+  t04_followup: function(c, sent, now) {
+    if (['선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'].indexOf(c.stage) >= 0) return false;
+    var d = daysBetween(c.date, now);
+    return d !== null && d <= -3; // daysBetween은 미래가 양수라, "3일 지남"은 -3 이하
+  },
+  t11_after_install: function(c, sent, now) {
+    var d = daysBetween(c.installDate, now);
+    return d !== null && d <= -3;
+  },
+  t12_repeat_purchase: function(c, sent, now) {
+    var d = daysBetween(c.installDate, now);
+    return d !== null && d <= -182;
+  }
+};
+function isAlimDueNow(key, c, sent, now) {
+  var rule = TIMED_ALIM_RULES[key];
+  if (!rule) return !sent; // 즉시성 8개 항목은 기존 방식 그대로
+  return rule(c, sent, now);
+}
+
 function renderAlimSection(c, alimBody) {
   var alimSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
 
@@ -39,9 +94,10 @@ function renderAlimSection(c, alimBody) {
     return row;
   }
 
-  // ── "지금 할 일" — 현재 단계에 맞는 미발송 알림톡만 상단에 강조 표시 ──
+  // ── "지금 할 일" — 현재 단계에 맞는 항목 중, 시점이 실제로 된 것만(트리거감지) ──
   var recommendedKeys = STAGE_ALIM[c.stage] || [];
-  var todoKeys = recommendedKeys.filter(function(k){ return !sentMap[k]; });
+  var _now = new Date();
+  var todoKeys = recommendedKeys.filter(function(k){ return isAlimDueNow(k, c, sentMap[k], _now); });
   var todoWrap = div('background:var(--ivory1);border-radius:var(--r-card);padding:10px 12px;margin-bottom:12px', []);
   todoWrap.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--terra);letter-spacing:0.05em;margin-bottom:4px', text:'📌 지금 보낼 알림톡'}));
   if (todoKeys.length > 0) {
@@ -174,6 +230,7 @@ function _openAlimtalkPreview(meta, key, c, initialMsg) {
     try {
       var logs = JSON.parse(localStorage.getItem('dah_kakao_log')||'[]');
       var now = new Date();
+      var ctxForLog = (typeof guessContextVars === 'function') ? guessContextVars(c) : {};
       logs.unshift({
         name: c.clientName,
         custId: c.id || null,
@@ -182,7 +239,8 @@ function _openAlimtalkPreview(meta, key, c, initialMsg) {
         date: (now.getMonth()+1)+'월 '+now.getDate()+'일',
         time: now.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}),
         method: meta.tag,
-        message: finalMsg
+        message: finalMsg,
+        forDate: key === 'tA_visit_dday' ? ctxForLog.visitDate : (key === 'tB_schedule_confirm' ? ctxForLog.scheduleDate : undefined)
       });
       localStorage.setItem('dah_kakao_log', JSON.stringify(logs.slice(0,200)));
     } catch(e){}

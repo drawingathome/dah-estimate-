@@ -54,6 +54,8 @@ if (/dah-dashboard/.test(target)) {
   // 2026-09-11: 22개→13개 통합 재작성으로 옛 alim_v3_rewrite_check.js가
   // 참조하던 키(t43_deposit_card 등)가 전부 없어져서 폐기, 신규 테스트로 교체
   scripts.push(['alim_13_rewrite_check.js', []]);
+  // 2026-09-11: 트리거감지 1단계(시점판단 로직) 검증 — D-1/재확인/재예약리셋 등
+  scripts.push(['alim_trigger_timing_check.js', []]);
   // 2026-08-29(선혜님 제안 - "1번도 2번도 아니고 자동 감시 테스트를
   // 만들자"): 대시보드/견적서 앱은 서로 다른 도메인이라 코드 공유가
   // 안 되고, 같은 목적의 로직이 양쪽에 따로 구현되면서 한쪽만 고치면
