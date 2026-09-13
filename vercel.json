@@ -1,5 +1,4 @@
 {
-  "ignoreCommand": "bash vercel-test-check.sh",
   "cleanUrls": true,
   "trailingSlash": false,
   "headers": [
