@@ -543,15 +543,22 @@ function updateOrderStatusFromVendorGroups(groups) {
 }
 
 // 구글드라이브에 문서 저장 (실패해도 조용히 무시 — 화면 흐름을 절대 막지 않음)
+// 2026-09-12(선혜님 지적 - "오류를 너한테 줘도 니가 고칠 생각을 안하는거
+// 같아서"로 실제 원인 조사): "Failed to fetch" 반복 실패의 진짜 원인 -
+// 이 웹훅 호출이 단 한 번만 시도하고 실패하면 그걸로 완전히 끝이었음.
+// 모바일 네트워크 순간 끊김이나 Apps Script 콜드스타트 지연 같은 일시적인
+// 문제에도 재시도가 전혀 없어서 곧바로 영구 실패로 기록됐음 - 최대 2번
+// (1초 간격) 재시도하는 fetchWithRetry(shared-optimistic-lock.js, 두 앱
+// 공용)를 적용.
 function saveDocumentToDrive(category, customerName, vendor, htmlContent, staffName) {
   if (!DRIVE_WEBHOOK_URL) return;
   try {
     var estimateNo = document.getElementById('c-no')?.value || '';
-    fetch(DRIVE_WEBHOOK_URL, {
+    fetchWithRetry(DRIVE_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' }, // Apps Script는 text/plain이 CORS 프리플라이트 없이 가장 안정적
       body: JSON.stringify({ action: 'saveDocument', category: category, customerName: customerName, vendor: vendor || '', estimateNo: estimateNo, htmlContent: htmlContent, staffName: staffName || '' })
-    }).catch(function(e) { console.warn('구글드라이브 저장 실패:', e); typeof reportClientError==='function' && reportClientError('구글드라이브 저장 실패: ' + (e && e.message || e), e && e.stack); });
+    }).catch(function(e) { console.warn('구글드라이브 저장 실패:', e); typeof reportClientError==='function' && reportClientError('구글드라이브 저장 실패(재시도 2회 후에도 실패): ' + (e && e.message || e), e && e.stack); });
   } catch (e) { console.warn('구글드라이브 저장 실패:', e); typeof reportClientError==='function' && reportClientError('구글드라이브 저장 실패: ' + (e && e.message || e), e && e.stack); }
 }
 
@@ -559,11 +566,11 @@ function saveDocumentToDrive(category, customerName, vendor, htmlContent, staffN
 function syncCustomerToSheet(customer) {
   if (!DRIVE_WEBHOOK_URL) return;
   try {
-    fetch(DRIVE_WEBHOOK_URL, {
+    fetchWithRetry(DRIVE_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ action: 'syncCustomer', clientName: customer.clientName, phone: customer.phone, addr: customer.addr, staffName: customer.staffName, stage: customer.stage, price: customer.price, performanceRevenue: customer.performanceRevenue, date: customer.date, measureDate: customer.measureDate, installDate: customer.installDate, memo: customer.memo })
-    }).catch(function(e) { console.warn('고객명단 동기화 실패:', e); typeof reportClientError==='function' && reportClientError('고객명단 동기화 실패: ' + (e && e.message || e), e && e.stack); });
+    }).catch(function(e) { console.warn('고객명단 동기화 실패:', e); typeof reportClientError==='function' && reportClientError('고객명단 동기화 실패(재시도 2회 후에도 실패): ' + (e && e.message || e), e && e.stack); });
   } catch (e) { console.warn('고객명단 동기화 실패:', e); typeof reportClientError==='function' && reportClientError('고객명단 동기화 실패: ' + (e && e.message || e), e && e.stack); }
 }
 

@@ -47,3 +47,21 @@ function fetchLatestUpdatedAt(table, id, callback) {
     xhr.send();
   } catch (e) { callback(null); }
 }
+
+// 2026-09-12(선혜님 지적 - "오류를 너한테 줘도 니가 고칠 생각을 안하는거
+// 같아서" - 구글드라이브/시트 저장 "Failed to fetch" 반복 실패의 실제
+// 원인을 조사해서 발견): fetch가 단 한 번만 시도하고 실패하면 그걸로
+// 끝이라, 모바일 네트워크 순간 끊김이나 Apps Script 콜드스타트 지연
+// 같은 일시적 문제에도 곧바로 영구 실패로 기록됐음 - 최대 2번(1초 간격)
+// 재시도. 두 앱(견적서/대시보드) 다 이 파일을 로드하므로 여기 한 곳에만
+// 정의해서 쌍둥이 함수가 되지 않게 함.
+function fetchWithRetry(url, options, retriesLeft) {
+  if (retriesLeft === undefined) retriesLeft = 2;
+  return fetch(url, options).catch(function (e) {
+    if (retriesLeft > 0) {
+      return new Promise(function (resolve) { setTimeout(resolve, 1000); })
+        .then(function () { return fetchWithRetry(url, options, retriesLeft - 1); });
+    }
+    throw e;
+  });
+}

@@ -136,7 +136,7 @@ var DRIVE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyyNG-Y6sABngKq
 function syncCustomerToSheet(customer) {
   if (!DRIVE_WEBHOOK_URL) return;
   try {
-    fetch(DRIVE_WEBHOOK_URL, {
+    fetchWithRetry(DRIVE_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
@@ -147,7 +147,7 @@ function syncCustomerToSheet(customer) {
         date: customer.date, measureDate: customer.measureDate, installDate: customer.installDate,
         memo: customer.memo
       })
-    }).catch(function(e) { console.warn('고객명단 동기화 실패:', e); typeof reportClientError==='function' && reportClientError('고객명단 동기화 실패: ' + (e && e.message || e), e && e.stack); });
+    }).catch(function(e) { console.warn('고객명단 동기화 실패:', e); typeof reportClientError==='function' && reportClientError('고객명단 동기화 실패(재시도 2회 후에도 실패): ' + (e && e.message || e), e && e.stack); });
   } catch (e) { console.warn('고객명단 동기화 실패:', e); typeof reportClientError==='function' && reportClientError('고객명단 동기화 실패: ' + (e && e.message || e), e && e.stack); }
 }
 
