@@ -373,38 +373,31 @@ function dahCheckClientErrors() {
       return false;
     }
 
-    var needsAttention = [];
-    var autoResolved = [];
-    rows.forEach(function(r) {
-      if (isSaveConflictRow(r) && checkResolved(r)) {
-        autoResolved.push(r);
-      } else {
-        needsAttention.push(r);
+    // 2026-09-12(선혜님 지적 - "메일이 오게해서 오류 잡을려고 한거 아니야??
+    // 일 똑바로 안할래"): 방금 "이미 해결된 것 같으면 메일에서 아예 빼자"로
+    // 고쳤었는데, 이건 위험한 판단이었음 - 비교 기준(견적서는 금액+품목수,
+    // 고객정보는 금액+단계) 딱 두 가지만 맞으면 "해결됨"으로 치는데, 주소·
+    // 메모 등 다른 값이 실제로는 안 맞을 수도 있음 - 알림을 줄이려다가
+    // 진짜 문제를 조용히 숨겨버릴 위험이 있었음. 숨기지 않고, 전부 다
+    // 메일에 그대로 넣되 확인 결과만 옆에 표시하는 방식으로 수정 -
+    // 최종 판단은 항상 선혜님이 직접 하시게 함.
+    var summary = rows.map(function(r) {
+      var tag = '';
+      if (isSaveConflictRow(r)) {
+        tag = checkResolved(r) ? ' [금액/단계 일치 확인됨 - 그래도 한 번 봐주세요]' : ' [확인 안 됨]';
       }
-    });
-
-    if (needsAttention.length === 0) {
-      Logger.log('✅ 저장 실패 ' + autoResolved.length + '건 있었지만 전부 자동 복구 확인됨 - 메일 생략');
-      return;
-    }
-
-    var summary = needsAttention.map(function(r) {
-      return '[' + r.created_at + '] ' + r.message + (r.url ? ' (' + r.url + ')' : '');
+      return '[' + r.created_at + '] ' + r.message + tag + (r.url ? ' (' + r.url + ')' : '');
     }).join('\n');
-    var resolvedNote = autoResolved.length > 0
-      ? ('\n\n(참고 - 아래 ' + autoResolved.length + '건은 저장 실패 기록은 있었지만 지금 확인해보니 이미 정상 저장되어 있어 별도 확인 불필요합니다: ' +
-         autoResolved.map(function(r){ return r.created_at; }).join(', ') + ')')
-      : '';
     MailApp.sendEmail(
       Session.getActiveUser().getEmail(),
-      'DAH 새 오류 ' + needsAttention.length + '건 발생',
-      '최근 확인 이후 아래와 같은 오류가 새로 기록됐고, 확인해봐도 아직 해결 안 된 것들입니다.\n' +
-      '(대부분은 자동으로 로컬/서버에 백업되어 데이터 유실은 없지만, 반복적으로 발생하면 실제 사용에 불편이 있을 수 있어 확인이 필요합니다)\n\n' +
+      'DAH 새 오류 ' + rows.length + '건 발생',
+      '최근 확인 이후 아래와 같은 오류가 새로 기록됐습니다.\n' +
+      '(대부분은 자동으로 로컬/서버에 백업되어 데이터 유실은 없지만, 반복적으로 발생하면 실제 사용에 불편이 있을 수 있어 확인이 필요합니다.\n' +
+      '"저장 실패(동시저장충돌)" 항목은 지금 실제 DB 값과 대조한 결과를 [ ] 안에 참고로 표시했습니다 - 다만 이 대조는 일부 값만 비교하는 거라 완전하지 않으니, "확인됨"이라고 나와도 한 번은 직접 봐주세요.)\n\n' +
       summary +
-      resolvedNote +
       '\n\n※ 이 알림은 apps-script-daily-backup.js의 dahCheckClientErrors()에서 매일 자동 발송됩니다.'
     );
-    Logger.log('⚠️ 확인 필요 ' + needsAttention.length + '건 이메일 발송함 (자동복구 ' + autoResolved.length + '건 제외)');
+    Logger.log('⚠️ 오류 ' + rows.length + '건 이메일 발송함');
   } catch (e) {
     Logger.log('dahCheckClientErrors 실패: ' + e.message);
   }
