@@ -2,7 +2,7 @@
 // DAH 프로젝트 공통 테스트 유틸리티
 // 사용법: 각 테스트 스크립트에서 require('./_helpers')
 
-const { spawn } = require('child_process');
+const { spawn, execSync } = require('child_process');
 const fs = require('fs');
 
 // puppeteer 모듈 위치: 여러 후보를 순서대로 시도 (로컬 sandbox / CI / 일반 npm install 전부 대응)
@@ -151,15 +151,50 @@ async function blockRealNetwork(page) {
   });
 }
 
-function startServer(dir, port) {
+// 2026-09-13(GitHub Actions "Run failed" 메일로 발견, 로컬에서도 하루 종일
+// 겪었던 "ERR_EMPTY_RESPONSE" 간헐적 실패의 진짜 원인을 여기서 찾음):
+// 지금까지 서버를 띄우고 무조건 800ms만 기다린 뒤 "준비됐다"고 넘어갔는데,
+// 이건 실제로 서버가 요청을 받을 수 있는 상태인지 전혀 확인 안 하는
+// 방식이었음 - 기기가 잠깐 바쁘면(CI 공유 러너, 여러 테스트 동시 실행 등)
+// 800ms 안에 http.server가 완전히 준비되지 않을 수 있어서, 그 순간에
+// 첫 요청(page.goto)이 날아가면 연결 자체가 거부/리셋되어 매번
+// "ERR_EMPTY_RESPONSE"로 실패했음 - 신선한 클론에서 그대로 재현 확인함.
+// 고정 대기시간 대신, 서버가 실제로 응답할 때까지 짧은 간격으로 직접
+// 확인(polling)한 뒤에만 완료 처리 - 이게 진짜 "준비 확인"임.
+function waitForServerReady(port, maxWaitMs) {
+  const http = require('http');
+  const deadline = Date.now() + (maxWaitMs || 5000);
   return new Promise((resolve, reject) => {
-    const proc = spawn('python3', ['-m', 'http.server', String(port)], { cwd: dir });
-    let started = false;
-    const check = setTimeout(() => {
-      if (!started) { started = true; resolve(proc); }
-    }, 800);
-    proc.on('error', (err) => { clearTimeout(check); reject(err); });
+    function tryOnce() {
+      const req = http.get({ host: '127.0.0.1', port, path: '/', timeout: 500 }, (res) => {
+        res.resume();
+        resolve();
+      });
+      req.on('error', () => {
+        if (Date.now() >= deadline) { reject(new Error('startServer: 포트 ' + port + '가 ' + (maxWaitMs || 5000) + 'ms 안에 응답하지 않음')); return; }
+        setTimeout(tryOnce, 50);
+      });
+      req.on('timeout', () => { req.destroy(); });
+    }
+    tryOnce();
   });
+}
+
+function startServer(dir, port) {
+  // 2026-09-13(위 waitForServerReady 도입 중 추가로 발견 - 55개 테스트
+  // 파일 중 33개만 server.kill()을 호출하고 있었음): 성공적으로 끝난
+  // 테스트조차 스폰한 서버 프로세스를 정리 안 하고 남겨두는 경우가 많아서,
+  // 같은 포트를 쓰는 "다음" 테스트가 포트 충돌로 실패하는 연쇄 문제가
+  // 있었음(방금 재현 중 실제로 겪음). 55개 파일을 하나하나 고치는 대신,
+  // 여기 한 곳에서 서버를 새로 띄우기 전에 그 포트를 이미 쓰고 있는
+  // 프로세스가 있으면(이전 테스트가 남긴 것으로 간주) 먼저 정리 - 근본
+  // 원인(개별 테스트의 정리 누락)은 아니지만, 그 여파가 다음 테스트로
+  // 번지는 걸 이 지점에서 막음.
+  try { execSync('pkill -f "http.server ' + port + '\\\\b"', { stdio: 'ignore' }); } catch (e) { /* 쓰는 프로세스가 없으면 실패하는 게 정상(exit code 1) - 무시 */ }
+  const proc = spawn('python3', ['-m', 'http.server', String(port)], { cwd: dir });
+  return waitForServerReady(port, 5000)
+    .then(() => proc)
+    .catch((err) => { try { proc.kill(); } catch (e) {} throw err; });
 }
 
 async function loginAs(page, role, masterPw, staffName) {
