@@ -26,6 +26,36 @@ async function run() {
   });
   await new Promise(res => setTimeout(res, 500));
 
+  // 0) 2026-09-14(선혜님 지시 - "아코디언을 완전히 접어서 버튼 뒤로"):
+  // "전체 이력 보기" 버튼 하나만 보이고, 10개 단계 목록 자체가 안 보여야 함
+  let r0 = await page.evaluate(() => {
+    var body = document.getElementById('detail-alim-body');
+    var text = body.textContent;
+    return { hasToggleBtn: text.indexOf('전체 이력 보기') !== -1, hasStageListVisible: text.indexOf('방문예약 (발송') !== -1 && (function(){
+      var els = Array.from(body.querySelectorAll('div')).filter(function(d){ return d.textContent.trim().indexOf('방문예약 (발송') === 0; });
+      return els.length > 0 && getComputedStyle(els[0].parentElement).display !== 'none';
+    })() };
+  });
+  ok('0-1. "전체 이력 보기" 버튼이 있음', r0.hasToggleBtn);
+  r0 = await page.evaluate(() => {
+    var toggle = Array.from(document.querySelectorAll('#detail-alim-body div')).find(function(d){
+      return d.children.length === 2 && d.children[0].tagName === 'SPAN' && d.children[0].textContent.trim() === '전체 이력 보기';
+    });
+    var listWrap = toggle ? toggle.nextElementSibling : null;
+    return { closedByDefault: listWrap ? getComputedStyle(listWrap).display === 'none' : null };
+  });
+  ok('0-2. 목록이 기본적으로 완전히 숨겨져 있음', r0.closedByDefault === true, JSON.stringify(r0));
+
+  r0 = await page.evaluate(() => {
+    var toggle = Array.from(document.querySelectorAll('#detail-alim-body div')).find(function(d){
+      return d.children.length === 2 && d.children[0].tagName === 'SPAN' && d.children[0].textContent.trim() === '전체 이력 보기';
+    });
+    toggle.click();
+    var listWrap = toggle.nextElementSibling;
+    return { openedAfterClick: getComputedStyle(listWrap).display !== 'none', hasStageNames: listWrap.textContent.indexOf('방문예약 (발송') !== -1 };
+  });
+  ok('0-3. 버튼 클릭하면 10개 단계 목록이 펼쳐짐', r0.openedAfterClick && r0.hasStageNames, JSON.stringify(r0));
+
   let r = await page.evaluate(() => {
     var body = document.getElementById('detail-alim-body');
     var text = body ? body.textContent : '';
@@ -40,17 +70,19 @@ async function run() {
   // 2) 모든 아코디언이 기본적으로 접혀있는지(펼쳐진 body가 하나도 없어야 함)
   r = await page.evaluate(() => {
     var body = document.getElementById('detail-alim-body');
-    var catWrap = Array.from(body.querySelectorAll('div')).find(function(d){ return d.textContent.trim() === '단계별 전체 보기'; });
+    var master = Array.from(body.querySelectorAll('div')).find(function(d){
+      return d.children.length === 2 && d.children[0].tagName === 'SPAN' && d.children[0].textContent.trim() === '전체 이력 보기';
+    });
+    var stageListWrap = master ? master.nextElementSibling : null;
     var openBodies = 0;
-    if (catWrap) {
-      var parent = catWrap.parentElement;
-      Array.from(parent.children).forEach(function(child) {
+    if (stageListWrap) {
+      Array.from(stageListWrap.children).forEach(function(child) {
         if (child.style.display === 'block') openBodies++;
       });
     }
     return openBodies;
   });
-  ok('2. 모든 단계 아코디언이 기본적으로 접혀있음(자동으로 펼쳐진 게 없음)', r === 0, '펼쳐진 개수=' + r);
+  ok('2. 마스터 토글을 열어도, 그 안의 10개 단계는 개별적으로 여전히 다 접혀있음', r === 0, '펼쳐진 개수=' + r);
 
   // 2026-09-14(선혜님 지시로 "지금 보낼 알림톡" 핀 박스를 소통탭에서
   // 아예 제거함 - 정보탭 한 곳에만 남김): 이제 소통탭엔 그 박스 자체가

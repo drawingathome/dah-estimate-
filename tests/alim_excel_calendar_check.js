@@ -33,7 +33,7 @@ async function run() {
       openDetail('알림확인고객', 6000, 'alim');
       setTimeout(() => {
         var text = document.getElementById('detail-alim-body') ? document.getElementById('detail-alim-body').textContent : '';
-        resolve({ hasSendSection: text.includes('단계별 전체 보기'), hasSendButton: Array.from(document.querySelectorAll('#detail-alim-body span')).some(s => s.textContent.trim() === '발송') });
+        resolve({ hasSendSection: text.includes('전체 이력 보기'), hasSendButton: Array.from(document.querySelectorAll('#detail-alim-body span')).some(s => s.textContent.trim() === '발송') });
       }, 500);
     });
   });

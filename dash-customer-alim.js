@@ -124,17 +124,15 @@ function renderAlimSection(c, alimBody) {
     // 2026-08-29: v3 재작성 시 추가 — 특정 단계에 속하지 않는 취소/노쇼/재고/AS 문구 모음
     ['취소·기타', OTHER_ALIM_KEYS]
   ];
-  var catListWrap = div('', []);
-  catListWrap.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin:8px 0 4px', text:'단계별 전체 보기'}));
+  // 2026-09-14(선혜님 지시 - "아코디언을 완전히 접어서 버튼 뒤로"):
+  // 10개 단계 헤더가 접혀있어도 목록 자체는 항상 화면에 쭉 나열돼있어서,
+  // 오늘 필요한 딱 하나를 찾으려면 눈으로 10줄을 지나쳐야 했음. 이제
+  // 목록 전체를 "전체 이력 보기" 버튼 하나 뒤로 완전히 숨김 - 평소엔
+  // 이 버튼 한 줄만 보임.
+  var stageListWrap = div('display:none;margin-top:6px', []);
   categories.forEach(function(cat) {
     var stageName = cat[0], keys = cat[1] || [];
     var sentCount = keys.filter(function(k){ return sentMap[k]; }).length;
-    // 2026-09-14(선혜님 지적 - "너무 허접해, 전문업체면 이렇게 안 할 것"):
-    // 3가지 문제 수정 — ① "0/3" 옆에 뭘 세는 건지 설명 없었음 → "발송" 명시
-    // ② 현재 단계는 항상 자동으로 펼쳐져 있어서 안 쓰는 정보까지 늘 화면을
-    // 차지했음 → 전부 기본 접힘으로 통일 ③ 위 "지금 보낼 알림톡"에 이미 뜬
-    // 항목이 아래 펼쳤을 때 또 나와서 중복으로 보였음 → 이미 표시된 건
-    // 아래에서 제외.
     var header = div('display:flex;align-items:center;justify-content:space-between;padding:8px 0;cursor:pointer', [
       span('font-size:12px;font-weight:700;color:var(--dark)', stageName + ' (발송 ' + sentCount + '/' + keys.length + ')'),
       span('font-size:11px;color:var(--sub)', '▸')
@@ -142,9 +140,15 @@ function renderAlimSection(c, alimBody) {
     header.onclick = function(){ toggleHomeAccordion(header); };
     var body = div('display:none', []);
     keys.forEach(function(k){ var r = makeRow(k); if (r) body.appendChild(r); });
-    catListWrap.appendChild(header);
-    catListWrap.appendChild(body);
+    stageListWrap.appendChild(header);
+    stageListWrap.appendChild(body);
   });
+  var masterToggle = div('display:flex;align-items:center;justify-content:space-between;padding:8px 0;cursor:pointer;border-top:1px solid var(--border);margin-top:4px', [
+    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase', '전체 이력 보기'),
+    span('font-size:11px;color:var(--sub)', '▸')
+  ]);
+  masterToggle.onclick = function(){ toggleHomeAccordion(masterToggle); };
+  var catListWrap = div('', [masterToggle, stageListWrap]);
   alimSec.appendChild(catListWrap);
 
   if (alimBody) alimBody.appendChild(alimSec);
