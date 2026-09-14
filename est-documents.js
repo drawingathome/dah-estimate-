@@ -802,7 +802,18 @@ function applyVendorArrivalDefaults(groups) {
       window._vendorArrivalDates[vendor] = d.toISOString().slice(0, 10);
     }
     if (!window._vendorArrivalLocations[vendor]) {
-      window._vendorArrivalLocations[vendor] = (goesToProduction && productionMeta && productionMeta.defaultLocation)
+      // 2026-09-12(선혜님 지시 - "캔가공소의 도착장소는: 시공팀 시공
+      // (유지철 팀장님)으로 표시해줘"): 캔가공소 자체의 발주서(cat==='production',
+      // 완성된 제품이 나가는 곳)와, 원단/레일/블라인드가 캔가공소로 들어가는
+      // 도착지는 서로 다른 주소라 별개 필드로 분리 - defaultLocation 하나를
+      // 공유해서 쓰면 이 지시를 반영하는 순간 원단 발주서 도착지까지 같이
+      // "시공팀 시공"으로 잘못 바뀌어버림(실제로 한 번 이렇게 만들 뻔했다가
+      // 배포 전에 재검증하며 발견함). production 카테고리 자신은
+      // productionOutputLocation(완성품 나가는 곳), 그리로 들어가는
+      // 원단/레일/블라인드는 기존 defaultLocation(캔가공소가 받는 곳)을 씀.
+      var isProductionGroup = cat === 'production';
+      window._vendorArrivalLocations[vendor] = (isProductionGroup && meta && meta.productionOutputLocation)
+        || (goesToProduction && productionMeta && productionMeta.defaultLocation)
         || (meta && meta.defaultLocation)
         || DEFAULT_LOCATION;
     }
