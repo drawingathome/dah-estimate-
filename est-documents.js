@@ -812,7 +812,17 @@ function applyVendorArrivalDefaults(groups) {
       var isProductionGroup = cat === 'production';
       var isFabricGroup = cat === 'fabric';
       var isRailOrBlindGroup = cat === 'material' || cat === 'blind';
-      window._vendorArrivalLocations[vendor] = (isProductionGroup && meta && meta.productionOutputLocation)
+      // 2026-09-12(선혜님 지시 - "캔가공소에서 제작을 해서 도착장소가
+      // 바뀔 수도 있어 다른 시공팀장님이 시공할 수 있음"): "시공팀 시공
+      // (유지철 팀장님)"을 거래처 설정에 고정값으로 박아두면, 다른
+      // 시공팀장이 맡는 건에서도 항상 유지철 팀장님으로 잘못 나감.
+      // 마침 견적서에 이미 건별로 시공팀장 이름을 넣는 칸(#c-installer-name,
+      // 시공 의뢰서에 쓰는 것과 동일한 값)이 있어서, 그 값을 그대로
+      // 가져다 써서 건마다 실제 담당 팀장 이름이 반영되게 함. 아직 시공팀장을
+      // 안 정한 이른 단계면 이름 없이 "시공팀 시공"만 표시.
+      var installerNameEl = (typeof document !== 'undefined') ? document.getElementById('c-installer-name') : null;
+      var installerName = installerNameEl ? installerNameEl.value.trim() : '';
+      window._vendorArrivalLocations[vendor] = (isProductionGroup && (installerName ? ('시공팀 시공 (' + installerName + ')') : '시공팀 시공'))
         || (isFabricGroup && productionMeta && productionMeta.fabricArrivalLabel)
         || (isRailOrBlindGroup && productionMeta && productionMeta.railBlindArrivalLabel)
         || (meta && meta.defaultLocation)

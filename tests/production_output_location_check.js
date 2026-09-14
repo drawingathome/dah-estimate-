@@ -20,11 +20,15 @@ async function run() {
 
   const r = await page.evaluate(() => {
     window._dahVendorListRaw = [
-      { name: '캔가공소', categories: ['production'], productionOutputLocation: '시공팀 시공 (유지철 팀장님)', fabricArrivalLabel: '캔가공소', railBlindArrivalLabel: '캔가공소 유지철 팀장님' },
+      { name: '캔가공소', categories: ['production'], fabricArrivalLabel: '캔가공소', railBlindArrivalLabel: '캔가공소 유지철 팀장님' },
       { name: '디테라', categories: ['fabric'] },
       { name: '윈텍', categories: ['blind'] },
       { name: '목성', categories: ['material'] }
     ];
+    // 2026-09-12(선혜님 지시 - "다른 시공팀장님이 시공할 수 있음"): 캔가공소
+    // 자체 도착장소는 이제 고정값이 아니라 건별 시공팀장 입력칸을 따름 -
+    // 이 테스트에서도 실제 그 칸에 값을 넣어서 검증.
+    document.getElementById('c-installer-name').value = '유지철 팀장님';
     window._vendorArrivalLocations = {};
     window._vendorArrivalDates = {};
     var groups = {
