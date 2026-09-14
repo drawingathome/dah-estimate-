@@ -76,7 +76,12 @@ function retryFailedSave(entry) {
 }
 
 function dismissFailedSave(entry) {
-  if (!confirm('이 백업 내용을 확인했고 지워도 될까요? (되돌릴 수 없어요)')) return;
+  // 2026-09-14(선혜님 - "확인함을 누르면 지워지는데 상관없니"로 발견):
+  // 문구가 "되돌릴 수 없어요"라고만 떠서 마치 실제 고객/견적 데이터가
+  // 지워지는 것처럼 오해하기 쉬웠음 - 이건 브라우저에 남겨둔 "여분의
+  // 백업 사본"만 지우는 거고 실제 DB는 전혀 안 건드린다는 걸 문구에
+  // 명확히 함.
+  if (!confirm('이 백업 사본만 지울게요(실제 고객/견적 데이터는 그대로예요).\n다시 확인하고 싶으면 "지금 값과 비교하기"를 먼저 눌러보세요. 지울까요?')) return;
   removeFailedSaveEntry(entry.type, entry.savedAt);
   openFailedSavesModal();
   renderFailedSavesBanner();
