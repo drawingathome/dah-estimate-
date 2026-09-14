@@ -611,7 +611,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   // "클릭하면 고칠 수 있어요" 안내 자체가 애초에 없었음. "미지정" 상태일
   // 때는 특히 구체적으로 안내.
   if (isUnassigned) {
-    out += '<div class="print-hide" style="font-size:11px;color:#C0392B;margin-top:4px">✏️ 아래 표의 빨간 글씨(미지정/거래처)를 눌러서 직접 입력하면 돼요</div>';
+    out += '<div class="print-hide" style="font-size:11px;color:#C0392B;margin-top:4px">✏️ 아래 표의 "거래처" 칸(빨간 글씨나 드롭다운)을 눌러서 직접 정하면 돼요</div>';
   }
   // 2026-09-11(선혜님이 실제 캔가공소 발주서 양식 확인해주심): 원단/
   // 부자재/블라인드는 공통 테이블(위치·품명·제품정보·사이즈·내용·수량·
@@ -659,17 +659,26 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
     out += '</tbody></table></div>';
     out += '<div class="print-hide" style="font-size:11px;color:#B0A99F;margin-top:2px">← 표를 옆으로 밀면 나머지 항목(고객/원단정보)이 보입니다</div>';
   } else if (isMaterial) {
+    // 2026-09-14(선혜님이 방금 레일 발주서 캡처로 확인해주심 - "된거니????"):
+    // 원단 표엔 항목별 "거래처" 칸을 추가했는데, 레일도 거래처가 비어있을
+    // 수 있는 건 똑같은데(목성/솜피 등 커튼마다 다른 레일업체를 쓸 수
+    // 있음) 이 표엔 그 칸을 안 넣어서, 안내 문구("빨간 글씨를 눌러서
+    // 입력")는 뜨는데 정작 누를 빨간 글씨가 없는 상태였음 - 원단과
+    // 동일하게 항목별 "거래처" 칸 추가.
     out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
         +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
         +'<th style="text-align:left;padding:8px 6px">위치</th>'
         +'<th style="text-align:left;padding:8px 6px">품명</th>'
+        +'<th style="text-align:left;padding:8px 6px">거래처</th>'
         +'<th style="text-align:right;padding:8px 6px">수량</th>'
         +'<th style="text-align:left;padding:8px 6px">고객명</th>'
         +'</tr></thead><tbody>';
-    groupItems.forEach(function(it){
+    groupItems.forEach(function(it, idx){
+      var vendorCellEditable = !!(it.sourceRow && it.vendorField && !it.vendorIsSelect);
       out += '<tr style="border-bottom:1px solid #EEE6DC">'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.space)+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.product)+'</td>'
+          +'<td'+(vendorCellEditable?' class="pv-item-vendor-field" contenteditable="true" data-item-idx="'+idx+'"':'')+' style="padding:8px 6px;'+(it.vendor?'':'color:#C0392B')+'">'+escHtml(it.vendor||'미지정')+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
           +'</tr>';
@@ -682,11 +691,20 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
     // 원단(커튼) 표를 그대로 재사용해서 "제품정보"(색상)만 있고 저 다섯
     // 정보는 "내용" 한 칸에 뭉쳐서 나가거나 아예 빠져있었음 - 블라인드
     // 전용 표로 분리해서 실제 양식과 동일한 칸 구성으로 재구성.
+    // 2026-09-14(선혜님이 레일 발주서 캡처로 "된거니????" 확인해주심 -
+    // 원단/레일과 똑같이 블라인드도 항목별 거래처 칸이 빠져있었음): 다만
+    // 블라인드 거래처는 <select>라 자유 텍스트로는 등록 안 된 이름이면
+    // 거부되므로(다른 곳과 동일 규칙), 문서 안에 실제 드롭다운을 그대로
+    // 넣어서 등록된 거래처 중에서 바로 고를 수 있게 함.
+    var blindVendorOptions = (Array.isArray(window._dahVendorListRaw) ? window._dahVendorListRaw : [])
+      .filter(function(v){ return v && Array.isArray(v.categories) && v.categories.indexOf('blind') >= 0; })
+      .map(function(v){ return v.name; });
     out += '<div class="pv-order-table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch">';
     out += '<table style="width:100%;border-collapse:collapse;font-size:11px">'
         +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
         +'<th style="text-align:left;padding:6px 4px">위치</th>'
         +'<th style="text-align:left;padding:6px 4px">원단명</th>'
+        +'<th style="text-align:left;padding:6px 4px">거래처</th>'
         +'<th style="text-align:left;padding:6px 4px">시스템</th>'
         +'<th style="text-align:center;padding:6px 4px">사이즈</th>'
         +'<th style="text-align:center;padding:6px 4px">손잡이방향</th>'
@@ -696,10 +714,20 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         +'<th style="text-align:right;padding:6px 4px">수량</th>'
         +'<th style="text-align:left;padding:6px 4px">고객명</th>'
         +'</tr></thead><tbody>';
-    groupItems.forEach(function(it){
+    groupItems.forEach(function(it, idx){
+      var vendorCellHtml;
+      if (it.sourceRow && it.vendorField && it.vendorIsSelect) {
+        var opts = '<option value="">선택</option>' + blindVendorOptions.map(function(name){
+          return '<option value="'+escHtml(name)+'"'+(name===it.vendor?' selected':'')+'>'+escHtml(name)+'</option>';
+        }).join('');
+        vendorCellHtml = '<select class="pv-item-vendor-select" data-item-idx="'+idx+'" style="font-size:11px;padding:2px;border:1px solid '+(it.vendor?'#EEE6DC':'#E4483A')+';border-radius:4px;color:'+(it.vendor?'#282828':'#C0392B')+'">'+opts+'</select>';
+      } else {
+        vendorCellHtml = escHtml(it.vendor||'—');
+      }
       out += '<tr style="border-bottom:1px solid #EEE6DC">'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.space)+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.product)+'</td>'
+          +'<td style="padding:6px 4px">'+vendorCellHtml+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.kind)+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.size)+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.handle)+'</td>'
@@ -1294,6 +1322,34 @@ function printForVendor(categoryFilter) {
 // 원본 행(sourceRow)까지 담고 있는 객체)를 받아서, "발주처" 칸을 실제로
 // 고치면 그 그룹에 속한 모든 항목의 원본 행까지 값을 밀어넣어줌.
 function wireVendorNameEdit(container, groups) {
+  // 2026-09-14(선혜님 지적 - "된거니????": 레일/블라인드도 원단과 같은
+  // 문제가 있었음 발견): 블라인드는 거래처가 <select>라 직접 타이핑하는
+  // 방식(.pv-item-vendor-field)이 아니라 문서 안에 진짜 드롭다운
+  // (.pv-item-vendor-select)을 넣었음 - 그 값을 고르면 바로 그 항목의
+  // 원본 블라인드 행에 반영.
+  container.querySelectorAll('.pv-item-vendor-select').forEach(function(sel){
+    var block = sel.closest('[data-vendor]');
+    if (!block) return;
+    var vendorKey = block.getAttribute('data-vendor');
+    var groupItems = groups[vendorKey];
+    var idx = parseInt(sel.getAttribute('data-item-idx'), 10);
+    var item = groupItems && groupItems[idx];
+    if (!item || !item.sourceRow || !item.vendorField) return;
+    sel.addEventListener('change', function(){
+      var input = item.sourceRow.querySelector(item.vendorField);
+      if (!input) return;
+      input.value = sel.value;
+      sel.style.borderColor = sel.value ? '#EEE6DC' : '#E4483A';
+      sel.style.color = sel.value ? '#282828' : '#C0392B';
+      var toast = document.createElement('div');
+      toast.className = 'print-hide';
+      toast.textContent = '✅ "' + escHtml(item.space||'') + '" 항목의 거래처를 반영했어요. 견적서를 저장해야 최종 저장돼요.';
+      toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#282828;color:#fff;padding:10px 16px;border-radius:20px;font-size:12px;z-index:10001';
+      document.body.appendChild(toast);
+      setTimeout(function(){ toast.remove(); }, 3500);
+    });
+  });
+
   // 2026-09-14(선혜님 지적 - "원단이 업체마다 다 다를 수 있어"): 원단표에
   // 새로 추가한 항목별 "거래처" 칸(.pv-item-vendor-field) - 그룹 전체가
   // 아니라 그 항목의 원본 커튼 행 하나에만 반영. 확인창 없이 바로 반영
