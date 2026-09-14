@@ -769,6 +769,12 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   // 있게 "거래처" 칸을 새로 추가 - 여기서 고치면 그 항목의 원본 커튼
   // 행에만 반영되고(전체 일괄 확인창 없이), 원단명이 같은 항목은 값이
   // 자동으로 같이 채워지지 않고 각자 따로 입력해야 함(의도적).
+  // 2026-09-14(선혜님 지시 - "원단도 드롭다운되게끔 해~ 블라인드처럼"):
+  // 자유 텍스트 대신 레일/블라인드와 동일하게 등록된 원단(fabric)
+  // 카테고리 거래처 드롭다운으로 통일. 목록에 없으면 "+ 직접 입력".
+  var fabricVendorOptions = (Array.isArray(window._dahVendorListRaw) ? window._dahVendorListRaw : [])
+    .filter(function(v){ return v && Array.isArray(v.categories) && v.categories.indexOf('fabric') >= 0; })
+    .map(function(v){ return v.name; });
   out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
       +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
       +'<th style="text-align:left;padding:8px 6px">원단명</th>'
@@ -777,10 +783,18 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
       +'<th style="text-align:left;padding:8px 6px">고객명</th>'
       +'</tr></thead><tbody>';
   groupItems.forEach(function(it, idx){
-    var vendorCellEditable = !!(it.sourceRow && it.vendorField && !it.vendorIsSelect);
+    var vendorCellHtml;
+    if (it.sourceRow && it.vendorField && !it.vendorIsSelect) {
+      var fOpts = '<option value="">선택</option>' + fabricVendorOptions.map(function(name){
+        return '<option value="'+escHtml(name)+'"'+(name===it.vendor?' selected':'')+'>'+escHtml(name)+'</option>';
+      }).join('') + '<option value="__custom__">+ 직접 입력</option>';
+      vendorCellHtml = '<select class="pv-item-vendor-select" data-item-idx="'+idx+'" style="font-size:12px;padding:2px;border:1px solid '+(it.vendor?'#EEE6DC':'#E4483A')+';border-radius:4px;color:'+(it.vendor?'#282828':'#C0392B')+'">'+fOpts+'</select>';
+    } else {
+      vendorCellHtml = escHtml(it.vendor||'—');
+    }
     out += '<tr style="border-bottom:1px solid #EEE6DC">'
         +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.product)+'</td>'
-        +'<td'+(vendorCellEditable?' class="pv-item-vendor-field" contenteditable="true" data-item-idx="'+idx+'"':'')+' style="padding:8px 6px;'+(it.vendor?'':'color:#C0392B')+'">'+escHtml(it.vendor||'미지정')+'</td>'
+        +'<td style="padding:8px 6px">'+vendorCellHtml+'</td>'
         +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
         +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
         +'</tr>';
@@ -1373,35 +1387,11 @@ function wireVendorNameEdit(container, groups) {
     });
   });
 
-  // 2026-09-14(선혜님 지적 - "원단이 업체마다 다 다를 수 있어"): 원단표에
-  // 새로 추가한 항목별 "거래처" 칸(.pv-item-vendor-field) - 그룹 전체가
-  // 아니라 그 항목의 원본 커튼 행 하나에만 반영. 확인창 없이 바로 반영
-  // (원래부터 "이 항목 하나"만 대상이라 그룹 일괄수정과 달리 다른 항목을
-  // 건드릴 위험이 없음).
-  container.querySelectorAll('.pv-item-vendor-field').forEach(function(cell){
-    var block = cell.closest('[data-vendor]');
-    if (!block) return;
-    var vendorKey = block.getAttribute('data-vendor');
-    var groupItems = groups[vendorKey];
-    var idx = parseInt(cell.getAttribute('data-item-idx'), 10);
-    var item = groupItems && groupItems[idx];
-    if (!item || !item.sourceRow || !item.vendorField) return;
-    cell.addEventListener('blur', function(){
-      var newVal = cell.textContent.trim();
-      if (newVal === '미지정') newVal = '';
-      var input = item.sourceRow.querySelector(item.vendorField);
-      if (!input) return;
-      input.value = newVal;
-      cell.style.color = newVal ? '' : '#C0392B';
-      if (!newVal) cell.textContent = '미지정';
-      var toast = document.createElement('div');
-      toast.className = 'print-hide';
-      toast.textContent = '✅ "' + escHtml(item.space||'') + '" 항목의 거래처를 반영했어요. 견적서를 저장해야 최종 저장돼요.';
-      toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#282828;color:#fff;padding:10px 16px;border-radius:20px;font-size:12px;z-index:10001';
-      document.body.appendChild(toast);
-      setTimeout(function(){ toast.remove(); }, 3500);
-    });
-  });
+  // 2026-09-14(선혜님 지시 - "원단도 드롭다운되게끔 해~ 블라인드처럼"):
+  // 원단도 드롭다운(.pv-item-vendor-select)으로 바뀌면서 이 자유텍스트
+  // 입력칸(.pv-item-vendor-field)을 만드는 코드가 더 이상 없음 - 이걸
+  // 연결하던 아래 블록은 이제 아무 대상도 못 찾는 죽은 코드라 제거
+  // (체크리스트 29번 - 죽은 코드 삭제 시 재스캔).
 
   var fields = container.querySelectorAll('.pv-vendor-name-field');
   fields.forEach(function(field){
