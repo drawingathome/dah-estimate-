@@ -359,6 +359,14 @@ function openDetailInner(name, id, forceTab) {
   }
   currentDetailName = c.clientName;
   currentDetailId = c.id || null;
+  // 2026-09-13(선혜님 - "동시저장충돌" 원인 조사 후 결정): 이 고객상세를
+  // 여는 순간 "나 지금 이 고객 보고 있음"을 알리고, 다른 사람이 이미
+  // 보고 있으면 배너로 알려줌(renderDetailStageSection 등이 body를 다시
+  // 채우기 전에 먼저 걸어둬야, 나중에 다른 사람이 들어와도 배너가
+  // body 맨 위에 유지됨).
+  if (typeof joinCustomerPresence === 'function' && c.id) {
+    joinCustomerPresence(c.id, renderPresenceBanner);
+  }
   if (typeof logEvent === 'function') logEvent('detail_open', { stage: c.stage, tab: forceTab || 'info' });
   var isMaster = currentUser && currentUser.role === 'master';
 
@@ -899,7 +907,14 @@ function renderDetailBottomButtons(c, isMaster, body) {
 
 }
 
-function closeDetail() { document.getElementById('detail-overlay').className = 'overlay'; currentDetailName = null; currentDetailId = null; }
+function closeDetail() {
+  document.getElementById('detail-overlay').className = 'overlay';
+  currentDetailName = null;
+  currentDetailId = null;
+  // 2026-09-13: 화면을 닫으면 "나 지금 보고 있음" 상태도 같이 정리 -
+  // 안 그러면 화면을 닫은 뒤에도 계속 "누가 보고 있다"고 잘못 표시됨.
+  if (typeof leaveCustomerPresence === 'function') leaveCustomerPresence();
+}
 
 function changeStage(stage) {
   var arr = loadCustomers();

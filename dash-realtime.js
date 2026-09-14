@@ -132,7 +132,67 @@ function _showRealtimeUpdateBanner(customer) {
   document.getElementById('realtime-dismiss-btn').addEventListener('click', function() { banner.remove(); });
 }
 
-// 로그인 상태가 이미 있으면(새로고침 등) 페이지 로드시 바로 실시간 동기화 시작.
+// 2026-09-13(선혜님 - 유경진/황남주/손현영 저장충돌 원인 조사 후 "지금
+// 진행해야지"로 결정): 지금까지는 "동시에 같은 고객을 두 곳에서 저장하려다
+// 충돌"이 일어난 뒤에야(저장 실패로) 알 수 있었음 - 미리 "지금 누가 이
+// 고객을 보고 있는지" 알려주면 애초에 충돌 자체를 줄일 수 있음.
+// Supabase Realtime의 Presence 기능(이미 로드된 supabase-js 클라이언트가
+// 지원)을 이용 - 고객상세 화면을 열면 그 고객 전용 채널에 "나 지금 보고
+// 있음"을 알리고, 같은 채널에 다른 사람이 있으면 배너로 알려줌.
+var _presenceChannel = null;
+var _presenceCustomerId = null;
+
+function joinCustomerPresence(customerId, onOthersChange) {
+  leaveCustomerPresence(); // 이전 고객 화면을 보고 있었다면 먼저 나감
+  if (!customerId) return;
+  var client = _getSupabaseRealtimeClient();
+  if (!client) return;
+  _presenceCustomerId = customerId;
+  var myName = (typeof currentUser !== 'undefined' && currentUser && currentUser.name) || '알 수 없음';
+  var myKey = myName + '-' + Math.random().toString(36).slice(2, 8); // 같은 이름이 여러 탭/기기로 들어와도 각각 구분되게
+  var channel = client.channel('customer-presence-' + customerId, { config: { presence: { key: myKey } } });
+  channel.on('presence', { event: 'sync' }, function () {
+    var state = channel.presenceState();
+    var others = [];
+    Object.keys(state).forEach(function (key) {
+      if (key === myKey) return;
+      (state[key] || []).forEach(function (p) { others.push(p.name); });
+    });
+    if (typeof onOthersChange === 'function') onOthersChange(others);
+  });
+  channel.subscribe(function (status) {
+    if (status === 'SUBSCRIBED') {
+      channel.track({ name: myName, joinedAt: Date.now() });
+    }
+  });
+  _presenceChannel = channel;
+}
+
+function leaveCustomerPresence() {
+  if (_presenceChannel && _supabaseRealtimeClient) {
+    _supabaseRealtimeClient.removeChannel(_presenceChannel);
+  }
+  _presenceChannel = null;
+  _presenceCustomerId = null;
+  var banner = document.getElementById('presence-warning-banner');
+  if (banner) banner.remove();
+}
+
+function renderPresenceBanner(others) {
+  var existing = document.getElementById('presence-warning-banner');
+  if (existing) existing.remove();
+  if (!others || others.length === 0) return;
+  var body = document.getElementById('detail-body');
+  if (!body) return;
+  var banner = document.createElement('div');
+  banner.id = 'presence-warning-banner';
+  banner.style.cssText = 'background:#FBEAE7;border:1px solid #E4483A;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;font-weight:700;color:#C0392B';
+  var names = others.filter(function (v, i) { return others.indexOf(v) === i; }).join(', '); // 중복 이름 제거
+  banner.textContent = '⚠️ ' + names + '님도 지금 이 고객을 보고 있어요 — 동시에 저장하면 한쪽 내용이 충돌할 수 있어요';
+  body.insertBefore(banner, body.firstChild);
+}
+
+
 // 새로 로그인하는 경우는 dash-supabase-auth.js의 saveAuthSession()에서 시작됨.
 (function() {
   document.addEventListener('DOMContentLoaded', function() {
