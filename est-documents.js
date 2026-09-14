@@ -1284,6 +1284,23 @@ function wireVendorNameEdit(container, groups) {
     field.addEventListener('blur', function(){
       var newVal = field.textContent.trim();
       if (newVal === vendorKey || (vendorKey.indexOf('미지정') === 0 && newVal === '')) return;
+      // 2026-09-13(선혜님 - "전문업체 기준으로... 직접 다 확인" 요청 중
+      // 직접 재현하다 발견): "미지정(원단)"은 실제로 같은 거래처라서
+      // 묶인 게 아니라, 그냥 다들 거래처를 아직 안 정해서 우연히 같은
+      // 이름표 아래 묶인 것뿐임 - 예를 들어 거실 커튼은 A업체, 안방
+      // 커튼은 B업체로 각각 다르게 정해야 하는데, 여기서 한 번에 이름을
+      // 바꾸면 서로 무관한 커튼들에 전부 같은 거래처가 조용히 들어가
+      // 버림. 실제 거래처(이미 이름이 있던 경우)를 고칠 때는 상관없지만
+      // (원래도 같은 거래처였으니), "미지정"에서 시작해서 여러 항목이
+      // 걸려있을 땐 몇 개나 바뀌는지 미리 보여주고 확인받음.
+      var distinctRows = editableItems.filter(function(it, i, arr){ return arr.indexOf(it) === arr.findIndex(function(x){ return x.sourceRow === it.sourceRow; }); });
+      if (vendorKey.indexOf('미지정') === 0 && distinctRows.length > 1) {
+        var spaces = distinctRows.map(function(it){ return it.space; }).join(', ');
+        if (!confirm('"' + newVal + '"을(를) ' + distinctRows.length + '개 항목(' + spaces + ')에 한꺼번에 적용할까요?\n각자 다른 거래처라면 여기서 한 번에 바꾸지 말고, 견적서 행마다 따로 입력해주세요.')) {
+          field.textContent = '';
+          return;
+        }
+      }
       var applied = 0, rejected = 0;
       editableItems.forEach(function(it){
         var input = it.sourceRow.querySelector(it.vendorField);
