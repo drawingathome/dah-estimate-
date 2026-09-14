@@ -436,7 +436,14 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       // 형상가공 복원 추가 - 8/29와 같은 "복원 함수마다 각각 챙겨야
       // 하는" 유형이라, 저장 추가할 때 바로 여기도 함께 넣음(놓치는 걸 방지).
       var yd = ctr.querySelector('.c-yardage'); if (yd) yd.value = it.yardage || '';
-      var sp = ctr.querySelector('.c-shape-process'); if (sp) sp.checked = !!it.shapeProcess;
+      // 2026-09-12(선혜님 지적 - "형상가공 O으로 하자고 했는데 그런거 다
+      // 누락했네": 손현영 견적서 재현으로 발견): shapeProcess 필드가 아직
+      // 없던 예전 저장 데이터(it.shapeProcess가 undefined)를 복원할 때
+      // !!undefined가 항상 false가 되어 무조건 X로 뜨고 있었음 - 기본값
+      // O 로직(getDefaultShapeProcessChecked)이 신규행에만 적용되고
+      // 복원 경로는 건너뛰고 있었던 것. 값이 명시적으로 저장돼있으면
+      // 그 값을, 아예 없던 예전 데이터면 기본값(O)을 따르도록 수정.
+      var sp = ctr.querySelector('.c-shape-process'); if (sp) sp.checked = (it.shapeProcess !== undefined) ? !!it.shapeProcess : getDefaultShapeProcessChecked();
       var fup = ctr.querySelector('.c-fabric-unit-price'); if (fup) fup.value = it.fabricUnitPrice || '';
       var pt = ctr.querySelector('.pleat-type'); if (pt && it.pleatType) pt.value = it.pleatType;
       var ot = ctr.querySelector('.open-type'); if (ot && it.openType) ot.value = it.openType;

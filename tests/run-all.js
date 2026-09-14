@@ -64,6 +64,8 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['as_management_check.js', []]);
   // 2026-09-11: 네이버예약 붙여넣기 자동채우기 검증
   scripts.push(['naver_paste_parse_check.js', []]);
+  // 2026-09-12: 형상가공 기본값 복원 검증 (예전 데이터 X로 잘못 복원되던 버그)
+  scripts.push(['shape_process_default_check.js', []]);
   // 2026-08-29(선혜님 제안 - "1번도 2번도 아니고 자동 감시 테스트를
   // 만들자"): 대시보드/견적서 앱은 서로 다른 도메인이라 코드 공유가
   // 안 되고, 같은 목적의 로직이 양쪽에 따로 구현되면서 한쪽만 고치면

@@ -275,7 +275,10 @@ function loadDraft() {
             if (tr.querySelector('.c-rail-vendor')) tr.querySelector('.c-rail-vendor').value = item.railVendor || '';
             if (tr.querySelector('.c-color')) tr.querySelector('.c-color').value = item.color || '';
             if (tr.querySelector('.c-yardage')) tr.querySelector('.c-yardage').value = item.yardage || '';
-            if (tr.querySelector('.c-shape-process')) tr.querySelector('.c-shape-process').checked = !!item.shapeProcess;
+            // 2026-09-12(선혜님 지적 - "형상가공 O으로 하자고 했는데 그런거
+            // 다 누락했네"): est-customer-load.js와 동일한 문제 - 이 경로
+            // (임시저장 복원)에서도 undefined를 무조건 X로 처리하고 있었음.
+            if (tr.querySelector('.c-shape-process')) tr.querySelector('.c-shape-process').checked = (item.shapeProcess !== undefined) ? !!item.shapeProcess : getDefaultShapeProcessChecked();
             if (tr.querySelector('.c-fabric-unit-price')) tr.querySelector('.c-fabric-unit-price').value = item.fabricUnitPrice || '';
             if (tr.querySelector('.pleat-type')) tr.querySelector('.pleat-type').value = item.pleatType || '';
             if (tr.querySelector('.open-type')) tr.querySelector('.open-type').value = item.openType || '';
