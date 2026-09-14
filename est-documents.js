@@ -520,6 +520,24 @@ function printForCustomer() {
 }
 
 function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, today, arrivalDate, arrivalLocation) {
+  // 2026-09-14("코드 모두 정리해" 중 발견): 원단/레일/블라인드 드롭다운
+  // 칸을 만드는 코드가 3곳에 거의 똑같이 복사돼 있었음 - 바로 오늘
+  // 하루 종일 반복됐던 "한 카테고리만 고치고 나머지를 깜빡하는" 사고의
+  // 구조적 원인이 될 수 있는 패턴이라, 공용 함수 하나로 합침. 이제
+  // 드롭다운 스타일/옵션 구성을 바꾸려면 이 함수 한 곳만 고치면 3개
+  // 카테고리에 전부 반영됨(체크리스트 35번 - 카테고리는 항상 세트).
+  function buildVendorSelectCell(it, idx, vendorOptions) {
+    if (!it.sourceRow || !it.vendorField) return escHtml(it.vendor||'—');
+    var opts = '<option value="">선택</option>' + vendorOptions.map(function(name){
+      return '<option value="'+escHtml(name)+'"'+(name===it.vendor?' selected':'')+'>'+escHtml(name)+'</option>';
+    }).join('') + '<option value="__custom__">+ 직접 입력</option>';
+    return '<select class="pv-item-vendor-select" data-item-idx="'+idx+'" style="font-size:12px;padding:2px;border:1px solid '+(it.vendor?'#EEE6DC':'#E4483A')+';border-radius:4px;color:'+(it.vendor?'#282828':'#C0392B')+'">'+opts+'</select>';
+  }
+  function vendorOptionsFor(category) {
+    return (Array.isArray(window._dahVendorListRaw) ? window._dahVendorListRaw : [])
+      .filter(function(v){ return v && Array.isArray(v.categories) && v.categories.indexOf(category) >= 0; })
+      .map(function(v){ return v.name; });
+  }
   // 2026-09-09(선혜님 지시 - "모든 발주서에는 하단에 비고 칸을 만들어서
   // 코멘트 남길 수 있게 하자" + "발주 페이지 자체를 수정할 수 있게":
   // data-vendor로 이 문서가 어느 거래처 것인지 표시해서, 인쇄 버튼을
@@ -665,9 +683,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
     // (목성/솜피 등) - 블라인드와 똑같이 실제 등록된 거래처 중에서
     // 드롭다운으로 바로 고르게 함. 목록에 없는 곳이면 "+ 직접 입력"으로
     // 예외 처리.
-    var materialVendorOptions = (Array.isArray(window._dahVendorListRaw) ? window._dahVendorListRaw : [])
-      .filter(function(v){ return v && Array.isArray(v.categories) && v.categories.indexOf('material') >= 0; })
-      .map(function(v){ return v.name; });
+    var materialVendorOptions = vendorOptionsFor('material');
     out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
         +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
         +'<th style="text-align:left;padding:8px 6px">위치</th>'
@@ -677,15 +693,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         +'<th style="text-align:left;padding:8px 6px">고객명</th>'
         +'</tr></thead><tbody>';
     groupItems.forEach(function(it, idx){
-      var vendorCellHtml;
-      if (it.sourceRow && it.vendorField && !it.vendorIsSelect) {
-        var mOpts = '<option value="">선택</option>' + materialVendorOptions.map(function(name){
-          return '<option value="'+escHtml(name)+'"'+(name===it.vendor?' selected':'')+'>'+escHtml(name)+'</option>';
-        }).join('') + '<option value="__custom__">+ 직접 입력</option>';
-        vendorCellHtml = '<select class="pv-item-vendor-select" data-item-idx="'+idx+'" style="font-size:12px;padding:2px;border:1px solid '+(it.vendor?'#EEE6DC':'#E4483A')+';border-radius:4px;color:'+(it.vendor?'#282828':'#C0392B')+'">'+mOpts+'</select>';
-      } else {
-        vendorCellHtml = escHtml(it.vendor||'—');
-      }
+      var vendorCellHtml = buildVendorSelectCell(it, idx, materialVendorOptions);
       out += '<tr style="border-bottom:1px solid #EEE6DC">'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.space)+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.product)+'</td>'
@@ -707,9 +715,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
     // 블라인드 거래처는 <select>라 자유 텍스트로는 등록 안 된 이름이면
     // 거부되므로(다른 곳과 동일 규칙), 문서 안에 실제 드롭다운을 그대로
     // 넣어서 등록된 거래처 중에서 바로 고를 수 있게 함.
-    var blindVendorOptions = (Array.isArray(window._dahVendorListRaw) ? window._dahVendorListRaw : [])
-      .filter(function(v){ return v && Array.isArray(v.categories) && v.categories.indexOf('blind') >= 0; })
-      .map(function(v){ return v.name; });
+    var blindVendorOptions = vendorOptionsFor('blind');
     out += '<div class="pv-order-table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch">';
     out += '<table style="width:100%;border-collapse:collapse;font-size:11px">'
         +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
@@ -726,15 +732,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         +'<th style="text-align:left;padding:6px 4px">고객명</th>'
         +'</tr></thead><tbody>';
     groupItems.forEach(function(it, idx){
-      var vendorCellHtml;
-      if (it.sourceRow && it.vendorField && it.vendorIsSelect) {
-        var opts = '<option value="">선택</option>' + blindVendorOptions.map(function(name){
-          return '<option value="'+escHtml(name)+'"'+(name===it.vendor?' selected':'')+'>'+escHtml(name)+'</option>';
-        }).join('');
-        vendorCellHtml = '<select class="pv-item-vendor-select" data-item-idx="'+idx+'" style="font-size:11px;padding:2px;border:1px solid '+(it.vendor?'#EEE6DC':'#E4483A')+';border-radius:4px;color:'+(it.vendor?'#282828':'#C0392B')+'">'+opts+'</select>';
-      } else {
-        vendorCellHtml = escHtml(it.vendor||'—');
-      }
+      var vendorCellHtml = buildVendorSelectCell(it, idx, blindVendorOptions);
       out += '<tr style="border-bottom:1px solid #EEE6DC">'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.space)+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.product)+'</td>'
@@ -772,9 +770,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   // 2026-09-14(선혜님 지시 - "원단도 드롭다운되게끔 해~ 블라인드처럼"):
   // 자유 텍스트 대신 레일/블라인드와 동일하게 등록된 원단(fabric)
   // 카테고리 거래처 드롭다운으로 통일. 목록에 없으면 "+ 직접 입력".
-  var fabricVendorOptions = (Array.isArray(window._dahVendorListRaw) ? window._dahVendorListRaw : [])
-    .filter(function(v){ return v && Array.isArray(v.categories) && v.categories.indexOf('fabric') >= 0; })
-    .map(function(v){ return v.name; });
+  var fabricVendorOptions = vendorOptionsFor('fabric');
   out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
       +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
       +'<th style="text-align:left;padding:8px 6px">원단명</th>'
@@ -783,15 +779,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
       +'<th style="text-align:left;padding:8px 6px">고객명</th>'
       +'</tr></thead><tbody>';
   groupItems.forEach(function(it, idx){
-    var vendorCellHtml;
-    if (it.sourceRow && it.vendorField && !it.vendorIsSelect) {
-      var fOpts = '<option value="">선택</option>' + fabricVendorOptions.map(function(name){
-        return '<option value="'+escHtml(name)+'"'+(name===it.vendor?' selected':'')+'>'+escHtml(name)+'</option>';
-      }).join('') + '<option value="__custom__">+ 직접 입력</option>';
-      vendorCellHtml = '<select class="pv-item-vendor-select" data-item-idx="'+idx+'" style="font-size:12px;padding:2px;border:1px solid '+(it.vendor?'#EEE6DC':'#E4483A')+';border-radius:4px;color:'+(it.vendor?'#282828':'#C0392B')+'">'+fOpts+'</select>';
-    } else {
-      vendorCellHtml = escHtml(it.vendor||'—');
-    }
+    var vendorCellHtml = buildVendorSelectCell(it, idx, fabricVendorOptions);
     out += '<tr style="border-bottom:1px solid #EEE6DC">'
         +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.product)+'</td>'
         +'<td style="padding:8px 6px">'+vendorCellHtml+'</td>'
@@ -1373,6 +1361,17 @@ function wireVendorNameEdit(container, groups) {
         var customOpt = document.createElement('option');
         customOpt.value = val; customOpt.textContent = val; customOpt.selected = true;
         sel.insertBefore(customOpt, sel.lastElementChild);
+        // 2026-09-14("코드 모두 정리해" 중 공용 함수로 합치면서 발견):
+        // 블라인드의 실제 원본 필드(.b-vendor)는 진짜 <select>라서, 여기
+        // 등록 안 된 새 이름을 .value로 바로 넣으면 일치하는 <option>이
+        // 없어 조용히 빈 값으로 되돌아감(값이 안 들어간 채 성공한 것처럼
+        // 보임) - 원본이 실제 <select>일 때는 그쪽에도 같은 옵션을 먼저
+        // 추가해야 함. 원단/레일의 원본 필드(<input>)는 이 문제가 없음.
+        if (input.tagName === 'SELECT' && !Array.from(input.options).some(function(o){ return o.value === val; })) {
+          var srcCustomOpt = document.createElement('option');
+          srcCustomOpt.value = val; srcCustomOpt.textContent = val;
+          input.appendChild(srcCustomOpt);
+        }
       }
       input.value = val;
       item.vendor = val;
