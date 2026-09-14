@@ -21,7 +21,11 @@ async function run() {
   }
   const dir = path.dirname(path.resolve(filePath));
   const file = path.basename(filePath);
-  const port = 9901 + Math.floor(Math.random() * 500);
+  // 2026-09-13("코드 정리하자" 중 우연히 발견 - 무작위 포트가 정확히
+  // 10080에 걸리면 크롬이 그 포트를 "안전하지 않은 포트"로 취급해서
+  // ERR_UNSAFE_PORT로 접속 자체를 거부함(약 1/500 확률로만 재현되는
+  // 드문 결함이었음). 범위를 크롬 제한 포트 목록과 안 겹치는 20000대로 이동.
+  const port = 20001 + Math.floor(Math.random() * 500);
   const server = await startServer(dir, port);
   const browser = await launchBrowser();
   let failCount = 0;

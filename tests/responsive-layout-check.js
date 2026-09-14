@@ -22,7 +22,7 @@ async function run() {
   }
   const dir = path.dirname(path.resolve(filePath));
   const file = path.basename(filePath);
-  const port = 9901 + Math.floor(Math.random() * 500);
+  const port = 19901 + Math.floor(Math.random() * 500); // 2026-09-13: 10080(크롬 제한 포트) 회피 위해 10000 상향
   const server = await startServer(dir, port);
   const browser = await launchBrowser();
   let failCount = 0;
