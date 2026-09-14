@@ -14,6 +14,12 @@ jobs:
         run: |
           find . -maxdepth 1 -name "*.html" -exec sed -i -E 's/(src|href)="\/([^\/"][^"]*)"/\1=".\/\2"/g' {} \;
 
+      - name: manifest.json 절대경로도 상대경로로 치환 (PWA 아이콘 깨짐 방지)
+        run: |
+          if [ -f manifest.json ]; then
+            sed -i -E 's/"(start_url|src)": *"\/([^"]*)"/"\1": ".\/\2"/g' manifest.json
+          fi
+
       - name: gh-pages 브랜치로 배포
         run: |
           git config user.name "github-actions[bot]"
