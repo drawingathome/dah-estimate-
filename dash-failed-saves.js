@@ -123,13 +123,65 @@ function openFailedSavesModal() {
 
     var detailsToggle = document.createElement('button');
     detailsToggle.textContent = '백업된 내용 보기';
-    detailsToggle.style.cssText = 'font-size:11px;color:#8E8078;background:none;border:none;padding:0;cursor:pointer;text-decoration:underline;margin-bottom:8px';
+    detailsToggle.style.cssText = 'font-size:11px;color:#8E8078;background:none;border:none;padding:0;cursor:pointer;text-decoration:underline';
     var pre = document.createElement('pre');
-    pre.style.cssText = 'display:none;background:#FAF7F5;padding:10px;border-radius:6px;font-size:11px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;margin:0 0 10px';
+    pre.style.cssText = 'display:none;background:#FAF7F5;padding:10px;border-radius:6px;font-size:11px;overflow-x:auto;white-space:pre-wrap;word-break:break-all;margin:8px 0 0';
     pre.textContent = JSON.stringify(entry.payload, null, 2);
     detailsToggle.onclick = function () { pre.style.display = pre.style.display === 'none' ? 'block' : 'none'; };
-    card.appendChild(detailsToggle);
+
+    var checkBtn = document.createElement('button');
+    checkBtn.textContent = '🔍 지금 값과 비교하기';
+    checkBtn.style.cssText = 'font-size:11px;color:#8E8078;background:none;border:none;padding:0;cursor:pointer;text-decoration:underline;margin-left:14px';
+    var toggleRow = document.createElement('div');
+    toggleRow.style.cssText = 'margin-bottom:8px';
+    toggleRow.appendChild(detailsToggle);
+    toggleRow.appendChild(checkBtn);
+    card.appendChild(toggleRow);
     card.appendChild(pre);
+    var diffBox = document.createElement('div');
+    diffBox.style.cssText = 'display:none;margin-bottom:10px';
+    card.appendChild(diffBox);
+    // 2026-09-14(선혜님 - "이거는 계속 이런데?!!! 처리 안해줄래?"로 발견):
+    // 이 백업들이 localStorage(브라우저 자체)에만 있어서, 저는 원격에서
+    // 직접 지워드릴 수가 없음 - 대신 직접 지금 실제 저장된 값과
+    // 한 눈에 비교해서, 이미 반영됐는지 그 자리에서 바로 판단할 수
+    // 있게 함(예전 이메일 알림 때처럼 "몇 개만 보고 자동으로 판단"하지
+    // 않고, 백업된 값 전부를 하나하나 눈으로 직접 대조해서 스스로
+    // 판단하시게).
+    checkBtn.onclick = function () {
+      if (diffBox.style.display !== 'none') { diffBox.style.display = 'none'; return; }
+      diffBox.style.display = 'block';
+      diffBox.innerHTML = '<div style="font-size:11px;color:#B0A99F;padding:8px 0">조회 중...</div>';
+      var table = entry.type === 'customer' ? 'customers' : 'estimates';
+      var filterField = entry.type === 'customer' ? 'phone' : 'id';
+      var filterVal = entry.type === 'customer' ? entry.payload.phone : entry.estDbId;
+      if (!filterVal) { diffBox.innerHTML = '<div style="font-size:11px;color:#C0392B;padding:8px 0">비교할 기준값이 없어요.</div>'; return; }
+      sbXHR('GET', table + '?' + filterField + '=eq.' + encodeURIComponent(filterVal) + '&select=*', null, function (err, rows) {
+        if (err || !rows || !rows[0]) { diffBox.innerHTML = '<div style="font-size:11px;color:#C0392B;padding:8px 0">지금 값을 못 가져왔어요(이미 삭제됐거나 네트워크 문제).</div>'; return; }
+        var current = rows[0];
+        var rowsHtml = '';
+        var allMatch = true;
+        Object.keys(entry.payload).forEach(function (key) {
+          if (key === 'line_items') return; // 품목 배열은 통째로 비교하기엔 너무 길어서 별도 표시
+          var backedUp = entry.payload[key];
+          var currentVal = current[key];
+          var match = String(backedUp == null ? '' : backedUp) === String(currentVal == null ? '' : currentVal);
+          if (!match) allMatch = false;
+          rowsHtml += '<tr><td style="padding:3px 6px;color:#8E8078">' + key + '</td>' +
+            '<td style="padding:3px 6px;' + (match ? '' : 'color:#C0392B') + '">' + (backedUp === '' ? '(빈값)' : String(backedUp)) + '</td>' +
+            '<td style="padding:3px 6px;' + (match ? '' : 'font-weight:700') + '">' + (currentVal === '' || currentVal == null ? '(빈값)' : String(currentVal)) + '</td></tr>';
+        });
+        var lineItemsNote = '';
+        if (entry.payload.line_items) {
+          var curCount = Array.isArray(current.line_items) ? current.line_items.length : 0;
+          var backedCount = entry.payload.line_items.length;
+          lineItemsNote = '<div style="font-size:11px;margin-top:6px;' + (curCount === backedCount ? 'color:#8E8078' : 'color:#C0392B') + '">품목 개수 — 백업: ' + backedCount + '개 / 지금: ' + curCount + '개' + (curCount === backedCount ? '' : ' (달라요)') + '</div>';
+          if (curCount !== backedCount) allMatch = false;
+        }
+        diffBox.innerHTML = '<div style="font-size:12px;font-weight:700;margin-bottom:6px;color:' + (allMatch ? '#3A7D44' : '#C0392B') + '">' + (allMatch ? '✅ 지금 저장된 값과 완전히 일치해요 — 안심하고 지우셔도 돼요' : '⚠️ 지금 값과 다른 부분이 있어요 — 아래 빨간 글씨 확인해주세요') + '</div>' +
+          '<table style="width:100%;font-size:11px;border-collapse:collapse"><tr style="font-weight:700;border-bottom:1px solid #EEE6DC"><td style="padding:3px 6px">항목</td><td style="padding:3px 6px">백업된 값</td><td style="padding:3px 6px">지금 값</td></tr>' + rowsHtml + '</table>' + lineItemsNote;
+      });
+    };
 
     var btnRow = document.createElement('div');
     btnRow.style.cssText = 'display:flex;gap:8px';
