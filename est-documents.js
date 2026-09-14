@@ -803,17 +803,18 @@ function applyVendorArrivalDefaults(groups) {
     }
     if (!window._vendorArrivalLocations[vendor]) {
       // 2026-09-12(선혜님 지시 - "캔가공소의 도착장소는: 시공팀 시공
-      // (유지철 팀장님)으로 표시해줘"): 캔가공소 자체의 발주서(cat==='production',
-      // 완성된 제품이 나가는 곳)와, 원단/레일/블라인드가 캔가공소로 들어가는
-      // 도착지는 서로 다른 주소라 별개 필드로 분리 - defaultLocation 하나를
-      // 공유해서 쓰면 이 지시를 반영하는 순간 원단 발주서 도착지까지 같이
-      // "시공팀 시공"으로 잘못 바뀌어버림(실제로 한 번 이렇게 만들 뻔했다가
-      // 배포 전에 재검증하며 발견함). production 카테고리 자신은
-      // productionOutputLocation(완성품 나가는 곳), 그리로 들어가는
-      // 원단/레일/블라인드는 기존 defaultLocation(캔가공소가 받는 곳)을 씀.
+      // (유지철 팀장님)으로 표시해줘" 이어서 "디테라 등 원단 8곳→캔가공소,
+      // 윈텍/덱스터/헌터더글라스/목성/솜피(레일·블라인드)→캔가공소 유지철
+      // 팀장님"): production 카테고리 자신(완성품이 나가는 곳)/원단이
+      // 들어가는 곳/레일·블라인드가 들어가는 곳, 이렇게 세 가지가 전부
+      // 서로 다른 표시라 별개 필드 3개로 분리(defaultLocation 하나를
+      // 공유하면 지난번처럼 서로 덮어써버리는 문제가 재발함).
       var isProductionGroup = cat === 'production';
+      var isFabricGroup = cat === 'fabric';
+      var isRailOrBlindGroup = cat === 'material' || cat === 'blind';
       window._vendorArrivalLocations[vendor] = (isProductionGroup && meta && meta.productionOutputLocation)
-        || (goesToProduction && productionMeta && productionMeta.defaultLocation)
+        || (isFabricGroup && productionMeta && productionMeta.fabricArrivalLabel)
+        || (isRailOrBlindGroup && productionMeta && productionMeta.railBlindArrivalLabel)
         || (meta && meta.defaultLocation)
         || DEFAULT_LOCATION;
     }

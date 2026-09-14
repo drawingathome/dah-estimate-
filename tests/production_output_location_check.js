@@ -20,7 +20,7 @@ async function run() {
 
   const r = await page.evaluate(() => {
     window._dahVendorListRaw = [
-      { name: '캔가공소', categories: ['production'], productionOutputLocation: '시공팀 시공 (유지철 팀장님)' },
+      { name: '캔가공소', categories: ['production'], productionOutputLocation: '시공팀 시공 (유지철 팀장님)', fabricArrivalLabel: '캔가공소', railBlindArrivalLabel: '캔가공소 유지철 팀장님' },
       { name: '디테라', categories: ['fabric'] },
       { name: '윈텍', categories: ['blind'] },
       { name: '목성', categories: ['material'] }
@@ -43,10 +43,10 @@ async function run() {
   });
 
   ok('1. 캔가공소 자체 발주서 도착장소 = 시공팀 시공(유지철 팀장님)', r.production === '시공팀 시공 (유지철 팀장님)', r.production);
-  ok('2. 원단(fabric) 도착장소는 시공팀시공으로 안 바뀜(별개 필드 분리 확인)', r.fabric !== '시공팀 시공 (유지철 팀장님)', r.fabric);
-  ok('3. 블라인드 도착장소도 안 바뀜', r.blind !== '시공팀 시공 (유지철 팀장님)', r.blind);
-  ok('4. 레일(material) 도착장소도 안 바뀜', r.material !== '시공팀 시공 (유지철 팀장님)', r.material);
-  ok('5. 원단/블라인드/레일은 여전히 서로 같은(캔가공소 수신) 주소로 통일됨', r.fabric === r.blind && r.blind === r.material, JSON.stringify({fabric:r.fabric, blind:r.blind, material:r.material}));
+  ok('2. 원단(fabric) 도착장소 = 캔가공소', r.fabric === '캔가공소', r.fabric);
+  ok('3. 블라인드 도착장소 = 캔가공소 유지철 팀장님', r.blind === '캔가공소 유지철 팀장님', r.blind);
+  ok('4. 레일(material) 도착장소 = 캔가공소 유지철 팀장님', r.material === '캔가공소 유지철 팀장님', r.material);
+  ok('5. 원단과 레일/블라인드는 서로 다른 표기(구분됨)', r.fabric !== r.material, JSON.stringify({fabric:r.fabric, material:r.material}));
 
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));
