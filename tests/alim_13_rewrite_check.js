@@ -62,16 +62,20 @@ async function run() {
   ok('7. #{공간} 있을 때 자연스럽게 삽입', r.withSpaceOk === true);
   ok('8. #{공간} 없을 때 중복공백 없이 처리', r.noSpaceOk === true);
 
-  // 4) 버튼 필드가 필요한 4개 항목에 실제로 존재하는지(문서상 약속한 4개)
+  // 4) 버튼 필드가 필요한 항목에 실제로 존재하는지 - 2026-09-14: 6번(결제)은
+  // 링크 형식이 불규칙해서 버튼 자체를 포기(본문 텍스트 링크로 대체)했고,
+  // 대신 4/7번(견적서 공개보기)에 새로 버튼이 생겼음 - 최신 5개로 갱신.
   r = await page.evaluate(() => {
     return {
       t00: !!ALIM_META.t00_reservation.button,
       t01: !!ALIM_META.t01_survey.button,
       t11: !!ALIM_META.t11_after_install.button,
-      tC: !!ALIM_META.tC_payment.button
+      t03: !!ALIM_META.t03_estimate.button,
+      t07: !!ALIM_META.t07_final_estimate.button,
+      tC_noButton: !ALIM_META.tC_payment.button
     };
   });
-  ok('9. 버튼 4개(0,1,11,C) 전부 정의됨', r.t00 && r.t01 && r.t11 && r.tC);
+  ok('9. 버튼 5개(0,1,4,7,9) 전부 정의됨 + 6번은 의도적으로 버튼 없음', r.t00 && r.t01 && r.t11 && r.t03 && r.t07 && r.tC_noButton, JSON.stringify(r));
 
   // 5) 알림톡 탭 렌더링 시 에러 없이 뜨는지(실제 UI 스모크)
   await page.evaluate(() => {
