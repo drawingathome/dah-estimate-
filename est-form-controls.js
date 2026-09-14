@@ -43,33 +43,6 @@ function setStatus(s, isRestoring) {
   triggerSumPulse();
 }
 
-/* 저장된 가견적(dah_saved) 항목에서 고객 기본정보만 폼에 복원
-   ※ 커튼/블라인드 제품행 상세정보는 저장 데이터 구조상 애초에 저장되지 않아 복원 불가 */
-function loadEstimateEntry(entry) {
-  if (!entry) return;
-  // 2026-09-08(전수조사 중 발견 - 8/29에 다른 두 경로(loadCustId,
-  // loadEstDbId)는 이미 고쳐져 있었는데, 이 경로(가견적→최종 전환시
-  // 고객명이 비어있어 예전 가견적 항목에서 정보를 가져오는 특수
-  // 케이스)만 estimate_status 복원 자체가 빠져있었음.
-  if (entry.status && typeof setStatus === 'function') setStatus(entry.status, true);
-  var nameEl = document.getElementById('c-name');
-  if (nameEl && entry.clientName) nameEl.value = entry.clientName;
-  var phoneEl = document.getElementById('c-phone');
-  if (phoneEl && entry.phone) phoneEl.value = entry.phone;
-  var addrEl = document.getElementById('c-addr');
-  if (addrEl && entry.addr) addrEl.value = entry.addr;
-  var staffEl = document.getElementById('c-staff');
-  if (staffEl && entry.staffName) staffEl.value = entry.staffName;
-  var memoEl = document.getElementById('c-memo');
-  if (memoEl && entry.memo) memoEl.value = entry.memo;
-  var measureEl = document.getElementById('c-measure');
-  if (measureEl && entry.date) measureEl.value = entry.date;
-  var installEl = document.getElementById('c-install');
-  if (installEl && entry.installDate) installEl.value = entry.installDate;
-  window._estimateConfirmedAt = entry.confirmedAt || null;
-  if (typeof renderConfirmBadge === 'function') renderConfirmBadge();
-}
-
 var currentCustType = 'new';
 function setCustType(type) {
   currentCustType = type;
