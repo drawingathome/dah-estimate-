@@ -72,6 +72,8 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['alim_tab_ux_check.js', []]);
   // 2026-09-14: 정보탭/소통탭 "지금 할 일" 개수 일치 검증 (서로 다른 로직 쓰던 버그)
   scripts.push(['alim_todo_consistency_check.js', []]);
+  // 2026-09-14: 진행 단계 표시가 "N/전체" 숫자 형식으로 정확히 나오는지 검증
+  scripts.push(['stage_progress_number_check.js', []]);
   // 2026-08-29(선혜님 제안 - "1번도 2번도 아니고 자동 감시 테스트를
   // 만들자"): 대시보드/견적서 앱은 서로 다른 도메인이라 코드 공유가
   // 안 되고, 같은 목적의 로직이 양쪽에 따로 구현되면서 한쪽만 고치면

@@ -621,7 +621,10 @@ function renderDetailStageSection(c, body, isMaster) {
 
   var stageTop = div('display:flex;justify-content:space-between;align-items:center;margin-bottom:10px', [
     div('display:flex;align-items:center;gap:var(--sp-2)', [
-      el('span', {style:'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--dark);color:#fff;font-size:12px;font-weight:700;flex-shrink:0', text:stageNum}),
+      // 2026-09-14(선혜님 지시 - "진행 단계를 숫자로 바꾸기"): 아래 진행바가
+      // 점(선)만 있고 숫자가 없어서 "지금 전체 몇 단계 중 몇 번째인지"를
+      // 한눈에 못 봤음 - 배지에 "8/9"처럼 전체 대비 현재 위치를 명시.
+      el('span', {style:'display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:20px;padding:0 6px;border-radius:10px;background:var(--dark);color:#fff;font-size:11px;font-weight:700;flex-shrink:0', text: stageNum + '/' + STAGES.length}),
       el('span', {style:'font-size:12px;font-weight:700;color:var(--dark);letter-spacing:-0.3px', text:c.stage + ' 단계'})
     ]),
     div('display:flex;align-items:center;gap:2px', [
