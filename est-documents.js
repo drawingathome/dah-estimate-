@@ -659,12 +659,15 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
     out += '</tbody></table></div>';
     out += '<div class="print-hide" style="font-size:11px;color:#B0A99F;margin-top:2px">← 표를 옆으로 밀면 나머지 항목(고객/원단정보)이 보입니다</div>';
   } else if (isMaterial) {
-    // 2026-09-14(선혜님이 방금 레일 발주서 캡처로 확인해주심 - "된거니????"):
-    // 원단 표엔 항목별 "거래처" 칸을 추가했는데, 레일도 거래처가 비어있을
-    // 수 있는 건 똑같은데(목성/솜피 등 커튼마다 다른 레일업체를 쓸 수
-    // 있음) 이 표엔 그 칸을 안 넣어서, 안내 문구("빨간 글씨를 눌러서
-    // 입력")는 뜨는데 정작 누를 빨간 글씨가 없는 상태였음 - 원단과
-    // 동일하게 항목별 "거래처" 칸 추가.
+    // 2026-09-14(선혜님 지적 - "발주처를 직접 안쓰고 선택하게 해야지"):
+    // 원단은 거래처가 매번 다양해서 자유 텍스트로 남겼지만, 레일/자재는
+    // 이미 거래처 관리에 "자재" 카테고리로 등록해두는 시스템이 있음
+    // (목성/솜피 등) - 블라인드와 똑같이 실제 등록된 거래처 중에서
+    // 드롭다운으로 바로 고르게 함. 목록에 없는 곳이면 "+ 직접 입력"으로
+    // 예외 처리.
+    var materialVendorOptions = (Array.isArray(window._dahVendorListRaw) ? window._dahVendorListRaw : [])
+      .filter(function(v){ return v && Array.isArray(v.categories) && v.categories.indexOf('material') >= 0; })
+      .map(function(v){ return v.name; });
     out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
         +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
         +'<th style="text-align:left;padding:8px 6px">위치</th>'
@@ -674,11 +677,19 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         +'<th style="text-align:left;padding:8px 6px">고객명</th>'
         +'</tr></thead><tbody>';
     groupItems.forEach(function(it, idx){
-      var vendorCellEditable = !!(it.sourceRow && it.vendorField && !it.vendorIsSelect);
+      var vendorCellHtml;
+      if (it.sourceRow && it.vendorField && !it.vendorIsSelect) {
+        var mOpts = '<option value="">선택</option>' + materialVendorOptions.map(function(name){
+          return '<option value="'+escHtml(name)+'"'+(name===it.vendor?' selected':'')+'>'+escHtml(name)+'</option>';
+        }).join('') + '<option value="__custom__">+ 직접 입력</option>';
+        vendorCellHtml = '<select class="pv-item-vendor-select" data-item-idx="'+idx+'" style="font-size:12px;padding:2px;border:1px solid '+(it.vendor?'#EEE6DC':'#E4483A')+';border-radius:4px;color:'+(it.vendor?'#282828':'#C0392B')+'">'+mOpts+'</select>';
+      } else {
+        vendorCellHtml = escHtml(it.vendor||'—');
+      }
       out += '<tr style="border-bottom:1px solid #EEE6DC">'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.space)+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.product)+'</td>'
-          +'<td'+(vendorCellEditable?' class="pv-item-vendor-field" contenteditable="true" data-item-idx="'+idx+'"':'')+' style="padding:8px 6px;'+(it.vendor?'':'color:#C0392B')+'">'+escHtml(it.vendor||'미지정')+'</td>'
+          +'<td style="padding:8px 6px">'+vendorCellHtml+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
           +'</tr>';
@@ -1338,9 +1349,21 @@ function wireVendorNameEdit(container, groups) {
     sel.addEventListener('change', function(){
       var input = item.sourceRow.querySelector(item.vendorField);
       if (!input) return;
-      input.value = sel.value;
-      sel.style.borderColor = sel.value ? '#EEE6DC' : '#E4483A';
-      sel.style.color = sel.value ? '#282828' : '#C0392B';
+      var val = sel.value;
+      if (val === '__custom__') {
+        // 2026-09-14(선혜님 지적 - "발주처를 직접 안쓰고 선택하게 해야지"
+        // 로 material도 드롭다운화 - 다만 등록 안 된 새 거래처를 써야
+        // 하는 예외 상황도 있어서 "+ 직접 입력"으로 탈출구를 남김).
+        val = prompt('거래처 이름을 입력해주세요:', '') || '';
+        if (!val) { sel.value = item.vendor || ''; return; }
+        var customOpt = document.createElement('option');
+        customOpt.value = val; customOpt.textContent = val; customOpt.selected = true;
+        sel.insertBefore(customOpt, sel.lastElementChild);
+      }
+      input.value = val;
+      item.vendor = val;
+      sel.style.borderColor = val ? '#EEE6DC' : '#E4483A';
+      sel.style.color = val ? '#282828' : '#C0392B';
       var toast = document.createElement('div');
       toast.className = 'print-hide';
       toast.textContent = '✅ "' + escHtml(item.space||'') + '" 항목의 거래처를 반영했어요. 견적서를 저장해야 최종 저장돼요.';
