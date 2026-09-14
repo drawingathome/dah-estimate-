@@ -98,6 +98,55 @@ function closeAdd() {
   if (_saveBtn) { _saveBtn.disabled = false; _saveBtn.style.opacity = ''; }
 }
 
+// 2026-09-11(선혜님 지시): 네이버예약 API가 없어서 완전자동은 불가능함이
+// 확인됨(스마트플레이스/토스포스/업종별CRM 전부 확인, 인테리어업종용은 없음).
+// 대신 예약 상세화면을 통째로 복사→붙여넣기하면 이름/전화번호/일시를 자동
+// 추출해서 채워주는 것으로 수동입력 속도만 개선. 완전 자동화 아니므로
+// 결과는 항상 사람이 눈으로 확인 후 저장 버튼을 눌러야 함(자동저장 아님).
+function parseNaverReservationPaste() {
+  var raw = (document.getElementById('add-naver-paste') || {}).value || '';
+  if (!raw.trim()) { showToast('붙여넣은 내용이 없어요'); return; }
+
+  var filled = [];
+
+  // 전화번호: 010-XXXX-XXXX 형식, 다른 텍스트에 섞여있어도 안정적으로 찾음
+  var phoneMatch = raw.match(/01[0-9]-?\s*\d{3,4}-?\s*\d{4}/);
+  if (phoneMatch) {
+    var digits = phoneMatch[0].replace(/[^0-9]/g, '');
+    var formatted = digits.length === 11 ? digits.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3') : digits.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+    document.getElementById('add-phone').value = formatted;
+    filled.push('전화번호');
+  }
+
+  // 이름: "예약자" 라벨 다음 줄의 한글 이름 (2~5자, 다음 줄의 "전화번호" 라벨 전까지)
+  var nameMatch = raw.match(/예약자\s*[\r\n:]+\s*([가-힣]{2,5})/);
+  if (nameMatch) {
+    document.getElementById('add-name').value = nameMatch[1];
+    filled.push('이름');
+  }
+
+  // 이용일시: "2026. 9. 17.(목) 오전 11:00" 형태
+  var dtMatch = raw.match(/(\d{4})\s*[.\-]\s*(\d{1,2})\s*[.\-]\s*(\d{1,2})\.?\s*\([가-힣]\)\s*(오전|오후)?\s*(\d{1,2}):(\d{2})/);
+  if (dtMatch) {
+    var y = dtMatch[1], m = ('0' + dtMatch[2]).slice(-2), d = ('0' + dtMatch[3]).slice(-2);
+    document.getElementById('add-date').value = y + '-' + m + '-' + d;
+    filled.push('날짜');
+    var ampm = dtMatch[4] || '';
+    var hh = dtMatch[5], mm = dtMatch[6];
+    var memoEl = document.getElementById('add-memo');
+    if (memoEl) {
+      var timeNote = '네이버예약 방문시간: ' + ampm + ' ' + hh + ':' + mm;
+      memoEl.value = memoEl.value ? (memoEl.value + '\n' + timeNote) : timeNote;
+    }
+  }
+
+  if (filled.length === 0) {
+    showToast('자동으로 못 찾았어요, 직접 입력해주세요');
+  } else {
+    showToast(filled.join('·') + ' 자동으로 채웠어요, 확인 후 저장해주세요');
+  }
+}
+
 function saveCustomer() {
   // 2026-08-29: 위 참고 - 저장 진행 중 중복클릭 방지. 모달이 닫히면(성공/
   // 실패 무관, closeAdd에서) 재활성화됨. 혹시 어떤 이유로 콜백을 못 타서

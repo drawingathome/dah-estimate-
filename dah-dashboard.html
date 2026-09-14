@@ -53,7 +53,7 @@
 <script src="/dash-customer-order.js?v=202609113200"></script>
 <script src="/dash-customer-as.js?v=202609113300"></script>
 <script src="/dash-customer-detail.js?v=202609113200"></script>
-<script src="/dash-customer-add.js?v=202609113100"></script>
+<script src="/dash-customer-add.js?v=202609121000"></script>
 <script src="/dash-auth.js?v=202608251500"></script>
 <script src="/dash-settings.js?v=202609113200"></script>
 <script src="/dash-export.js?v=202609091000"></script>
@@ -768,6 +768,16 @@
       <div style="background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:#6B6B6B;line-height:1.6">
         네이버 예약 정보만 입력하세요<br>
         나머지 정보는 상담 후 고객 상세에서 추가할 수 있어요
+      </div>
+
+      <!-- 2026-09-11(선혜님 지시 — 네이버예약 자동연동이 안 돼서 수동입력 속도라도
+           개선): 네이버 예약 상세화면(예약자/전화번호/이용일시 등)을 통째로
+           복사해서 붙여넣으면 이름/전화번호/일시를 자동으로 채워줌. 완전자동은
+           아니지만 하나씩 타이핑하는 것보다 훨씬 빠름. -->
+      <div style="background:var(--ivory1);border-radius:12px;padding:12px 14px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--terra);margin-bottom:6px">📋 네이버 예약 화면 붙여넣기</div>
+        <textarea id="add-naver-paste" placeholder="네이버 예약 상세화면 내용을 통째로 복사해서 여기 붙여넣으면 이름/전화번호/일시가 자동으로 채워져요" style="width:100%;min-height:52px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:inherit;box-sizing:border-box;resize:vertical;margin-bottom:6px"></textarea>
+        <button type="button" onclick="parseNaverReservationPaste()" style="width:100%;padding:8px;background:var(--dark);color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer">자동 채우기</button>
       </div>
 
       <!-- 필수 정보 (3개만) -->
