@@ -56,7 +56,7 @@ async function run() {
     var noSpace = fillAlimTemplate(ALIM_META.t04_followup.template, { clientName:'테스트4' });
     return {
       withSpaceOk: withSpace.indexOf('거실 상담 이후') !== -1,
-      noSpaceOk: noSpace.indexOf('  ') === -1 && noSpace.indexOf('님, 상담') !== -1
+      noSpaceOk: noSpace.indexOf('  ') === -1 && noSpace.indexOf('상담 이후') !== -1
     };
   });
   ok('7. #{공간} 있을 때 자연스럽게 삽입', r.withSpaceOk === true);
