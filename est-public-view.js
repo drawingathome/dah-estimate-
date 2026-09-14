@@ -41,7 +41,11 @@ function renderPublicViewFromRow(row) {
   // 2026-09-14: 이 견적이 확정견적인지 가견적인지에 따라 문서 상단
   // 라벨("가견적서"/"최종 견적서")이 buildCustomerHTML() 안에서
   // currentTab 값으로 갈리므로 동일하게 맞춰줌.
-  window.currentTab = (row.contract_status === 'confirmed' || row.estimate_status === '확정') ? 'final' : 'ga';
+  // 2026-09-14(선혜님 지적 - "변수 확인해"로 재검토하다 발견): 실제 저장되는
+  // 값은 contract_status='contracted'/'pending', estimate_status='final'/'ga'
+  // (전부 영어)인데, 여기 처음엔 'confirmed'/'확정'으로 잘못 짐작해서 넣었음 -
+  // 이 조건이 항상 false라 확정견적서도 계속 "가견적서"로만 뜨고 있었음.
+  window.currentTab = (row.estimate_status === 'final') ? 'final' : 'ga';
   var statusFinalEl = document.getElementById('status-final');
   if (statusFinalEl) statusFinalEl.classList[window.currentTab === 'final' ? 'add' : 'remove']('on');
 
