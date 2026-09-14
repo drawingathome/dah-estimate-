@@ -74,6 +74,9 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['alim_todo_consistency_check.js', []]);
   // 2026-09-14: 진행 단계 표시가 "N/전체" 숫자 형식으로 정확히 나오는지 검증
   scripts.push(['stage_progress_number_check.js', []]);
+  // 2026-09-14: 6번 결제안내 버튼 URL("https://#{결제링크}")이 저장된
+  // 링크값과 합쳐질 때 "https://https://" 이중 접두어가 안 생기는지 검증
+  scripts.push(['payment_link_button_check.js', []]);
   // 2026-08-29(선혜님 제안 - "1번도 2번도 아니고 자동 감시 테스트를
   // 만들자"): 대시보드/견적서 앱은 서로 다른 도메인이라 코드 공유가
   // 안 되고, 같은 목적의 로직이 양쪽에 따로 구현되면서 한쪽만 고치면

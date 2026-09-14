@@ -199,7 +199,10 @@ function fillAlimTemplate(tpl, c) {
     '금액': fmt(ctx.amount),
     '공간': c.space ? (c.space + ' ') : '',
     '환불안내': ctx.refundNote,
-    '결제링크': c.paymentLink || '(결제링크 미등록 — 고객상세에서 먼저 입력해주세요)',
+    // 2026-09-14: 문구/버튼 둘 다 "https://#{결제링크}"로 통일했으므로,
+    // 실제 저장된 값(보통 https://로 시작하는 완전한 링크)에서 그 접두어를
+    // 떼고 채워야 "https://https://..."로 겹치지 않음.
+    '결제링크': c.paymentLink ? c.paymentLink.replace(/^https?:\/\//, '') : '(결제링크 미등록 — 고객상세에서 먼저 입력해주세요)',
     '견적번호': c.estimateId || ''
   };
   var filled = (tpl || '').replace(/#\{([^}]+)\}/g, function(_, key) {
