@@ -68,6 +68,8 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['estimate_link_autofetch_check.js', []]);
   // 2026-09-14: 견적서 링크가 오래된(오늘 아닌) 견적을 가리킬 때 경고배너 검증
   scripts.push(['estimate_stale_warning_check.js', []]);
+  // 2026-09-14: 소통(알림톡) 탭 UX 개선 검증 - 발송라벨/기본접힘/중복제거
+  scripts.push(['alim_tab_ux_check.js', []]);
   // 2026-08-29(선혜님 제안 - "1번도 2번도 아니고 자동 감시 테스트를
   // 만들자"): 대시보드/견적서 앱은 서로 다른 도메인이라 코드 공유가
   // 안 되고, 같은 목적의 로직이 양쪽에 따로 구현되면서 한쪽만 고치면

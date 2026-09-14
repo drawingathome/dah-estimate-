@@ -119,15 +119,26 @@ function renderAlimSection(c, alimBody) {
   catListWrap.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin:8px 0 4px', text:'단계별 전체 보기'}));
   categories.forEach(function(cat) {
     var stageName = cat[0], keys = cat[1] || [];
-    var isCurrentStage = (stageName === c.stage);
     var sentCount = keys.filter(function(k){ return sentMap[k]; }).length;
+    // 2026-09-14(선혜님 지적 - "너무 허접해, 전문업체면 이렇게 안 할 것"):
+    // 3가지 문제 수정 — ① "0/3" 옆에 뭘 세는 건지 설명 없었음 → "발송" 명시
+    // ② 현재 단계는 항상 자동으로 펼쳐져 있어서 안 쓰는 정보까지 늘 화면을
+    // 차지했음 → 전부 기본 접힘으로 통일 ③ 위 "지금 보낼 알림톡"에 이미 뜬
+    // 항목이 아래 펼쳤을 때 또 나와서 중복으로 보였음 → 이미 표시된 건
+    // 아래에서 제외.
     var header = div('display:flex;align-items:center;justify-content:space-between;padding:8px 0;cursor:pointer', [
-      span('font-size:12px;font-weight:700;color:var(--dark)', stageName + ' (' + sentCount + '/' + keys.length + ')'),
-      span('font-size:11px;color:var(--sub)', isCurrentStage ? '▾' : '▸')
+      span('font-size:12px;font-weight:700;color:var(--dark)', stageName + ' (발송 ' + sentCount + '/' + keys.length + ')'),
+      span('font-size:11px;color:var(--sub)', '▸')
     ]);
     header.onclick = function(){ toggleHomeAccordion(header); };
-    var body = div('display:' + (isCurrentStage ? 'block' : 'none'), []);
-    keys.forEach(function(k){ var r = makeRow(k); if (r) body.appendChild(r); });
+    var body = div('display:none', []);
+    var keysToShow = keys.filter(function(k) { return todoKeys.indexOf(k) === -1; });
+    if (keysToShow.length > 0) {
+      keysToShow.forEach(function(k){ var r = makeRow(k); if (r) body.appendChild(r); });
+    }
+    if (keys.length > 0 && keysToShow.length === 0) {
+      body.appendChild(el('div', {style:'font-size:11px;color:var(--sub);padding:6px 0', text:'전부 위 "지금 보낼 알림톡"에 표시돼 있어요'}));
+    }
     catListWrap.appendChild(header);
     catListWrap.appendChild(body);
   });
