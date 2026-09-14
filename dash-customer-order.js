@@ -130,7 +130,7 @@ function renderOrderSection(c, orderBody) {
       var label = span('font-size:12px;color:var(--dark)', item.label);
       var checkbox = el('input', { type: 'checkbox' });
       checkbox.checked = isDone;
-      checkbox.style.cssText = 'width:20px;height:20px;cursor:default';
+      checkbox.style.cssText = 'width:20px;height:20px;cursor:pointer';
       // 업체명·발주일·도착예정일 간단 입력 (2026-07-21 신규) — 체크하면 나타남, 이미 값 있으면 미리 채워짐
       var detailWrap = div('flex-direction:column;gap:6px;margin-top:6px', []);
       detailWrap.style.display = isDone ? 'flex' : 'none';
@@ -183,17 +183,34 @@ function renderOrderSection(c, orderBody) {
 
       checkbox.addEventListener('click', function(e) {
         // 2026-09-11(선혜님 - "전문업체 기준으로 업무효율성 평가해봐" 요청에
-        // 2순위로 나온 개선사항: "완료 표시를 하나로 통일"): 지금까지
-        // 이 체크박스를 손으로 직접 체크/해제할 수 있어서, 실제로 발주서를
-        // 만들어 보내지 않고도 체크만 하거나, 반대로 발주서는 보냈는데
-        // 체크를 깜박하는 등 표시와 실제 상태가 어긋날 수 있었음. 이제
-        // 완료 표시는 오직 실제 발주서(printForVendor)/시공의뢰서
-        // (printRequest)를 "인쇄/PDF저장"했을 때만 자동으로 남도록
-        // 통일 - 이 체크박스는 그 결과를 보여주는 용도로만 남기고,
-        // 직접 클릭해서 바꾸는 건 막음. 업체명/발주일/도착예정일 메모
-        // 칸은 완료 여부와 무관하게 여전히 직접 적어둘 수 있음(그대로 유지).
+        // 2순위로 나온 개선사항: "완료 표시를 하나로 통일"): 발주서를 실제로
+        // 만들지 않고 체크만 하는 걸 막으려고 직접 클릭을 완전히 막아뒀었음.
+        // 2026-09-14(선혜님 지적 - "발주서 부분이 허접해서 이 시스템으로
+        // 다 만들지 못해 발주를 따로 해도 발주필요로 뜬다"로 재조정):
+        // 발주서 문서 기능이 아직 모든 케이스를 못 만들어서, 이 앱 밖에서
+        // (전화/카톡 등으로) 직접 발주하는 경우엔 완료 표시할 방법이
+        // 아예 없어져 있었음 - 완전히 막는 대신, "정말 발주했는지 + 어디로
+        // 했는지"를 직접 입력받아서 수동으로도 완료 처리할 수 있게 다시 열되,
+        // 예전처럼 아무 근거 없이 그냥 체크만 되는 건 막음(거래처 입력 필수).
         e.preventDefault();
-        showToast('이 표시는 자동으로 남아요 — "상세보기 →"에서 "✓ 발주완료 표시"를 누르거나 인쇄/PDF저장하면 자동으로 완료 처리돼요.');
+        // 참고: <input type="checkbox">는 클릭 시 핸들러가 실행되기 "전에"
+        // 이미 .checked가 뒤집혀 있는 상태로 들어옴(브라우저 기본 동작) -
+        // 그래서 지금 checkbox.checked 값 자체가 "이번 클릭으로 만들려는
+        // 새 상태"임. true면 "켜려는 중"(미완료→완료), false면
+        // "끄려는 중"(완료→미완료)으로 판단해야 함.
+        if (checkbox.checked) {
+          var vendorName = prompt(item.label + ' — 실제로 발주하신 거래처명을 입력해주세요(이 앱의 발주서를 안 쓰고 직접 처리하신 경우):', vendorInput.value || '');
+          if (vendorName === null) { checkbox.checked = false; return; } // 취소
+          if (!vendorName.trim()) { checkbox.checked = false; showToast('거래처명을 입력해야 완료 처리돼요'); return; }
+          vendorInput.value = vendorName.trim();
+          detailWrap.style.display = 'flex';
+          saveOrderState();
+          showToast(item.label + ' 완료 처리했어요 (거래처: ' + vendorName.trim() + ')');
+        } else {
+          if (!confirm(item.label + ' 완료 표시를 취소할까요?')) { checkbox.checked = true; return; }
+          saveOrderState();
+          showToast(item.label + ' 완료 표시를 취소했어요');
+        }
       });
       vendorInput.addEventListener('change', saveOrderState);
       orderDateInput.addEventListener('change', saveOrderState);
