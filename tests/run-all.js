@@ -113,6 +113,8 @@ if (/dah-estimate/.test(target)) {
   // 테스트로 다음 재발을 잡도록 영구 등록.
   scripts.push(['curtain-select-value-integrity-check.js', []]);
   scripts.push(['field-parity-check.js', []]);
+  // 2026-09-14: 고객용 견적서 공개보기(로그인 없이 ?view=id로 보는 화면) 검증
+  scripts.push(['est_public_view_check.js', []]);
 }
 
 let anyFail = false;
