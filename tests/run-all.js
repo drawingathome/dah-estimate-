@@ -80,6 +80,11 @@ if (/dah-dashboard/.test(target)) {
   // 방지를 위해 dah-dashboard 대상일 때 한 번만 돌림(target 인자 자체는
   // 안 쓰고 dash-*.js/est-*.js 전체를 직접 스캔함).
   scripts.push(['cross-app-twin-check.js', []]);
+  // 2026-09-14(선혜님 지시 - "쌍둥이함수 찾아", 정보탭↔소통탭 "지금 할
+  // 일" 불일치 버그로 발견): 대시보드 "안에서" 같은 판단을 두 곳에
+  // 따로 구현하는 문제는 cross-app-twin-check.js로는 못 잡음 - 별도
+  // 감시 테스트 신설.
+  scripts.push(['intra-app-twin-check.js', []]);
   // 2026-09-06(선혜님 지시 - "지금 하자", 전문업체 기준 개선점으로
   // "새로 만든 안전장치에 영구 테스트가 없다"는 걸 해결하기 위해 추가):
   // shared-staging-guard.js(스테이징 쓰기차단 안전장치)도 두 앱이 공유하는
