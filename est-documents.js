@@ -697,38 +697,27 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
     out += '</tbody></table></div>';
     out += '<div class="print-hide" style="font-size:11px;color:#B0A99F;margin-top:2px">← 표를 옆으로 밀면 나머지 항목(끈길이/하단바/코멘트/수량/고객명)이 보입니다</div>';
   } else {
-  // 2026-09-11(발주서 하나하나 점검하다 발견 - 원단 7칸짜리 표가 모바일
-  // 실사용 폭보다 넓어서 "수량"/"고객명" 칸이 안 보이던 문제; 블라인드는
-  // 같은 날 별도로 전용 표(isBlind)로 분리됨): 캔가공소 표와 동일하게
-  // 여백/글자크기 축소 + 좌우 스크롤 감싸는 칸.
-  out += '<div class="pv-order-table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch">';
-  out += '<table style="width:100%;border-collapse:collapse;font-size:11px">'
+  // 2026-09-12(선혜님 지적 - "원단명 / 몇 마 정도만 나오면 돼, 품명 사이즈
+  // 내용 등이 필요한게 아니야 공간도 필요없어"): 원단 발주서는 material
+  // (레일)이 이미 그랬던 것처럼 실제로 필요한 칸(원단명/수량/고객명)만
+  // 남기고, 공간·제품정보·사이즈·내용처럼 원단 발주에는 의미 없는 칸
+  // (전부 "—"만 찍히던 칸)은 제거. it.product가 이미 원단명(fabric 코드
+  // 또는 없으면 고객용 제품명)이고, it.qty에 마수+예상금액이 이미 포함돼
+  // 있어 그대로 씀.
+  out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
       +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
-      +'<th style="text-align:left;padding:6px 4px">위치</th>'
-      +'<th style="text-align:left;padding:6px 4px">품명</th>'
-      // 2026-09-10(선혜님 지적 - "컬러-> 제품정보 로 수정해주고"): 실제
-      // 값이 순수 색상명이 아니라 제품코드/세부사양(예: "AL25-8274L",
-      // "Amalfi RM-01번 화이트 + 뒷면: HK-3022FR 아이보리")이라 "컬러"
-      // 보다 "제품정보"가 정확한 표현.
-      +'<th style="text-align:left;padding:6px 4px">제품정보</th>'
-      +'<th style="text-align:center;padding:6px 4px">사이즈</th>'
-      +'<th style="text-align:left;padding:6px 4px">내용</th>'
-      +'<th style="text-align:right;padding:6px 4px">수량</th>'
-      +'<th style="text-align:left;padding:6px 4px">고객명</th>'
+      +'<th style="text-align:left;padding:8px 6px">원단명</th>'
+      +'<th style="text-align:right;padding:8px 6px">수량</th>'
+      +'<th style="text-align:left;padding:8px 6px">고객명</th>'
       +'</tr></thead><tbody>';
   groupItems.forEach(function(it){
     out += '<tr style="border-bottom:1px solid #EEE6DC">'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.space)+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.product)+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.color)+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.size)+(it.fabSize?('<br><span style="font-size:11px;color:#F06E2D;font-weight:700">제작 '+escHtml(it.fabSize)+'</span>'):'')+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.content)+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.product)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
         +'</tr>';
   });
-  out += '</tbody></table></div>';
-  out += '<div class="print-hide" style="font-size:11px;color:#B0A99F;margin-top:2px">← 표를 옆으로 밀면 나머지 항목(수량/고객명)이 보입니다</div>';
+  out += '</tbody></table>';
   }
 
   out += '<div class="pv-vendor-note-editable" contenteditable="true" style="margin-top:var(--sp-6);text-align:center;font-size:13px;color:#E4483A;font-weight:600;line-height:1.7;white-space:pre-wrap;outline:none;border:1px dashed #F0C9C4;border-radius:8px;padding:8px" data-placeholder="비고(클릭해서 직접 입력)">'+escHtml(extraNote||'')+'</div>';
@@ -789,6 +778,10 @@ function getVendorInfoIssues() {
 // 발주는 어느 원단업체에서 사입하든 실제로는 항상 캔가공소로 바로
 // 배송돼야 함(DAH 사무실이 아니라 제작하는 곳으로) - 원단 그룹은 그
 // 원단업체 자신의 기본주소가 아니라 캔가공소의 등록된 주소를 기본값으로 씀.
+// 2026-09-12(선혜님 지적 - "레일, 블라인드도 마찬가지로 도착지 캔가공소로
+// 수정하라고 했을껀데 누락된거야??"): 실제로 이 로직이 fabric에만 걸려
+// 있었고 material(레일)/blind는 각자 거래처 자신의 주소로 빠지고 있던
+// 진짜 누락이었음 — 세 카테고리 다 캔가공소 도착으로 통일.
 function applyVendorArrivalDefaults(groups) {
   window._vendorArrivalDates = window._vendorArrivalDates || {};
   window._vendorArrivalLocations = window._vendorArrivalLocations || {};
@@ -799,16 +792,17 @@ function applyVendorArrivalDefaults(groups) {
   }
   Object.keys(groups || {}).forEach(function(vendor){
     var groupItems = groups[vendor] || [];
-    var isFabricGroup = groupItems.length > 0 && groupItems[0].orderCategory === 'fabric';
+    var cat = groupItems.length > 0 ? groupItems[0].orderCategory : null;
+    var goesToProduction = cat === 'fabric' || cat === 'material' || cat === 'blind';
     var meta = findVendorMeta(vendor);
-    var productionMeta = isFabricGroup ? findVendorMeta(getAutoProductionVendorName()) : null;
+    var productionMeta = goesToProduction ? findVendorMeta(getAutoProductionVendorName()) : null;
     if (!window._vendorArrivalDates[vendor] && meta && meta.defaultArrivalDays) {
       var d = new Date();
       d.setDate(d.getDate() + parseInt(meta.defaultArrivalDays, 10));
       window._vendorArrivalDates[vendor] = d.toISOString().slice(0, 10);
     }
     if (!window._vendorArrivalLocations[vendor]) {
-      window._vendorArrivalLocations[vendor] = (isFabricGroup && productionMeta && productionMeta.defaultLocation)
+      window._vendorArrivalLocations[vendor] = (goesToProduction && productionMeta && productionMeta.defaultLocation)
         || (meta && meta.defaultLocation)
         || DEFAULT_LOCATION;
     }
