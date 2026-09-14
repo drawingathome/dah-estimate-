@@ -566,14 +566,15 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
       // "발주처" 칸에 pv-vendor-name-field 클래스를 붙여서, 이 칸을 고치면
       // 실제 견적서 행(원단/레일/블라인드 거래처 칸)까지 값이 반영되도록 함
       // (printForVendor의 wireVendorNameEdit 참고).
+      // 2026-09-14(선혜님이 발주서 캡처 보여주심 - "요청일/발주처" 칸이
+      // 통째로 두 번 겹쳐 나옴): 리베이스 도중 이 표를 여는 out += 문이
+      // 두 개로 잘못 쪼개져서, 앞쪽(클래스 붙은 버전)은 닫는 태그 없이
+      // 끊기고 뒤쪽(클래스 없는 버전)이 나머지를 이어받고 있었음 -
+      // 화면엔 표가 두 개로 보이는 것도 문제였지만, 더 심각한 건 실제로
+      // 보이는(살아남은) 표의 "발주처" 칸엔 pv-vendor-name-field 클래스가
+      // 없어서 발주처를 고쳐도 원본 견적서에 반영 안 되는 기능이 조용히
+      // 먹통이었다는 것 - 하나로 합치고 클래스도 살아남은 쪽에 되살림.
       + infoTableRow('요청일', today, true, '발주처', escHtml(vendor), true, false, 'pv-vendor-name-field')
-      // 2026-09-10(선혜님 지적 - "도착일 / 도착 장소가 없어" → "수정이
-  out += '<table style="width:100%;border-collapse:collapse;margin-top:var(--sp-6);padding-top:16px">'
-      // 2026-09-11(선혜님 지시 - "모든 발주서 요청일자나 도착일자 도착
-      // 장소는 기본적으로 수정할 수 있게 해줘"): 요청일만 유일하게 고정
-      // 값(editable=false)이었음 - 도착일/도착장소/발주처와 동일하게
-      // 수정 가능하도록 통일.
-      + infoTableRow('요청일', today, true, '발주처', escHtml(vendor), true, false)
       // 2026-09-10(선혜님 지적 - "도착일 / 도착 장소가 없어" → "수정이
       // 되게" → "거래처마다 달라야"): 발주정보 팝업에서 거래처별로
       // 입력받은 값을 여기 표시(입력 안 하면 "협의" 표시), 클릭해서도
@@ -704,15 +705,28 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   // (전부 "—"만 찍히던 칸)은 제거. it.product가 이미 원단명(fabric 코드
   // 또는 없으면 고객용 제품명)이고, it.qty에 마수+예상금액이 이미 포함돼
   // 있어 그대로 씀.
+  // 2026-09-14(선혜님 지적 - "원단이 업체마다 다 다를 수 있어 이렇게
+  // 만들면 안될꺼 같은데?"): "미지정(원단)" 한 그룹 안에 서로 다른
+  // 원단(예: 이븐/시소코/에센셜/클라우디오)이 섞여 있는데, 지금까지는
+  // 표 위쪽 "발주처" 칸 하나만 고칠 수 있어서 전부 같은 거래처로
+  // 몰아넣게 되는 구조였음(방금 확인 팝업으로 실수는 막았지만,애초에
+  // 각기 다른 원단마다 실제로 다른 업체에서 사입하는 게 정상인데 표에서
+  // 그걸 표현할 방법 자체가 없었음). 항목별로 거래처를 각자 지정할 수
+  // 있게 "거래처" 칸을 새로 추가 - 여기서 고치면 그 항목의 원본 커튼
+  // 행에만 반영되고(전체 일괄 확인창 없이), 원단명이 같은 항목은 값이
+  // 자동으로 같이 채워지지 않고 각자 따로 입력해야 함(의도적).
   out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
       +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
       +'<th style="text-align:left;padding:8px 6px">원단명</th>'
+      +'<th style="text-align:left;padding:8px 6px">거래처</th>'
       +'<th style="text-align:right;padding:8px 6px">수량</th>'
       +'<th style="text-align:left;padding:8px 6px">고객명</th>'
       +'</tr></thead><tbody>';
-  groupItems.forEach(function(it){
+  groupItems.forEach(function(it, idx){
+    var vendorCellEditable = !!(it.sourceRow && it.vendorField && !it.vendorIsSelect);
     out += '<tr style="border-bottom:1px solid #EEE6DC">'
         +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.product)+'</td>'
+        +'<td'+(vendorCellEditable?' class="pv-item-vendor-field" contenteditable="true" data-item-idx="'+idx+'"':'')+' style="padding:8px 6px;'+(it.vendor?'':'color:#C0392B')+'">'+escHtml(it.vendor||'미지정')+'</td>'
         +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
         +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
         +'</tr>';
@@ -1265,6 +1279,36 @@ function printForVendor(categoryFilter) {
 // 원본 행(sourceRow)까지 담고 있는 객체)를 받아서, "발주처" 칸을 실제로
 // 고치면 그 그룹에 속한 모든 항목의 원본 행까지 값을 밀어넣어줌.
 function wireVendorNameEdit(container, groups) {
+  // 2026-09-14(선혜님 지적 - "원단이 업체마다 다 다를 수 있어"): 원단표에
+  // 새로 추가한 항목별 "거래처" 칸(.pv-item-vendor-field) - 그룹 전체가
+  // 아니라 그 항목의 원본 커튼 행 하나에만 반영. 확인창 없이 바로 반영
+  // (원래부터 "이 항목 하나"만 대상이라 그룹 일괄수정과 달리 다른 항목을
+  // 건드릴 위험이 없음).
+  container.querySelectorAll('.pv-item-vendor-field').forEach(function(cell){
+    var block = cell.closest('[data-vendor]');
+    if (!block) return;
+    var vendorKey = block.getAttribute('data-vendor');
+    var groupItems = groups[vendorKey];
+    var idx = parseInt(cell.getAttribute('data-item-idx'), 10);
+    var item = groupItems && groupItems[idx];
+    if (!item || !item.sourceRow || !item.vendorField) return;
+    cell.addEventListener('blur', function(){
+      var newVal = cell.textContent.trim();
+      if (newVal === '미지정') newVal = '';
+      var input = item.sourceRow.querySelector(item.vendorField);
+      if (!input) return;
+      input.value = newVal;
+      cell.style.color = newVal ? '' : '#C0392B';
+      if (!newVal) cell.textContent = '미지정';
+      var toast = document.createElement('div');
+      toast.className = 'print-hide';
+      toast.textContent = '✅ "' + escHtml(item.space||'') + '" 항목의 거래처를 반영했어요. 견적서를 저장해야 최종 저장돼요.';
+      toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#282828;color:#fff;padding:10px 16px;border-radius:20px;font-size:12px;z-index:10001';
+      document.body.appendChild(toast);
+      setTimeout(function(){ toast.remove(); }, 3500);
+    });
+  });
+
   var fields = container.querySelectorAll('.pv-vendor-name-field');
   fields.forEach(function(field){
     var block = field.closest('[data-vendor]');
