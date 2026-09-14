@@ -181,7 +181,8 @@ function fillAlimTemplate(tpl, c) {
     '금액': fmt(ctx.amount),
     '공간': c.space ? (c.space + ' ') : '',
     '환불안내': ctx.refundNote,
-    '결제링크': c.paymentLink || '(결제링크 미등록 — 고객상세에서 먼저 입력해주세요)'
+    '결제링크': c.paymentLink || '(결제링크 미등록 — 고객상세에서 먼저 입력해주세요)',
+    '견적번호': c.estimateId || ''
   };
   var filled = (tpl || '').replace(/#\{([^}]+)\}/g, function(_, key) {
     return (key in map) ? map[key] : ('#{' + key + '}');
@@ -191,13 +192,28 @@ function fillAlimTemplate(tpl, c) {
   return filled.split('\n').map(function(line) { return line.replace(/ {2,}/g, ' '); }).join('\n');
 }
 
+// 2026-09-14(선혜님 지시 - "4,7번은 견적서 링크가 필요한데 설계했어?"):
+// 4번(가견적)/7번(확정견적)은 고객마다 "지금 어느 견적을 봐야 하는지"가
+// 고정값이 아니라 그 순간 최신 견적을 DB에서 찾아야 함(같은 고객이
+// 재구매로 여러 번 견적을 만들 수 있어서, "최근 것"이 매번 바뀜) - 이력
+// 탭에서 쓰던 것과 동일한 조회 패턴(client_id로 최신 1건) 재사용.
+var ESTIMATE_LINK_KEYS = ['t03_estimate', 't07_final_estimate'];
 function sendAlimtalk(key) {
   var arr = loadCustomers();
   var c = findCurrentDetailCustomer(arr);
   if (!c) return;
   var meta = ALIM_META[key]; if (!meta) return;
-  var initialMsg = fillAlimTemplate(meta.template, c);
-  _openAlimtalkPreview(meta, key, c, initialMsg);
+  if (ESTIMATE_LINK_KEYS.indexOf(key) === -1 || !c.id) {
+    var initialMsg = fillAlimTemplate(meta.template, c);
+    _openAlimtalkPreview(meta, key, c, initialMsg);
+    return;
+  }
+  sbXHR('GET', 'estimates?client_id=eq.' + encodeURIComponent(c.id) + '&order=created_at.desc&limit=1&select=id', null, function(err, rows) {
+    var withEstId = Object.assign({}, c, { estimateId: (!err && rows && rows[0]) ? rows[0].id : '' });
+    if (!withEstId.estimateId) showToast('아직 저장된 견적서가 없어요 — 링크 없이 발송돼요');
+    var initialMsg = fillAlimTemplate(meta.template, withEstId);
+    _openAlimtalkPreview(meta, key, withEstId, initialMsg);
+  });
 }
 
 // 알림톡 발송 전 미리보기+수정 모달 — "제목만 보고 바로 발송확인" 대신 실제 내용을 보여주고 고칠 수 있게 함
