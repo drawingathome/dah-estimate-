@@ -208,9 +208,25 @@ function sendAlimtalk(key) {
     _openAlimtalkPreview(meta, key, c, initialMsg);
     return;
   }
-  sbXHR('GET', 'estimates?client_id=eq.' + encodeURIComponent(c.id) + '&order=created_at.desc&limit=1&select=id', null, function(err, rows) {
-    var withEstId = Object.assign({}, c, { estimateId: (!err && rows && rows[0]) ? rows[0].id : '' });
-    if (!withEstId.estimateId) showToast('아직 저장된 견적서가 없어요 — 링크 없이 발송돼요');
+  sbXHR('GET', 'estimates?client_id=eq.' + encodeURIComponent(c.id) + '&order=created_at.desc&limit=1&select=id,updated_at', null, function(err, rows) {
+    var found = (!err && rows && rows[0]) ? rows[0] : null;
+    var withEstId = Object.assign({}, c, { estimateId: found ? found.id : '' });
+    if (!found) {
+      showToast('아직 저장된 견적서가 없어요 — 링크 없이 발송돼요');
+    } else {
+      // 2026-09-14(선혜님 지적 - "실장님이 견적서 저장 전에 버튼부터 누르면?"):
+      // 재구매 고객은 예전 견적이 이미 있어서, 오늘 상담한 새 견적을 아직
+      // 저장 안 한 채로 이 버튼을 누르면 "예전 견적"이 조용히 링크로
+      // 나갈 위험이 있었음(신규 고객은 아예 없다고 뜨니 안전, 재구매만 위험).
+      // 강제로 막지는 않되(때로는 예전 견적을 다시 보내는 게 맞을 수도
+      // 있어서), 오늘 저장된 게 아니면 미리보기에 눈에 띄게 경고를 남겨
+      // 발송 직전에 사람이 판단할 수 있게 함.
+      var updatedDateStr = (found.updated_at || '').slice(0, 10);
+      var todayStr2 = new Date().toISOString().slice(0, 10);
+      if (updatedDateStr && updatedDateStr !== todayStr2) {
+        withEstId._estimateStaleWarning = '⚠️ 이 링크가 가리키는 견적서는 ' + updatedDateStr + '에 저장된 거예요. 오늘 새로 만든 견적이 아직 저장 안 됐다면, 먼저 저장부터 해주세요.';
+      }
+    }
     var initialMsg = fillAlimTemplate(meta.template, withEstId);
     _openAlimtalkPreview(meta, key, withEstId, initialMsg);
   });
@@ -229,6 +245,7 @@ function _openAlimtalkPreview(meta, key, c, initialMsg) {
     '<div style="font-size:12px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:var(--sp-1)">' + escHtml(meta.tag) + ' · ' + escHtml(meta.desc) + '</div>' +
     '<div style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:var(--sp-3)">' + escHtml(meta.label) + '</div>' +
     (meta.button ? '<div style="font-size:11px;color:var(--sub);background:var(--ivory1);padding:6px 10px;border-radius:8px;margin-bottom:var(--sp-2)">🔘 딜러사 등록 시 버튼: ' + escHtml(meta.button) + '</div>' : '') +
+    (c._estimateStaleWarning ? '<div style="font-size:11px;color:#C0392B;background:#FBEAE7;padding:8px 10px;border-radius:8px;margin-bottom:var(--sp-2);font-weight:700">' + escHtml(c._estimateStaleWarning) + '</div>' : '') +
     '<textarea id="alimtalk-msg-textarea" style="width:100%;min-height:140px;padding:10px;border:1.5px solid var(--border);border-radius:10px;font-size:12px;font-family:inherit;box-sizing:border-box;resize:vertical;outline:none"></textarea>' +
     '<div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-3)">' +
       '<button id="alimtalk-cancel-btn" style="flex:1;padding:11px;background:#fff;border:1px solid var(--border);border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;color:var(--dark)">취소</button>' +

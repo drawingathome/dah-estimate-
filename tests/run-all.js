@@ -68,6 +68,8 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['shape_process_default_check.js', []]);
   // 2026-09-14: 4번/7번 가견적·확정견적서 발송 시 최신 견적ID 자동조회 검증
   scripts.push(['estimate_link_autofetch_check.js', []]);
+  // 2026-09-14: 견적서 링크가 오래된(오늘 아닌) 견적을 가리킬 때 경고배너 검증
+  scripts.push(['estimate_stale_warning_check.js', []]);
   // 2026-09-12: 캔가공소 자체 도착장소(시공팀 시공)와 원단/레일/블라인드
   // 도착장소(캔가공소 수신)가 서로 다른 필드로 올바르게 분리됐는지 검증
   scripts.push(['production_output_location_check.js', []]);
