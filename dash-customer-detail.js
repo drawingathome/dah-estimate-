@@ -688,12 +688,11 @@ function renderDetailStageSection(c, body, isMaster) {
 }
 
 function renderDetailTodoSection(c, body) {
-  var todoKeys = STAGE_ALIM[c.stage] || [];
-  // 2026-08-04: Make.com 웹훅이 실제로 연결 안 되어 있어서(webhook_url 빈값),
-  // '자동'/'알림' 태그 알림들이 실제로는 아무도 발송하고 있지 않았음
-  // (몇 달간 리마인더/안부 메시지가 안 나갔을 가능성). 진짜 자동화 연결
-  // 전까지는, 놓치지 않도록 '지금 해야 할 일'에 같이 포함시킴 ('선택' 태그만 제외)
-  var manualKeys = todoKeys.filter(function(k){ return ALIM_META[k] && ALIM_META[k].tag !== '선택'; });
+  // 2026-09-14(선혜님 지적 - 문지윤 고객 실제 캡처로 발견): 여기가 소통
+  // 탭과 다른 로직(단순 단계매칭)을 써서 서로 다른 개수가 나오고 있었음 -
+  // 공용 함수(getDueAlimKeys)로 통일해서 두 탭이 항상 같은 답을 보여주게 함.
+  var todoKeys = getDueAlimKeys(c);
+  var manualKeys = todoKeys; // '선택' 태그가 있던 옛 22개 체계의 흔적 - 지금 13개엔 '선택' 태그 자체가 없어져서 그대로 사용
   if (manualKeys.length > 0) {
     var todoSec = div('margin-bottom:14px;padding:var(--sp-3);background:var(--ivory1);border:1.5px solid var(--dark);border-radius:12px', []);
     todoSec.appendChild(el('div', {style:'font-size:12px;font-weight:700;color:var(--dark);letter-spacing:1.5px;margin-bottom:var(--sp-2)', text:'지금 해야 할 일'}));

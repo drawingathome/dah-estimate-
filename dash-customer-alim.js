@@ -58,17 +58,33 @@ function isAlimDueNow(key, c, sent, now) {
   return rule(c, sent, now);
 }
 
-function renderAlimSection(c, alimBody) {
-  var alimSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
-
+// 2026-09-14(선혜님 지적 - "정보 탭이랑 소통 탭이 서로 다른 개수를
+// 보여줌": 문지윤 고객 실제 캡처로 발견): "지금 할 일" 판단이 두 곳
+// (renderDetailTodoSection/renderAlimSection)에 따로따로 구현돼 있었고,
+// 소통 탭만 isAlimDueNow(D-1 등 시점 계산)를 쓰고 정보 탭은 그냥
+// "이 단계면 무조건 할 일"로 단순 판단해서 서로 다른 개수가 나왔음.
+// 발송이력(sentMap) 조회 로직을 공용 함수로 빼서 두 곳이 똑같은 기준을
+// 쓰도록 통일.
+function getAlimSentMap(c) {
   var logs = [];
   try { logs = JSON.parse(localStorage.getItem('dah_kakao_log')||'[]'); } catch(e){}
   var sentMap = {};
-  // 2026-08-05: 이름으로만 매칭하던 버그 수정 — 동명이인이면 서로 다른 사람의
-  // 발송이력이 섞여서 "이미 보냈음" 체크가 잘못 뜰 위험이 있었음. 로그에 custId가
-  // 있으면(신규 발송분) id로 정확히 매칭, 없으면(기존 발송이력) 이름으로 폴백해서
-  // 과거 발송이력이 안 사라지게 함.
   logs.forEach(function(l){ var match = l.custId ? (l.custId === c.id) : (l.name===c.clientName); if (match) sentMap[l.type]=l; });
+  return sentMap;
+}
+// 2026-09-14: 위 두 탭이 똑같이 쓸 수 있도록, "지금 진짜 보낼 때가 된"
+// 키 목록(트리거감지 적용됨)을 만들어주는 공용 함수.
+function getDueAlimKeys(c) {
+  var recommendedKeys = STAGE_ALIM[c.stage] || [];
+  var sentMap = getAlimSentMap(c);
+  var now = new Date();
+  return recommendedKeys.filter(function(k){ return isAlimDueNow(k, c, sentMap[k], now); });
+}
+
+function renderAlimSection(c, alimBody) {
+  var alimSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
+
+  var sentMap = getAlimSentMap(c);
 
   function makeRow(key) {
     var meta = ALIM_META[key]; if(!meta) return null;
