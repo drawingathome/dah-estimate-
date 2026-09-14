@@ -64,18 +64,10 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['as_management_check.js', []]);
   // 2026-09-11: 네이버예약 붙여넣기 자동채우기 검증
   scripts.push(['naver_paste_parse_check.js', []]);
-  // 2026-09-12: 형상가공 기본값 복원 검증 (예전 데이터 X로 잘못 복원되던 버그)
-  scripts.push(['shape_process_default_check.js', []]);
   // 2026-09-14: 4번/7번 가견적·확정견적서 발송 시 최신 견적ID 자동조회 검증
   scripts.push(['estimate_link_autofetch_check.js', []]);
   // 2026-09-14: 견적서 링크가 오래된(오늘 아닌) 견적을 가리킬 때 경고배너 검증
   scripts.push(['estimate_stale_warning_check.js', []]);
-  // 2026-09-12: 캔가공소 자체 도착장소(시공팀 시공)와 원단/레일/블라인드
-  // 도착장소(캔가공소 수신)가 서로 다른 필드로 올바르게 분리됐는지 검증
-  scripts.push(['production_output_location_check.js', []]);
-  // 2026-09-12: 캔가공소 자체 도착장소가 고정값이 아니라 건별 시공팀장
-  // 입력값을 따라 동적으로 바뀌는지 검증
-  scripts.push(['production_dynamic_installer_check.js', []]);
   // 2026-08-29(선혜님 제안 - "1번도 2번도 아니고 자동 감시 테스트를
   // 만들자"): 대시보드/견적서 앱은 서로 다른 도메인이라 코드 공유가
   // 안 되고, 같은 목적의 로직이 양쪽에 따로 구현되면서 한쪽만 고치면
@@ -116,6 +108,14 @@ if (/dah-estimate/.test(target)) {
   // 버그가 세 번 재발했음(8/29, 9/8 1차 오진단, 9/8 2차) - 말이 아니라
   // 테스트로 다음 재발을 잡도록 영구 등록.
   scripts.push(['curtain-select-value-integrity-check.js', []]);
+  // 2026-09-12: 형상가공 기본값 복원 검증 (예전 데이터 X로 잘못 복원되던 버그)
+  scripts.push(['shape_process_default_check.js', []]);
+  // 2026-09-12: 캔가공소 자체 도착장소(시공팀 시공)와 원단/레일/블라인드
+  // 도착장소(캔가공소 수신)가 서로 다른 필드로 올바르게 분리됐는지 검증
+  scripts.push(['production_output_location_check.js', []]);
+  // 2026-09-12: 캔가공소 자체 도착장소가 고정값이 아니라 건별 시공팀장
+  // 입력값을 따라 동적으로 바뀌는지 검증
+  scripts.push(['production_dynamic_installer_check.js', []]);
   scripts.push(['field-parity-check.js', []]);
   // 2026-09-14: 고객용 견적서 공개보기(로그인 없이 ?view=id로 보는 화면) 검증
   scripts.push(['est_public_view_check.js', []]);
