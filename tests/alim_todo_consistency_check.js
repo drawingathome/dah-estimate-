@@ -36,18 +36,17 @@ async function run() {
 
   await page.evaluate(() => { switchDetailTab('alim'); });
   await new Promise(res => setTimeout(res, 300));
+  // 2026-09-14(핀 박스를 소통탭에서 제거하고 정보탭 한 곳에만 남기기로
+  // 함): 이제 소통탭엔 "지금 보낼 알림톡" 섹션 자체가 없어야 정상.
   const alimResult = await page.evaluate(() => {
     var body = document.getElementById('detail-alim-body');
     var text = body ? body.textContent : '';
-    var todoSection = text.split('단계별 전체 보기')[0];
-    var count8 = (todoSection.match(/8\. 일정 확정/g) || []).length;
-    var count3 = (todoSection.match(/3\. 방문 전날/g) || []).length;
-    return { count8: count8, count3: count3, snippet: todoSection.slice(0, 300) };
+    return { hasPinnedBox: text.indexOf('📌 지금 보낼 알림톡') !== -1 };
   });
 
   ok('1. 정보탭 "지금 해야 할 일"에 8번은 뜸(즉시성이라 항상 대상)', infoResult.hasTodo, infoResult.snippet);
   ok('2. 정보탭에 "1건 더 남음"이 안 뜸(3번은 아직 D-1 아니라 대상 아님 - 예전엔 여기서 잘못 1건으로 떴음)', infoResult.moreCount === 0, 'moreCount=' + infoResult.moreCount);
-  ok('3. 소통탭 "지금 보낼 알림톡"에도 8번만 있고 3번은 없음(두 탭 일치)', alimResult.count8 === 1 && alimResult.count3 === 0, JSON.stringify(alimResult));
+  ok('3. 소통탭엔 "지금 보낼 알림톡" 핀 박스가 더 이상 없음(정보탭 한 곳으로 통합됨)', !alimResult.hasPinnedBox, JSON.stringify(alimResult));
 
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));

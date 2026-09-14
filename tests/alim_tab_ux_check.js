@@ -52,27 +52,15 @@ async function run() {
   });
   ok('2. 모든 단계 아코디언이 기본적으로 접혀있음(자동으로 펼쳐진 게 없음)', r === 0, '펼쳐진 개수=' + r);
 
-  // 3) "지금 보낼 알림톡"에 뜬 항목(8번)이 아래 시공준비중 펼쳤을 때 중복으로 안 나오는지
+  // 2026-09-14(선혜님 지시로 "지금 보낼 알림톡" 핀 박스를 소통탭에서
+  // 아예 제거함 - 정보탭 한 곳에만 남김): 이제 소통탭엔 그 박스 자체가
+  // 없어야 하고, 같은 항목이 여러 단계에 "공통"으로 배정돼 여러 아코디언에
+  // 나오는 건 정상(예: "실측·시공·AS 공통" 항목) - 중복 제거 대상이 아님.
   r = await page.evaluate(() => {
     var body = document.getElementById('detail-alim-body');
-    // 시공준비중 헤더 찾아서 클릭(펼치기)
-    var headers = Array.from(body.querySelectorAll('div')).filter(function(d) {
-      return d.textContent.indexOf('시공준비중 (발송') === 0;
-    });
-    if (headers.length === 0) return { found: false };
-    headers[0].click();
-    return { found: true };
+    return body.textContent.indexOf('📌 지금 보낼 알림톡') === -1;
   });
-  await new Promise(res => setTimeout(res, 200));
-  r = await page.evaluate(() => {
-    var body = document.getElementById('detail-alim-body');
-    var topSection = body.querySelector('div'); // 지금 보낼 알림톡 wrap(첫 자식)
-    var fullText = body.textContent;
-    // "8. 일정 확정" 라벨이 전체 텍스트에 몇 번 나오는지
-    var count = (fullText.match(/8\. 일정 확정/g) || []).length;
-    return { count: count, snippet: fullText.indexOf('시공준비중') !== -1 ? fullText.slice(fullText.indexOf('시공준비중'), fullText.indexOf('시공준비중') + 200) : '' };
-  });
-  ok('3. 지금 보낼 항목이 펼친 아코디언에서 중복 표시되지 않음(1번만 나옴)', r.count === 1, 'count=' + r.count + ', snippet=' + r.snippet);
+  ok('3. 소통탭에 "지금 보낼 알림톡" 핀 박스가 더 이상 없음(정보탭에만 남김)', r === true);
 
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));

@@ -33,11 +33,13 @@ async function run() {
       openDetail('알림확인고객', 6000, 'alim');
       setTimeout(() => {
         var text = document.getElementById('detail-alim-body') ? document.getElementById('detail-alim-body').textContent : '';
-        resolve({ hasSendSection: text.includes('지금 보낼 알림톡'), hasSendButton: Array.from(document.querySelectorAll('#detail-alim-body span')).some(s => s.textContent.trim() === '발송') });
+        resolve({ hasSendSection: text.includes('단계별 전체 보기'), hasSendButton: Array.from(document.querySelectorAll('#detail-alim-body span')).some(s => s.textContent.trim() === '발송') });
       }, 500);
     });
   });
-  ok('1. 알림톡탭 - 지금보낼알림톡 섹션 표시', r.hasSendSection === true, JSON.stringify(r));
+  // 2026-09-14: "지금 보낼 알림톡" 핀 박스는 정보탭으로 옮기고 소통탭에선
+  // 제거했음(선혜님 지시) - 소통탭엔 이제 "단계별 전체 보기"만 있음.
+  ok('1. 알림톡탭 - 단계별 전체 보기 섹션 표시', r.hasSendSection === true, JSON.stringify(r));
   ok('2. 알림톡탭 - 발송 버튼 존재', r.hasSendButton === true);
 
   // 2) 엑셀 내보내기 - 함수 존재 및 CSV 헤더에 실제 고객 데이터 반영되는지 (다운로드 트리거 대신 csvSafeCell 검증)

@@ -110,20 +110,13 @@ function renderAlimSection(c, alimBody) {
     return row;
   }
 
-  // ── "지금 할 일" — 현재 단계에 맞는 항목 중, 시점이 실제로 된 것만(트리거감지) ──
-  var recommendedKeys = STAGE_ALIM[c.stage] || [];
-  var _now = new Date();
-  var todoKeys = recommendedKeys.filter(function(k){ return isAlimDueNow(k, c, sentMap[k], _now); });
-  var todoWrap = div('background:var(--ivory1);border-radius:var(--r-card);padding:10px 12px;margin-bottom:12px', []);
-  todoWrap.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--terra);letter-spacing:0.05em;margin-bottom:4px', text:'📌 지금 보낼 알림톡'}));
-  if (todoKeys.length > 0) {
-    todoKeys.forEach(function(k){ var r = makeRow(k); if (r) { r.style.borderBottom = '1px solid var(--border)'; todoWrap.appendChild(r); } });
-  } else {
-    todoWrap.appendChild(el('div', {style:'font-size:11px;color:var(--sub);padding:4px 0', text:'이 단계에서 보낼 알림톡을 다 보냈어요'}));
-  }
-  alimSec.appendChild(todoWrap);
+  // 2026-09-14(선혜님 지시 - "지금 해야 할 일을 정보탭 한 곳에만"):
+  // 소통 탭에도 똑같은 "지금 보낼 알림톡" 박스가 따로 있어서, 정보탭이랑
+  // 겹쳐 보이고 탭을 오가며 확인해야 했음. 소통 탭은 이제 "전체 이력/
+  // 전체 보기" 전용으로 단순화 - "지금 할 일" CTA는 정보 탭
+  // (renderDetailTodoSection) 한 곳에만 남김.
 
-  // ── 단계별 카테고리 아코디언 (전부 보기용, 현재 단계만 기본 펼침) ──
+  // ── 단계별 카테고리 아코디언 (전부 보기용) ──
   var categories = [
     ['방문예약', STAGE_ALIM.방문예약], ['상담', STAGE_ALIM.상담], ['가견적', STAGE_ALIM.가견적],
     ['선금결제', STAGE_ALIM.선금결제], ['실측준비중', STAGE_ALIM.실측준비중], ['확정견적', STAGE_ALIM.확정견적],
@@ -148,13 +141,7 @@ function renderAlimSection(c, alimBody) {
     ]);
     header.onclick = function(){ toggleHomeAccordion(header); };
     var body = div('display:none', []);
-    var keysToShow = keys.filter(function(k) { return todoKeys.indexOf(k) === -1; });
-    if (keysToShow.length > 0) {
-      keysToShow.forEach(function(k){ var r = makeRow(k); if (r) body.appendChild(r); });
-    }
-    if (keys.length > 0 && keysToShow.length === 0) {
-      body.appendChild(el('div', {style:'font-size:11px;color:var(--sub);padding:6px 0', text:'전부 위 "지금 보낼 알림톡"에 표시돼 있어요'}));
-    }
+    keys.forEach(function(k){ var r = makeRow(k); if (r) body.appendChild(r); });
     catListWrap.appendChild(header);
     catListWrap.appendChild(body);
   });
