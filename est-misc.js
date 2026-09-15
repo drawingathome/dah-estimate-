@@ -46,12 +46,14 @@ function openKakaoAddr(targetId) {
 function renderEmptyState() {
   var cBody = document.getElementById('curtain-body');
   var bBody = document.getElementById('blind-body');
+  var oBody = document.getElementById('other-body');
   var cTable = document.getElementById('curtain-table');
   var bTable = document.getElementById('blind-table');
   var hasC = cBody && cBody.children.length > 0;
   var hasB = bBody && bBody.children.length > 0;
+  var hasO = oBody && oBody.children.length > 0;
   var emWrap = document.getElementById('empty-hint');
-  if(emWrap) emWrap.style.display = (!hasC && !hasB) ? 'flex' : 'none';
+  if(emWrap) emWrap.style.display = (!hasC && !hasB && !hasO) ? 'flex' : 'none';
   // 2026-08-26(선혜님과 함께 발견 — "모바일 카드 폭을 넓히면 높이를 더
   // 줄일 수 있지 않겠냐"는 질문에서 시작된 디버깅): 여기서 보일 때
   // display:'table'을 인라인으로 강제 지정하고 있었는데, 인라인 스타일이
@@ -132,6 +134,20 @@ function collectLineItems() {
       opt: tr.querySelector('.blind-opt')?.value||'',
       extra: getPriceVal(tr.querySelector('.blind-extra')),
       price: getPriceVal(tr.querySelector('.blind-price')), amt: tr.querySelector('.bamt')?.textContent||''
+    });
+  });
+  // 2026-09-15(선혜님 지시 - 침구/러그 등 기타 품목 신설): 커튼/블라인드와
+  // 동일한 패턴으로 lineItems에 저장 - 안 하면 저장 자체는 되는 것처럼
+  // 보여도(calcTotal에는 반영됨) 다시 열면 완전히 사라짐(위 svc-body
+  // 관련 주석과 똑같은 함정).
+  document.querySelectorAll('#other-body tr').forEach(function(tr){
+    var name = tr.querySelector('.other-name')?.value||'';
+    var priceVal = getPriceVal(tr.querySelector('.other-price'));
+    if (!name && !priceVal) return;
+    lineItems.push({
+      type: 'other', displayName: name, size: tr.querySelector('.other-size')?.value||'',
+      qty: tr.querySelector('.other-qty')?.value||'1', note: tr.querySelector('.other-note')?.value||'',
+      price: priceVal, amt: tr.querySelector('.oamt')?.textContent||''
     });
   });
   // 2026-08-10: "+ 항목 추가"로 사용자가 직접 넣은 부자재(레일/시공비/전동/
@@ -263,6 +279,10 @@ function loadDraft() {
         var blindBody = document.getElementById('blind-body');
         if (curtainBody) curtainBody.innerHTML = '';
         if (blindBody) blindBody.innerHTML = '';
+        // 2026-09-15(기타 품목 신설): 위 두 표와 동일하게 초기화 안 하면
+        // 초안을 여러 번 불러올 때마다 기타품목 행이 계속 쌓임.
+        var otherBodyReset = document.getElementById('other-body');
+        if (otherBodyReset) otherBodyReset.innerHTML = '';
         d.lineItems.forEach(function(item) {
           if (item.type === 'curtain') {
             addCurtainRow();
@@ -316,6 +336,24 @@ function loadDraft() {
             if (btr.querySelector('.blind-price')) btr.querySelector('.blind-price').value = item.price || '';
             var bmwEl = btr.querySelector('.bmw');
             if (bmwEl && typeof calcBlindRow === 'function') calcBlindRow(bmwEl);
+          } else if (item.type === 'other') {
+            // 2026-09-15(선혜님 지시로 기타 품목 신설 - 회귀테스트가 바로
+            // 잡아냄): 저장(collectLineItems)/복원(restoreLineItemsToForm)
+            // 두 곳엔 추가했는데, 완전히 별도로 존재하는 이 임시저장
+            // 복원 경로(loadDraft)엔 깜빡함 - 바로 위 2026-09-08 주석과
+            // 정확히 같은 유형의 함정(3곳 중 한 곳 누락)을 스스로 반복할
+            // 뻔했음. 배포 전 자동 검사(field-parity-check)가 잡아냄.
+            addOtherItemRow();
+            var otherBodyDraft = document.getElementById('other-body');
+            var otr = otherBodyDraft.lastElementChild;
+            if (!otr) return;
+            if (otr.querySelector('.other-name')) otr.querySelector('.other-name').value = item.displayName || '';
+            if (otr.querySelector('.other-size')) otr.querySelector('.other-size').value = item.size || '';
+            if (otr.querySelector('.other-qty')) otr.querySelector('.other-qty').value = item.qty || '1';
+            if (otr.querySelector('.other-note')) otr.querySelector('.other-note').value = item.note || '';
+            if (otr.querySelector('.other-price')) otr.querySelector('.other-price').value = item.price || '';
+            var otherPriceEl = otr.querySelector('.other-price');
+            if (otherPriceEl && typeof calcOtherItemRow === 'function') calcOtherItemRow(otherPriceEl);
           } else if (item.type === 'svc') {
             addSvcRow();
             var svcBody = document.getElementById('svc-body');

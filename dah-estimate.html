@@ -613,6 +613,31 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
         </thead>
         <tbody id="blind-body"></tbody>
       </table>
+      <!-- 2026-09-15(선혜님 지시 - "커튼/블라인드 아니어도 침구/러그 제작
+           가능한데 견적서 양식 하나 추가하면...하자" - 실제 침구 제품
+           견적서 캡처로 필요한 칸 확인: 품명/사이즈/가격/수량/기타 6개면
+           충분, 할인은 기존 로직 재사용): 커튼/블라인드 전용 계산식
+           (마수/판폭 등) 없이 단가×수량만 계산하는 범용 품목 표 - 침구/
+           러그뿐 아니라 다른 기타 제품에도 그대로 쓸 수 있음. 기존
+           커튼/블라인드 코드는 전혀 안 건드림(완전히 별도 표/함수). -->
+      <table id="other-table" style="display:none">
+        <colgroup>
+          <col style="min-width:90px;width:22%">
+          <col style="min-width:70px;width:14%">
+          <col style="min-width:70px;width:14%">
+          <col style="min-width:40px;width:8%">
+          <col style="min-width:80px;width:16%">
+          <col style="min-width:70px;width:14%">
+          <col style="min-width:28px;width:6%">
+        </colgroup>
+        <thead>
+          <tr><th colspan="7" style="text-align:left;padding-left:0;letter-spacing:3px;font-size:11px;color:#8E8078;padding-bottom:6px;border-bottom:1px solid #EEE6DC">기타 품목 (침구·러그 등)</th></tr>
+          <tr>
+            <th>품명</th><th>사이즈</th><th>단가</th><th>수량</th><th>기타</th><th>합계</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="other-body"></tbody>
+      </table>
     </div>
     <!-- 빈 상태 안내 -->
     <div id="empty-hint" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 16px;gap:10px">
@@ -622,6 +647,7 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
     <div class="add-row-btns print-hide">
       <button class="add-btn" onclick="addCurtainRow()">+ 커튼 추가</button>
       <button class="add-btn add-btn-blind" onclick="addBlindRow()">+ 블라인드 추가</button>
+      <button class="add-btn add-btn-other" onclick="addOtherItemRow()">+ 기타 품목 추가</button>
     </div>
   </div>
   </div>
@@ -846,12 +872,12 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
 <script src="/est-sync-queue.js?v=202608291500"></script>
 <script src="/dash-supabase-auth.js?v=202609061500"></script>
 <script src="/est-form-controls.js?v=202609130300"></script>
-<script src="/est-product-calc.js?v=202609112500"></script>
+<script src="/est-product-calc.js?v=202609150400"></script>
 <script src="/est-survey.js?v=202608190049"></script>
 <script src="/est-save.js?v=202609150700"></script>
-<script src="/est-documents.js?v=202609150300"></script>
-<script src="/est-customer-load.js?v=202609121100"></script>
-<script src="/est-misc.js?v=202609121100"></script>
+<script src="/est-documents.js?v=202609150400"></script>
+<script src="/est-customer-load.js?v=202609150400"></script>
+<script src="/est-misc.js?v=202609150400"></script>
 <script>
 var currentTab = 'ga';
 

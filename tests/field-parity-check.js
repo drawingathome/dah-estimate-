@@ -16,7 +16,7 @@ const path = require('path');
 
 // 저장은 하지만 복원할 필요가 없는 필드(계산 결과 표시용, 값 자체는
 // mw/mh/price 등 원본 필드로부터 매번 재계산되므로 복원 대상이 아님).
-const SAVE_ONLY_OK = new Set(['.bamt', '.camt']);
+const SAVE_ONLY_OK = new Set(['.bamt', '.camt', '.oamt']);
 
 function extractFieldClasses(filePath, startMarker, endMarker) {
   const content = fs.readFileSync(filePath, 'utf-8');

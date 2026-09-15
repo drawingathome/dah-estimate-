@@ -382,6 +382,12 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
   if (!lineItems || lineItems.length === 0) return false;
   document.getElementById('curtain-body').innerHTML = '';
   document.getElementById('blind-body').innerHTML = '';
+  // 2026-09-15(기타 품목 신설하며 함께 처리): 위 두 표와 동일하게 초기화
+  // 안 하면, 저장된 견적서를 다시 열 때마다 기타품목 행이 계속 누적됨
+  // (매번 다시 열 때마다 중복 추가되는 흔한 함정 - blind/curtain은 이미
+  // 처리돼 있었는데 새로 추가하면서 깜빡하기 쉬운 부분이라 명시).
+  var otherBodyForReset = document.getElementById('other-body');
+  if (otherBodyForReset) otherBodyForReset.innerHTML = '';
   var svcBodyForReset = document.getElementById('svc-body');
   if (svcBodyForReset) svcBodyForReset.innerHTML = '';
   lineItems.forEach(function(it) {
@@ -423,6 +429,19 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
         var svcQtyEl = str.querySelector('.sqty'); if (svcQtyEl) svcQtyEl.value = it.qty || it.pnum || '1';
         if (typeof calcSvcRow === 'function' && svcPriceEl) calcSvcRow(svcPriceEl);
       }
+    } else if (it.type === 'other') {
+      // 2026-09-15(선혜님 지시 - 침구/러그 등 기타 품목 신설): curtain/blind
+      // 처럼 별도 분기 필요 - 안 하면 아래 최종 else(커튼 기본값)로 빠져서
+      // 커튼 전용 필드(주름방식/개폐형태 등)가 엉뚱하게 붙거나, 표 자체가
+      // 틀린 곳(curtain-body)에 복원되는 문제가 생김.
+      addOtherItemRow();
+      var otr = document.getElementById('other-body').lastElementChild;
+      var onEl = otr.querySelector('.other-name'); if (onEl) onEl.value = it.displayName || '';
+      var osEl = otr.querySelector('.other-size'); if (osEl) osEl.value = it.size || '';
+      var oqEl = otr.querySelector('.other-qty'); if (oqEl) oqEl.value = it.qty || '1';
+      var ontEl = otr.querySelector('.other-note'); if (ontEl) ontEl.value = it.note || '';
+      var opEl = otr.querySelector('.other-price'); if (opEl && it.price) { opEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(opEl); }
+      if (typeof calcOtherItemRow === 'function' && opEl) calcOtherItemRow(opEl);
     } else {
       addCurtainRow();
       var ctr = document.getElementById('curtain-body').lastElementChild;

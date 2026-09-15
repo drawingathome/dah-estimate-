@@ -333,6 +333,52 @@ function addBlindRow() {
   if (typeof refreshBlindVendorOptions === 'function') refreshBlindVendorOptions();
 }
 
+// 2026-09-15(선혜님 지시 - "커튼/블라인드 아니어도 침구/러그 제작 가능한데
+// 견적서 양식 하나 추가하면...하자"): 커튼(마수)/블라인드(판폭) 같은 전용
+// 계산식이 필요 없는 범용 품목 - 단가×수량만 계산. addBlindRow와 같은
+// 패턴(행 생성/드래그/복사/삭제)을 따르되, 계산 로직만 훨씬 단순함.
+function addOtherItemRow() {
+  var tbody = document.getElementById('other-body');
+  var tbl = document.getElementById('other-table');
+  if (tbl) tbl.style.display = 'table';
+  var tr = document.createElement('tr');
+  tr.innerHTML =
+    '<td data-label="품명"><input type="text" placeholder="품명 (예: 이불 사계절누빔형)" class="other-name" style="'+INP+'"></td>'+
+    '<td data-label="사이즈"><input type="text" placeholder="사이즈 (예: 200*230)" class="other-size" style="'+INP+'"></td>'+
+    '<td data-label="단가"><input type="text" inputmode="numeric" placeholder="단가" class="other-price" oninput="fmtPrice(this);calcOtherItemRow(this)" onfocus="fmtPriceFocus(this)" onblur="fmtPriceBlur(this);calcOtherItemRow(this)" style="'+INP+'"></td>'+
+    '<td data-label="수량"><input type="text" inputmode="numeric" placeholder="1" class="other-qty" value="1" oninput="fmtPrice(this);calcOtherItemRow(this)" style="'+INP+'"></td>'+
+    '<td data-label="기타"><input type="text" placeholder="원단번호 등 메모" class="other-note" style="'+INP+'"></td>'+
+    '<td class="amt oamt" data-label="합계">—</td>'+
+    '<td style="white-space:nowrap">'+
+      '<span class="row-drag-handle print-hide" title="드래그해서 순서 바꾸기" style="cursor:grab;padding:4px 6px;color:var(--sub);user-select:none;display:inline-block">⠿</span>'+
+      '<button class="copy-btn print-hide" onclick="copyOtherItemRow(this)">⧉</button>'+
+      '<button class="del-btn print-hide" onclick="delRow(this)">✕</button>'+
+    '</td>';
+  tbody.appendChild(tr);
+  makeRowDraggable(tr);
+  setupRowDragReorder('other-body');
+  renderEmptyState();
+}
+
+function calcOtherItemRow(el) {
+  var tr = el.closest('tr');
+  if (!tr) return;
+  var price = Math.max(0, getPriceVal(tr.querySelector('.other-price'))||0);
+  var qty = Math.max(0, parseFloat(tr.querySelector('.other-qty')?.value)||0);
+  var amt = price*qty;
+  var amtCell = tr.querySelector('.oamt');
+  if (amtCell) amtCell.textContent = amt>0 ? amt.toLocaleString()+'원' : '—';
+  if (typeof calcTotal === 'function') calcTotal();
+}
+
+function copyOtherItemRow(btn) {
+  var tr = btn.closest('tr');
+  var clone = tr.cloneNode(true);
+  tr.parentNode.insertBefore(clone, tr.nextSibling);
+  makeRowDraggable(clone);
+  if (typeof calcTotal === 'function') calcTotal();
+}
+
 // 2026-09-09: 블라인드 거래처 select들을 전부(새 행 포함) 최신 거래처
 // 목록(blind 카테고리)으로 채움 - 설정탭에서 거래처가 추가/변경될 때마다
 // 다시 호출하면 항상 최신 상태 유지. 기존 선택값은 목록에 남아있으면
@@ -638,6 +684,15 @@ function calcTotal() {
     var sqm=Math.ceil(sqmRaw*10)/10;
     curtainTotal+=Math.round(price*sqm);
   });
+  // 2026-09-15(선혜님 지시 - 침구/러그 등 기타 품목 신설): 커튼/블라인드
+  // 전용 계산식(마수/판폭)이 필요 없는 단순 단가×수량 품목 - 실제 침구
+  // 견적서 캡처 기준으로 할인이 이 제품소계 전체에 함께 적용되는 걸
+  // 확인해서, 커튼/블라인드와 같은 discountable 합계(curtainTotal)에 포함.
+  document.querySelectorAll('#other-body tr').forEach(function(tr){
+    var price = Math.max(0, getPriceVal(tr.querySelector('.other-price'))||0);
+    var qty = Math.max(0, parseFloat(tr.querySelector('.other-qty')?.value)||0);
+    curtainTotal += price*qty;
+  });
   var svcTotal=0;
   document.querySelectorAll('#svc-body tr').forEach(function(tr){
     // 2026-08-14: 부자재 단가는 할인성 마이너스 입력을 실제로 쓰신다고
@@ -795,6 +850,14 @@ function delRow(btn) {
     if(railCostRow) railCostRow.remove();
   }
   tr.remove();
+  // 2026-09-15(기타 품목 신설하며 함께 처리): blind-table과 동일하게,
+  // 마지막 기타품목 행을 지우면 표 자체도 숨겨야 curtain-only 견적에서
+  // 빈 표가 남지 않음.
+  var otherBody = document.getElementById('other-body');
+  var otherTbl = document.getElementById('other-table');
+  if (otherBody && otherTbl && otherBody.querySelectorAll('tr').length === 0) {
+    otherTbl.style.display = 'none';
+  }
   var blindBody=document.getElementById('blind-body');
   var blindTbl=document.getElementById('blind-table');
   if(blindBody&&blindTbl) {

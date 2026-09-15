@@ -99,8 +99,25 @@ function buildCustomerHTML() {
     if(desc&&amt&&amt!=='0원') svcRows.push({svcType:escHtml(svcType),desc:escHtml(desc),price:price,qty:qty,amt:amt});
   });
 
-  
-  var allRows = curtainRows.concat(blindRows);
+  // 2026-09-15(선혜님 지시 - 침구/러그 등 기타 품목 신설): 커튼/블라인드와
+  // 같은 고객용 표에 합쳐서 보여줌 - 실제 침구 제품 견적서 캡처와 칸
+  // 구성이 거의 같아서(품명/사이즈/가격/수량) 새 표를 따로 만들지 않고
+  // 기존 표의 "폭" 칸 자리에 수량을 넣는 정도로 재사용. 공간 그룹은
+  // "기타"로 묶임(커튼처럼 방 단위 공간이 있는 제품이 아니라서).
+  var otherRows=[];
+  document.querySelectorAll('#other-body tr').forEach(function(tr){
+    var name = tr.querySelector('.other-name')?.value||'';
+    var size = tr.querySelector('.other-size')?.value||'';
+    var price = getPriceVal(tr.querySelector('.other-price'))||0;
+    var qty = tr.querySelector('.other-qty')?.value||'1';
+    var amt = tr.querySelector('.oamt')?.textContent||'—';
+    if(name||size||price) otherRows.push({
+      space:escHtml('기타'),name:escHtml(name),spec:'',sizeText:escHtml(size),
+      mw:'',mh:'',pnum:qty,price:price,amt:amt,type:'other'
+    });
+  });
+
+  var allRows = curtainRows.concat(blindRows).concat(otherRows);
   var prodHTML = '';
   if(allRows.length) {
     prodHTML += '<div class="pv-table-scroll-wrap"><div class="pv-table-scroll"><table class="pv-prod-table">';
@@ -127,7 +144,7 @@ function buildCustomerHTML() {
       var spaceCell = isFirst ? '<td class="space-cell" rowspan="'+groupSize+'"><span class="space-cell-text">'+(r.space||'')+'</span></td>' : '';
       var html = '<tr'+(isFirst?' class="pv-group-first"':'')+'>'
         +spaceCell
-        +'<td class="sz">'+(r.mw?r.mw+'×'+r.mh:'—')+'</td>'
+        +'<td class="sz">'+(r.mw?r.mw+'×'+r.mh:(r.sizeText||'—'))+'</td>'
         +'<td class="name">'+title+(subSpec?'<div class="pv-cell-sub">'+subSpec+'</div>':'')+'</td>'
         +'<td class="r" style="color:#B0A99F;font-size:10.5px">'+(r.pnum?r.pnum:'—')+'</td>'
         +'<td class="r" style="color:#B0A99F;font-size:10.5px">'+(r.price?r.price.toLocaleString():'—')+'</td>'
@@ -328,10 +345,16 @@ function buildCustomerHTML() {
 
   
   if(prodHTML){
+    // 2026-09-15(기타 품목 신설): 침구/러그만 있는 견적인데 헤더가 "커튼 ·
+    // 블라인드"라고 고정돼 있으면 어색함 - 실제 들어있는 종류에 맞게 문구 조정.
+    var hasCurtainOrBlind = (curtainRows.length + blindRows.length) > 0;
+    var hasOther = otherRows.length > 0;
+    var sectionLabel = hasCurtainOrBlind && hasOther ? '커튼 · 블라인드 · 기타'
+      : hasOther ? '제품 내역' : '커튼 · 블라인드';
     out += '<div class="pv-section">';
     out += '<div class="pv-section-title">'
         +'<svg width="20" height="20" viewBox="0 0 20 20" style="vertical-align:-5px;margin-right:6px"><line x1="2" y1="3.5" x2="18" y2="3.5" stroke="#1A1A1A" stroke-width="1.3" stroke-linecap="round"/><path d="M5.5 4.5 Q7.5 11 5.5 17.5" stroke="#1A1A1A" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M10 4.5 Q12 11 10 17.5" stroke="#1A1A1A" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M14.5 4.5 Q16.5 11 14.5 17.5" stroke="#1A1A1A" stroke-width="1.1" fill="none" stroke-linecap="round"/></svg>'
-        +'커튼 · 블라인드</div>';
+        +sectionLabel+'</div>';
     out += prodHTML;
     out += '</div>';
   }
