@@ -144,6 +144,16 @@ function parseNaverReservationPaste() {
     showToast('자동으로 못 찾았어요, 직접 입력해주세요');
   } else {
     showToast(filled.join('·') + ' 자동으로 채웠어요, 확인 후 저장해주세요');
+    // 2026-09-14(선혜님 지시 - "고객정보가 양쪽에서 보이게 하고 내가
+    // 상담할 고객으로 지정이 될 수 있게" 논의 중 "네이버 예약으로 새
+    // 고객 등록할 땐 미배정으로 두자"로 확정): 지금까지는 이 모달을
+    // 연 사람(currentUser)이 자동으로 담당자 기본값이 돼서, 네이버
+    // 예약을 처음 발견한 사람이 자동으로 담당자가 돼버렸음 - 실제
+    // 상담은 나중에 다른 사람이 할 수도 있으니, 네이버 붙여넣기로
+    // 채운 경우만 "미배정"으로 바꿔서 나중에 담당할 사람이 직접
+    // 지정하게 함(수동으로 입력하는 경우는 기존처럼 본인 담당 유지).
+    var unassignedBtn = document.querySelector('.staff-btn[data-staff="미배정"]');
+    if (unassignedBtn) unassignedBtn.click();
   }
 }
 

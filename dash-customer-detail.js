@@ -584,7 +584,40 @@ function renderDetailHeader(c) {
   infoBar.innerHTML =
     '<span>' + phoneHtml + '</span>' +
     '<span style="color:var(--border)">|</span>' +
-    '<span>' + escHtml(c.staffName || '마스터') + '</span>';
+    '<span id="detail-staffname-label">' + escHtml(c.staffName || '마스터') + '</span>';
+  // 2026-09-14(선혜님 지시 - "고객정보가 양쪽에서 보이게 하고 내가
+  // 상담할 고객으로 지정이 될 수 있게" → "본인 지정도 되고 마스터가
+  // 바꿀 수도 있게"): 마스터는 이미 "고객 정보 수정" 모달에서 담당자를
+  // 자유롭게 바꿀 수 있었지만, 실장 등 직원은 그 모달에서 담당자
+  // 버튼이 아예 막혀있어서(pointer-events:none) 본인 스스로 담당을
+  // 가져올 방법이 없었음 - 지금 보고 있는 사람이 현재 담당자가 아니면
+  // "내가 담당할게요" 버튼을 바로 옆에 띄워서 원클릭으로 가능하게 함.
+  if (typeof currentUser !== 'undefined' && currentUser && (c.staffName || '마스터') !== currentUser.name) {
+    var claimBtn = document.createElement('button');
+    claimBtn.textContent = '내가 담당할게요';
+    claimBtn.style.cssText = 'font-size:11px;font-weight:700;color:var(--terra);background:none;border:1px solid var(--terra);border-radius:20px;padding:3px 10px;cursor:pointer;font-family:inherit;margin-left:6px';
+    claimBtn.onclick = function () {
+      if (!confirm('"' + (c.clientName || '') + '" 고객을 본인 담당으로 지정할까요?')) return;
+      var arr = loadCustomers();
+      var target = arr.find(function (x) { return String(x.id) === String(c.id); });
+      if (!target) return;
+      target.staffName = currentUser.name;
+      // 2026-09-14(재확인 중 발견 - saveCustomers()는 이 브라우저의
+      // localStorage에만 저장하고 서버(Supabase)엔 안 올라감을 뒤늦게
+      // 발견함): 이 기능의 핵심 목적이 "양쪽에서 보이게"인데 로컬에만
+      // 남기면 상대방 화면엔 전혀 반영이 안 되는, 기능 자체가 무의미해
+      // 지는 실수를 할 뻔했음 - saveCustomerToDb()로 실제 서버까지
+      // 저장.
+      claimBtn.disabled = true; claimBtn.textContent = '저장 중...';
+      saveCustomerToDb(target, function (err) {
+        if (err) { alert('저장에 실패했어요: ' + (err.message || err)); claimBtn.disabled = false; claimBtn.textContent = '내가 담당할게요'; return; }
+        saveCustomers(arr);
+        showToast(currentUser.name + '님 담당으로 지정했어요');
+        openDetailInner(c.clientName, c.id, 'info');
+      });
+    };
+    infoBar.appendChild(claimBtn);
+  }
 
 }
 
