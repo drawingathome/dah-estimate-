@@ -31,13 +31,22 @@ function _getSupabaseRealtimeClient() {
 function startRealtimeSync() {
   var client = _getSupabaseRealtimeClient();
   if (!client) { console.warn('실시간 동기화: Supabase 클라이언트를 초기화할 수 없습니다'); return; }
-  if (_realtimeChannel) return; // 이미 구독 중이면 중복 방지
 
-  // Realtime도 RLS(로그인 필요) 적용대상이므로, 로그인된 사용자의 access_token을 함께 실어보냄
+  // 2026-09-15(선혜님 지시 - "계속 파봐": 반복되는 "실시간 동기화 연결
+  // 실패" 경고의 진짜 원인 발견): 로그인 토큰은 4분마다 자동 갱신되는데
+  // (dash-supabase-auth.js), 그 갱신된 토큰이 "이미 연결된" 실시간 채널
+  // 에는 절대 전달되지 않고 있었음 - 아래 "이미 구독 중이면 중복 방지"
+  // 가드가 setAuth 호출 자체까지 같이 건너뛰게 만들어서, 최초 로그인 때
+  // 받은 토큰 하나로 계속 붙어있다가 그 토큰이 만료되면(보통 1시간) 그
+  // 뒤로는 실시간 연결이 계속 실패했음. 채널 "재생성"은 중복 방지가
+  // 맞지만, 토큰 갱신(setAuth)은 채널 존재 여부와 무관하게 매번 실행되게
+  // 분리.
   var authSession = (typeof getAuthSession === 'function') ? getAuthSession() : null;
   if (authSession && authSession.access_token) {
     client.realtime.setAuth(authSession.access_token);
   }
+
+  if (_realtimeChannel) return; // 채널 자체는 한 번만 생성(위 토큰 갱신은 이미 반영됨)
 
   _realtimeChannel = client
     .channel('dah-customers-realtime')

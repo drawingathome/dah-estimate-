@@ -72,6 +72,10 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['alim_tab_ux_check.js', []]);
   // 2026-09-14: 정보탭/소통탭 "지금 할 일" 개수 일치 검증 (서로 다른 로직 쓰던 버그)
   scripts.push(['alim_todo_consistency_check.js', []]);
+  // 2026-09-15: 로그인 토큰이 자동갱신될 때 실시간 동기화 채널에도 새
+  // 토큰이 반영되는지 검증 (예전엔 최초 토큰 그대로 굳어있다가 만료후
+  // 계속 연결실패하던 버그)
+  scripts.push(['realtime_token_refresh_check.js', []]);
   // 2026-09-14: 진행 단계 표시가 "N/전체" 숫자 형식으로 정확히 나오는지 검증
   scripts.push(['stage_progress_number_check.js', []]);
   // 2026-09-14: 6번 결제안내 버튼 URL("https://#{결제링크}")이 저장된
