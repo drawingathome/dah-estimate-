@@ -1335,6 +1335,32 @@ function printForVendor(categoryFilter) {
 // 원본 행(sourceRow)까지 담고 있는 객체)를 받아서, "발주처" 칸을 실제로
 // 고치면 그 그룹에 속한 모든 항목의 원본 행까지 값을 밀어넣어줌.
 function wireVendorNameEdit(container, groups) {
+  // 2026-09-14(선혜님 - "블라인드는 한번 수정해도 다시 초기화 해버리네"로
+  // 발견): 재현해보니 편집 자체는 문제없이 반영되고 있었음 - 진짜 원인은
+  // 이 편집이 "지금 열려있는 견적서 화면"에만 반영되고, 실제 저장
+  // (saveEstimate)은 완전히 별도 단계였다는 것. 저장을 깜빡하고 창을
+  // 닫거나 나중에 다시 열면(특히 대시보드 "상세보기"로 새로 열 때마다
+  // 서버에서 새로 불러오므로) 당연히 저장 안 된 예전 값(미지정)으로
+  // "초기화된 것처럼" 보임 - 이 토스트에 "지금 저장" 버튼을 바로 붙여서
+  // 그 자리에서 바로 저장까지 끝낼 수 있게 함.
+  function showVendorSavedToast(msg) {
+    var toast = document.createElement('div');
+    toast.className = 'print-hide';
+    toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#282828;color:#fff;padding:10px 16px;border-radius:20px;font-size:12px;z-index:10001;display:flex;align-items:center;gap:10px';
+    var msgSpan = document.createElement('span');
+    msgSpan.textContent = msg;
+    var saveBtn = document.createElement('button');
+    saveBtn.textContent = '지금 저장';
+    saveBtn.style.cssText = 'background:#fff;color:#282828;border:none;border-radius:14px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap';
+    saveBtn.onclick = function(){
+      toast.remove();
+      if (typeof saveEstimate === 'function') saveEstimate();
+    };
+    toast.appendChild(msgSpan);
+    toast.appendChild(saveBtn);
+    document.body.appendChild(toast);
+    setTimeout(function(){ toast.remove(); }, 6000);
+  }
   // 2026-09-14(선혜님 지적 - "된거니????": 레일/블라인드도 원단과 같은
   // 문제가 있었음 발견): 블라인드는 거래처가 <select>라 직접 타이핑하는
   // 방식(.pv-item-vendor-field)이 아니라 문서 안에 진짜 드롭다운
@@ -1377,12 +1403,7 @@ function wireVendorNameEdit(container, groups) {
       item.vendor = val;
       sel.style.borderColor = val ? '#EEE6DC' : '#E4483A';
       sel.style.color = val ? '#282828' : '#C0392B';
-      var toast = document.createElement('div');
-      toast.className = 'print-hide';
-      toast.textContent = '✅ "' + escHtml(item.space||'') + '" 항목의 거래처를 반영했어요. 견적서를 저장해야 최종 저장돼요.';
-      toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#282828;color:#fff;padding:10px 16px;border-radius:20px;font-size:12px;z-index:10001';
-      document.body.appendChild(toast);
-      setTimeout(function(){ toast.remove(); }, 3500);
+      showVendorSavedToast('✅ "' + (item.space||'') + '" 항목의 거래처를 반영했어요.');
     });
   });
 
@@ -1450,14 +1471,10 @@ function wireVendorNameEdit(container, groups) {
         return;
       }
       // 2026-09-11: 여기서 값을 바꾸는 건 "지금 열려있는 견적서 화면"까지만
-      // 이고, Supabase 저장은 아직 안 된 상태 - 견적서 저장 버튼을 눌러야
-      // 최종 반영됨을 명확히 알림(조용히 사라지는 변경이 되지 않도록).
-      var toast = document.createElement('div');
-      toast.className = 'print-hide';
-      toast.textContent = '✅ 이 견적서의 거래처 칸에 "' + newVal + '"(으)로 반영했어요. 견적서를 저장해야 최종 저장돼요.';
-      toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#282828;color:#fff;padding:10px 16px;border-radius:20px;font-size:12px;z-index:10001';
-      document.body.appendChild(toast);
-      setTimeout(function(){ toast.remove(); }, 3500);
+      // 이고, Supabase 저장은 아직 안 된 상태 - 저장을 깜빡하면 다음에
+      // 다시 열었을 때 이전 값으로 보임(2026-09-14 "다시 초기화" 지적으로
+      // "지금 저장" 버튼을 토스트에 바로 붙임 - showVendorSavedToast 참고).
+      showVendorSavedToast('✅ 이 견적서의 거래처 칸에 "' + newVal + '"(으)로 반영했어요.');
     });
   });
 }
