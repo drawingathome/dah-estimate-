@@ -527,6 +527,27 @@ function loadCustomersAsync(callback, force) {
 
 function saveCustomers(arr) { _customerCache = arr; try { localStorage.setItem('dah_customers', JSON.stringify(arr)); } catch(e) {} }
 
+// 2026-09-15("전문업체면 어떻게 하는게 나을까"로 결정): "고객을 담당으로
+// 가져가기"가 두 곳(홈화면 미배정 선착순, 고객상세 담당변경)에 각자
+// 다른 안전장치로 따로 구현돼 있던 걸 발견 - 서버에 "지금 담당자가
+// 내가 예상한 사람과 같을 때만 저장"하는 조건부 PATCH(선착순 로직의
+// 핵심 안전장치)를 범용화해서 하나로 합침. expectedCurrentStaff에
+// '미배정'을 넘기면 기존 "선착순 배정"과 동일하게 동작하고, 실제
+// 담당자 이름을 넘기면 "지금 이 사람이 담당인 게 맞을 때만 나에게로
+// 변경"이 되어 고객상세의 "본인 지정" 용도로도 그대로 쓸 수 있음.
+function claimCustomer(customerId, expectedCurrentStaff, newStaffName, callback) {
+  sbXHR('PATCH', 'customers?id=eq.' + encodeURIComponent(customerId) + '&staff_name=eq.' + encodeURIComponent(expectedCurrentStaff || '미배정'),
+    { staff_name: newStaffName },
+    function (err, rows) {
+      if (err) { callback(err); return; }
+      var all = loadCustomers();
+      var target = all.find(function (c) { return String(c.id) === String(customerId); });
+      if (target) { target.staffName = newStaffName; saveCustomers(all); }
+      if (typeof logEvent === 'function') logEvent('claim_customer', { customerId: customerId, from: expectedCurrentStaff, to: newStaffName });
+      callback(null, target);
+    });
+}
+
 function saveCustomerToDb(customer, callback) {
   // 2026-08-31(선혜님 지적 — "본인이 쓴것도 인지하는거야??"로 발견): 방금
   // 만든 동시편집 충돌감지(updated_at 잠금)가, 같은 사람이 같은 고객을

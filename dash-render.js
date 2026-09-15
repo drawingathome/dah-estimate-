@@ -31,6 +31,10 @@ function renderGoalProgress(currentAmount) {
 // 먼저 가져갔으면(그 사이 staff_name이 바뀌어 조건 불일치) sbXHR가
 // 0건 반영을 실패로 처리하는 기존 안전장치에 그대로 걸림 — 이 함수는
 // 그 실패를 "이미 배정됨" 안내로 바꿔서 보여주기만 하면 됨.
+// 2026-09-15(선혜님 - "전문업체면 어떻게 하는게 나을까"): 고객상세
+// 화면의 "본인 지정" 버튼과 안전장치가 서로 다르게 따로 구현돼 있던 걸
+// 발견해서 공용 함수(claimCustomer, dash-api.js)로 통합 - 이 함수는
+// 이제 그 공용 함수를 부르기만 함.
 function claimUnassignedCustomer(btnEl) {
   var cid = btnEl.getAttribute('data-cid');
   var cname = btnEl.getAttribute('data-cname');
@@ -38,16 +42,12 @@ function claimUnassignedCustomer(btnEl) {
   var myName = (currentUser && currentUser.role === 'staff') ? currentUser.name : '마스터';
   if (!confirm(cname + ' 고객을 담당하시겠어요?')) return;
   btnEl.disabled = true; btnEl.textContent = '처리 중...';
-  sbXHR('PATCH', 'customers?id=eq.' + encodeURIComponent(cid) + '&staff_name=eq.' + encodeURIComponent('미배정'), { staff_name: myName }, function(err, rows) {
+  claimCustomer(cid, '미배정', myName, function(err) {
     if (err) {
       showToast(err.zeroRows ? (cname + ' 님은 이미 다른 담당자가 가져갔어요') : '처리 중 오류가 발생했어요');
       renderHome();
       return;
     }
-    var all = loadCustomers();
-    var target = all.find(function(c) { return String(c.id) === String(cid); });
-    if (target) { target.staffName = myName; saveCustomers(all); }
-    if (typeof logEvent === 'function') logEvent('claim_unassigned', { customerId: cid, name: cname, by: myName });
     showToast(cname + ' 님 담당이 확정됐어요');
     renderHome();
   });
@@ -87,6 +87,15 @@ function renderHome(skipServerFetch) {
     if (!customers) customers = [];
     // 스태프 권한 필터 (2026-08-04 추가) — 고객목록/매출탭엔 있는데 홈 화면만
     // 빠져있어서, 스태프 계정에도 전체(다른 담당자 포함) 통계가 보이던 권한 누락
+    // 2026-09-15("코드 검사 꼼꼼하게 하자"로 발견 - 진짜 심각한 버그였음):
+    // 이 필터가 "미배정" 고객까지 전부 걸러버려서, 2026-09-11에 만든 "신규리드
+    // 선착순 배정"(직원이 미배정 리드를 보고 먼저 담당으로 가져가는 기능)이
+    // 정작 직원 계정으로는 미배정 섹션 자체가 안 보여서 완전히 무용지물이었음
+    // (마스터로만 보임 - "전체 실장에게 노출"이라는 원래 목적과 정반대).
+    // 매출/진행현황/처리필요 등 다른 모든 계산은 원래대로 "본인 담당 고객만"
+    // 기준으로 두되(미배정을 섞으면 그 통계들이 왜곡됨), "미배정 섹션" 렌더링
+    // 에만 쓸 별도 목록(unassignedPool)을 필터 전에 따로 빼둠.
+    var unassignedPool = customers.filter(function(c) { return c.staffName === '미배정' && !isSoftDeleted(c); });
     if (currentUser && currentUser.role === 'staff') {
       customers = customers.filter(function(c) { return (c.staffName||'마스터') === currentUser.name; });
     }
@@ -300,7 +309,7 @@ function renderHome(skipServerFetch) {
       // optimistic-lock-check.js와 같은 원리). 아직 실제 알림(웹훅/알림톡)
       // 채널이 없어서 "30분 경과"는 카톡 알림 대신 화면에서 빨간 강조로 대체.
       (function() {
-        var unassigned = customers.filter(function(c) { return c.staffName === '미배정' && !c.is_archived; });
+        var unassigned = unassignedPool;
         if (unassigned.length === 0) return '';
         var nowTs = Date.now();
         var rows = unassigned.map(function(c) {

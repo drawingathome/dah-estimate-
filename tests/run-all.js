@@ -58,6 +58,11 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['alim_trigger_timing_check.js', []]);
   // 2026-09-11: 신규리드 선착순 배정(미배정 풀 + 클릭해서 담당) 검증
   scripts.push(['unassigned_claim_check.js', []]);
+  // 2026-09-15("코드 검사 꼼꼼하게 하자" 중 발견): 위 unassigned_claim_check.js가
+  // 마스터 계정으로만 검증해서, 정작 이 기능(신규리드 선착순 배정)을 써야 할
+  // 스태프 계정에서는 완전히 안 보이던 심각한 버그를 놓쳤었음 - 반드시 스태프
+  // 관점으로 검증하는 테스트를 별도로 추가(체크리스트 37번 참고).
+  scripts.push(['staff-claim-check.js', []]);
   // 2026-09-11: 감사로그(변경이력) 조회 화면 검증
   scripts.push(['audit_log_check.js', []]);
   // 2026-09-11: AS 관리 화면(GitHub 이슈#4) — 접수 등록/상태변경 검증

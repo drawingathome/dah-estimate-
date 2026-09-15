@@ -611,20 +611,24 @@ function renderDetailHeader(c) {
     claimBtn.style.cssText = 'font-size:11px;font-weight:700;color:var(--terra);background:none;border:1px solid var(--terra);border-radius:20px;padding:3px 10px;cursor:pointer;font-family:inherit;margin-left:6px';
     claimBtn.onclick = function () {
       if (!confirm('"' + (c.clientName || '') + '" 고객을 본인 담당으로 지정할까요?')) return;
-      var arr = loadCustomers();
-      var target = arr.find(function (x) { return String(x.id) === String(c.id); });
-      if (!target) return;
-      target.staffName = currentUser.name;
-      // 2026-09-14(재확인 중 발견 - saveCustomers()는 이 브라우저의
-      // localStorage에만 저장하고 서버(Supabase)엔 안 올라감을 뒤늦게
-      // 발견함): 이 기능의 핵심 목적이 "양쪽에서 보이게"인데 로컬에만
-      // 남기면 상대방 화면엔 전혀 반영이 안 되는, 기능 자체가 무의미해
-      // 지는 실수를 할 뻔했음 - saveCustomerToDb()로 실제 서버까지
-      // 저장.
+      // 2026-09-15(선혜님 - "전문업체면 어떻게 하는게 나을까"로 결정):
+      // 이 버튼도 홈화면 "미배정 선착순 배정"과 똑같은 안전장치(조건부
+      // PATCH - 지금 담당자가 화면에 보이는 사람이 맞을 때만 저장)를
+      // 쓰도록 공용 함수(claimCustomer, dash-api.js)로 통합. 예전엔
+      // saveCustomerToDb(일반 저장, updated_at 비교)를 따로 썼는데,
+      // 그 사이 다른 사람이 이미 담당을 가져갔으면 여기서도 정확히
+      // 감지해서 "이미 가져갔다"고 알려줌 - 조용히 덮어쓰지 않음.
       claimBtn.disabled = true; claimBtn.textContent = '저장 중...';
-      saveCustomerToDb(target, function (err) {
-        if (err) { alert('저장에 실패했어요: ' + (err.message || err)); claimBtn.disabled = false; claimBtn.textContent = '내가 담당할게요'; return; }
-        saveCustomers(arr);
+      claimCustomer(c.id, c.staffName || '마스터', currentUser.name, function (err) {
+        if (err) {
+          if (err.zeroRows) {
+            alert('그 사이 다른 분이 이미 담당으로 지정했어요. 화면을 새로고침해주세요.');
+          } else {
+            alert('저장에 실패했어요: ' + (err.message || err));
+          }
+          claimBtn.disabled = false; claimBtn.textContent = '내가 담당할게요';
+          return;
+        }
         showToast(currentUser.name + '님 담당으로 지정했어요');
         openDetailInner(c.clientName, c.id, 'info');
       });
