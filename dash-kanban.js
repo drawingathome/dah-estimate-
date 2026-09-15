@@ -297,10 +297,7 @@ function renderPipe(customers) {
   // 2026-09-15(선혜님 - "보여야하는거 아니야????"로 확인 후 수정): 미배정
   // 리드도 "상담" 등 실제 단계에 있는 건데 파이프라인에서 안 보이면 전체
   // 흐름을 온전히 못 봄 - 미배정만 예외로 통과(홈화면/검색/캘린더와 동일).
-  var unassignedForPipe = (customers || []).filter(function(c) { return c.staffName === '미배정'; });
-  var filtered = (currentUser && currentUser.role === 'staff')
-    ? (customers || []).filter(function(c) { return (c.staffName||'마스터') === currentUser.name; }).concat(unassignedForPipe)
-    : customers;
+  var filtered = filterForStaffWithUnassigned(customers || [], currentUser);
   renderPipeKanban(filtered);
 }
 

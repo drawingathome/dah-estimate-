@@ -11,10 +11,7 @@ function renderSearch() {
   // "없는 고객"처럼 보여서 중복 등록으로 이어질 위험이 있음. 홈화면
   // 미배정 버그(2026-09-15)와 똑같은 원인 - "미배정"은 그 누구 이름과도
   // 안 맞아서 조용히 걸러짐. 홈화면 때와 동일하게 미배정만 예외로 통과.
-  var unassignedForSearch = allLoaded.filter(function(c) { return c.staffName === '미배정'; });
-  var all = (currentUser && currentUser.role === 'staff')
-    ? allLoaded.filter(function(c) { return (c.staffName||'마스터') === currentUser.name; }).concat(unassignedForSearch)
-    : allLoaded;
+  var all = filterForStaffWithUnassigned(allLoaded, currentUser);
   // 정렬 적용 (2026-07-20: 예전엔 정렬버튼을 눌러도 반영이 안 되던 버그 수정)
   all = (typeof sortCustomers === 'function' && typeof _currentSort !== 'undefined') ? sortCustomers(all, _currentSort) : all.slice().reverse();
   // 2026-08-06 중요 수정: "완료 후 14일 지나면 고객목록에서 자동으로 숨김"은
