@@ -26,9 +26,11 @@ function renderEstList() {
   try { all = JSON.parse(localStorage.getItem('dah_saved') || '[]'); } catch(e) {}
   // 스태프 권한 필터 (2026-08-04 추가) — 다른 화면엔 있는데 견적서 목록만
   // 빠져있어서, 스태프 계정에도 다른 담당자 견적서까지 다 보이던 권한 누락
-  if (currentUser && currentUser.role === 'staff') {
-    all = all.filter(function(e){ return (e.staffName||'마스터') === currentUser.name; });
-  }
+  // 2026-09-15("의심되는 다른 오류나 버그는?!!!"로 재점검하다 발견): 이
+  // 필터도 미배정 고객의 견적서를 걸러버려서, 직원 계정으로는 아직 아무도
+  // 안 가져간 신규 고객의 가견적서를 견적서 목록에서 못 찾는 문제가 있었음
+  // - 다른 화면들과 동일하게 공용함수로 미배정만 예외 처리.
+  all = filterForStaffWithUnassigned(all, currentUser);
 
   // 2026-08-06: 이 견적서와 연결된 고객의 실제 단계(시공완료 여부)를 알아야
   // "시공완료 보관함"을 판단할 수 있어서, 고객 배열과 매칭해둠(id 우선, 이름 폴백)

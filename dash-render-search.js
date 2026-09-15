@@ -5,7 +5,13 @@
 
 function renderSearch() {
   var allLoaded = loadCustomers();
-  var all = (currentUser && currentUser.role === 'staff') ? allLoaded.filter(function(c) { return (c.staffName||'마스터') === currentUser.name; }) : allLoaded;
+  // 2026-09-15("누락된 오류나 문제는 없니??"로 확인 중 발견): 직원 계정으로
+  // 검색해도 "미배정" 고객은 이름/전화번호를 정확히 입력해도 검색 결과에
+  // 전혀 안 나옴 - 실제 고객이 전화해서 문의했는데 직원이 검색하면
+  // "없는 고객"처럼 보여서 중복 등록으로 이어질 위험이 있음. 홈화면
+  // 미배정 버그(2026-09-15)와 똑같은 원인 - "미배정"은 그 누구 이름과도
+  // 안 맞아서 조용히 걸러짐. 홈화면 때와 동일하게 미배정만 예외로 통과.
+  var all = filterForStaffWithUnassigned(allLoaded, currentUser);
   // 정렬 적용 (2026-07-20: 예전엔 정렬버튼을 눌러도 반영이 안 되던 버그 수정)
   all = (typeof sortCustomers === 'function' && typeof _currentSort !== 'undefined') ? sortCustomers(all, _currentSort) : all.slice().reverse();
   // 2026-08-06 중요 수정: "완료 후 14일 지나면 고객목록에서 자동으로 숨김"은

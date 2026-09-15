@@ -58,6 +58,17 @@ function isSoftDeleted(c) {
   return c.is_archived === true;
 }
 
+// 2026-09-15(선혜님 - "쌍둥이함수까지 다 본거야??"로 점검 중 발견): 미배정
+// 고객을 직원 권한 필터의 예외로 통과시키는 한 줄짜리 필터가 홈화면/검색/
+// 캘린더/칸반보드 4곳에 각각 따로 복사돼 있었음 - 오늘 claimCustomer를
+// 공용함수로 합쳤던 것과 같은 이유로 여기도 합침. 나중에 5번째 화면이
+// 필요해지거나 "미배정" 문자열 자체가 바뀔 때, 한 곳만 고치면 되게 함.
+function filterForStaffWithUnassigned(allCustomers, currentUser) {
+  if (!currentUser || currentUser.role !== 'staff') return allCustomers;
+  var unassignedPool = allCustomers.filter(function(c) { return c.staffName === '미배정'; });
+  return allCustomers.filter(function(c) { return (c.staffName||'마스터') === currentUser.name; }).concat(unassignedPool);
+}
+
 function escHtml(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;')

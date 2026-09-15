@@ -294,9 +294,10 @@ function renderPipe(customers) {
   // 스태프 권한 필터 (2026-08-04 추가) — 고객목록/매출탭엔 이미 있는데
   // 진행현황(칸반)만 빠져있어서, 스태프 계정으로도 다른 담당자 고객이
   // 전부 보이던 권한 누락이었음
-  var filtered = (currentUser && currentUser.role === 'staff')
-    ? (customers || []).filter(function(c) { return (c.staffName||'마스터') === currentUser.name; })
-    : customers;
+  // 2026-09-15(선혜님 - "보여야하는거 아니야????"로 확인 후 수정): 미배정
+  // 리드도 "상담" 등 실제 단계에 있는 건데 파이프라인에서 안 보이면 전체
+  // 흐름을 온전히 못 봄 - 미배정만 예외로 통과(홈화면/검색/캘린더와 동일).
+  var filtered = filterForStaffWithUnassigned(customers || [], currentUser);
   renderPipeKanban(filtered);
 }
 
