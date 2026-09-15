@@ -25,6 +25,16 @@ function resetEstEditingState() {
   window._editingEstUpdatedAt = null;
   window._viewingFrozenEstimate = false;
   window._estSaveCustomerId = null;
+  // 2026-09-15(선혜님 지적 - "허서진 고객님 데이터 다 날라감!!!!"으로
+  // 발견): 8/24·9/10에 겪었던 것과 정확히 같은 유형의 재발 - "확정"
+  // 상태(window._estimateConfirmedAt)가 이 초기화 목록에 없었음. 이전
+  // 고객 견적을 확정한 뒤 "새 견적서"를 누르면, 새 견적인데도 확정
+  // 상태가 그대로 남아서 화면이 잠긴 채로 시작됨(입력해도 disabled된
+  // 필드라 아무것도 안 들어간 것처럼 보였음) - 이게 "데이터가 사라졌다"
+  // 는 증상의 정체였음.
+  window._estimateConfirmedAt = null;
+  if (typeof lockEstimateForm === 'function') lockEstimateForm(false);
+  if (typeof renderConfirmBadge === 'function') renderConfirmBadge();
   // 2026-08-29(선혜님이 자동백업 중복탐지 알림으로 발견 — 임민희 견적서
   // 8건 중복, 0.074초 안에 생성됨): idempotency_key가 저장 시도(재시도
   // 포함) "전체에서 동일한 값을 유지"해야 DB 유니크 제약이 중복을 막아줄
