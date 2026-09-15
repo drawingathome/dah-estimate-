@@ -24,14 +24,14 @@ async function run() {
   const r1 = await page.evaluate(() => {
     document.getElementById('c-name').value = '노지경';
     toggleConfirmEstimate(); // 확정
-    return { confirmedAtSet: !!window._estimateConfirmedAt, badgeText: document.getElementById('hd-confirm-badge').textContent };
+    return { confirmedAtSet: !!window._estEditState.estimateConfirmedAt, badgeText: document.getElementById('hd-confirm-badge').textContent };
   });
   ok('1. 이전 고객(노지경) 견적을 확정하면 확정 상태/배지가 켜짐(사전조건 확인)', r1.confirmedAtSet && r1.badgeText.indexOf('확정됨') !== -1, JSON.stringify(r1));
 
   const r2 = await page.evaluate(() => {
     newEstimate(); // "새 견적서" 버튼과 동일한 함수
     return {
-      confirmedAtAfterNew: window._estimateConfirmedAt,
+      confirmedAtAfterNew: window._estEditState.estimateConfirmedAt,
       badgeTextAfterNew: document.getElementById('hd-confirm-badge').textContent,
       nameFieldDisabled: document.getElementById('c-name').disabled,
       nameFieldValue: document.getElementById('c-name').value

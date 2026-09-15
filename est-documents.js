@@ -447,8 +447,8 @@ function printForCustomer() {
   // 2026-08-24: "저장 당시 금액 고정" 보기 모드일 때는 calcTotal()로 다시
   // 계산하면 그 순간 최신 설정으로 덮어써버려서 얼려둔 의미가 없어짐 —
   // 이 경우엔 재계산 대신 저장된 스냅샷을 그대로 다시 적용만 함.
-  if (window._viewingFrozenEstimate && window._lastCalcBreakdown && typeof applyFrozenBreakdown === 'function') {
-    applyFrozenBreakdown(window._lastCalcBreakdown);
+  if (window._estEditState.viewingFrozenEstimate && window._estEditState.lastCalcBreakdown && typeof applyFrozenBreakdown === 'function') {
+    applyFrozenBreakdown(window._estEditState.lastCalcBreakdown);
   } else {
     calcTotal();
   }
@@ -2077,11 +2077,11 @@ function _showRequestPreview(kind, label, extraNote) {
       // 했음. estimates.installer_name/installer_phone 컬럼 신설,
       // 발주상태 기록과 같은 시점(실제 저장 확정 시점)에 즉시 DB 반영 -
       // 견적서 "저장" 버튼을 따로 안 눌러도 남도록.
-      if (window._editingEstDbId && typeof SUPABASE_URL !== 'undefined') {
+      if (window._estEditState.editingEstDbId && typeof SUPABASE_URL !== 'undefined') {
         var installerPhoneForSave = document.getElementById('c-installer-phone')?.value || '';
         try {
           var xhrInstaller = new XMLHttpRequest();
-          xhrInstaller.open('PATCH', SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(window._editingEstDbId), true);
+          xhrInstaller.open('PATCH', SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(window._estEditState.editingEstDbId), true);
           xhrInstaller.setRequestHeader('apikey', SUPABASE_KEY);
           xhrInstaller.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
           xhrInstaller.setRequestHeader('Content-Type', 'application/json');

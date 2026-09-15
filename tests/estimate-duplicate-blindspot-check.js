@@ -94,8 +94,8 @@ async function run() {
     // (예: 방문 이력이 있는 기존 고객을 검색해서 불러온 경우) _editingEstDbId는
     // 세팅 안 된(=이 탭 기준으로는 "새로 시작하는 견적"인) 상태.
     await page.evaluate(() => {
-      window._estSaveCustomerId = 'test-known-customer-id';
-      window._editingEstDbId = null;
+      window._estEditState.estSaveCustomerId = 'test-known-customer-id';
+      window._estEditState.editingEstDbId = null;
       document.getElementById('c-name').value = '_사각지대테스트고객';
       document.getElementById('c-phone').value = '01055559999';
       const tr = document.querySelector('.row-curtain');
@@ -138,8 +138,8 @@ async function run() {
     await page.evaluate(() => { localStorage.removeItem('dah_customers'); localStorage.removeItem('dah_saved'); });
     await new Promise(r => setTimeout(r, 700));
     await page.evaluate(() => {
-      window._estSaveCustomerId = 'test-known-customer-id';
-      window._editingEstDbId = null;
+      window._estEditState.estSaveCustomerId = 'test-known-customer-id';
+      window._estEditState.editingEstDbId = null;
       document.getElementById('c-name').value = '_사각지대폴백테스트고객';
       document.getElementById('c-phone').value = '01044443333';
       const tr = document.querySelector('.row-curtain');

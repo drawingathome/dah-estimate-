@@ -173,7 +173,8 @@ function fmtPhone(el) {
 // 대시보드의 "계약상태"(가견적/계약됨/미계약)와는 별개 개념 —
 // 계약상태는 "고객이 계약금을 냈는지", 이 확정은 "견적 세부내용이 확정됐는지"를 나타냄.
 // (선혜님 워크플로우: 실측 후 확정견적서를 고객과 조율 → 더 안 바뀌면 [확정] 클릭)
-var _estimateConfirmedAt = null;
+// 2026-09-15: 이 값은 이제 window._estEditState.estimateConfirmedAt로 통합
+// 관리됨(est-save.js에서 초기화) - 여기서 별도 선언하지 않음.
 // 2026-09-08(선혜님 지적 - "확정이 되더라도 수정이 되고, 수정후 저장을
 // 해도 확정이 풀리지 않는다는거야 확정이 되면 수정이 안되어야 하는거
 // 아니야" → "확정이 되면 아예 수정이 안되게 막아주고 수정을 원하면 확정을
@@ -233,14 +234,14 @@ function lockEstimateForm(locked) {
 }
 
 function toggleConfirmEstimate() {
-  if (window._estimateConfirmedAt) {
+  if (window._estEditState.estimateConfirmedAt) {
     if (!confirm('확정을 취소할까요? (다시 수정 가능한 상태로 돌아갑니다)')) return;
-    window._estimateConfirmedAt = null;
+    window._estEditState.estimateConfirmedAt = null;
     lockEstimateForm(false);
     showToast('견적 확정이 취소됐습니다 — 다시 수정 가능합니다');
   } else {
     if (!confirm('이 견적 내용(사이즈·금액)을 확정할까요?\n확정하면 수정할 수 없게 잠깁니다. 다시 수정하려면 확정을 한번 더 눌러 해제하세요.')) return;
-    window._estimateConfirmedAt = new Date().toISOString();
+    window._estEditState.estimateConfirmedAt = new Date().toISOString();
     lockEstimateForm(true);
     showToast('견적이 확정됐습니다 — 수정하려면 확정을 다시 눌러 해제하세요');
   }
@@ -255,11 +256,11 @@ function renderConfirmBadge() {
   // 2026-09-08: 견적서를 불러오는 모든 지점(4곳)에서 renderConfirmBadge가
   // 호출되니, 잠금 처리도 여기 한 곳에 포함시켜서 이미 확정된 견적서를
   // 열었을 때 바로 잠긴 상태로 보이게 함 - 호출부마다 따로 안 챙겨도 됨.
-  if (typeof lockEstimateForm === 'function') lockEstimateForm(!!window._estimateConfirmedAt);
+  if (typeof lockEstimateForm === 'function') lockEstimateForm(!!window._estEditState.estimateConfirmedAt);
   var badge = document.getElementById('hd-confirm-badge');
   if (!badge) return;
-  if (window._estimateConfirmedAt) {
-    var d = new Date(window._estimateConfirmedAt);
+  if (window._estEditState.estimateConfirmedAt) {
+    var d = new Date(window._estEditState.estimateConfirmedAt);
     var dateStr = d.getFullYear() + '.' + (d.getMonth()+1) + '.' + d.getDate();
     badge.textContent = '✓ 확정됨 (' + dateStr + ')';
     badge.style.background = '#3B6D11';

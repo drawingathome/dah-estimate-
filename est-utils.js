@@ -264,7 +264,7 @@ function restoreAppliedDiscounts(applied, attempt, onComplete) {
       // 2026-09-04(선혜님 지적 - "현은지 할인 쿠폰 또 빠지네"로 재확인,
       // 실제 DB 데이터로 재현 성공): 재시도(최대 8초)가 아직 안 끝난
       // 상태에서 사용자가 저장 버튼을 누르면, calcTotal()이 아직 "쿠폰
-      // 복원 완료 후" 상태로 재실행되기 전이라 window._lastAppliedDiscounts
+      // 복원 완료 후" 상태로 재실행되기 전이라 window._estEditState.lastAppliedDiscounts
       // 가 여전히 빈 상태({coupons:[]})로 남아있고, 그 빈 상태 그대로
       // 저장돼서 쿠폰 정보가 통째로 사라짐(실제 DB에서 applied_discounts
       // 가 빈 배열로 저장된 것 확인) - 복원 중엔 저장 버튼을 잠시
@@ -454,10 +454,10 @@ function renderWorkStatusCards() {
 }
 
 function getCustomerOrderStatus(callback) {
-  if (!window._estSaveCustomerId || typeof SUPABASE_URL === 'undefined') { callback({}); return; }
+  if (!window._estEditState.estSaveCustomerId || typeof SUPABASE_URL === 'undefined') { callback({}); return; }
   try {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estSaveCustomerId) + '&select=order_status', true);
+    xhr.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estEditState.estSaveCustomerId) + '&select=order_status', true);
     xhr.setRequestHeader('apikey', SUPABASE_KEY);
     xhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
     xhr.onload = function() {
@@ -472,11 +472,11 @@ function getCustomerOrderStatus(callback) {
 }
 
 function updateOrderStatus(updates) {
-  if (!window._estSaveCustomerId || typeof SUPABASE_URL === 'undefined') return;
+  if (!window._estEditState.estSaveCustomerId || typeof SUPABASE_URL === 'undefined') return;
   if (!updates || Object.keys(updates).length === 0) return;
   try {
     var xhrGet = new XMLHttpRequest();
-    xhrGet.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estSaveCustomerId) + '&select=order_status', true);
+    xhrGet.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estEditState.estSaveCustomerId) + '&select=order_status', true);
     xhrGet.setRequestHeader('apikey', SUPABASE_KEY);
     xhrGet.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
     xhrGet.onload = function() {
@@ -493,7 +493,7 @@ function updateOrderStatus(updates) {
       var merged = Object.assign({}, current, updates);
       try {
         var xhrPatch = new XMLHttpRequest();
-        xhrPatch.open('PATCH', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estSaveCustomerId), true);
+        xhrPatch.open('PATCH', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estEditState.estSaveCustomerId), true);
         xhrPatch.setRequestHeader('apikey', SUPABASE_KEY);
         xhrPatch.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
         xhrPatch.setRequestHeader('Content-Type', 'application/json');

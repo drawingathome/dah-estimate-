@@ -98,7 +98,7 @@ async function testRoleAndViewport(role, vw, label, port) {
   await new Promise(r => setTimeout(r, 300));
 
   // 1) 견적서 중복방지: 서버가 "오늘 이미 있음"이라 하면 PATCH로 전환되는지
-  await page.evaluate(() => { window._estSaveCustomerId = 'role-check-customer-id'; window._editingEstDbId = null; });
+  await page.evaluate(() => { window._estEditState.estSaveCustomerId = 'role-check-customer-id'; window._estEditState.editingEstDbId = null; });
   await page.evaluate(() => { saveEstimate(); });
   await new Promise(r => setTimeout(r, 1200));
   if (estPostCount > 0) findings.push(`[중복방지] 새로 생성(POST)됨(0이어야 정상) POST=${estPostCount}`);

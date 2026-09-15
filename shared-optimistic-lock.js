@@ -19,7 +19,7 @@
 // 뒤에 로드되어야 함(각 앱의 dash-api.js/est-utils.js가 먼저 로드됨).
 //
 //   fetchLatestUpdatedAt('estimates', estId, function(updatedAt) {
-//     if (updatedAt) window._editingEstUpdatedAt = updatedAt;
+//     if (updatedAt) window._estEditState.editingEstUpdatedAt = updatedAt;
 //   });
 //
 //   fetchLatestUpdatedAt('customers', custId, function(updatedAt) {

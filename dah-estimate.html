@@ -867,17 +867,17 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
   <option value="허니콤 No.1">허니콤 No.1</option>
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
-<script src="/est-utils.js?v=202609120100"></script>
-<script src="/shared-optimistic-lock.js?v=202609120100"></script>
+<script src="/est-utils.js?v=202609151300"></script>
+<script src="/shared-optimistic-lock.js?v=202609151300"></script>
 <script src="/est-sync-queue.js?v=202608291500"></script>
 <script src="/dash-supabase-auth.js?v=202609061500"></script>
-<script src="/est-form-controls.js?v=202609130300"></script>
-<script src="/est-product-calc.js?v=202609150400"></script>
+<script src="/est-form-controls.js?v=202609151300"></script>
+<script src="/est-product-calc.js?v=202609151300"></script>
 <script src="/est-survey.js?v=202608190049"></script>
-<script src="/est-save.js?v=202609150700"></script>
-<script src="/est-documents.js?v=202609150400"></script>
-<script src="/est-customer-load.js?v=202609150400"></script>
-<script src="/est-misc.js?v=202609150400"></script>
+<script src="/est-save.js?v=202609151300"></script>
+<script src="/est-documents.js?v=202609151300"></script>
+<script src="/est-customer-load.js?v=202609151300"></script>
+<script src="/est-misc.js?v=202609151300"></script>
 <script>
 var currentTab = 'ga';
 
@@ -976,7 +976,7 @@ var currentTab = 'ga';
           // 수정이 아니라 매번 새 고객으로 만들어지고 있었음. 불러온 시점에
           // 이미 알고 있는 진짜 id를 바로 세팅해서, 이름을 바꿔도 "그 고객"으로
           // 정확히 인식되게 함.
-          window._estSaveCustomerId = c.id;
+          window._estEditState.estSaveCustomerId = c.id;
           if (c.client_name) document.getElementById('c-name').value = c.client_name;
           if (c.phone) document.getElementById('c-phone').value = c.phone;
           if (c.addr) document.getElementById('c-addr').value = c.addr;
@@ -1059,7 +1059,7 @@ var currentTab = 'ga';
               // 견적없는 고객 진입점, 최신 견적을 함께 불러오는 부분)엔
               // 빠져있었음 - 같은 원인의 또 다른 사각지대.
               if (e && e.confirmed_at) {
-                window._estimateConfirmedAt = e.confirmed_at;
+                window._estEditState.estimateConfirmedAt = e.confirmed_at;
                 if (typeof renderConfirmBadge === 'function') renderConfirmBadge();
               }
               showToast(''+(c.client_name||'')+' 고객 정보 불러옴'+(loadedItems ? ' (이전 견적 품목 포함)' : ''));
@@ -1096,7 +1096,7 @@ var currentTab = 'ga';
           // 2026-08-25: loadCustId 경로와 동일한 이유 — 이 경로도 window._estSaveCustomerId를
           // 여기서 세팅 안 하고 있었음. 이름을 바꿔서 저장해도 정확히 "그 고객"
           // 수정으로 인식되도록, 불러온 시점에 이미 알고 있는 client_id를 바로 세팅.
-          if (e.client_id) window._estSaveCustomerId = e.client_id;
+          if (e.client_id) window._estEditState.estSaveCustomerId = e.client_id;
           if (e.customer_name) document.getElementById('c-name').value = e.customer_name;
           if (e.phone) document.getElementById('c-phone').value = e.phone;
           if (e.memo) document.getElementById('c-memo').value = e.memo;
@@ -1185,7 +1185,7 @@ var currentTab = 'ga';
           function afterDiscountRestore() {
             // 2026-08-24: 저장 당시 금액으로 고정(위 loadCustId 경로와 동일 이유 — 2번 덮어씀)
             if (e.price_breakdown && typeof applyFrozenBreakdown === 'function') {
-              window._viewingFrozenEstimate = true;
+              window._estEditState.viewingFrozenEstimate = true;
               applyFrozenBreakdown(e.price_breakdown);
             }
             // 2026-08-24(선혜님 요청 — "세부내용 보기 팝업은 의미없다, 대신
@@ -1272,7 +1272,7 @@ var currentTab = 'ga';
             }
           }
           // 2026-09-01(선혜님 지시 - "좀 더 파보자"로 발견, 실제 재현 성공):
-          // _editingEstDbId/_editingEstUpdatedAt 세팅이 loadMode==='edit'일
+          // window._estEditState.editingEstDbId/window._estEditState.editingEstUpdatedAt 세팅이 loadMode==='edit'일
           // 때만 됐었음 - 대시보드 "다시보기"(mode=view)로 연 화면은 실제로는
           // 완전히 편집 가능한 화면인데, 이 안전장치가 없어서 사용자가 거기서
           // 실수로 뭔가 고치고 저장하면 편집대상 id가 없어 새 레코드(POST)가
@@ -1280,19 +1280,19 @@ var currentTab = 'ga';
           // 같은 메커니즘). "복사해서 새로 만들기"(mode=copy)만 새 견적서가
           // 맞으므로 제외 - edit과 view 둘 다 "기존 견적서"를 다루는 것이므로 포함.
           if (loadMode === 'edit' || loadMode === 'view') {
-            window._editingEstDbId = e.id;
+            window._estEditState.editingEstDbId = e.id;
             // 2026-08-13: 동시편집 충돌 감지(낙관적 잠금)를 위해 불러온 시점의
             // updated_at을 캡처 - 저장시 이 값이 그 사이 바뀌었으면(다른 곳에서
             // 먼저 저장했다는 뜻) 조용히 덮어쓰지 않고 경고를 띄움(2번 "확신
             // 못하는 부분"에서 기록만 해뒀다가 실제로 구현함).
-            window._editingEstUpdatedAt = e.updated_at || null;
+            window._estEditState.editingEstUpdatedAt = e.updated_at || null;
             // 2026-08-12: 확정된 견적서를 "열어서 수정"으로 열면 화면엔
             // 확정 안 된 것처럼 보이고, 그 상태로 아무것도 안 건드리고
             // 재저장하면 확정 상태가 null로 덮어써져 사라지던 버그(다양한
             // 상황 재검토 중 발견). "복사해서 새로 만들기"는 새 견적서라
             // 확정 안 된 채로 시작하는 게 맞아서 이 복원은 edit/view모드에만 적용.
             if (e.confirmed_at) {
-              window._estimateConfirmedAt = e.confirmed_at;
+              window._estEditState.estimateConfirmedAt = e.confirmed_at;
               if (typeof renderConfirmBadge === 'function') renderConfirmBadge();
             }
             if (loadMode === 'edit') {
@@ -1301,14 +1301,14 @@ var currentTab = 'ga';
           } else {
             // 2026-09-15(선혜님 지적 - "복사해서 하나 더 만들었는데 하나밖에
             // 없고 제일 마지막에 수정한 가격으로만 견적서 하나 뜨네"로 발견):
-            // 복사 모드에서도 window._estSaveCustomerId(e.client_id)는
+            // 복사 모드에서도 window._estEditState.estSaveCustomerId(e.client_id)는
             // 그대로 세팅되고 있어서, est-save.js의 "오늘 이미 저장된 견적
             // 찾아 이어서 수정" 중복방지 안전장치(원래는 같은 걸 실수로
             // 두 번 저장하는 걸 막으려는 것)가 오늘 만든 원본 견적을 찾아내
             // 복사본 저장을 그 원본에 PATCH해버림 - "복사"라는 의도 자체가
             // 무시되고 원본이 덮어써짐. 복사 모드로 들어온 첫 저장 한 번은
             // 이 중복확인 자체를 건너뛰도록 플래그.
-            window._skipTodayDuplicateCheck = true;
+            window._estEditState.skipTodayDuplicateCheck = true;
             showToast('📋 '+(e.customer_name||'')+' 견적서를 복사했어요 — 저장하면 새 견적서로 만들어져요');
           }
         } catch(e2) { showToast('⚠️ 견적서를 불러오는 중 문제가 발생했어요'); }

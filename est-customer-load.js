@@ -571,14 +571,14 @@ function loadCustByIdx(el) {
       var todayStr = new Date().toISOString().slice(0,10);
       var latestDateStr = (latest.savedAt||'').slice(0,10);
       if (latest.dbId && latestDateStr === todayStr) {
-        window._editingEstDbId = latest.dbId;
-        window._editingEstUpdatedAt = latest.updatedAt || null;
+        window._estEditState.editingEstDbId = latest.dbId;
+        window._estEditState.editingEstUpdatedAt = latest.updatedAt || null;
         showToast('오늘 만드신 성지윤님 견적을 이어서 수정합니다 — 저장하면 새로 안 쌓이고 이 견적이 갱신돼요'.replace('성지윤', c.clientName||''));
       }
     }
   } catch(e) { console.warn('기존 견적 품목 불러오기 실패:', e); }
   closeCustLoad();
-  if (!(window._editingEstDbId)) {
+  if (!(window._estEditState.editingEstDbId)) {
     showToast('고객 정보를 불러왔습니다 — '+(c.clientName||'')+(loadedItems ? ' (이전 견적 품목 포함)' : ''));
   }
 }
@@ -610,9 +610,9 @@ function calcDeposit() {
   if(balDispEl) balDispEl.textContent = dep>0 ? bal.toLocaleString()+'원' : '—';
   // 이 견적을 다시 저장할 때 방금 직접 입력한 계약금/잔금이 정확히 저장되도록
   // (저장 당시 금액 고정 스냅샷에도 반영되게) 최신 계산값 갱신.
-  if (window._lastCalcBreakdown) {
-    window._lastCalcBreakdown.deposit = dep;
-    window._lastCalcBreakdown.balance = bal;
+  if (window._estEditState.lastCalcBreakdown) {
+    window._estEditState.lastCalcBreakdown.deposit = dep;
+    window._estEditState.lastCalcBreakdown.balance = bal;
   }
 }
 function setDepositAuto(pct) {

@@ -31,27 +31,27 @@ async function run() {
 
     // 견적을 "편집 중"인 것처럼 4가지 변수를 전부 세팅
     await page.evaluate(() => {
-      window._editingEstDbId = 'fake-editing-id';
-      window._editingEstUpdatedAt = '2026-08-26T00:00:00Z';
-      window._viewingFrozenEstimate = true;
-      window._estSaveCustomerId = 'fake-customer-id';
+      window._estEditState.editingEstDbId = 'fake-editing-id';
+      window._estEditState.editingEstUpdatedAt = '2026-08-26T00:00:00Z';
+      window._estEditState.viewingFrozenEstimate = true;
+      window._estEditState.estSaveCustomerId = 'fake-customer-id';
       // 2026-08-26 추가: 계산결과 캐시 3개도 이전 고객 것인 양 채워둠
-      window._lastCalcBreakdown = { total: 999999 };
-      window._lastDiscountBreakdown = [{ label: '가짜할인', amount: 1000 }];
-      window._lastAppliedDiscounts = { coupons: ['fake-coupon'], manual: 500 };
+      window._estEditState.lastCalcBreakdown = { total: 999999 };
+      window._estEditState.lastDiscountBreakdown = [{ label: '가짜할인', amount: 1000 }];
+      window._estEditState.lastAppliedDiscounts = { coupons: ['fake-coupon'], manual: 500 };
     });
 
     await page.evaluate(() => { newEstimate(); });
     await new Promise(r => setTimeout(r, 300));
 
     const state = await page.evaluate(() => ({
-      editingEstDbId: window._editingEstDbId,
-      editingEstUpdatedAt: window._editingEstUpdatedAt,
-      viewingFrozenEstimate: window._viewingFrozenEstimate,
-      estSaveCustomerId: window._estSaveCustomerId,
-      lastCalcBreakdown: window._lastCalcBreakdown,
-      lastDiscountBreakdown: window._lastDiscountBreakdown,
-      lastAppliedDiscounts: window._lastAppliedDiscounts
+      editingEstDbId: window._estEditState.editingEstDbId,
+      editingEstUpdatedAt: window._estEditState.editingEstUpdatedAt,
+      viewingFrozenEstimate: window._estEditState.viewingFrozenEstimate,
+      estSaveCustomerId: window._estEditState.estSaveCustomerId,
+      lastCalcBreakdown: window._estEditState.lastCalcBreakdown,
+      lastDiscountBreakdown: window._estEditState.lastDiscountBreakdown,
+      lastAppliedDiscounts: window._estEditState.lastAppliedDiscounts
     }));
 
     check('[' + label + '] _editingEstDbId가 null로 리셋됨', state.editingEstDbId === null, `실제=${state.editingEstDbId}`);

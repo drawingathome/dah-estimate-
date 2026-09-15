@@ -23,9 +23,9 @@ async function run() {
   // "복사" 모드 진입 상황 재현: mode=copy 경로가 실행하는 것과 동일하게
   // client_id는 세팅되지만 editingEstDbId는 비어있는 상태 + 스킵 플래그
   const r1 = await page.evaluate(() => {
-    window._estSaveCustomerId = 555; // 원본 고객
-    window._editingEstDbId = null;
-    window._skipTodayDuplicateCheck = true; // 복사모드 진입시 세팅되는 플래그
+    window._estEditState.estSaveCustomerId = 555; // 원본 고객
+    window._estEditState.editingEstDbId = null;
+    window._estEditState.skipTodayDuplicateCheck = true; // 복사모드 진입시 세팅되는 플래그
 
     var sawDuplicateCheckCall = false;
     window.sbXHR = undefined; // saveToEstimates는 XMLHttpRequest를 직접 씀 - 아래서 가로챔
@@ -44,26 +44,26 @@ async function run() {
     };
 
     // saveToEstimates 내부의 "오늘 저장된 것 찾기" 분기 조건만 직접 재현해서 확인
-    var willCheckDuplicate = (!window._editingEstDbId && !window._skipTodayDuplicateCheck && window._estSaveCustomerId && typeof SUPABASE_URL !== 'undefined');
+    var willCheckDuplicate = (!window._estEditState.editingEstDbId && !window._estEditState.skipTodayDuplicateCheck && window._estEditState.estSaveCustomerId && typeof SUPABASE_URL !== 'undefined');
     return { willCheckDuplicate: willCheckDuplicate };
   });
   ok('1. 복사모드(스킵 플래그 있음)일 때 "오늘 저장된 것 찾기" 분기 자체를 안 탐', r1.willCheckDuplicate === false, JSON.stringify(r1));
 
   // 대조군: 스킵 플래그 없이(일반 신규저장) 같은 조건이면 분기를 정상적으로 탐
   const r2 = await page.evaluate(() => {
-    window._estSaveCustomerId = 555;
-    window._editingEstDbId = null;
-    window._skipTodayDuplicateCheck = false;
-    var willCheckDuplicate = (!window._editingEstDbId && !window._skipTodayDuplicateCheck && window._estSaveCustomerId && typeof SUPABASE_URL !== 'undefined');
+    window._estEditState.estSaveCustomerId = 555;
+    window._estEditState.editingEstDbId = null;
+    window._estEditState.skipTodayDuplicateCheck = false;
+    var willCheckDuplicate = (!window._estEditState.editingEstDbId && !window._estEditState.skipTodayDuplicateCheck && window._estEditState.estSaveCustomerId && typeof SUPABASE_URL !== 'undefined');
     return { willCheckDuplicate: willCheckDuplicate };
   });
   ok('2. 일반 신규저장(스킵 플래그 없음)은 그대로 "오늘 저장된 것 찾기"를 정상적으로 탐(회귀 없음)', r2.willCheckDuplicate === true, JSON.stringify(r2));
 
   // 3) edit 모드 진입시 skipTodayDuplicateCheck가 세팅되지 않는지(복사 전용이어야 함)
   const r3 = await page.evaluate(() => {
-    delete window._skipTodayDuplicateCheck;
+    delete window._estEditState.skipTodayDuplicateCheck;
     // edit 모드 분기(loadMode==='edit')는 else 브랜치를 안 타므로 스킵플래그를 안 건드림 - 그대로 undefined여야 함
-    return window._skipTodayDuplicateCheck;
+    return window._estEditState.skipTodayDuplicateCheck;
   });
   ok('3. edit 모드는 스킵 플래그와 무관함(복사 전용 안전장치가 편집모드까지 새는 것 방지)', r3 === undefined, String(r3));
 
@@ -95,7 +95,7 @@ async function run() {
   await new Promise(r => setTimeout(r, 1500));
   await loginAs(page2, 'master');
   await new Promise(r => setTimeout(r, 800));
-  const r4 = await page2.evaluate(() => ({ flag: window._skipTodayDuplicateCheck, custId: window._estSaveCustomerId, editingId: window._editingEstDbId }));
+  const r4 = await page2.evaluate(() => ({ flag: window._estEditState.skipTodayDuplicateCheck, custId: window._estEditState.estSaveCustomerId, editingId: window._estEditState.editingEstDbId }));
   ok('4. 실제 ?mode=copy 진입 경로로 페이지를 열면 스킵 플래그가 실제로 세팅됨', r4.flag === true, JSON.stringify(r4));
 
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));

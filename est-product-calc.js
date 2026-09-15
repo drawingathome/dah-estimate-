@@ -658,7 +658,7 @@ function applyFrozenBreakdown(bd) {
       }).join('');
     }
   }
-  window._lastCalcBreakdown = bd; // 이 상태로 저장(재저장)해도 같은 스냅샷 유지
+  window._estEditState.lastCalcBreakdown = bd; // 이 상태로 저장(재저장)해도 같은 스냅샷 유지
 }
 
 function calcTotal() {
@@ -768,8 +768,8 @@ function calcTotal() {
     }
     grand = flooredGrand;
   }
-  window._lastDiscountBreakdown = discountBreakdown; // 영수증 표시용
-  window._lastAppliedDiscounts = { coupons: appliedCoupons, manual: manualDiscount }; // 저장용(쿠폰ID 포함) - 절사는 매번 계산되므로 저장 불필요
+  window._estEditState.lastDiscountBreakdown = discountBreakdown; // 영수증 표시용
+  window._estEditState.lastAppliedDiscounts = { coupons: appliedCoupons, manual: manualDiscount }; // 저장용(쿠폰ID 포함) - 절사는 매번 계산되므로 저장 불필요
   var breakdownEl = document.getElementById('discount-breakdown');
   if (breakdownEl) {
     breakdownEl.innerHTML = discountBreakdown.map(function(d){
@@ -830,7 +830,7 @@ function calcTotal() {
   // 나중에 이 견적을 다시 열었을 때, 그 사이 할인쿠폰/설정이 바뀌어도 저장
   // 당시 금액 그대로 보이게 하려면 이 breakdown을 저장 시점에 DB에 같이
   // 넣어둬야 함(est-save.js에서 이 값을 읽어감). 매번 계산 끝에 최신값으로 갱신.
-  window._lastCalcBreakdown = {
+  window._estEditState.lastCalcBreakdown = {
     productSubtotal: curtainTotal, discount: discount, installSubtotal: svcTotal,
     finalTotal: grand, deposit: deposit, balance: balance, performanceRevenue: perf,
     discountDetail: discountBreakdown

@@ -12,8 +12,8 @@
 
 // 2026-08-26(선혜님과 함께 진행한 코드 구조 개선 — "전역변수가 여기저기
 // 흩어져있어서 한 곳에서 리셋을 빠뜨리면 또 버그가 난다"는 문제의식으로 시작):
-// "지금 편집 중인 견적이 무엇인지" 관련 상태 4가지(_editingEstDbId/
-// _editingEstUpdatedAt/_viewingFrozenEstimate/_estSaveCustomerId)를 "새로
+// "지금 편집 중인 견적이 무엇인지" 관련 상태 4가지(window._estEditState.editingEstDbId/
+// window._estEditState.editingEstUpdatedAt/window._estEditState.viewingFrozenEstimate/window._estEditState.estSaveCustomerId)를 "새로
 // 시작하는" 모든 지점에서 반드시 함께 리셋하도록 이 함수 하나로 모음. 예전엔
 // newEstimate()가 앞 3개만 리셋하고 _estSaveCustomerId는 빠뜨리고 있었음
 // (다행히 saveToLocalStorage()의 이름기반 재매칭이 우연히 이 문제를 가려주고
@@ -30,28 +30,34 @@
 // 나기 어렵게 함. 새 편집세션 상태 변수를 추가할 때는 반드시 여기부터
 // 등록할 것.
 var EST_SESSION_RESET_VALUES = {
-  _editingEstDbId: null,
-  _editingEstUpdatedAt: null,
-  _viewingFrozenEstimate: false,
-  _estSaveCustomerId: null,
-  _estimateConfirmedAt: null, // 9/15: 확정 상태 - 안 넣었다가 "허서진 데이터 실종" 사건 발생
-  _skipTodayDuplicateCheck: false, // "복사해서 새로 만들기" 전용 플래그 - 지금까지 이 목록에 없었음(추가 발견)
-  _lastCalcBreakdown: null,
-  _lastDiscountBreakdown: null,
-  _lastAppliedDiscounts: null
+  editingEstDbId: null,
+  editingEstUpdatedAt: null,
+  viewingFrozenEstimate: false,
+  estSaveCustomerId: null,
+  estimateConfirmedAt: null, // 9/15: 확정 상태 - 안 넣었다가 "허서진 데이터 실종" 사건 발생
+  skipTodayDuplicateCheck: false, // "복사해서 새로 만들기" 전용 플래그 - 지금까지 이 목록에 없었음(추가 발견)
+  lastCalcBreakdown: null,
+  lastDiscountBreakdown: null,
+  lastAppliedDiscounts: null
 };
 
+// 2026-09-15: 위 레지스트리를 실제로 담는 상자. 103곳에 흩어져있던
+// window._xxx 개별 전역변수를 전부 이 객체 하나의 프로퍼티로 통합함
+// (읽기/쓰기 지점은 window._estEditState.xxx로 전부 변경됨). 리셋은
+// 이제 "객체 통째로 새로 만들기" 한 줄로 끝남 - 개별 대입문을 하나씩
+// 나열할 필요가 없어져서, 새 상태값을 깜빡하고 안 넣는 재발 자체가
+// 구조적으로 불가능해짐(위 레지스트리에 등록만 하면 자동 포함).
+window._estEditState = Object.assign({}, EST_SESSION_RESET_VALUES);
+
 function resetEstEditingState() {
-  Object.keys(EST_SESSION_RESET_VALUES).forEach(function(key) {
-    window[key] = EST_SESSION_RESET_VALUES[key];
-  });
+  window._estEditState = Object.assign({}, EST_SESSION_RESET_VALUES);
   if (typeof lockEstimateForm === 'function') lockEstimateForm(false);
   if (typeof renderConfirmBadge === 'function') renderConfirmBadge();
   // 2026-08-29(선혜님이 자동백업 중복탐지 알림으로 발견 — 임민희 견적서
   // 8건 중복, 0.074초 안에 생성됨): idempotency_key는 위 목록과 달리
   // "고정된 초기값"이 아니라 매번 새로 생성해야 하는 값이라 별도 처리 -
   // 이 견적서 편집 세션 하나당 키 하나만 쓰도록 여기서 한 번만 생성.
-  window._currentEstIdempotencyKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('est-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+  window._estEditState.currentEstIdempotencyKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('est-' + Date.now() + '-' + Math.random().toString(36).slice(2));
 }
 
 function newEstimate() {
@@ -245,7 +251,7 @@ function _saveEstimateInner(_onDone) {
     
     try {
       var xhr=new XMLHttpRequest();
-      var existingCustId = window._estSaveCustomerId;
+      var existingCustId = window._estEditState.estSaveCustomerId;
       var isUpdate = !!existingCustId;
       xhr.open(isUpdate ? 'PATCH' : 'POST', SUPABASE_URL+'/rest/v1/customers'+(isUpdate ? '?id=eq.'+existingCustId : ''), true);
       xhr.setRequestHeader('apikey',SUPABASE_KEY);
@@ -280,7 +286,7 @@ function _saveEstimateInner(_onDone) {
               var savedArr = JSON.parse(localStorage.getItem('dah_saved')||'[]');
               var sIdx = savedArr.findIndex(function(e){ return e.no === document.getElementById('c-no')?.value.trim() && !e.clientId; });
               if (sIdx >= 0) { savedArr[sIdx].clientId = newId; localStorage.setItem('dah_saved', JSON.stringify(savedArr)); }
-              window._estSaveCustomerId = newId;
+              window._estEditState.estSaveCustomerId = newId;
             }
           } catch(e3) { /* 무시 — 로컬 id는 다음 저장시 이름+전화번호로 다시 매칭됨 */ }
           }
@@ -379,7 +385,7 @@ function _saveEstimateInner(_onDone) {
     // estimates_idempotency_key_uniq 유니크 제약과는 별개 문제라 여기선 못 막음 -
     // 대신 그 경우를 대비해 8-2번처럼 주기적으로 견적서 목록에서 중복을
     // 스캔하는 걸 권장.)
-    if (!window._editingEstDbId && !window._skipTodayDuplicateCheck && window._estSaveCustomerId && typeof SUPABASE_URL !== 'undefined') {
+    if (!window._estEditState.editingEstDbId && !window._estEditState.skipTodayDuplicateCheck && window._estEditState.estSaveCustomerId && typeof SUPABASE_URL !== 'undefined') {
       var todayStart = new Date(); todayStart.setHours(0,0,0,0);
       var xhrCheck = new XMLHttpRequest();
       // 2026-08-31(선혜님 지적 — "현은지 왜 또 중복이 되지????", 개판이네
@@ -392,7 +398,7 @@ function _saveEstimateInner(_onDone) {
       // 이 안전장치도 원본을 못 찾아 완전히 새 레코드(POST)를 만들어버림.
       // "오늘 작업 중인 견적"을 정확히 찾으려면 최초 생성일이 아니라
       // 최근 수정일(updated_at) 기준이어야 함.
-      xhrCheck.open('GET', SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(window._estSaveCustomerId) +
+      xhrCheck.open('GET', SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(window._estEditState.estSaveCustomerId) +
         '&is_archived=eq.false&updated_at=gte.' + encodeURIComponent(todayStart.toISOString()) +
         '&select=id,updated_at&order=updated_at.desc&limit=1', true);
       xhrCheck.setRequestHeader('apikey', SUPABASE_KEY);
@@ -408,8 +414,8 @@ function _saveEstimateInner(_onDone) {
           if (xhrCheck.status >= 200 && xhrCheck.status < 300) {
             var rows = JSON.parse(xhrCheck.responseText || '[]');
             if (rows && rows.length) {
-              window._editingEstDbId = rows[0].id;
-              window._editingEstUpdatedAt = rows[0].updated_at || null;
+              window._estEditState.editingEstDbId = rows[0].id;
+              window._estEditState.editingEstUpdatedAt = rows[0].updated_at || null;
               showToast('오늘 이미 저장된 견적을 찾아 이어서 수정합니다(중복 방지)');
             }
           }
@@ -433,7 +439,7 @@ function _saveEstimateInner(_onDone) {
     // 재시도했을 때, DB의 유니크 제약(estimates_idempotency_key_uniq)이 중복 삽입을
     // 막아주고, 그 409 응답을 "이미 저장됨"으로 해석해서 정상 처리함.
     var estPayloadForRetry = Object.assign({
-      client_idempotency_key: window._currentEstIdempotencyKey || ((window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('est-' + Date.now() + '-' + Math.random().toString(36).slice(2))),
+      client_idempotency_key: window._estEditState.currentEstIdempotencyKey || ((window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('est-' + Date.now() + '-' + Math.random().toString(36).slice(2))),
       customer_name:name, price:grand,
       performance_revenue:perf, staff_name:staffName,
       estimate_status:currentTab||'ga',
@@ -451,22 +457,22 @@ function _saveEstimateInner(_onDone) {
       measure_date_tbd: document.getElementById('c-measure-tbd')?.checked || false,
       install_date_tbd: document.getElementById('c-install-tbd')?.checked || false,
       memo: custMemo,
-      confirmed_at: window._estimateConfirmedAt || null,
+      confirmed_at: window._estEditState.estimateConfirmedAt || null,
       branch: '반포점',
-      client_id: window._estSaveCustomerId || null,
+      client_id: window._estEditState.estSaveCustomerId || null,
       line_items: lineItems,
       cust_type: currentCustType || 'new',
       region: document.getElementById('c-region')?.value || '',
       // 2026-08-14: 할인 정보 자체가 지금까지 저장 안 되고 있던 필드누락을
       // 쿠폰 다중선택 기능 만들면서 같이 발견/해결 - 재구매/열어서수정시
       // 어떤 쿠폰이 선택돼있었는지 정확히 복원하기 위해 저장.
-      applied_discounts: window._lastAppliedDiscounts || { coupons: [], manual: null },
+      applied_discounts: window._estEditState.lastAppliedDiscounts || { coupons: [], manual: null },
       // 2026-08-24(선혜님 확인 — "다시 열어도 저장 당시 금액 그대로"): 제품소계/
       // 시공자재/할인/최종금액/계약금/잔금 스냅샷을 같이 저장. 안 하면 견적을
       // 나중에 다시 열었을 때 그 사이 바뀐 할인쿠폰/설정으로 재계산되어 금액이
       // 달라지는 문제가 있었음(최시내님 사례로 발견 — 저장시 482만원이었는데
       // 나중에 다시 여니 490.9만원으로 나옴).
-      price_breakdown: window._lastCalcBreakdown || null
+      price_breakdown: window._estEditState.lastCalcBreakdown || null
     }, currentCustType === 'as' ? {
       as_install_date: document.getElementById('as-install-date')?.value || null,
       as_type: document.getElementById('as-type-sel')?.value || null,
@@ -483,15 +489,15 @@ function _saveEstimateInner(_onDone) {
       // 진입한 경우) PATCH로 그 레코드 자체를 갱신, 없으면(신규작성/"복사해서
       // 새로만들기") 기존처럼 POST — 이 경우 응답에서 생성된 id를 받아 로컬에
       // dbId로 저장해둬야 다음번에 "열어서 수정"이 가능해짐.
-      var isEditMode = !!window._editingEstDbId;
+      var isEditMode = !!window._estEditState.editingEstDbId;
       // 2026-08-13: 동시편집 충돌 방지(낙관적 잠금) - PATCH할 때 "내가 불러온
       // 시점의 updated_at"도 조건에 포함시켜서, 그 사이 다른 사람(다른 탭/다른
       // 스태프)이 먼저 저장했으면(=updated_at이 달라졌으면) 이번 PATCH가 0건
       // 매칭되어 아무것도 안 바뀜 - 이걸로 "덮어쓰기 충돌"을 감지해서 조용히
       // 데이터를 잃지 않고 사용자에게 알림.
-      var lockUpdatedAt = window._editingEstUpdatedAt || null;
+      var lockUpdatedAt = window._estEditState.editingEstUpdatedAt || null;
       if (isEditMode) {
-        var patchUrl = SUPABASE_URL+'/rest/v1/estimates?id=eq.'+encodeURIComponent(window._editingEstDbId);
+        var patchUrl = SUPABASE_URL+'/rest/v1/estimates?id=eq.'+encodeURIComponent(window._estEditState.editingEstDbId);
         if (lockUpdatedAt) patchUrl += '&updated_at=eq.'+encodeURIComponent(lockUpdatedAt);
         xhr2.open('PATCH', patchUrl, true);
       } else {
@@ -537,7 +543,7 @@ function _saveEstimateInner(_onDone) {
                   failedSaves.push({
                     savedAt: new Date().toISOString(),
                     reason: lockUpdatedAt ? '동시저장충돌' : '권한문제(담당자불일치 추정)',
-                    editingEstDbId: window._editingEstDbId,
+                    editingEstDbId: window._estEditState.editingEstDbId,
                     payload: estPayloadForRetry
                   });
                   if (failedSaves.length > 50) failedSaves = failedSaves.slice(-50); // 무한정 쌓이지 않게 최근 50건만
@@ -556,7 +562,7 @@ function _saveEstimateInner(_onDone) {
                 }
                 // 2026-09-05(선혜님 지시 - "더 파자"로 발견, 실제 DB
                 // 로그로 재현 확인): 동시저장충돌 감지 후에도 window.
-                // _editingEstUpdatedAt(락값)을 갱신하는 코드가 없어서,
+                // window._estEditState.editingEstUpdatedAt(락값)을 갱신하는 코드가 없어서,
                 // 사용자가 재시도해도 계속 예전(불일치) 락값 그대로
                 // 재시도하게 되어 매번 같은 이유로 또 실패하는 반복이
                 // 있었음(실제 client_error_logs에서 6분 사이 5번, 1분
@@ -573,16 +579,16 @@ function _saveEstimateInner(_onDone) {
                 // 공용 함수로 뽑아냄 - 조회 로직 자체의 버그는 이제 고칠
                 // 곳이 한 곳뿐이라, 한쪽만 고치고 깜빡하는 실수가 구조적
                 // 으로 불가능해짐.
-                if (lockUpdatedAt && window._editingEstDbId && typeof fetchLatestUpdatedAt === 'function') {
-                  fetchLatestUpdatedAt('estimates', window._editingEstDbId, function(freshUpdatedAt) {
-                    if (freshUpdatedAt) window._editingEstUpdatedAt = freshUpdatedAt;
+                if (lockUpdatedAt && window._estEditState.editingEstDbId && typeof fetchLatestUpdatedAt === 'function') {
+                  fetchLatestUpdatedAt('estimates', window._estEditState.editingEstDbId, function(freshUpdatedAt) {
+                    if (freshUpdatedAt) window._estEditState.editingEstUpdatedAt = freshUpdatedAt;
                   });
                 }
                 onDone();
                 return;
               }
               // 성공 - 다음 저장을 위해 최신 updated_at 갱신
-              if (lockCheckRows[0] && lockCheckRows[0].updated_at) window._editingEstUpdatedAt = lockCheckRows[0].updated_at;
+              if (lockCheckRows[0] && lockCheckRows[0].updated_at) window._estEditState.editingEstUpdatedAt = lockCheckRows[0].updated_at;
             } catch(eLock) {
               // 응답 파싱 실패 = 실제로 뭐가 바뀌었는지 확인 불가 상태 —
               // 조용히 "성공"으로 넘어가지 않고 확인 필요하다고 알림
@@ -597,8 +603,8 @@ function _saveEstimateInner(_onDone) {
               var createdRows = JSON.parse(xhr2.responseText);
               var newDbId = createdRows && createdRows[0] && createdRows[0].id;
               if (newDbId) {
-                window._editingEstDbId = newDbId; // 이후 같은 화면에서 재저장하면 이제부터 수정모드
-                window._editingEstUpdatedAt = createdRows[0].updated_at || null;
+                window._estEditState.editingEstDbId = newDbId; // 이후 같은 화면에서 재저장하면 이제부터 수정모드
+                window._estEditState.editingEstUpdatedAt = createdRows[0].updated_at || null;
                 var localArr = JSON.parse(localStorage.getItem('dah_saved')||'[]');
                 var lastIdx = localArr.length - 1;
                 // 2026-08-24: 여기서도 .dbId만 갱신하고 .id는 그대로 둬서, 첫 저장
@@ -619,21 +625,21 @@ function _saveEstimateInner(_onDone) {
           showToast('저장 완료 (로컬) — DB 동기화는 실패했어요');
           // 2026-08-05: 실패하면 그걸로 끝이라 나중에 수동으로 다시 저장해야 했음 —
           // 재시도 큐에 등록해서 네트워크 복구시 자동으로 다시 시도되도록 함
-          if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._editingEstDbId);
+          if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId);
         }
         onDone(); // 2026-08-24: 성공/409/실패 모든 경우에 버튼 다시 눌러도 되게 원상복구
       };
       xhr2.onerror=function(){
         console.warn('Supabase 견적서 저장 실패 (localStorage는 완료)');
         showToast('저장 완료 (로컬) — DB 동기화는 실패했어요');
-        if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._editingEstDbId);
+        if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId);
         onDone();
       };
       xhr2.send(JSON.stringify(estPayloadForRetry));
     } catch(e) {
       console.warn('Supabase 연결 오류:', e);
       showToast('저장 완료 (로컬) — DB 동기화는 실패했어요');
-      if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._editingEstDbId);
+      if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId);
       onDone();
     }
   }
@@ -655,7 +661,7 @@ function _saveEstimateInner(_onDone) {
       var uniqCurtainVendors = curtainVendors.filter(function(v,i){ return curtainVendors.indexOf(v)===i; });
       var uniqBlindVendors = blindVendors.filter(function(v,i){ return blindVendors.indexOf(v)===i; });
 
-      var editingDbId = window._editingEstDbId || null;
+      var editingDbId = window._estEditState.editingEstDbId || null;
       var idx = saved.findIndex(function(e){ return (editingDbId && (e.dbId === editingDbId || e.id === editingDbId)) || e.no === noStr; });
       var entry = {
         // 2026-08-24(선혜님 발견 — "이 두개의 견적번호가 다른 이유는?": 같은 저장인데
@@ -690,12 +696,12 @@ function _saveEstimateInner(_onDone) {
         date: document.getElementById('c-measure')?.value || '',
         installDate: document.getElementById('c-install')?.value || '',
         memo: custMemo,
-        confirmedAt: window._estimateConfirmedAt || null,
+        confirmedAt: window._estEditState.estimateConfirmedAt || null,
         branch: '반포점',
         lineItems: lineItems,
         custType: currentCustType || 'new',
         region: document.getElementById('c-region')?.value || '',
-        appliedDiscounts: window._lastAppliedDiscounts || { coupons: [], manual: null }
+        appliedDiscounts: window._estEditState.lastAppliedDiscounts || { coupons: [], manual: null }
       };
       if (currentCustType === 'as') {
         entry.asInstallDate = document.getElementById('as-install-date')?.value || null;
@@ -723,11 +729,11 @@ function _saveEstimateInner(_onDone) {
         // 상황 자체에서 항상 매칭에 실패했음(바뀐 새 이름은 로컬에 없으니 당연히
         // 못 찾음) — 그래서 수정이 아니라 매번 완전히 새 고객으로 만들어지고
         // 있었음. 이미 "이 견적은 이 고객 것"이라고 알고 있는 id(고객 불러오기로
-        // 로드했거나 이전에 이미 저장해서 알고 있는 경우 window._estSaveCustomerId
+        // 로드했거나 이전에 이미 저장해서 알고 있는 경우 window._estEditState.estSaveCustomerId
         // 에 남아있음)가 있으면 이름이 바뀌었어도 그 id를 최우선으로 써서 정확히
         // "수정"으로 처리되게 함 — 이름+전화번호 매칭은 그 id를 모를 때(진짜
         // 신규/다른 고객 가능성)만 보조적으로 사용.
-        var knownId = window._estSaveCustomerId || null;
+        var knownId = window._estEditState.estSaveCustomerId || null;
         var cidx = knownId
           ? customers.findIndex(function(c){ return String(c.id) === String(knownId); })
           : customers.findIndex(function(c){
@@ -771,7 +777,7 @@ function _saveEstimateInner(_onDone) {
           customers.unshift(custEntry);
         }
         localStorage.setItem('dah_customers', JSON.stringify(customers));
-        window._estSaveCustomerId = existingId; // saveToCustomers/saveToEstimates에서 사용
+        window._estEditState.estSaveCustomerId = existingId; // saveToCustomers/saveToEstimates에서 사용
       } catch(e2) { console.warn('dah_customers 동기화 실패', e2); }
 
     } catch(e) { console.warn('localStorage 저장 실패', e); }
