@@ -822,7 +822,29 @@ function _saveEstimateInner(_onDone) {
 // 방어도 추가했었으나, 검증 후→값 수정→재저장 같은 정당한 짧은 간격의
 // 재시도까지 막아버리는 회귀를 자체 테스트로 발견해 제거함 - idempotency
 // key 재사용만으로 이미 충분한 방어였음.)
+// 2026-09-15(선혜님 지시 - "여기에 버그 있는지 확인해" → "해": 어제
+// "인테리어오월" 견적서가 저장완료라고 봤는데 서버·로컬·실패백업·
+// 재시도큐 어디에도 흔적이 없던 사건으로 발견): validateEstimate()가
+// 저장 버튼을 누른 즉시(네트워크 요청 나가기도 전에) 조용히 멈출 수
+// 있어서, 그 경우 "시도했다"는 기록 자체가 아무 데도 안 남았음 -
+// 검증 통과/실패와 무관하게 "저장 버튼을 눌렀다"는 사실 자체를
+// 무조건 여기 남겨서, 다음에 똑같이 흔적 없이 사라지는 상황이 다시는
+// 안 생기게 함.
+function logSaveAttempt() {
+  try {
+    var log = JSON.parse(localStorage.getItem('dah_save_attempts')||'[]');
+    log.push({
+      at: new Date().toISOString(),
+      customerName: (document.getElementById('c-name')?.value || '').trim(),
+      phone: (document.getElementById('c-phone')?.value || '').trim()
+    });
+    if (log.length > 30) log = log.slice(-30); // 최근 30건만
+    localStorage.setItem('dah_save_attempts', JSON.stringify(log));
+  } catch (e) { /* 이 기록 자체가 실패해도 저장 흐름엔 영향 안 줌 */ }
+}
+
 function saveEstimate() {
+  logSaveAttempt();
   // 2026-09-08(선혜님 지적 - "저장 후 대시보드를 클릭하면 사이트에서
   // 나갈까요? 저장되지 않을 수 있습니다가 무조건 알림이 떠 저장이
   // 됐으면 안떠야지"): dah-estimate.html의 beforeunload 핸들러가
@@ -939,6 +961,13 @@ function runSelfDiagnosis() {
   var pending = [];
   try { pending = JSON.parse(localStorage.getItem('dah_pending_estimate_sync') || '[]'); } catch(e) {}
   check('서버 저장 대기열', pending.length === 0, pending.length === 0 ? '밀린 것 없음' : (pending.length + '건 대기중 - 하단 배너를 눌러 재시도해보세요'));
+
+  var attempts = [];
+  try { attempts = JSON.parse(localStorage.getItem('dah_save_attempts') || '[]'); } catch(e) {}
+  var recentAttempts = attempts.slice(-3).reverse().map(function(a){
+    return (a.customerName||'(이름없음)') + ' — ' + new Date(a.at).toLocaleString('ko-KR');
+  }).join('<br>');
+  check('최근 저장 시도 기록', attempts.length > 0, attempts.length + '건 기록됨' + (recentAttempts ? '<br>최근: ' + recentAttempts : ''));
 
   check('현재 페이지 버전', true, 'v' + (window.DAH_BUILD||'?'));
 }

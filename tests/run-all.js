@@ -133,6 +133,9 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['field-parity-check.js', []]);
   // 2026-09-14: 고객용 견적서 공개보기(로그인 없이 ?view=id로 보는 화면) 검증
   scripts.push(['est_public_view_check.js', []]);
+  // 2026-09-15: 저장 버튼을 눌렀는데 검증실패로 조용히 멈춰도 "시도 기록"이
+  // 무조건 남는지 검증 - "인테리어오월" 견적서 실종 사건으로 발견한 위험
+  scripts.push(['save_attempt_log_check.js', []]);
 }
 
 let anyFail = false;
