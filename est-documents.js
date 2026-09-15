@@ -621,7 +621,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   // 수정"): 거래처를 아직 안 정한 항목("미지정")을 화면 전환 없이도
   // 바로 알아챌 수 있도록 경고 색으로 눈에 띄게 표시.
   var isUnassigned = (!vendor || vendor.indexOf('미지정') === 0);
-  out += '<div style="margin-top:var(--sp-5);padding:8px 14px;background:'+(isUnassigned?'#FBEAE7':'#F5F2EE')+';font-size:13px;font-weight:700;color:'+(isUnassigned?'#C0392B':'#282828')+'">'+(isUnassigned?'⚠️ '+escHtml(vendor||'거래처 미지정')+' — 아래 항목의 거래처를 정해주세요':'거래처: '+escHtml(vendor))+'</div>';
+  out += '<div class="pv-unassigned-banner" style="margin-top:var(--sp-5);padding:8px 14px;background:'+(isUnassigned?'#FBEAE7':'#F5F2EE')+';font-size:13px;font-weight:700;color:'+(isUnassigned?'#C0392B':'#282828')+'">'+(isUnassigned?'⚠️ '+escHtml(vendor||'거래처 미지정')+' — 아래 항목의 거래처를 정해주세요':'거래처: '+escHtml(vendor))+'</div>';
   // 2026-09-14(선혜님 - "아래 항목의 거래처를 정해달라는데 어떻게
   // 정하는데??"로 발견): 경고 문구는 "정해주세요"라고만 하지, 실제로
   // 어떻게(클릭해서 직접 타이핑) 정하는 건지 이 문서 어디에도 안내가
@@ -1361,6 +1361,33 @@ function wireVendorNameEdit(container, groups) {
     document.body.appendChild(toast);
     setTimeout(function(){ toast.remove(); }, 6000);
   }
+  // 2026-09-15(선혜님 - "미지정을 지정해도 계속 뜨잖아... 다단다에서는
+  // 블라인드 업체명이 보이는데" 로 발견 — 실제로는 데이터는 정확히
+  // 저장되고 있었음(시공의뢰서엔 이미 정확히 나오고 있었던 게 그 증거).
+  // 진짜 문제는 발주서 화면 위쪽의 "⚠️ 미지정" 경고 배너가 정적으로
+  // 한 번만 그려지고, 그 뒤로 항목을 하나씩 고쳐도 전혀 다시 계산이
+  // 안 되고 있었다는 것 - 데이터는 맞는데 화면(배너)만 계속 옛날 상태를
+  // 보여주고 있었음. 항목을 고칠 때마다 그 그룹의 배너/헤더를 지금
+  // 상태 기준으로 다시 그림.
+  function refreshBlockBanner(block, groupItems) {
+    var banner = block.querySelector('.pv-unassigned-banner');
+    if (!banner) return;
+    var vendors = groupItems.map(function(it){ return it.vendor || ''; });
+    var allAssigned = vendors.length > 0 && vendors.every(function(v){ return !!v; });
+    if (allAssigned) {
+      var uniqueVendors = vendors.filter(function(v, i, arr){ return arr.indexOf(v) === i; });
+      var label = uniqueVendors.length === 1 ? uniqueVendors[0] : '여러 거래처';
+      banner.style.background = '#F5F2EE';
+      banner.style.color = '#282828';
+      banner.textContent = '거래처: ' + label;
+      var headerField = block.querySelector('.pv-vendor-name-field');
+      if (headerField) headerField.textContent = label;
+    } else {
+      banner.style.background = '#FBEAE7';
+      banner.style.color = '#C0392B';
+      banner.textContent = '⚠️ 일부 항목의 거래처가 아직 안 정해졌어요 — 빨간 글씨나 드롭다운을 확인해주세요';
+    }
+  }
   // 2026-09-14(선혜님 지적 - "된거니????": 레일/블라인드도 원단과 같은
   // 문제가 있었음 발견): 블라인드는 거래처가 <select>라 직접 타이핑하는
   // 방식(.pv-item-vendor-field)이 아니라 문서 안에 진짜 드롭다운
@@ -1403,6 +1430,7 @@ function wireVendorNameEdit(container, groups) {
       item.vendor = val;
       sel.style.borderColor = val ? '#EEE6DC' : '#E4483A';
       sel.style.color = val ? '#282828' : '#C0392B';
+      refreshBlockBanner(block, groupItems);
       showVendorSavedToast('✅ "' + (item.space||'') + '" 항목의 거래처를 반영했어요.');
     });
   });
@@ -1459,9 +1487,10 @@ function wireVendorNameEdit(container, groups) {
           // 오히려 원본을 망칠 수 있으므로, 등록된 옵션과 정확히 일치할
           // 때만 반영하고 아니면 거부.
           var matched = Array.from(input.options).some(function(opt){ return opt.value === newVal; });
-          if (matched) { input.value = newVal; applied++; } else { rejected++; }
+          if (matched) { input.value = newVal; it.vendor = newVal; applied++; } else { rejected++; }
         } else {
           input.value = newVal;
+          it.vendor = newVal;
           applied++;
         }
       });
@@ -1474,6 +1503,10 @@ function wireVendorNameEdit(container, groups) {
       // 이고, Supabase 저장은 아직 안 된 상태 - 저장을 깜빡하면 다음에
       // 다시 열었을 때 이전 값으로 보임(2026-09-14 "다시 초기화" 지적으로
       // "지금 저장" 버튼을 토스트에 바로 붙임 - showVendorSavedToast 참고).
+      // 2026-09-15(선혜님 - "미지정을 지정해도 계속 뜨잖아"로 발견): 값은
+      // 정확히 반영되고 있었는데 경고 배너를 다시 계산 안 해서 계속
+      // "미지정"으로 보이고 있었음 - 배너/헤더도 지금 상태로 갱신.
+      refreshBlockBanner(block, groupItems);
       showVendorSavedToast('✅ 이 견적서의 거래처 칸에 "' + newVal + '"(으)로 반영했어요.');
     });
   });
