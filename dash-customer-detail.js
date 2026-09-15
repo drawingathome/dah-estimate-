@@ -738,6 +738,63 @@ function renderDetailStageSection(c, body, isMaster) {
 
 }
 
+// 2026-09-15(선혜님 지시 - "전문업체는 이런 일이 있을 수 있니??" 로
+// 만든 안전장치): estimates 테이블에 DB 트리거(estimate_history)가
+// 자동으로 직전 버전을 남기게 만들어둠 - 이걸 보고, 필요하면 그 버전
+// 으로 되돌릴 수 있는 화면.
+function showEstimateHistoryModal(dbId, clientName) {
+  var existing = document.getElementById('est-history-overlay');
+  if (existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'est-history-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99998;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:12px;padding:var(--sp-5);width:420px;max-width:100%;max-height:80vh;overflow-y:auto';
+  box.innerHTML = '<div style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:4px">📜 ' + escHtml(clientName||'') + ' 견적서 이력</div>' +
+    '<div style="font-size:11px;color:var(--sub);margin-bottom:var(--sp-3)">수정/삭제되기 직전 버전이 자동으로 여기 남아요</div>' +
+    '<div id="est-history-list" style="font-size:12px;color:var(--sub)">불러오는 중...</div>' +
+    '<button id="est-history-close-btn" style="margin-top:var(--sp-3);width:100%;padding:11px;background:#fff;border:1px solid var(--border);border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;color:var(--dark)">닫기</button>';
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  document.getElementById('est-history-close-btn').addEventListener('click', function(){ overlay.remove(); });
+
+  sbXHR('GET', 'estimate_history?estimate_id=eq.' + encodeURIComponent(dbId) + '&order=changed_at.desc&limit=20', null, function(err, rows) {
+    var listEl = document.getElementById('est-history-list');
+    if (!listEl) return; // 로딩 중 모달 닫힘
+    if (err || !Array.isArray(rows)) { listEl.textContent = '불러오지 못했어요. 다시 시도해주세요.'; return; }
+    if (rows.length === 0) { listEl.textContent = '아직 수정된 적 없는 견적서예요(이력 없음).'; return; }
+    listEl.innerHTML = '';
+    rows.forEach(function(h) {
+      var snap = h.snapshot || {};
+      var dt = new Date(h.changed_at);
+      var dateStr = (dt.getMonth()+1) + '/' + dt.getDate() + ' ' + dt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+      var priceStr = (Number(snap.price)||0).toLocaleString() + '원';
+      var itemCount = Array.isArray(snap.line_items) ? snap.line_items.length : 0;
+      var row = document.createElement('div');
+      row.style.cssText = 'padding:10px 0;border-bottom:1px solid var(--ivory1);display:flex;justify-content:space-between;align-items:center;gap:8px';
+      row.innerHTML = '<div><div style="font-size:11px;color:var(--sub)">' + escHtml(dateStr) + ' 이전 (' + escHtml(h.change_type === 'before_delete' ? '삭제 전' : '수정 전') + ')</div>' +
+        '<div style="font-size:13px;font-weight:700;color:var(--dark)">' + escHtml(priceStr) + ' · 품목 ' + itemCount + '개</div></div>';
+      var restoreBtn = document.createElement('button');
+      restoreBtn.textContent = '이 버전으로 복원';
+      restoreBtn.style.cssText = 'flex-shrink:0;font-size:11px;font-weight:700;padding:7px 10px;border-radius:8px;border:1px solid var(--dark);background:#fff;color:var(--dark);cursor:pointer;font-family:inherit';
+      restoreBtn.addEventListener('click', function(){
+        if (!confirm(dateStr + ' 버전(' + priceStr + ')으로 되돌릴까요?\n\n지금 저장된 최신 내용은 사라지고 이 버전으로 바뀝니다.')) return;
+        sbXHR('PATCH', 'estimates?id=eq.' + encodeURIComponent(dbId), {
+          price: snap.price, line_items: snap.line_items, memo: snap.memo,
+          estimate_status: snap.estimate_status, contract_status: snap.contract_status
+        }, function(perr){
+          if (perr) { showToast('⚠️ 복원이 서버에 반영되지 않았어요 — 다시 시도해주세요'); return; }
+          showToast('✅ ' + dateStr + ' 버전으로 복원됐어요');
+          overlay.remove();
+          openDetail(currentDetailName, currentDetailId);
+        });
+      });
+      row.appendChild(restoreBtn);
+      listEl.appendChild(row);
+    });
+  });
+}
+
 function renderDetailTodoSection(c, body) {
   // 2026-09-14(선혜님 지적 - 문지윤 고객 실제 캡처로 발견): 여기가 소통
   // 탭과 다른 로직(단순 단계매칭)을 써서 서로 다른 개수가 나오고 있었음 -
@@ -1264,6 +1321,23 @@ function renderEstimateHistory(container, clientName, clientId) {
         });
       })(e.dbId);
       actionRow.appendChild(editBtn); actionRow.appendChild(copyBtn);
+      // 2026-09-15(선혜님 지시 - "전문업체는 이런 일이 있을 수 있니??"로
+      // 만든 안전장치): 견적서가 수정/삭제될 때마다 DB 트리거가 자동으로
+      // 직전 버전을 estimate_history에 남기게 만들어둠(코드가 아니라 DB
+      // 자체에 건 것이라 어떤 클라이언트 버그가 있어도 항상 작동함) -
+      // 그걸 화면에서 볼 수 있는 버튼.
+      var histBtn = el('button', {style:
+        'flex:0 0 60px;font-size:11px;font-weight:600;padding:7px 4px;border-radius:8px;' +
+        'border:1px solid var(--border);background:#fff;color:var(--sub);cursor:pointer;font-family:inherit;min-height:32px'
+      });
+      histBtn.textContent = '이력';
+      (function(dbId, estObj){
+        histBtn.addEventListener('click', function(ev){
+          ev.stopPropagation();
+          showEstimateHistoryModal(dbId, estObj.clientName || currentDetailName);
+        });
+      })(e.dbId, e);
+      actionRow.appendChild(histBtn);
       // 2026-08-28(선혜님 지적 — "위 이미지에서 개별 견적서 삭제는 왜 안되지
       // 전체 삭제만 되게 했지??"): 맨 위 "견적서" 탭엔 이미 개별 삭제(🗑)
       // 버튼이 있었는데, 이 고객상세 화면의 견적서 목록엔 애초에 코드

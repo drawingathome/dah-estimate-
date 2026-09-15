@@ -76,6 +76,9 @@ if (/dah-dashboard/.test(target)) {
   // 토큰이 반영되는지 검증 (예전엔 최초 토큰 그대로 굳어있다가 만료후
   // 계속 연결실패하던 버그)
   scripts.push(['realtime_token_refresh_check.js', []]);
+  // 2026-09-15: 견적서 이력/복원 기능 검증 (DB 트리거로 자동 백업된
+  // 이전 버전을 화면에서 보고 복원할 수 있는지)
+  scripts.push(['estimate_history_restore_check.js', []]);
   // 2026-09-14: 진행 단계 표시가 "N/전체" 숫자 형식으로 정확히 나오는지 검증
   scripts.push(['stage_progress_number_check.js', []]);
   // 2026-09-14: 6번 결제안내 버튼 URL("https://#{결제링크}")이 저장된
