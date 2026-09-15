@@ -79,6 +79,8 @@ if (/dah-dashboard/.test(target)) {
   // 2026-09-15: 견적서 이력/복원 기능 검증 (DB 트리거로 자동 백업된
   // 이전 버전을 화면에서 보고 복원할 수 있는지)
   scripts.push(['estimate_history_restore_check.js', []]);
+  // 2026-09-15: 정보탭 개선 검증 - 중복금액 병합/버튼 정리(⋮메뉴)
+  scripts.push(['info_tab_polish_check.js', []]);
   // 2026-09-14: 진행 단계 표시가 "N/전체" 숫자 형식으로 정확히 나오는지 검증
   scripts.push(['stage_progress_number_check.js', []]);
   // 2026-09-14: 6번 결제안내 버튼 URL("https://#{결제링크}")이 저장된

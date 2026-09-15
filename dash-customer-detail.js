@@ -538,6 +538,12 @@ function renderDetailHeader(c) {
     // 계산에는 이 값이 아니라 customer.price가 실제로 쓰임 — 둘이 다른 소스라
     // 서로 어긋날 수 있어서(예: 견적을 여러개 받은 뒤 더 작은 금액으로 확정한
     // 경우), 실무자가 직접 확인·수정할 수 있게 별도로 명확히 표시
+    // 2026-09-15(선혜님 지적 - "같은 숫자가 두 번 뜬다, 전문업체 기준
+    // 만족스럽니??"로 재검토): "진행중인 견적"(최신 견적서 금액)과
+    // "매출 계산 기준금액"(customer.price)이 서로 다른 소스인 건 맞지만,
+    // 실무에서 거의 항상 같은 값이라(둘 다 안 어긋난 경우가 대부분)
+    // 매번 똑같은 숫자를 두 줄로 보여줘서 헷갈렸음 - 두 값이 실제로
+    // 다를 때만 별도로 보여주고, 같으면 한 줄로 합쳐서 보여줌.
     var priceEditRow = document.getElementById('detail-price-edit-row');
     if (!priceEditRow) {
       priceEditRow = document.createElement('div');
@@ -546,9 +552,16 @@ function renderDetailHeader(c) {
       curEstBox.parentNode.insertBefore(priceEditRow, curEstBox.nextSibling);
     }
     function renderPriceRow() {
-      priceEditRow.innerHTML =
-        '<span style="font-size:11px;color:var(--sub)">매출 계산 기준금액</span>' +
-        '<span style="font-size:12px;font-weight:700;color:var(--dark);cursor:pointer;text-decoration:underline;text-decoration-style:dotted" id="price-edit-trigger">' + (Number(c.price)||0).toLocaleString() + '원 (수정)</span>';
+      var pricesMatch = latestEst && Number(c.price||0) === Number(latestEst.price||0);
+      priceEditRow.style.display = 'flex';
+      if (pricesMatch) {
+        // 값이 같을 땐 숫자를 또 안 보여주고, 수정 링크만 작게 남겨둠(편집 기능은 유지)
+        priceEditRow.innerHTML = '<span style="font-size:11px;color:var(--sub)">매출 반영 금액 = 위 견적 금액과 동일 · <span id="price-edit-trigger" style="cursor:pointer;text-decoration:underline;text-decoration-style:dotted;color:var(--dark);font-weight:600">직접 수정</span></span>';
+      } else {
+        priceEditRow.innerHTML =
+          '<span style="font-size:11px;color:var(--sub)">매출 계산 기준금액 (견적과 다름)</span>' +
+          '<span style="font-size:12px;font-weight:700;color:var(--dark);cursor:pointer;text-decoration:underline;text-decoration-style:dotted" id="price-edit-trigger">' + (Number(c.price)||0).toLocaleString() + '원 (수정)</span>';
+      }
       document.getElementById('price-edit-trigger').onclick = function() {
         var input = document.createElement('input');
         input.type = 'number'; input.value = c.price || 0;
@@ -837,6 +850,15 @@ function renderDetailTodoSection(c, body) {
     body.appendChild(todoSec);
   }
 
+}
+
+// 2026-09-15: 견적서 카드 ⋮ 메뉴(이력/삭제)가 다른 곳 클릭해도 안 닫히면
+// 안 되니, 문서 전체 클릭시 열려있는 메뉴를 한 번만 등록해서 항상 닫음.
+if (!window._estMoreMenuGlobalListenerBound) {
+  window._estMoreMenuGlobalListenerBound = true;
+  document.addEventListener('click', function() {
+    document.querySelectorAll('.est-more-menu-open').forEach(function(m){ m.style.display = 'none'; m.classList.remove('est-more-menu-open'); });
+  });
 }
 
 function renderDetailInfoSection(c, body) {
@@ -1321,37 +1343,39 @@ function renderEstimateHistory(container, clientName, clientId) {
         });
       })(e.dbId);
       actionRow.appendChild(editBtn); actionRow.appendChild(copyBtn);
-      // 2026-09-15(선혜님 지시 - "전문업체는 이런 일이 있을 수 있니??"로
-      // 만든 안전장치): 견적서가 수정/삭제될 때마다 DB 트리거가 자동으로
-      // 직전 버전을 estimate_history에 남기게 만들어둠(코드가 아니라 DB
-      // 자체에 건 것이라 어떤 클라이언트 버그가 있어도 항상 작동함) -
-      // 그걸 화면에서 볼 수 있는 버튼.
-      var histBtn = el('button', {style:
-        'flex:0 0 60px;font-size:11px;font-weight:600;padding:7px 4px;border-radius:8px;' +
-        'border:1px solid var(--border);background:#fff;color:var(--sub);cursor:pointer;font-family:inherit;min-height:32px'
+      // 2026-09-15(선혜님 지적 - "버튼이 4개라 빽빽해요, 전문업체 기준
+      // 만족스럽니??"로 재검토): "이력"/"삭제"를 자주 안 쓰는 보조 동작으로
+      // 보고, 점3개(⋮) 메뉴 하나 뒤로 모아서 자주 쓰는 열기/복사 2개만
+      // 눈에 띄게 남김.
+      var moreBtn = el('button', {style:
+        'flex:0 0 36px;font-size:16px;font-weight:700;padding:7px 0;border-radius:8px;' +
+        'border:1px solid var(--border);background:#fff;color:var(--sub);cursor:pointer;font-family:inherit;min-height:32px;position:relative'
       });
-      histBtn.textContent = '이력';
+      moreBtn.className = 'est-card-more-btn';
+      moreBtn.textContent = '⋮';
+      var moreMenu = el('div', {style:
+        'display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid var(--border);' +
+        'border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,0.12);z-index:50;overflow:hidden;min-width:100px'
+      });
+      var histItem = el('div', {style:'padding:10px 14px;font-size:12px;color:var(--dark);cursor:pointer;white-space:nowrap', text:'📜 이력 보기'});
+      var delItem = el('div', {style:'padding:10px 14px;font-size:12px;color:#C0392B;cursor:pointer;white-space:nowrap;border-top:1px solid var(--ivory1)', text:'🗑 삭제'});
+      moreMenu.appendChild(histItem); moreMenu.appendChild(delItem);
+      moreBtn.appendChild(moreMenu);
+      moreBtn.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        var isOpen = moreMenu.style.display === 'block';
+        document.querySelectorAll('.est-more-menu-open').forEach(function(m){ m.style.display = 'none'; m.classList.remove('est-more-menu-open'); });
+        if (!isOpen) { moreMenu.style.display = 'block'; moreMenu.classList.add('est-more-menu-open'); }
+      });
       (function(dbId, estObj){
-        histBtn.addEventListener('click', function(ev){
+        histItem.addEventListener('click', function(ev){
           ev.stopPropagation();
+          moreMenu.style.display = 'none';
           showEstimateHistoryModal(dbId, estObj.clientName || currentDetailName);
         });
-      })(e.dbId, e);
-      actionRow.appendChild(histBtn);
-      // 2026-08-28(선혜님 지적 — "위 이미지에서 개별 견적서 삭제는 왜 안되지
-      // 전체 삭제만 되게 했지??"): 맨 위 "견적서" 탭엔 이미 개별 삭제(🗑)
-      // 버튼이 있었는데, 이 고객상세 화면의 견적서 목록엔 애초에 코드
-      // 자체가 없었음(열기/복사만 있었음). 같은 archiveEstimate() 함수를
-      // 그대로 재사용해서 여기도 추가함(완전삭제로 동작하도록 함께 수정됨).
-      var delBtn2 = el('button', {style:
-        'flex:0 0 40px;font-size:13px;padding:7px;border-radius:8px;' +
-        'border:1px solid #F0D8D5;background:#fff;color:#C0392B;cursor:pointer;font-family:inherit;min-height:32px'
-      });
-      delBtn2.textContent = '🗑';
-      delBtn2.title = '삭제';
-      (function(estObj){
-        delBtn2.addEventListener('click', function(ev){
+        delItem.addEventListener('click', function(ev){
           ev.stopPropagation();
+          moreMenu.style.display = 'none';
           var label = (estObj.clientName || currentDetailName || '이름없음') + ' · ' + (Number(estObj.price)||0).toLocaleString() + '원';
           if (!confirm(label + '\n\n⚠️ 이 견적서를 완전히 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) return;
           // archiveEstimate()는 est.id(서버 UUID)를 기준으로 판단하는데,
@@ -1362,8 +1386,8 @@ function renderEstimateHistory(container, clientName, clientId) {
             openDetail(currentDetailName, currentDetailId); // 목록 새로고침
           });
         });
-      })(e);
-      actionRow.appendChild(delBtn2);
+      })(e.dbId, e);
+      actionRow.appendChild(moreBtn);
       card.appendChild(actionRow);
     } else {
       // 2026-08-12 이전에 저장된 견적서는 서버 레코드 id(dbId)가 없어서
