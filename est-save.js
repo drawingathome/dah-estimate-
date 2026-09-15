@@ -20,39 +20,38 @@
 // 있었지만, 그건 "우연히 안전"한 거였지 확실한 보장이 아니었음). 앞으로 견적
 // 편집상태를 초기화해야 하는 곳이 새로 생기면, 각 변수를 따로따로 건드리지
 // 말고 반드시 이 함수를 호출할 것.
+// 2026-09-15(선혜님 지적 - "왜 자꾸 이런 일이 생기지?"로 재설계):
+// 이 목록이 "새 견적서를 시작할 때 반드시 초기화해야 하는 전역 상태"의
+// 유일한 원천임. 8/24(편집중 표시가 안 지워짐)·9/10(같은 유형 재발)·
+// 9/15(확정상태 누락)까지, 전부 "resetEstEditingState() 함수 본문에
+// 새 줄 추가하는 걸 깜빡해서" 반복된 사고였음 - 함수 안에 흩어진 개별
+// 대입문 대신, 이 객체 하나에 "이름: 초기화값"만 추가하면 자동으로
+// 리셋 대상에 포함되는 구조로 바꿔서, "깜빡하고 안 넣는" 실수 자체가
+// 나기 어렵게 함. 새 편집세션 상태 변수를 추가할 때는 반드시 여기부터
+// 등록할 것.
+var EST_SESSION_RESET_VALUES = {
+  _editingEstDbId: null,
+  _editingEstUpdatedAt: null,
+  _viewingFrozenEstimate: false,
+  _estSaveCustomerId: null,
+  _estimateConfirmedAt: null, // 9/15: 확정 상태 - 안 넣었다가 "허서진 데이터 실종" 사건 발생
+  _skipTodayDuplicateCheck: false, // "복사해서 새로 만들기" 전용 플래그 - 지금까지 이 목록에 없었음(추가 발견)
+  _lastCalcBreakdown: null,
+  _lastDiscountBreakdown: null,
+  _lastAppliedDiscounts: null
+};
+
 function resetEstEditingState() {
-  window._editingEstDbId = null;
-  window._editingEstUpdatedAt = null;
-  window._viewingFrozenEstimate = false;
-  window._estSaveCustomerId = null;
-  // 2026-09-15(선혜님 지적 - "허서진 고객님 데이터 다 날라감!!!!"으로
-  // 발견): 8/24·9/10에 겪었던 것과 정확히 같은 유형의 재발 - "확정"
-  // 상태(window._estimateConfirmedAt)가 이 초기화 목록에 없었음. 이전
-  // 고객 견적을 확정한 뒤 "새 견적서"를 누르면, 새 견적인데도 확정
-  // 상태가 그대로 남아서 화면이 잠긴 채로 시작됨(입력해도 disabled된
-  // 필드라 아무것도 안 들어간 것처럼 보였음) - 이게 "데이터가 사라졌다"
-  // 는 증상의 정체였음.
-  window._estimateConfirmedAt = null;
+  Object.keys(EST_SESSION_RESET_VALUES).forEach(function(key) {
+    window[key] = EST_SESSION_RESET_VALUES[key];
+  });
   if (typeof lockEstimateForm === 'function') lockEstimateForm(false);
   if (typeof renderConfirmBadge === 'function') renderConfirmBadge();
   // 2026-08-29(선혜님이 자동백업 중복탐지 알림으로 발견 — 임민희 견적서
-  // 8건 중복, 0.074초 안에 생성됨): idempotency_key가 저장 시도(재시도
-  // 포함) "전체에서 동일한 값을 유지"해야 DB 유니크 제약이 중복을 막아줄
-  // 수 있는데, 실제로는 _saveToEstimatesActual()이 호출될 때마다 매번
-  // crypto.randomUUID()로 새 키를 만들고 있었음 - 8/24에 넣은 버튼
-  // 비활성화 방어가 어떤 이유로든 뚫리면(리렌더링으로 버튼이 새로
-  // 교체되는 등) 각 시도가 전부 다른 키를 가져서 서버쪽 방어가 무력화됨.
+  // 8건 중복, 0.074초 안에 생성됨): idempotency_key는 위 목록과 달리
+  // "고정된 초기값"이 아니라 매번 새로 생성해야 하는 값이라 별도 처리 -
   // 이 견적서 편집 세션 하나당 키 하나만 쓰도록 여기서 한 번만 생성.
   window._currentEstIdempotencyKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('est-' + Date.now() + '-' + Math.random().toString(36).slice(2));
-  // 2026-08-26 추가: 계산결과 캐시 3개(_lastCalcBreakdown/_lastDiscountBreakdown/
-  // _lastAppliedDiscounts)도 함께 리셋. 지금은 newEstimate() 끝에서 calcTotal()을
-  // 호출해서 결과적으로 이 값들이 다시 채워지고 있어 실제로는 안전하지만, 그건
-  // "calcTotal()이 항상 호출된다"는 암묵적 전제에 기댄 우연한 안전이었음(그
-  // 호출이 나중에 실수로 빠지면 이전 고객의 계산결과가 새 견적에 남아있을 수
-  // 있었음). 명시적으로 여기서도 비워서 그 전제에 기대지 않도록 함.
-  window._lastCalcBreakdown = null;
-  window._lastDiscountBreakdown = null;
-  window._lastAppliedDiscounts = null;
 }
 
 function newEstimate() {
