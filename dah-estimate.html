@@ -970,7 +970,7 @@ var currentTab = 'ga';
           var c = rows && rows[0];
           if (!c) return;
           // 2026-08-25(선혜님 발견 — "이름을 이라리로 바꿔도 오지은으로 뜬다"):
-          // 이 경로로 기존 고객을 불러오면서도 window._estSaveCustomerId를 여기서
+          // 이 경로로 기존 고객을 불러오면서도 window._estEditState.estSaveCustomerId를 여기서
           // 세팅 안 하고 있었음 — 저장할 때 이름+전화번호로 다시 매칭해야 했는데,
           // 이름을 바꾸는 상황(정확히 이 경우)에서는 그 매칭이 항상 실패해서
           // 수정이 아니라 매번 새 고객으로 만들어지고 있었음. 불러온 시점에
@@ -1076,7 +1076,7 @@ var currentTab = 'ga';
     // 2026-08-12: 견적서 이력에서 "열어서 수정" / "복사해서 새로 만들기" —
     // 특정 견적서(uuid)를 직접 조회. estimates 테이블 자체에 customer_name/
     // phone이 있어서 고객 조회를 따로 안 해도 됨. mode=edit이면
-    // window._editingEstDbId를 세팅해서 저장시 PATCH(같은 레코드 갱신)로
+    // window._estEditState.editingEstDbId를 세팅해서 저장시 PATCH(같은 레코드 갱신)로
     // 동작하게 하고, mode=copy(또는 생략)면 세팅 안 해서 기존처럼 새 견적서로
     // 저장되게 함(c-no는 항상 새로 발급되므로 자연히 복사가 됨).
     var loadEstDbId = urlParams.get('loadEstDbId');
@@ -1093,7 +1093,7 @@ var currentTab = 'ga';
           var erows = JSON.parse(eoxhr.responseText);
           var e = erows && erows[0];
           if (!e) { showToast('⚠️ 해당 견적서를 찾을 수 없어요'); return; }
-          // 2026-08-25: loadCustId 경로와 동일한 이유 — 이 경로도 window._estSaveCustomerId를
+          // 2026-08-25: loadCustId 경로와 동일한 이유 — 이 경로도 window._estEditState.estSaveCustomerId를
           // 여기서 세팅 안 하고 있었음. 이름을 바꿔서 저장해도 정확히 "그 고객"
           // 수정으로 인식되도록, 불러온 시점에 이미 알고 있는 client_id를 바로 세팅.
           if (e.client_id) window._estEditState.estSaveCustomerId = e.client_id;

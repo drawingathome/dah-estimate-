@@ -51,7 +51,7 @@ async function run() {
           req.respond({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Allow-Headers': '*' } });
           return;
         }
-        // 고객 저장(신규/기존 모두) - id를 돌려줘서 window._estSaveCustomerId가 채워지게 함
+        // 고객 저장(신규/기존 모두) - id를 돌려줘서 window._estEditState.estSaveCustomerId가 채워지게 함
         if (url.includes('/customers') && (req.method() === 'PATCH' || req.method() === 'POST')) {
           req.respond({ status: req.method() === 'POST' ? 201 : 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[{"id":"test-known-customer-id"}]' });
           return;
