@@ -36,7 +36,14 @@ function getCalEvents(customers, year, month) {
 
 function renderCal() {
   var allCal = loadCustomers().filter(function(c){ return !isSoftDeleted(c); });
-  var customers = (currentUser && currentUser.role === 'staff') ? allCal.filter(function(c) { return (c.staffName||'마스터') === currentUser.name; }) : allCal;
+  // 2026-09-15(선혜님 - "보여야하는거 아니야????"로 확인 후 수정): 네이버
+  // 예약으로 들어온 신규 고객은 "미배정"으로 시작하는데, 그 방문예약일이
+  // 캘린더에서 안 보이면 아무도 모르고 놓칠 수 있는 실제 스케줄 위험이라
+  // 미배정만 예외로 통과(홈화면/검색과 동일 원칙).
+  var unassignedForCal = allCal.filter(function(c) { return c.staffName === '미배정'; });
+  var customers = (currentUser && currentUser.role === 'staff')
+    ? allCal.filter(function(c) { return (c.staffName||'마스터') === currentUser.name; }).concat(unassignedForCal)
+    : allCal;
   var yr = calCurrentYear, mo = calCurrentMonth;
   var today = todayStr();
   var DOW = ['일','월','화','수','목','금','토'];
