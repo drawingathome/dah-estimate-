@@ -51,6 +51,22 @@ async function run() {
   });
   ok('3. 자가진단 화면에 "최근 저장 시도 기록" 항목이 표시됨', r3.indexOf('최근 저장 시도 기록') !== -1, r3.slice(0, 200));
 
+  // 4) 2026-09-15(선혜님 지시 - "원인을 찾아야지 다음에 문제가 안되게 하지"):
+  // 실측/시공일 미입력 확인창에서 "취소"를 누르면 이제 눈에 띄는 안내가 뜸
+  // (파일 상단에 등록된 page.on('dialog', ...)가 자동으로 "취소"를 누름)
+  await page.evaluate(() => {
+    document.getElementById('c-name').value = '취소테스트고객';
+    document.getElementById('c-phone').value = '01011112222';
+    document.getElementById('c-addr').value = '서울시 어딘가';
+    saveEstimate();
+  });
+  await new Promise(res => setTimeout(res, 400));
+  const r4 = await page.evaluate(() => {
+    var t = document.getElementById('toast');
+    return t ? t.textContent : '';
+  });
+  ok('4. 확인창에서 "취소"를 누르면 "저장이 취소됐어요" 안내가 뜸(예전엔 아무 표시 없었음)', r4.indexOf('저장이 취소됐어요') !== -1, r4);
+
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));
   const failed = log.filter(l => l.startsWith('❌'));

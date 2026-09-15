@@ -866,7 +866,14 @@ function saveEstimate() {
   if (!document.getElementById('c-install-tbd')?.checked && !(document.getElementById('c-install')?.value || '')) missing.push('시공 예정일');
   if (missing.length > 0) {
     var okToProceed = window.confirm('다음 항목이 비어있어요: ' + missing.join(', ') + '\n\n그래도 저장하시겠어요?');
-    if (!okToProceed) return;
+    if (!okToProceed) {
+      // 2026-09-15(선혜님 지시 - "원인을 찾아야지 다음에 문제가 안되게
+      // 하지"): 여기서 "취소"를 누르면 화면에 아무 표시도 없이 그냥
+      // 아무 일도 안 일어났음 - 바빠서 놓치면 "저장했다고 생각했는데
+      // 사실 취소였다"는 상황이 재발할 수 있음. 눈에 띄는 안내를 남김.
+      showToast('저장이 취소됐어요 — "저장" 버튼을 다시 눌러주세요');
+      return;
+    }
   }
 
   var btn = document.getElementById('btn-save-estimate');
