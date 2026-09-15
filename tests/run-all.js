@@ -34,6 +34,18 @@ const scripts = [
 ];
 
 if (/dah-dashboard/.test(target)) {
+  // 2026-09-15(코드정리 중 발견 - run-all.js에 등록이 안 돼있던 기존
+  // 테스트 파일 10개 재등록. 여러 세션이 동시에 이 저장소를 작업하면서
+  // 병합 과정에서 scripts.push 등록 줄이 누락된 것으로 추정): 실제로
+  // 돌려보고 통과하는 것만 등록함(staff-full-sweep류는 전체탐색형
+  // 도구라 별개로 수동 실행하는 게 맞아서 제외).
+  scripts.push(['add_modal_position_check.js', []]);
+  scripts.push(['cloud_estimate_convert_check.js', []]);
+  scripts.push(['modal_mobile_position_check.js', []]);
+  scripts.push(['modal_pc_position_check.js', []]);
+  scripts.push(['no_archive_hide_check.js', []]);
+  scripts.push(['no_reentry_needed_check.js', []]);
+  scripts.push(['xhr_timeout_check.js', []]);
   scripts.push(['login-flow-check.js', [target]]);
   scripts.push(['role-permission-check.js', [target]]);
   scripts.push(['dashboard-data-check.js', [target]]);
@@ -119,6 +131,8 @@ if (/dah-dashboard/.test(target)) {
 }
 
 if (/dah-estimate/.test(target)) {
+  // 2026-09-15(코드정리 중 발견 - 등록 누락됐던 기존 테스트 재등록)
+  scripts.push(['lineitems_fix_check.js', []]);
   scripts.push(['estimate-calc-check.js', [target]]);
   scripts.push(['estimate-validation-check.js', [target]]);
   scripts.push(['multi-device-sync-check.js', [target]]);

@@ -1,3 +1,4 @@
 node_modules/
 tests/_shot_*.png
 package-lock.json
+qa/*.png
