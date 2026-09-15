@@ -370,7 +370,7 @@ function _saveEstimateInner(_onDone) {
     // estimates_idempotency_key_uniq 유니크 제약과는 별개 문제라 여기선 못 막음 -
     // 대신 그 경우를 대비해 8-2번처럼 주기적으로 견적서 목록에서 중복을
     // 스캔하는 걸 권장.)
-    if (!window._editingEstDbId && window._estSaveCustomerId && typeof SUPABASE_URL !== 'undefined') {
+    if (!window._editingEstDbId && !window._skipTodayDuplicateCheck && window._estSaveCustomerId && typeof SUPABASE_URL !== 'undefined') {
       var todayStart = new Date(); todayStart.setHours(0,0,0,0);
       var xhrCheck = new XMLHttpRequest();
       // 2026-08-31(선혜님 지적 — "현은지 왜 또 중복이 되지????", 개판이네
