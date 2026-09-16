@@ -539,7 +539,10 @@ function loadCustByIdx(el) {
   if(c.clientName && document.getElementById('c-name')) document.getElementById('c-name').value=c.clientName;
   if(c.phone && document.getElementById('c-phone')) document.getElementById('c-phone').value=c.phone;
   if(c.addr && document.getElementById('c-addr')) {
-    var splitAddr = (typeof splitAddrDetail === 'function') ? splitAddrDetail(c.addr) : { base: c.addr, detail: '' };
+    // 2026-09-15(선혜님 - "위험도가 있든 없든 고쳐야지!!"): est-utils.js가
+    // 이 파일보다 항상 먼저 로드되는 게 이미 확인됐으므로, 매번 함수
+    // 존재를 방어적으로 검사하던 반복 코드를 없애고 그냥 직접 호출.
+    var splitAddr = splitAddrDetail(c.addr);
     document.getElementById('c-addr').value = splitAddr.base;
     if (splitAddr.detail && document.getElementById('c-addr2')) document.getElementById('c-addr2').value = splitAddr.detail;
   }

@@ -873,10 +873,10 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
 <script src="/dash-supabase-auth.js?v=202609061500"></script>
 <script src="/est-form-controls.js?v=202609151300"></script>
 <script src="/est-product-calc.js?v=202609151300"></script>
-<script src="/est-survey.js?v=202609152300"></script>
+<script src="/est-survey.js?v=202609152400"></script>
 <script src="/est-save.js?v=202609152300"></script>
 <script src="/est-documents.js?v=202609152200"></script>
-<script src="/est-customer-load.js?v=202609152100"></script>
+<script src="/est-customer-load.js?v=202609152400"></script>
 <script src="/est-misc.js?v=202609151300"></script>
 <script>
 var currentTab = 'ga';
@@ -980,7 +980,9 @@ var currentTab = 'ga';
           if (c.client_name) document.getElementById('c-name').value = c.client_name;
           if (c.phone) document.getElementById('c-phone').value = c.phone;
           if (c.addr) {
-            var splitAddr2 = (typeof splitAddrDetail === 'function') ? splitAddrDetail(c.addr) : { base: c.addr, detail: '' };
+            // 2026-09-15(선혜님 - "위험도가 있든 없든 고쳐야지!!"): 방어적
+            // typeof 검사 반복 제거, 직접 호출로 통일.
+            var splitAddr2 = splitAddrDetail(c.addr);
             document.getElementById('c-addr').value = splitAddr2.base;
             if (splitAddr2.detail && document.getElementById('c-addr2')) document.getElementById('c-addr2').value = splitAddr2.detail;
           }
@@ -1121,7 +1123,9 @@ var currentTab = 'ga';
                 var arows = JSON.parse(axhr.responseText);
                 var cRow = arows && arows[0];
                 if (cRow && cRow.addr && document.getElementById('c-addr')) {
-                  var splitAddr3 = (typeof splitAddrDetail === 'function') ? splitAddrDetail(cRow.addr) : { base: cRow.addr, detail: '' };
+                  // 2026-09-15(선혜님 - "위험도가 있든 없든 고쳐야지!!"):
+                  // 방어적 typeof 검사 반복 제거, 직접 호출로 통일.
+                  var splitAddr3 = splitAddrDetail(cRow.addr);
                   document.getElementById('c-addr').value = splitAddr3.base;
                   if (splitAddr3.detail && document.getElementById('c-addr2') && !document.getElementById('c-addr2').value) document.getElementById('c-addr2').value = splitAddr3.detail;
                 }
