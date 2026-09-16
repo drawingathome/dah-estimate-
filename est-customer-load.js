@@ -538,7 +538,11 @@ function loadCustByIdx(el) {
   }
   if(c.clientName && document.getElementById('c-name')) document.getElementById('c-name').value=c.clientName;
   if(c.phone && document.getElementById('c-phone')) document.getElementById('c-phone').value=c.phone;
-  if(c.addr && document.getElementById('c-addr')) document.getElementById('c-addr').value=c.addr;
+  if(c.addr && document.getElementById('c-addr')) {
+    var splitAddr = (typeof splitAddrDetail === 'function') ? splitAddrDetail(c.addr) : { base: c.addr, detail: '' };
+    document.getElementById('c-addr').value = splitAddr.base;
+    if (splitAddr.detail && document.getElementById('c-addr2')) document.getElementById('c-addr2').value = splitAddr.detail;
+  }
   // 2026-09-15(선혜님 - "고객 불러오기 해봤는데 기존 견적이 불러와지던데"
   // → "고객정보만 가져오고 품목은 항상 비워두게"로 확정): 예전엔(2026-08-05)
   // 재구매 편의를 위해 이 고객의 가장 최근 견적 품목/지역/할인까지 전부

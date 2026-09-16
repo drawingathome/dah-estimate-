@@ -110,6 +110,24 @@ function formatKoreanDate(d) {
 // 이걸 몰라서 진짜로 쌍둥이를 만들 뻔한 사례. 아래는 그 기존 시스템을
 // 그대로 재사용.
 
+// 2026-09-15(선혜님 - "상세주소부분은 상세주소로 동일하게 옮겨져야지"):
+// 대시보드(고객 정보)는 주소+상세주소(동/호수)를 항상 하나로 합쳐서
+// addr 한 필드로만 저장하는데(dash-customer-add.js 참고), 견적서 앱은
+// 주소/상세주소를 완전히 별개의 두 칸으로 다뤄서, 대시보드에서 넘어온
+// 고객정보를 불러오면 상세주소 칸이 항상 빈칸으로 뜨는 게 진짜 문제로
+// 확인됨(정보가 없어진 건 아니고 이미 주소 칸에 다 있지만, 빈칸을 보고
+// 다시 입력하면 중복이 생길 위험). 주소 끝의 "OOO동 OOO호"/"OOO호"류
+// 패턴을 감지해서 자동으로 분리 - 패턴이 안 맞으면(애매한 경우) 안전하게
+// 원래대로 전체를 기본주소에 두고 상세주소는 비워둠(기존 동작과 동일,
+// 억지로 잘못 쪼개지 않음).
+function splitAddrDetail(fullAddr) {
+  var addr = (fullAddr || '').trim();
+  if (!addr) return { base: '', detail: '' };
+  var m = addr.match(/^(.*?)\s+(\d+동\s*\d*호?|\d+호|지하\s*\d*호?|B\d+호)$/);
+  if (m && m[1].trim()) return { base: m[1].trim(), detail: m[2].trim() };
+  return { base: addr, detail: '' };
+}
+
 function escHtml(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;')

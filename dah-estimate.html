@@ -867,7 +867,7 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
   <option value="허니콤 No.1">허니콤 No.1</option>
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
-<script src="/est-utils.js?v=202609151300"></script>
+<script src="/est-utils.js?v=202609152100"></script>
 <script src="/shared-optimistic-lock.js?v=202609151300"></script>
 <script src="/est-sync-queue.js?v=202608291500"></script>
 <script src="/dash-supabase-auth.js?v=202609061500"></script>
@@ -876,7 +876,7 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
 <script src="/est-survey.js?v=202608190049"></script>
 <script src="/est-save.js?v=202609151300"></script>
 <script src="/est-documents.js?v=202609151300"></script>
-<script src="/est-customer-load.js?v=202609152000"></script>
+<script src="/est-customer-load.js?v=202609152100"></script>
 <script src="/est-misc.js?v=202609151300"></script>
 <script>
 var currentTab = 'ga';
@@ -979,7 +979,11 @@ var currentTab = 'ga';
           window._estEditState.estSaveCustomerId = c.id;
           if (c.client_name) document.getElementById('c-name').value = c.client_name;
           if (c.phone) document.getElementById('c-phone').value = c.phone;
-          if (c.addr) document.getElementById('c-addr').value = c.addr;
+          if (c.addr) {
+            var splitAddr2 = (typeof splitAddrDetail === 'function') ? splitAddrDetail(c.addr) : { base: c.addr, detail: '' };
+            document.getElementById('c-addr').value = splitAddr2.base;
+            if (splitAddr2.detail && document.getElementById('c-addr2')) document.getElementById('c-addr2').value = splitAddr2.detail;
+          }
           if (c.staff_name) document.getElementById('c-staff').value = c.staff_name;
           if (c.memo) document.getElementById('c-memo').value = c.memo;
           // 2026-08-28: 이 시점엔 아직 견적서(e)를 못 받아왔으니 고객
