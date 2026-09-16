@@ -1,5 +1,5 @@
 const path = require('path');
-const { launchBrowser, startServer } = require('./_helpers');
+const { launchBrowser, startServer, setupValidSession } = require('./_helpers');
 
 async function run() {
   const dir = path.resolve(__dirname, '..');
@@ -19,12 +19,24 @@ async function run() {
         req.respond({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Allow-Headers': '*' } });
         return;
       }
+      // 2026-09-15(코드정리 중 발견 - "모두 고쳐"로 끝까지 파서 찾음):
+      // 저장 직전에 로그인 토큰이 곧 만료되는지 확인하고 필요하면 갱신을
+      // 시도하는 절차(refreshAuthSessionIfNeeded, dash-supabase-auth.js)가
+      // 있는데, 이 테스트의 기존 목업은 이 요청도 그냥 "[]"(빈 배열)로
+      // 응답해버려서 "갱신 실패"로 처리돼 저장 자체가 조용히 멈추고
+      // 있었음(알림창이 아니라 화면에 그려지는 커스텀 재로그인 UI라
+      // 눈에 띄지도 않았음). 이 요청에는 진짜 토큰 갱신 응답과 같은
+      // 모양으로 답해줘야 함.
+      if (url.includes('/auth/v1/token')) {
+        req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ access_token: 'fake-refreshed-token', refresh_token: 'fake-refresh-token', expires_in: 3600, token_type: 'bearer' }) });
+        return;
+      }
       if (url.includes('/customers') && req.method() === 'POST') {
         req.respond({ status: 201, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify([{ id: 'new-cust-1' }]) });
         return;
       }
       if (url.includes('/estimates') && req.method() === 'POST') {
-        req.respond({ status: 201, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[]' });
+        req.respond({ status: 201, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[{"id":"new-est-1","updated_at":"2026-09-16T00:00:00Z"}]' });
         return;
       }
       req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[]' });
@@ -36,12 +48,12 @@ async function run() {
   await page.setViewport({ width: 390, height: 900 });
   await page.goto(`http://localhost:${port}/dah-estimate.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });
   await new Promise(r => setTimeout(r, 800));
-  // 2026-09-15(코드정리 중 발견 - 로그인 게이트가 생긴 이후 이 테스트가
-  // 안 고쳐져 있었음): dah-estimate.html은 로그인 전엔 폼 자체가 잠겨있어서,
-  // 로그인 없이 진행하면 saveEstimate() 등이 전부 조용히 실패함 - 다른
-  // 통과 중인 est 앱 테스트들과 동일하게 로그인 세션을 세팅해줌.
-  const { loginAs } = require('./_helpers');
-  await loginAs(page, 'master');
+  // 2026-09-15(코드정리 중 발견 - "모두 고쳐"로 끝까지 파서 찾음): 이
+  // 테스트가 로그인 절차 없이 곧바로 saveEstimate()를 호출하고 있어서,
+  // 저장 직전 로그인세션 유효성 확인(refreshAuthSessionIfNeeded)에서
+  // 막혀 저장 자체가 조용히 멈추고 있었음 - 바로 이 문제를 위해 이미
+  // 만들어져 있던 헬퍼(setupValidSession)를 다른 est 테스트들처럼 사용.
+  await setupValidSession(page);
   await new Promise(r => setTimeout(r, 500));
 
   const log = [];

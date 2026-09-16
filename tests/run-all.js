@@ -147,6 +147,10 @@ if (/dah-dashboard/.test(target)) {
 if (/dah-estimate/.test(target)) {
   // 2026-09-15(코드정리 중 발견 - 등록 누락됐던 기존 테스트 재등록)
   scripts.push(['lineitems_fix_check.js', []]);
+  // 2026-09-15("모두 고쳐"로 끝까지 파서 원인 발견 후 등록): 로그인
+  // 세션 미설정으로 저장이 조용히 멈추던 문제를 setupValidSession()
+  // 헬퍼 사용으로 해결
+  scripts.push(['estimate_app_flow_check.js', []]);
   scripts.push(['estimate-calc-check.js', [target]]);
   scripts.push(['estimate-validation-check.js', [target]]);
   scripts.push(['multi-device-sync-check.js', [target]]);
