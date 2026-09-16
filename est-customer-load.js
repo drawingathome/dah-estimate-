@@ -305,8 +305,14 @@ function renderCustLoadList(q) {
   // "권한" 개념 자체가 없어서, 스태프로 로그인해도 전체 고객(다른 담당자
   // 포함)이 다 보였음. 대시보드는 이미 스태프를 자기 담당 고객만 보게
   // 막고 있는데 견적서 앱만 예외였던 보안 허점.
+  // 2026-09-15(선혜님 - "누락된거 없니? 다 했니?"로 재점검하다 발견):
+  // 대시보드에서 고친 "미배정만 예외로 통과" 원칙이 견적서 앱의 이
+  // 화면(고객 불러오기)에는 아직 없어서, 직원이 미배정 신규고객의 이름/
+  // 전화번호로 검색해도 못 찾아 견적서를 새로 만들다 중복 고객을 만들
+  // 위험이 있었음 - 동일 원칙 적용(이 앱엔 dash-utils.js가 없어 인라인으로).
   if (window._estCurrentUser && window._estCurrentUser.role === 'staff') {
-    customers = customers.filter(function(c){ return (c.staffName||'마스터') === window._estCurrentUser.name; });
+    var unassignedForLoad = customers.filter(function(c){ return c.staffName === '미배정'; });
+    customers = customers.filter(function(c){ return (c.staffName||'마스터') === window._estCurrentUser.name; }).concat(unassignedForLoad);
   }
   var filtered = q ? customers.filter(function(c){
     return (c.clientName||'').includes(q) || (c.phone||'').replace(/-/g,'').includes(q.replace(/-/g,''));
