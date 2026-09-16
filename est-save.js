@@ -72,6 +72,12 @@ function newEstimate() {
   document.getElementById('c-name').value='';
   document.getElementById('c-phone').value='';
   document.getElementById('c-addr').value='';
+  // 2026-09-15("견적서나 실측 의뢰서 등등 주소 나오는 곳은 모두 같이
+  // 보고 직접 확인해"로 전수조사 중 발견): 기본주소(c-addr)는 지우면서
+  // 상세주소(c-addr2)는 안 지우고 있었음 - "새 견적서"로 완전히 다른
+  // 고객을 시작해도 이전 고객의 동/호수가 화면에 그대로 남아있다가,
+  // 새 주소 뒤에 엉뚱하게 합쳐져서 저장될 위험이 있었음.
+  document.getElementById('c-addr2').value='';
   document.getElementById('c-memo').value='';
   document.getElementById('c-region').value='';
   document.getElementById('discount').value=0;

@@ -49,7 +49,14 @@ function loadSurveyFromSheet() {
       document.getElementById('c-phone').value = data.phone;
     }
     if(data.addr && !document.getElementById('c-addr').value) {
-      document.getElementById('c-addr').value = data.addr;
+      // 2026-09-15(전수조사 중 발견): 고객이 설문(실측신청서)에 직접 입력한
+      // 주소도 "OOO동 OOO호"로 끝나는 경우가 많아, 다른 곳과 동일하게
+      // 자동 분리 적용 - 패턴이 안 맞으면 안전하게 그대로 기본주소에 둠.
+      var splitSurveyAddr = (typeof splitAddrDetail === 'function') ? splitAddrDetail(data.addr) : { base: data.addr, detail: '' };
+      document.getElementById('c-addr').value = splitSurveyAddr.base;
+      if (splitSurveyAddr.detail && document.getElementById('c-addr2') && !document.getElementById('c-addr2').value) {
+        document.getElementById('c-addr2').value = splitSurveyAddr.detail;
+      }
     }
     displaySurvey(data);
   }
