@@ -45,6 +45,9 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['modal_pc_position_check.js', []]);
   scripts.push(['no_archive_hide_check.js', []]);
   scripts.push(['no_reentry_needed_check.js', []]);
+  // 2026-09-15(코드정리 중 발견 - 8/24 이전 기준으로 짜여있던 테스트를
+  // 최신 기준(isRejected는 명시적 'rejected'만)에 맞게 고쳐서 재등록)
+  scripts.push(['est_archive_filter_check.js', []]);
   scripts.push(['xhr_timeout_check.js', []]);
   scripts.push(['login-flow-check.js', [target]]);
   scripts.push(['role-permission-check.js', [target]]);

@@ -36,6 +36,13 @@ async function run() {
   await page.setViewport({ width: 390, height: 900 });
   await page.goto(`http://localhost:${port}/dah-estimate.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });
   await new Promise(r => setTimeout(r, 800));
+  // 2026-09-15(코드정리 중 발견 - 로그인 게이트가 생긴 이후 이 테스트가
+  // 안 고쳐져 있었음): dah-estimate.html은 로그인 전엔 폼 자체가 잠겨있어서,
+  // 로그인 없이 진행하면 saveEstimate() 등이 전부 조용히 실패함 - 다른
+  // 통과 중인 est 앱 테스트들과 동일하게 로그인 세션을 세팅해줌.
+  const { loginAs } = require('./_helpers');
+  await loginAs(page, 'master');
+  await new Promise(r => setTimeout(r, 500));
 
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
@@ -80,8 +87,9 @@ async function run() {
   console.log('\n=== JS 에러 ===');
   console.log(jsErrors.length ? jsErrors.join('\n') : '없음 ✅');
 
+  const failed = log.filter(l => l.startsWith('❌'));
   await browser.close();
-  process.exit(0);
+  process.exit(failed.length === 0 && jsErrors.length === 0 ? 0 : 1);
 }
 run().catch(e => { console.error('스크립트 에러:', e); process.exit(1); });
 setTimeout(() => process.exit(1), 25000);
