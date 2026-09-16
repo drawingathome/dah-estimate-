@@ -539,54 +539,30 @@ function loadCustByIdx(el) {
   if(c.clientName && document.getElementById('c-name')) document.getElementById('c-name').value=c.clientName;
   if(c.phone && document.getElementById('c-phone')) document.getElementById('c-phone').value=c.phone;
   if(c.addr && document.getElementById('c-addr')) document.getElementById('c-addr').value=c.addr;
-  var loadedItems = false;
-  try {
-    var saved = JSON.parse(localStorage.getItem('dah_saved')||'[]');
-    // 2026-08-05: id가 없는 고객(서버 동기화 전 로컬전용 레코드 등)이면
-    // 'c.id && ...' 조건이 전부 false가 되어 mine이 항상 빈 배열이었음 —
-    // 미리보기 목록(renderCustLoadList)엔 이름기반 폴백이 있는데 여기만 빠져서,
-    // 미리보기엔 "이전 견적 있음" 뱃지가 뜨는데 정작 불러오기를 누르면 품목이
-    // 하나도 안 채워지는 불일치가 있었음. 동일한 폴백으로 통일.
-    var mine = (c.id
-      ? saved.filter(function(e){ return e.clientId === c.id; })
-      : saved.filter(function(e){ return e.clientName === (c.clientName||''); })
-    ).sort(function(a,b){ return (b.savedAt||'') > (a.savedAt||'') ? 1 : -1; });
-    var latest = mine[0];
-    if (latest) {
-      loadedItems = restoreLineItemsToForm(latest.lineItems, latest.fabric);
-      // 2026-08-12: 저장된 견적의 지역(region)을 복원 - 예전엔 지역 정보 자체가
-      // 저장 안 돼서, 재구매 견적 불러오기 시 지역시공비(실측+설치, 서울기준
-      // 9만원)가 통째로 사라지던 버그. change 이벤트를 발생시켜야
-      // autoAddSvcFee()가 실행되어 지역시공비 행이 다시 생김(value만 설정하면
-      // onchange가 안 걸림).
-      if (latest.region && document.getElementById('c-region')) {
-        document.getElementById('c-region').value = latest.region;
-        document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
-      }
-      if (latest.appliedDiscounts && typeof restoreAppliedDiscounts === 'function') {
-        restoreAppliedDiscounts(latest.appliedDiscounts);
-      }
-      // 2026-08-24(선혜님 발견 — "생성이 안되어야지"): "고객 불러오기"는
-      // 원래 "이 고객정보로 완전히 새 견적을 시작"하는 용도라 항상 새로
-      // 저장되게 만들어져 있었음. 근데 같은 날 이미 만든 견적을 다시 불러와서
-      // (예: 기능 테스트 삼아) 살짝 고치고 저장하면, 그것도 매번 새 견적으로
-      // 쌓여서 유령이 계속 생기는 원인이 됐음. 최근 견적이 "오늘" 저장된
-      // 것이면 새로 만드는 게 아니라 그걸 이어서 수정(PATCH)하도록 함 —
-      // 진짜 재구매(다른 날짜의 새 방문)는 오늘 것이 없으므로 기존처럼
-      // 새 견적으로 정상 시작됨.
-      var todayStr = new Date().toISOString().slice(0,10);
-      var latestDateStr = (latest.savedAt||'').slice(0,10);
-      if (latest.dbId && latestDateStr === todayStr) {
-        window._estEditState.editingEstDbId = latest.dbId;
-        window._estEditState.editingEstUpdatedAt = latest.updatedAt || null;
-        showToast('오늘 만드신 성지윤님 견적을 이어서 수정합니다 — 저장하면 새로 안 쌓이고 이 견적이 갱신돼요'.replace('성지윤', c.clientName||''));
-      }
-    }
-  } catch(e) { console.warn('기존 견적 품목 불러오기 실패:', e); }
+  // 2026-09-15(선혜님 - "고객 불러오기 해봤는데 기존 견적이 불러와지던데"
+  // → "고객정보만 가져오고 품목은 항상 비워두게"로 확정): 예전엔(2026-08-05)
+  // 재구매 편의를 위해 이 고객의 가장 최근 견적 품목/지역/할인까지 전부
+  // 같이 불러왔는데, 그러면 "이 고객으로 완전히 새 견적서"를 만들 때마다
+  // 매번 이전 품목을 일일이 지워야 해서 오히려 불편했음 - 이제 고객
+  // 기본정보(이름/전화/주소)만 가져오고 품목·지역·할인은 항상 빈 상태로
+  // 시작. 같은 날 실수로 중복 저장되는 것 자체는 저장 시점에 별도로
+  // 서버에서 한 번 더 확인하는 안전장치(saveToEstimates 참고)가 이미
+  // 있어서, 여기서 이 처리를 안 해도 유령 견적서가 쌓이지 않음.
+  // 예전엔 restoreLineItemsToForm()이 품목 복원 전에 항상 먼저 비우는
+  // 역할도 같이 했는데, 이제 그 호출 자체를 없앴으니 여기서 직접 비워야
+  // 함 - 안 그러면 A고객 견적 작업 중에 곧바로 B고객을 불러올 때 A의
+  // 품목이 B의 이름/전화번호와 뒤섞인 채 남아있게 됨.
+  document.getElementById('curtain-body').innerHTML = '';
+  document.getElementById('blind-body').innerHTML = '';
+  var blindTbl = document.getElementById('blind-table'); if (blindTbl) blindTbl.style.display = 'none';
+  var otherBody = document.getElementById('other-body'); if (otherBody) otherBody.innerHTML = '';
+  var otherTbl = document.getElementById('other-table'); if (otherTbl) otherTbl.style.display = 'none';
+  document.getElementById('svc-body').innerHTML = '';
+  if (typeof resetEstEditingState === 'function') resetEstEditingState();
+  if (typeof renderEmptyState === 'function') renderEmptyState();
+  if (typeof calcTotal === 'function') calcTotal();
   closeCustLoad();
-  if (!(window._estEditState.editingEstDbId)) {
-    showToast('고객 정보를 불러왔습니다 — '+(c.clientName||'')+(loadedItems ? ' (이전 견적 품목 포함)' : ''));
-  }
+  showToast('고객 정보를 불러왔습니다 — '+(c.clientName||''));
 }
 
 // 2026-08-28(선혜님 지시 - "코드정리 싹 다 한거니?"로 발견): searchCustomer/
