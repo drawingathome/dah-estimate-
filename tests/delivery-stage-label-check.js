@@ -88,6 +88,28 @@ async function run() {
   const kanbanLeftover = await findLeftoverLabel('kanban', () => { goTab('pipe'); });
   ok('9. 검색화면에 원래 단계명이 새어나오지 않음', searchLeftover.hits.length === 0, JSON.stringify(searchLeftover.hits));
   ok('10. 칸반화면엔 컬럼헤더(kanban-label, 의도적 그룹라벨)만 남고 그 외엔 없음', kanbanLeftover.hits.every(h => h.cls === 'kanban-label'), JSON.stringify(kanbanLeftover.hits));
+  // ── 혼합 시나리오: 시공/배송/기타지역 고객이 한 화면에 섞여도 서로 안 섞이는지 ──
+  const mixedResult = await page.evaluate(() => {
+    saveCustomers([
+      { id: 9600, clientName: '시공고객A', phone: '01000000101', stage: '시공준비중', region: '서울', date: todayStr() },
+      { id: 9601, clientName: '배송고객B', phone: '01000000102', stage: '시공준비중', region: '', date: todayStr() },
+      { id: 9602, clientName: '기타지역고객C', phone: '01000000103', stage: '시공완료', region: '기타', date: todayStr() }
+    ]);
+    goTab('search');
+    renderSearch();
+    return document.getElementById('search-list').innerText;
+  });
+  ok('11. 혼합목록에서 시공고객은 원래 이름 유지', mixedResult.includes('시공고객A') && mixedResult.split('시공고객A')[1].slice(0, 30).includes('시공준비중'));
+  ok('12. 혼합목록에서 배송고객만 정확히 변환(서로 안 섞임)', mixedResult.includes('배송고객B') && mixedResult.split('배송고객B')[1].slice(0, 30).includes('발송준비중'));
+  ok('13. 기타지역 고객은 시공으로 취급되어 원래 이름 유지', mixedResult.includes('기타지역고객C') && mixedResult.split('기타지역고객C')[1].slice(0, 30).includes('시공완료'));
+
+  // ── 배송이었다가 나중에 지역을 지정하면 정상적으로 시공 이름으로 복귀하는지 ──
+  const switchBack = await page.evaluate(() => ({
+    before: getDisplayStageLabel({ stage: '시공준비중', region: '' }),
+    after: getDisplayStageLabel({ stage: '시공준비중', region: '경기' })
+  }));
+  ok('14. 배송->시공 전환시 정상적으로 원래 이름 복귀', switchBack.before === '발송준비중' && switchBack.after === '시공준비중', JSON.stringify(switchBack));
+
   console.log(log.join('\n'));
   console.log(jsErrors.length ? 'JS 에러: ' + jsErrors.join('\n') : 'JS 에러 없음');
   const allPass = log.every(l => l.startsWith('✅'));
