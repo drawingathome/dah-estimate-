@@ -8,6 +8,10 @@ function buildCustomerHTML() {
   var cName       = escHtml(document.getElementById('c-name')?.value||'');
   var cPhone      = escHtml(document.getElementById('c-phone')?.value||'');
   var cAddr       = escHtml(document.getElementById('c-addr')?.value||'');
+  // 2026-09-15(위 실측/시공 의뢰서와 동일한 이유로 함께 처리): 고객용
+  // 견적서도 상세주소를 안 보여주고 있었음 - 완전성을 위해 동일하게 합침.
+  var cAddrDetailForCust = (document.getElementById('c-addr2')?.value||'').trim();
+  if (cAddrDetailForCust) cAddr = (cAddr ? cAddr+' ' : '') + escHtml(cAddrDetailForCust);
   var measureDate = document.getElementById('c-measure')?.value||'';
   var installDate = document.getElementById('c-install')?.value||'';
   var cNo         = document.getElementById('c-no')?.value||'';
@@ -1552,6 +1556,15 @@ function buildRequestHTML(kind, extraNote) {
   var cName    = escHtml(document.getElementById('c-name')?.value||'');
   var cPhone   = escHtml(document.getElementById('c-phone')?.value||'');
   var cAddr    = escHtml(document.getElementById('c-addr')?.value||'');
+  // 2026-09-15(선혜님 - "실측이나 시공요청서에 주소 뒷부분이 안나오는데?"):
+  // 오늘 주소/상세주소를 두 칸으로 분리했는데(splitAddrDetail), 정작 이
+  // 실측/시공 의뢰서는 예전부터 계속 c-addr(기본주소)만 읽고 있어서
+  // 상세주소(동/호수)가 원래도 안 나가고 있었음 - 그동안은 "비고"란에
+  // 직접 타이핑해서 수동으로 우회하고 계셨던 것으로 보임. 실측/시공
+  // 담당자가 정확한 호수를 찾아가야 하는 문서라 빠지면 안 되는 정보라,
+  // 상세주소가 있으면 주소 뒤에 자동으로 합쳐서 보여줌.
+  var cAddrDetail = (document.getElementById('c-addr2')?.value||'').trim();
+  if (cAddrDetail) cAddr = (cAddr ? cAddr+' ' : '') + escHtml(cAddrDetail);
   var cStaff   = escHtml(document.getElementById('c-staff')?.value||'장선혜');
   var instName = escHtml(document.getElementById('c-installer-name')?.value||'');
   var instPhone= escHtml(document.getElementById('c-installer-phone')?.value||'');
