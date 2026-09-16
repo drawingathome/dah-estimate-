@@ -1006,11 +1006,7 @@ function runSelfDiagnosis() {
 // 완전히 동일한 기능이 이미 있었음. "개별 견적서 작성 화면"에 "전체
 // 견적서 목록" 다운로드 버튼이 있는 건 위치도 안 맞고 순수 중복이었음.
 
-function showToast(msg) {
-  var t=document.getElementById('toast');
-  t.textContent=msg; t.style.opacity='1';
-  // 2026-08-28: 대시보드 버전(dash-core.js)과 표시시간(2200→2500ms) 통일
-  // - 실질적 버그는 아니었지만 두 앱 UX를 일관되게 맞춤(선혜님 요청 -
-  // "쌍둥이 함수 찾기, 코드 정리, 제대로 하자").
-  setTimeout(function(){ t.style.opacity='0'; },2500);
-}
+// 2026-09-16(선혜님 - "링크 너가 나한테 준거잖아"): showToast는
+// shared-common-utils.js로 옮김 - 이 파일의 정의는 삭제(2026-08-28에
+// 이미 "쌍둥이 함수 찾기, 코드 정리, 제대로 하자"로 표시시간만 맞춰
+// 뒀던 걸 이제 진짜로 파일 자체를 하나로 합침).

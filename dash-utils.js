@@ -90,14 +90,11 @@ function filterForStaffWithUnassigned(allCustomers, currentUser) {
   return allCustomers.filter(function(c) { return (c.staffName||'마스터') === currentUser.name; }).concat(unassignedPool);
 }
 
-function escHtml(s) {
-  return String(s == null ? '' : s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+// 2026-09-16(선혜님 - "링크 너가 나한테 준거잖아"): escHtml/fmtPhone은
+// shared-common-utils.js로 옮김(두 앱이 동일 파일을 그대로 로드) -
+// 이 파일에 있던 정의는 삭제. fmtPhone(v)은 공용 핵심로직
+// formatPhoneDigits()를 그대로 감싸는 얇은 래퍼로 유지(대시보드는
+// "값 받아서 반환" 방식을 그대로 씀).
 
 function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 function fmt(n) { return (Number(n) || 0).toLocaleString() + '원'; }
@@ -110,12 +107,6 @@ function todayStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.
 function thisMonthStr() { var d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth()+1); }
 function daysDiff(dateStr) { return Math.floor((new Date() - new Date(dateStr)) / 86400000); }
 function fmtPhone(v) {
-  var d = v.replace(/[^0-9]/g, '');
-  if (d.slice(0,2) === '02') {
-    if (d.length <= 6) return d.slice(0,2) + '-' + d.slice(2);
-    if (d.length <= 9) return d.slice(0,2) + '-' + d.slice(2,5) + '-' + d.slice(5);
-    return d.slice(0,2) + '-' + d.slice(2,6) + '-' + d.slice(6,10);
-  }
-  if (d.length <= 7) return d.slice(0,3) + '-' + d.slice(3);
-  return d.slice(0,3) + '-' + d.slice(3,7) + '-' + d.slice(7,11);
+  return formatPhoneDigits(v.replace(/[^0-9]/g, ''));
 }
+

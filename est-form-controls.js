@@ -149,24 +149,12 @@ function closeSpacePicker(e) {
     document.getElementById('space-picker').style.display = 'none';
 }
 
+// 2026-09-16(선혜님 - "링크 너가 나한테 준거잖아"): 핵심 로직은
+// shared-common-utils.js의 formatPhoneDigits()로 옮김 - 이 함수는
+// "엘리먼트를 받아서 직접 값을 바꾼다"는 견적서 앱만의 호출방식만
+// 유지하는 얇은 래퍼.
 function fmtPhone(el) {
-  var v = el.value.replace(/\D/g,'');
-  // 2026-08-28(선혜님 지적 - "너는 왜 자꾸 버그를 못찾니"로 시작한 재점검 중
-  // 발견): 대시보드(dash-utils.js)의 fmtPhone은 서울 지역번호(02)를 2자리
-  // 프리픽스로 정확히 처리하는데, 이 견적서 앱 버전엔 그 처리가 아예 없어서
-  // "02-XXXX-XXXX"(서울 유선전화)를 입력하면 무조건 3자리 프리픽스로
-  // 잘못 나뉘어 포맷되고 있었음(예: "023-4567-890"처럼). 두 앱이 완전히
-  // 별도 배포(다른 도메인)라 코드를 공유할 수 없어서 각자 따로 구현돼있는데,
-  // 이번에 대시보드 버전과 동작이 어긋나 있던 걸 발견 - 같은 로직으로 맞춤.
-  if (v.slice(0,2) === '02') {
-    if (v.length<=6) el.value = v.slice(0,2)+'-'+v.slice(2);
-    else if (v.length<=9) el.value = v.slice(0,2)+'-'+v.slice(2,5)+'-'+v.slice(5);
-    else el.value = v.slice(0,2)+'-'+v.slice(2,6)+'-'+v.slice(6,10);
-    return;
-  }
-  if(v.length<=3) el.value=v;
-  else if(v.length<=7) el.value=v.slice(0,3)+'-'+v.slice(3);
-  else el.value=v.slice(0,3)+'-'+v.slice(3,7)+'-'+v.slice(7,11);
+  el.value = formatPhoneDigits(el.value.replace(/\D/g,''));
 }
 
 // 견적 확정: "이 견적 내용(사이즈/금액)이 더 이상 안 바뀐다"는 걸 명시하는 기능.

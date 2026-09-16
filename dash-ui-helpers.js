@@ -131,23 +131,12 @@ function validateDate(dateStr) {
 }
 
 // 연락처 자동 포맷 (010-1234-5678)
+// 2026-09-16(선혜님 - "링크 너가 나한테 준거잖아"): 위 주석에서 이미
+// "대시보드/견적서 fmtPhone과 동일 로직" 이라고 밝혀뒀던 세 번째
+// 중복 함수 - 이제 진짜로 셋 다 같은 공용 핵심로직(formatPhoneDigits,
+// shared-common-utils.js) 하나만 부르게 통합.
 function formatPhone(input) {
-  var clean = input.replace(/[^0-9]/g, '');
-  // 2026-08-29(선혜님 지시 - HTML 파일 전체 재검토로 발견): 대시보드/견적서
-  // 앱의 fmtPhone 2개(오늘 이미 발견·통일함)와는 완전히 별개인 세 번째
-  // 전화번호 포맷 함수 - "고객 추가" 폼(add-name)에서 지금 실제로 쓰이고
-  // 있는데, 정확히 같은 버그(서울 지역번호 02 처리 누락)가 있었음. 서울
-  // 유선전화(02-XXXX-XXXX)를 입력하면 3자리 프리픽스로 잘못 나뉘어
-  // 포맷되고 있었음 - fmtPhone과 동일한 로직으로 맞춤.
-  if (clean.slice(0,2) === '02') {
-    if (clean.length<=6) return clean.slice(0,2)+'-'+clean.slice(2);
-    if (clean.length<=9) return clean.slice(0,2)+'-'+clean.slice(2,5)+'-'+clean.slice(5);
-    return clean.slice(0,2)+'-'+clean.slice(2,6)+'-'+clean.slice(6,10);
-  }
-  if (clean.length <= 3)  return clean;
-  if (clean.length <= 7)  return clean.slice(0,3) + '-' + clean.slice(3);
-  if (clean.length <= 11) return clean.slice(0,3) + '-' + clean.slice(3,7) + '-' + clean.slice(7);
-  return clean.slice(0,3) + '-' + clean.slice(3,7) + '-' + clean.slice(7,11);
+  return formatPhoneDigits(input.replace(/[^0-9]/g, ''));
 }
 
 // 입력 필드 오류 표시
@@ -182,37 +171,5 @@ function hideLoading() {
 }
 
 /* ── 주소검색(다음 우편번호) ── */
-function openKakaoAddr(targetId) {
-  var script = document.createElement('script');
-  script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
-  script.onload = function() {
-    new daum.Postcode({
-      oncomplete: function(data) {
-        var addr = data.roadAddress || data.jibunAddress;
-        var el = document.getElementById(targetId);
-        if (el) {
-          el.value = addr;
-          el.dispatchEvent(new Event('input'));
-          el.dispatchEvent(new Event('change'));
-        }
-      }
-    }).open();
-  };
-  
-  if (window.daum && window.daum.Postcode) {
-    script.onload = null;
-    new daum.Postcode({
-      oncomplete: function(data) {
-        var addr = data.roadAddress || data.jibunAddress;
-        var el = document.getElementById(targetId);
-        if (el) {
-          el.value = addr;
-          el.dispatchEvent(new Event('input'));
-          el.dispatchEvent(new Event('change'));
-        }
-      }
-    }).open();
-  } else {
-    document.head.appendChild(script);
-  }
-}
+// 2026-09-16(선혜님 - "링크 너가 나한테 준거잖아"): openKakaoAddr는
+// shared-common-utils.js로 옮김 - 이 파일의 정의는 삭제.

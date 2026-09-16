@@ -54,14 +54,9 @@ function setLeadStaleDays(days) {
   sbSyncSetting('lead_stale_days', days);
 }
 
-// 지역별 실측비/시공비 (2026-07-31 신규) — 견적서 앱과 공유하는 설정값
-var DEFAULT_REGION_FEES_DASH = { '서울': {'실측비':40000, '시공비':50000}, '경기': {'실측비':60000, '시공비':80000} };
-function getRegionFees() {
-  try {
-    var cached = JSON.parse(localStorage.getItem('dah_region_fees') || 'null');
-    return cached || DEFAULT_REGION_FEES_DASH;
-  } catch(e) { return DEFAULT_REGION_FEES_DASH; }
-}
+// 2026-09-16(선혜님 - "링크 너가 나한테 준거잖아"): getRegionFees/
+// DEFAULT_REGION_FEES는 shared-common-utils.js로 옮김 - 이 파일의
+// 정의는 삭제. setRegionFees(설정화면 전용, 견적서 앱엔 없음)는 그대로 유지.
 function setRegionFees(fees) {
   try { localStorage.setItem('dah_region_fees', JSON.stringify(fees)); } catch(e){}
   sbSyncSetting('region_fees', fees);
@@ -133,23 +128,9 @@ var SUPABASE_KEY = 'sb_publishable_9nYjQBzwiyausr7-Cd-elw_S9inJlge';
 
 // 구글드라이브 자동화 허브 웹훅 (배포 후 URL 채워넣을 예정) — 견적서 앱과 공유
 var DRIVE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyyNG-Y6sABngKqk2ttfXUK_LIrQtyqiLLaaEvUnhWs3Yn4YqFtsGTVoug7EQAbig6OgQ/exec';
-function syncCustomerToSheet(customer) {
-  if (!DRIVE_WEBHOOK_URL) return;
-  try {
-    fetchWithRetry(DRIVE_WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'syncCustomer',
-        clientName: customer.clientName, phone: customer.phone, addr: customer.addr,
-        staffName: customer.staffName, stage: customer.stage,
-        price: customer.price, performanceRevenue: customer.performanceRevenue,
-        date: customer.date, measureDate: customer.measureDate, installDate: customer.installDate,
-        memo: customer.memo
-      })
-    }).catch(function(e) { console.warn('고객명단 동기화 실패:', e); typeof reportClientError==='function' && reportClientError('고객명단 동기화 실패(재시도 2회 후에도 실패): ' + (e && e.message || e), e && e.stack); });
-  } catch (e) { console.warn('고객명단 동기화 실패:', e); typeof reportClientError==='function' && reportClientError('고객명단 동기화 실패: ' + (e && e.message || e), e && e.stack); }
-}
+// 2026-09-16(선혜님 - "링크 너가 나한테 준거잖아"): syncCustomerToSheet는
+// shared-common-utils.js로 옮김(DRIVE_WEBHOOK_URL은 위에서 이미 정의됨,
+// shared-common-utils.js는 이 파일보다 항상 나중에 로드되도록 배치).
 
 function sbXHR(method, path, data, callback) {
   var xhr = new XMLHttpRequest();

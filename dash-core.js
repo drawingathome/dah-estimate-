@@ -1,14 +1,11 @@
 /* ══════════════════════════════════════════════════
    DAH 대시보드 — 앱 핵심 진입점 함수
-   화면 전환(탭 이동), 토스트 알림 — 다른 모든 모듈이 공통으로 사용.
+   화면 전환(탭 이동) — 다른 모든 모듈이 공통으로 사용.
    ══════════════════════════════════════════════════ */
 
-function showToast(msg) {
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.opacity = '1';
-  setTimeout(function() { t.style.opacity = '0'; }, 2500);
-}
+// 2026-09-16(선혜님 - "링크 너가 나한테 준거잖아"): showToast는
+// shared-common-utils.js로 옮김(#toast 마크업이 이 파일보다 먼저
+// 로드되는 dah-dashboard.html에 이미 있음) - 이 파일의 정의는 삭제.
 
 /** @param {string} t 탭ID (home|pipe|search|est-list|cal|chart|settings) */
 function goTab(t) {

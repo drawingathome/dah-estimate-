@@ -2,40 +2,8 @@
    DAH 견적서 앱 — 주소검색 / 날짜포맷 / 빈상태 / 공유 / 자동저장
    ══════════════════════════════════════════════════ */
 
-function openKakaoAddr(targetId) {
-  var script = document.createElement('script');
-  script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
-  script.onload = function() {
-    new daum.Postcode({
-      oncomplete: function(data) {
-        var addr = data.roadAddress || data.jibunAddress;
-        var el = document.getElementById(targetId);
-        if (el) {
-          el.value = addr;
-          el.dispatchEvent(new Event('input'));
-          el.dispatchEvent(new Event('change'));
-        }
-      }
-    }).open();
-  };
-  
-  if (window.daum && window.daum.Postcode) {
-    script.onload = null;
-    new daum.Postcode({
-      oncomplete: function(data) {
-        var addr = data.roadAddress || data.jibunAddress;
-        var el = document.getElementById(targetId);
-        if (el) {
-          el.value = addr;
-          el.dispatchEvent(new Event('input'));
-          el.dispatchEvent(new Event('change'));
-        }
-      }
-    }).open();
-  } else {
-    document.head.appendChild(script);
-  }
-}
+// 2026-09-16(선혜님 - "링크 너가 나한테 준거잖아"): openKakaoAddr는
+// shared-common-utils.js로 옮김 - 이 파일의 정의는 삭제.
 
 // 2026-08-28(선혜님 지시 - "코드정리 싹 다 한거니?"로 발견): fmtDateKo(직접
 // 타이핑하는 텍스트필드를 "2026년 08월 28일" 형식으로 자동 포맷하던

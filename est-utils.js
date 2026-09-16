@@ -128,26 +128,12 @@ function splitAddrDetail(fullAddr) {
   return { base: addr, detail: '' };
 }
 
-function escHtml(s) {
-  return String(s == null ? '' : s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+// 2026-09-16(선혜님 - "링크 너가 나한테 준거잖아"): escHtml/getRegionFees는
+// shared-common-utils.js로 옮김(대시보드 설명 그대로 "견적서 앱은
+// dash-api.js를 안 불러오므로"가 원래 이유였는데, 그 이유 자체가
+// 이제 공용파일로 해소됨) - 이 파일의 정의는 삭제.
 const SUPABASE_KEY = 'sb_publishable_9nYjQBzwiyausr7-Cd-elw_S9inJlge';
 
-// 지역별 실측비/시공비 (2026-07-31 신규) — 예전엔 코드에 고정값. 이제 대시보드
-// 설정탭에서 관리하는 값을 Supabase에서 직접 조회해 옴 (견적서 앱은 dash-api.js를
-// 안 불러오므로 최소한의 조회 로직만 여기 둠). 조회 실패해도 기본값으로 안전하게 동작.
-var DEFAULT_REGION_FEES = { '서울': {'실측비':40000, '시공비':50000}, '경기': {'실측비':60000, '시공비':80000} };
-function getRegionFees() {
-  try {
-    var cached = JSON.parse(localStorage.getItem('dah_region_fees') || 'null');
-    return cached || DEFAULT_REGION_FEES;
-  } catch(e) { return DEFAULT_REGION_FEES; }
-}
 function fetchRegionFeesFromCloud(callback) {
   var xhr = new XMLHttpRequest();
   xhr.open('GET', SUPABASE_URL + '/rest/v1/app_settings?key=eq.region_fees&select=value', true);
@@ -580,17 +566,8 @@ function saveDocumentToDrive(category, customerName, vendor, htmlContent, staffN
   } catch (e) { console.warn('구글드라이브 저장 실패:', e); typeof reportClientError==='function' && reportClientError('구글드라이브 저장 실패: ' + (e && e.message || e), e && e.stack); }
 }
 
-// 고객명단 구글시트 동기화 (실패해도 조용히 무시)
-function syncCustomerToSheet(customer) {
-  if (!DRIVE_WEBHOOK_URL) return;
-  try {
-    fetchWithRetry(DRIVE_WEBHOOK_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'syncCustomer', clientName: customer.clientName, phone: customer.phone, addr: customer.addr, staffName: customer.staffName, stage: customer.stage, price: customer.price, performanceRevenue: customer.performanceRevenue, date: customer.date, measureDate: customer.measureDate, installDate: customer.installDate, memo: customer.memo })
-    }).catch(function(e) { console.warn('고객명단 동기화 실패:', e); typeof reportClientError==='function' && reportClientError('고객명단 동기화 실패(재시도 2회 후에도 실패): ' + (e && e.message || e), e && e.stack); });
-  } catch (e) { console.warn('고객명단 동기화 실패:', e); typeof reportClientError==='function' && reportClientError('고객명단 동기화 실패: ' + (e && e.message || e), e && e.stack); }
-}
+// 2026-09-16(선혜님 - "링크 너가 나한테 준거잖아"): syncCustomerToSheet는
+// shared-common-utils.js로 옮김 - 이 파일의 정의는 삭제.
 
 // ══════════════════════════════════════════════════
 // 2026-08-25: 자동 에러 수집 (선혜님 요청 — "대기업처럼 에러를 자동으로 받아보자")
