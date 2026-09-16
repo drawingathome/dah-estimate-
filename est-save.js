@@ -15,7 +15,7 @@
 // "지금 편집 중인 견적이 무엇인지" 관련 상태 4가지(window._estEditState.editingEstDbId/
 // window._estEditState.editingEstUpdatedAt/window._estEditState.viewingFrozenEstimate/window._estEditState.estSaveCustomerId)를 "새로
 // 시작하는" 모든 지점에서 반드시 함께 리셋하도록 이 함수 하나로 모음. 예전엔
-// newEstimate()가 앞 3개만 리셋하고 _estSaveCustomerId는 빠뜨리고 있었음
+// newEstimate()가 앞 3개만 리셋하고 window._estEditState.estSaveCustomerId는 빠뜨리고 있었음
 // (다행히 saveToLocalStorage()의 이름기반 재매칭이 우연히 이 문제를 가려주고
 // 있었지만, 그건 "우연히 안전"한 거였지 확실한 보장이 아니었음). 앞으로 견적
 // 편집상태를 초기화해야 하는 곳이 새로 생기면, 각 변수를 따로따로 건드리지
@@ -63,7 +63,7 @@ function resetEstEditingState() {
 function newEstimate() {
   if(!confirm('새 견적서를 작성하시겠어요? 현재 내용이 초기화됩니다.')) return;
   // 2026-08-24(전수 재검사 중 발견 — 잠재적으로 심각한 버그): 기존 견적을
-  // "이어서 수정"하던 중(_editingEstDbId가 세팅된 상태)에 이 버튼을 누르면
+  // "이어서 수정"하던 중(window._estEditState.editingEstDbId가 세팅된 상태)에 이 버튼을 누르면
   // 화면은 비워지는데 이 표시값은 안 지워지고 있었음. 그 상태로 완전히 다른
   // 고객 정보를 입력해서 저장하면, 저장 로직이 "이건 수정이다"로 착각해서
   // 새 고객이 아니라 원래 열려있던 남의 견적을 그 내용으로 덮어써버릴 수
@@ -393,7 +393,7 @@ function _saveEstimateInner(_onDone) {
       // (최초 생성일) 기준으로만 찾고 있었음 - 현은지 원본 견적서는
       // 8/4에 처음 만들어졌는데, 오늘(8/31) 그 견적을 열어서 수정저장까지
       // 했음에도 "오늘 생성된 것"에는 안 걸려서 못 찾음. 그 상태로
-      // _editingEstDbId도 어떤 이유로(정확한 재현은 못 했으나 mode=edit
+      // window._estEditState.editingEstDbId도 어떤 이유로(정확한 재현은 못 했으나 mode=edit
       // 아닌 경로로 재진입했을 가능성) 유실된 채 "확정" 저장을 하니,
       // 이 안전장치도 원본을 못 찾아 완전히 새 레코드(POST)를 만들어버림.
       // "오늘 작업 중인 견적"을 정확히 찾으려면 최초 생성일이 아니라
@@ -821,7 +821,7 @@ function _saveEstimateInner(_onDone) {
 // 2026-08-24(선혜님 발견 — 같은 견적이 5개씩 한번에 중복 저장되던 문제):
 // 저장 버튼에 중복 클릭 방지 장치가 전혀 없어서, 짧은 시간 안에 여러 번
 // 눌리면(빠른 연타, 또는 터치가 두 번 인식되는 기기 문제 등) 각각이 독립적으로
-// _saveEstimateInner()를 실행함 — 첫 저장이 서버 응답을 받아 _editingEstDbId를
+// _saveEstimateInner()를 실행함 — 첫 저장이 서버 응답을 받아 window._estEditState.editingEstDbId를
 // 세팅하기 전에 나머지 클릭들이 이미 실행돼버려서, 전부 "새 견적"으로 처리되어
 // 그대로 중복 생성됨(실제 사례: 0.15초 안에 5건 중복 생성 확인). 버튼을 즉시
 // 비활성화하고, 저장 흐름이 끝나면(성공/실패 무관) 다시 눌러도 되게 원상복구.

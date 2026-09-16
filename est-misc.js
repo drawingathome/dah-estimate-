@@ -204,10 +204,12 @@ function collectFormData() {
   // 이미 서버에 만들어진 레코드인지 표시하는 값(window._estEditState.editingEstDbId)이 메모리에만
   // 있고 초안에는 저장이 안 되고 있었음. 화면이 새로고침되면(아이패드에서
   // 배경 탭이 조용히 재시작되는 경우 등) 폼 내용은 초안으로 복원되는데
-  // _editingEstDbId만 사라져서, 다음 저장이 "수정"이 아니라 "새로 생성"으로
+  // editingEstDbId만 사라져서, 다음 저장이 "수정"이 아니라 "새로 생성"으로
   // 처리되어 같은 견적이 계속 중복 생성됐음. 초안에 같이 저장해서 복원 가능하게 함.
-  form._editingEstDbId = window._estEditState.editingEstDbId || null;
-  form._editingEstUpdatedAt = window._estEditState.editingEstUpdatedAt || null;
+  // 2026-09-15: 초안 JSON 키 이름도 window._estEditState 프로퍼티명(밑줄 없는
+  // 캐멀케이스)과 통일 - 예전엔 여기만 밑줄 붙은 이름을 따로 썼음.
+  form.editingEstDbId = window._estEditState.editingEstDbId || null;
+  form.editingEstUpdatedAt = window._estEditState.editingEstUpdatedAt || null;
   if (form.custType === 'as') {
     form.asInstallDate = document.getElementById('as-install-date')?.value || '';
     form.asType         = document.getElementById('as-type-sel')?.value || '';
@@ -252,9 +254,9 @@ function loadDraft() {
       // 2026-08-24: 이 초안이 이미 서버에 저장된 적 있는 견적이면(=이어서
       // 수정 중이었으면) 그 연결정보도 같이 복원 — 없으면 다음 저장이 새
       // 레코드로 중복 생성됨(위 collectFormData 주석 참고).
-      if (d._editingEstDbId) {
-        window._estEditState.editingEstDbId = d._editingEstDbId;
-        window._estEditState.editingEstUpdatedAt = d._editingEstUpdatedAt || null;
+      if (d.editingEstDbId) {
+        window._estEditState.editingEstDbId = d.editingEstDbId;
+        window._estEditState.editingEstUpdatedAt = d.editingEstUpdatedAt || null;
       }
 
       // 2026-08-10: 커튼/블라인드 행 복원 — 예전엔 고객정보만 복원되고

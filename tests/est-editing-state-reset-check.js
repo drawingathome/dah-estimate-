@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // tests/est-editing-state-reset-check.js
 // 2026-08-26: "새 견적서" 버튼을 눌렀을 때 견적 편집상태 관련 전역변수
-// 4가지(_editingEstDbId/_editingEstUpdatedAt/_viewingFrozenEstimate/
-// _estSaveCustomerId)가 전부 리셋되는지 확인. 예전엔 _estSaveCustomerId가
+// 4가지(editingEstDbId/editingEstUpdatedAt/viewingFrozenEstimate/
+// estSaveCustomerId)가 전부 리셋되는지 확인. 예전엔 estSaveCustomerId가
 // 빠져있었음(resetEstEditingState() 도입으로 수정) - 재발 방지용 회귀테스트.
 const path = require('path');
 const { launchBrowser, startServer } = require('./_helpers');
@@ -54,15 +54,15 @@ async function run() {
       lastAppliedDiscounts: window._estEditState.lastAppliedDiscounts
     }));
 
-    check('[' + label + '] _editingEstDbId가 null로 리셋됨', state.editingEstDbId === null, `실제=${state.editingEstDbId}`);
-    check('[' + label + '] _editingEstUpdatedAt이 null로 리셋됨', state.editingEstUpdatedAt === null, `실제=${state.editingEstUpdatedAt}`);
-    check('[' + label + '] _viewingFrozenEstimate가 false로 리셋됨', state.viewingFrozenEstimate === false, `실제=${state.viewingFrozenEstimate}`);
-    check('[' + label + '] _estSaveCustomerId가 null로 리셋됨(예전엔 빠져있던 것)', state.estSaveCustomerId === null, `실제=${state.estSaveCustomerId}`);
+    check('[' + label + '] editingEstDbId가 null로 리셋됨', state.editingEstDbId === null, `실제=${state.editingEstDbId}`);
+    check('[' + label + '] editingEstUpdatedAt이 null로 리셋됨', state.editingEstUpdatedAt === null, `실제=${state.editingEstUpdatedAt}`);
+    check('[' + label + '] viewingFrozenEstimate가 false로 리셋됨', state.viewingFrozenEstimate === false, `실제=${state.viewingFrozenEstimate}`);
+    check('[' + label + '] estSaveCustomerId가 null로 리셋됨(예전엔 빠져있던 것)', state.estSaveCustomerId === null, `실제=${state.estSaveCustomerId}`);
     // calcTotal()이 newEstimate() 끝에서 호출되면서 0원 상태의 새 breakdown 객체로
     // 덮어써짐(=null이 아니라 total:0에 가까운 값) - "이전 고객의 999999가 아님"만 확인
-    check('[' + label + '] _lastCalcBreakdown이 이전 고객 값(999999)로 남아있지 않음', !state.lastCalcBreakdown || state.lastCalcBreakdown.total !== 999999, `실제=${JSON.stringify(state.lastCalcBreakdown)}`);
-    check('[' + label + '] _lastDiscountBreakdown이 이전 고객 값(가짜할인)로 남아있지 않음', !Array.isArray(state.lastDiscountBreakdown) || !state.lastDiscountBreakdown.some(d => d.label === '가짜할인'), `실제=${JSON.stringify(state.lastDiscountBreakdown)}`);
-    check('[' + label + '] _lastAppliedDiscounts가 이전 고객 값(fake-coupon)로 남아있지 않음', !state.lastAppliedDiscounts || !(state.lastAppliedDiscounts.coupons||[]).includes('fake-coupon'), `실제=${JSON.stringify(state.lastAppliedDiscounts)}`);
+    check('[' + label + '] lastCalcBreakdown이 이전 고객 값(999999)로 남아있지 않음', !state.lastCalcBreakdown || state.lastCalcBreakdown.total !== 999999, `실제=${JSON.stringify(state.lastCalcBreakdown)}`);
+    check('[' + label + '] lastDiscountBreakdown이 이전 고객 값(가짜할인)로 남아있지 않음', !Array.isArray(state.lastDiscountBreakdown) || !state.lastDiscountBreakdown.some(d => d.label === '가짜할인'), `실제=${JSON.stringify(state.lastDiscountBreakdown)}`);
+    check('[' + label + '] lastAppliedDiscounts가 이전 고객 값(fake-coupon)로 남아있지 않음', !state.lastAppliedDiscounts || !(state.lastAppliedDiscounts.coupons||[]).includes('fake-coupon'), `실제=${JSON.stringify(state.lastAppliedDiscounts)}`);
 
     await page.close();
   }

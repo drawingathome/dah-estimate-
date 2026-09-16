@@ -37,7 +37,7 @@ async function run() {
       nameFieldValue: document.getElementById('c-name').value
     };
   });
-  ok('2. "새 견적서" 누르면 확정 상태(_estimateConfirmedAt)가 null로 초기화됨(예전엔 안 됐음)', r2.confirmedAtAfterNew === null, JSON.stringify(r2));
+  ok('2. "새 견적서" 누르면 확정 상태(estimateConfirmedAt)가 null로 초기화됨(예전엔 안 됐음)', r2.confirmedAtAfterNew === null, JSON.stringify(r2));
   ok('3. 배지도 다시 "✓ 확정"(미확정 상태)으로 돌아옴', r2.badgeTextAfterNew.trim() === '✓ 확정', r2.badgeTextAfterNew);
   ok('4. 새 견적서 시작 후 고객명 입력칸이 잠겨있지 않음(실제 입력 가능)', r2.nameFieldDisabled === false, JSON.stringify(r2));
 

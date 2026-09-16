@@ -91,7 +91,7 @@ async function run() {
 
     // "다른 탭/기기에서 이미 저장한 적 있는 고객을 불러왔지만, 이 탭의 로컬엔
     // 오늘 저장 기록이 없는" 상황을 흉내냄: 고객 서버ID는 알고 있지만
-    // (예: 방문 이력이 있는 기존 고객을 검색해서 불러온 경우) _editingEstDbId는
+    // (예: 방문 이력이 있는 기존 고객을 검색해서 불러온 경우) window._estEditState.editingEstDbId는
     // 세팅 안 된(=이 탭 기준으로는 "새로 시작하는 견적"인) 상태.
     await page.evaluate(() => {
       window._estEditState.estSaveCustomerId = 'test-known-customer-id';
