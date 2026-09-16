@@ -117,7 +117,7 @@ function calcCurtainRow(el, skipPnumReset) {
   var mw = Math.max(0, parseFloat(tr.querySelector('.mw')?.value)||0);
   var mh = Math.max(0, parseFloat(tr.querySelector('.mh')?.value)||0);
   // 2026-08-05: 제작높이 힌트만 레일타입에 따라 다르게 계산 — 일반레일 -3cm / 전동레일 -5cm.
-  // 실측/시공 의뢰서 문서(est-documents.js)는 이 보정 없이 원래 실측값 그대로 출력하는 게 맞음(선혜님 확인).
+  // 실측/시공 의뢰서 문서(est-doc-request.js)는 이 보정 없이 원래 실측값 그대로 출력하는 게 맞음(선혜님 확인).
   // 2026-08-05: '일반/전동' 2択 자동판정 대신, 보정값(cm)을 직접 입력받는 방식으로 변경.
   // 이유: 전동레일도 브랜드마다(솜피 등) 실제 보정값이 다르고, 고객이 일부러 길게
   // (푸들스타일) 만들고 싶을 때도 있어서 -3/-5 중 하나로 무작정 고정하면 오히려 방해됨.

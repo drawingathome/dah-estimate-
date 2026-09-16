@@ -253,7 +253,7 @@ function cleanupJunkCustomerRows() {
 // 들어오는거 같은데"): 구글드라이브 "DAH_문서보관" 폴더 전수조사 결과
 // 발견한 문제 2가지를 정리하는 함수.
 //   1) "실측시공_실측_[설치기사이름].html" 같이 설치기사 이름이 파일명에
-//      들어간 예전 파일들 - saveDocumentToDrive() 호출부(est-documents.js)를
+//      들어간 예전 파일들 - saveDocumentToDrive() 호출부(est-doc-customer/vendor/request.js)를
 //      고쳐서 앞으로는 이런 파일명이 안 생기게 했지만, 이미 만들어진 예전
 //      파일들은 새 이름("실측시공_실측.html")의 최신 파일과 별개로 계속
 //      남아있어 정리가 필요함.

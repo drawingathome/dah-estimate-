@@ -1163,12 +1163,14 @@ var editingCustomerId = null; // 동명이인 구분용
 // 2026-09-01(선혜님 지시 - "왜 2개를 만드니"로 발견): buildVendorOrderFromLineItems/
 // buildRequestFromLineItems(저장된 lineItems로 대시보드가 직접 발주서/의뢰서를
 // 재구성하던 로직)는 오늘 발견한 "쌍둥이 함수" 패턴의 또 다른 사례였음 - 견적서
-// 앱(est-documents.js)에 똑같은 목적의 원본 로직이 따로 있어서, 시공요청서를
+// 앱(est-doc-vendor.js/est-doc-request.js)에 똑같은 목적의 원본 로직이 따로 있어서, 시공요청서를
 // 개선할 때마다 두 곳을 매번 똑같이 고쳐야 했음. showRequestFromEstimate/
 // showVendorOrderFromEstimate(아래)가 이제 견적서 앱을 새 창으로 열어서(autoDoc
 // 파라미터로 조용히 자동실행) 진짜 데이터로 만들게 바뀌면서, 이 두 함수와
 // 그 안에서만 쓰이던 헬퍼(extractSubLoc/curtainRole/groupLabel 등)는 완전히
-// 불필요해져 제거함 - 문서 생성 로직이 이제 한 곳에만 존재.
+// 불필요해져 제거함 - 문서 생성 로직이 이제 견적서 앱에만 존재
+// (2026-09-16: est-documents.js가 커져서 est-doc-customer/vendor/request.js
+// 3개로 나뉨 - 여전히 한 앱 안에만 있다는 핵심은 그대로).
 
 
 // 2026-09-01(선혜님 지시 - "왜 2개를 만드니": 어제 되살렸던 두 wrapper가
@@ -1179,7 +1181,7 @@ var editingCustomerId = null; // 동명이인 구분용
 // 두 곳을 매번 똑같이 고쳐야 했음(실제로 오늘 여러 번 놓칠 뻔함).
 // 근본 해결: 대시보드는 이제 문서를 직접 안 만들고, 견적서 앱을 새 창으로
 // 열어서(autoDoc 파라미터로 조용히 자동 실행) 진짜 데이터로 만들게 함 -
-// 문서 생성 로직이 이제 한 곳(est-documents.js)에만 존재.
+// 문서 생성 로직이 이제 견적서 앱(est-doc-*.js)에만 존재.
 function showRequestFromEstimate(kind, e) {
   if (!e.dbId) { showToast('이 견적은 세부 데이터가 없어서 다시 만들 수 없어요'); return; }
   window.open('dah-estimate.html?loadEstDbId=' + encodeURIComponent(e.dbId) + '&mode=view&autoDoc=' + encodeURIComponent(kind), '_blank');

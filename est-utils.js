@@ -75,7 +75,7 @@ const SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
 // 2026-09-11(선혜님이 알려주신 실제 레일 계산 방식 - "우리가 레일
 // 계산할때 -자 조절레일로 적는거 아니야?"): 원단 폭(cm)을 자(尺)
 // 단위로 환산 - est-product-calc.js(견적 화면 표시용)와
-// est-documents.js(발주서용) 둘 다 이 계산이 필요해서 전역 헬퍼로 통일.
+// est-doc-vendor.js(발주서용) 둘 다 이 계산이 필요해서 전역 헬퍼로 통일.
 function calcRailJa(mwCm) {
   var ja = mwCm / 30, jaR = Math.ceil(ja);
   if (jaR % 2 !== 0) jaR++;

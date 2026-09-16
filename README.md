@@ -30,17 +30,17 @@
 | 앱 | 배포 URL | HTML | CSS | JS 분리 파일 |
 |---|---|---|---|---|
 | 대시보드 | `/dashboard` | `dah-dashboard.html` | `dash-styles.css` | `dash-utils.js`, `dash-api.js`, `dash-ui-helpers.js`, `dash-memo.js`, `dash-chart.js`, `dash-calendar.js`, `dash-kanban.js`, `dash-customer-detail.js`, `dash-customer-add.js`, `dash-customer-alim.js`, `dash-customer-order.js`, `dash-customer-pay.js`, `dash-auth.js`, `dash-supabase-auth.js`, `dash-settings.js`, `dash-export.js`, `dash-search.js`, `dash-render.js`, `dash-render-est.js`, `dash-render-search.js`, `dash-realtime.js`, `dash-sync-queue.js`, `dash-core.js` (23개) |
-| 견적서 | `/estimate` | `dah-estimate.html` | `est-styles.css` | `est-utils.js`, `est-form-controls.js`, `est-product-calc.js`, `est-survey.js`, `est-save.js`, `est-sync-queue.js`, `est-documents.js`, `est-customer-load.js`, `est-misc.js` (9개) |
+| 견적서 | `/estimate` | `dah-estimate.html` | `est-styles.css` | `est-utils.js`, `est-form-controls.js`, `est-product-calc.js`, `est-survey.js`, `est-save.js`, `est-sync-queue.js`, `est-doc-customer.js`, `est-doc-vendor.js`, `est-doc-request.js`, `est-customer-load.js`, `est-misc.js` (11개) |
 | 설문지 | `/survey` | `survey.html` | (인라인) | `survey-app.js` (React, CDN 로드) |
 
-**공용 파일** (두 앱이 동일 파일을 그대로 로드): `shared-optimistic-lock.js`(낙관적 잠금 락값 갱신 — `fetchLatestUpdatedAt`), `shared-staging-guard.js`(스테이징 쓰기차단 안전장치, 아래 12번 섹션 참고). 새로운 로직이 두 앱 모두에 필요하면, 각 앱 파일에 복사하는 대신 이런 공용 파일로 뽑아내는 것을 우선 검토할 것 — `escHtml`/`syncCustomerToSheet` 등 기존 함수들은 아직 각 앱에 복사된 채 `tests/cross-app-twin-check.js`로만 동기화를 지키고 있어, 향후 같은 방식으로 정리할 여지가 있음.
+**공용 파일** (두 앱이 동일 파일을 그대로 로드): `shared-optimistic-lock.js`(낙관적 잠금 락값 갱신 — `fetchLatestUpdatedAt`), `shared-staging-guard.js`(스테이징 쓰기차단 안전장치, 아래 12번 섹션 참고), `shared-common-utils.js`(2026-09-16 신설 — `escHtml`, `openKakaoAddr`, `syncCustomerToSheet`, `showToast`, `getRegionFees`/`DEFAULT_REGION_FEES`, `formatPhoneDigits`. 예전엔 이 함수들이 각 앱에 복사된 채 `tests/cross-app-twin-check.js`로만 동기화를 지켰는데, 실제 배포 URL을 직접 확인해서 "두 앱은 별도 도메인이라 공유 불가"라는 예전 전제가 틀렸음을 확인한 뒤 진짜 공용 파일로 통합함 — 이 파일을 고치면 양쪽에 즉시 반영됨). 새로운 로직이 두 앱 모두에 필요하면, 각 앱 파일에 복사하는 대신 이런 공용 파일로 뽑아내는 것을 우선 검토할 것. 파라미터 형태가 앱마다 다른 경우(예: `fmtPhone`— 값 반환 vs 엘리먼트 직접수정)는 핵심 로직만 공용 파일로 뽑고 각 앱에 얇은 래퍼를 남기는 방식으로 처리함(`formatPhoneDigits` 참고).
 
 역할:
 - **`dah-dashboard.html`**: 고객 목록(칸반/검색), 매출 대시보드, 설정(직원관리·백업), 마스터/스태프 권한 구분
 - **`dah-estimate.html`**: 커튼·블라인드 견적서 작성, 발주서/실측·시공 의뢰서 자동생성
 - **`survey.html`**: 고객용 사전 설문지 (구글시트+Supabase 이중저장)
 
-**"다시보기" 흐름(2026-09-01 근본 재설계)**: 대시보드에서 발주서/실측·시공 의뢰서를 "다시보기"할 때, 대시보드가 문서를 직접 재구성하지 않습니다(과거엔 `buildRequestFromLineItems` 등으로 두 앱에 같은 로직이 중복 구현되어 있었음 — "쌍둥이 함수" 버그의 근원). 대신 `dah-estimate.html?loadEstDbId=X&mode=view&autoDoc=install|measure|vendor`처럼 새 창을 열어 **견적서 앱 자신이 실제 최신 데이터로 문서를 만들게** 합니다. 문서 생성 로직은 `est-documents.js` 한 곳에만 존재하므로, 시공요청서 등을 고치면 대시보드도 자동으로 최신 상태가 됩니다.
+**"다시보기" 흐름(2026-09-01 근본 재설계)**: 대시보드에서 발주서/실측·시공 의뢰서를 "다시보기"할 때, 대시보드가 문서를 직접 재구성하지 않습니다(과거엔 `buildRequestFromLineItems` 등으로 두 앱에 같은 로직이 중복 구현되어 있었음 — "쌍둥이 함수" 버그의 근원). 대신 `dah-estimate.html?loadEstDbId=X&mode=view&autoDoc=install|measure|vendor`처럼 새 창을 열어 **견적서 앱 자신이 실제 최신 데이터로 문서를 만들게** 합니다. 문서 생성 로직은 견적서 앱 안에만 존재하므로(2026-09-16: 파일이 커져서 `est-doc-customer.js`/`est-doc-vendor.js`/`est-doc-request.js` 3개로 분리됨 — 세 종류가 서로 내부 함수를 부르지 않는 걸 확인 후 분리, 함수 이름은 그대로라 호출부 영향 없음), 시공요청서 등을 고치면 대시보드도 자동으로 최신 상태가 됩니다.
 
 루트(`/`)는 `dah-dashboard`로 리다이렉트됩니다 (`vercel.json`).
 

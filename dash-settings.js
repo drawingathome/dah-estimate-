@@ -435,7 +435,7 @@ function renderSettings() {
     // 거래처 항목에 연락처 필드 자체가 없어서, 실측·시공 의뢰서 만들 때마다
     // 담당 설치기사 연락처를 매번 손으로 입력해야 했음. 연락처를 여기서
     // 관리하면, '실측·시공' 담당 거래처가 1곳으로 특정될 때 견적서 앱에서
-    // 자동으로 채워줄 수 있음(est-documents.js printRequest() 참고).
+    // 자동으로 채워줄 수 있음(est-doc-request.js printRequest() 참고).
     var phoneRow = div('display:flex;align-items:center;gap:8px;margin-top:8px', [
       span('font-size:11px;color:var(--sub);flex-shrink:0', '연락처')
     ]);
