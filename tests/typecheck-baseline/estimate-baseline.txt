@@ -1,5 +1,3 @@
-  'URL' 형식에 'method' 속성이 없습니다.
-  'URL' 형식에 'url' 속성이 없습니다.
   'string' 형식에 'style' 속성이 없습니다.
   'string' 형식에 'textContent' 속성이 없습니다.
   'string' 형식에 'textContent' 속성이 없습니다.
@@ -463,5 +461,3 @@ shared-staging-guard.js(64,23): error TS2339: 'XMLHttpRequest' 형식에 '_dahMe
 shared-staging-guard.js(65,20): error TS2339: 'XMLHttpRequest' 형식에 '_dahUrl' 속성이 없습니다.
 shared-staging-guard.js(79,53): error TS2554: 1개의 인수가 필요한데 0개를 가져왔습니다.
 shared-staging-guard.js(80,65): error TS2554: 1개의 인수가 필요한데 0개를 가져왔습니다.
-shared-staging-guard.js(92,71): error TS2339: 'Request | URL' 형식에 'url' 속성이 없습니다.
-shared-staging-guard.js(93,82): error TS2339: 'Request | URL' 형식에 'method' 속성이 없습니다.

@@ -89,8 +89,17 @@
   if (window.fetch) {
     var origFetch = window.fetch;
     window.fetch = function (input, init) {
-      var url = (typeof input === 'string') ? input : (input && input.url) || '';
-      var method = ((init && init.method) || (typeof input === 'object' && input.method) || 'GET').toUpperCase();
+      // 2026-09-16(선혜님 - "4번 하자"로 만든 타입체크에서 발견): input이
+      // string|URL|Request 셋 중 하나인데, "input.url"/"input.method"로
+      // 접근하면 URL 타입엔 그런 속성이 없어서 타입체커가 걸림 - 실제
+      // 동작엔 문제없었지만(URL이면 그냥 undefined가 돼서 || 기본값으로
+      // 빠짐), instanceof Request로 명확히 구분해서 타입도 정확하게 맞춤.
+      // (부수 발견: 같은 오류라도 유니온 타입을 나열하는 순서
+      // "URL | Request" vs "Request | URL"가 실행 환경마다 달라져서,
+      // 베이스라인 문자열 비교 테스트가 실제 코드 변화 없이도 오탐할 수
+      // 있었음 - 이 코드를 고쳐서 오류 자체를 없애는 게 가장 확실한 해결.)
+      var url = (typeof input === 'string') ? input : (input instanceof Request ? input.url : (input ? String(input) : '')) || '';
+      var method = ((init && init.method) || (input instanceof Request && input.method) || 'GET').toUpperCase();
       if (isBlockedWriteUrl(url) && WRITE_METHODS.indexOf(method) !== -1) {
         console.warn('[스테이징 안전장치] 실제 쓰기 요청을 차단했습니다(fetch):', method, url);
         return Promise.resolve(new Response(JSON.stringify({ message: '스테이징 환경에서는 저장·수정·삭제가 차단됩니다(실제 데이터 보호)' }), { status: 403 }));

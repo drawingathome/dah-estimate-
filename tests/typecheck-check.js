@@ -21,6 +21,22 @@ const CONFIGS = [
   { name: '견적서', config: 'tsconfig.estimate.json', baseline: 'tests/typecheck-baseline/estimate-baseline.txt' },
 ];
 
+// 2026-09-16(CI에서 실제로 처음 실패해서 발견 - 로컬 sandbox에서 만든
+// 베이스라인과 깨끗한 clone에서의 실행 결과를 직접 비교해서 원인
+// 확인): 타입스크립트가 유니온 타입 오류를 출력할 때 'URL | Request'
+// 처럼 멤버 나열 순서가 실행 환경마다 'Request | URL'로 뒤바뀔 수
+// 있음 - 코드가 전혀 안 바뀌어도 이 순서 차이만으로 "새 오류"로
+// 오탐됨. 비교 전에 'A | B | C' 형태를 알파벳순으로 정규화해서 이
+// 비결정성에 흔들리지 않게 함(가능하면 코드 자체를 고쳐 오류를 아예
+// 없애는 게 우선이지만 - shared-staging-guard.js에서 실제로 그렇게
+// 했음 - 앞으로 또 나올 수 있는 다른 케이스까지 다 막기 위한 안전망).
+function normalizeUnionOrder(line) {
+  return line.replace(/'([A-Za-z0-9_.\[\]<> ]+(?:\s*\|\s*[A-Za-z0-9_.\[\]<> ]+)+)'/g, (m, group) => {
+    const parts = group.split('|').map(s => s.trim()).sort();
+    return "'" + parts.join(' | ') + "'";
+  });
+}
+
 let anyNew = false;
 
 for (const c of CONFIGS) {
@@ -37,10 +53,11 @@ for (const c of CONFIGS) {
   const baseline = fs.existsSync(baselinePath)
     ? fs.readFileSync(baselinePath, 'utf-8').split('\n').filter(Boolean)
     : [];
-  const baselineSet = new Set(baseline);
+  const baselineNormSet = new Set(baseline.map(normalizeUnionOrder));
 
-  const newErrors = current.filter(line => !baselineSet.has(line));
-  const fixedCount = baseline.filter(line => !current.includes(line)).length;
+  const newErrors = current.filter(line => !baselineNormSet.has(normalizeUnionOrder(line)));
+  const currentNormSet = new Set(current.map(normalizeUnionOrder));
+  const fixedCount = baseline.filter(line => !currentNormSet.has(normalizeUnionOrder(line))).length;
 
   console.log(`  기존(베이스라인) 오류: ${baseline.length}건 — 그대로 둠(당장 고칠 대상 아님)`);
   if (fixedCount > 0) console.log(`  ✅ 베이스라인 중 ${fixedCount}건은 이번에 고쳐져서 없어짐(베이스라인 갱신 권장)`);
