@@ -617,5 +617,8 @@ function saveDocumentToDrive(category, customerName, vendor, htmlContent, staffN
       reason && reason.stack
     );
   });
-  window.reportClientError = reportClientError; // 수동으로도 기록 가능(예: catch 블록에서)
+  // 2026-09-16(선혜님 - "4번 하자"로 시작한 가벼운 타입체크에서 발견):
+  // window.reportClientError 대입이 이 IIFE 안에 두 번 있었음(바로 위,
+  // 그리고 여기 아래) - 기능상 문제는 전혀 없었지만(같은 값을 두 번
+  // 대입해도 결과는 동일) 왜 두 번 있는지 헷갈리는 죽은 중복이라 제거.
 })();

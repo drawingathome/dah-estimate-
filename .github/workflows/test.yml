@@ -16,8 +16,8 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Puppeteer
-        run: npm install puppeteer@22
+      - name: 의존성 설치 (Puppeteer + TypeScript)
+        run: npm install
 
       - name: 대시보드 회귀 테스트
         run: node tests/run-all.js dah-dashboard.html

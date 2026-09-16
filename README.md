@@ -113,6 +113,13 @@ node tests/run-all.js dah-estimate.html
 
 검사 항목(일부): 폰트 크기 정책 위반, 터치타겟 최소 크기(32px), 모바일 가로스크롤, 마스터/스태프 권한별 UI 노출, 로그인 흐름, 견적 계산, 매출 집계 정합성, 데이터 안전성(삭제/복구), 여러 기기 동기화, 경쟁 상태(race condition) 등. 자세한 내용은 `tests/README.md` 참고.
 
+**가벼운 타입체크(2026-09-16 신설)**: 빌드 시스템 없이 `tsc --noEmit`만으로 두 앱을 각각 검사합니다(`tsconfig.dashboard.json`/`tsconfig.estimate.json` — 두 앱이 실제로 같이 안 돌아가므로 반드시 따로 검사해야 함, 안 그러면 `SUPABASE_URL` 같은 공용 변수가 "중복 선언"으로 잘못 잡힘). 이 코드베이스엔 타입 주석이 전혀 없어서 지금 당장 전체를 깨끗하게 만드는 건 비현실적이라(대부분 `document.querySelector`가 반환하는 제네릭 `Element` 타입에 `.style`/`.value`를 접근하는 흔한 패턴), 현재 상태를 `tests/typecheck-baseline/`에 스냅샷 떠두고 `tests/typecheck-check.js`가 **새로 생기는 오류만** 잡아내는 "ratchet" 방식으로 운영합니다(`run-all.js`에 포함되어 매번 같이 실행됨). 새 전역이 필요하면 `global.d.ts`에 선언을 추가할 것.
+```bash
+npm install                 # 최초 1회 (puppeteer + typescript)
+npm run typecheck           # 두 앱 전체 타입체크 결과 확인(한국어)
+node tests/typecheck-check.js  # 베이스라인 대비 새 오류만 확인
+```
+
 ## 8. 알려진 제한사항 (개선 예정)
 
 - **Supabase "Leaked Password Protection" 미활성화** — HaveIBeenPwned 대조 기능. Supabase 대시보드에서 토글만 켜면 되는데 아직 대기 중.

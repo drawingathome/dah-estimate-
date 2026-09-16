@@ -91,6 +91,11 @@ if (/dah-dashboard/.test(target)) {
   // 그리고 의도적으로 그대로 둔 곳(칸반 컬럼헤더)은 정확히 그것만
   // 남았는지 종단간으로 검증.
   scripts.push(['delivery-stage-label-check.js', []]);
+  // 2026-09-16(선혜님 - "4번 하자"): 가벼운 타입체크(tsc --noEmit) -
+  // 기존 코드 노이즈는 베이스라인으로 스냅샷 떠두고, 새로 생기는 오류만
+  // 잡아냄(tests/typecheck-check.js 상단 설명 참고). target과 무관하게
+  // 항상 같은 결과이므로 두 앱 어느 쪽으로 실행해도 동일하게 동작.
+  scripts.push(['typecheck-check.js', []]);
   // 2026-09-11: 감사로그(변경이력) 조회 화면 검증
   scripts.push(['audit_log_check.js', []]);
   // 2026-09-11: AS 관리 화면(GitHub 이슈#4) — 접수 등록/상태변경 검증

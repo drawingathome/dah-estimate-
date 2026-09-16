@@ -1,0 +1,15 @@
+{
+  "name": "dah-app",
+  "private": true,
+  "version": "1.0.0",
+  "description": "DAH 드로잉엣홈 견적서/대시보드 앱 - 빌드 시스템 없이 브라우저에서 직접 실행되는 순수 JS. package.json은 개발 도구(타입체크, 테스트) 용도로만 쓰이고, 배포되는 코드 자체엔 전혀 영향 없음.",
+  "scripts": {
+    "typecheck": "npm run typecheck:dashboard && npm run typecheck:estimate",
+    "typecheck:dashboard": "tsc --noEmit --locale ko -p tsconfig.dashboard.json",
+    "typecheck:estimate": "tsc --noEmit --locale ko -p tsconfig.estimate.json"
+  },
+  "devDependencies": {
+    "puppeteer": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

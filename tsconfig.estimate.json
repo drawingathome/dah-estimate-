@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "target": "ES2019",
+    "lib": ["ES2019", "DOM"],
+    "strict": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "moduleDetection": "legacy"
+  },
+  "files": [
+    "global.d.ts",
+    "shared-common-utils.js",
+    "shared-optimistic-lock.js",
+    "shared-staging-guard.js",
+    "dash-supabase-auth.js",
+    "est-customer-load.js",
+    "est-doc-customer.js",
+    "est-doc-request.js",
+    "est-doc-vendor.js",
+    "est-form-controls.js",
+    "est-misc.js",
+    "est-product-calc.js",
+    "est-public-view.js",
+    "est-save.js",
+    "est-survey.js",
+    "est-sync-queue.js",
+    "est-utils.js"
+  ]
+}

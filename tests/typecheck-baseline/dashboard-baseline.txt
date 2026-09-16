@@ -1,0 +1,145 @@
+  'ArrayBuffer' 형식은 'string' 형식에 할당할 수 없습니다.
+  'EventTarget' 형식에 'Node' 형식의 baseURI, childNodes, firstChild, isConnected 외 43개 속성이 없습니다.
+  'HTMLElement' 형식에 'value' 속성이 없습니다.
+  'URL' 형식에 'method' 속성이 없습니다.
+  'URL' 형식에 'url' 속성이 없습니다.
+  'number' 형식은 'string' 형식에 할당할 수 없습니다.
+  'string' 형식에 'filter' 속성이 없습니다.
+  'string' 형식에 'forEach' 속성이 없습니다.
+dash-auth.js(26,26): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-auth.js(44,30): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-auth.js(46,36): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-auth.js(50,40): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-auth.js(57,10): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-auth.js(63,10): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-auth.js(69,10): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-calendar.js(118,5): error TS2322: 'number' 형식은 'string' 형식에 할당할 수 없습니다.
+dash-chart.js(140,7): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-chart.js(141,7): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-chart.js(142,7): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-chart.js(22,31): error TS2362: 산술 연산의 왼쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+dash-chart.js(22,44): error TS2363: 산술 연산 오른쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+dash-chart.js(232,28): error TS2345: 'number' 형식의 인수는 'string' 형식의 매개 변수에 할당될 수 없습니다.
+dash-chart.js(232,57): error TS2345: 'number' 형식의 인수는 'string' 형식의 매개 변수에 할당될 수 없습니다.
+dash-chart.js(233,28): error TS2345: 'number' 형식의 인수는 'string' 형식의 매개 변수에 할당될 수 없습니다.
+dash-chart.js(233,55): error TS2345: 'number' 형식의 인수는 'string' 형식의 매개 변수에 할당될 수 없습니다.
+dash-chart.js(237,26): error TS2345: 'number' 형식의 인수는 'string' 형식의 매개 변수에 할당될 수 없습니다.
+dash-chart.js(237,55): error TS2345: 'number' 형식의 인수는 'string' 형식의 매개 변수에 할당될 수 없습니다.
+dash-chart.js(257,30): error TS2345: 'number' 형식의 인수는 'string' 형식의 매개 변수에 할당될 수 없습니다.
+dash-chart.js(257,61): error TS2345: 'number' 형식의 인수는 'string' 형식의 매개 변수에 할당될 수 없습니다.
+dash-chart.js(258,30): error TS2345: 'number' 형식의 인수는 'string' 형식의 매개 변수에 할당될 수 없습니다.
+dash-chart.js(265,28): error TS2345: 'number' 형식의 인수는 'string' 형식의 매개 변수에 할당될 수 없습니다.
+dash-chart.js(265,55): error TS2345: 'number' 형식의 인수는 'string' 형식의 매개 변수에 할당될 수 없습니다.
+dash-chart.js(273,27): error TS2345: 'number' 형식의 인수는 'string' 형식의 매개 변수에 할당될 수 없습니다.
+dash-chart.js(273,55): error TS2345: 'number' 형식의 인수는 'string' 형식의 매개 변수에 할당될 수 없습니다.
+dash-customer-add.js(107,64): error TS2339: 'HTMLElement | {}' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(117,42): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(124,41): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(132,41): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(139,14): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(139,29): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(139,45): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(156,38): error TS2339: 'Element' 형식에 'click' 속성이 없습니다.
+dash-customer-add.js(166,19): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
+dash-customer-add.js(167,15): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
+dash-customer-add.js(169,55): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
+dash-customer-add.js(171,50): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(172,52): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(175,32): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
+dash-customer-add.js(187,136): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(187,215): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(187,263): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(187,321): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(187,379): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(187,427): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(21,109): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(21,168): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(21,233): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(21,282): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(21,342): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(21,403): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(21,469): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(21,50): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(21,530): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(21,598): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(22,145): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(22,200): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(22,249): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(22,298): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(22,348): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(22,404): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(22,455): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(22,48): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(22,506): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(22,97): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(261,122): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(261,231): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(261,279): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(261,337): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(261,395): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(261,443): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(42,104): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-customer-add.js(42,151): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-customer-add.js(42,190): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-customer-add.js(42,271): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-customer-add.js(42,47): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-customer-add.js(43,109): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-customer-add.js(43,137): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-customer-add.js(43,26): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-customer-add.js(43,58): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-customer-add.js(70,21): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(8,51): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(9,60): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(98,28): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
+dash-customer-alim.js(135,26): error TS2339: 'string | string[]' 형식에 'filter' 속성이 없습니다.
+dash-customer-alim.js(143,10): error TS2339: 'string | string[]' 형식에 'forEach' 속성이 없습니다.
+dash-customer-alim.js(19,22): error TS2362: 산술 연산의 왼쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+dash-customer-alim.js(19,26): error TS2363: 산술 연산 오른쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+dash-customer-alim.js(279,12): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-alim.js(28,19): error TS2363: 산술 연산 오른쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+dash-customer-alim.js(283,29): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-detail.js(1156,22): error TS8024: JSDoc '@param' 태그의 이름이 'editName'인데 해당 이름의 매개 변수가 없습니다.
+dash-customer-detail.js(1373,81): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-customer-detail.js(864,77): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-failed-saves.js(31,40): error TS2362: 산술 연산의 왼쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+dash-failed-saves.js(31,62): error TS2363: 산술 연산 오른쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+dash-kanban.js(113,26): error TS2345: 'EventTarget' 형식의 인수는 'Node' 형식의 매개 변수에 할당될 수 없습니다.
+dash-kanban.js(132,42): error TS2362: 산술 연산의 왼쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+dash-kanban.js(132,69): error TS2363: 산술 연산 오른쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+dash-kanban.js(135,42): error TS2362: 산술 연산의 왼쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+dash-kanban.js(135,69): error TS2363: 산술 연산 오른쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+dash-render-est.js(65,51): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-render-search.js(33,51): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-render-search.js(36,63): error TS2339: 'HTMLElement' 형식에 'checked' 속성이 없습니다.
+dash-render.js(204,37): error TS2362: 산술 연산의 왼쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+dash-render.js(204,46): error TS2363: 산술 연산 오른쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+dash-settings.js(118,28): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-settings.js(232,26): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
+dash-settings.js(238,20): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-settings.js(244,39): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-settings.js(252,49): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
+dash-settings.js(73,18): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-settings.js(77,18): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-settings.js(81,18): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-settings.js(813,31): error TS2345: 'string | ArrayBuffer' 형식의 인수는 'string' 형식의 매개 변수에 할당될 수 없습니다.
+dash-settings.js(85,18): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-settings.js(93,65): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-settings.js(94,57): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-settings.js(95,60): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-settings.js(96,59): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-ui-helpers.js(48,62): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-ui-helpers.js(49,28): error TS2339: 'Element' 형식에 'click' 속성이 없습니다.
+dash-utils.js(108,49): error TS2362: 산술 연산의 왼쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+dash-utils.js(108,62): error TS2363: 산술 연산 오른쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+dash-utils.js(52,22): error TS2362: 산술 연산의 왼쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+dash-utils.js(52,35): error TS2363: 산술 연산 오른쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+shared-common-utils.js(39,14): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+shared-common-utils.js(54,14): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+shared-staging-guard.js(57,10): error TS2339: 'XMLHttpRequest' 형식에 '_dahMethod' 속성이 없습니다.
+shared-staging-guard.js(58,10): error TS2339: 'XMLHttpRequest' 형식에 '_dahUrl' 속성이 없습니다.
+shared-staging-guard.js(64,23): error TS2339: 'XMLHttpRequest' 형식에 '_dahMethod' 속성이 없습니다.
+shared-staging-guard.js(65,20): error TS2339: 'XMLHttpRequest' 형식에 '_dahUrl' 속성이 없습니다.
+shared-staging-guard.js(79,53): error TS2554: 1개의 인수가 필요한데 0개를 가져왔습니다.
+shared-staging-guard.js(80,65): error TS2554: 1개의 인수가 필요한데 0개를 가져왔습니다.
+shared-staging-guard.js(92,71): error TS2339: 'Request | URL' 형식에 'url' 속성이 없습니다.
+shared-staging-guard.js(93,82): error TS2339: 'Request | URL' 형식에 'method' 속성이 없습니다.
