@@ -58,6 +58,27 @@ function isSoftDeleted(c) {
   return c.is_archived === true;
 }
 
+// 2026-09-15(선혜님 지시 - 침구/카펫/쿠션처럼 시공 없이 배송만 하는
+// 주문이 늘어날 수 있어서, 그 판단 기준을 "품목 종류"가 아니라 이미
+// 있던 "시공 지역: 시공 안함(배송)" 선택(c.region === '')으로 통일하기로
+// 결정): 내부 저장값(단계 이름 자체)은 절대 안 건드림 - 알림톡/칸반/
+// 결제자동전환 등 8개 파일의 자동화가 이 정확한 문자열에 의존하고
+// 있어서, 값을 바꾸면 그 자동화를 전부 다시 만들어야 함. 대신 "화면에
+// 보여주는 글자"만 바꿔주는 함수 하나를 만들어서, 단계 이름이 뜨는
+// 모든 화면이 이 함수를 거치게 함. region이 늦은 단계(실측/시공 관련)
+// 까지 비어있다는 건 그 시점엔 이미 지역선택을 거쳤을 가능성이 높아
+// "명시적으로 배송 선택함"으로 봐도 안전함(초기 단계는 애초에 이 3개
+// 단계에 해당 안 되므로 영향 없음).
+var DELIVERY_STAGE_LABELS = { '실측준비중': '제작준비중', '시공준비중': '발송준비중', '시공완료': '발송완료' };
+function getDisplayStageLabel(customer) {
+  if (!customer) return '';
+  var stage = customer.stage;
+  if ((customer.region === '' || customer.region == null) && DELIVERY_STAGE_LABELS[stage]) {
+    return DELIVERY_STAGE_LABELS[stage];
+  }
+  return stage;
+}
+
 // 2026-09-15(선혜님 - "쌍둥이함수까지 다 본거야??"로 점검 중 발견): 미배정
 // 고객을 직원 권한 필터의 예외로 통과시키는 한 줄짜리 필터가 홈화면/검색/
 // 캘린더/칸반보드 4곳에 각각 따로 복사돼 있었음 - 오늘 claimCustomer를

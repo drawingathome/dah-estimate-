@@ -202,7 +202,7 @@ function renderHome(skipServerFetch) {
       }
       if (['방문예약','상담','가견적'].indexOf(c.stage) >= 0 && c.date && !c.leadParked) {
         var daysSince = Math.floor((_today - new Date(c.date)) / (1000*60*60*24));
-        if (daysSince >= LEAD_STALE_DAYS) reasons.push(c.stage + ' 후 ' + daysSince + '일째 진행없음');
+        if (daysSince >= LEAD_STALE_DAYS) reasons.push(getDisplayStageLabel(c) + ' 후 ' + daysSince + '일째 진행없음');
       }
       if (reasons.length > 0) needActionMap[c.clientName] = { customer: c, reasons: reasons };
     });
@@ -361,7 +361,7 @@ function renderHome(skipServerFetch) {
                   '<div style="flex:1;min-width:0">' +
                     '<div style="display:flex;align-items:center;gap:6px">' +
                       '<span style="font-size:12px;font-weight:700;color:var(--dark);overflow:hidden;white-space:nowrap;text-overflow:ellipsis">' + escHtml(c.clientName||'') + '</span>' +
-                      '<span style="font-size:10px;font-weight:700;color:' + stageColor + ';background:' + (stageColor==='var(--terra)'?'var(--bg-org)':'#F0F0F0') + ';padding:1px 6px;border-radius:6px;flex-shrink:0">' + escHtml(c.stage||'') + '</span>' +
+                      '<span style="font-size:10px;font-weight:700;color:' + stageColor + ';background:' + (stageColor==='var(--terra)'?'var(--bg-org)':'#F0F0F0') + ';padding:1px 6px;border-radius:6px;flex-shrink:0">' + escHtml(getDisplayStageLabel(c)||'') + '</span>' +
                     '</div>' +
                     '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(c.phone||'') + '</div>' +
                   '</div>' +

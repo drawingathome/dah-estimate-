@@ -133,8 +133,9 @@ function renderAlimSection(c, alimBody) {
   categories.forEach(function(cat) {
     var stageName = cat[0], keys = cat[1] || [];
     var sentCount = keys.filter(function(k){ return sentMap[k]; }).length;
+    var displayStageName = (stageName !== '취소·기타') ? getDisplayStageLabel({stage: stageName, region: c.region}) : stageName;
     var header = div('display:flex;align-items:center;justify-content:space-between;padding:8px 0;cursor:pointer', [
-      span('font-size:12px;font-weight:700;color:var(--dark)', stageName + ' (발송 ' + sentCount + '/' + keys.length + ')'),
+      span('font-size:12px;font-weight:700;color:var(--dark)', displayStageName + ' (발송 ' + sentCount + '/' + keys.length + ')'),
       span('font-size:11px;color:var(--sub)', '▸')
     ]);
     header.onclick = function(){ toggleHomeAccordion(header); };

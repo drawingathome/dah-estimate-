@@ -485,7 +485,7 @@ function renderDetailHeader(c) {
 
   // 단계 배지 (이름과 한 줄에)
   var _dsb = document.getElementById('detail-stage-badge');
-  if (_dsb) { _dsb.textContent = c.stage; }
+  if (_dsb) { _dsb.textContent = getDisplayStageLabel(c); }
 
   // 요약 row: 재구매 + 경과일 (조용한 보조정보로)
   var summaryRow = document.getElementById('detail-summary-row');
@@ -690,7 +690,7 @@ function renderDetailStageSection(c, body, isMaster) {
       // 점(선)만 있고 숫자가 없어서 "지금 전체 몇 단계 중 몇 번째인지"를
       // 한눈에 못 봤음 - 배지에 "8/9"처럼 전체 대비 현재 위치를 명시.
       el('span', {style:'display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:20px;padding:0 6px;border-radius:10px;background:var(--dark);color:#fff;font-size:11px;font-weight:700;flex-shrink:0', text: stageNum + '/' + STAGES.length}),
-      el('span', {style:'font-size:12px;font-weight:700;color:var(--dark);letter-spacing:-0.3px', text:c.stage + ' 단계'})
+      el('span', {style:'font-size:12px;font-weight:700;color:var(--dark);letter-spacing:-0.3px', text:getDisplayStageLabel(c) + ' 단계'})
     ]),
     div('display:flex;align-items:center;gap:2px', [
       isMaster ? btn('font-size:11px;color:var(--dark);background:var(--ivory1);border:1px solid var(--border);padding:5px 10px;cursor:pointer;font-family:inherit;border-radius:10px;min-height:32px', '수정', function(){ closeDetail(); openAdd(c.clientName); }) : el('span',{}),
@@ -719,7 +719,7 @@ function renderDetailStageSection(c, body, isMaster) {
   if (nextStage) {
     stageActionRow.appendChild(btn(
       'flex:1;padding:11px;border:none;background:var(--dark);color:#fff;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px',
-      nextStage + '으로 진행 →', function(){ changeStage(nextStage); }
+      getDisplayStageLabel({stage: nextStage, region: c.region}) + '으로 진행 →', function(){ changeStage(nextStage); }
     ));
   }
   var toggleStageBtn = btn(
@@ -744,7 +744,7 @@ function renderDetailStageSection(c, body, isMaster) {
       'padding:5px 11px;border:1px solid '+(on?'var(--dark)':'var(--border)')+';'+
       'background:'+(on?'var(--dark)':'#fff')+';color:'+(on?'#fff':'#6B6B6B')+';'+
       'font-size:11px;font-weight:'+(on?'700':'400')+';font-family:inherit;cursor:pointer;border-radius:10px',
-      num+'. '+s, function(){ changeStage(s); }
+      num+'. '+getDisplayStageLabel({stage: s, region: c.region}), function(){ changeStage(s); }
     );
     stageBar.appendChild(pill);
   });
