@@ -6,7 +6,8 @@
   "scripts": {
     "typecheck": "npm run typecheck:dashboard && npm run typecheck:estimate",
     "typecheck:dashboard": "tsc --noEmit --locale ko -p tsconfig.dashboard.json",
-    "typecheck:estimate": "tsc --noEmit --locale ko -p tsconfig.estimate.json"
+    "typecheck:estimate": "tsc --noEmit --locale ko -p tsconfig.estimate.json",
+    "bump-versions": "node scripts/bump-cache-versions.js"
   },
   "devDependencies": {
     "puppeteer": "^22.0.0",

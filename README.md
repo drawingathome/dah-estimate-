@@ -100,6 +100,7 @@
   git pull
   vercel --token <VERCEL_TOKEN> --prod --force
   ```
+- **캐시버전 자동화(2026-09-17 신설)**: `dah-dashboard.html`/`dah-estimate.html`의 `<script src="/파일.js?v=...">` 버전 문자열은 이제 손으로 넣지 않습니다. `node scripts/bump-cache-versions.js`(또는 `npm run bump-versions`)가 각 JS 파일의 실제 내용을 MD5 해시로 계산해서 자동으로 채워 넣습니다 — 내용이 안 바뀌면 버전도 안 바뀌고, 한 글자라도 바뀌면 해시가 달라져 캐시가 자동으로 무효화됩니다. **파일을 고친 뒤 커밋 전에 항상 이 명령을 실행할 것.** CI(`node scripts/bump-cache-versions.js --check`)가 커밋 시점에 버전이 실제 내용과 맞는지 자동으로 검사해서, "코드는 고쳤는데 캐시버전을 깜빡한" 실수(2026-09-17에 실제로 2건 발생해서 뒤늦게 발견함)를 원천 차단합니다.
 
 ## 7. 테스트 / CI
 

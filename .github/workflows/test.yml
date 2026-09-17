@@ -19,6 +19,9 @@ jobs:
       - name: 의존성 설치 (Puppeteer + TypeScript)
         run: npm install
 
+      - name: 캐시버전 정합성 확인
+        run: node scripts/bump-cache-versions.js --check
+
       - name: 대시보드 회귀 테스트
         run: node tests/run-all.js dah-dashboard.html
 
