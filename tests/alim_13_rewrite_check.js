@@ -28,7 +28,9 @@ async function run() {
     var orphans = Object.keys(ALIM_META).filter(function(k) { return !refSet.has(k); });
     return { total: total, orphans: orphans };
   });
-  ok('1. ALIM_META 13개', r.total === 13, 'total=' + r.total);
+  // 2026-09-16: 5번(팔로업)·10번(재구매유도)이 카카오 반려로 완전히
+  // 제거돼서 13개 -> 11개로 줄어듦(의도된 변경).
+  ok('1. ALIM_META 11개(5·10번 카카오반려로 제거됨)', r.total === 11, 'total=' + r.total);
   ok('2. 고아 키 없음', r.orphans.length === 0, JSON.stringify(r.orphans));
 
   // 2) 각 단계별로 A/B/C/D 상황추정이 그럴듯하게 되는지 (실측준비중 단계 → 방문유형=실측)
@@ -51,9 +53,13 @@ async function run() {
   ok('6. 잔금결제 단계 → 일정유형 자동으로 "시공"', r.scheduleTypeOk === true);
 
   // 3) #{공간} 빈 값일 때 중복 공백 없이 자연스럽게
+  // 2026-09-16: 이 검증에 쓰던 t04_followup(팔로업) 템플릿이 카카오 반려로
+  // 완전히 제거됐음 - #{공간} 치환 로직 자체(fillAlimTemplate)는 여전히
+  // 유효하므로, 별도의 인라인 테스트용 템플릿 문자열로 같은 메커니즘을 검증.
   r = await page.evaluate(() => {
-    var withSpace = fillAlimTemplate(ALIM_META.t04_followup.template, { clientName:'테스트3', space:'거실' });
-    var noSpace = fillAlimTemplate(ALIM_META.t04_followup.template, { clientName:'테스트4' });
+    var testTemplate = '#{고객명}님, #{공간} 상담 이후 감사합니다';
+    var withSpace = fillAlimTemplate(testTemplate, { clientName:'테스트3', space:'거실' });
+    var noSpace = fillAlimTemplate(testTemplate, { clientName:'테스트4' });
     return {
       withSpaceOk: withSpace.indexOf('거실 상담 이후') !== -1,
       noSpaceOk: noSpace.indexOf('  ') === -1 && noSpace.indexOf('상담 이후') !== -1

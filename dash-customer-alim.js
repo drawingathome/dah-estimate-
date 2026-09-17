@@ -37,19 +37,12 @@ var TIMED_ALIM_RULES = {
     if (sent && sent.forDate === ctx.visitDate) return false;
     return d <= 1;
   },
-  // 정책: 상담 3일 후, 단 그 시점에 "아직 미결제인지" 매번 재확인(예약이 아니라 재검사)
-  t04_followup: function(c, sent, now) {
-    if (['선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'].indexOf(c.stage) >= 0) return false;
-    var d = daysBetween(c.date, now);
-    return d !== null && d <= -3; // daysBetween은 미래가 양수라, "3일 지남"은 -3 이하
-  },
+  // 2026-09-16: t04_followup(팔로업), t12_repeat_purchase(재구매유도)는
+  // 카카오 검수 반려("요청하지 않은 리마인드/구매유도는 광고성")로 알림톡
+  // 자체를 제거함(dash-customer-detail.js ALIM_META/STAGE_ALIM 참고).
   t11_after_install: function(c, sent, now) {
     var d = daysBetween(c.installDate, now);
     return d !== null && d <= -3;
-  },
-  t12_repeat_purchase: function(c, sent, now) {
-    var d = daysBetween(c.installDate, now);
-    return d !== null && d <= -182;
   }
 };
 function isAlimDueNow(key, c, sent, now) {

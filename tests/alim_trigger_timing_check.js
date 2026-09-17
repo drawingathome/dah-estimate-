@@ -55,14 +55,8 @@ async function run() {
     var c7 = { id:7, stage:'방문예약', createdAt: oneHourAgo.toISOString() };
     results.oneHourAgo = isAlimDueNow('t01_survey', c7, null, now);
 
-    // 8) 상담 3일 지났지만 이미 선금결제 단계(결제완료) → 팔로업 안 떠야 함(재확인)
-    var c8 = { id:8, stage:'선금결제', date: iso(-5) };
-    results.alreadyPaidNoFollowup = !isAlimDueNow('t04_followup', c8, null, now);
-
-    // 9) 상담 3일 지났고 아직 가견적 단계(미결제) → 팔로업 떠야 함
-    var c9 = { id:9, stage:'가견적', date: iso(-3) };
-    results.unpaidFollowup = isAlimDueNow('t04_followup', c9, null, now);
-
+    // 2026-09-16: 팔로업(t04_followup) 검증 항목(8,9번)은 카카오 반려로
+    // 해당 알림톡 자체가 완전히 제거돼서 함께 삭제됨.
     // 10) 즉시성 항목(t00 등)은 기존처럼 안 보냈으면 바로 뜸
     var c10 = { id:10, stage:'방문예약' };
     results.immediateItemStillWorks = isAlimDueNow('t00_reservation', c10, null, now);
@@ -77,8 +71,8 @@ async function run() {
   ok('5. 재예약으로 날짜변경 → 다시 뜸(자동 리셋)', r.rescheduled);
   ok('6. 방금생성 → 설문지 아직 안뜸(30분 대기)', r.justCreated);
   ok('7. 1시간전 생성 → 설문지 뜸', r.oneHourAgo);
-  ok('8. 이미 결제한 단계 → 팔로업 안뜸(재확인 원칙)', r.alreadyPaidNoFollowup);
-  ok('9. 미결제 3일경과 → 팔로업 뜸', r.unpaidFollowup);
+  // 2026-09-16: 8,9번(팔로업 검증)은 해당 알림톡 자체가 카카오 반려로
+  // 제거돼서 검증 항목도 함께 삭제됨.
   ok('10. 즉시성 항목(t00)은 기존 방식 그대로 작동', r.immediateItemStillWorks);
 
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
