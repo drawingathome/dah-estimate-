@@ -162,12 +162,22 @@ function joinCustomerPresence(customerId, onOthersChange) {
   var channel = client.channel('customer-presence-' + customerId, { config: { presence: { key: myKey } } });
   channel.on('presence', { event: 'sync' }, function () {
     var state = channel.presenceState();
-    var others = [];
+    // 2026-09-17(선혜님 - "내가 마스터인데 이런 글이 왜뜨지??"로 발견):
+    // 탭을 랜덤값으로만 구분해서, 본인이 폰/컴퓨터 등 여러 곳에서 같은
+    // 고객을 열면 "본인의 다른 탭"까지 "마스터님도 보고 있어요"처럼
+    // 완전히 남처럼 표시되고 있었음 - 구글독스/노션 등 실제 협업툴은
+    // 세션(탭) 단위가 아니라 "계정(사람)" 단위로 구분해서, 본인의 다른
+    // 탭은 남과 다르게 안내함. 이름이 나와 같으면 "본인의 다른 세션",
+    // 다르면 진짜 "다른 사람"으로 나눠서 onOthersChange에 넘김.
+    var others = [], selfOtherSessions = 0;
     Object.keys(state).forEach(function (key) {
       if (key === myKey) return;
-      (state[key] || []).forEach(function (p) { others.push(p.name); });
+      (state[key] || []).forEach(function (p) {
+        if (p.name === myName) selfOtherSessions++;
+        else others.push(p.name);
+      });
     });
-    if (typeof onOthersChange === 'function') onOthersChange(others);
+    if (typeof onOthersChange === 'function') onOthersChange(others, selfOtherSessions);
   });
   channel.subscribe(function (status) {
     if (status === 'SUBSCRIBED') {
@@ -187,17 +197,29 @@ function leaveCustomerPresence() {
   if (banner) banner.remove();
 }
 
-function renderPresenceBanner(others) {
+function renderPresenceBanner(others, selfOtherSessions) {
   var existing = document.getElementById('presence-warning-banner');
   if (existing) existing.remove();
-  if (!others || others.length === 0) return;
+  var hasOthers = others && others.length > 0;
+  var hasSelfElsewhere = selfOtherSessions > 0;
+  if (!hasOthers && !hasSelfElsewhere) return;
   var body = document.getElementById('detail-body');
   if (!body) return;
   var banner = document.createElement('div');
   banner.id = 'presence-warning-banner';
   banner.style.cssText = 'background:#FBEAE7;border:1px solid #E4483A;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;font-weight:700;color:#C0392B';
-  var names = others.filter(function (v, i) { return others.indexOf(v) === i; }).join(', '); // 중복 이름 제거
-  banner.textContent = '⚠️ ' + names + '님도 지금 이 고객을 보고 있어요 — 동시에 저장하면 한쪽 내용이 충돌할 수 있어요';
+  // 2026-09-17(선혜님 - "내가 마스터인데 이런 글이 왜뜨지??"로 발견,
+  // "전문업체도 이런식으로 하니??"로 확인): 구글독스/노션처럼 "본인의
+  // 다른 탭·기기"와 "진짜 다른 사람"을 구분해서 다른 문구로 안내.
+  var lines = [];
+  if (hasOthers) {
+    var names = others.filter(function (v, i) { return others.indexOf(v) === i; }).join(', ');
+    lines.push('⚠️ ' + names + '님도 지금 이 고객을 보고 있어요 — 동시에 저장하면 한쪽 내용이 충돌할 수 있어요');
+  }
+  if (hasSelfElsewhere) {
+    lines.push('📱 지금 다른 탭이나 기기에서도 이 화면을 보고 계세요 — 동시에 저장하면 방금 입력한 내용이 사라질 수 있어요');
+  }
+  banner.textContent = lines.join(' ');
   body.insertBefore(banner, body.firstChild);
 }
 

@@ -99,6 +99,9 @@ if (/dah-dashboard/.test(target)) {
   // 2026-09-17(GitHub Issue #5 - "다음 세션 작업" 확정 설계 구현): 발주정보
   // 입력 팝업 - 숨겨진 거래처 입력칸을 큰 팝업으로 채우는 새 기능.
   scripts.push(['vendor-info-popup-check.js', []]);
+  // 2026-09-17(선혜님 - "내가 마스터인데 이런 글이 왜뜨지??"): 동시열람
+  // 배너가 본인의 다른 탭/기기를 "다른 사람"처럼 표시하던 버그 수정 검증.
+  scripts.push(['presence-banner-check.js', []]);
   // 2026-09-11: 감사로그(변경이력) 조회 화면 검증
   scripts.push(['audit_log_check.js', []]);
   // 2026-09-11: AS 관리 화면(GitHub 이슈#4) — 접수 등록/상태변경 검증
