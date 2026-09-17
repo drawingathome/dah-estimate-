@@ -45,9 +45,11 @@ function buildCustomerHTML() {
     if(d.length>=8) return d.slice(0,4)+'년 '+parseInt(d.slice(4,6))+'월 '+parseInt(d.slice(6,8))+'일';
     return d||'—';
   }
-  function today(){
-    return formatKoreanDate();
-  }
+  // 2026-09-17(선혜님 - "쌍둥이 함수 확인" 재점검으로 발견): today()라는
+  // 1줄짜리 래퍼(formatKoreanDate()만 그대로 호출)가 이 파일과
+  // est-doc-vendor.js에 똑같이 중복 정의돼 있었음(est-documents.js를
+  // 3개로 나눌 때 각자 안에 있던 내부 헬퍼가 그대로 복사됨) - 유일한
+  // 호출부를 formatKoreanDate() 직접 호출로 바꾸면서 이 정의는 제거.
 
   
   var curtainRows=[];
@@ -330,7 +332,7 @@ function buildCustomerHTML() {
 
   out += '<div class="pv-meta">'
       +'<span>No. <strong>'+(cNo||'—')+'</strong></span>'
-      +'<span>발행일 <strong>'+today()+'</strong></span>'
+      +'<span>발행일 <strong>'+formatKoreanDate()+'</strong></span>'
       +'<span>담당자 <strong>'+(cStaff||'장선혜')+'</strong></span>'
       +'</div>';
 

@@ -597,9 +597,11 @@ function collectVendorGroups(categoryFilter) {
 }
 
 function buildVendorHTML(extraNote, arrivalDatesByVendor, arrivalLocationsByVendor, categoryFilter) {
-  function today(){
-    return formatKoreanDate();
-  }
+  // 2026-09-17(선혜님 - "쌍둥이 함수 확인" 재점검으로 발견): today()라는
+  // 1줄짜리 래퍼(formatKoreanDate()만 그대로 호출)가 est-doc-customer.js와
+  // 이 파일에 똑같이 중복 정의돼 있었음(est-documents.js를 3개로 나눌 때
+  // 각자 안에 있던 내부 헬퍼가 그대로 복사됨) - 내용이 완전히 같고 위험도는
+  // 낮았지만, 굳이 감쌀 필요 없이 formatKoreanDate()를 직접 불러 정리.
   var collected = collectVendorGroups(categoryFilter);
 
   if(collected.itemCount === 0) {
@@ -608,7 +610,7 @@ function buildVendorHTML(extraNote, arrivalDatesByVendor, arrivalLocationsByVend
     return '<div class="pv-wrap" style="max-width:720px;margin:0 auto;padding:60px 20px;text-align:center;color:#B0A99F;font-size:13px">'+emptyMsg+'</div>';
   }
 
-  var todayStr = today();
+  var todayStr = formatKoreanDate();
   var vendors = Object.keys(collected.groups);
   var out = '';
   vendors.forEach(function(vendor, i){
