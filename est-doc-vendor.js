@@ -631,6 +631,159 @@ function buildVendorHTML(extraNote, arrivalDatesByVendor, arrivalLocationsByVend
 // 대시보드 체크리스트와 똑같은 사고방식으로 통일 - 다만 "전체 보기"
 // 선택지는 남겨서, 정말 한 번에 다 보고 싶을 때(급한 발주 등)는 여전히
 // 가능하게 함.
+// ══════════════════════════════════════════════════
+// 2026-09-17(GitHub Issue #5 - "다음 세션 작업" 2026-09-09 확정 설계):
+// 발주서가 사실상 못 쓰는 구조였음 - 원단/거래처 입력칸(.c-vendor,
+// .b-vendor)이 .inner-fields(display:none) 안에 숨어있어서, 행마다
+// "펼치기" 버튼을 눌러야만 보이는 아주 작은 칸이었음. 그래서 실제로는
+// 아무도 안 채우고 넘어가는 경우가 많았음(이미 발생한 문제: 블라인드에
+// 가공소 이름이 잘못 붙던 버그, 원단명 두 개가 헷갈리던 문제 등).
+//
+// 핵심 설계 원칙(이슈에 명시된 그대로 지킴): 이 팝업은 별도 데이터
+// 구조를 만들지 않고, 입력한 값을 그대로 원래 화면의 실제 input
+// (.c-vendor/.b-vendor)에 반영만 함 - 그래서 기존 발주서 생성 코드
+// (collectVendorGroups/buildVendorHTML/printForVendor)는 한 줄도
+// 안 건드려도 그대로 작동함.
+// ══════════════════════════════════════════════════
+function openVendorInfoInputModal() {
+  var curtainRows = Array.from(document.querySelectorAll('#curtain-body tr'));
+  var blindRows = Array.from(document.querySelectorAll('#blind-body tr'));
+
+  if (curtainRows.length === 0 && blindRows.length === 0) {
+    alert('발주할 커튼/블라인드 항목이 없어요.');
+    return;
+  }
+
+  var existing = document.getElementById('vendor-info-input-modal');
+  if (existing) existing.remove();
+
+  var ov = document.createElement('div');
+  ov.id = 'vendor-info-input-modal';
+  ov.className = 'print-hide';
+  ov.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:#F5F2EE;z-index:10000;overflow-y:auto;display:flex;flex-direction:column';
+
+  var nav = document.createElement('div');
+  nav.style.cssText = 'position:sticky;top:0;z-index:10001;background:#282828;padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;flex-shrink:0';
+  var navLabel = document.createElement('span');
+  navLabel.textContent = '발주 정보 입력';
+  navLabel.style.cssText = 'color:rgba(255,255,255,0.9);font-size:13px;font-weight:700;white-space:nowrap';
+  var closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕ 닫기';
+  closeBtn.onclick = function(){ ov.remove(); };
+  closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap';
+  nav.appendChild(navLabel); nav.appendChild(closeBtn);
+
+  var content = document.createElement('div');
+  content.style.cssText = 'flex:1;padding:20px 16px 60px;display:flex;justify-content:center';
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'width:100%;max-width:560px';
+
+  var card = document.createElement('div');
+  card.style.cssText = 'background:#fff;border-radius:12px;padding:20px;margin-bottom:16px';
+
+  // 가공소(제작)/레일·부자재 자동배정 안내 - 커튼은 예외 없이 항상
+  // 제작을 거침(선혜님 확인: "커튼은 무조건 제작을 해애해") - 항목별
+  // 체크박스 없이 통째로 자동 배정, 등록된 거래처가 1곳뿐일 때만 자동.
+  if (curtainRows.length > 0) {
+    var prodName = (typeof getAutoProductionVendorName === 'function') ? getAutoProductionVendorName() : '';
+    var materialName = (typeof getAutoMaterialVendorName === 'function') ? getAutoMaterialVendorName() : '';
+    var infoBox = document.createElement('div');
+    infoBox.style.cssText = 'font-size:12px;color:var(--sub);line-height:1.7;margin-bottom:16px;padding:10px 12px;background:#F5F2EE;border-radius:8px';
+    infoBox.innerHTML =
+      '제작(가공소): ' + (prodName ? '<b style="color:#282828">'+escHtml(prodName)+'</b> (자동배정)' : '거래처 관리에 production 카테고리 거래처를 등록해주세요') + '<br>' +
+      '레일·부자재: ' + (materialName ? '<b style="color:#282828">'+escHtml(materialName)+'</b> (자동배정)' : '해당 항목이 있으면 거래처 관리에서 material 카테고리로 등록해주세요');
+    card.appendChild(infoBox);
+  }
+
+  var rowInputs = [];
+
+  function addSectionTitle(text) {
+    var t = document.createElement('div');
+    t.textContent = text;
+    t.style.cssText = 'font-size:13px;font-weight:700;color:#282828;margin:14px 0 8px';
+    card.appendChild(t);
+  }
+  function addRow(labelHtml, inputEl) {
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)';
+    var label = document.createElement('div');
+    label.style.cssText = 'flex:1;font-size:12px;color:#282828;min-width:0;line-height:1.4';
+    label.innerHTML = labelHtml;
+    inputEl.style.cssText += ';width:130px;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;flex-shrink:0;box-sizing:border-box';
+    row.appendChild(label); row.appendChild(inputEl);
+    card.appendChild(row);
+  }
+
+  if (curtainRows.length > 0) {
+    addSectionTitle('커튼 — 원단 거래처 (항목마다 다를 수 있어요)');
+    curtainRows.forEach(function(tr) {
+      var space = tr.querySelector('.space-inp')?.value || '';
+      var name = tr.querySelector('.c-display-name')?.value || '';
+      var mw = tr.querySelector('.mw')?.value || '';
+      var mh = tr.querySelector('.mh')?.value || '';
+      var currentVendor = tr.querySelector('.c-vendor')?.value || '';
+      var labelHtml = '<b>'+escHtml(space||'—')+'</b> ' + escHtml(name||'') + (mw&&mh ? ' <span style="color:var(--sub)">'+escHtml(mw)+'×'+escHtml(mh)+'</span>' : '');
+      var input = document.createElement('input');
+      input.type = 'text';
+      input.setAttribute('list', 'vendor-list');
+      input.placeholder = '원단 거래처';
+      input.value = currentVendor;
+      addRow(labelHtml, input);
+      rowInputs.push({ tr: tr, field: 'c-vendor', input: input });
+    });
+  }
+
+  if (blindRows.length > 0) {
+    addSectionTitle('블라인드 — 거래처 (필수 선택)');
+    var blindVendors = (Array.isArray(window._dahVendorListRaw) ? window._dahVendorListRaw : []).filter(function(v) {
+      return v && Array.isArray(v.categories) && v.categories.indexOf('blind') >= 0;
+    });
+    blindRows.forEach(function(tr) {
+      var space = tr.querySelector('.space-inp')?.value || '';
+      var name = tr.querySelector('.b-display-name')?.value || '';
+      var bmw = tr.querySelector('.bmw')?.value || '';
+      var bmh = tr.querySelector('.bmh')?.value || '';
+      var currentVendor = tr.querySelector('.b-vendor')?.value || '';
+      var labelHtml = '<b>'+escHtml(space||'—')+'</b> ' + escHtml(name||'') + (bmw&&bmh ? ' <span style="color:var(--sub)">'+escHtml(bmw)+'×'+escHtml(bmh)+'</span>' : '');
+      var select = document.createElement('select');
+      select.required = true;
+      var optsHtml = '<option value="">거래처 선택</option>';
+      blindVendors.forEach(function(v) {
+        optsHtml += '<option value="'+escHtml(v.name||'')+'">'+escHtml(v.name||'')+'</option>';
+      });
+      select.innerHTML = optsHtml;
+      if (currentVendor) select.value = currentVendor;
+      addRow(labelHtml, select);
+      rowInputs.push({ tr: tr, field: 'b-vendor', input: select });
+    });
+  }
+
+  wrap.appendChild(card);
+
+  var confirmBtn = document.createElement('button');
+  confirmBtn.textContent = '확인 → 발주서 만들기';
+  confirmBtn.style.cssText = 'width:100%;padding:12px;background:#282828;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer';
+  confirmBtn.onclick = function() {
+    // 핵심 설계 원칙: 팝업 값을 원래 화면의 실제 input에 그대로 반영.
+    // 새 데이터 구조를 만들지 않아서 기존 발주서 생성 코드는 그대로 작동함.
+    rowInputs.forEach(function(ri) {
+      var realInput = ri.tr.querySelector('.' + ri.field);
+      if (realInput) {
+        realInput.value = ri.input.value;
+        realInput.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+    ov.remove();
+    openVendorOrderPicker();
+  };
+  wrap.appendChild(confirmBtn);
+
+  content.appendChild(wrap);
+  ov.appendChild(nav);
+  ov.appendChild(content);
+  document.body.appendChild(ov);
+}
+
 function openVendorOrderPicker() {
   var existing = document.getElementById('vendor-order-picker');
   if (existing) existing.remove();

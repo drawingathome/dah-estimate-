@@ -408,6 +408,17 @@ function getAutoProductionVendorName() {
   });
   return prodVendors.length === 1 ? (prodVendors[0].name || '') : '';
 }
+// 2026-09-17(GitHub Issue #5 - "다음 세션 작업" 2026-09-09 확정 설계 구현):
+// 레일/부자재(예: 목성)도 가공소와 동일한 패턴으로 자동배정 - 등록된
+// material 카테고리 거래처가 1곳뿐이면 자동, 2곳 이상이면 그때부터
+// 선택 UI 필요(선혜님 확인).
+function getAutoMaterialVendorName() {
+  if (!Array.isArray(window._dahVendorListRaw)) return '';
+  var materialVendors = window._dahVendorListRaw.filter(function(v) {
+    return v && Array.isArray(v.categories) && v.categories.indexOf('material') >= 0;
+  });
+  return materialVendors.length === 1 ? (materialVendors[0].name || '') : '';
+}
 // 2026-09-11(선혜님 확인 - "우리는 거의 모든 제품이 형상가공 들어가기
 // 때문에 기본이 O 야"): 캔가공소 거래처 설정에 등록해둔 기본값을 따름 -
 // 명시적으로 false로 등록해두지 않았으면(대부분의 경우) 기본 O.

@@ -775,7 +775,7 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
            order_status를 조회해서 채움. 클릭 동작 자체는 기존과 동일. -->
       <div style="margin-top:14px;font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.04em">업무 처리</div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
-        <button onclick="openVendorOrderPicker()" style="padding:12px 14px;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px;display:flex;justify-content:space-between;align-items:center;width:100%">
+        <button onclick="openVendorInfoInputModal()" style="padding:12px 14px;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px;display:flex;justify-content:space-between;align-items:center;width:100%">
           <span>📦 발주서 (거래처별)</span><span class="work-status" id="work-order-status" style="font-size:11px;font-weight:600;color:var(--sub)">—</span>
         </button>
         <button onclick="printRequest('measure')" style="padding:12px 14px;background:#F5F2EE;color:#282828;border:1px solid #EEE6DC;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:-0.3px;display:flex;justify-content:space-between;align-items:center;width:100%">
@@ -867,7 +867,7 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
   <option value="허니콤 No.1">허니콤 No.1</option>
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
-<script src="/est-utils.js?v=202609160200"></script>
+<script src="/est-utils.js?v=202609170100"></script>
 <script src="/shared-common-utils.js?v=202609160100"></script>
 <script src="/shared-optimistic-lock.js?v=202609151300"></script>
 <script src="/est-sync-queue.js?v=202608291500"></script>
@@ -877,7 +877,7 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
 <script src="/est-survey.js?v=202609152400"></script>
 <script src="/est-save.js?v=202609160200"></script>
 <script src="/est-doc-customer.js?v=202609160300"></script>
-<script src="/est-doc-vendor.js?v=202609160300"></script>
+<script src="/est-doc-vendor.js?v=202609170100"></script>
 <script src="/est-doc-request.js?v=202609160300"></script>
 <script src="/est-customer-load.js?v=202609152400"></script>
 <script src="/est-misc.js?v=202609160200"></script>
