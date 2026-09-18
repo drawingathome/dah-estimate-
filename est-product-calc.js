@@ -23,7 +23,7 @@ function addCurtainRow() {
       '<div class="inner-fields print-hide">'+
         '<div class="inner-row">'+
           '<input type="text" list="fabric-list" placeholder="원단명" class="c-fabric inner-inp">'+
-          '<input type="text" list="vendor-list" placeholder="원단 거래처" class="c-vendor inner-inp" style="width:72px">'+
+          '<input type="text" list="fabric-vendor-list" placeholder="원단 거래처" class="c-vendor inner-inp" style="width:72px">'+
           // 2026-09-09(선혜님 확인 - "커튼은 무조건 제작을 해애해") - 이
           // 체크박스(가공소 여부를 항목마다 표시하던 것) 제거. 커튼은
           // 예외 없이 항상 제작(가공소)을 거치므로, collectVendorGroups()가

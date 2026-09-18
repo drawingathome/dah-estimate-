@@ -727,7 +727,7 @@ function openVendorInfoInputModal() {
       var labelHtml = '<b>'+escHtml(space||'—')+'</b> ' + escHtml(name||'') + (mw&&mh ? ' <span style="color:var(--sub)">'+escHtml(mw)+'×'+escHtml(mh)+'</span>' : '');
       var input = document.createElement('input');
       input.type = 'text';
-      input.setAttribute('list', 'vendor-list');
+      input.setAttribute('list', 'fabric-vendor-list');
       input.placeholder = '원단 거래처';
       input.value = currentVendor;
       addRow(labelHtml, input);

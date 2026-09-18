@@ -852,6 +852,26 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
   <option value="솜피">솜피</option>
   <option value="목성">목성</option>
 </datalist>
+<!-- 2026-09-18(선혜님 - "다 적어도 이렇게 뜨는데 왜 이래 이거 여러번
+     얘기 한거 아니니?????"로 발견): 위 vendor-list(원단/블라인드/
+     가공소/부자재 거래처가 전부 섞인 통합 목록)를 커튼의 "원단
+     거래처" 입력칸 자동완성에도 그대로 썼었음 - 그래서 원단을 입력할
+     때 자동완성 목록에 "캔가공소"(가공소) 같은 전혀 다른 종류의
+     거래처가 같이 뜨고, 실수로 그걸 선택하기 쉬운 구조였음. "가공소는
+     자동 처리되니 원단칸에 넣지 마세요"라는 경고 배너로 방어만 하고
+     있었는데, 그 경고가 뜨는 근본 원인(자동완성 자체가 헷갈리게
+     섞여있음) 자체는 안 고쳐져 있었음 - 원단 전용 목록을 따로 만들어서
+     애초에 헷갈릴 선택지 자체가 안 뜨게 함. -->
+<datalist id="fabric-vendor-list">
+  <option value="디테라">디테라</option>
+  <option value="아이엔티">아이엔티</option>
+  <option value="예원">예원</option>
+  <option value="크바드라트">크바드라트</option>
+  <option value="이지패브릭">이지패브릭</option>
+  <option value="리더스">리더스</option>
+  <option value="유니밋">유니밋</option>
+  <option value="지오데코">지오데코</option>
+</datalist>
 <!-- 원단 자동완성 -->
 <datalist id="fabric-list">
   <option value="린넨룩 No.1">린넨룩 No.1</option>
@@ -881,11 +901,11 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
 <script src="/est-sync-queue.js?v=f2f3fb3e0f4c"></script>
 <script src="/dash-supabase-auth.js?v=b3ea9d6b2fd5"></script>
 <script src="/est-form-controls.js?v=a737ee9e83f3"></script>
-<script src="/est-product-calc.js?v=d54e82cbfe44"></script>
+<script src="/est-product-calc.js?v=06f6ea9cb5c2"></script>
 <script src="/est-survey.js?v=7a7c7ecd5e16"></script>
 <script src="/est-save.js?v=ffe27f37c66f"></script>
 <script src="/est-doc-customer.js?v=493b9047dfb7"></script>
-<script src="/est-doc-vendor.js?v=25f5e4ef6dc5"></script>
+<script src="/est-doc-vendor.js?v=ebcaca546af6"></script>
 <script src="/est-doc-request.js?v=eefbb47da973"></script>
 <script src="/est-customer-load.js?v=428d7fa87ff7"></script>
 <script src="/est-misc.js?v=9d7e37eb08e8"></script>

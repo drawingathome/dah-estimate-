@@ -128,6 +128,10 @@ if (/dah-dashboard/.test(target)) {
   // 2026-09-18(선혜님 - "안되잖아"): 인쇄시 편집화면의 계약금 요약
   // 카드(#lockable-rail-svc)가 .container 밖에 있어서 안 숨겨지던 버그.
   scripts.push(['print-hide-check.js', []]);
+  // 2026-09-18(선혜님 - "다 적어도 이렇게 뜨는데 왜 이래"): 원단
+  // 거래처 자동완성에 가공소/블라인드/부자재가 섞여서 실수로 잘못
+  // 선택하기 쉽던 문제 - 원단 전용 목록으로 분리해서 근본 해결.
+  scripts.push(['fabric-vendor-list-check.js', []]);
   // 2026-09-11: 감사로그(변경이력) 조회 화면 검증
   scripts.push(['audit_log_check.js', []]);
   // 2026-09-11: AS 관리 화면(GitHub 이슈#4) — 접수 등록/상태변경 검증
