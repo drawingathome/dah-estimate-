@@ -85,7 +85,7 @@ async function run() {
 
   const confirmResult = await page.evaluate(() => {
     const modal = document.getElementById('vendor-info-input-modal');
-    const input = modal.querySelector('input[list="vendor-list"]');
+    const input = modal.querySelector('input[list="fabric-vendor-list"]');
     input.value = '동대문원단';
     const select = modal.querySelector('select');
     select.value = '덱스터';
@@ -115,7 +115,7 @@ async function run() {
   const reopenResult = await page.evaluate(() => {
     openVendorInfoInputModal();
     const modal = document.getElementById('vendor-info-input-modal');
-    const input = modal.querySelector('input[list="vendor-list"]');
+    const input = modal.querySelector('input[list="fabric-vendor-list"]');
     const select = modal.querySelector('select');
     return { prefilledCurtain: input.value, prefilledBlind: select.value };
   });
