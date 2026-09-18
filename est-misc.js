@@ -138,6 +138,23 @@ function collectLineItems() {
   return lineItems;
 }
 
+// 2026-09-18(선혜님 - "이 견적서 다시 살려줘" / "인쇄가 왜이렇게 되지??"
+// - 예전 커튼/블라인드 견적서를 불러와서 침구로 완전히 바꿨는데 인쇄엔
+// 예전 내용이 그대로 나오는 걸 발견): "저장 당시 금액 고정"(2026-08-24
+// 신설, viewingFrozenEstimate) 기능이 한 번 켜지면 절대 안 꺼지는
+// 구조였음 - 견적서를 "열어서 수정"으로 불러오면 저장 당시 금액을
+// 그대로 보여주려고 켜지는데, 그 뒤 사용자가 품목을 실제로 편집해도
+// (심지어 커튼→침구로 완전히 갈아엎어도) 안 풀려서, 인쇄/저장 시
+// 최신 입력이 아니라 예전 얼려둔 스냅샷이 계속 적용되고 있었음.
+// 품목 표(커튼/블라인드/기타)에서 실제 입력이 발생하면 고정을 풀어서
+// 최신 금액이 반영되게 함 - 이름/전화번호 등 단순 정보 수정까지는
+// 안 건드림(그 정도로는 금액 재계산이 불필요하므로).
+function unfreezeEstimateIfEditing() {
+  if (window._estEditState && window._estEditState.viewingFrozenEstimate) {
+    window._estEditState.viewingFrozenEstimate = false;
+  }
+}
+
 function autoSave() {
   clearTimeout(_autoSaveTimer);
   _autoSaveTimer = setTimeout(function() {

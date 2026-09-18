@@ -875,20 +875,20 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
   <option value="허니콤 No.1">허니콤 No.1</option>
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
-<script src="/est-utils.js?v=59872dbbe42f"></script>
+<script src="/est-utils.js?v=8e2deb064f7e"></script>
 <script src="/shared-common-utils.js?v=f78f0d883265"></script>
 <script src="/shared-optimistic-lock.js?v=db886eb6aa35"></script>
 <script src="/est-sync-queue.js?v=f2f3fb3e0f4c"></script>
 <script src="/dash-supabase-auth.js?v=b3ea9d6b2fd5"></script>
 <script src="/est-form-controls.js?v=a737ee9e83f3"></script>
-<script src="/est-product-calc.js?v=e678cc7ca418"></script>
+<script src="/est-product-calc.js?v=ee410a5feda9"></script>
 <script src="/est-survey.js?v=7a7c7ecd5e16"></script>
-<script src="/est-save.js?v=571e7a92fe1e"></script>
+<script src="/est-save.js?v=ffe27f37c66f"></script>
 <script src="/est-doc-customer.js?v=493b9047dfb7"></script>
 <script src="/est-doc-vendor.js?v=25f5e4ef6dc5"></script>
 <script src="/est-doc-request.js?v=eefbb47da973"></script>
 <script src="/est-customer-load.js?v=428d7fa87ff7"></script>
-<script src="/est-misc.js?v=624e3150c734"></script>
+<script src="/est-misc.js?v=9858f2401c40"></script>
 <script>
 var currentTab = 'ga';
 
@@ -1498,8 +1498,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // 저장되고 실제 견적 내용은 저장 안 되던 문제의 핵심 수정.
   var curtainTable = document.getElementById('curtain-table');
   var blindTable = document.getElementById('blind-table');
-  if (curtainTable) curtainTable.addEventListener('input', autoSave);
-  if (blindTable) blindTable.addEventListener('input', autoSave);
+  if (curtainTable) curtainTable.addEventListener('input', function(e) { unfreezeEstimateIfEditing(); autoSave(); });
+  if (blindTable) blindTable.addEventListener('input', function(e) { unfreezeEstimateIfEditing(); autoSave(); });
   // 2026-09-18(선혜님 - "견적서 다 정리했는데 저장이 안되는데 이 자료를
   // 다 날려야 하는 상황이니??"로 발견): other-table(기타 품목 - 침구·
   // 러그, 2026-09-15 신설)이 이 목록에서 빠져있었음 - 2026-08-10에 고친
@@ -1507,7 +1507,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // 침구 표에서 그대로 재발하고 있었음(침구 항목 입력 중엔 자동 임시저장
   // 자체가 전혀 안 걸림). 즉시 추가.
   var otherTable = document.getElementById('other-table');
-  if (otherTable) otherTable.addEventListener('input', autoSave);
+  if (otherTable) otherTable.addEventListener('input', function(e) { unfreezeEstimateIfEditing(); autoSave(); });
   
   // 2026-08-13: 페이지 로드시 자동으로 loadDraft()를 호출하던 것을 제거함 —
   // 여러 탭에서 서로 다른 고객을 동시에 작업할 때, 새 탭을 열면 다른 탭에서

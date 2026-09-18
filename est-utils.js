@@ -419,6 +419,21 @@ function getAutoMaterialVendorName() {
   });
   return materialVendors.length === 1 ? (materialVendors[0].name || '') : '';
 }
+// 2026-09-18(선혜님 - "견적서 다 정리했는데 저장이 안되는데..."로 시작한
+// 침구 관련 재점검, 그 다음 "침구 러그는 결제가 50%가 아니라 100%
+// 결제로 해야하는데"로 발견): 커튼/블라인드 품목이 실제로 있는지
+// 판단하는 로직이 est-save.js(실측/시공 예정일 검증)에만 있었는데,
+// 계약금 자동계산(est-product-calc.js)에도 똑같이 필요해져서 공용
+// 함수로 뽑음 - 기본으로 자동생성되는 빈 커튼 행(사이즈/단가가 전부
+// 빈 상태)은 "진짜 품목 있음"으로 안 침. 두 파일이 각자 이 로직을
+// 따로 구현하면 나중에 어긋날 위험이 있어 여기 한 곳으로 통일.
+function hasCurtainOrBlindItem() {
+  return Array.from(document.querySelectorAll('#curtain-body tr')).some(function(r) {
+    return (r.querySelector('.mw')?.value || '').trim() !== '' || (r.querySelector('.mh')?.value || '').trim() !== '' || getPriceVal(r.querySelector('.cprice')) > 0;
+  }) || Array.from(document.querySelectorAll('#blind-body tr')).some(function(r) {
+    return (r.querySelector('.mw')?.value || '').trim() !== '' || (r.querySelector('.mh')?.value || '').trim() !== '' || getPriceVal(r.querySelector('.blind-price')) > 0;
+  });
+}
 // 2026-09-11(선혜님 확인 - "우리는 거의 모든 제품이 형상가공 들어가기
 // 때문에 기본이 O 야"): 캔가공소 거래처 설정에 등록해둔 기본값을 따름 -
 // 명시적으로 false로 등록해두지 않았으면(대부분의 경우) 기본 O.

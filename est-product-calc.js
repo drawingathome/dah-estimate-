@@ -6,6 +6,7 @@
    ══════════════════════════════════════════════════ */
 
 function addCurtainRow() {
+  if (typeof unfreezeEstimateIfEditing === 'function') unfreezeEstimateIfEditing();
   var tbody = document.getElementById('curtain-body');
   var tr = document.createElement('tr');
   tr.className = 'row-curtain';
@@ -272,6 +273,7 @@ function autoUpdateRail(curtainTr) {
 }
 
 function addBlindRow() {
+  if (typeof unfreezeEstimateIfEditing === 'function') unfreezeEstimateIfEditing();
   var tbody = document.getElementById('blind-body');
   var tbl = document.getElementById('blind-table');
   if(tbl) tbl.style.display = 'table';
@@ -338,6 +340,7 @@ function addBlindRow() {
 // 계산식이 필요 없는 범용 품목 - 단가×수량만 계산. addBlindRow와 같은
 // 패턴(행 생성/드래그/복사/삭제)을 따르되, 계산 로직만 훨씬 단순함.
 function addOtherItemRow() {
+  if (typeof unfreezeEstimateIfEditing === 'function') unfreezeEstimateIfEditing();
   var tbody = document.getElementById('other-body');
   var tbl = document.getElementById('other-table');
   if (tbl) tbl.style.display = 'table';
@@ -779,8 +782,14 @@ function calcTotal() {
   }
   var depInp=document.getElementById('deposit-input');
   var depRaw=getPriceVal(depInp)||0;
+  // 2026-09-18(선혜님 - "침구 러그는 결제가 50%가 아니라 100% 결제로
+  // 해야하는데"): 커튼/블라인드는 시공이 남아있어서 계약금 50%+잔금
+  // 50%가 맞지만, 침구/러그는 시공 자체가 없어 배송 시점에 전액을
+  // 받아야 함 - 커튼/블라인드 품목이 하나도 없으면(침구만 있으면)
+  // 자동계산 비율을 100%로, 있으면 기존대로 50%로.
+  var depositRatio = hasCurtainOrBlindItem() ? 0.5 : 1;
   if(grand>0 && depInp && !depInp.dataset.manualEdit){
-    var auto50=Math.round(grand*0.5);
+    var auto50=Math.round(grand*depositRatio);
     depInp.value=''; depInp.removeAttribute('data-raw');
     depInp.value=auto50.toLocaleString();
     depInp.dataset.raw=String(auto50);
@@ -814,7 +823,7 @@ function calcTotal() {
   var totalEl = document.getElementById('sum-total');
   if(totalEl) totalEl.textContent = grand.toLocaleString()+'원';
   var depDispEl = document.getElementById('sum-deposit-disp');
-  if(depDispEl) depDispEl.textContent = deposit>0 ? deposit.toLocaleString()+'원' : (grand>0 ? Math.round(grand*0.5).toLocaleString()+'원 (예상)' : '—');
+  if(depDispEl) depDispEl.textContent = deposit>0 ? deposit.toLocaleString()+'원' : (grand>0 ? Math.round(grand*depositRatio).toLocaleString()+'원 (예상)' : '—');
   var balDispEl = document.getElementById('sum-balance-disp');
   if(balDispEl) balDispEl.textContent = deposit>0 ? balance.toLocaleString()+'원' : '—';
   var discEl=document.getElementById('sum-discount');
@@ -838,6 +847,10 @@ function calcTotal() {
 }
 
 function delRow(btn) {
+  // 2026-09-18(선혜님 - "이 견적서 다시 살려줘" / "인쇄가 왜이렇게
+  // 되지??"): 행 삭제는 input 이벤트가 아니라 클릭이라 위 이벤트
+  // 위임(unfreezeEstimateIfEditing)으로는 안 잡힘 - 여기서 직접 호출.
+  if (typeof unfreezeEstimateIfEditing === 'function') unfreezeEstimateIfEditing();
   var tr = btn.closest('tr');
   // 2026-08-14: autoUpdateRail과 동일하게 rowIndex 대신 rowUid로 매칭 —
   // 삭제할 행 자체의 레일을 정확히 찾아 지우기 위함(위 autoUpdateRail 주석 참고)

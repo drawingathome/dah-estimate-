@@ -322,7 +322,8 @@ est-misc.js(92,94): error TS2339: 'Element' 형식에 'value' 속성이 없습�
 est-misc.js(95,55): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
 est-misc.js(98,53): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
 est-misc.js(99,48): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
-est-product-calc.js(1002,46): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
+est-product-calc.js(1004,47): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
+est-product-calc.js(1008,46): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
 est-product-calc.js(206,28): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 est-product-calc.js(234,65): error TS2322: 'number' 형식은 'string' 형식에 할당할 수 없습니다.
 est-product-calc.js(244,65): error TS2322: 'number' 형식은 'string' 형식에 할당할 수 없습니다.
@@ -355,12 +356,11 @@ est-product-calc.js(727,24): error TS2339: 'Element' 형식에 'dataset' 속성�
 est-product-calc.js(727,45): error TS2339: 'Element' 형식에 'dataset' 속성이 없습니다.
 est-product-calc.js(727,66): error TS2339: 'Element' 형식에 'dataset' 속성이 없습니다.
 est-product-calc.js(730,16): error TS2345: '{ source: string; type: any; value: number; label: string; }' 형식의 인수는 '{ source: string; el: Element; type: any; value: number; label: any; id: any; name: any; }' 형식의 매개 변수에 할당될 수 없습니다.
-est-product-calc.js(784,12): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-est-product-calc.js(785,12): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-est-product-calc.js(800,26): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-est-product-calc.js(801,14): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-est-product-calc.js(823,23): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
-est-product-calc.js(998,47): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
+est-product-calc.js(790,12): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+est-product-calc.js(791,12): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+est-product-calc.js(806,26): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+est-product-calc.js(807,14): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+est-product-calc.js(829,23): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
 est-public-view.js(36,37): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 est-public-view.js(37,38): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 est-public-view.js(38,38): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
@@ -430,17 +430,13 @@ est-save.js(85,21): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없�
 est-save.js(870,57): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 est-save.js(871,51): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 est-save.js(896,44): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-est-save.js(909,37): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
-est-save.js(909,92): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
-est-save.js(911,37): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
-est-save.js(911,92): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
-est-save.js(914,103): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-est-save.js(914,52): error TS2339: 'HTMLElement' 형식에 'checked' 속성이 없습니다.
-est-save.js(915,103): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-est-save.js(915,52): error TS2339: 'HTMLElement' 형식에 'checked' 속성이 없습니다.
-est-save.js(931,13): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
-est-save.js(932,9): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
-est-save.js(936,20): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
+est-save.js(912,103): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+est-save.js(912,52): error TS2339: 'HTMLElement' 형식에 'checked' 속성이 없습니다.
+est-save.js(913,103): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+est-save.js(913,52): error TS2339: 'HTMLElement' 형식에 'checked' 속성이 없습니다.
+est-save.js(929,13): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
+est-save.js(930,9): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
+est-save.js(934,20): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
 est-survey.js(10,51): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 est-survey.js(45,56): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 est-survey.js(46,41): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
@@ -461,13 +457,17 @@ est-utils.js(303,16): error TS2339: 'HTMLElement' 형식에 'value' 속성이 �
 est-utils.js(308,42): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 est-utils.js(311,11): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 est-utils.js(312,11): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-est-utils.js(461,18): error TS2538: 'HTMLElement' 형식을 인덱스 형식으로 사용할 수 없습니다.
-est-utils.js(461,33): error TS2538: 'HTMLElement' 형식을 인덱스 형식으로 사용할 수 없습니다.
-est-utils.js(462,12): error TS2339: 'string | HTMLElement' 형식에 'textContent' 속성이 없습니다.
-est-utils.js(462,34): error TS2538: 'HTMLElement' 형식을 인덱스 형식으로 사용할 수 없습니다.
-est-utils.js(463,12): error TS2339: 'string | HTMLElement' 형식에 'style' 속성이 없습니다.
-est-utils.js(465,12): error TS2339: 'string | HTMLElement' 형식에 'textContent' 속성이 없습니다.
-est-utils.js(571,55): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+est-utils.js(432,37): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
+est-utils.js(432,92): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
+est-utils.js(434,37): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
+est-utils.js(434,92): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
+est-utils.js(476,18): error TS2538: 'HTMLElement' 형식을 인덱스 형식으로 사용할 수 없습니다.
+est-utils.js(476,33): error TS2538: 'HTMLElement' 형식을 인덱스 형식으로 사용할 수 없습니다.
+est-utils.js(477,12): error TS2339: 'string | HTMLElement' 형식에 'textContent' 속성이 없습니다.
+est-utils.js(477,34): error TS2538: 'HTMLElement' 형식을 인덱스 형식으로 사용할 수 없습니다.
+est-utils.js(478,12): error TS2339: 'string | HTMLElement' 형식에 'style' 속성이 없습니다.
+est-utils.js(480,12): error TS2339: 'string | HTMLElement' 형식에 'textContent' 속성이 없습니다.
+est-utils.js(586,55): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 est-utils.js(97,10): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 shared-common-utils.js(39,14): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 shared-common-utils.js(54,14): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.

@@ -905,11 +905,9 @@ function saveEstimate() {
   // 만들어두므로(dah-estimate.html 초기화 코드), "행이 존재하는지"가
   // 아니라 "그 행에 실제로 뭔가 입력됐는지"(사이즈나 단가)로 판단해야
   // 함 - 처음엔 이걸 놓쳐서 테스트에서 직접 재현·발견함.
-  var hasCurtainOrBlind = Array.from(document.querySelectorAll('#curtain-body tr')).some(function(r) {
-    return (r.querySelector('.mw')?.value || '').trim() !== '' || (r.querySelector('.mh')?.value || '').trim() !== '' || getPriceVal(r.querySelector('.cprice')) > 0;
-  }) || Array.from(document.querySelectorAll('#blind-body tr')).some(function(r) {
-    return (r.querySelector('.mw')?.value || '').trim() !== '' || (r.querySelector('.mh')?.value || '').trim() !== '' || getPriceVal(r.querySelector('.blind-price')) > 0;
-  });
+  // 2026-09-18: 이 판단 로직은 계약금 100%/50% 자동계산(est-product-
+  // calc.js)에도 필요해져서 hasCurtainOrBlindItem()으로 공용화함.
+  var hasCurtainOrBlind = hasCurtainOrBlindItem();
   if (hasCurtainOrBlind) {
     if (!document.getElementById('c-measure-tbd')?.checked && !(document.getElementById('c-measure')?.value || '')) missing.push('실측 예정일');
     if (!document.getElementById('c-install-tbd')?.checked && !(document.getElementById('c-install')?.value || '')) missing.push('시공 예정일');
