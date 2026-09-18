@@ -120,6 +120,11 @@ if (/dah-dashboard/.test(target)) {
   // 되지??"): 예전 견적서를 불러와서 품목을 완전히 바꿔도 "저장 당시
   // 금액 고정"이 안 풀려서 인쇄/저장에 예전 스냅샷이 계속 나오던 버그.
   scripts.push(['unfreeze-estimate-check.js', []]);
+  // 2026-09-18: 위 테스트가 인위적으로 조건을 만들어 검증했다면, 이
+  // 테스트는 실제 loadEstDbId 흐름 + 실제 삭제버튼 클릭 + 실제 인쇄까지
+  // 전부 진짜로 재현 - 3가지 겹친 버그(얼림/실측시공비 잔존/계약금
+  // 수동편집 보호)를 종단간으로 검증.
+  scripts.push(['estimate-conversion-check.js', []]);
   // 2026-09-11: 감사로그(변경이력) 조회 화면 검증
   scripts.push(['audit_log_check.js', []]);
   // 2026-09-11: AS 관리 화면(GitHub 이슈#4) — 접수 등록/상태변경 검증

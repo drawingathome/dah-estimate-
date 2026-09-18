@@ -153,6 +153,12 @@ function unfreezeEstimateIfEditing() {
   if (window._estEditState && window._estEditState.viewingFrozenEstimate) {
     window._estEditState.viewingFrozenEstimate = false;
   }
+  // 2026-09-18(같은 재현 과정에서 추가 발견): applyFrozenBreakdown()이
+  // 계약금 입력칸에 "수동수정 보호"(dataset.manualEdit) 플래그도 같이
+  // 켜두는데, 이걸 안 풀어주면 얼림 자체는 풀렸어도 계약금 자동계산
+  // (50%/100%)이 여전히 막혀서 예전 계약금 값이 그대로 남아있음.
+  var depInp = document.getElementById('deposit-input');
+  if (depInp) depInp.dataset.manualEdit = '';
 }
 
 function autoSave() {

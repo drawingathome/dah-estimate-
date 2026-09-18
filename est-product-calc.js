@@ -891,6 +891,19 @@ function delRow(btn) {
     // 무관하게 항상 호출하면 됨.
     recalcBlindOptionExtras();
   }
+  // 2026-09-18(선혜님 - "이 견적서 다시 살려줘" / "인쇄가 왜이렇게
+  // 되지??"로 발견, 그 다음 "1번 똑같은데?? 왜 갑자기 이렇게
+  // 바뀐거지??"로 재현되어 최초 수정의 회귀까지 발견): 처음엔
+  // autoAddSvcFee()를 재호출하는 방식으로 고쳤는데, 그 함수 자체에
+  // "커튼/블라인드 없으면 실측비/시공비 불필요" 조건을 넣었더니
+  // "지역을 먼저 선택하고 나중에 커튼을 입력하는" 정상적인 흐름까지
+  // 깨뜨림(지역 선택 시점엔 아직 커튼이 없어서 실측/시공비 자체가
+  // 안 붙게 됨) - autoAddSvcFee()는 원래대로 되돌리고, 대신 여기서
+  // (커튼+블라인드가 실제로 모두 사라진 시점에만) 실측비/시공비 행을
+  // 직접 지움 - 레일 자재비는 이미 위에서 개별 행 삭제시 연동 삭제됨.
+  if (typeof hasCurtainOrBlindItem === 'function' && !hasCurtainOrBlindItem() && svcBody) {
+    Array.from(svcBody.querySelectorAll('[data-svc-type="실측비"],[data-svc-type="시공비"]')).forEach(function(r) { r.remove(); });
+  }
   calcTotal();
 }
 
