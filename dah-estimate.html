@@ -883,7 +883,7 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
 <script src="/est-form-controls.js?v=a737ee9e83f3"></script>
 <script src="/est-product-calc.js?v=e678cc7ca418"></script>
 <script src="/est-survey.js?v=7a7c7ecd5e16"></script>
-<script src="/est-save.js?v=4f4bb82de0c2"></script>
+<script src="/est-save.js?v=571e7a92fe1e"></script>
 <script src="/est-doc-customer.js?v=493b9047dfb7"></script>
 <script src="/est-doc-vendor.js?v=25f5e4ef6dc5"></script>
 <script src="/est-doc-request.js?v=eefbb47da973"></script>
@@ -1500,6 +1500,14 @@ document.addEventListener('DOMContentLoaded', function() {
   var blindTable = document.getElementById('blind-table');
   if (curtainTable) curtainTable.addEventListener('input', autoSave);
   if (blindTable) blindTable.addEventListener('input', autoSave);
+  // 2026-09-18(선혜님 - "견적서 다 정리했는데 저장이 안되는데 이 자료를
+  // 다 날려야 하는 상황이니??"로 발견): other-table(기타 품목 - 침구·
+  // 러그, 2026-09-15 신설)이 이 목록에서 빠져있었음 - 2026-08-10에 고친
+  // "임시저장이 고객정보만 저장되고 실제 견적 내용은 저장 안 되던 문제"가
+  // 침구 표에서 그대로 재발하고 있었음(침구 항목 입력 중엔 자동 임시저장
+  // 자체가 전혀 안 걸림). 즉시 추가.
+  var otherTable = document.getElementById('other-table');
+  if (otherTable) otherTable.addEventListener('input', autoSave);
   
   // 2026-08-13: 페이지 로드시 자동으로 loadDraft()를 호출하던 것을 제거함 —
   // 여러 탭에서 서로 다른 고객을 동시에 작업할 때, 새 탭을 열면 다른 탭에서

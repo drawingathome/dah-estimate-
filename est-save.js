@@ -171,6 +171,17 @@ function validateEstimate() {
     if (price > 0) hasProduct = true;
     else if (hasSize) missingPriceRows.push('블라인드 ' + (idx + 1) + '번째');
   });
+  // 2026-09-18(선혜님 - "제품금액을 1개 이상 넣으라고 하면서 저장이
+  // 안돼" - 침구만 있는 견적서로 재현): hasProduct 검사가 커튼/블라인드
+  // 두 표만 보고 #other-body(기타 품목 - 침구·러그, 2026-09-15 신설)는
+  // 아예 빠뜨리고 있었음 - 그래서 침구만 담긴 견적서는 금액을 다 채워도
+  // 항상 "제품 금액을 1개 이상 입력해주세요"로 막히고 있었음.
+  document.querySelectorAll('#other-body tr').forEach(function(r) {
+    var price = getPriceVal(r.querySelector('.other-price'));
+    var hasName = (r.querySelector('.other-name')?.value || '').trim() !== '';
+    if (price > 0) hasProduct = true;
+    else if (hasName) missingPriceRows.push('기타품목 "' + (r.querySelector('.other-name')?.value || '').trim() + '"');
+  });
   if (!hasProduct) {
     // 2026-08-05: AS·수선 접수는 무상 하자처리처럼 제품금액이 없을 수 있음.
     // 증상이 기재되어 있으면 금액 없이도 저장 가능하게 예외 처리 —
@@ -883,8 +894,26 @@ function saveEstimate() {
   // 물어봐서, 실수로 빠뜨린 걸 이 시점에 알아차릴 수 있게 함.
   var missing = [];
   if (!(document.getElementById('c-addr')?.value || '').trim()) missing.push('주소');
-  if (!document.getElementById('c-measure-tbd')?.checked && !(document.getElementById('c-measure')?.value || '')) missing.push('실측 예정일');
-  if (!document.getElementById('c-install-tbd')?.checked && !(document.getElementById('c-install')?.value || '')) missing.push('시공 예정일');
+  // 2026-09-18(선혜님 - "우리가 시공을 안하는걸로 선택했는데도 알림
+  // 문구가 저렇게 뜨네" - 침구만 있는 견적서로 재현): 이 검증이 항상
+  // "커튼/블라인드가 있는 견적서"만 가정하고 만들어져서, 실측·시공
+  // 자체가 필요 없는 침구/러그만 있는 견적서에도 무조건 실측/시공
+  // 예정일을 요구하고 있었음. 커튼·블라인드 품목이 하나도 없으면(기타
+  // 품목만 있으면) 이 두 항목 검증 자체를 건너뜀 - 실측/시공이 있는
+  // 기존 흐름은 전혀 안 건드림.
+  // 주의: 새 견적서를 열면 addCurtainRow()가 기본으로 빈 커튼 행을 하나
+  // 만들어두므로(dah-estimate.html 초기화 코드), "행이 존재하는지"가
+  // 아니라 "그 행에 실제로 뭔가 입력됐는지"(사이즈나 단가)로 판단해야
+  // 함 - 처음엔 이걸 놓쳐서 테스트에서 직접 재현·발견함.
+  var hasCurtainOrBlind = Array.from(document.querySelectorAll('#curtain-body tr')).some(function(r) {
+    return (r.querySelector('.mw')?.value || '').trim() !== '' || (r.querySelector('.mh')?.value || '').trim() !== '' || getPriceVal(r.querySelector('.cprice')) > 0;
+  }) || Array.from(document.querySelectorAll('#blind-body tr')).some(function(r) {
+    return (r.querySelector('.mw')?.value || '').trim() !== '' || (r.querySelector('.mh')?.value || '').trim() !== '' || getPriceVal(r.querySelector('.blind-price')) > 0;
+  });
+  if (hasCurtainOrBlind) {
+    if (!document.getElementById('c-measure-tbd')?.checked && !(document.getElementById('c-measure')?.value || '')) missing.push('실측 예정일');
+    if (!document.getElementById('c-install-tbd')?.checked && !(document.getElementById('c-install')?.value || '')) missing.push('시공 예정일');
+  }
   if (missing.length > 0) {
     var okToProceed = window.confirm('다음 항목이 비어있어요: ' + missing.join(', ') + '\n\n그래도 저장하시겠어요?');
     if (!okToProceed) {

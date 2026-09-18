@@ -54,10 +54,25 @@ async function run() {
   // 4) 2026-09-15(선혜님 지시 - "원인을 찾아야지 다음에 문제가 안되게 하지"):
   // 실측/시공일 미입력 확인창에서 "취소"를 누르면 이제 눈에 띄는 안내가 뜸
   // (파일 상단에 등록된 page.on('dialog', ...)가 자동으로 "취소"를 누름)
+  // 2026-09-18(hasProduct 검사에 기타품목 반영, 실측/시공일 검증에
+  // "커튼·블라인드 없으면 건너뛰기" 추가하면서 발견): 이 테스트는 원래
+  // 기본으로 자동 생성되는 "빈 커튼 행"만으로 hasProduct를 통과하고
+  // confirm()까지 도달하는 우연한 동작에 기대고 있었음(빈 커튼 행이
+  // 왜 hasProduct=true를 만들었는지는 재현/추적 불가 - 이전 테스트들의
+  // 부수효과로 추정) - 이제 "커튼/블라인드가 실제로 있어야만" 실측/
+  // 시공일을 요구하도록 명확히 바뀌었으므로, 이 테스트도 우연에 기대지
+  // 않고 실제 커튼 품목(사이즈+단가)을 명시적으로 채워서 견고하게 만듦.
   await page.evaluate(() => {
     document.getElementById('c-name').value = '취소테스트고객';
     document.getElementById('c-phone').value = '01011112222';
     document.getElementById('c-addr').value = '서울시 어딘가';
+    var tr = document.querySelector('#curtain-body tr');
+    if (tr) {
+      tr.querySelector('.mw').value = '300';
+      tr.querySelector('.mh').value = '250';
+      tr.querySelector('.cprice').value = '100000';
+      calcCurtainRow(tr.querySelector('.cprice'));
+    }
     saveEstimate();
   });
   await new Promise(res => setTimeout(res, 400));
