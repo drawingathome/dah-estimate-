@@ -9,7 +9,10 @@
 // "내용 자체"로 해시를 계산해서 버전 문자열로 쓰면 이 문제가 구조적으로
 // 사라짐 - 내용이 안 바뀌면 버전도 안 바뀌고(불필요한 diff 없음),
 // 단 한 글자라도 바뀌면 해시가 달라져서 자동으로 캐시가 무효화됨.
-// 사람이 "버전을 올려야 하나?"를 판단할 필요 자체가 없어짐.
+// 사람이 "버전을 올려야 하나?"를 판단할 필요 자체가 없어짐. JS뿐
+// 아니라 CSS 파일(est-styles.css/dash-styles.css)도 동일하게 처리함
+// (2026-09-17 저녁 CSS까지 확장 - 처음엔 JS만 다뤄서, 바로 그날 CSS를
+// 고치고도 이 스크립트가 못 잡을 뻔했음).
 //
 // 사용법:
 //   node scripts/bump-cache-versions.js          # 실제로 HTML 파일을 고침
@@ -38,20 +41,29 @@ for (const htmlFile of HTML_FILES) {
   let html = fs.readFileSync(htmlPath, 'utf-8');
   let changedInThisFile = false;
 
-  // <script src="/파일명.js?v=아무값"></script> 패턴을 전부 찾아서,
+  // <script src="/파일명.js?v=아무값"></script> 와
+  // <link rel="stylesheet" href="/파일명.css?v=아무값"> 패턴을 전부 찾아서,
   // 그 파일명이 실제로 저장소에 존재하면 현재 내용의 해시로 교체.
-  const scriptTagPattern = /<script src="\/([a-zA-Z0-9_-]+\.js)\?v=[^"]*"><\/script>/g;
-  html = html.replace(scriptTagPattern, (match, fileName) => {
-    const jsPath = path.join(ROOT, fileName);
-    if (!fs.existsSync(jsPath)) return match; // 로컬에 없는 외부 스크립트는 그대로 둠
-    const newHash = hashFile(jsPath);
-    const newTag = `<script src="/${fileName}?v=${newHash}"></script>`;
-    if (newTag !== match) {
-      changedInThisFile = true;
-      console.log(`  ${htmlFile}: ${fileName} → v=${newHash}`);
-    }
-    return newTag;
-  });
+  const patterns = [
+    /<script src="\/([a-zA-Z0-9_-]+\.js)\?v=[^"]*"><\/script>/g,
+    /<link rel="stylesheet" href="\/([a-zA-Z0-9_-]+\.css)\?v=[^"]*">/g,
+  ];
+  for (const scriptTagPattern of patterns) {
+    html = html.replace(scriptTagPattern, (match, fileName) => {
+      const jsPath = path.join(ROOT, fileName);
+      if (!fs.existsSync(jsPath)) return match; // 로컬에 없는 외부 스크립트는 그대로 둠
+      const newHash = hashFile(jsPath);
+      const isCss = fileName.endsWith('.css');
+      const newTag = isCss
+        ? `<link rel="stylesheet" href="/${fileName}?v=${newHash}">`
+        : `<script src="/${fileName}?v=${newHash}"></script>`;
+      if (newTag !== match) {
+        changedInThisFile = true;
+        console.log(`  ${htmlFile}: ${fileName} → v=${newHash}`);
+      }
+      return newTag;
+    });
+  }
 
   if (changedInThisFile) {
     anyMismatch = true;

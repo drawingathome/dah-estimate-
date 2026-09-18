@@ -440,6 +440,7 @@ td.amt{
 }
 .r{text-align:right}
 .c-display-name{font-weight:600!important}
+#other-body .other-name{font-weight:600!important}
 .sub-size{display:block;font-size:11px;color:#F06E2D;font-weight:600;margin-top:2px;white-space:nowrap}
 
 /* 2026-08-26(선혜님과 함께 진행한 "내부견적서 한눈에 안 들어옴" 개선 1단계):
@@ -455,12 +456,20 @@ td.amt{
    되돌림 - 대신 "안 보이던" 예전 문제로 돌아가지 않게 sticky 고정(1단계에서
    만든 것)은 그대로 유지해서 "안 보임"과 "과한 강조" 둘 다 피함.*/
 #curtain-body .c-display-name,
-#blind-body .c-display-name{
+#blind-body .c-display-name,
+#other-body .other-name{
   font-size:13px!important;
   color:#282828!important;
 }
+/* 2026-09-17(선혜님 - "기존 견적서와 동일한 폰트/사이즈인지 비교해봐"로
+   발견): 위 2026-08-26 개선(제품명/합계만 13px로 강조)이 #other-body
+   (기타 품목 - 침구/러그)에는 처음부터 빠져있었음(9/15에 기타품목을
+   만들 때 이 개선의 존재를 놓친 것으로 보임) - 커튼/블라인드만 강조되고
+   침구는 전부 11px로 흐릿해서 상대적으로 덜 중요해 보이는 문제였음.
+   other-name(품명)/td.amt(합계) 둘 다 여기 포함시켜서 동일하게 맞춤. */
 #curtain-body td.amt,
-#blind-body td.amt{
+#blind-body td.amt,
+#other-body td.amt{
   font-size:13px!important;
   color:#282828!important;
 }
@@ -584,6 +593,42 @@ td.amt{
      살짝 다른 배경으로 시각적으로 구분되게 함. */
   #curtain-body tr:has(.c-display-name:placeholder-shown),
   #blind-body tr:has(.b-display-name:placeholder-shown){
+    border-style:dashed;background:#FAF8F5;
+  }
+
+  /* 2026-09-17(선혜님 - "기존 견적서와 동일한 폰트/사이즈인지 비교해봐"로
+     발견): 위 커튼/블라인드 카드형 전환(2026-08-26)이 #other-table
+     (기타 품목 - 침구/러그, 2026-09-15 신설)에는 처음부터 빠져있었음 -
+     표 헤더가 안 숨고 셀이 가로로 그대로 남아서, 화면 폭보다 넓은 표가
+     찌그러진 채로 보이고 있었음. 커튼만큼 필드가 많지 않아서(품명/
+     사이즈/단가/수량/기타/합계 6개) 그 정도로 정교하게 나눌 필요는
+     없지만, 최소한 같은 카드형 골격(뼈대)은 맞춤 - 품명(위, 전체폭)→
+     사이즈+단가(반반)→수량+기타(반반)→합계+버튼(한 줄) 4줄 구성. */
+  #other-table thead{display:none}
+  #other-table{display:block}
+  #other-body{display:block}
+  #other-body tr{
+    display:flex!important;flex-wrap:wrap;align-items:flex-start;
+    width:100%!important;box-sizing:border-box;
+    border:1px solid #EEE6DC;border-radius:12px;
+    padding:12px 10px;margin-bottom:10px;background:#fff;
+  }
+  #other-body td{
+    display:block!important;position:static!important;
+    padding:4px 6px!important;border:none!important;background:transparent!important;
+  }
+  #other-body td:before{
+    content:attr(data-label);display:block;font-size:10px;color:#B0A99F;margin-bottom:2px;
+  }
+  #other-body td[data-label="품명"]{order:1;width:100%;padding-bottom:0!important}
+  #other-body td[data-label="품명"]:before{display:none}
+  #other-body td[data-label="사이즈"]{order:2;width:50%;box-sizing:border-box}
+  #other-body td[data-label="단가"]{order:2;width:50%;box-sizing:border-box}
+  #other-body td[data-label="수량"]{order:3;width:50%;box-sizing:border-box}
+  #other-body td[data-label="기타"]{order:3;width:50%;box-sizing:border-box}
+  #other-body td.amt{order:4;width:60%;box-sizing:border-box;text-align:right!important}
+  #other-body td:last-child{order:4;width:40%;box-sizing:border-box;text-align:right;padding-top:8px!important}
+  #other-body tr:has(.other-name:placeholder-shown){
     border-style:dashed;background:#FAF8F5;
   }
 }

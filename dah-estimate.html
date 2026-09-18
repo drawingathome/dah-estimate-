@@ -29,7 +29,7 @@
 </script>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
-<link rel="stylesheet" href="/est-styles.css?v=202609082100">
+<link rel="stylesheet" href="/est-styles.css?v=e42b5e9df121">
 </style>
 <meta charset="UTF-8">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -613,13 +613,21 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
         </thead>
         <tbody id="blind-body"></tbody>
       </table>
-      <!-- 2026-09-15(선혜님 지시 - "커튼/블라인드 아니어도 침구/러그 제작
-           가능한데 견적서 양식 하나 추가하면...하자" - 실제 침구 제품
-           견적서 캡처로 필요한 칸 확인: 품명/사이즈/가격/수량/기타 6개면
-           충분, 할인은 기존 로직 재사용): 커튼/블라인드 전용 계산식
-           (마수/판폭 등) 없이 단가×수량만 계산하는 범용 품목 표 - 침구/
-           러그뿐 아니라 다른 기타 제품에도 그대로 쓸 수 있음. 기존
-           커튼/블라인드 코드는 전혀 안 건드림(완전히 별도 표/함수). -->
+    </div></div>
+    <!-- 2026-09-15(선혜님 지시 - "커튼/블라인드 아니어도 침구/러그 제작
+         가능한데 견적서 양식 하나 추가하면...하자" - 실제 침구 제품
+         견적서 캡처로 필요한 칸 확인: 품명/사이즈/가격/수량/기타 6개면
+         충분, 할인은 기존 로직 재사용): 커튼/블라인드 전용 계산식
+         (마수/판폭 등) 없이 단가×수량만 계산하는 범용 품목 표 - 침구/
+         러그뿐 아니라 다른 기타 제품에도 그대로 쓸 수 있음. 기존
+         커튼/블라인드 코드는 전혀 안 건드림(완전히 별도 표/함수).
+         2026-09-17(선혜님 - "기존 견적서와 동일한 폰트/사이즈인지
+         비교해봐"로 발견): 이 표가 원래 블라인드 표와 같은 .tbl-wrap
+         안에 같이 들어있어서, 모바일 카드형 변환(.tbl-wrap table{
+         min-width:0})의 혜택을 못 받고 있었음 - 이번에 자기 자신만의
+         wrap div로 분리함. -->
+    <!-- 기타 품목 -->
+    <div class="tbl-outer"><div class="tbl-wrap">
       <table id="other-table" style="display:none">
         <colgroup>
           <col style="min-width:90px;width:22%">
@@ -638,7 +646,7 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
         </thead>
         <tbody id="other-body"></tbody>
       </table>
-    </div>
+    </div></div>
     <!-- 빈 상태 안내 -->
     <div id="empty-hint" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 16px;gap:10px">
       <div style="font-size:22px;opacity:0.25">🪟</div>
