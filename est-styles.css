@@ -1067,6 +1067,13 @@ body.preview-open #self-diag-btn { display:none!important; }
 
   html, body { background:#fff!important; }
   .container, .quicknav, .print-hide { display:none!important; }
+  /* 2026-09-18(선혜님 - "안되잖아" - 인쇄하면 편집화면의 "제품소계/
+     계약금" 요약 카드(#lockable-rail-svc)가 그 아래 실제 견적서
+     문서와 같이 보이던 문제): 이 카드가 유일하게 .container 밖에
+     body 바로 아래 있어서, 위 .container 숨김 규칙의 대상이 안 됐음
+     (다른 lockable-* 섹션들은 전부 .container 안에 있어서 정상 숨겨짐 -
+     이 카드만 예외였음). 명시적으로 추가해서 확실히 숨김. */
+  body.preview-open #lockable-rail-svc { display:none!important; }
   body.preview-open .container { display:none!important; }
   body.preview-open #pv-overlay {
     display:block!important; position:static!important; width:100%!important;

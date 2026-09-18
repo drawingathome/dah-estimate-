@@ -125,6 +125,9 @@ if (/dah-dashboard/.test(target)) {
   // 전부 진짜로 재현 - 3가지 겹친 버그(얼림/실측시공비 잔존/계약금
   // 수동편집 보호)를 종단간으로 검증.
   scripts.push(['estimate-conversion-check.js', []]);
+  // 2026-09-18(선혜님 - "안되잖아"): 인쇄시 편집화면의 계약금 요약
+  // 카드(#lockable-rail-svc)가 .container 밖에 있어서 안 숨겨지던 버그.
+  scripts.push(['print-hide-check.js', []]);
   // 2026-09-11: 감사로그(변경이력) 조회 화면 검증
   scripts.push(['audit_log_check.js', []]);
   // 2026-09-11: AS 관리 화면(GitHub 이슈#4) — 접수 등록/상태변경 검증
