@@ -101,13 +101,16 @@ function buildCustomerHTML() {
   
   var svcRows=[];
   document.querySelectorAll('#svc-body tr').forEach(function(tr){
-    var tds=tr.querySelectorAll('td');
-    var svcType=tds[0]?.querySelector('select')?.value||'';
-    var desc =tds[1]?.querySelector('input')?.value||'';
-    var price=getPriceVal(tds[2]?.querySelector('input'));
-    var qty  =parseFloat(tds[3]?.querySelector('input')?.value)||1;
-    var amt  =tds[4]?.textContent||'';
-    if(desc&&amt&&amt!=='0원') svcRows.push({svcType:escHtml(svcType),desc:escHtml(desc),price:price,qty:qty,amt:amt});
+    // 2026-09-18(선혜님 - "그럼 청구는 되지만 실측이나 시공에서 안뜨잖아"로
+    // svc-body에 "위치" 칸 신설하면서, td 순서가 밀려 인덱스 기반 참조가
+    // 다 깨질 뻔함 - 클래스명 기반으로 바꿔서 컬럼 순서 변화에 안전하게 함.
+    var svcType=tr.querySelector('.svc-kind')?.value||'';
+    var svcSpace=tr.querySelector('.svc-space')?.value||'';
+    var desc =tr.querySelector('.svc-content')?.value||'';
+    var price=getPriceVal(tr.querySelector('.sprice'));
+    var qty  =parseFloat(tr.querySelector('.sqty')?.value)||1;
+    var amt  =tr.querySelector('.samt')?.textContent||'';
+    if(desc&&amt&&amt!=='0원') svcRows.push({svcType:escHtml(svcType),space:escHtml(svcSpace),desc:escHtml(desc),price:price,qty:qty,amt:amt});
   });
 
   // 2026-09-15(선혜님 지시 - 침구/러그 등 기타 품목 신설): 커튼/블라인드와
@@ -207,17 +210,17 @@ function buildCustomerHTML() {
     var motorMaterialSum = 0;
     var etcOptionSum = 0;
     document.querySelectorAll('#svc-body tr').forEach(function(tr){
-      var tds = tr.querySelectorAll('td');
-      var desc = tds[1]?.querySelector('input')?.value || '';
-      var price = getPriceVal(tds[2]?.querySelector('input'));
-      var qty = parseFloat(tds[3]?.querySelector('input')?.value) || 1;
+      var desc = tr.querySelector('.svc-content')?.value || '';
+      var price = getPriceVal(tr.querySelector('.sprice'));
+      var qty = parseFloat(tr.querySelector('.sqty')?.value) || 1;
       var amt = price * qty;
       if (!desc || !amt) return;
       var isRailMaterial = tr.hasAttribute('data-rail-src');
       var isRailInstall = tr.hasAttribute('data-railcost-src');
       var isRegionInstall = tr.hasAttribute('data-install-base');
       var svcTypeAttr = tr.getAttribute('data-svc-type') || '';
-      var kindSelect = tds[0]?.querySelector('select')?.value || '';
+      var kindSelect = tr.querySelector('.svc-kind')?.value || '';
+      var svcSpaceVal = tr.querySelector('.svc-space')?.value || '';
       var isMeasureOrInstall = isRegionInstall || isRailInstall ||
         svcTypeAttr === '실측비' || svcTypeAttr === '시공비' || svcTypeAttr === '블라인드시공';
       var isOptionExtra = svcTypeAttr === '옵션추가금'; // 전동 등 블라인드 옵션추가금
@@ -226,7 +229,9 @@ function buildCustomerHTML() {
         measureInstallSum += amt;
       } else if (isRailMaterial) {
         railSum += amt;
-        railDetailBits.push(desc.trim() + (qty > 1 ? ' ' + qty + '개' : ''));
+        // 2026-09-18: 위치가 이제 desc 텍스트에 안 합쳐져 있으므로(별도
+        // .svc-space 칸으로 분리됨), 여기 요약 표시에서 다시 붙여줌.
+        railDetailBits.push((svcSpaceVal ? svcSpaceVal + ' ' : '') + desc.trim() + (qty > 1 ? ' ' + qty + '개' : ''));
       } else if (isOptionExtra || isManualMaterial) {
         motorMaterialSum += amt;
       } else {

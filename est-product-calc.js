@@ -225,25 +225,29 @@ function autoUpdateRail(curtainTr) {
   // 레일 (자재) 행: 단가 1,600원 × 레일수
   var existing = svcBody.querySelector('[data-rail-src="'+rowIdx+'"]');
   if(existing) {
-    var tds = existing.querySelectorAll('td');
     // 2026-09-01(선혜님 지시 - "조절레일 (타공형) 이 기본이야"): 그냥 "레일"
     // 이라고만 나오던 것을, 실제로 기본으로 쓰는 레일 종류(조절레일/타공형)를
     // 명시하도록 변경 - 시공요청서에도 이 텍스트에서 레일길이를 추출해서
     // 보여주니, 시공기사님이 어떤 레일인지 더 명확히 알 수 있게 됨.
-    if(tds[1]) { var inp=tds[1].querySelector('input'); if(inp) inp.value=(space?space+' ':' ')+'조절레일(타공형) '+jaR+'자'; }
-    if(tds[2]) { var inp=tds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw',String(RAIL_UNIT_PRICE)); inp.value=(RAIL_UNIT_PRICE).toLocaleString(); } }
-    if(tds[3]) { var inp=tds[3].querySelector('input'); if(inp) inp.value=jaR; }
-    calcSvcRow(tds[2]?.querySelector('input'));
+    // 2026-09-18(선혜님 - "그럼 청구는 되지만 실측이나 시공에서 안뜨잖아"로
+    // svc-body에 "위치" 칸을 신설하면서, td 순서를 세는 대신 클래스명으로
+    // 찾도록 바꿈 - 컬럼이 나중에 또 바뀌어도 안 깨지게. 위치는 이제
+    // 내용 텍스트에 안 합치고 별도 칸(.svc-space)에 정확히 넣음.
+    var spaceInp = existing.querySelector('.svc-space'); if(spaceInp) spaceInp.value = space||'';
+    var inp=existing.querySelector('.svc-content'); if(inp) inp.value='조절레일(타공형) '+jaR+'자';
+    var pinp=existing.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw',String(RAIL_UNIT_PRICE)); pinp.value=(RAIL_UNIT_PRICE).toLocaleString(); }
+    var qinp=existing.querySelector('.sqty'); if(qinp) qinp.value=jaR;
+    calcSvcRow(pinp);
   } else {
     addSvcRow();
     var newRow = svcBody.lastElementChild;
     newRow.setAttribute('data-rail-src', rowIdx);
-    var tds = newRow.querySelectorAll('td');
-    if(tds[0]) { var sel=tds[0].querySelector('select'); if(sel) sel.value='레일'; }
-    if(tds[1]) { var inp=tds[1].querySelector('input'); if(inp) inp.value=(space?space+' ':' ')+'조절레일(타공형) '+jaR+'자'; }
-    if(tds[2]) { var inp=tds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw',String(RAIL_UNIT_PRICE)); inp.value=(RAIL_UNIT_PRICE).toLocaleString(); } }
-    if(tds[3]) { var inp=tds[3].querySelector('input'); if(inp) inp.value=jaR; }
-    calcSvcRow(tds[2]?.querySelector('input'));
+    var sel=newRow.querySelector('.svc-kind'); if(sel) sel.value='레일';
+    var spaceInp=newRow.querySelector('.svc-space'); if(spaceInp) spaceInp.value = space||'';
+    var inp=newRow.querySelector('.svc-content'); if(inp) inp.value='조절레일(타공형) '+jaR+'자';
+    var pinp=newRow.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw',String(RAIL_UNIT_PRICE)); pinp.value=(RAIL_UNIT_PRICE).toLocaleString(); }
+    var qinp=newRow.querySelector('.sqty'); if(qinp) qinp.value=jaR;
+    calcSvcRow(pinp);
   }
 
   // 2026-08-05: 레일시공비(25,000원)도 동일한 이유로 변수 추출
@@ -252,21 +256,21 @@ function autoUpdateRail(curtainTr) {
   // 레일 시공비 행: 단가 25,000원 × 1개 (레일수와 무관, 창문 1개 시공당 고정)
   var existingCost = svcBody.querySelector('[data-railcost-src="'+rowIdx+'"]');
   if(existingCost) {
-    var ctds = existingCost.querySelectorAll('td');
-    if(ctds[1]) { var inp=ctds[1].querySelector('input'); if(inp) inp.value=(space?space+' ':' ')+'레일 시공비'; }
-    if(ctds[2]) { var inp=ctds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw',String(RAIL_INSTALL_FEE)); inp.value=(RAIL_INSTALL_FEE).toLocaleString(); } }
-    if(ctds[3]) { var inp=ctds[3].querySelector('input'); if(inp) inp.value=1; }
-    calcSvcRow(ctds[2]?.querySelector('input'));
+    var cSpaceInp=existingCost.querySelector('.svc-space'); if(cSpaceInp) cSpaceInp.value = space||'';
+    var cinp=existingCost.querySelector('.svc-content'); if(cinp) cinp.value='레일 시공비';
+    var cpinp=existingCost.querySelector('.sprice'); if(cpinp){ cpinp.setAttribute('data-raw',String(RAIL_INSTALL_FEE)); cpinp.value=(RAIL_INSTALL_FEE).toLocaleString(); }
+    var cqinp=existingCost.querySelector('.sqty'); if(cqinp) cqinp.value=1;
+    calcSvcRow(cpinp);
   } else {
     addSvcRow();
     var newCostRow = svcBody.lastElementChild;
     newCostRow.setAttribute('data-railcost-src', rowIdx);
-    var ctds = newCostRow.querySelectorAll('td');
-    if(ctds[0]) { var sel=ctds[0].querySelector('select'); if(sel) sel.value='시공비'; }
-    if(ctds[1]) { var inp=ctds[1].querySelector('input'); if(inp) inp.value=(space?space+' ':' ')+'레일 시공비'; }
-    if(ctds[2]) { var inp=ctds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw',String(RAIL_INSTALL_FEE)); inp.value=(RAIL_INSTALL_FEE).toLocaleString(); } }
-    if(ctds[3]) { var inp=ctds[3].querySelector('input'); if(inp) inp.value=1; }
-    calcSvcRow(ctds[2]?.querySelector('input'));
+    var csel=newCostRow.querySelector('.svc-kind'); if(csel) csel.value='시공비';
+    var cSpaceInp=newCostRow.querySelector('.svc-space'); if(cSpaceInp) cSpaceInp.value = space||'';
+    var cinp=newCostRow.querySelector('.svc-content'); if(cinp) cinp.value='레일 시공비';
+    var cpinp=newCostRow.querySelector('.sprice'); if(cpinp){ cpinp.setAttribute('data-raw',String(RAIL_INSTALL_FEE)); cpinp.value=(RAIL_INSTALL_FEE).toLocaleString(); }
+    var cqinp=newCostRow.querySelector('.sqty'); if(cqinp) cqinp.value=1;
+    calcSvcRow(cpinp);
   }
 
   calcTotal();
@@ -487,11 +491,11 @@ function recalcBlindOptionExtras() {
     row.setAttribute('data-svc-type','옵션추가금');
   }
   var tds = row.querySelectorAll('td');
-  if(tds[0]) { var sel=tds[0].querySelector('select'); if (sel) sel.value='전동'; }
-  if(tds[1]) { var inp=tds[1].querySelector('input'); if (inp) inp.value = optNames.length ? optNames.join(', ') : '옵션 추가금'; }
-  if(tds[2]) { var inp=tds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw', String(extraSum)); inp.value=extraSum.toLocaleString(); } }
-  if(tds[3]) { var inp=tds[3].querySelector('input'); if (inp) inp.value = 1; }
-  calcSvcRow(tds[2]?.querySelector('input'));
+  var sel=row.querySelector('.svc-kind'); if (sel) sel.value='전동';
+  var inp=row.querySelector('.svc-content'); if (inp) inp.value = optNames.length ? optNames.join(', ') : '옵션 추가금';
+  var pinp=row.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw', String(extraSum)); pinp.value=extraSum.toLocaleString(); }
+  var qinp=row.querySelector('.sqty'); if (qinp) qinp.value = 1;
+  calcSvcRow(pinp);
 }
 
 function autoAddBlindSvc() {
@@ -517,11 +521,11 @@ function autoAddBlindSvc() {
     row.setAttribute('data-svc-type','블라인드시공');
   }
   var tds = row.querySelectorAll('td');
-  if(tds[0]) { var sel=tds[0].querySelector('select'); if(sel) sel.value='시공비'; }
-  if(tds[1]) { var inp=tds[1].querySelector('input'); if(inp) inp.value='블라인드 시공비 ('+blindCount+'개)'; }
-  if(tds[2]) { var inp=tds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw','10000'); inp.value=(10000).toLocaleString(); } }
-  if(tds[3]) { var inp=tds[3].querySelector('input'); if(inp) inp.value=blindCount; }
-  calcSvcRow(tds[2]?.querySelector('input'));
+  var sel=row.querySelector('.svc-kind'); if(sel) sel.value='시공비';
+  var inp=row.querySelector('.svc-content'); if(inp) inp.value='블라인드 시공비 ('+blindCount+'개)';
+  var pinp=row.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw','10000'); pinp.value=(10000).toLocaleString(); }
+  var qinp=row.querySelector('.sqty'); if(qinp) qinp.value=blindCount;
+  calcSvcRow(pinp);
 }
 
 function addSvcRow() {
@@ -531,6 +535,7 @@ function addSvcRow() {
     '<td><select class="svc-kind" style="'+SEL+'"><option value="레일">레일</option><option value="시공비">시공비</option>'+
     '<option value="전동">전동</option><option value="실측비">실측비</option>'+
     '<option value="부자재">부자재</option><option value="기타">기타</option></select></td>'+
+    '<td><input type="text" placeholder="위치" class="svc-space" style="'+INP+'"></td>'+
     '<td><input type="text" placeholder="내용 입력" class="svc-content" style="'+INP+'"></td>'+
     '<td><input type="text" inputmode="numeric" placeholder="단가" class="sprice" oninput="fmtPrice(this);calcSvcRow(this)" onfocus="fmtPriceFocus(this)" onblur="fmtPriceBlur(this);calcSvcRow(this)" style="'+INP+'"></td>'+
     '<td><input type="number" placeholder="1" class="sqty" value="1" oninput="fmtPrice(this);calcSvcRow(this)" style="'+INP+'"></td>'+
@@ -585,12 +590,12 @@ function autoAddSvcFee() {
     var row = svcBody.lastElementChild;
     row.setAttribute('data-svc-type', type);
     var tds = row.querySelectorAll('td');
-    if(tds[0]) { var sel=tds[0].querySelector('select'); if(sel) sel.value=type==='실측비'?'실측비':'시공비'; }
-    if(tds[1]) { var inp=tds[1].querySelector('input'); if(inp) inp.value=region+(type==='실측비'?' 실측비':' 시공비'); }
-    if(tds[2]) { var inp=tds[2].querySelector('input'); if(inp){ inp.setAttribute('data-raw',String(typePrice)); inp.value=typePrice.toLocaleString(); } }
+    var sel=row.querySelector('.svc-kind'); if(sel) sel.value=type==='실측비'?'실측비':'시공비';
+    var inp=row.querySelector('.svc-content'); if(inp) inp.value=region+(type==='실측비'?' 실측비':' 시공비');
+    var pinp=row.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw',String(typePrice)); pinp.value=typePrice.toLocaleString(); }
     if(type==='시공비') row.setAttribute('data-install-base', String(typePrice));
-    if(tds[3]) { var inp=tds[3].querySelector('input'); if(inp) inp.value=1; }
-    calcSvcRow(tds[2]?.querySelector('input'));
+    var qinp=row.querySelector('.sqty'); if(qinp) qinp.value=1;
+    calcSvcRow(pinp);
   });
   if(hint) hint.textContent='→ 실측 '+prices['실측비'].toLocaleString()+'원 + 시공 '+prices['시공비'].toLocaleString()+'원 자동추가';
   // 2026-08-14: 블라인드를 먼저 입력하고 나중에 지역을 선택하면 블라인드
@@ -1027,7 +1032,7 @@ function renderSvcSummary() {
     var price = Math.max(0, getPriceVal(priceInp) || 0);
     var qty = Math.max(0, parseFloat(qtyInp?.value) || 1);
     var amt = price * qty;
-    var label = tr.querySelectorAll('td')[1]?.querySelector('input')?.value || '';
+    var label = tr.querySelector('.svc-content')?.value || '';
     var isRailMaterial = tr.hasAttribute('data-rail-src');   // 레일 자재(1,600원×레일수)
     var isRailInstall  = tr.hasAttribute('data-railcost-src'); // 레일 시공비(25,000원)
     var isRegionInstall = tr.hasAttribute('data-install-base');

@@ -118,6 +118,23 @@ function buildRequestHTML(kind, extraNote) {
       var g = getGroup(space, extractSubLoc(name));
       g.parts[kind2] = (g.parts[kind2]||0) + 1;
     });
+    // 2026-09-18(선혜님 - "그럼 청구는 되지만 실측이나 시공에서 안뜨잖아" -
+    // "레일만 시공"(커튼 판매 없음) 시나리오로 발견): 레일·시공비·기타
+    // 표(svc-body)에 위치 칸을 신설해서, 커튼/블라인드 없이 여기 직접
+    // 추가한 항목도 실측/시공 의뢰서에 나오게 함. 단, data-rail-src 등
+    // 자동생성 마커가 있는 행(이미 위 커튼/블라인드 루프에서 그 공간이
+    // 그룹으로 잡혔을 것)은 중복 방지를 위해 제외 - 사용자가 직접
+    // "+ 항목 추가"로 넣고 위치를 채운 행만 반영.
+    document.querySelectorAll('#svc-body tr').forEach(function(tr){
+      if (tr.hasAttribute('data-rail-src') || tr.hasAttribute('data-railcost-src') ||
+          tr.hasAttribute('data-svc-type')) return;
+      var space = tr.querySelector('.svc-space')?.value || '';
+      var content = tr.querySelector('.svc-content')?.value || '';
+      var kind = tr.querySelector('.svc-kind')?.value || '기타';
+      if (!space || !content) return;
+      var g = getGroup(space, '');
+      g.parts[kind] = (g.parts[kind]||0) + 1;
+    });
     function groupLabel(space, subLoc) { return space + (subLoc ? '['+subLoc+']' : ''); }
     var CURTAIN_PARTS = {'겉커튼':1,'속커튼':1,'커튼':1}; // 단위가 "장"인 구성요소(나머지는 블라인드류 - "피스")
     var items = [];
@@ -188,23 +205,27 @@ function buildRequestHTML(kind, extraNote) {
       // lineItems에 없음) - 그래서 위 매칭이 항상 실패해서, "저장 후 다시 열어
       // 시공요청서 만들기"(오늘 만든 '다시보기' 기능이 정확히 이 경로를 탐 -
       // 실사용에서 가장 흔한 경로)에서 레일길이가 항상 빠지고 있었음. rowUid
-      // 매칭이 안 되면, 레일 서비스행 텍스트가 정확히 "그 공간 이름"으로
-      // 시작하는지로 폴백 매칭 - 완벽하진 않지만(같은 공간에 레일이 여러개면
+      // 매칭이 안 되면, 레일 서비스행의 "위치" 칸이 정확히 그 공간 이름과
+      // 같은지로 폴백 매칭 - 완벽하진 않지만(같은 공간에 레일이 여러개면
       // 첫번째와 매칭) 없는 것보다 훨씬 나음.
+      // 2026-09-18(선혜님 - "그럼 청구는 되지만 실측이나 시공에서 안뜨잖아"로
+      // svc-body에 "위치" 칸 신설하면서, 위치가 이제 "내용" 텍스트 안에 안
+      // 합쳐지고 별도 .svc-space 칸에 정확히 들어감 - 텍스트 접두어 매칭
+      // (indexOf(space+' ')===0) 대신 .svc-space 값을 직접 비교하도록 정정,
+      // td 인덱스 참조도 클래스명 기반으로 바꿔서 컬럼 순서 변화에 안전하게 함.
       if (!railTr) {
         var space = curtainTr.querySelector('.space-inp')?.value || '';
         if (space && svcBody) {
           var svcRows = svcBody.querySelectorAll('tr');
           for (var i = 0; i < svcRows.length; i++) {
-            var inp0 = svcRows[i].querySelectorAll('td')[1]?.querySelector('input');
-            var txt0 = inp0 ? inp0.value : '';
-            if (txt0.indexOf(space + ' ') === 0 && /자/.test(txt0)) { railTr = svcRows[i]; break; }
+            var spaceVal = svcRows[i].querySelector('.svc-space')?.value || '';
+            var txt0 = svcRows[i].querySelector('.svc-content')?.value || '';
+            if (spaceVal === space && /자/.test(txt0)) { railTr = svcRows[i]; break; }
           }
         }
       }
       if (!railTr) return '';
-      var inp = railTr.querySelectorAll('td')[1] && railTr.querySelectorAll('td')[1].querySelector('input');
-      var txt = inp ? inp.value : '';
+      var txt = railTr.querySelector('.svc-content')?.value || '';
       var m = txt.match(/(\d+)자/);
       return m ? m[1] + '자 레일' : '';
     }
@@ -267,6 +288,21 @@ function buildRequestHTML(kind, extraNote) {
         // 가공소 이름이 붙고 있었음 - 블라인드는 순수 거래처명만 표시.
         etc: vendor || '—'
       });
+    });
+    // 2026-09-18(선혜님 - "그럼 청구는 되지만 실측이나 시공에서 안뜨잖아" -
+    // "레일만 시공"(커튼 판매 없음) 시나리오로 발견): 커튼/블라인드
+    // 표에 아무것도 없어도, 레일·시공비·기타 표(svc-body)에 위치를
+    // 채워 직접 추가한 항목은 시공 의뢰서에도 별도 행으로 나오게 함
+    // (자동생성 레일/실측비/시공비 행은 위 커튼 루프에서 이미 그
+    // 공간이 반영됐을 것이므로 제외 - data-rail-src 등 마커로 구분).
+    document.querySelectorAll('#svc-body tr').forEach(function(tr){
+      if (tr.hasAttribute('data-rail-src') || tr.hasAttribute('data-railcost-src') ||
+          tr.hasAttribute('data-svc-type')) return;
+      var space = tr.querySelector('.svc-space')?.value || '';
+      var content = tr.querySelector('.svc-content')?.value || '';
+      var kind = tr.querySelector('.svc-kind')?.value || '기타';
+      if (!space || !content) return;
+      rows.push({ space: space, size: '—', content: kind + ' — ' + content, etc: '—' });
     });
 
     // 2026-09-08(선혜님 지시 - "고객견적서에 있는 공간 순서대로 정리해주면

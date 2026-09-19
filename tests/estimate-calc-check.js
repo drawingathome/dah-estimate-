@@ -66,10 +66,10 @@ async function run() {
     const railInfo = await page.evaluate(() => {
       var rows = document.querySelectorAll('#svc-body tr');
       var railCostRow = Array.from(rows).find(function (tr) {
-        var name = tr.querySelectorAll('td')[1]?.querySelector('input')?.value || '';
+        var name = tr.querySelector('.svc-content')?.value || '';
         return name.includes('레일 시공비');
       });
-      return railCostRow ? railCostRow.querySelectorAll('td')[3]?.querySelector('input')?.value : 'not-found';
+      return railCostRow ? railCostRow.querySelector('.sqty')?.value : 'not-found';
     });
     console.log('\n[견적서 핵심계산 검사] ' + file + ' @ ' + label);
     check('[' + label + '] 레일시공비 수량이 1개 고정 (레일자수를 곱하지 않음)', railInfo === '1', '실제값=' + railInfo + ' (예상: 1)');
