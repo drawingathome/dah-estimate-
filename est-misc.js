@@ -131,6 +131,12 @@ function collectLineItems() {
     if (!content && !price) return;
     lineItems.push({
       type: 'svc', kind: tr.querySelector('.svc-kind')?.value || '기타',
+      // 2026-09-18(선혜님 - "코드정리하고 버그 없는지 확인해"로 직접
+      // 발견): "레일만 시공" 기능을 만들면서 svc-body에 위치(.svc-space)
+      // 칸을 신설했는데, 이 저장 로직은 그 존재를 몰라서 위치가 아예
+      // 저장 안 되고 있었음 - "레일만 시공" 항목을 저장했다가 다시
+      // 열면 위치가 통째로 사라지는 회귀가 될 뻔했음. space 필드 추가.
+      space: tr.querySelector('.svc-space')?.value || '',
       content: content, price: price,
       qty: tr.querySelector('.sqty')?.value || '1'
     });
@@ -353,6 +359,12 @@ function loadDraft() {
             var str = svcBody.lastElementChild;
             if (!str) return;
             if (str.querySelector('.svc-kind')) str.querySelector('.svc-kind').value = item.kind || '기타';
+            // 2026-09-18(선혜님 - "코드정리하고 버그 없는지 확인해"로
+            // field-parity-check 테스트가 발견): "레일만 시공" 위치칸
+            // (.svc-space)이 est-customer-load.js의 정식 복원(서버 DB)
+            // 에는 반영했는데, 이 자동저장 초안 복원(loadDraft)에는
+            // 빠져있었음 - 입력 도중 새로고침하면 위치가 사라질 뻔함.
+            if (str.querySelector('.svc-space')) str.querySelector('.svc-space').value = item.space || '';
             if (str.querySelector('.svc-content')) str.querySelector('.svc-content').value = item.content || '';
             if (str.querySelector('.sprice')) str.querySelector('.sprice').value = item.price || '';
             if (str.querySelector('.sqty')) str.querySelector('.sqty').value = item.qty || '1';

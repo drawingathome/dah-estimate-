@@ -182,6 +182,21 @@ function validateEstimate() {
     if (price > 0) hasProduct = true;
     else if (hasName) missingPriceRows.push('기타품목 "' + (r.querySelector('.other-name')?.value || '').trim() + '"');
   });
+  // 2026-09-18(선혜님 - "코드정리하고 버그 없는지 확인해"로 직접 발견,
+  // 침구 때와 정확히 같은 패턴 재발): "레일만 시공" 기능(레일·시공비·
+  // 기타 표에 위치 넣고 수동 추가)을 오늘 만들었는데, 이 hasProduct
+  // 검사가 svc-body는 전혀 확인 안 해서, 레일만 시공하는 견적서는
+  // 금액을 채워도 항상 "제품 금액을 1개 이상 입력해주세요"로 막혔음.
+  // 자동생성 행(레일자재/레일시공비/실측비/시공비 등, data-rail-src 등
+  // 마커 있음)은 커튼/블라인드가 이미 hasProduct를 채웠을 것이므로
+  // 제외하고, 사용자가 직접 추가한 수동 항목만 확인.
+  document.querySelectorAll('#svc-body tr').forEach(function(r) {
+    if (r.hasAttribute('data-rail-src') || r.hasAttribute('data-railcost-src') || r.hasAttribute('data-svc-type')) return;
+    var price = getPriceVal(r.querySelector('.sprice'));
+    var hasContent = (r.querySelector('.svc-content')?.value || '').trim() !== '';
+    if (price > 0) hasProduct = true;
+    else if (hasContent) missingPriceRows.push('"' + (r.querySelector('.svc-content')?.value || '').trim() + '"');
+  });
   if (!hasProduct) {
     // 2026-08-05: AS·수선 접수는 무상 하자처리처럼 제품금액이 없을 수 있음.
     // 증상이 기재되어 있으면 금액 없이도 저장 가능하게 예외 처리 —

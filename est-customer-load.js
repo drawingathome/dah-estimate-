@@ -430,6 +430,11 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       var str = document.getElementById('svc-body').lastElementChild;
       if (str) {
         var svcKindEl = str.querySelector('.svc-kind'); if (svcKindEl) svcKindEl.value = it.kind || '기타';
+        // 2026-09-18(선혜님 - "코드정리하고 버그 없는지 확인해"로 직접
+        // 발견): 위치(.svc-space) 저장 자체를 est-misc.js에서 놓쳤던 것과
+        // 짝을 맞춰서, 여기 복원 로직도 it.space를 위치 칸에 정확히 넣도록
+        // 추가 - 안 그러면 저장은 돼도 다시 열 때 위치가 사라짐.
+        var svcSpaceEl = str.querySelector('.svc-space'); if (svcSpaceEl) svcSpaceEl.value = it.space || '';
         var svcContentEl = str.querySelector('.svc-content'); if (svcContentEl) svcContentEl.value = it.content || it.displayName || it.space || '';
         var svcPriceEl = str.querySelector('.sprice'); if (svcPriceEl && it.price) { svcPriceEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(svcPriceEl); }
         var svcQtyEl = str.querySelector('.sqty'); if (svcQtyEl) svcQtyEl.value = it.qty || it.pnum || '1';

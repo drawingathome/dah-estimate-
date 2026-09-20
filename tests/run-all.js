@@ -136,6 +136,11 @@ if (/dah-dashboard/.test(target)) {
   // 실측이나 시공에서 안뜨잖아"): svc-body에 위치 칸 신설, 커튼 없이
   // 레일만 있는 경우도 실측/시공 의뢰서에 정확히 나오는지 검증.
   scripts.push(['rail-only-check.js', []]);
+  // 2026-09-18(선혜님 - "코드정리하고 버그 없는지 확인해"): 위 rail-
+  // only-check.js가 실측/시공의뢰서 반영을 검증했다면, 이건 저장→서버
+  // 전송→다시 불러오기 전체 사이클에서 위치 정보가 안 사라지는지,
+  // 그리고 hasProduct 검사도 svc-body를 인식하는지 검증.
+  scripts.push(['rail-save-restore-check.js', []]);
   // 2026-09-11: 감사로그(변경이력) 조회 화면 검증
   scripts.push(['audit_log_check.js', []]);
   // 2026-09-11: AS 관리 화면(GitHub 이슈#4) — 접수 등록/상태변경 검증
