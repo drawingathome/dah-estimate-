@@ -257,7 +257,43 @@ function _saveEstimateInner(_onDone) {
   // 커튼/블라인드 각 행의 전체 세부정보 수집 (2026-08-04 신규, 2026-08-10에
   // collectLineItems() 공용함수로 분리 — 임시저장에서도 재사용하기 위함)
   var lineItems = collectLineItems();
+  // 2026-09-19(선혜님 - "노지경님 견적서가 1개였는데 내가 한개를 더
+  // 넣었어" - 재구매/여러 견적서 고객 시나리오로 발견): customers.price/
+  // performance_revenue가 "이번에 저장하는 견적서 하나"의 금액으로 매번
+  // 통째로 덮어써지고 있었음 - 한 고객에게 견적서가 2개 이상이면, 나중에
+  // 저장한 것의 금액만 남고 이전 견적서 금액은 사라짐(결제 확인/완납
+  // 판정의 기준 총액이 틀어짐). 기존 고객(수정 모드)이면 저장 직전에
+  // 이 고객의 다른 견적서들(현재 편집 중인 이 건 제외)을 먼저 조회해서
+  // 합계를 구한 뒤, 그 합계 + 이번 견적서 금액을 최종 총액으로 반영.
+  // 신규 고객은 다른 견적서가 있을 수 없으니 조회 없이 바로 진행.
   function saveToCustomers() {
+    var existingCustIdForSum = window._estEditState.estSaveCustomerId;
+    var excludeEstIdForSum = window._estEditState.editingEstDbId;
+    if (existingCustIdForSum && typeof SUPABASE_URL !== 'undefined') {
+      var sumXhr = new XMLHttpRequest();
+      sumXhr.open('GET', SUPABASE_URL+'/rest/v1/estimates?client_id=eq.'+existingCustIdForSum+'&select=id,price,performance_revenue', true);
+      sumXhr.setRequestHeader('apikey', SUPABASE_KEY);
+      sumXhr.setRequestHeader('Authorization', 'Bearer '+(typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+      sumXhr.onload = function() {
+        var otherGrand = 0, otherPerf = 0;
+        try {
+          if (sumXhr.status >= 200 && sumXhr.status < 300) {
+            var rows = JSON.parse(sumXhr.responseText || '[]');
+            rows.forEach(function(r) {
+              if (excludeEstIdForSum && String(r.id) === String(excludeEstIdForSum)) return;
+              otherGrand += Number(r.price) || 0;
+              otherPerf += Number(r.performance_revenue) || 0;
+            });
+          }
+        } catch (eSum) { console.warn('다른 견적서 합계 조회 파싱 실패:', eSum); }
+        proceed(otherGrand, otherPerf);
+      };
+      sumXhr.onerror = function() { console.warn('다른 견적서 합계 조회 실패(네트워크) - 이번 견적서 금액만으로 진행'); proceed(0, 0); };
+      sumXhr.send();
+    } else {
+      proceed(0, 0);
+    }
+  function proceed(otherEstGrand, otherEstPerf) {
     
     saveToLocalStorage();
 
@@ -398,10 +434,11 @@ function _saveEstimateInner(_onDone) {
       // perf 변수 자체가 이미 "커튼·블라인드 총액-할인"(레일·시공비는
       // 애초에 안 들어감, 순수 제품비용)이라 확정 여부와 무관하게 항상
       // 동기화해도 실적 왜곡 위험이 없음 - price와 동일하게 gate 제거.
-      custPayload.price = grand;
-      custPayload.performance_revenue = perf;
+      custPayload.price = grand + otherEstGrand;
+      custPayload.performance_revenue = perf + otherEstPerf;
       xhr.send(JSON.stringify(custPayload));
     } catch(e) { console.warn('Supabase 연결 오류:', e); saveToEstimates(); }
+  }
   }
   function saveToEstimates() {
     // 2026-08-26(선혜님 발견 — 김채은/유경진 견적서 중복 생성 사례):

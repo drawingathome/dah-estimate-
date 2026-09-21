@@ -141,6 +141,10 @@ if (/dah-dashboard/.test(target)) {
   // 전송→다시 불러오기 전체 사이클에서 위치 정보가 안 사라지는지,
   // 그리고 hasProduct 검사도 svc-body를 인식하는지 검증.
   scripts.push(['rail-save-restore-check.js', []]);
+  // 2026-09-19(선혜님 - "노지경님 견적서가 1개였는데 내가 한개를 더
+  // 넣었어..."): 한 고객이 여러 견적서를 가지면 customers.price가
+  // 최신 것으로만 덮어써지던 버그 - 다른 견적서 조회 후 합산되는지 검증.
+  scripts.push(['customer-price-sum-check.js', []]);
   // 2026-09-11: 감사로그(변경이력) 조회 화면 검증
   scripts.push(['audit_log_check.js', []]);
   // 2026-09-11: AS 관리 화면(GitHub 이슈#4) — 접수 등록/상태변경 검증
@@ -193,6 +197,9 @@ if (/dah-dashboard/.test(target)) {
   // shared-staging-guard.js(스테이징 쓰기차단 안전장치)도 두 앱이 공유하는
   // 파일이라 cross-app-twin-check.js와 같은 이유로 한 번만 돌림.
   scripts.push(['staging-guard-check.js', []]);
+  // 2026-09-19(선혜님 - "완납 표시가 제대로 표시 되야 하는데 그런게
+  // 없네"): 결제 관리 화면에 선금+잔금=총액이면 완납 배지 표시 신설.
+  scripts.push(['paid-badge-check.js', []]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',

@@ -31,7 +31,23 @@ function renderPaySection(c, payBody) {
   };
 
   var paySec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
-  paySec.appendChild(el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px', text:'결제 관리'}));
+  var paySecTitleRow = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:10px', [
+    el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase', text:'결제 관리'})
+  ]);
+  // 2026-09-19(선혜님 - "결제를 선금 잔금을 해서 넣어서 토탈 금액이
+  // 일치한지 그리고 일치하면 완납 표시가 제대로 표시 되야 하는데 그런게
+  // 없네"): 선금+잔금 합계가 총액(c.price)과 정확히 일치하면 "완납"
+  // 배지를 보여주는 기능 자체가 없었음 - 신설. 총액이 아직 없거나(0)
+  // 결제 입력이 하나도 없으면 표시 안 함(불필요한 정보 추가 방지,
+  // dash-render-search.js의 미수금 표시와 동일한 원칙).
+  var payTotalForBadge = Number(payData.depositAmount || 0) + Number(payData.balanceAmount || 0);
+  if (Number(c.price) > 0 && payTotalForBadge > 0 && payTotalForBadge === Number(c.price)) {
+    paySecTitleRow.appendChild(el('span', {
+      style: 'font-size:11px;font-weight:700;color:#2E7D32;background:#E8F5E9;padding:3px 10px;border-radius:10px',
+      text: '✓ 완납'
+    }));
+  }
+  paySec.appendChild(paySecTitleRow);
 
   function savePayData(pd, callback) {
     if (typeof logEvent === 'function') logEvent('payment_save', { hasDeposit: Number(pd.depositAmount) > 0, hasBalance: Number(pd.balanceAmount) > 0, customerId: c.id, customerName: c.clientName });
