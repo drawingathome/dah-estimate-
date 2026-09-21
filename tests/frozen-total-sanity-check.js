@@ -31,7 +31,7 @@ async function run() {
     line_items: [
       { type: 'curtain', space: '거실', displayName: '거실커튼', mw: 300, mh: 250, price: 5000000, qty: 1 }
     ],
-    price_breakdown: { productSubtotal: 28455000, discount: -4126000, installSubtotal: 3805000, finalTotal: 28134000, deposit: 14067000, balance: 14067000, performanceRevenue: 28455000, discountDetail: [] },
+    price_breakdown: { productSubtotal: 28455000, discount: -4126000, installSubtotal: 3805000, finalTotal: 28134000, deposit: 1000000, balance: 27134000, performanceRevenue: 28455000, discountDetail: [] },
     updated_at: new Date().toISOString(), created_at: new Date().toISOString(), confirmed_at: null
   };
 
@@ -64,10 +64,19 @@ async function run() {
 
   const state = await page.evaluate(() => ({
     screenTotalText: document.getElementById('sum-total')?.textContent,
-    frozen: window._estEditState?.viewingFrozenEstimate
+    frozen: window._estEditState?.viewingFrozenEstimate,
+    depositInputValue: document.getElementById('deposit-input')?.value,
+    depositManualEdit: document.getElementById('deposit-input')?.dataset.manualEdit
   }));
   ok('1. 예전에 저장된 앞뒤 안 맞는 총액(28,134,000원)이 더는 그대로 노출되지 않음', !state.screenTotalText.includes('28,134,000'), JSON.stringify(state));
   ok('2. 얼림 상태가 자동으로 풀려서, 이후 편집시 정상적으로 재계산됨', state.frozen === false, JSON.stringify(state));
+  // 2026-09-21(선혜님 - "100만원 선금이 정리가 되어있는데 왜 계약금
+  // 3,359,000원으로 정리가 되냐고" - 민소아 견적서로 실제 재현된
+  // 부작용): 총액 불일치로 얼림을 안 적용하는 상황에서도, 이미 실제로
+  // 받은 계약금(50%가 아닌 임의 금액, 예: 100만원)이 자동 50% 추정치로
+  // 조용히 덮어써지면 안 됨 - 저장된 계약금 그대로 유지되는지 검증.
+  ok('3. [핵심] 총액이 안 맞는 상황에서도, 실제 받은 계약금(100만원)이 50% 자동추정치로 안 바뀌고 그대로 유지됨', state.depositInputValue === '1,000,000', JSON.stringify(state));
+  ok('4. 계약금 수동보호 플래그도 함께 켜져서, 이후 다른 편집에도 이 계약금이 다시 덮어써지지 않음', state.depositManualEdit === '1', JSON.stringify(state));
 
   console.log(log.join('\n'));
   console.log(jsErrors.length ? 'JS 에러: ' + jsErrors.join('\n') : 'JS 에러 없음');

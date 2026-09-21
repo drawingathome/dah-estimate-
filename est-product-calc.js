@@ -715,6 +715,29 @@ function applyFrozenBreakdown(bd) {
     var liveTotal = liveTotalEl ? Number((liveTotalEl.textContent || '').replace(/[^\d]/g, '')) : null;
     if (bd.finalTotal != null && liveTotal != null && liveTotal !== bd.finalTotal) {
       window._estEditState.viewingFrozenEstimate = false;
+      // 2026-09-21(선혜님 - "100만원 선금이 정리가 되어있는데 왜
+      // 계약금 3,359,000원으로 정리가 되냐고" - 민소아 견적서로 실제
+      // 재현된 부작용): 위 안전장치가 총액 불일치를 감지하면 여기서
+      // 그냥 return해버려서, 아래에 있던 "계약금은 실제 받은 돈이니
+      // 자동 50% 추정으로 덮어쓰지 마라"는 보호 플래그 설정까지 통째로
+      // 건너뛰었음 - 그 직후 calcTotal()이 이미 실행된 상태라 "보호
+      // 안 된 계약금은 50% 자동계산"이 그대로 발동해서, 실제로 받은
+      // 선금(예: 100만원)이 화면상 50% 추정치로 조용히 덮어써짐. 항목
+      // 표시/총액은 재계산값을 쓰더라도, "실제 받은 돈"인 계약금만큼은
+      // 저장된 값과 보호 플래그를 여기서 먼저 적용해 자동추정에
+      // 덮어써지지 않게 함.
+      if (bd.deposit != null && bd.deposit > 0) {
+        var depInpEarly = document.getElementById('deposit-input');
+        if (depInpEarly) {
+          depInpEarly.value = bd.deposit.toLocaleString();
+          depInpEarly.dataset.raw = String(bd.deposit);
+          depInpEarly.dataset.manualEdit = '1';
+        }
+        var sumDepDispEarly = document.getElementById('sum-deposit-disp');
+        if (sumDepDispEarly) sumDepDispEarly.textContent = bd.deposit.toLocaleString()+'원';
+        var sumBalDispEarly = document.getElementById('sum-balance-disp');
+        if (sumBalDispEarly && liveTotal != null) sumBalDispEarly.textContent = Math.max(0, liveTotal - bd.deposit).toLocaleString()+'원';
+      }
       return;
     }
   }
