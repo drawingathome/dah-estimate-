@@ -298,6 +298,15 @@ function renderPaySection(c, payBody, est) {
         var amt = Number(r.amount.value.replace(/[^0-9]/g,'')) || 0;
         if (amt > 0) { inputAmt += amt; methodParts.push(r.method.value + ' ' + amt.toLocaleString() + '원'); }
       });
+      // 2026-09-21(견적서별 결제 관리 전환 작업 중, full_lifecycle_simulation.js
+      // 재검증으로 발견): 금액을 0원(또는 빈 값)으로 두고 저장을 눌러도 이걸
+      // 그대로 막지 않고 저장을 진행하고 있었음 - 이때 날짜 입력칸은 이미
+      // 기본값(오늘 날짜)으로 채워져 있으니, balanceAmount='0'과 balanceDate가
+      // 함께 저장돼서 "0" && "날짜"가 둘 다 truthy라 이후 이 결제가 "완료됨"
+      // (수정 버튼만 있는 상태)으로 잘못 표시되는 실제 버그로 이어짐 - 원래도
+      // 있던 결함인데 오늘 처리 흐름이 바뀌며 우연히 노출됨. 0원이면 애초에
+      // 저장할 내용 자체가 없으니 조용히 아무 일도 안 하고 끝냄.
+      if (inputAmt <= 0) { return; }
       if (inputAmt > 0 && !depDate.value) {
         alert('입금 날짜를 입력해주세요.');
         depDate.focus();
@@ -399,6 +408,10 @@ function renderPaySection(c, payBody, est) {
         var amt = Number(r.amount.value.replace(/[^0-9]/g,'')) || 0;
         if (amt > 0) { inputAmt += amt; methodParts.push(r.method.value + ' ' + amt.toLocaleString() + '원'); }
       });
+      // 2026-09-21: 선금 저장과 동일한 이유 - 0원이면 저장할 내용 자체가
+      // 없으니 조용히 아무 일도 안 하고 끝냄(날짜 기본값과 맞물려 "0"&&날짜가
+      // 둘 다 truthy가 되어 결제완료로 잘못 표시되는 걸 원천 차단).
+      if (inputAmt <= 0) { return; }
       if (inputAmt > 0 && !balDate.value) {
         alert('입금 날짜를 입력해주세요.');
         balDate.focus();

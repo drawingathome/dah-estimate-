@@ -13,7 +13,14 @@ async function run() {
   const page = await browser.newPage();
   const jsErrors = [];
   page.on('pageerror', e => jsErrors.push(e.message));
-  page.on('dialog', async d => { try { await d.accept(); } catch (e) {} });
+  // 2026-09-21(견적서별 결제 관리 전환 재검증 중 발견): 발주탭 체크박스는
+  // 클릭시 prompt()로 "실제 발주하신 거래처명"을 물어보고, 빈 값이면
+  // 완료 처리 자체를 취소하는 안전장치가 있음(dash-customer-order.js) -
+  // 지금까지 d.accept()만 하고 텍스트를 안 채워서, 8번 검증(발주 전부
+  // 체크)이 실제로는 매번 "거래처 미입력으로 취소됨" 상태였던 것으로
+  // 보임. type이 'prompt'일 때만 텍스트를 채워서 그 외 confirm/alert는
+  // 기존처럼 그대로 accept.
+  page.on('dialog', async d => { try { await d.accept(d.type() === 'prompt' ? '테스트거래처' : undefined); } catch (e) {} });
   await blockRealNetwork(page);
   await page.setViewport({ width: VP_WIDTH, height: VP_HEIGHT });
   await page.goto(`http://localhost:${port}/dah-dashboard.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });
@@ -45,13 +52,18 @@ async function run() {
   ok('2. 상담→가견적 수동전환', r === '가견적', r);
 
   await wait();
-  r = await page.evaluate(() => {
+  r = await page.evaluate(async () => {
     openDetail('생애주기A', 5000);
+    await new Promise(res => setTimeout(res, 400));
     var amt = document.querySelector('input[placeholder="선금 금액"]');
     var date = document.querySelectorAll('#detail-pay-body input[type="date"]')[0];
     var btn = Array.from(document.querySelectorAll('#detail-pay-body button, #detail-pay-body span')).find(b => b.textContent.trim() === '선금 저장');
     amt.value = '1500000'; if (date) date.value = todayStr();
     btn.click();
+    // 2026-09-21: savePayData()는 sbXHR 콜백을 거치는 비동기 함수라,
+    // click() 직후 곧바로 stage를 읽으면 아직 changeStage()가 실행되기
+    // 전의 값을 읽어버림 - 저장/전환 완료를 기다린 뒤 읽도록 대기 추가.
+    await new Promise(res => setTimeout(res, 400));
     return loadCustomers().find(x=>x.id===5000).stage;
   });
   ok('3. 선금입금(50%) 후 선금결제 자동전환', r === '선금결제', r);
@@ -71,10 +83,11 @@ async function run() {
   ok('3-3. 실측일정이 캘린더에 반영', r.inCalendar === true);
 
   await wait();
-  r = await page.evaluate(() => {
+  r = await page.evaluate(async () => {
     var arr = loadCustomers(); var c = arr.find(x=>x.id===5000);
     c.stage = '확정견적'; saveCustomers(arr);
     openDetail('생애주기A', 5000);
+    await new Promise(res => setTimeout(res, 400));
     var amt = document.querySelector('input[placeholder="잔금 금액"]');
     var btn = Array.from(document.querySelectorAll('#detail-pay-body button, #detail-pay-body span')).find(b => b.textContent.trim() === '잔금 저장');
     amt.value = '';
@@ -107,13 +120,15 @@ async function run() {
   ok('6. 발주 일부만 체크시 처리필요에 계속 발주필요로 뜸(전부체크 전까지)', r === true);
 
   await wait();
-  r = await page.evaluate(() => {
+  r = await page.evaluate(async () => {
     openDetail('생애주기A', 5000);
+    await new Promise(res => setTimeout(res, 400));
     var amt = document.querySelector('input[placeholder="잔금 금액"]');
     var date = document.querySelectorAll('#detail-pay-body input[type="date"]')[1];
     var btn = Array.from(document.querySelectorAll('#detail-pay-body button, #detail-pay-body span')).find(b => b.textContent.trim() === '잔금 저장');
     amt.value = '1500000'; if (date) date.value = todayStr();
     btn.click();
+    await new Promise(res => setTimeout(res, 400));
     return loadCustomers().find(x=>x.id===5000).stage;
   });
   ok('7. 잔금입금 후 시공준비중 자동전환', r === '시공준비중', r);
@@ -136,8 +151,9 @@ async function run() {
   ok('8. 발주 전부 체크 후 처리필요 섹션에서만 정확히 사라짐', r.pass === true, JSON.stringify(r));
 
   await wait();
-  r = await page.evaluate(() => {
+  r = await page.evaluate(async () => {
     openDetail('생애주기A', 5000);
+    await new Promise(res => setTimeout(res, 400));
     changeStage('시공완료');
     return loadCustomers().find(x=>x.id===5000).stage;
   });
@@ -151,14 +167,16 @@ async function run() {
   ok('10. 시공완료 후에도 고객목록에 항상 표시(자동숨김 없음)', r === true);
 
   await wait();
-  r = await page.evaluate(() => {
+  r = await page.evaluate(async () => {
     var arr = loadCustomers();
     arr.push({ id: 5001, clientName: '동명이인테스트', phone: '01011112222', stage: '상담', staffName: '마스터', date: todayStr(), price: 1000000 });
     arr.push({ id: 5002, clientName: '동명이인테스트', phone: '01033334444', stage: '선금결제', staffName: '마스터', date: todayStr(), price: 2000000, depositAmount: 1000000, depositDate: todayStr() });
     saveCustomers(arr);
     openDetail('동명이인테스트', 5001);
+    await new Promise(res => setTimeout(res, 400));
     var infoBarA = document.getElementById('detail-info-bar').textContent;
     openDetail('동명이인테스트', 5002);
+    await new Promise(res => setTimeout(res, 400));
     var infoBarB = document.getElementById('detail-info-bar').textContent;
     return { infoBarA, infoBarB };
   });
@@ -177,10 +195,18 @@ async function run() {
   log.forEach(l => console.log(l));
   console.log('\n=== JS 에러 ===');
   console.log(jsErrors.length ? jsErrors.join('\n') : '없음 ✅');
-  console.log('\n총 ' + log.length + '개 검사 중 실패:', log.filter(l=>l.startsWith('❌')).length + '개');
+  const failCount = log.filter(l=>l.startsWith('❌')).length;
+  console.log('\n총 ' + log.length + '개 검사 중 실패:', failCount + '개');
 
   await browser.close();
-  process.exit(0);
+  // 2026-09-21(견적서별 결제 관리 전환 후 CI 실패 원인 조사 중 발견): 이
+  // 스크립트는 검증 결과(❌ 개수)와 무관하게 항상 process.exit(0)으로
+  // 끝나고 있었음 - run().catch()가 잡는 "런타임 크래시"만 실패로
+  // 감지되고, "검증했더니 값이 틀렸다"는 결과는 절대로 CI 실패로
+  // 이어지지 않는 구조적 결함이었음(payment_order_gating_check.js에서
+  // 똑같은 결함을 이미 한 번 발견·수정한 바로 그 패턴). 실패 개수가
+  // 0보다 크면 exit(1)하도록 수정.
+  process.exit(failCount === 0 && jsErrors.length === 0 ? 0 : 1);
 }
 run().catch(e => { console.error('스크립트 자체 에러:', e); process.exit(1); });
 setTimeout(() => process.exit(1), 30000);
