@@ -240,6 +240,9 @@ if (/dah-dashboard/.test(target)) {
   // 계산 5곳 통일 검증.
   scripts.push(['pay-per-estimate-check.js', []]);
   scripts.push(['unpaid-per-estimate-check.js', []]);
+  // 2026-09-21(선혜님 - 전보현/민소아 고객 실제 발생 확인): 실측/시공
+  // 예정일 수정시 예전 "미정" 플래그가 안 지워지던 버그 검증.
+  scripts.push(['date-tbd-clear-check.js', []]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',

@@ -291,6 +291,15 @@ function dbRowToCustomer(row) {
     visitCount:         Number(row.visit_count)||1,
     measureDate:        row.measure_date||'',
     installDate:        row.install_date||'',
+    // 2026-09-21(선혜님 - 전보현/민소아 고객 실제 발생 확인, 데이터는
+    // Supabase에서 직접 고침): 대시보드 고객상세에서 실측/시공 예정일을
+    // 클릭해서 실제 날짜를 입력해도, customers.measure_date_tbd/
+    // install_date_tbd(견적서 "미정" 체크박스가 켜져 있으면 저장되는
+    // 플래그)를 대시보드 쪽 서버↔로컬 매핑 함수 둘 다 전혀 모르고
+    // 있었음 - 그래서 이 값을 서버에서 읽어오지도, 대시보드에서 고친
+    // 값을 서버로 보내지도 못했음. 이 두 필드를 양방향 매핑에 추가.
+    measureDateTbd:     row.measure_date_tbd||false,
+    installDateTbd:     row.install_date_tbd||false,
     createdAt:          row.created_at||new Date().toISOString(),
     // 2026-08-31(선혜님 지시 - "만들어줘", 견적서에 이미 있는 동시편집
     // 충돌감지를 고객 레코드에도 적용하기 위해 추가): 이 값을 잠금
@@ -331,6 +340,8 @@ function customerToDbRow(c) {
     date:                c.date||'',
     measure_date:        c.measureDate||'',
     install_date:        c.installDate||'',
+    measure_date_tbd:    c.measureDateTbd||false,
+    install_date_tbd:    c.installDateTbd||false,
     memo:                c.memo||'',
     visit_count:         Number(c.visitCount)||1,
     // 결제 필드

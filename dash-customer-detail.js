@@ -1039,6 +1039,17 @@ function renderDetailInfoSection(c, body) {
           var target = findCurrentDetailCustomer(arr);
           if (target) {
             target[item.key] = newVal || '';
+            // 2026-09-21(선혜님 - 전보현/민소아 고객 실제 발생 확인):
+            // 실제 날짜를 입력하는데도 예전에 "미정"으로 체크해뒀던
+            // 플래그(measureDateTbd/installDateTbd)가 그대로 남아있으면,
+            // 이 값이 견적서에 동기화될 때 "미정" 상태로 잘못 복원돼서
+            // 날짜칸이 자동으로 비워지고 실측/시공 의뢰서에 "미정"이
+            // 뜨는 버그로 이어짐 - 실제 날짜를 입력하는 순간 그 플래그를
+            // 명확히 꺼줌(dash-api.js의 customerToDbRow가 이 필드를
+            // 서버로 함께 전송하도록 오늘 같이 수정함).
+            if (newVal && (item.key === 'installDate' || item.key === 'measureDate')) {
+              target[item.key === 'installDate' ? 'installDateTbd' : 'measureDateTbd'] = false;
+            }
             saveCustomers(arr);
             saveCustomerToDb(target, function(err){
               showToast(err ? '⚠️ ' + item.label + ': 로컬엔 저장됨(서버 재시도 대기)' : item.label + '이 저장됐습니다');
@@ -1070,6 +1081,22 @@ function renderDetailInfoSection(c, body) {
                       patchXhr.setRequestHeader('Content-Type', 'application/json');
                       var patchBody = {};
                       patchBody[estField] = newVal || null;
+                      // 2026-09-21(선혜님 - 전보현/민소아 고객 실제
+                      // 발생 확인 - 진짜 근본 원인): 견적서 앱이 실제로
+                      // 참조하는 건 estimates.measure_date_tbd/
+                      // install_date_tbd(applyScheduleAndDepositToForm이
+                      // 이 견적서 레코드의 필드를 직접 읽음)인데, 지금까지
+                      // 이 PATCH가 날짜(estField)만 갱신하고 그 옆의 tbd
+                      // 플래그는 전혀 안 건드리고 있었음 - 실제 날짜를
+                      // 입력했는데도 이 견적서에 예전 "미정" 값이 그대로
+                      // 남아있으면, 다음에 견적서를 열 때 "미정" 체크가
+                      // 켜진 채로 복원돼서 날짜칸이 도로 비워짐(이번
+                      // 버그의 진짜 발생 지점). 날짜를 실제로 입력하는
+                      // 경우에만 그 tbd도 함께 꺼줌.
+                      if (newVal) {
+                        var estTbdField = item.key === 'installDate' ? 'install_date_tbd' : 'measure_date_tbd';
+                        patchBody[estTbdField] = false;
+                      }
                       patchXhr.send(JSON.stringify(patchBody));
                     }
                   } catch (eFind) {}
