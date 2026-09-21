@@ -257,7 +257,7 @@ function renderKanbanCols(customers, kanbanWrap) {
             // 계속 오해를 샀음. "착시다"라고 설명만 하지 않고, 실제로 받은
             // 금액과 전체 금액을 카드에 둘 다 명확히 구분해서 보여주도록 변경.
             var price = Number(c.price) || 0;
-            var received = (Number(c.depositAmount) || 0) + (Number(c.balanceAmount) || 0);
+            var received = (typeof getReceivedAmount === 'function') ? getReceivedAmount(c) : ((Number(c.depositAmount) || 0) + (Number(c.balanceAmount) || 0));
             if (!price) return '';
             var totalLine = '<div class="kanban-item-price">' + price.toLocaleString() + '원</div>';
             if (received > 0 && received < price) {

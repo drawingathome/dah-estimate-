@@ -433,6 +433,20 @@ function estimateDbRowToLocal(row) {
     priceBreakdown: row.price_breakdown || null,
     updatedAt: row.updated_at || null,
     isArchived: !!row.is_archived,
+    // 2026-09-21(선혜님 - "그럼 언제 하라는거지??????" → 견적서별 결제
+    // 관리로 구조 전환): 결제(선금/잔금)를 이 견적서 자체에 저장하도록
+    // 바꾸면서 estimates 테이블에 새로 추가한 8개 컬럼 - 다른 필드들과
+    // 똑같이 여기서 매핑을 빠뜨리면(위 "전수재검사" 코멘트에서 이미
+    // 한 번 겪은 실수 패턴) 클라우드 동기화된 견적서에서만 결제 정보가
+    // 안 보이는 조용한 회귀가 될 뻔했음 - 처음부터 함께 추가.
+    depositAmount:  Number(row.deposit_amount)||0,
+    depositDate:    row.deposit_date||'',
+    depositMethod:  row.deposit_method||'',
+    depositReceipt: row.deposit_receipt||false,
+    balanceAmount:  Number(row.balance_amount)||0,
+    balanceDate:    row.balance_date||'',
+    balanceMethod:  row.balance_method||'',
+    balanceReceipt: row.balance_receipt||false,
     _fromCloud: true
   };
 }

@@ -60,8 +60,7 @@ function renderSearch() {
   var unpaidSummaryEl = document.getElementById('search-unpaid-summary');
   if (typeof _currentStageFilter !== 'undefined' && _currentStageFilter === 'unpaid') {
     var totalUnpaid = customers.reduce(function(sum, c) {
-      var u = (Number(c.price)||0) - ((Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0));
-      return sum + Math.max(0, u);
+      return sum + (typeof getUnpaidAmount === 'function' ? getUnpaidAmount(c) : Math.max(0, (Number(c.price)||0) - ((Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0))));
     }, 0);
     if (!unpaidSummaryEl) {
       unpaidSummaryEl = document.createElement('div');

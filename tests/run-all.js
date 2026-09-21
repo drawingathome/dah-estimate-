@@ -235,6 +235,11 @@ if (/dah-dashboard/.test(target)) {
   // 2026-09-21(선혜님 - "결제 화면이 무슨 견적서에 대한 결제건인지
   // 확인이 안되게 되어있고"): 견적서 다건 합계 안내 표시 검증.
   scripts.push(['pay-multi-estimate-check.js', []]);
+  // 2026-09-21(선혜님 - "그럼 언제 하라는거지??????" - 견적서별 결제
+  // 관리로 구조 전환): 견적서 각각에 결제 저장/표시, 미수금·받은금액
+  // 계산 5곳 통일 검증.
+  scripts.push(['pay-per-estimate-check.js', []]);
+  scripts.push(['unpaid-per-estimate-check.js', []]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',

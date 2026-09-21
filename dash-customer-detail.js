@@ -428,7 +428,8 @@ function openDetailInner(name, id, forceTab) {
   if (estBodyEl) { estBodyEl.innerHTML = ''; }
   var autoTab = forceTab;
   if (!autoTab) {
-    if ((c.stage === '선금결제' && !c.depositAmount) || (c.stage === '잔금결제' && !c.balanceAmount)) {
+    var estPayForAutoTab = (typeof getLatestEstPay === 'function') ? getLatestEstPay(c) : c;
+    if ((c.stage === '선금결제' && !estPayForAutoTab.depositAmount) || (c.stage === '잔금결제' && !estPayForAutoTab.balanceAmount)) {
       autoTab = 'pay'; // 입금 대기 중이면 결제탭부터
     } else {
       var os = c.orderStatus || {};
@@ -457,7 +458,32 @@ function openDetailInner(name, id, forceTab) {
   
   renderDetailTodoSection(c, body);
 
-  renderPaySection(c, payBody);
+  // 2026-09-21(선혜님 - "그럼 언제 하라는거지??????" → 견적서별 결제
+  // 관리로 구조 전환): 결제는 이제 "고객 하나"가 아니라 "견적서 각각"에
+  // 속함 - 이 고객의 견적서를 전부 찾아서(최신순), 각각에 대해
+  // renderPaySection을 반복 호출. 견적서가 하나도 없으면(신규 고객,
+  // 아직 견적서를 만든 적 없음) est 없이 한 번 호출해서 예전처럼
+  // 고객(customers) 레벨 결제 폴백을 그대로 씀.
+  var allEstsForPaySection = [];
+  try { allEstsForPaySection = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(ePaySec) {}
+  var myEstsForPaySection = allEstsForPaySection.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
+  myEstsForPaySection.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
+  if (myEstsForPaySection.length === 0) {
+    renderPaySection(c, payBody);
+  } else {
+    myEstsForPaySection.forEach(function(e, idx) {
+      var dt = e.savedAt ? new Date(e.savedAt) : (e.date ? new Date(e.date) : null);
+      var dateStr = dt ? ((dt.getMonth()+1) + '/' + dt.getDate() + ' 작성') : '';
+      var statusStr = e.contractStatus === 'contracted' ? '확정견적' : '가견적';
+      var label = '견적서 ' + (myEstsForPaySection.length - idx) + (myEstsForPaySection.length > 1 ? ('/' + myEstsForPaySection.length) : '') + (dateStr ? (' · ' + dateStr) : '') + ' · ' + statusStr;
+      renderPaySection(c, payBody, {
+        id: e.id, price: e.price,
+        depositAmount: e.depositAmount, depositDate: e.depositDate, depositMethod: e.depositMethod, depositReceipt: e.depositReceipt,
+        balanceAmount: e.balanceAmount, balanceDate: e.balanceDate, balanceMethod: e.balanceMethod, balanceReceipt: e.balanceReceipt,
+        estimateLabel: label
+      });
+    });
+  }
 
   
   renderAlimSection(c, alimBody);

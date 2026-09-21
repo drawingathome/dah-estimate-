@@ -37,12 +37,54 @@ function renderStaffBadge(staffName, sizePx) {
 // 시작된 단계(선금결제~시공완료)만 대상 - 가견적/상담처럼 아직 청구
 // 전인 단계는 "미수금"이 아니라 "아직 청구 전"이므로 0을 반환.
 var UNPAID_RELEVANT_STAGES = ['선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'];
+// 2026-09-21(선혜님 - "그럼 언제 하라는거지??????" → 견적서별 결제
+// 관리로 구조 전환): 결제(선금/잔금)가 이제 고객이 아니라 견적서
+// 각각에 저장되는데, 이 함수(및 이 함수를 안 쓰고 직접 c.depositAmount/
+// c.balanceAmount를 계산하던 dash-kanban.js/dash-customer-alim.js/
+// dash-render-search.js)가 전부 "고객 레벨" 필드만 보고 있었음 - 그대로
+// 두면 견적서 단위로 결제를 저장하는 순간 미수금 현황판·칸반 받은금액
+// 표시·잔금 리마인더가 전부 조용히 0으로 보이는 광범위한 회귀가 될
+// 뻔했음(5곳에서 같은 계산이 중복 작성돼 있던 걸 전수 확인). 이 고객의
+// 모든 견적서(dah_saved)를 찾아 각각의 결제 합계를 더하고, 견적서가
+// 하나도 없으면(신규 고객, 아직 견적서 없음) 예전처럼 고객 레벨
+// 필드로 폴백 - "받은 금액"의 유일한 진실 공급원으로 통일.
+function getReceivedAmount(c) {
+  try {
+    var allEsts = JSON.parse(localStorage.getItem('dah_saved')||'[]');
+    var myEsts = allEsts.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
+    if (myEsts.length > 0) {
+      var sum = 0;
+      myEsts.forEach(function(e){ sum += (Number(e.depositAmount)||0) + (Number(e.balanceAmount)||0); });
+      return sum;
+    }
+  } catch(e) {}
+  return (Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0);
+}
 function getUnpaidAmount(c) {
   if (UNPAID_RELEVANT_STAGES.indexOf(c.stage) < 0) return 0;
   var price = Number(c.price) || 0;
   if (price <= 0) return 0;
-  var received = (Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0);
+  var received = getReceivedAmount(c);
   return Math.max(0, price - received);
+}
+
+// 2026-09-21: 알림톡의 "계약금 결제 안내"/"잔금 결제 안내"처럼 개별
+// 선금/잔금 "금액 하나"가 필요한 곳을 위한 헬퍼 - 이 고객의 견적서가
+// 있으면 최신 것의 결제 정보, 없으면 예전처럼 고객 레벨 필드로 폴백.
+// 여러 견적서가 있으면 "가장 최근 것"을 대표로 삼음(완벽하진 않지만
+// 최소한 0으로 보이는 회귀는 막음 - 어느 견적서인지 명확히 골라야
+// 하는 경우엔 이 함수 대신 견적서를 직접 지정해서 써야 함).
+function getLatestEstPay(c) {
+  try {
+    var allEsts = JSON.parse(localStorage.getItem('dah_saved')||'[]');
+    var myEsts = allEsts.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
+    if (myEsts.length > 0) {
+      myEsts.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
+      var e = myEsts[0];
+      return { price: Number(e.price)||0, depositAmount: Number(e.depositAmount)||0, balanceAmount: Number(e.balanceAmount)||0 };
+    }
+  } catch(err) {}
+  return { price: Number(c.price)||0, depositAmount: Number(c.depositAmount)||0, balanceAmount: Number(c.balanceAmount)||0 };
 }
 
 function isArchived(c) {

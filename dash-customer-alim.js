@@ -167,10 +167,11 @@ function guessContextVars(c) {
 
   if (['확정견적','잔금결제','시공준비중'].indexOf(stage) >= 0) {
     amountType = '잔금';
-    amount = Math.max((Number(c.price)||0) - (Number(c.depositAmount)||0), 0) || c.balanceAmount;
+    var estPayForAlim = (typeof getLatestEstPay === 'function') ? getLatestEstPay(c) : c;
+    amount = Math.max((Number(estPayForAlim.price)||0) - (Number(estPayForAlim.depositAmount)||0), 0) || estPayForAlim.balanceAmount;
   } else {
     amountType = '계약금';
-    amount = c.depositAmount;
+    amount = (typeof getLatestEstPay === 'function') ? getLatestEstPay(c).depositAmount : c.depositAmount;
   }
 
   refundNote = (['실측준비중','확정견적','잔금결제','시공준비중','시공완료'].indexOf(stage) >= 0 && c.measureDate)

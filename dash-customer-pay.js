@@ -6,45 +6,49 @@
    결제 관련 로직만 이 파일로 분리함.
    openDetail()이 renderPaySection(c, payBody)를 호출함. */
 
-function renderPaySection(c, payBody) {
+// 2026-09-21(선혜님 - "그럼 언제 하라는거지??????" → 견적서별 결제
+// 관리로 구조 전환 지시): 결제(선금/잔금)가 그동안 "고객 하나"에
+// 저장돼서, 고객에게 견적서가 2개 이상이면 "이 결제가 어느 견적서
+// 것인지" 근본적으로 알 방법이 없었음(노지경 고객 사례) - 실제 청구/
+// 인보이스 시스템처럼 결제는 항상 "견적서 하나"에 속하도록 전환.
+// renderPaySection(c, payBody, est)의 3번째 인자(est)가 있으면 그
+// 견적서(est.id, est.price, est.deposit_amount 등 estimates 테이블
+// 컬럼)를 기준으로 저장/표시하고, est가 없으면(신규 고객이라 견적서
+// 자체가 아직 없는 경우) 예전처럼 고객(customers) 레벨에 저장하는
+// 폴백을 그대로 유지 - 호출부(dash-customer-detail.js)가 이 고객의
+// 견적서 개수만큼 이 함수를 반복 호출함.
+function renderPaySection(c, payBody, est) {
+  var payTarget = est || c; // 저장/표시 기준이 되는 대상(견적서 또는 폴백으로 고객)
+  var payKeySuffix = est ? ('est_' + est.id) : ('id_' + c.id);
   // 2026-08-04: id기반 키를 우선 시도하고, 없으면 이름기반(예전 데이터)으로 폴백
   function getLocalPay() {
     try {
-      if (c.id) {
-        var byId = localStorage.getItem('dah_pay_id_'+c.id);
-        if (byId) return JSON.parse(byId);
-      }
-      return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}');
+      var byKey = localStorage.getItem('dah_pay_'+payKeySuffix);
+      if (byKey) return JSON.parse(byKey);
+      if (!est) return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}');
+      return {};
     } catch(e) { return {}; }
   }
   var _localPay = getLocalPay();
-  // 결제 관리 섹션 - customers 객체 직접 사용 (localStorage 병행)
+  // 결제 관리 섹션 - payTarget(견적서 또는 고객) 직접 사용 (localStorage 병행)
   var payData = {
-    depositAmount:  c.depositAmount  || _localPay.depositAmount  || 0,
-    depositDate:    c.depositDate    || _localPay.depositDate    || '',
-    depositMethod:  c.depositMethod  || _localPay.depositMethod  || '',
-    depositReceipt: c.depositReceipt || _localPay.depositReceipt || false,
-    balanceAmount:  c.balanceAmount  || _localPay.balanceAmount  || 0,
-    balanceDate:    c.balanceDate    || _localPay.balanceDate    || '',
-    balanceMethod:  c.balanceMethod  || _localPay.balanceMethod  || '',
-    balanceReceipt: c.balanceReceipt || _localPay.balanceReceipt || false
+    depositAmount:  payTarget.depositAmount  || payTarget.deposit_amount  || _localPay.depositAmount  || 0,
+    depositDate:    payTarget.depositDate    || payTarget.deposit_date    || _localPay.depositDate    || '',
+    depositMethod:  payTarget.depositMethod  || payTarget.deposit_method  || _localPay.depositMethod  || '',
+    depositReceipt: payTarget.depositReceipt || payTarget.deposit_receipt || _localPay.depositReceipt || false,
+    balanceAmount:  payTarget.balanceAmount  || payTarget.balance_amount  || _localPay.balanceAmount  || 0,
+    balanceDate:    payTarget.balanceDate    || payTarget.balance_date    || _localPay.balanceDate    || '',
+    balanceMethod:  payTarget.balanceMethod  || payTarget.balance_method  || _localPay.balanceMethod  || '',
+    balanceReceipt: payTarget.balanceReceipt || payTarget.balance_receipt || _localPay.balanceReceipt || false
   };
+  // "이 결제가 이 견적서 기준"이라는 뜻으로, 계산에 쓸 총액은 항상
+  // 견적서 자체의 금액(est.price) - 여러 견적서 합계(c.price)가 아님.
+  var payBasisPrice = est ? Number(est.price)||0 : Number(c.price)||0;
 
   var paySec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
-  // 2026-09-21(선혜님 - "견적서가 두갠데 결제 화면이 무슨 견적서에 대한
-  // 결제건인지 확인이 안되게 되어있고" - 노지경 고객 사례): 결제(선금/
-  // 잔금)는 견적서 하나가 아니라 이 고객의 모든 견적서 합계(customers.
-  // price, 오늘 여러 견적서 합산 기능 참고)를 기준으로 진행되는 게
-  // 원래 설계인데, 화면에 "이게 몇 건짜리 합계에 대한 결제인지"가
-  // 전혀 안 보여서 헷갈렸음 - 견적서가 2건 이상이면 그 사실과 합계
-  // 금액을 명시하는 안내줄 추가(1건이면 굳이 안 보여줌, 불필요한
-  // 정보 방지).
-  var allEstsForPay = [];
-  try { allEstsForPay = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
-  var myEstsForPay = allEstsForPay.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
-  if (myEstsForPay.length >= 2) {
-    paySec.appendChild(div('font-size:11px;color:var(--terra);background:#FFF3EC;padding:8px 10px;border-radius:8px;margin-bottom:10px', [
-      el('span', {text: '📎 이 견적서 ' + myEstsForPay.length + '건 합계(' + (Number(c.price)||0).toLocaleString() + '원)에 대한 결제예요'})
+  if (est && est.estimateLabel) {
+    paySec.appendChild(div('font-size:11px;color:var(--sub);margin-bottom:8px', [
+      el('span', {text: est.estimateLabel + ' · ' + payBasisPrice.toLocaleString() + '원'})
     ]));
   }
   var paySecTitleRow = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:10px', [
@@ -52,12 +56,11 @@ function renderPaySection(c, payBody) {
   ]);
   // 2026-09-19(선혜님 - "결제를 선금 잔금을 해서 넣어서 토탈 금액이
   // 일치한지 그리고 일치하면 완납 표시가 제대로 표시 되야 하는데 그런게
-  // 없네"): 선금+잔금 합계가 총액(c.price)과 정확히 일치하면 "완납"
-  // 배지를 보여주는 기능 자체가 없었음 - 신설. 총액이 아직 없거나(0)
-  // 결제 입력이 하나도 없으면 표시 안 함(불필요한 정보 추가 방지,
-  // dash-render-search.js의 미수금 표시와 동일한 원칙).
+  // 없네"): 선금+잔금 합계가 총액(payBasisPrice)과 정확히 일치하면
+  // "완납" 배지를 보여주는 기능 - 이제 여러 견적서 합계가 아니라 이
+  // 견적서 하나의 금액 기준.
   var payTotalForBadge = Number(payData.depositAmount || 0) + Number(payData.balanceAmount || 0);
-  if (Number(c.price) > 0 && payTotalForBadge > 0 && payTotalForBadge === Number(c.price)) {
+  if (payBasisPrice > 0 && payTotalForBadge > 0 && payTotalForBadge === payBasisPrice) {
     paySecTitleRow.appendChild(el('span', {
       style: 'font-size:11px;font-weight:700;color:#2E7D32;background:#E8F5E9;padding:3px 10px;border-radius:10px',
       text: '✓ 완납'
@@ -66,7 +69,70 @@ function renderPaySection(c, payBody) {
   paySec.appendChild(paySecTitleRow);
 
   function savePayData(pd, callback) {
-    if (typeof logEvent === 'function') logEvent('payment_save', { hasDeposit: Number(pd.depositAmount) > 0, hasBalance: Number(pd.balanceAmount) > 0, customerId: c.id, customerName: c.clientName });
+    if (typeof logEvent === 'function') logEvent('payment_save', { hasDeposit: Number(pd.depositAmount) > 0, hasBalance: Number(pd.balanceAmount) > 0, customerId: c.id, customerName: c.clientName, estimateId: est ? est.id : null });
+    var newDep = Number(pd.depositAmount)||0;
+    var newBal = Number(pd.balanceAmount)||0;
+    var paidTotal = newDep + newBal;
+    // 1) localStorage 백업 (견적서 단위 키)
+    localStorage.setItem('dah_pay_'+payKeySuffix, JSON.stringify(pd));
+    if (est) {
+      // 2026-09-21: 견적서별 결제 전환 - est가 있으면 estimates 테이블에
+      // 저장. dah_saved(견적서 로컬 캐시)도 함께 갱신해서 화면이 새로고침
+      // 전에도 최신 상태를 반영하게 함.
+      try {
+        var savedArr = JSON.parse(localStorage.getItem('dah_saved')||'[]');
+        var savedIdx = savedArr.findIndex(function(x){ return x.id === est.id; });
+        if (savedIdx >= 0) {
+          savedArr[savedIdx].depositAmount = newDep; savedArr[savedIdx].depositDate = pd.depositDate||'';
+          savedArr[savedIdx].depositMethod = pd.depositMethod||''; savedArr[savedIdx].depositReceipt = pd.depositReceipt||false;
+          savedArr[savedIdx].balanceAmount = newBal; savedArr[savedIdx].balanceDate = pd.balanceDate||'';
+          savedArr[savedIdx].balanceMethod = pd.balanceMethod||''; savedArr[savedIdx].balanceReceipt = pd.balanceReceipt||false;
+          localStorage.setItem('dah_saved', JSON.stringify(savedArr));
+        }
+      } catch(eCache) {}
+      var estPatchBody = {
+        deposit_amount:  newDep, deposit_date: pd.depositDate||'', deposit_method: pd.depositMethod||'', deposit_receipt: pd.depositReceipt||false,
+        balance_amount:  newBal, balance_date: pd.balanceDate||'', balance_method: pd.balanceMethod||'', balance_receipt: pd.balanceReceipt||false
+      };
+      sbXHR('PATCH', 'estimates?id=eq.'+est.id, estPatchBody, function(err, data){
+        if (err) {
+          showToast('⚠️ 결제정보가 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요');
+        }
+        // 2026-09-11 이어짐: price_breakdown.deposit(자동계산된 50% 계획값)도
+        // 함께 갱신 - 이제 "최신 견적서"를 다시 조회할 필요 없이, 결제가
+        // 귀속된 정확한 그 견적서(est.id)를 바로 씀(더 정확해짐).
+        if (!err && typeof SUPABASE_URL !== 'undefined') {
+          try {
+            var findEstXhr = new XMLHttpRequest();
+            findEstXhr.open('GET', SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(est.id) + '&select=price_breakdown', true);
+            findEstXhr.setRequestHeader('apikey', SUPABASE_KEY);
+            findEstXhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+            findEstXhr.onload = function() {
+              try {
+                var estRows = JSON.parse(findEstXhr.responseText);
+                var estRow = estRows && estRows[0];
+                if (estRow && estRow.price_breakdown) {
+                  var pb = Object.assign({}, estRow.price_breakdown);
+                  pb.deposit = newDep;
+                  pb.balance = (Number(pb.finalTotal) || 0) - newDep;
+                  var patchEstXhr = new XMLHttpRequest();
+                  patchEstXhr.open('PATCH', SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(est.id), true);
+                  patchEstXhr.setRequestHeader('apikey', SUPABASE_KEY);
+                  patchEstXhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+                  patchEstXhr.setRequestHeader('Content-Type', 'application/json');
+                  patchEstXhr.send(JSON.stringify({ price_breakdown: pb }));
+                }
+              } catch (eEstFind) {}
+            };
+            findEstXhr.send();
+          } catch (eEstOuter) {}
+        }
+        if (callback) callback();
+      });
+      return;
+    }
+    // ── est가 없는 경우(견적서가 아직 없는 신규 고객): 예전처럼 고객
+    // (customers) 레벨에 저장하는 폴백 그대로 유지 ──
     // 2026-08-25(선혜님 발견 — "오지은 실장이 119만원 입금했는데 목표가 그대로"):
     // 매출(목표달성률) 계산은 customers.price/performance_revenue를 기준으로
     // 하는데, 이 두 필드는 오직 견적서를 저장할 때만 채워지고 있었음. 견적서
@@ -75,16 +141,7 @@ function renderPaySection(c, payBody) {
     // 있었음. price/performance_revenue가 아직 비어있는(0) 고객이면, 이번에
     // 입력한 입금 총액만큼은 최소한 매출로 잡히도록 자동으로 채워줌(이미
     // 값이 있으면 덮어쓰지 않음 — 견적서 기반 정확한 금액을 그대로 존중).
-    var newDep = Number(pd.depositAmount)||0;
-    var newBal = Number(pd.balanceAmount)||0;
-    var paidTotal = newDep + newBal;
     var priceWasEmpty = !(Number(c.price) > 0) && !(Number(c.performanceRevenue) > 0);
-    // 1) localStorage 백업
-    // 2026-08-04: 이름 기반 키만 쓰면 동명이인일 때 결제정보가 섞일 이론적
-    // 위험이 있어(실제 최우선 소스는 customers.depositAmount라 id기반으로
-    // 안전하지만, 서버값이 비어 이 폴백에 의존하는 드문 경우 대비) id 기반
-    // 키로도 함께 저장해서 이중 안전장치를 둠
-    localStorage.setItem('dah_pay_'+c.clientName, JSON.stringify(pd));
     if (c.id) localStorage.setItem('dah_pay_id_'+c.id, JSON.stringify(pd));
     // 2) customers 캐시 업데이트
     var arr = loadCustomers();
@@ -140,39 +197,6 @@ function renderPaySection(c, payBody) {
           var arr = loadCustomers();
           var localC = arr.find(function(x){ return x.id === c.id; });
           if (localC) { localC.updatedAt = data[0].updated_at; saveCustomers(arr); }
-        }
-        // 2026-09-11(선혜님 지적 - "선금이 2,170,000원이라서 대시보드에서
-        // 적용을 했어 그러면 계약금도 그렇게 나와야 하는데 견적서의
-        // 계약금(50%)... 이라고 나온다고"): 실측/시공일 동기화와 정확히
-        // 같은 유형의 누락 - 결제탭에서 실제로 받은 선금을 입력해도,
-        // 연결된 견적서의 price_breakdown.deposit(자동계산된 50% 계획값)은
-        // 전혀 안 바뀌고 있었음. price_breakdown은 JSON 통째 컬럼이라
-        // 먼저 최신 견적서를 조회해서 기존 값과 병합한 뒤 다시 저장.
-        if (!err && typeof SUPABASE_URL !== 'undefined' && c.id) {
-          try {
-            var findEstXhr = new XMLHttpRequest();
-            findEstXhr.open('GET', SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(c.id) + '&order=created_at.desc&limit=1&select=id,price_breakdown', true);
-            findEstXhr.setRequestHeader('apikey', SUPABASE_KEY);
-            findEstXhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
-            findEstXhr.onload = function() {
-              try {
-                var estRows = JSON.parse(findEstXhr.responseText);
-                var estRow = estRows && estRows[0];
-                if (estRow && estRow.price_breakdown) {
-                  var pb = Object.assign({}, estRow.price_breakdown);
-                  pb.deposit = newDep;
-                  pb.balance = (Number(pb.finalTotal) || 0) - newDep;
-                  var patchEstXhr = new XMLHttpRequest();
-                  patchEstXhr.open('PATCH', SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(estRow.id), true);
-                  patchEstXhr.setRequestHeader('apikey', SUPABASE_KEY);
-                  patchEstXhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
-                  patchEstXhr.setRequestHeader('Content-Type', 'application/json');
-                  patchEstXhr.send(JSON.stringify({ price_breakdown: pb }));
-                }
-              } catch (eEstFind) {}
-            };
-            findEstXhr.send();
-          } catch (eEstOuter) {}
         }
         if (callback) callback();
       });
@@ -279,8 +303,8 @@ function renderPaySection(c, payBody) {
         depDate.focus();
         return;
       }
-      var expectedHalf = Math.round((c.price || 0) * 0.5);
-      if (c.price > 0 && inputAmt > 0 && inputAmt !== expectedHalf) {
+      var expectedHalf = Math.round((payBasisPrice || 0) * 0.5);
+      if (payBasisPrice > 0 && inputAmt > 0 && inputAmt !== expectedHalf) {
         var proceed = confirm(
           '입력하신 선금(' + inputAmt.toLocaleString() + '원)이 견적금액의 50%(' + expectedHalf.toLocaleString() + '원)와 달라요.\n'
           + '이대로 저장할까요?'
@@ -380,8 +404,8 @@ function renderPaySection(c, payBody) {
         balDate.focus();
         return;
       }
-      var expectedBalance = Math.max(0, (c.price || 0) - (Number(payData.depositAmount) || 0));
-      if (c.price > 0 && inputAmt > 0 && inputAmt !== expectedBalance) {
+      var expectedBalance = Math.max(0, (payBasisPrice || 0) - (Number(payData.depositAmount) || 0));
+      if (payBasisPrice > 0 && inputAmt > 0 && inputAmt !== expectedBalance) {
         var proceed = confirm(
           '입력하신 잔금(' + inputAmt.toLocaleString() + '원)이 예상 잔금(견적금액-선금, ' + expectedBalance.toLocaleString() + '원)과 달라요.\n'
           + '이대로 저장할까요?'
