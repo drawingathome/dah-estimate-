@@ -36,10 +36,16 @@ function setupNetwork(page, estGetDelayMs) {
         }
         if (method === 'GET' && url.includes('/rest/v1/estimates') && url.includes('client_id=eq.')) {
           // 서버엔 실제로 견적서(완납)가 있다고 응답 - 일부러 지연을 줘서
-          // "사용자가 입력을 시작한 뒤에" 도착하는 상황을 재현
+          // "사용자가 입력을 시작한 뒤에" 도착하는 상황을 재현.
+          // 2026-09-21(병합 후 재검증 중 발견): 다른 세션이 이 응답의
+          // client_id가 요청한 고객과 실제로 일치하는지 검증하는 안전장치를
+          // 추가했음(무관한 응답을 진짜로 오인하던 버그 수정) - 이 mock도
+          // 고정값이 아니라 요청 URL에서 실제 client_id를 읽어 그대로
+          // 돌려줘야 시나리오 2(다른 고객 id)에서도 정확히 매칭됨.
+          var reqClientId = decodeURIComponent(url.split('client_id=eq.')[1].split('&')[0]);
           setTimeout(() => {
             req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify([
-              { id: 'srv-est-1', client_id: 9700, client_name: '서버지연테스트', price: 2000000,
+              { id: 'srv-est-1', client_id: Number(reqClientId), client_name: '서버지연테스트', price: 2000000,
                 deposit_amount: 1000000, deposit_date: '2026-09-01', deposit_method: '카드', deposit_receipt: true,
                 balance_amount: 1000000, balance_date: '2026-09-10', balance_method: '현금', balance_receipt: false,
                 contract_status: 'contracted', created_at: '2026-09-01T00:00:00Z', updated_at: '2026-09-01T00:00:00Z' }
