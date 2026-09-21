@@ -528,14 +528,30 @@ function renderDetailHeader(c) {
   var myEsts = allEstsForCur.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
   myEsts.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
   var latestEst = myEsts[0];
+  // 2026-09-19(선혜님 - "노지경님 견적서가 1개였는데 내가 한개를 더
+  // 넣었어... 2건에 대한 건 없고 이거뿐이야" / "그래야지" - 확인 후
+  // 진행): "진행중인 견적" 요약이 이 고객의 견적서가 여러 건이어도
+  // 항상 "가장 최근 것 하나"만 보여주고 있었음 - 앞서 매출 계산
+  // 기준금액(customers.price)은 여러 견적서 합산으로 고쳤는데, 이
+  // 요약 박스는 그 데이터 소스 자체가 다른 별개 표시(dah_saved 로컬
+  // 캐시)라 안 고쳐져 있었음. openDetail()이 이미 loadEstimatesAsync()
+  // 로 서버 최신 목록을 받아온 뒤에만 이 화면을 그리므로(2026-08-28
+  // 확인), myEsts는 이 시점에 신뢰 가능한 "이 고객의 전체 견적서
+  // 목록" - 최신 것 하나가 아니라 전체 합계로 보여줌.
+  var estSumForCur = 0, itemSumForCur = 0;
+  myEsts.forEach(function(e) {
+    estSumForCur += Number(e.price) || 0;
+    itemSumForCur += Number(e.itemCount) || 0;
+  });
   if (curEstBox) {
     if (latestEst) {
-      var amt = (Number(latestEst.price)||0).toLocaleString()+'원';
-      var itemLabel = latestEst.itemCount ? ('총 '+latestEst.itemCount+'개 품목') : '';
+      var amt = estSumForCur.toLocaleString()+'원';
+      var itemLabel = itemSumForCur ? ('총 '+itemSumForCur+'개 품목') : '';
+      var countLabel = myEsts.length > 1 ? (' · 견적서 '+myEsts.length+'건') : '';
       curEstBox.innerHTML =
         '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">' +
           '<span style="width:6px;height:6px;border-radius:50%;background:var(--terra);display:inline-block"></span>' +
-          '<span style="font-size:11px;font-weight:600;color:#B85A2E;letter-spacing:0.3px">진행중인 견적' + (itemLabel ? ' · '+itemLabel : '') + '</span>' +
+          '<span style="font-size:11px;font-weight:600;color:#B85A2E;letter-spacing:0.3px">진행중인 견적' + (itemLabel ? ' · '+itemLabel : '') + countLabel + '</span>' +
         '</div>' +
         '<div style="font-size:22px;font-weight:700;color:var(--dark);letter-spacing:-0.5px">' + amt + '</div>';
       curEstBox.style.display = 'block';
@@ -562,7 +578,7 @@ function renderDetailHeader(c) {
       curEstBox.parentNode.insertBefore(priceEditRow, curEstBox.nextSibling);
     }
     function renderPriceRow() {
-      var pricesMatch = latestEst && Number(c.price||0) === Number(latestEst.price||0);
+      var pricesMatch = latestEst && Number(c.price||0) === estSumForCur;
       priceEditRow.style.display = 'flex';
       if (pricesMatch) {
         // 값이 같을 땐 숫자를 또 안 보여주고, 수정 링크만 작게 남겨둠(편집 기능은 유지)

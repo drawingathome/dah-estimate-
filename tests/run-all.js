@@ -200,6 +200,10 @@ if (/dah-dashboard/.test(target)) {
   // 2026-09-19(선혜님 - "완납 표시가 제대로 표시 되야 하는데 그런게
   // 없네"): 결제 관리 화면에 선금+잔금=총액이면 완납 배지 표시 신설.
   scripts.push(['paid-badge-check.js', []]);
+  // 2026-09-19(선혜님 - "2건에 대한 건 없고 이거뿐이야" → "그래야지"):
+  // "진행중인 견적" 요약이 최신 견적서 하나가 아니라 전체 합계로
+  // 표시되는지 검증.
+  scripts.push(['ongoing-est-sum-check.js', []]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',
