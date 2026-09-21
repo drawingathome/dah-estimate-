@@ -226,7 +226,8 @@ function validateEstimate() {
 function _saveEstimateInner(_onDone) {
   var onDone = typeof _onDone === 'function' ? _onDone : function(){};
   clearDraft(); // 저장 완료 시 초안 삭제
-  if (!validateEstimate()) { onDone(); return; }
+  if (!validateEstimate()) { logSaveStage('검증실패-중단'); onDone(); return; }
+  logSaveStage('검증통과');
   var name=document.getElementById('c-name').value.trim();
   if(!name) { showToast('⚠️ 고객명을 입력하세요'); onDone(); return; }
   var phone=document.getElementById('c-phone').value.trim();
@@ -322,6 +323,18 @@ function _saveEstimateInner(_onDone) {
       var existingCustId = window._estEditState.estSaveCustomerId;
       var isUpdate = !!existingCustId;
       xhr.open(isUpdate ? 'PATCH' : 'POST', SUPABASE_URL+'/rest/v1/customers'+(isUpdate ? '?id=eq.'+existingCustId : ''), true);
+      // 2026-09-21(선혜님 - "니가 한 자료 계속 똑같은 문제가 생기지
+      // 무조건 원인 찾아!!" - 민소아 견적서, 서버 이력엔 그날 기록이
+      // 전혀 없던 두 번째 재발로 원인 조사 중 발견): xhr.onload/onerror
+      // 콜백이 브라우저 사정으로(탭이 백그라운드로 전환되며 요청이
+      // 멈추는 등, 오지은 실장님 태블릿 사례와 같은 유형) 영원히 한
+      // 번도 안 불리면, 저장 버튼이 disabled 상태로 영구히 남아 그
+      // 이후의 모든 저장 시도가 "if (btn.disabled) return;"에서 로그도
+      // 없이 조용히 씹히는 치명적인 경로가 있었음 - 타임아웃을 걸어
+      // 일정 시간 안에 응답이 없으면 강제로 실패 처리해서 버튼이 절대
+      // 영구히 잠기지 않게 함.
+      xhr.timeout = 15000;
+      xhr.ontimeout = function(){ logSaveStage('고객저장-타임아웃', null); console.warn('Supabase 고객 저장 타임아웃'); showToast('⚠️ 서버 응답이 없어요(시간초과) — 다시 저장해주세요'); saveToEstimates(); };
       xhr.setRequestHeader('apikey',SUPABASE_KEY);
       xhr.setRequestHeader('Authorization','Bearer '+(typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
       xhr.setRequestHeader('Content-Type','application/json');
@@ -334,6 +347,7 @@ function _saveEstimateInner(_onDone) {
       // 실제 반영 건수를 확인하고, 실패시 화면에 명확히 알림.
       xhr.setRequestHeader('Prefer', 'return=representation');
       xhr.onload=function(){
+        logSaveStage('고객저장-응답', { status: xhr.status, isUpdate: isUpdate, bodyLen: (xhr.responseText||'').length });
         if (xhr.status < 200 || xhr.status >= 300) {
           console.warn('Supabase 고객 저장 실패 (status='+xhr.status+'):', xhr.responseText);
           showToast('⚠️ 고객정보가 서버에 저장되지 않았어요(오류 '+xhr.status+') — 새로고침해서 확인해주세요');
@@ -361,7 +375,7 @@ function _saveEstimateInner(_onDone) {
         }
         saveToEstimates();
       };
-      xhr.onerror=function(){ console.warn('Supabase 고객 저장 실패 (localStorage는 완료)'); showToast('⚠️ 고객정보 저장 실패(네트워크) — 로컬엔 저장됨'); saveToEstimates(); };
+      xhr.onerror=function(){ logSaveStage('고객저장-네트워크오류', null); console.warn('Supabase 고객 저장 실패 (localStorage는 완료)'); showToast('⚠️ 고객정보 저장 실패(네트워크) — 로컬엔 저장됨'); saveToEstimates(); };
       var custPayload = {
         client_name:name, phone:phone
       };
@@ -437,7 +451,7 @@ function _saveEstimateInner(_onDone) {
       custPayload.price = grand + otherEstGrand;
       custPayload.performance_revenue = perf + otherEstPerf;
       xhr.send(JSON.stringify(custPayload));
-    } catch(e) { console.warn('Supabase 연결 오류:', e); saveToEstimates(); }
+    } catch(e) { logSaveStage('고객저장-예외', { message: e && e.message, stack: e && e.stack }); console.warn('Supabase 연결 오류:', e); saveToEstimates(); }
   }
   }
   function saveToEstimates() {
@@ -575,6 +589,17 @@ function _saveEstimateInner(_onDone) {
       xhr2.setRequestHeader('apikey',SUPABASE_KEY);
       xhr2.setRequestHeader('Authorization','Bearer '+(typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
       xhr2.setRequestHeader('Content-Type','application/json');
+      // 2026-09-21: 고객저장(xhr)과 동일한 이유로 견적서 저장(xhr2)에도
+      // 타임아웃 추가 - 응답 콜백이 영원히 안 불리면 버튼이 영구히
+      // 잠긴 채 남는 것을 방지.
+      xhr2.timeout = 15000;
+      xhr2.ontimeout = function(){
+        logSaveStage('견적서저장-타임아웃', null);
+        console.warn('Supabase 견적서 저장 타임아웃');
+        showToast('⚠️ 서버 응답이 없어요(시간초과) — 저장이 안 됐을 수 있어요, 다시 저장해주세요');
+        if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId);
+        onDone();
+      };
       // 2026-08-25(선혜님 발견 — "저장했는데 나중에 수정이 안 됨", 진짜
       // 원인): 수정(PATCH) 저장인데 updated_at 잠금값이 없는 경우엔
       // return=minimal을 써서, 서버가 실제로 몇 건을 바꿨는지 전혀 확인을
@@ -585,6 +610,7 @@ function _saveEstimateInner(_onDone) {
       // 받아서 실제 몇 건이 바뀌었는지 확인하도록 수정.
       xhr2.setRequestHeader('Prefer', isEditMode ? 'return=representation' : 'return=minimal');
       xhr2.onload=function(){
+        logSaveStage('견적서저장-응답', { status: xhr2.status, isEditMode: isEditMode, bodyLen: (xhr2.responseText||'').length });
         if (xhr2.status >= 200 && xhr2.status < 300) {
           // 수정 저장인데 응답이 빈 배열이면 = 0건 매칭 = 실제로 아무것도
           // 안 바뀐 것(담당자 불일치로 보안규칙에 막혔거나, updated_at
@@ -699,6 +725,7 @@ function _saveEstimateInner(_onDone) {
         onDone(); // 2026-08-24: 성공/409/실패 모든 경우에 버튼 다시 눌러도 되게 원상복구
       };
       xhr2.onerror=function(){
+        logSaveStage('견적서저장-네트워크오류', null);
         console.warn('Supabase 견적서 저장 실패 (localStorage는 완료)');
         showToast('저장 완료 (로컬) — DB 동기화는 실패했어요');
         if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId);
@@ -706,6 +733,7 @@ function _saveEstimateInner(_onDone) {
       };
       xhr2.send(JSON.stringify(estPayloadForRetry));
     } catch(e) {
+      logSaveStage('견적서저장-예외', { message: e && e.message, stack: e && e.stack });
       console.warn('Supabase 연결 오류:', e);
       showToast('저장 완료 (로컬) — DB 동기화는 실패했어요');
       if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId);
@@ -868,6 +896,7 @@ function _saveEstimateInner(_onDone) {
   //     "다시 로그인해주세요"로 명확히 안내하고 멈추도록 함.
   if (typeof refreshAuthSessionIfNeeded === 'function') {
     refreshAuthSessionIfNeeded(function(ok) {
+      logSaveStage(ok ? '세션확인-정상' : '세션확인-만료', null);
       if (ok) {
         saveToCustomers();
       } else {
@@ -883,6 +912,7 @@ function _saveEstimateInner(_onDone) {
       }
     });
   } else {
+    logSaveStage('세션확인-건너뜀(함수없음)', null);
     saveToCustomers();
   }
 }
@@ -927,8 +957,40 @@ function logSaveAttempt() {
   } catch (e) { /* 이 기록 자체가 실패해도 저장 흐름엔 영향 안 줌 */ }
 }
 
+// 2026-09-21(선혜님 - "니가 한 자료 계속 똑같은 문제가 생기지 무조건
+// 원인 찾아!!" - 민소아 견적서: 화면엔 저장한 것처럼 보였는데 서버
+// 이력에 그 시점 기록이 전혀 없던 두 번째 재발): logSaveAttempt()는
+// "저장 버튼을 눌렀다"는 사실 하나만 남겼지, 그 다음 어느 단계에서
+// 멈췄는지(검증 실패/확인창 취소/세션 만료/서버 응답 실패 등)는 전혀
+// 기록이 안 남아서, 이번에도 서버 DB를 직접 뒤져도 "왜"까지는 못
+// 밝혀냈음(estimate_history/client_error_logs 둘 다 그날 기록이
+// 0건 - 즉 정상 흐름 안에서 조용히 멈췄다는 뜻이라 예외 로그에도
+// 안 잡힘). 저장 시도마다 거치는 모든 주요 단계를 순서대로 기록해서,
+// 다음엔 이 로그만 보면 정확히 어느 단계에서 멈췄는지 100% 알 수
+// 있게 함 - localStorage(이 기기)뿐 아니라 서버(client_error_logs)
+// 에도 함께 남겨서, 어느 기기에서 벌어졌든 마스터가 확인 가능하게 함.
+function logSaveStage(stage, detail) {
+  try {
+    var log = JSON.parse(localStorage.getItem('dah_save_diagnostics')||'[]');
+    log.push({
+      at: new Date().toISOString(),
+      customerName: (document.getElementById('c-name')?.value || '').trim(),
+      stage: stage,
+      detail: detail || null
+    });
+    if (log.length > 100) log = log.slice(-100); // 최근 100건(저장 1건당 여러 단계라 넉넉히)
+    localStorage.setItem('dah_save_diagnostics', JSON.stringify(log));
+  } catch (e) { /* 진단 로그 자체가 실패해도 저장 흐름엔 영향 안 줌 */ }
+  try {
+    if (typeof reportClientError === 'function') {
+      reportClientError('저장단계: ' + stage, null, { stage: stage, detail: detail || null, customerName: (document.getElementById('c-name')?.value || '').trim() });
+    }
+  } catch (e2) { /* 서버 기록 실패해도 저장 흐름엔 영향 안 줌 */ }
+}
+
 function saveEstimate() {
   logSaveAttempt();
+  logSaveStage('시작');
   // 2026-09-08(선혜님 지적 - "저장 후 대시보드를 클릭하면 사이트에서
   // 나갈까요? 저장되지 않을 수 있습니다가 무조건 알림이 떠 저장이
   // 됐으면 안떠야지"): dah-estimate.html의 beforeunload 핸들러가
@@ -964,8 +1026,10 @@ function saveEstimate() {
     if (!document.getElementById('c-measure-tbd')?.checked && !(document.getElementById('c-measure')?.value || '')) missing.push('실측 예정일');
     if (!document.getElementById('c-install-tbd')?.checked && !(document.getElementById('c-install')?.value || '')) missing.push('시공 예정일');
   }
+  logSaveStage('필수항목검증완료', { missing: missing, hasCurtainOrBlind: hasCurtainOrBlind });
   if (missing.length > 0) {
     var okToProceed = window.confirm('다음 항목이 비어있어요: ' + missing.join(', ') + '\n\n그래도 저장하시겠어요?');
+    logSaveStage(okToProceed ? '확인창-진행' : '확인창-취소', { missing: missing });
     if (!okToProceed) {
       // 2026-09-15(선혜님 지시 - "원인을 찾아야지 다음에 문제가 안되게
       // 하지"): 여기서 "취소"를 누르면 화면에 아무 표시도 없이 그냥
