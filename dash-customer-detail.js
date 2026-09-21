@@ -506,7 +506,14 @@ function openDetailInner(name, id, forceTab) {
   if (myEstsForPaySection.length === 0 && c.id && typeof sbXHR === 'function') {
     sbXHR('GET', 'estimates?client_id=eq.' + encodeURIComponent(c.id) + '&select=id,client_id,client_name,price,deposit_amount,deposit_date,deposit_method,deposit_receipt,balance_amount,balance_date,balance_method,balance_receipt,contract_status,created_at,updated_at&order=updated_at.desc', null, function(err, rows) {
       if (err || !Array.isArray(rows) || rows.length === 0) return; // 서버도 진짜 없으면 로컬 판단이 맞았던 것 - 그대로 둠
-      var serverEsts = rows.map(function(r){
+      // 2026-09-21(재검증 중 발견 - pay-changestage-lock-sync-check.js가
+      // 갑자기 실패하며 발견): 응답이 배열이고 길이가 0보다 크다는 것만
+      // 확인하면, 이 요청과 무관한 다른 종류의 응답(다른 테스트 목업의
+      // 범용 폴백 등)까지 "진짜 견적서 찾음"으로 잘못 받아들일 수 있음 -
+      // client_id가 정확히 이 고객과 일치하는 행만 진짜로 인정.
+      var validRows = rows.filter(function(r){ return String(r.client_id) === String(c.id); });
+      if (validRows.length === 0) return;
+      var serverEsts = validRows.map(function(r){
         return {
           id: r.id, clientId: r.client_id, clientName: r.client_name, price: r.price,
           depositAmount: r.deposit_amount, depositDate: r.deposit_date, depositMethod: r.deposit_method, depositReceipt: r.deposit_receipt,

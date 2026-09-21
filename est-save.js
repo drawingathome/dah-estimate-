@@ -1040,10 +1040,30 @@ function saveEstimate() {
     }
   }
 
-  var btn = document.getElementById('btn-save-estimate');
+  var btn = /** @type {HTMLButtonElement} */ (document.getElementById('btn-save-estimate'));
   if (btn) {
-    if (btn.disabled) return; // 이미 저장 진행 중이면 이번 클릭은 무시
+    // 2026-09-21(선혜님 지적 - "전문업체는 원인을 어떻게 찾을까, 이게
+    // 한두번이 아니잖아"로 전 구간 재점검 중 발견): 이 조기 종료 지점엔
+    // logSaveStage() 호출이 아예 없었음 - 만약 이전 저장 시도의
+    // reenable()이 어떤 이유로든 실행되지 않아 버튼이 disabled 상태로
+    // 고착되면, 그 뒤로는 "저장"을 몇 번을 눌러도 여기서 매번 조용히
+    // 끝나버려서 완전히 흔적 없는 실패가 반복될 수 있었음(인테리어오월/
+    // 민소아 사건과 정확히 같은 증상 패턴). 단순히 알리기만 하는 게
+    // 아니라, 15초 넘게 비활성 상태로 멈춰있으면(정상적인 저장은
+    // 그보다 훨씬 빨리 끝남) 고착으로 판단하고 스스로 풀어서 이번
+    // 클릭으로 다시 시도하게 함 - 사람이 새로고침할 때까지 기다리지 않음.
+    var stuckMs = btn.disabled && btn.dataset.disabledAt ? (Date.now() - Number(btn.dataset.disabledAt)) : 0;
+    if (btn.disabled && stuckMs > 15000) {
+      logSaveStage('버튼-고착감지-자동복구', { stuckMs: stuckMs });
+      btn.disabled = false; btn.style.opacity = '';
+    }
+    if (btn.disabled) {
+      logSaveStage('버튼-이미비활성-무시');
+      showToast('⚠️ 저장이 이미 진행 중이에요 — 잠시 후 다시 시도해주세요');
+      return;
+    }
     btn.disabled = true;
+    btn.dataset.disabledAt = String(Date.now());
     btn.style.opacity = '0.6';
   }
   function reenable() {

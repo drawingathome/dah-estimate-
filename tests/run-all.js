@@ -222,6 +222,10 @@ if (/dah-dashboard/.test(target)) {
   // 2026-09-15: "새 견적서" 버튼이 이전 고객의 확정상태를 초기화하는지
   // 검증 - 허서진 고객 사례("데이터 다 날아감")로 발견
   scripts.push(['confirm_state_reset_check.js', []]);
+  // 2026-09-21(선혜님 - "전문업체는 원인을 어떻게 찾을까"로 저장 흐름
+  // 전 구간 재점검 - 로그가 아예 없던 조기종료 지점(버튼 고착) 발견해
+  // 수정 + 15초 이상 고착시 자동복구까지 추가): 검증
+  scripts.push(['save_button_stuck_recovery_check.js', []]);
   // 2026-09-15: 편집세션 상태 리셋을 "레지스트리 객체" 구조로 통합 -
   // 새 변수가 생겨도 이름만 등록하면 자동으로 리셋되는지 검증
   scripts.push(['est_session_reset_registry_check.js', []]);
