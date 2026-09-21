@@ -527,7 +527,22 @@ function openDetailInner(name, id, forceTab) {
         serverEsts.forEach(function(se){ if (!existingIds[se.id]) cacheArr.push(se); });
         localStorage.setItem('dah_saved', JSON.stringify(cacheArr));
       } catch(eCacheFix) {}
-      if (currentDetailId === c.id) renderPayTabContent(serverEsts); // 아직 이 고객 상세를 보고 있을 때만 다시 그림
+      if (currentDetailId === c.id) {
+        // 2026-09-21(선혜님 - "안전하게 해야지" 지시로 보강): 서버 재확인
+        // 응답이 도착하는 그 찰나에, 사용자가 이미 (로컬 캐시 기준 폴백
+        // 폼에) 선금/잔금 금액을 입력하기 시작했다면, 화면을 통째로
+        // 다시 그리면 입력 중이던 값이 사라짐 - 로컬 캐시 자체는 이미
+        // 위에서 서버 기준으로 바로잡았으니(cacheArr 저장 완료), 지금
+        // 당장 화면을 갱신 안 해도 다음에 이 고객 상세를 다시 열 때는
+        // 정확하게 나옴. 입력 필드에 값이 있거나 포커스가 결제 영역
+        // 안에 있으면 지금은 다시 그리지 않고 건너뜀.
+        var hasUserInput = /** @type {HTMLInputElement[]} */ (Array.from(payBody.querySelectorAll('input[placeholder="선금 금액"], input[placeholder="잔금 금액"]')))
+          .some(function(inp){ return inp.value && inp.value.trim() !== ''; });
+        var hasFocusInside = payBody.contains(document.activeElement);
+        if (!hasUserInput && !hasFocusInside) {
+          renderPayTabContent(serverEsts);
+        }
+      }
     });
   }
 
