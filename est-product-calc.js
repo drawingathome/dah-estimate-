@@ -1136,7 +1136,7 @@ function renderSvcSummary() {
   ['measureInstall', 'rail', 'motor', 'etc'].forEach(function(key) {
     var g = groups[key];
     if (g.details.length === 0) return;
-    var detailText = g.details.filter(Boolean).join(', ');
+    var detailText = summarizeSvcDetails(g.details);
     html += '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:4px 0">'
       + '<div><span style="font-size:12px;font-weight:700;color:#282828">' + escHtml(g.label) + '</span>'
       + (detailText ? '<div style="font-size:11px;color:#B0A99F;margin-top:1px">' + escHtml(detailText) + '</div>' : '')
@@ -1145,6 +1145,23 @@ function renderSvcSummary() {
       + '</div>';
   });
   card.innerHTML = html || '<div style="font-size:11px;color:#B0A99F">레일/시공비/기타 항목이 없습니다</div>';
+}
+
+// 2026-09-19(선혜님 - "레일이 여러개면 묶어서 정리가 안되니 너무
+// 복잡한데?? 전문업체 기분으로 확인해" - 커튼 22개짜리 견적서에서
+// "레일 시공비"라는 똑같은 문구가 20번 넘게 그대로 나열되던 것으로
+// 발견): 같은 텍스트(예: "레일 시공비")가 여러 번 반복되면 "레일
+// 시공비 24개"처럼 묶어서 보여줌 - 서로 다른 길이(예: "16자"/"18자")는
+// 각자 그대로 두되, 같은 길이가 여러 개면 그것끼리는 묶임.
+function summarizeSvcDetails(details) {
+  var counts = {}, order = [];
+  details.filter(Boolean).forEach(function(d) {
+    if (!(d in counts)) { counts[d] = 0; order.push(d); }
+    counts[d]++;
+  });
+  return order.map(function(d) {
+    return counts[d] > 1 ? d + ' ' + counts[d] + '개' : d;
+  }).join(', ');
 }
 
 function toggleSvcDetail() {

@@ -153,6 +153,10 @@ if (/dah-dashboard/.test(target)) {
   // 놓친 "인쇄까지 확인" 경로 - 단가 override시 수량이 곱해져 최종
   // 금액이 부풀려지던 진짜 버그를 여기서 발견·수정.
   scripts.push(['svc-override-qty-print-check.js', []]);
+  // 2026-09-19(선혜님 - "레일이 여러개면 묶어서 정리가 안되니 너무
+  // 복잡한데??"): 레일·시공비 요약 카드에서 같은 항목이 개수만큼
+  // 그대로 반복되던 것을 "N개"로 묶어서 정리.
+  scripts.push(['svc-summary-grouping-check.js', []]);
   // 2026-09-11: 감사로그(변경이력) 조회 화면 검증
   scripts.push(['audit_log_check.js', []]);
   // 2026-09-11: AS 관리 화면(GitHub 이슈#4) — 접수 등록/상태변경 검증
