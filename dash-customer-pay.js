@@ -339,12 +339,26 @@ function renderPaySection(c, payBody, est) {
   paySec.appendChild(depSec);
 
   // 잔금 섹션
+  // 2026-09-21(선혜님 지적 — "노지경 두번째 견적서가 완납으로 끝나는
+  // 건인데 결제부분이 왜 이렇지??": 계약금(선금) 하나만으로 이미 견적
+  // 총액을 다 채운 경우(예: 620,000원 견적에 계약금 620,000원), 잔금
+  // 자체가 존재하지 않는데도 화면은 "아직 잔금 안 받음"으로 보고 빈
+  // 입력창을 계속 띄우고 있었음 - "완납"이라는 상단 배지랑 앞뒤가
+  // 안 맞는 화면이었음. 계약금만으로 총액이 채워졌는지부터 먼저 확인해서,
+  // 그 경우엔 입력폼 대신 "잔금 없음(계약금으로 완납)"이라는 확정 상태로
+  // 보여줌 - 실제로 받을 잔금이 없는데 입력을 유도하는 화면 자체를 없앰.
+  var totalPrice = Number(payTarget.price || c.price || 0);
+  var depositPaidAmount = Number(payData.depositAmount) || 0;
+  var noBalanceNeeded = totalPrice > 0 && depositPaidAmount >= totalPrice;
   var balanceDone = payData.balanceAmount && payData.balanceDate;
-  var balSec = div('padding:var(--sp-3);background:'+(balanceDone?'#F5FAF5':'var(--ivory1)')+';border-radius:12px;border:1px solid '+(balanceDone?'#B0D4B0':'var(--border)'), []);
+  var balSec = div('padding:var(--sp-3);background:'+((balanceDone||noBalanceNeeded)?'#F5FAF5':'var(--ivory1)')+';border-radius:12px;border:1px solid '+((balanceDone||noBalanceNeeded)?'#B0D4B0':'var(--border)'), []);
   var balTitle = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-2)', [
-    el('div', {style:'font-size:12px;font-weight:700;color:var(--dark)', text:(balanceDone?'✔ ':'')+'잔금'})
+    el('div', {style:'font-size:12px;font-weight:700;color:var(--dark)', text:((balanceDone||noBalanceNeeded)?'✔ ':'')+'잔금'})
   ]);
-  if (balanceDone) {
+  if (noBalanceNeeded && !balanceDone) {
+    balSec.appendChild(balTitle);
+    balSec.appendChild(el('div', {style:'font-size:11px;font-weight:800;color:var(--dark);letter-spacing:-0.5px', text:'잔금 없음(계약금으로 완납)'}));
+  } else if (balanceDone) {
     var balEditBtn = btn('font-size:11px;color:#6B6B6B;background:none;border:1px solid var(--border);border-radius:10px;padding:2px 8px;cursor:pointer;font-family:inherit', '수정', function(){
       balSec.innerHTML = ''; buildBalForm();
     });
