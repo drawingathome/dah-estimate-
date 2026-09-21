@@ -254,8 +254,13 @@ function renderCalList(customers, selectedDate) {
     // 실측/시공 일정 옆에 선금·잔금 입금 상태를 같이 표시 (2026-07-20 추가)
     // — 예전엔 일정과 결제 여부를 따로따로 봐야 했어서 한눈에 확인이 안 됐음.
     if (isMain && ev.cust) {
-      var dep = Number(ev.cust.depositAmount) || 0;
-      var bal = Number(ev.cust.balanceAmount) || 0;
+      // 2026-09-21(선혜님 - "위 내용 코드 정리해줘 버그가 많을꺼 같은데"
+      // 요청으로 전수 점검 중 발견): 결제를 견적서 단위로 전환한 뒤,
+      // 여기도 여전히 customers 레벨 필드만 봐서 실제로 입금됐어도
+      // 캘린더에 체크마크가 안 뜰 뻔했음 - getLatestEstPay로 교체.
+      var estPayForCal = (typeof getLatestEstPay === 'function') ? getLatestEstPay(ev.cust) : ev.cust;
+      var dep = Number(estPayForCal.depositAmount) || 0;
+      var bal = Number(estPayForCal.balanceAmount) || 0;
       if (dep > 0 || bal > 0) {
         var payWrap = document.createElement('div');
         payWrap.style.cssText = 'font-size:11px;margin-top:2px;display:flex;gap:4px;justify-content:flex-end';

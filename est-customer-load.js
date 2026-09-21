@@ -557,11 +557,31 @@ function loadCustByIdx(el) {
   // 로컬 캐시(dah_customers)의 depositAmount는 오래됐을 수 있어서
   // 즉시 반영 후에도, 서버에서 최신 값을 다시 조회해서 한 번 더 정확하게
   // 채움(URL기반 로드 경로와 동일한 안전장치, applyRealDepositToForm 재사용).
-  if (Number(c.depositAmount) > 0) applyRealDepositToForm(c.depositAmount);
+  // 2026-09-21(선혜님 - "위 내용 코드 정리해줘 버그가 많을꺼 같은데"
+  // 요청으로 전수 점검 중 발견): 결제를 견적서 단위로 전환한 뒤,
+  // c.depositAmount(customers 레벨)는 신규 고객이 아닌 이상 더 이상
+  // 갱신되지 않아 이 즉시 반영이 오래된/부정확한 값을 잠깐 보여줄 수
+  // 있었음 - 로컬 견적서 캐시(dah_saved)에서 최신 것을 찾아 즉시 반영.
+  try {
+    var localEsts = JSON.parse(localStorage.getItem('dah_saved')||'[]');
+    var myLocalEsts = localEsts.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
+    if (myLocalEsts.length > 0) {
+      myLocalEsts.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
+      if (Number(myLocalEsts[0].depositAmount) > 0) applyRealDepositToForm(myLocalEsts[0].depositAmount);
+    } else if (Number(c.depositAmount) > 0) {
+      applyRealDepositToForm(c.depositAmount);
+    }
+  } catch (eLocalDep) {}
+  // 2026-09-21(선혜님 - "위 내용 코드 정리해줘 버그가 많을꺼 같은데"
+  // 요청으로 전수 점검 중 발견): 결제를 견적서 단위로 전환한 뒤,
+  // customers.deposit_amount는 신규 고객이 아닌 이상 더 이상 갱신되지
+  // 않으므로, 여기서 계속 customers 테이블만 조회하면 이 참고용 계약금
+  // 힌트가 항상 0(또는 오래된 값)으로 잘못 보일 수 있었음 - 이 고객의
+  // 최신 견적서(estimates)에서 조회하도록 교체.
   if (c.id && typeof SUPABASE_URL !== 'undefined') {
     try {
       var depXhr = new XMLHttpRequest();
-      depXhr.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(c.id) + '&select=deposit_amount', true);
+      depXhr.open('GET', SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(c.id) + '&order=created_at.desc&limit=1&select=deposit_amount', true);
       depXhr.setRequestHeader('apikey', SUPABASE_KEY);
       depXhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
       depXhr.onload = function() {

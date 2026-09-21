@@ -27,45 +27,45 @@ function isLegacyNoPaymentRecord(c) {
 var PRE_CONTRACT_STAGES = ['방문예약','상담','가견적'];
 
 function splitCustomerPayments(c) {
-  var pd = (function(){
-    try { return JSON.parse(localStorage.getItem('dah_pay_'+c.clientName)||'{}'); } catch(e) { return {}; }
-  })();
-  var dep = Number(c.depositAmount) || Number(pd.depositAmount) || 0;
-  var depDate = c.depositDate || pd.depositDate || '';
-  var bal = Number(c.balanceAmount) || Number(pd.balanceAmount) || 0;
-  var balDate = c.balanceDate || pd.balanceDate || '';
-  // 2026-08-28(선혜님 확인 — "선금 넣고 실측준비중이면 이 선금이 매출에
-  // 안 잡히는거야??" → "후자지!" = 확정견적 여부와 무관하게, 실제 입금된
-  // 순간부터 매출로 잡혀야 함): 예전엔 c.performanceRevenue(확정견적일
-  // 때만 채워짐 - 2026-08-04 도입)에만 의존해서, 선금결제/실측준비중처럼
-  // 확정견적 이전 단계에서 실제로 입금을 받았어도 매출(목표달성률)에
-  // 전혀 안 잡히고 있었음. 이 함수를 호출하는 쪽(getMonthRevenue 등)이
-  // 이미 PRE_CONTRACT_STAGES(방문예약/상담/가견적)는 걸러내고 있으므로,
-  // 여기까지 온 고객은 이미 선금결제 이상 단계 - c.price(매출계산
-  // 기준금액, 이제 가견적 단계부터도 항상 최신 견적금액으로 동기화됨)를
-  // 우선 사용해서 확정 여부와 무관하게 실제 견적금액 기준으로 반영되게 함.
-  // performanceRevenue가 별도로 명시돼있으면(과거 이관 데이터 등) 그 값을
-  // 그대로 존중.
-  var perf = Number(c.performanceRevenue) || Number(c.price) || 0;
-  var totalPaid = dep + bal;
-  // 2026-08-04: 성과매출 배분 비율의 분모가 잘못됐던 버그 수정 — 예전엔
-  // totalPaid(지금까지 실제 입금된 금액)로 나눠서, 계약금만 들어온 시점엔
-  // totalPaid가 곧 계약금 자체와 같아지므로 비율이 항상 100%로 계산됨(아직
-  // 잔금도 안 들어왔는데 성과매출 전액이 잡히는 문제). 전체 계약금액(price)을
-  // 분모로 써야 "계약금 비율만큼만" 정확히 배분됨.
-  var totalPrice = Number(c.price) || totalPaid || 1;
+  // 2026-09-21(선혜님 - "위 내용 코드 정리해줘 버그가 많을꺼 같은데" 요청
+  // 으로 전수 점검 중 발견): 결제를 견적서 단위로 전환(e2c5e63)한 뒤,
+  // 매출(목표 달성률) 계산의 핵심인 이 함수가 여전히 customers 레벨
+  // c.depositAmount/balanceAmount만 보고 있었음 - 견적서가 여러 건인
+  // 고객은 각 견적서에 저장된 실제 결제가 매출 집계에 전혀 안 잡히는
+  // 심각한 회귀가 될 뻔했음(getAllEstPays로 이 고객의 모든 견적서 결제를
+  // 각각 가져와 견적서별로 독립적으로 배분). 이관 데이터처럼
+  // performanceRevenue가 별도로 명시된 경우(대개 견적서 자체가 없는
+  // 예전 방식 고객)는 기존처럼 그 값을 그대로 존중.
+  var perfOverride = Number(c.performanceRevenue) || 0;
+  var allPays = getAllEstPays(c);
   var parts = [];
-  if (totalPaid > 0) {
+  var anyPaid = false;
+  allPays.forEach(function(estPay){
+    var dep = estPay.depositAmount;
+    var depDate = estPay.depositDate;
+    var bal = estPay.balanceAmount;
+    var balDate = estPay.balanceDate;
+    var totalPaid = dep + bal;
+    if (totalPaid <= 0) return;
+    anyPaid = true;
+    // 2026-08-04: 성과매출 배분 비율의 분모가 잘못됐던 버그 수정 — 예전엔
+    // totalPaid(지금까지 실제 입금된 금액)로 나눠서, 계약금만 들어온 시점엔
+    // totalPaid가 곧 계약금 자체와 같아지므로 비율이 항상 100%로 계산됨(아직
+    // 잔금도 안 들어왔는데 성과매출 전액이 잡히는 문제). 이 견적서 자체의
+    // 금액(estPay.price)을 분모로 써야 "계약금 비율만큼만" 정확히 배분됨.
+    var totalPrice = estPay.price || totalPaid || 1;
+    var perf = perfOverride || totalPrice;
     if (dep > 0 && depDate) parts.push({ date: depDate, revenue: dep, perf: perf * (dep / totalPrice) });
     if (bal > 0 && balDate) parts.push({ date: balDate, revenue: bal, perf: perf * (bal / totalPrice) });
-  } else if (c.date && isLegacyNoPaymentRecord(c)) {
+  });
+  if (!anyPaid && c.date && isLegacyNoPaymentRecord(c)) {
     // 입금 기록이 아직 없는 "예전 방식 고객"만 계약일 기준 전체금액으로 폴백
     // (2026-08-04 조건 추가) — 예전엔 이 폴백이 모든 고객에게 걸려서, 신규로
     // 만든 고객도 실제 입금 기록 없이 "계약금 단계"로 상태만 바꾸면 그 순간
     // 전체 견적금액이 매출로 잡혀버리는 심각한 문제가 있었음(실제 입금 여부와
     // 무관하게 매출이 표시됨). 이관 데이터(memo로 식별) 또는 등록일로부터
     // 7일 넘게 지났는데도 입금기록이 없는 예전 방식 고객만 하위호환 허용.
-    parts.push({ date: c.date, revenue: Number(c.price) || 0, perf: perf });
+    parts.push({ date: c.date, revenue: Number(c.price) || 0, perf: perfOverride || Number(c.price) || 0 });
   }
   return parts;
 }
