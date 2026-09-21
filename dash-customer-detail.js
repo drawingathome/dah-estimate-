@@ -464,24 +464,63 @@ function openDetailInner(name, id, forceTab) {
   // renderPaySection을 반복 호출. 견적서가 하나도 없으면(신규 고객,
   // 아직 견적서를 만든 적 없음) est 없이 한 번 호출해서 예전처럼
   // 고객(customers) 레벨 결제 폴백을 그대로 씀.
+  //
+  // 2026-09-21(선혜님 지적 - "근본까지 하자": 김은/황남주 실사례로 발견한
+  // 진짜 근본 원인): 위 "견적서가 있는지" 판단이 이 기기의 로컬 캐시
+  // (dah_saved)만 보고 있어서, 서버엔 견적서가 실제로 있어도 이 기기
+  // 로컬에 그게 없으면(다른 기기에서 결제 처리했거나 캐시가 비어있던
+  // 경우) "견적서 없음"으로 잘못 판단해 예전 고객레벨 저장으로 조용히
+  // 되돌아가고 있었음 - 오늘 하루 종일 봤던 "로컬 캐시 vs 서버 불일치"
+  // 계열의 근본 원인이 바로 여기였음. 화면은 로컬 캐시로 일단 빠르게
+  // 그리되(체감 지연 없음), 그 직후 서버에서 진짜 견적서 목록을 한 번
+  // 더 확인해서 로컬 캐시가 틀렸으면(서버엔 있는데 로컬엔 없었으면)
+  // 캐시를 바로잡고 화면을 다시 그려서, 항상 서버가 최종 진실이 되게 함.
+  function renderPayTabContent(estsForPay) {
+    payBody.innerHTML = '';
+    var sorted = estsForPay.slice().sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
+    if (sorted.length === 0) {
+      renderPaySection(c, payBody);
+    } else {
+      sorted.forEach(function(e, idx) {
+        var dt = e.savedAt ? new Date(e.savedAt) : (e.date ? new Date(e.date) : null);
+        var dateStr = dt ? ((dt.getMonth()+1) + '/' + dt.getDate() + ' 작성') : '';
+        var statusStr = e.contractStatus === 'contracted' ? '확정견적' : '가견적';
+        var label = '견적서 ' + (sorted.length - idx) + (sorted.length > 1 ? ('/' + sorted.length) : '') + (dateStr ? (' · ' + dateStr) : '') + ' · ' + statusStr;
+        renderPaySection(c, payBody, {
+          id: e.id, price: e.price,
+          depositAmount: e.depositAmount, depositDate: e.depositDate, depositMethod: e.depositMethod, depositReceipt: e.depositReceipt,
+          balanceAmount: e.balanceAmount, balanceDate: e.balanceDate, balanceMethod: e.balanceMethod, balanceReceipt: e.balanceReceipt,
+          estimateLabel: label
+        });
+      });
+    }
+  }
   var allEstsForPaySection = [];
   try { allEstsForPaySection = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(ePaySec) {}
   var myEstsForPaySection = allEstsForPaySection.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
-  myEstsForPaySection.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
-  if (myEstsForPaySection.length === 0) {
-    renderPaySection(c, payBody);
-  } else {
-    myEstsForPaySection.forEach(function(e, idx) {
-      var dt = e.savedAt ? new Date(e.savedAt) : (e.date ? new Date(e.date) : null);
-      var dateStr = dt ? ((dt.getMonth()+1) + '/' + dt.getDate() + ' 작성') : '';
-      var statusStr = e.contractStatus === 'contracted' ? '확정견적' : '가견적';
-      var label = '견적서 ' + (myEstsForPaySection.length - idx) + (myEstsForPaySection.length > 1 ? ('/' + myEstsForPaySection.length) : '') + (dateStr ? (' · ' + dateStr) : '') + ' · ' + statusStr;
-      renderPaySection(c, payBody, {
-        id: e.id, price: e.price,
-        depositAmount: e.depositAmount, depositDate: e.depositDate, depositMethod: e.depositMethod, depositReceipt: e.depositReceipt,
-        balanceAmount: e.balanceAmount, balanceDate: e.balanceDate, balanceMethod: e.balanceMethod, balanceReceipt: e.balanceReceipt,
-        estimateLabel: label
+  renderPayTabContent(myEstsForPaySection);
+  // 로컬 캐시가 "견적서 없음"으로 봤을 때만 서버로 재확인(있으면 캐시를
+  // 바로잡고 다시 그림) - 로컬에 이미 견적서가 있으면 그 안의 결제정보
+  // 자체가 최신인지는 다른 화면(견적서 저장 시)이 책임지므로, 여기서는
+  // "아예 없다고 잘못 판단하는" 사고만 정확히 겨냥해서 막음.
+  if (myEstsForPaySection.length === 0 && c.id && typeof sbXHR === 'function') {
+    sbXHR('GET', 'estimates?client_id=eq.' + encodeURIComponent(c.id) + '&select=id,client_id,client_name,price,deposit_amount,deposit_date,deposit_method,deposit_receipt,balance_amount,balance_date,balance_method,balance_receipt,contract_status,created_at,updated_at&order=updated_at.desc', null, function(err, rows) {
+      if (err || !Array.isArray(rows) || rows.length === 0) return; // 서버도 진짜 없으면 로컬 판단이 맞았던 것 - 그대로 둠
+      var serverEsts = rows.map(function(r){
+        return {
+          id: r.id, clientId: r.client_id, clientName: r.client_name, price: r.price,
+          depositAmount: r.deposit_amount, depositDate: r.deposit_date, depositMethod: r.deposit_method, depositReceipt: r.deposit_receipt,
+          balanceAmount: r.balance_amount, balanceDate: r.balance_date, balanceMethod: r.balance_method, balanceReceipt: r.balance_receipt,
+          contractStatus: r.contract_status, savedAt: r.updated_at || r.created_at
+        };
       });
+      try {
+        var cacheArr = JSON.parse(localStorage.getItem('dah_saved')||'[]');
+        var existingIds = {}; cacheArr.forEach(function(x){ if (x.id) existingIds[x.id] = true; });
+        serverEsts.forEach(function(se){ if (!existingIds[se.id]) cacheArr.push(se); });
+        localStorage.setItem('dah_saved', JSON.stringify(cacheArr));
+      } catch(eCacheFix) {}
+      if (currentDetailId === c.id) renderPayTabContent(serverEsts); // 아직 이 고객 상세를 보고 있을 때만 다시 그림
     });
   }
 
