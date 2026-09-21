@@ -74,6 +74,12 @@ function getUnpaidAmount(c) {
 // 여러 견적서가 있으면 "가장 최근 것"을 대표로 삼음(완벽하진 않지만
 // 최소한 0으로 보이는 회귀는 막음 - 어느 견적서인지 명확히 골라야
 // 하는 경우엔 이 함수 대신 견적서를 직접 지정해서 써야 함).
+// 2026-09-21: 알림톡의 "계약금 결제 안내"/"잔금 결제 안내"처럼 개별
+// 선금/잔금 "금액 하나"가 필요한 곳을 위한 헬퍼 - 이 고객의 견적서가
+// 있으면 최신 것의 결제 정보, 없으면 예전처럼 고객 레벨 필드로 폴백.
+// 여러 견적서가 있으면 "가장 최근 것"을 대표로 삼음(완벽하진 않지만
+// 최소한 0으로 보이는 회귀는 막음 - 어느 견적서인지 명확히 골라야
+// 하는 경우엔 이 함수 대신 견적서를 직접 지정해서 써야 함).
 function getLatestEstPay(c) {
   try {
     var allEsts = JSON.parse(localStorage.getItem('dah_saved')||'[]');
@@ -85,6 +91,51 @@ function getLatestEstPay(c) {
     }
   } catch(err) {}
   return { price: Number(c.price)||0, depositAmount: Number(c.depositAmount)||0, balanceAmount: Number(c.balanceAmount)||0 };
+}
+
+// 2026-09-21(선혜님 - "위 내용 코드 정리해줘 버그가 많을꺼 같은데" 요청으로
+// 전수 점검 중 발견): 결제를 견적서 단위로 전환(e2c5e63)하면서, 이 고객의
+// "모든" 견적서 각각의 결제 내역이 필요한 곳(매출 차트의 월별 배분, 엑셀
+// 다운로드, 캘린더 표시 등)이 전부 여전히 customers 레벨 필드만 보고
+// 있었음 - getReceivedAmount(합계)/getLatestEstPay(최신 하나)로는 부족한
+// 이런 곳들을 위해, 이 고객의 견적서마다 결제 내역을 각각 담은 배열을
+// 반환. 견적서가 없으면(신규 고객) customers 레벨 폴백 하나만 담긴
+// 배열을 반환해 호출부가 항상 배열을 순회하기만 하면 되게 함.
+function getAllEstPays(c) {
+  try {
+    var allEsts = JSON.parse(localStorage.getItem('dah_saved')||'[]');
+    var myEsts = allEsts.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
+    if (myEsts.length > 0) {
+      return myEsts.map(function(e){
+        return {
+          price: Number(e.price)||0,
+          depositAmount: Number(e.depositAmount)||0, depositDate: e.depositDate||'',
+          balanceAmount: Number(e.balanceAmount)||0, balanceDate: e.balanceDate||''
+        };
+      });
+    }
+  } catch(err) {}
+  return [{
+    price: Number(c.price)||0,
+    depositAmount: Number(c.depositAmount)||0, depositDate: c.depositDate||'',
+    balanceAmount: Number(c.balanceAmount)||0, balanceDate: c.balanceDate||''
+  }];
+}
+
+// 2026-09-21: 엑셀 다운로드처럼 "고객 하나당 한 줄"로 압축해야 하는 곳을
+// 위한 헬퍼 - 견적서가 여러 건이면 선금/잔금 각각 합계 금액을 내고,
+// 날짜는 그중 가장 최근(늦은) 날짜 하나를 대표로 보여줌(완벽하진
+// 않지만, 최소한 실제 있는 결제가 0으로 보이는 회귀는 막음).
+function getReceivedSummary(c) {
+  var allPays = getAllEstPays(c);
+  var depositAmount = 0, depositDate = '', balanceAmount = 0, balanceDate = '';
+  allPays.forEach(function(p){
+    depositAmount += p.depositAmount;
+    if (p.depositDate && p.depositDate > depositDate) depositDate = p.depositDate;
+    balanceAmount += p.balanceAmount;
+    if (p.balanceDate && p.balanceDate > balanceDate) balanceDate = p.balanceDate;
+  });
+  return { depositAmount: depositAmount, depositDate: depositDate, balanceAmount: balanceAmount, balanceDate: balanceDate };
 }
 
 function isArchived(c) {

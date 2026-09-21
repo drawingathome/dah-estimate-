@@ -243,6 +243,10 @@ if (/dah-dashboard/.test(target)) {
   // 2026-09-21(선혜님 - 전보현/민소아 고객 실제 발생 확인): 실측/시공
   // 예정일 수정시 예전 "미정" 플래그가 안 지워지던 버그 검증.
   scripts.push(['date-tbd-clear-check.js', []]);
+  // 2026-09-21(선혜님 - "위 내용 코드 정리해줘 버그가 많을꺼 같은데"
+  // 전수 점검 중 발견): 견적서 단위 결제가 매출차트/처리필요배지에도
+  // 정확히 반영되는지 검증(매출 계산과 미수금 판단의 핵심 회귀 방지).
+  scripts.push(['est-based-pay-sync-check.js', []]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',

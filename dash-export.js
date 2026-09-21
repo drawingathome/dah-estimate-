@@ -55,6 +55,12 @@ function _exportExcelInner() {
     }
 
     var rows = customers.map(function(c) {
+      // 2026-09-21(선혜님 - "위 내용 코드 정리해줘 버그가 많을꺼 같은데"
+      // 요청으로 전수 점검 중 발견): 결제를 견적서 단위로 전환한 뒤,
+      // 이 엑셀 다운로드는 여전히 customers 레벨 필드만 봐서 견적서가
+      // 여러 건인 고객은 실제 결제가 있어도 선금/잔금이 0으로 나오는
+      // 회귀가 될 뻔했음 - 견적서별 합계(getReceivedSummary)로 교체.
+      var recv = getReceivedSummary(c);
       return [
         c.clientName   || '',
         c.phone        || '',
@@ -68,10 +74,10 @@ function _exportExcelInner() {
         c.measureDate  || '',
         c.installDate  || '',
         c.confirmDate  || '',
-        c.depositAmount || 0,
-        c.depositDate  || '',
-        c.balanceAmount || 0,
-        c.balanceDate  || '',
+        recv.depositAmount || 0,
+        recv.depositDate  || '',
+        recv.balanceAmount || 0,
+        recv.balanceDate  || '',
         c.visitCount   || 1,
         c.leadParked ? 'Y' : '',
         orderStatusSummary(c),
