@@ -697,6 +697,27 @@ function triggerSumPulse(){
 // 사용자가 뭔가 직접 수정하면 그 시점부터는 다시 정상적으로 재계산됨.
 function applyFrozenBreakdown(bd) {
   if (!bd) return;
+  // 2026-09-19(선혜님 - "그게 중요하니??? 금액이 차이가 나는게 말이
+  // 안되는데" - 근본 원인 해결): 저장된 스냅샷(bd)이 지금 화면에 실제로
+  // 보이는 품목들과 안 맞으면(예전 버그로 저장된 데이터 등 어떤
+  // 이유로든), 그걸 무조건 그대로 보여주는 게 "화면 항목과 최종 총액이
+  // 완전히 안 맞는" 상황을 만들었음 - 언제, 왜 저장이 잘못됐는지와
+  // 무관하게, 화면에 보이는 숫자는 항상 서로 앞뒤가 맞아야 함. 얼려진
+  // 총액을 적용하기 전에 항상 지금 DOM 기준으로 실제 재계산해서 저장된
+  // 값과 비교하고, 서로 다르면(신뢰할 수 없는 스냅샷) 얼림 자체를 적용
+  // 안 하고 방금 재계산한 정확한 값을 그대로 둠 - 이렇게 하면 예전
+  // 버그로 저장된 데이터를 다시 입력/저장하지 않고 그냥 열기만 해도,
+  // 최소한 "화면에 보이는 항목 합계=최종 총액"이라는 앞뒤가 맞는
+  // 상태는 항상 보장됨.
+  if (typeof calcTotal === 'function') {
+    calcTotal();
+    var liveTotalEl = document.getElementById('sum-total');
+    var liveTotal = liveTotalEl ? Number((liveTotalEl.textContent || '').replace(/[^\d]/g, '')) : null;
+    if (bd.finalTotal != null && liveTotal != null && liveTotal !== bd.finalTotal) {
+      window._estEditState.viewingFrozenEstimate = false;
+      return;
+    }
+  }
   var setText = function(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
   if (bd.productSubtotal != null) setText('sum-curtain', bd.productSubtotal.toLocaleString()+'원');
   if (bd.installSubtotal != null) setText('sum-svc', bd.installSubtotal.toLocaleString()+'원');
