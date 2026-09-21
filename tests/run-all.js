@@ -124,6 +124,13 @@ if (/dah-dashboard/.test(target)) {
   // 테이블) 두 소스 중 하나만 보다가, 실제 입금 기록이 있는데도 전액
   // 미수금으로 잘못 표시되던 버그 검증 (김은/황남주 실사례로 발견)
   scripts.push(['received_amount_source_mismatch_check.js', []]);
+  // 2026-09-21: 계약금만으로 총액이 다 채워진 경우 잔금 UI가 "완납"과
+  // 앞뒤가 맞게 표시되는지 검증 (노지경 두번째 견적서 실사례로 발견)
+  scripts.push(['no_balance_needed_ui_check.js', []]);
+  // 2026-09-21: getLatestEstPay/getAllEstPays도 getReceivedAmount와
+  // 같은 견적서-고객레벨 소스 불일치 함정이 있었음을 전수점검으로
+  // 발견해서 같이 수정 - 검증
+  scripts.push(['est_pay_source_fallback_check.js', []]);
   // 2026-09-18: 위 테스트가 인위적으로 조건을 만들어 검증했다면, 이
   // 테스트는 실제 loadEstDbId 흐름 + 실제 삭제버튼 클릭 + 실제 인쇄까지
   // 전부 진짜로 재현 - 3가지 겹친 버그(얼림/실측시공비 잔존/계약금

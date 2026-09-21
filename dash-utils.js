@@ -90,17 +90,28 @@ function getUnpaidAmount(c) {
 // 여러 견적서가 있으면 "가장 최근 것"을 대표로 삼음(완벽하진 않지만
 // 최소한 0으로 보이는 회귀는 막음 - 어느 견적서인지 명확히 골라야
 // 하는 경우엔 이 함수 대신 견적서를 직접 지정해서 써야 함).
+// 2026-09-21(선혜님 지적 - "구조를 다 짠거 맞아?? 전문업체면 전수
+// 검사해야지"로 범위를 넓혀 확인 - getReceivedAmount와 정확히 같은
+// 함정이 이 함수에도 그대로 있었음): dash-customer-pay.js가 여전히
+// customers 레벨에 결제를 저장하고 있는 한, "견적서가 있으면 무조건
+// 견적서만 본다"는 판단은 항상 위험함 - 견적서 쪽 금액이 0인데 고객
+// 레벨엔 실제 입금이 있으면, 고객 레벨 쪽을 써야 함.
 function getLatestEstPay(c) {
+  var estResult = null;
   try {
     var allEsts = JSON.parse(localStorage.getItem('dah_saved')||'[]');
     var myEsts = allEsts.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
     if (myEsts.length > 0) {
       myEsts.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
       var e = myEsts[0];
-      return { price: Number(e.price)||0, depositAmount: Number(e.depositAmount)||0, balanceAmount: Number(e.balanceAmount)||0 };
+      estResult = { price: Number(e.price)||0, depositAmount: Number(e.depositAmount)||0, balanceAmount: Number(e.balanceAmount)||0 };
     }
   } catch(err) {}
-  return { price: Number(c.price)||0, depositAmount: Number(c.depositAmount)||0, balanceAmount: Number(c.balanceAmount)||0 };
+  var custResult = { price: Number(c.price)||0, depositAmount: Number(c.depositAmount)||0, balanceAmount: Number(c.balanceAmount)||0 };
+  if (!estResult) return custResult;
+  var estTotal = estResult.depositAmount + estResult.balanceAmount;
+  var custTotal = custResult.depositAmount + custResult.balanceAmount;
+  return custTotal > estTotal ? { price: estResult.price || custResult.price, depositAmount: custResult.depositAmount, balanceAmount: custResult.balanceAmount } : estResult;
 }
 
 // 2026-09-21(선혜님 - "위 내용 코드 정리해줘 버그가 많을꺼 같은데" 요청으로
@@ -112,11 +123,12 @@ function getLatestEstPay(c) {
 // 반환. 견적서가 없으면(신규 고객) customers 레벨 폴백 하나만 담긴
 // 배열을 반환해 호출부가 항상 배열을 순회하기만 하면 되게 함.
 function getAllEstPays(c) {
+  var estList = null;
   try {
     var allEsts = JSON.parse(localStorage.getItem('dah_saved')||'[]');
     var myEsts = allEsts.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
     if (myEsts.length > 0) {
-      return myEsts.map(function(e){
+      estList = myEsts.map(function(e){
         return {
           price: Number(e.price)||0,
           depositAmount: Number(e.depositAmount)||0, depositDate: e.depositDate||'',
@@ -125,11 +137,23 @@ function getAllEstPays(c) {
       });
     }
   } catch(err) {}
-  return [{
+  var custEntry = {
     price: Number(c.price)||0,
     depositAmount: Number(c.depositAmount)||0, depositDate: c.depositDate||'',
     balanceAmount: Number(c.balanceAmount)||0, balanceDate: c.balanceDate||''
-  }];
+  };
+  if (!estList) return [custEntry];
+  // 2026-09-21(getLatestEstPay와 같은 이유로 함께 발견): 견적서 목록엔
+  // 결제기록이 전혀 없는데(전부 0) 고객 레벨엔 실제 입금이 있으면,
+  // 그 견적서 배열 그대로 반환하는 건 "완납인데 0으로 보이는" 회귀가
+  // 됨 - 이럴 때만 고객 레벨 결제를 대표 항목 하나로 대신 반환.
+  var estTotalSum = estList.reduce(function(s, e){ return s + e.depositAmount + e.balanceAmount; }, 0);
+  var custTotal = custEntry.depositAmount + custEntry.balanceAmount;
+  if (estTotalSum === 0 && custTotal > 0) {
+    var latestPrice = estList.length > 0 ? estList[estList.length - 1].price : custEntry.price;
+    return [{ price: latestPrice || custEntry.price, depositAmount: custEntry.depositAmount, depositDate: custEntry.depositDate, balanceAmount: custEntry.balanceAmount, balanceDate: custEntry.balanceDate }];
+  }
+  return estList;
 }
 
 // 2026-09-21: 엑셀 다운로드처럼 "고객 하나당 한 줄"로 압축해야 하는 곳을
