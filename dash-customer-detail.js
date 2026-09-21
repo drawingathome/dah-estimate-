@@ -1224,6 +1224,46 @@ function showVendorOrderFromEstimate(e, category) {
   window.open(url, '_blank');
 }
 
+// 2026-09-21(선혜님 - "견적서 확인을 누르면... 제일 마지막 견적만
+// 확인이 되고 있어" - 노지경 고객 사례): 견적서가 2건 이상인 고객이
+// openEstimate()를 호출하면, 최신 하나로 바로 넘어가는 대신 이 모달로
+// 골라서 열게 함. showEstimateHistoryModal()과 같은 오버레이 스타일
+// 재사용 - 각 견적서의 날짜/금액/상태(가견적·확정견적)를 보여줌.
+function showEstimatePickerModal(rows, clientName) {
+  var existing = document.getElementById('est-picker-overlay');
+  if (existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'est-picker-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99998;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:12px;padding:var(--sp-5);width:420px;max-width:100%;max-height:80vh;overflow-y:auto';
+  box.innerHTML = '<div style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:4px">📋 ' + escHtml(clientName||'') + ' 견적서 ' + rows.length + '건</div>' +
+    '<div style="font-size:11px;color:var(--sub);margin-bottom:var(--sp-3)">어느 견적서를 여실지 골라주세요</div>' +
+    '<div id="est-picker-list"></div>' +
+    '<button id="est-picker-close-btn" style="margin-top:var(--sp-3);width:100%;padding:11px;background:#fff;border:1px solid var(--border);border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;color:var(--dark)">닫기</button>';
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  document.getElementById('est-picker-close-btn').addEventListener('click', function(){ overlay.remove(); });
+  overlay.addEventListener('click', function(e){ if (e.target === overlay) overlay.remove(); });
+
+  var listEl = document.getElementById('est-picker-list');
+  rows.forEach(function(r) {
+    var dt = new Date(r.created_at);
+    var dateStr = (dt.getMonth()+1) + '/' + dt.getDate() + ' 작성';
+    var priceStr = (Number(r.price)||0).toLocaleString() + '원';
+    var statusStr = r.estimate_status === 'final' ? '확정견적' : '가견적';
+    var row = document.createElement('button');
+    row.style.cssText = 'width:100%;text-align:left;padding:12px 10px;border:1px solid var(--border);border-radius:10px;background:#fff;font-family:inherit;cursor:pointer;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px';
+    row.innerHTML = '<div><div style="font-size:11px;color:var(--sub)">' + escHtml(dateStr) + ' · ' + escHtml(statusStr) + '</div>' +
+      '<div style="font-size:14px;font-weight:700;color:var(--dark)">' + escHtml(priceStr) + '</div></div>' +
+      '<span style="font-size:11px;color:var(--terra);font-weight:700">열기 ›</span>';
+    row.addEventListener('click', function(){
+      window.location.href = 'dah-estimate.html?loadEstDbId=' + encodeURIComponent(r.id) + '&mode=edit';
+    });
+    listEl.appendChild(row);
+  });
+}
+
 function openEstimate(name, id) {
   var useId = id || (typeof currentDetailId !== 'undefined' ? currentDetailId : null);
   // 2026-08-12: 예전엔 localStorage(dah_open_customer)로 고객정보를 넘기고
@@ -1241,18 +1281,27 @@ function openEstimate(name, id) {
   // loadEstDbId+mode=edit로 열어서 "이어서 수정"이 되도록, 없으면(진짜 신규
   // 고객) 기존처럼 loadCustId로 열리도록 분기함.
   if (useId) {
+    // 2026-09-21(선혜님 - "견적서 확인을 누르면 2개의 견적서를 선택하는게
+    // 아니라 그 중 제일 마지막 견적만 확인이 되고 있어" - 노지경 고객
+    // 사례): limit=1로 무조건 최신 견적서 하나만 가져와서 곧바로 그
+    // 견적서로 이동해버려서, 견적서가 여러 건인 고객은 선택할 기회
+    // 자체가 없었음(예전 것을 볼 방법이 없음) - 이 고객의 견적서가
+    // 2건 이상이면 어느 것을 열지 고르는 화면을 먼저 보여주고, 1건
+    // 이하면 예전처럼 바로 이동(불필요한 클릭 추가 안 함).
     var latestUrl = SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(useId) +
-      '&is_archived=is.false&order=created_at.desc&limit=1&select=id';
+      '&is_archived=is.false&order=created_at.desc&select=id,created_at,price,estimate_status';
     var lxhr = new XMLHttpRequest();
     lxhr.open('GET', latestUrl, true);
     lxhr.setRequestHeader('apikey', SUPABASE_KEY);
     lxhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
     lxhr.onload = function() {
-      var latestId = null;
-      try {
-        var rows = JSON.parse(lxhr.responseText);
-        if (rows && rows[0] && rows[0].id) latestId = rows[0].id;
-      } catch(e) {}
+      var rows = [];
+      try { rows = JSON.parse(lxhr.responseText) || []; } catch(e) {}
+      if (rows.length >= 2) {
+        showEstimatePickerModal(rows, name || (typeof currentDetailName !== 'undefined' ? currentDetailName : ''));
+        return;
+      }
+      var latestId = (rows[0] && rows[0].id) || null;
       if (latestId) {
         window.location.href = 'dah-estimate.html?loadEstDbId=' + encodeURIComponent(latestId) + '&mode=edit';
       } else {

@@ -229,6 +229,12 @@ if (/dah-dashboard/.test(target)) {
   // "진행중인 견적" 요약이 최신 견적서 하나가 아니라 전체 합계로
   // 표시되는지 검증.
   scripts.push(['ongoing-est-sum-check.js', []]);
+  // 2026-09-21(선혜님 - "견적서 확인을 누르면... 제일 마지막 견적만
+  // 확인이 되고 있어"): 견적서 2건 이상이면 선택 모달이 뜨는지 검증.
+  scripts.push(['estimate-picker-check.js', []]);
+  // 2026-09-21(선혜님 - "결제 화면이 무슨 견적서에 대한 결제건인지
+  // 확인이 안되게 되어있고"): 견적서 다건 합계 안내 표시 검증.
+  scripts.push(['pay-multi-estimate-check.js', []]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',

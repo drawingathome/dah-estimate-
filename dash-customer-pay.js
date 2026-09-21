@@ -31,6 +31,22 @@ function renderPaySection(c, payBody) {
   };
 
   var paySec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
+  // 2026-09-21(선혜님 - "견적서가 두갠데 결제 화면이 무슨 견적서에 대한
+  // 결제건인지 확인이 안되게 되어있고" - 노지경 고객 사례): 결제(선금/
+  // 잔금)는 견적서 하나가 아니라 이 고객의 모든 견적서 합계(customers.
+  // price, 오늘 여러 견적서 합산 기능 참고)를 기준으로 진행되는 게
+  // 원래 설계인데, 화면에 "이게 몇 건짜리 합계에 대한 결제인지"가
+  // 전혀 안 보여서 헷갈렸음 - 견적서가 2건 이상이면 그 사실과 합계
+  // 금액을 명시하는 안내줄 추가(1건이면 굳이 안 보여줌, 불필요한
+  // 정보 방지).
+  var allEstsForPay = [];
+  try { allEstsForPay = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
+  var myEstsForPay = allEstsForPay.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
+  if (myEstsForPay.length >= 2) {
+    paySec.appendChild(div('font-size:11px;color:var(--terra);background:#FFF3EC;padding:8px 10px;border-radius:8px;margin-bottom:10px', [
+      el('span', {text: '📎 이 견적서 ' + myEstsForPay.length + '건 합계(' + (Number(c.price)||0).toLocaleString() + '원)에 대한 결제예요'})
+    ]));
+  }
   var paySecTitleRow = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:10px', [
     el('div', {style:'font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase', text:'결제 관리'})
   ]);
