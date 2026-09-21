@@ -1064,7 +1064,19 @@ function renderDetailInfoSection(c, body) {
             // 날짜가 그대로 보이던 원인. 이 고객의 가장 최근 견적서도
             // 함께 갱신.
             if (typeof SUPABASE_URL !== 'undefined' && target.id) {
-              var estField = item.key === 'installDate' ? 'install_date' : 'measure_date';
+              // 2026-09-21(선혜님 - "전문업체라면 어떻게 하겠니? 제대로 좀
+              // 해봐" 요청으로 전체 DB 스키마 재점검 중 발견 - 심각한
+              // 회귀): estimates 테이블엔 measure_date라는 컬럼 자체가
+              // 없음(실측 예정일은 이 테이블에서 'date' 컬럼에 저장됨,
+              // est-save.js의 "date: document.getElementById('c-measure')
+              // ?.value" 로 확인) - 오늘 아침 이 자리에 measure_date로
+              // PATCH를 보내고 있었는데, 실제로 Supabase에 재현해보니
+              // "column measure_date of relation estimates does not exist"
+              // 로 요청 자체가 거부됨. 즉 오늘 아침 만든 tbd 수정이 실측
+              // 예정일 케이스에서는 이 PATCH 자체가 실패해서 tbd 플래그도
+              // 같이 반영이 안 됐을 가능성이 매우 높음(재현 테스트가
+              // 네트워크를 mock해서 항상 성공 응답을 줬기 때문에 못 잡음).
+              var estField = item.key === 'installDate' ? 'install_date' : 'date';
               try {
                 var findXhr = new XMLHttpRequest();
                 findXhr.open('GET', SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(target.id) + '&order=created_at.desc&limit=1&select=id', true);

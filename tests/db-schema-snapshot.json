@@ -1,0 +1,22 @@
+{
+  "_주의": "이 파일은 실제 Supabase DB 스키마의 스냅샷입니다. DB에 컬럼을 추가/삭제하면 이 파일도 함께 갱신해야 합니다 (MCP Supabase execute_sql로 information_schema.columns 조회). schema-consistency-check.js가 이 파일과 코드를 대조합니다.",
+  "_생성일": "2026-09-21",
+  "customers": [
+    "id","created_at","client_name","phone","addr","space","price","performance_revenue",
+    "staff_name","stage","date","memo","visit_count","measure_date","install_date",
+    "deposit_amount","deposit_date","deposit_method","deposit_receipt",
+    "balance_amount","balance_date","balance_method","balance_receipt",
+    "is_archived","order_status","branch","updated_at","lead_parked","confirm_date",
+    "payment_link","measure_date_tbd","install_date_tbd"
+  ],
+  "estimates": [
+    "id","customer_name","phone","space","product","price","performance_revenue",
+    "staff_name","date","memo","created_at","estimate_status","is_archived","confirmed_at",
+    "branch","client_id","updated_at","line_items","as_install_date","as_type","as_symptom",
+    "as_photo_memo","as_fee_type","client_idempotency_key","cust_type","region",
+    "applied_discounts","price_breakdown","contract_status","install_date",
+    "measure_date_tbd","install_date_tbd","installer_name","installer_phone",
+    "deposit_amount","deposit_date","deposit_method","deposit_receipt",
+    "balance_amount","balance_date","balance_method","balance_receipt"
+  ]
+}

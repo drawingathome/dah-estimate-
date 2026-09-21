@@ -104,6 +104,16 @@ async function run() {
   const estPatch = captured.find(c => c.url.includes('/estimates?'));
   ok('1. 고객(customers) PATCH에 measure_date_tbd:false가 함께 담김', custPatch && custPatch.body.measure_date_tbd === false, custPatch && JSON.stringify(custPatch.body));
   ok('2. 이 고객의 최신 견적서(estimates) PATCH에도 measure_date_tbd:false가 함께 담김(견적서 앱이 실제로 읽는 필드)', estPatch && estPatch.body.measure_date_tbd === false, estPatch && JSON.stringify(estPatch.body));
+  // 2026-09-21(선혜님 - "전문업체라면 어떻게 하겠니? 제대로 좀 해봐" 요청
+  // 으로 전체 스키마 재점검 중 발견): 이 테스트는 처음엔 tbd 플래그
+  // 값만 확인하고, 정작 그 옆에 실려가는 날짜 필드의 "키 이름" 자체는
+  // 검증 안 하고 있었음 - 그래서 dash-customer-detail.js가 estimates에
+  // 실제로 없는 컬럼(measure_date)으로 PATCH를 보내던 진짜 심각한
+  // 버그를 이 테스트가 처음부터 못 잡았음(mock 서버는 필드명이 뭐든
+  // 다 받아주니까). estimates 테이블의 실제 컬럼명은 'date'이지
+  // 'measure_date'가 아님 - 정확한 키로 담기는지, 잘못된 키가 안
+  // 섞여있는지 명시적으로 확인.
+  ok('3. [핵심] 견적서 PATCH의 날짜 필드가 실제 존재하는 컬럼명(date)으로 담김(measure_date 아님)', estPatch && /^\d{4}-\d{2}-\d{2}$/.test(estPatch.body.date) && !('measure_date' in estPatch.body), estPatch && JSON.stringify(estPatch.body));
 
   console.log(log.join('\n'));
   console.log(jsErrors.length ? 'JS 에러: ' + jsErrors.join('\n') : 'JS 에러 없음');

@@ -622,10 +622,20 @@ function dahDiagnoseSchema() {
 
   report('');
   report('=== estimates 테이블 진단 시작 ===');
+  // 2026-09-21(선혜님 - "전문업체라면 어떻게 하겠니? 제대로 좀 해봐" 요청
+  // 으로 전체 스키마 재점검 중 발견한 심각한 회귀를 계기로 확장):
+  // estRow에 오늘(9/21) 견적서별 결제 관리 전환과 실측/시공일 미정
+  // 플래그 수정으로 새로 추가된 10개 필드(결제 8개 + tbd 2개)가 전혀
+  // 없었음 - 이 진단이 있었다면, dash-customer-detail.js가 estimates에
+  // 없는 컬럼(measure_date)으로 PATCH를 보내던 버그를 배포 전에 바로
+  // 잡아냈을 것. INSERT뿐 아니라 customers처럼 PATCH 테스트도 추가.
   var estRow = {
     customer_name: testName, price: 100000, performance_revenue: 90000, staff_name: '마스터',
     estimate_status: 'ga', phone: '010-0000-0000', space: '거실', product: '테스트원단',
-    date: '2026-01-01', memo: '진단테스트', confirmed_at: null, branch: '반포점', client_id: null
+    date: '2026-01-01', memo: '진단테스트', confirmed_at: null, branch: '반포점', client_id: null,
+    install_date: '2026-01-03', measure_date_tbd: false, install_date_tbd: false,
+    deposit_amount: 50000, deposit_date: '2026-01-01', deposit_method: '카드', deposit_receipt: false,
+    balance_amount: 50000, balance_date: '2026-01-01', balance_method: '현금', balance_receipt: false
   };
   var estInsertRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates', {
     method: 'post',
@@ -636,9 +646,28 @@ function dahDiagnoseSchema() {
   if (estInsertRes.getResponseCode() >= 300) {
     report('❌ estimates INSERT 실패 — HTTP ' + estInsertRes.getResponseCode());
     report('   상세: ' + estInsertRes.getContentText());
+    report('   → 위 오류 메시지의 필드명을 확인해서, 해당 컬럼을 테이블에 추가하거나 코드에서 제외해야 합니다');
   } else {
-    report('✅ estimates INSERT 성공');
+    report('✅ estimates INSERT 성공 — 모든 필드가 정상적으로 테이블에 존재합니다');
     var estId = JSON.parse(estInsertRes.getContentText())[0].id;
+
+    // dash-customer-detail.js가 "실측/시공 예정일 클릭수정" 시 실제로
+    // 보내는 필드 그대로 PATCH 시도 - 컬럼명이 실제 스키마와 안 맞으면
+    // 여기서 바로 잡힘(오늘 measure_date 오탈자 버그가 정확히 이 경로).
+    var estPatchRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?id=eq.' + estId, {
+      method: 'patch',
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      payload: JSON.stringify({ date: '2026-02-01', measure_date_tbd: false, install_date: '2026-02-03', install_date_tbd: false, deposit_amount: 60000 }),
+      muteHttpExceptions: true
+    });
+    if (estPatchRes.getResponseCode() >= 300) {
+      report('❌ estimates PATCH(수정) 실패 — HTTP ' + estPatchRes.getResponseCode());
+      report('   상세: ' + estPatchRes.getContentText());
+      report('   → 이 오류가 나면 대시보드에서 실측/시공 예정일·결제 수정이 이 견적서에 실제로는 반영 안 되고 있는 것입니다');
+    } else {
+      report('✅ estimates PATCH(수정) 성공 — 실측/시공 예정일, 결제 수정이 정상적으로 견적서에 반영됩니다');
+    }
+
     UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?id=eq.' + estId, {
       method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
     });

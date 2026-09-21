@@ -96,6 +96,11 @@ if (/dah-dashboard/.test(target)) {
   // 잡아냄(tests/typecheck-check.js 상단 설명 참고). target과 무관하게
   // 항상 같은 결과이므로 두 앱 어느 쪽으로 실행해도 동일하게 동작.
   scripts.push(['typecheck-check.js', []]);
+  // 2026-09-21(선혜님 - "전문업체라면 어떻게 하겠니? 제대로 좀 해봐"
+  // 요청으로 전체 스키마 재점검 중 발견한 심각한 회귀를 계기로 신설):
+  // 코드가 estimates/customers에 쓰는 필드명이 실제 DB 컬럼과 일치하는지
+  // 검증 - mock 기반 재현 테스트로는 원천적으로 못 잡는 유형의 버그를 잡음.
+  scripts.push(['schema-consistency-check.js', []]);
   // 2026-09-17(GitHub Issue #5 - "다음 세션 작업" 확정 설계 구현): 발주정보
   // 입력 팝업 - 숨겨진 거래처 입력칸을 큰 팝업으로 채우는 새 기능.
   scripts.push(['vendor-info-popup-check.js', []]);
