@@ -235,9 +235,15 @@ function autoUpdateRail(curtainTr) {
     // 내용 텍스트에 안 합치고 별도 칸(.svc-space)에 정확히 넣음.
     var spaceInp = existing.querySelector('.svc-space'); if(spaceInp) spaceInp.value = space||'';
     var inp=existing.querySelector('.svc-content'); if(inp) inp.value='조절레일(타공형) '+jaR+'자';
-    var pinp=existing.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw',String(RAIL_UNIT_PRICE)); pinp.value=(RAIL_UNIT_PRICE).toLocaleString(); }
+    // 2026-09-19(선혜님 - "다시 열어보니 실측+레일비가... 이게 말이
+    // 되니?????????"): 사용자가 이 단가를 직접 수정해뒀으면(manualOverride)
+    // 자동계산이 그 값을 덮어쓰지 않고 그대로 둠 - 대신 수량(레일수)이
+    // 바뀌면 금액 재계산은 정상적으로 반영되도록 calcSvcRow는 그대로 호출.
+    if (!existing.dataset.manualOverride) {
+      var pinp=existing.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw',String(RAIL_UNIT_PRICE)); pinp.value=(RAIL_UNIT_PRICE).toLocaleString(); }
+    }
     var qinp=existing.querySelector('.sqty'); if(qinp) qinp.value=jaR;
-    calcSvcRow(pinp);
+    calcSvcRow(existing.querySelector('.sprice'));
   } else {
     addSvcRow();
     var newRow = svcBody.lastElementChild;
@@ -258,9 +264,11 @@ function autoUpdateRail(curtainTr) {
   if(existingCost) {
     var cSpaceInp=existingCost.querySelector('.svc-space'); if(cSpaceInp) cSpaceInp.value = space||'';
     var cinp=existingCost.querySelector('.svc-content'); if(cinp) cinp.value='레일 시공비';
-    var cpinp=existingCost.querySelector('.sprice'); if(cpinp){ cpinp.setAttribute('data-raw',String(RAIL_INSTALL_FEE)); cpinp.value=(RAIL_INSTALL_FEE).toLocaleString(); }
+    if (!existingCost.dataset.manualOverride) {
+      var cpinp=existingCost.querySelector('.sprice'); if(cpinp){ cpinp.setAttribute('data-raw',String(RAIL_INSTALL_FEE)); cpinp.value=(RAIL_INSTALL_FEE).toLocaleString(); }
+    }
     var cqinp=existingCost.querySelector('.sqty'); if(cqinp) cqinp.value=1;
-    calcSvcRow(cpinp);
+    calcSvcRow(existingCost.querySelector('.sprice'));
   } else {
     addSvcRow();
     var newCostRow = svcBody.lastElementChild;
@@ -493,9 +501,11 @@ function recalcBlindOptionExtras() {
   var tds = row.querySelectorAll('td');
   var sel=row.querySelector('.svc-kind'); if (sel) sel.value='전동';
   var inp=row.querySelector('.svc-content'); if (inp) inp.value = optNames.length ? optNames.join(', ') : '옵션 추가금';
-  var pinp=row.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw', String(extraSum)); pinp.value=extraSum.toLocaleString(); }
+  if (!row.dataset.manualOverride) {
+    var pinp=row.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw', String(extraSum)); pinp.value=extraSum.toLocaleString(); }
+  }
   var qinp=row.querySelector('.sqty'); if (qinp) qinp.value = 1;
-  calcSvcRow(pinp);
+  calcSvcRow(row.querySelector('.sprice'));
 }
 
 function autoAddBlindSvc() {
@@ -523,9 +533,11 @@ function autoAddBlindSvc() {
   var tds = row.querySelectorAll('td');
   var sel=row.querySelector('.svc-kind'); if(sel) sel.value='시공비';
   var inp=row.querySelector('.svc-content'); if(inp) inp.value='블라인드 시공비 ('+blindCount+'개)';
-  var pinp=row.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw','10000'); pinp.value=(10000).toLocaleString(); }
+  if (!row.dataset.manualOverride) {
+    var pinp=row.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw','10000'); pinp.value=(10000).toLocaleString(); }
+  }
   var qinp=row.querySelector('.sqty'); if(qinp) qinp.value=blindCount;
-  calcSvcRow(pinp);
+  calcSvcRow(row.querySelector('.sprice'));
 }
 
 function addSvcRow() {
@@ -537,7 +549,7 @@ function addSvcRow() {
     '<option value="부자재">부자재</option><option value="기타">기타</option></select></td>'+
     '<td><input type="text" placeholder="위치" class="svc-space" style="'+INP+'"></td>'+
     '<td><input type="text" placeholder="내용 입력" class="svc-content" style="'+INP+'"></td>'+
-    '<td><input type="text" inputmode="numeric" placeholder="단가" class="sprice" oninput="fmtPrice(this);calcSvcRow(this)" onfocus="fmtPriceFocus(this)" onblur="fmtPriceBlur(this);calcSvcRow(this)" style="'+INP+'"></td>'+
+    '<td><input type="text" inputmode="numeric" placeholder="단가" class="sprice" oninput="fmtPrice(this);markSvcManualOverride(this);calcSvcRow(this)" onfocus="fmtPriceFocus(this)" onblur="fmtPriceBlur(this);calcSvcRow(this)" style="'+INP+'"></td>'+
     '<td><input type="number" placeholder="1" class="sqty" value="1" oninput="fmtPrice(this);calcSvcRow(this)" style="'+INP+'"></td>'+
     '<td class="amt samt">0원</td>'+
     '<td style="white-space:nowrap">'+
@@ -545,6 +557,25 @@ function addSvcRow() {
       '<button class="del-btn print-hide" onclick="delSvcRow(this)">✕</button>'+
     '</td>';
   tbody.appendChild(tr);
+}
+
+// 2026-09-19(선혜님 - "신안라 님 견적서... 다시 열어보니 실측+레일비가
+// 765,000원+604,800원인데 금액은 똑같이 28,134,000원이 나오는데 이게
+// 말이 되니?????????" - 실제 데이터 유실/총액 불일치 재현으로 발견):
+// 실측비/시공비/레일(자동계산 svc행)의 단가를 사용자가 직접 수정해도,
+// 그 수정값 자체는 "자동생성이라 재계산으로 다시 만들어짐"이라는
+// 이유로 저장 대상에서 아예 제외되고 있었음(est-misc.js) - 근데 저장
+// 시점의 총액(grand)은 그 수정값을 반영해서 계산된 채로 저장됐음.
+// 다시 열면 항목은 기본 자동계산값으로 재생성되는데, 총액은 예전
+// (수정값 기준) 값이 얼려진 채로 그대로 보여서 화면이 완전히 앞뒤가
+// 안 맞았음 - 실제로는 수정한 값 자체가 통째로 유실되고 있었던 것.
+// 해결: 사용자가 자동계산 svc행의 단가를 실제로 타이핑하면(oninput,
+// 프로그래밍적 자동계산 대입과 구분됨) "수동 지정" 표시를 남겨서,
+// 이후 자동 재계산이 그 행을 건드리지 않고, 저장/복원 시에도 이
+// 수정값이 실제로 보존되게 함.
+function markSvcManualOverride(el) {
+  var tr = el.closest('tr');
+  if (tr) tr.dataset.manualOverride = '1';
 }
 
 function calcSvcRow(el) {
@@ -575,6 +606,20 @@ function autoAddSvcFee() {
   var prices = priceMap[region];
   if(!svcBody) return;
   var rows = svcBody.querySelectorAll('[data-svc-type="실측비"],[data-svc-type="시공비"]');
+  // 2026-09-19(선혜님 - "다시 열어보니 실측+레일비가... 이게 말이
+  // 되니?????????"): 실측비/시공비는 레일과 달리 "기존 행을 찾아
+  // 업데이트"가 아니라 "무조건 삭제 후 새로 생성"하는 방식이라, 삭제
+  // 전에 사용자가 수동 지정해둔 단가를 먼저 기억해뒀다가 새로 만든
+  // 뒤 그대로 복원 - 안 그러면 지역을 재선택할 때마다(예: 다른 필드
+  // 편집이 지역 select의 change를 트리거하는 경우 등) manualOverride
+  // 값 자체가 삭제와 함께 통째로 사라짐.
+  var manualOverrides = {};
+  rows.forEach(function(r){
+    if (r.dataset.manualOverride) {
+      var t = r.getAttribute('data-svc-type');
+      manualOverrides[t] = { price: r.querySelector('.sprice')?.value, raw: r.querySelector('.sprice')?.dataset.raw };
+    }
+  });
   rows.forEach(function(r){ r.remove(); });
   if(!prices || (prices['실측비']===0 && prices['시공비']===0)) {
     Array.from(svcBody.querySelectorAll('tr')).forEach(function(r){
@@ -592,7 +637,13 @@ function autoAddSvcFee() {
     var tds = row.querySelectorAll('td');
     var sel=row.querySelector('.svc-kind'); if(sel) sel.value=type==='실측비'?'실측비':'시공비';
     var inp=row.querySelector('.svc-content'); if(inp) inp.value=region+(type==='실측비'?' 실측비':' 시공비');
-    var pinp=row.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw',String(typePrice)); pinp.value=typePrice.toLocaleString(); }
+    var pinp=row.querySelector('.sprice');
+    if (manualOverrides[type]) {
+      // 삭제 전 기억해둔 수동 지정값을 그대로 복원 - 지역이 바뀌어도
+      // 사용자가 직접 넣은 값은 유지(자동계산값으로 되돌리지 않음).
+      if (pinp) { pinp.value = manualOverrides[type].price; pinp.dataset.raw = manualOverrides[type].raw; }
+      row.dataset.manualOverride = '1';
+    } else if(pinp){ pinp.setAttribute('data-raw',String(typePrice)); pinp.value=typePrice.toLocaleString(); }
     if(type==='시공비') row.setAttribute('data-install-base', String(typePrice));
     var qinp=row.querySelector('.sqty'); if(qinp) qinp.value=1;
     calcSvcRow(pinp);

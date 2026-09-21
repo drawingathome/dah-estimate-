@@ -145,6 +145,10 @@ if (/dah-dashboard/.test(target)) {
   // 넣었어..."): 한 고객이 여러 견적서를 가지면 customers.price가
   // 최신 것으로만 덮어써지던 버그 - 다른 견적서 조회 후 합산되는지 검증.
   scripts.push(['customer-price-sum-check.js', []]);
+  // 2026-09-19(선혜님 - "다시 열어보니 실측+레일비가... 이게 말이
+  // 되니?????????"): 자동계산 svc 항목(실측비/시공비/레일)의 수동수정
+  // 값이 저장/복원 시 실제로 보존되는지, 심각한 데이터 유실 버그였음.
+  scripts.push(['svc-manual-override-check.js', []]);
   // 2026-09-11: 감사로그(변경이력) 조회 화면 검증
   scripts.push(['audit_log_check.js', []]);
   // 2026-09-11: AS 관리 화면(GitHub 이슈#4) — 접수 등록/상태변경 검증

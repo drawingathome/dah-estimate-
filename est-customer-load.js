@@ -438,6 +438,38 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
         var svcContentEl = str.querySelector('.svc-content'); if (svcContentEl) svcContentEl.value = it.content || it.displayName || it.space || '';
         var svcPriceEl = str.querySelector('.sprice'); if (svcPriceEl && it.price) { svcPriceEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(svcPriceEl); }
         var svcQtyEl = str.querySelector('.sqty'); if (svcQtyEl) svcQtyEl.value = it.qty || it.pnum || '1';
+        // 2026-09-19(선혜님 - "다시 열어보니 실측+레일비가... 이게 말이
+        // 되니?????????"): 실측비/시공비/레일 등 자동계산 항목의 단가를
+        // 사용자가 직접 수정해뒀으면(it.autoType) 자동계산 로직이 다시
+        // 실행돼도 이 값을 덮어쓰지 않도록, 그 자동유형에 맞는 마커를
+        // 여기서 미리 붙여둠 - 레일/레일시공비는 rowUid가 저장 시점과
+        // 복원 시점에 서로 다르므로(매번 새로 발급됨), 위치(공간) 이름이
+        // 일치하는 커튼 행을 찾아 그 rowUid를 그대로 가져다 씀(같은
+        // 폴백 방식을 getRailLengthText()에서도 이미 쓰고 있음).
+        if (it.autoType) {
+          str.dataset.manualOverride = '1';
+          if (it.autoType === 'rail' || it.autoType === 'railcost') {
+            var matchedCurtainTr = Array.from(document.querySelectorAll('#curtain-body tr')).find(function(ctr) {
+              return (ctr.querySelector('.space-inp')?.value || '') === (it.space || '') && it.space;
+            });
+            if (matchedCurtainTr) {
+              if (!matchedCurtainTr.dataset.rowUid) {
+                window._curtainRowSeq = (window._curtainRowSeq || 0) + 1;
+                matchedCurtainTr.dataset.rowUid = 'crow' + window._curtainRowSeq;
+              }
+              str.setAttribute(it.autoType === 'rail' ? 'data-rail-src' : 'data-railcost-src', matchedCurtainTr.dataset.rowUid);
+            }
+          } else if (it.autoType === 'measure') {
+            str.setAttribute('data-svc-type', '실측비');
+          } else if (it.autoType === 'install') {
+            str.setAttribute('data-svc-type', '시공비');
+            str.setAttribute('data-install-base', String(it.price || 0));
+          } else if (it.autoType === 'blindInstall') {
+            str.setAttribute('data-svc-type', '블라인드시공');
+          } else if (it.autoType === 'option') {
+            str.setAttribute('data-svc-type', '옵션추가금');
+          }
+        }
         if (typeof calcSvcRow === 'function' && svcPriceEl) calcSvcRow(svcPriceEl);
       }
     } else if (it.type === 'other') {
