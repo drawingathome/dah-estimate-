@@ -48,17 +48,27 @@ var UNPAID_RELEVANT_STAGES = ['선금결제','실측준비중','확정견적','�
 // 모든 견적서(dah_saved)를 찾아 각각의 결제 합계를 더하고, 견적서가
 // 하나도 없으면(신규 고객, 아직 견적서 없음) 예전처럼 고객 레벨
 // 필드로 폴백 - "받은 금액"의 유일한 진실 공급원으로 통일.
+//
+// 2026-09-21(선혜님 발견 - "김은 황남주 입금 확인한거 같은데 왜
+// 미입금으로 뜨지??", 실제 서버 데이터로 재현 확인): 위 폴백이
+// "견적서가 하나도 없을 때만" 작동하도록 짜여있었는데, 실제 결제
+// 저장 화면(dash-customer-pay.js)은 여전히 견적서가 아니라 고객
+// 레벨(customers.deposit_amount/balance_amount)에 그대로 쓰고 있음
+// - 즉 쓰는 곳과 읽는 곳의 기준이 서로 다른 채 방치돼 있었음. 견적서가
+// 1개라도 있는 고객은(거의 전부) 견적서 쪽 금액(대부분 0)만 보고
+// 고객 레벨의 진짜 입금액을 완전히 무시해버려서, 실제로는 완납인
+// 고객이 전액 미수금으로 잘못 표시되는 광범위한 버그였음. dash-
+// customer-pay.js가 견적서 단위 저장으로 전환되기 전까지는, 두 소스
+// 중 더 큰 쪽(실제로 기록된 쪽)을 받은 금액으로 인정해야 안전함.
 function getReceivedAmount(c) {
+  var estSum = 0;
   try {
     var allEsts = JSON.parse(localStorage.getItem('dah_saved')||'[]');
     var myEsts = allEsts.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
-    if (myEsts.length > 0) {
-      var sum = 0;
-      myEsts.forEach(function(e){ sum += (Number(e.depositAmount)||0) + (Number(e.balanceAmount)||0); });
-      return sum;
-    }
+    myEsts.forEach(function(e){ estSum += (Number(e.depositAmount)||0) + (Number(e.balanceAmount)||0); });
   } catch(e) {}
-  return (Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0);
+  var customerLevelSum = (Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0);
+  return Math.max(estSum, customerLevelSum);
 }
 function getUnpaidAmount(c) {
   if (UNPAID_RELEVANT_STAGES.indexOf(c.stage) < 0) return 0;
