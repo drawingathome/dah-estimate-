@@ -149,6 +149,10 @@ if (/dah-dashboard/.test(target)) {
   // 되니?????????"): 자동계산 svc 항목(실측비/시공비/레일)의 수동수정
   // 값이 저장/복원 시 실제로 보존되는지, 심각한 데이터 유실 버그였음.
   scripts.push(['svc-manual-override-check.js', []]);
+  // 2026-09-19(선혜님 - "안됐잖아!!!!!"): 위 svc-manual-override-check가
+  // 놓친 "인쇄까지 확인" 경로 - 단가 override시 수량이 곱해져 최종
+  // 금액이 부풀려지던 진짜 버그를 여기서 발견·수정.
+  scripts.push(['svc-override-qty-print-check.js', []]);
   // 2026-09-11: 감사로그(변경이력) 조회 화면 검증
   scripts.push(['audit_log_check.js', []]);
   // 2026-09-11: AS 관리 화면(GitHub 이슈#4) — 접수 등록/상태변경 검증

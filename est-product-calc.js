@@ -237,12 +237,15 @@ function autoUpdateRail(curtainTr) {
     var inp=existing.querySelector('.svc-content'); if(inp) inp.value='조절레일(타공형) '+jaR+'자';
     // 2026-09-19(선혜님 - "다시 열어보니 실측+레일비가... 이게 말이
     // 되니?????????"): 사용자가 이 단가를 직접 수정해뒀으면(manualOverride)
-    // 자동계산이 그 값을 덮어쓰지 않고 그대로 둠 - 대신 수량(레일수)이
-    // 바뀌면 금액 재계산은 정상적으로 반영되도록 calcSvcRow는 그대로 호출.
+    // 자동계산이 그 값을 덮어쓰지 않고 그대로 둠. 수량도 마찬가지 -
+    // override 상태에서는 "단가=최종금액, 수량=1"이 원칙이므로, 레일
+    // 자수가 바뀌어도(예: 커튼 가로 재입력) 수량을 자동 자수로 되돌리지
+    // 않음 - 안 그러면 단가는 유지돼도 수량이 곱해져서 최종금액이 다시
+    // 부풀려짐(2026-09-19 "안됐잖아!!!!!"로 실제 재현된 바로 그 문제).
     if (!existing.dataset.manualOverride) {
       var pinp=existing.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw',String(RAIL_UNIT_PRICE)); pinp.value=(RAIL_UNIT_PRICE).toLocaleString(); }
+      var qinp=existing.querySelector('.sqty'); if(qinp) qinp.value=jaR;
     }
-    var qinp=existing.querySelector('.sqty'); if(qinp) qinp.value=jaR;
     calcSvcRow(existing.querySelector('.sprice'));
   } else {
     addSvcRow();
@@ -536,7 +539,11 @@ function autoAddBlindSvc() {
   if (!row.dataset.manualOverride) {
     var pinp=row.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw','10000'); pinp.value=(10000).toLocaleString(); }
   }
-  var qinp=row.querySelector('.sqty'); if(qinp) qinp.value=blindCount;
+  // 2026-09-19: 레일과 동일한 이유로, override 상태에서는 블라인드
+  // 개수가 바뀌어도 수량을 되돌리지 않음(단가=최종금액 원칙 유지).
+  if (!row.dataset.manualOverride) {
+    var qinp=row.querySelector('.sqty'); if(qinp) qinp.value=blindCount;
+  }
   calcSvcRow(row.querySelector('.sprice'));
 }
 
@@ -575,7 +582,18 @@ function addSvcRow() {
 // 수정값이 실제로 보존되게 함.
 function markSvcManualOverride(el) {
   var tr = el.closest('tr');
-  if (tr) tr.dataset.manualOverride = '1';
+  if (tr) {
+    tr.dataset.manualOverride = '1';
+    // 2026-09-19(선혜님 - "안됐잖아!!!!!" - 인쇄까지 실제로 확인해서
+    // 재현 성공): 사용자가 "단가" 칸에 입력하는 값은 실제로는 "이
+    // 항목 전체를 이 금액으로 고정하고 싶다"는 의도인데(예: 레일
+    // 자재비를 1,890,000원으로), 수량(레일 자수 등 자동계산값, 예:
+    // 10자)이 그대로 남아있어서 최종 금액이 단가×수량(18,900,000원)
+    // 으로 부풀려지고 있었음 - 단가를 직접 수정하는 순간 수량을 1로
+    // 맞춰서, 입력한 값이 곧 최종 금액이 되도록 함.
+    var qtyInp = tr.querySelector('.sqty');
+    if (qtyInp) qtyInp.value = '1';
+  }
 }
 
 function calcSvcRow(el) {
