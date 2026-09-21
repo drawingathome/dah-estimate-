@@ -41,6 +41,20 @@ async function run() {
         req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify([{ id: 1, updated_at: '2026-09-08T12:00:00.000Z' }]) });
         return;
       }
+      // 2026-09-21(견적서 앱 CI 실패 원인 조사 중 발견): 결제탭이 열릴 때
+      // "로컬 캐시가 견적서 없음으로 판단하면 서버로 재확인"하는 GET
+      // 요청(estimates?client_id=eq...)이 새로 생겼는데, 이 테스트는
+      // GET/PATCH 구분 없이 모든 요청에 { id: 1, updated_at: ... }를
+      // 반환하고 있었음 - 이게 배열 하나짜리 응답이라 "서버에 진짜
+      // 견적서가 있다"로 잘못 해석되어, 결제탭이 이 고객 레벨 폴백 폼을
+      // (사용자가 입력하는 도중에) 견적서 카드 화면으로 다시 그려버려
+      // 입력값이 날아가는 부작용이 있었음. 이 테스트가 검증하려는 건
+      // "customers PATCH 락값 동기화"이지 "서버 재확인" 기능이 아니므로,
+      // 그 GET 요청에는 실제 프로덕션처럼 빈 배열(견적서 없음)을 반환.
+      if (req.method() === 'GET' && url.includes('/rest/v1/estimates')) {
+        req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[]' });
+        return;
+      }
       req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify([{ id: 1, updated_at: '2026-09-08T12:00:01.000Z' }]) });
       return;
     }
