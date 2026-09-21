@@ -97,6 +97,24 @@ function applyRealDepositToForm(depositAmount) {
   depInp.value = Number(depositAmount).toLocaleString();
   depInp.dataset.raw = String(depositAmount);
   depInp.dataset.manualEdit = '1';
+  // 2026-09-21(선혜님 - "계약금은 100만원 걸었는데 왜 이게 불일치
+  // 하지????이거 예전에도 같은 오류 있었잖아" - 화면 캡처로 정확히
+  // 재현: 계약금 입력창은 1,000,000원인데 검은 요약박스(총액 카드
+  // 안의 "계약금")는 자동계산된 50%가 그대로 남아 서로 다른 값을
+  // 보여줌): 이 함수가 입력창(depInp.value)만 갱신하고 요약표시
+  // (sum-deposit-disp/sum-balance-disp)는 전혀 안 건드리고 있었음 -
+  // 예전엔 그 뒤에 항상 실행되던 applyFrozenBreakdown()이 매번
+  // 요약표시를 강제로 다시 맞춰줘서 우연히 안 드러났는데, 오늘
+  // "저장된 총액이 화면과 안 맞으면 얼림을 적용 안 함" 안전장치를
+  // 추가하면서 그 강제 재적용이 건너뛰어지는 경우가 생겨 결함이
+  // 그대로 드러남 - 이 함수 자체에서 요약표시도 함께 정확히 갱신해서,
+  // 이후 어떤 함수가 실행되든 안 되든 항상 일치하게 함.
+  var grandEl = document.getElementById('sum-total');
+  var grand = parseInt((grandEl?.textContent||'0').replace(/[^0-9]/g,''))||0;
+  var depDispEl = document.getElementById('sum-deposit-disp');
+  if (depDispEl) depDispEl.textContent = Number(depositAmount).toLocaleString()+'원';
+  var balDispEl = document.getElementById('sum-balance-disp');
+  if (balDispEl) balDispEl.textContent = Math.max(0, grand-Number(depositAmount)).toLocaleString()+'원';
 }
 
 function formatKoreanDate(d) {
