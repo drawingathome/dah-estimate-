@@ -94,6 +94,16 @@ function applyRealDepositToForm(depositAmount) {
   if (!(Number(depositAmount) > 0)) return;
   var depInp = document.getElementById('deposit-input');
   if (!depInp) return;
+  // 2026-09-22(선혜님 - "저거까지 봐야 하는거 아니야?? 관련된 경로
+  // 모두 확인해"로 전 경로 재점검): 이 함수를 부르는 곳이 여러 군데
+  // 있고(견적서 자체값, 고객 레벨값, 로컬캐시값 등 서로 다른 소스),
+  // 그 중 일부는 비동기(서버 재조회 콜백)라 나중에 도착함 - 이미 더
+  // 정확한(더 큰) 값이 채워져 있는데 나중에 도착한 작은/오래된 값이
+  // 그걸 덮어쓰는 경쟁 상태가 될 수 있었음. 여기 한 곳에서 "이미 있는
+  // 값보다 작으면 무시"하도록 막아서, 이 함수를 부르는 모든 경로가
+  // 자동으로 안전해지게 함(각 호출부를 일일이 고칠 필요 없음).
+  var existingRaw = Number(depInp.dataset.raw) || 0;
+  if (Number(depositAmount) < existingRaw) return;
   depInp.value = Number(depositAmount).toLocaleString();
   depInp.dataset.raw = String(depositAmount);
   depInp.dataset.manualEdit = '1';

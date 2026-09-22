@@ -255,6 +255,12 @@ if (/dah-dashboard/.test(target)) {
   // 저장된 실제 계약금을 화면에 채우는 코드가 아예 없어서, 인쇄화면이
   // 매번 50% 자동추정치로 표시되던 문제
   scripts.push(['est-load-deposit-restore-check.js', []]);
+  // 2026-09-22(선혜님 - "저거까지 봐야 하는거 아니야?? 관련된 경로 모두
+  // 확인해"로 전 경로 재점검 - loadEstDbId 안에 비동기로 별도 실행되는
+  // 고객레벨 계약금 복원 콜백이 먼저 채워진 값을 나중에 작은/오래된
+  // 값으로 덮어쓸 수 있던 경쟁상태 발견): applyRealDepositToForm에
+  // 다운그레이드 방지 가드 추가로 모든 호출 경로 한번에 안전해짐
+  scripts.push(['deposit-race-downgrade-check.js', []]);
   // 2026-09-22("쌍둥이함수까지 찾아" 지시로 발견): est-doc-customer.js
   // (고객용 문서)가 renderSvcSummary(내부화면)와 똑같은 4그룹 분류를
   // 각자 다른 기준으로 따로 계산하고 있어서 서로 다른 금액이 나올 수

@@ -895,7 +895,7 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
   <option value="허니콤 No.1">허니콤 No.1</option>
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
-<script src="/est-utils.js?v=6bbaa7d0679a"></script>
+<script src="/est-utils.js?v=0dc523f9da2a"></script>
 <script src="/shared-common-utils.js?v=f78f0d883265"></script>
 <script src="/shared-optimistic-lock.js?v=db886eb6aa35"></script>
 <script src="/est-sync-queue.js?v=f2f3fb3e0f4c"></script>
@@ -969,8 +969,25 @@ var currentTab = 'ga';
       document.getElementById('c-install-tbd').checked = true;
       if (typeof toggleDateTbd === 'function') toggleDateTbd('c-install');
     }
+    // 2026-09-22(선혜님 - "저거까지 봐야 하는거 아니야?? 관련된 경로
+    // 모두 확인해"로 전 경로 재점검 - 최금희 실사례 후속): loadEstDbId
+    // 경로 안에서 이 함수가 비동기로(고객 주소 조회 콜백 안에서) 나중에
+    // 실행되는데, 그 직전에 이미 "이 견적서 자체에 저장된 진짜 계약금"
+    // (e.deposit_amount)이 먼저 정확히 채워져 있을 수 있음 - 이 함수가
+    // 그걸 확인 안 하고 고객 레벨 값으로 무조건 덮어써버리면, 두 소스가
+    // 다를 때(견적서 단위로 이미 전환됐는데 고객 레벨엔 옛날 값이 남은
+    // 경우 등) 방금 정확히 채워진 값이 조용히 잘못된 값으로 되돌아갈
+    // 위험이 있었음. 오늘 반복해서 적용한 원칙과 동일하게, 이미 채워진
+    // 값이 있으면 더 큰(더 신뢰할 수 있는) 쪽만 반영함 - 절대 작은
+    // 값으로 다운그레이드하지 않음.
     if (customerRow && Number(customerRow.deposit_amount) > 0) {
-      var applyDeposit = function() { applyRealDepositToForm(customerRow.deposit_amount); };
+      var applyDeposit = function() {
+        var depInp = document.getElementById('deposit-input');
+        var existing = depInp ? (Number(depInp.dataset.raw) || 0) : 0;
+        if (Number(customerRow.deposit_amount) > existing) {
+          applyRealDepositToForm(customerRow.deposit_amount);
+        }
+      };
       applyDeposit();
       setTimeout(applyDeposit, 4000);
     }
