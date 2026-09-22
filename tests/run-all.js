@@ -293,6 +293,19 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['detail_tab_overflow_check.js', [target]]);
   scripts.push(['grouped_todo_check.js', [target]]);
   scripts.push(['order_data_gap_check.js', [target]]);
+  // 2026-09-22(선혜님 - "누락된거는 없니??" 재확인 요청으로 발견):
+  // 오늘 실제 버그(0원 결제저장 미차단, prompt 다이얼로그 처리, 검증
+  // 결과 무관 exit(0))를 직접 고쳤던 파일인데 등록을 깜빡했음 - 이
+  // 파일은 다른 테스트들과 달리 target(html경로)이 아니라 뷰포트
+  // 폭(width)을 인자로 받고 dah-dashboard.html을 내부에 고정해서 씀
+  // (다른 회귀 방지: target 문자열을 그대로 넘기면 parseInt가 NaN이
+  // 되어 항상 기본값 390(모바일)으로만 조용히 실행되고 PC는 한 번도
+  // 검증이 안 되는 상태였음 - 반드시 '390'/'1024' 같은 폭 문자열로).
+  scripts.push(['full_lifecycle_simulation.js', ['390']]);
+  scripts.push(['full_lifecycle_simulation.js', ['1024']]);
+  // daily-error-digest-filter-check.js(db74ef2, 다른 세션이 신설)도
+  // 등록이 빠져있었음 - 함께 등록.
+  scripts.push(['daily-error-digest-filter-check.js', []]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',
