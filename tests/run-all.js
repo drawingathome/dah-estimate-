@@ -306,6 +306,13 @@ if (/dah-dashboard/.test(target)) {
   // daily-error-digest-filter-check.js(db74ef2, 다른 세션이 신설)도
   // 등록이 빠져있었음 - 함께 등록.
   scripts.push(['daily-error-digest-filter-check.js', []]);
+  // 2026-09-22(선혜님 - "누락된거는 없니??" 재확인 중 다시 발견): 다른
+  // 세션이 만든 데이터 정합성 자동점검(dahScanForDataIntegrity) 로직
+  // 검증 테스트도 등록이 빠져있었음 - 함께 등록.
+  scripts.push(['data-integrity-scan-check.js', []]);
+  // 2026-09-22: 이 확인(테스트 등록 누락 자동감지) 자체도 등록 - 앞으로
+  // 새 테스트를 만들고 등록을 깜빡하면 CI가 바로 잡아주게 함.
+  scripts.push(['registration-check.js', []]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',
