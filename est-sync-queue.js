@@ -110,7 +110,7 @@ function _doRetryEstPendingSync(q) {
     xhr.setRequestHeader('apikey', SUPABASE_KEY);
     xhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
     xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.setRequestHeader('Prefer', isEdit ? 'return=minimal' : 'return=minimal');
+    xhr.setRequestHeader('Prefer', isEdit ? 'return=minimal' : 'return=representation');
     xhr.onload = function() {
       done++;
       if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 409) {

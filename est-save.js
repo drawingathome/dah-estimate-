@@ -608,7 +608,28 @@ function _saveEstimateInner(_onDone) {
       // 안 바뀌었는데도 무조건 "저장 완료!"가 떠서 대표님이 데이터가 사라진
       // 걸 전혀 알 방법이 없었음. 수정 저장은 항상 return=representation으로
       // 받아서 실제 몇 건이 바뀌었는지 확인하도록 수정.
-      xhr2.setRequestHeader('Prefer', isEditMode ? 'return=representation' : 'return=minimal');
+      // 2026-09-22(선혜님 - "버그를 고쳐도 왜 같은 버그가 생기지, 쌍둥이
+      // 함수까지 찾아" 지시로 끝까지 추적해서 발견한 진짜 근본원인 -
+      // 최금희 견적서 매출기준금액 2배 부풀림 사건): 이 줄이 완전히
+      // 거꾸로였음 - isEditMode(수정)일 때 return=representation을 쓰는
+      // 건 맞지만, 신규 저장(!isEditMode, POST)일 때 정확히 그 반대
+      // (return=minimal, 빈 응답)를 쓰고 있었음. 근데 바로 아래 코드가
+      // "신규 저장이면(!isEditMode) 응답에서 새로 생성된 id를 파싱해
+      // editingEstDbId에 저장"하는 로직이라, 이 두 부분이 정확히 서로
+      // 모순됐음: 신규 저장 성공 직후 응답 바디가 항상 비어있어서
+      // JSON.parse('')가 예외를 던지고, editingEstDbId가 설정되지
+      // 않은 채로 남음. 그 상태에서 같은 화면을 재저장하면(최금희님처럼
+      // 확인창이 뜨는 사이 다시 눌러서), saveToCustomers()의 "다른
+      // 견적서 합계" 조회가 자기 자신(방금 만든 그 견적서)을 editingEstDbId
+      // 로 제외해야 하는데 그 값이 비어있으니 제외를 못 하고 그대로 세어서,
+      // 매출기준금액이 정확히 2배로 부풀려짐(재현 테스트로 20,000→40,000
+      // 확정). saveToEstimates() 시작부의 "오늘 이미 저장된 것 찾기"
+      // 서버 조회가 나중에 editingEstDbId를 복구하긴 하지만, 그건
+      // saveToCustomers()보다 항상 나중에 실행되어 이미 늦음. 신규
+      // 저장도 언제나 return=representation으로 통일해서 생성된 id를
+      // 확실히 받도록 수정 - 이게 근본적인 해결책(늦게 복구하는 방식에
+      // 의존하지 않음).
+      xhr2.setRequestHeader('Prefer', 'return=representation');
       xhr2.onload=function(){
         logSaveStage('견적서저장-응답', { status: xhr2.status, isEditMode: isEditMode, bodyLen: (xhr2.responseText||'').length });
         if (xhr2.status >= 200 && xhr2.status < 300) {
