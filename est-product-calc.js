@@ -606,6 +606,15 @@ function calcSvcRow(el) {
   var q = Math.max(0, parseFloat(tr.querySelector('.sqty')?.value)||1);
   tr.querySelector('.samt').textContent = (p*q).toLocaleString()+'원';
   calcTotal();
+  // 2026-09-22(선혜님 지적 - "더하기 계산이 안맞는게 더 문제야", 최금희
+  // 고객 견적서에서 상세 내역 합이 2,145,000원인데 위 요약카드엔
+  // 1,865,000원으로 떠서 280,000원 차이나던 것으로 발견): 이 줄 자신의
+  // 금액(.samt)과 맨 아래 전체 합계(calcTotal)는 매번 정확히 갱신되고
+  // 있었는데, "레일·시공비·기타" 요약카드(renderSvcSummary)만 새 행을
+  // 추가/삭제할 때만 갱신되고 기존 행의 단가/수량을 직접 고칠 때는 전혀
+  // 다시 안 그려지고 있었음 - 복제 버튼으로 만든 행이든 원래 있던 행이든
+  // 상관없이, 단가를 손으로 고치는 모든 경우에 요약이 멈춰있었던 것.
+  if (typeof renderSvcSummary === 'function') renderSvcSummary();
 }
 
 function autoAddSvcFee() {
@@ -1028,6 +1037,9 @@ function delRow(btn) {
 function delSvcRow(btn) {
   btn.closest('tr').remove();
   calcTotal();
+  // 2026-09-22(더하기 안 맞는 문제 - calcSvcRow와 같은 원인): 행 삭제
+  // 시에도 요약카드가 안 갱신되고 있었음.
+  if (typeof renderSvcSummary === 'function') renderSvcSummary();
 }
 
 // 2026-08-22: 복사본을 원본 바로 다음 자리가 아니라, 같은 공간(space) 그룹의
@@ -1113,7 +1125,19 @@ function copySvcRow(btn) {
   clone.removeAttribute('data-svc-type');
   clone.removeAttribute('data-rail-src');
   clone.removeAttribute('data-rail-svc-src');
+  // 2026-09-22(선혜님 지적 - "더하기 계산이 안맞는게 더 문제야"로 원인
+  // 추적 중 발견): 레일시공비(data-railcost-src)나 지역시공비(data-
+  // install-base) 행을 복제하면, 복사본이 이 태그를 그대로 유지해서
+  // autoUpdateRail()이 나중에 "이 커튼줄의 레일시공비 행"을 찾을 때
+  // 원본과 복사본 중 어느 쪽을 자동갱신 대상으로 볼지 꼬여버림 - 한쪽은
+  // 최신값으로 갱신되고 다른 한쪽은 옛날 값에 멈춰있는 채로 둘 다
+  // 화면에 남아 합계가 어긋나는 원인이 됨. 복제본은 "자동관리 대상"에서
+  // 완전히 빼서 순수한 수동 입력 행으로 만듦(내용/단가는 그대로 유지,
+  // 필요하면 자유롭게 고쳐 쓰도록).
+  clone.removeAttribute('data-railcost-src');
+  clone.removeAttribute('data-install-base');
   calcTotal();
+  if (typeof renderSvcSummary === 'function') renderSvcSummary();
 }
 
 // 레일/시공비/기타 항목을 그룹으로 묶어 요약카드로 보여줌 (선혜님 피드백: 항목이 너무 많아 한눈에 안 들어옴)
