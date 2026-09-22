@@ -309,7 +309,12 @@ function _saveEstimateInner(_onDone) {
     saveToLocalStorage();
 
     // 고객명단 구글시트 동기화 (항상 — 가견적/확정 상관없이 현재 상태 반영)
-    var isFinalForDrive = (currentTab === 'final' || document.getElementById('status-final')?.classList.contains('on'));
+    // 2026-09-22(선혜님 - "비슷하게 예상되는 다른 오류들에 대해 찾아봐"로
+    // 발견 - estimate_status 버그와 정확히 같은 계열): 여기도 확정
+    // 버튼(estimateConfirmedAt)이 아니라 탭 상태(currentTab)만 보고
+    // "확정견적"/"가견적" 라벨을 구글시트에 보내고 있었음 - 구글시트가
+    // 실제 DB 확정 상태와 다르게 보일 위험이 있었음.
+    var isFinalForDrive = !!window._estEditState.estimateConfirmedAt;
     syncCustomerToSheet({
       clientName: name, phone: phone, addr: addr+(addr2?' '+addr2:''),
       staffName: staffName, stage: isFinalForDrive ? '확정견적' : '가견적',
@@ -787,7 +792,12 @@ function _saveEstimateInner(_onDone) {
     try {
       var saved = JSON.parse(localStorage.getItem('dah_saved')||'[]');
       var noStr = document.getElementById('c-no').value.trim();
-      var isFinal = (currentTab === 'final' || document.getElementById('status-final')?.classList.contains('on'));
+      // 2026-09-22(선혜님 - "비슷하게 예상되는 다른 오류들에 대해
+      // 찾아봐"로 발견 - estimate_status 버그와 정확히 같은 계열): 로컬
+      // 캐시에 저장되는 이 값도 탭 상태가 아니라 확정 버튼 기준으로
+      // 통일 - 이 캐시를 읽는 여러 화면(견적서 목록, 대시보드 이력 등)
+      // 이 전부 실제 확정 여부와 다른 걸 보여줄 위험이 있었음.
+      var isFinal = !!window._estEditState.estimateConfirmedAt;
       var curtainCount = document.querySelectorAll('#curtain-body tr').length;
       var blindCount = document.querySelectorAll('#blind-body tr').length;
       var itemCount = curtainCount + blindCount;

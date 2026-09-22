@@ -272,6 +272,10 @@ if (/dah-dashboard/.test(target)) {
   // 풀려있어" - 최금희 실사례): estimate_status가 확정 버튼(estimateConfirmedAt)
   // 과 무관하게 "가견적서/최종견적서" 탭 상태만 보고 저장되던 문제
   scripts.push(['estimate-status-confirm-sync-check.js', []]);
+  // 2026-09-22(선혜님 - "비슷하게 예상되는 다른 오류들에 대해 찾아봐"로
+  // 발견 - 정확히 같은 계열): 구글시트 동기화/로컬캐시 저장에도 확정
+  // 버튼이 아니라 탭 상태만 보고 확정여부를 정하던 문제가 2곳 더 있었음
+  scripts.push(['confirm-status-consistency-check.js', []]);
   // 2026-09-22("쌍둥이함수까지 찾아" 지시로 발견): est-doc-customer.js
   // (고객용 문서)가 renderSvcSummary(내부화면)와 똑같은 4그룹 분류를
   // 각자 다른 기준으로 따로 계산하고 있어서 서로 다른 금액이 나올 수
