@@ -979,15 +979,12 @@ var currentTab = 'ga';
     // 경우 등) 방금 정확히 채워진 값이 조용히 잘못된 값으로 되돌아갈
     // 위험이 있었음. 오늘 반복해서 적용한 원칙과 동일하게, 이미 채워진
     // 값이 있으면 더 큰(더 신뢰할 수 있는) 쪽만 반영함 - 절대 작은
-    // 값으로 다운그레이드하지 않음.
+    // 값으로 다운그레이드하지 않음. 2026-09-22(구조 재설계 후 정리):
+    // applyRealDepositToForm() 자체가 이제 depositSource='real'인 값과
+    // 비교해서 다운그레이드를 막아주므로, 여기서 직접 raw값을 비교하던
+    // 중복 로직은 제거하고 그냥 호출만 함.
     if (customerRow && Number(customerRow.deposit_amount) > 0) {
-      var applyDeposit = function() {
-        var depInp = document.getElementById('deposit-input');
-        var existing = depInp ? (Number(depInp.dataset.raw) || 0) : 0;
-        if (Number(customerRow.deposit_amount) > existing) {
-          applyRealDepositToForm(customerRow.deposit_amount);
-        }
-      };
+      var applyDeposit = function() { applyRealDepositToForm(customerRow.deposit_amount); };
       applyDeposit();
       setTimeout(applyDeposit, 4000);
     }
