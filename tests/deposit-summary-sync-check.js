@@ -71,7 +71,7 @@ async function run() {
     return {
       depositInputValue: depInp?.value,
       depositSummaryText: depDisp?.textContent,
-      manualEditFlag: depInp?.dataset.manualEdit,
+      depositSource: depInp?.dataset.depositSource,
       screenTotal: document.getElementById('sum-total')?.textContent
     };
   });

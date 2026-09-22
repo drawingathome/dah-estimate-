@@ -94,37 +94,27 @@ function applyRealDepositToForm(depositAmount) {
   if (!(Number(depositAmount) > 0)) return;
   var depInp = document.getElementById('deposit-input');
   if (!depInp) return;
-  // 2026-09-22(선혜님 - "저거까지 봐야 하는거 아니야?? 관련된 경로
-  // 모두 확인해"로 전 경로 재점검): 이 함수를 부르는 곳이 여러 군데
-  // 있고(견적서 자체값, 고객 레벨값, 로컬캐시값 등 서로 다른 소스),
-  // 그 중 일부는 비동기(서버 재조회 콜백)라 나중에 도착함 - 이미 더
-  // 정확한(더 큰) 값이 채워져 있는데 나중에 도착한 작은/오래된 값이
-  // 그걸 덮어쓰는 경쟁 상태가 될 수 있었음. 여기 한 곳에서 "이미 있는
-  // 값보다 작으면 무시"하도록 막아서, 이 함수를 부르는 모든 경로가
-  // 자동으로 안전해지게 함(각 호출부를 일일이 고칠 필요 없음).
-  //
-  // 2026-09-22(같은 날 재발견 - "안바뀌엇고 열면 자꾸 50%로 된다니깐"
-  // 최금희 실사례 끝까지 추적): 이 가드가 스스로를 막는 부작용이 있었음
-  // - 견적서를 불러올 때 할인쿠폰 복원이 이 함수보다 먼저 실행되면서
-  // (아직 진짜 계약금이 안 들어온 시점이라) calcTotal()이 임시로 자동
-  // 50%값(예: 832,500원)을 계산해버리는데, 그 값엔 manualEdit/userTyped
-  // 보호가 전혀 없는데도 이 가드가 "이미 있는 값"으로 착각해서, 그보다
-  // 작은 진짜 계약금(750,000원)을 거부해버렸음. "보호된 값"과 비교할
-  // 때만 다운그레이드를 막아야 함 - 보호 안 된 임시값은 언제든 진짜
-  // 값으로 교체 가능해야 함.
-  var existingProtected = depInp.dataset.userTyped === '1';
-  var existingRaw = existingProtected ? (Number(depInp.dataset.raw) || 0) : 0;
-  if (existingProtected && Number(depositAmount) < existingRaw) return;
+  // 2026-09-22(선혜님 - "코드 다시 정리하고... 왜 같은 문제가 발생하는지
+  // 파악해"로 구조 재설계): 계약금 보호 상태를 manualEdit/userTyped
+  // 두 개의 독립된 불리언으로 따로 관리하다가 서로 어긋나는 문제가
+  // 반복됐음(오늘 하루 4단계에 걸쳐 재발) - "이 값이 신뢰할 수 있는
+  // 실제 값인지, 아직 확정 안 된 추정값인지"라는 하나의 질문으로
+  // 통일함. depositSource 값: 'real'(사용자가 직접 입력했거나 실제
+  // 결제된 진짜 값 - 절대 자동 재계산 대상 아님) / 'frozen'(예전 견적
+  // 스냅샷을 불러온 임시 보호값 - 사용자가 진짜로 편집을 시작하면
+  // (unfreezeEstimateIfEditing) 풀려도 됨) / 없음(자동 추정값 - 언제든
+  // 자유롭게 재계산 가능). 이 함수가 다루는 값은 전부 "실제 진짜 값"
+  // 이므로 항상 'real'로 설정.
+  var existingIsReal = depInp.dataset.depositSource === 'real';
+  var existingRaw = existingIsReal ? (Number(depInp.dataset.raw) || 0) : 0;
+  // 여러 경로(견적서 자체값/고객레벨값/로컬캐시값)가 비동기로 서로
+  // 다른 타이밍에 이 함수를 부를 수 있음 - 이미 'real'로 보호된 값보다
+  // 작은 값이 나중에 도착해도 다운그레이드하지 않음(보호 안 된 추정값은
+  // 언제든 교체 가능).
+  if (existingIsReal && Number(depositAmount) < existingRaw) return;
   depInp.value = Number(depositAmount).toLocaleString();
   depInp.dataset.raw = String(depositAmount);
-  depInp.dataset.manualEdit = '1';
-  // 2026-09-22(선혜님 - "선금 75만원 넣었는데 왜 또 50%로 뜨니??"로
-  // 발견한 것과 같은 계열): 이 함수가 불러오는 값은 "실제로 입금된
-  // 진짜 계약금"이라 사용자가 방금 타이핑한 값과 똑같이 보호돼야
-  // 하는데, userTyped가 없으면 unfreezeEstimateIfEditing()(품목 수정시)
-  // 이 "예전 얼려둔 스냅샷"과 구분 못 하고 보호를 풀어버려 50% 자동
-  // 계산이 실제 입금액을 덮어쓸 위험이 있었음.
-  depInp.dataset.userTyped = '1';
+  depInp.dataset.depositSource = 'real';
   // 2026-09-21(선혜님 - "계약금은 100만원 걸었는데 왜 이게 불일치
   // 하지????이거 예전에도 같은 오류 있었잖아" - 화면 캡처로 정확히
   // 재현: 계약금 입력창은 1,000,000원인데 검은 요약박스(총액 카드

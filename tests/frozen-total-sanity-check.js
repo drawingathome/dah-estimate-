@@ -66,7 +66,7 @@ async function run() {
     screenTotalText: document.getElementById('sum-total')?.textContent,
     frozen: window._estEditState?.viewingFrozenEstimate,
     depositInputValue: document.getElementById('deposit-input')?.value,
-    depositManualEdit: document.getElementById('deposit-input')?.dataset.manualEdit
+    depositSourceFlag: document.getElementById('deposit-input')?.dataset.depositSource
   }));
   ok('1. 예전에 저장된 앞뒤 안 맞는 총액(28,134,000원)이 더는 그대로 노출되지 않음', !state.screenTotalText.includes('28,134,000'), JSON.stringify(state));
   ok('2. 얼림 상태가 자동으로 풀려서, 이후 편집시 정상적으로 재계산됨', state.frozen === false, JSON.stringify(state));
@@ -76,7 +76,7 @@ async function run() {
   // 받은 계약금(50%가 아닌 임의 금액, 예: 100만원)이 자동 50% 추정치로
   // 조용히 덮어써지면 안 됨 - 저장된 계약금 그대로 유지되는지 검증.
   ok('3. [핵심] 총액이 안 맞는 상황에서도, 실제 받은 계약금(100만원)이 50% 자동추정치로 안 바뀌고 그대로 유지됨', state.depositInputValue === '1,000,000', JSON.stringify(state));
-  ok('4. 계약금 수동보호 플래그도 함께 켜져서, 이후 다른 편집에도 이 계약금이 다시 덮어써지지 않음', state.depositManualEdit === '1', JSON.stringify(state));
+  ok('4. 계약금 보호 상태(depositSource)도 함께 켜져서, 이후 다른 편집에도 이 계약금이 다시 덮어써지지 않음', state.depositSourceFlag === 'real' || state.depositSourceFlag === 'frozen', JSON.stringify(state));
 
   console.log(log.join('\n'));
   console.log(jsErrors.length ? 'JS 에러: ' + jsErrors.join('\n') : 'JS 에러 없음');

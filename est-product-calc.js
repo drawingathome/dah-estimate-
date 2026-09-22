@@ -757,10 +757,13 @@ function applyFrozenBreakdown(bd) {
       // 덮어써지지 않게 함.
       if (bd.deposit != null && bd.deposit > 0) {
         var depInpEarly = document.getElementById('deposit-input');
-        if (depInpEarly) {
+        // 2026-09-22(구조 재설계 - 통합 depositSource 모델): 이미 'real'
+        // (사용자 직접입력·실제결제액)로 확정된 값이 있으면 이 얼려둔
+        // 스냅샷값으로 되돌리지 않음 - 절대 다운그레이드 안 함.
+        if (depInpEarly && depInpEarly.dataset.depositSource !== 'real') {
           depInpEarly.value = bd.deposit.toLocaleString();
           depInpEarly.dataset.raw = String(bd.deposit);
-          depInpEarly.dataset.manualEdit = '1';
+          depInpEarly.dataset.depositSource = 'frozen';
         }
         var sumDepDispEarly = document.getElementById('sum-deposit-disp');
         if (sumDepDispEarly) sumDepDispEarly.textContent = bd.deposit.toLocaleString()+'원';
@@ -786,17 +789,12 @@ function applyFrozenBreakdown(bd) {
     setText('sum-deposit-disp', bd.deposit > 0 ? bd.deposit.toLocaleString()+'원' : '—');
     setText('sum-balance-disp', bd.deposit > 0 ? bd.balance.toLocaleString()+'원' : '—');
     var depInp = document.getElementById('deposit-input');
-    if (depInp && bd.deposit > 0) {
+    // 2026-09-22(구조 재설계 - 통합 depositSource 모델): 이미 'real'로
+    // 확정된 값이 있으면 얼려둔 스냅샷값으로 되돌리지 않음.
+    if (depInp && bd.deposit > 0 && depInp.dataset.depositSource !== 'real') {
       depInp.value = bd.deposit.toLocaleString();
       depInp.dataset.raw = String(bd.deposit);
-      // 2026-08-28(선혜님 지적 — "선금을 넣으면 선금이 자꾸 바뀌니깐 계속
-      // 손이 가서 번거롭네"): 이 함수(불러오기/복사시 저장당시 금액 고정)가
-      // 선금 입력창 값만 채우고 "수동입력 보호" 플래그(dataset.manualEdit)는
-      // 안 켜주고 있었음 - 그래서 불러온 직후 품목 하나만 살짝 건드려도
-      // calcTotal()의 자동 50% 재계산이 그대로 발동해서 애써 불러온(혹은
-      // 저장 당시 직접 입력했던) 선금 금액이 조용히 50% 자동값으로
-      // 되돌아가고 있었음. 여기서도 같은 플래그를 켜서 보호되게 함.
-      depInp.dataset.manualEdit = '1';
+      depInp.dataset.depositSource = 'frozen';
     }
   }
   if (Array.isArray(bd.discountDetail)) {
@@ -935,7 +933,9 @@ function calcTotal() {
   // 받아야 함 - 커튼/블라인드 품목이 하나도 없으면(침구만 있으면)
   // 자동계산 비율을 100%로, 있으면 기존대로 50%로.
   var depositRatio = hasCurtainOrBlindItem() ? 0.5 : 1;
-  if(grand>0 && depInp && !depInp.dataset.manualEdit){
+  // 2026-09-22(구조 재설계 - 통합 depositSource 모델): 'real'이든
+  // 'frozen'이든 뭔가 보호 대상으로 지정된 값이 있으면 자동 재계산 안 함.
+  if(grand>0 && depInp && !depInp.dataset.depositSource){
     var auto50=Math.round(grand*depositRatio);
     depInp.value=''; depInp.removeAttribute('data-raw');
     depInp.value=auto50.toLocaleString();

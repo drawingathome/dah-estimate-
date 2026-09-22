@@ -43,10 +43,10 @@ async function run() {
   await new Promise(r => setTimeout(r, 1500));
   const r1 = await page.evaluate(() => {
     var depInp = document.getElementById('deposit-input');
-    return { depositValue: depInp ? depInp.value : '없음', userTyped: depInp ? depInp.dataset.userTyped : null };
+    return { depositValue: depInp ? depInp.value : '없음', depositSource: depInp ? depInp.dataset.depositSource : null };
   });
   ok('1. [핵심] loadEstDbId로 불러오면 저장된 실제 계약금(750,000원)이 화면에 채워짐', r1.depositValue.indexOf('750,000') !== -1, JSON.stringify(r1));
-  ok('2. 불러온 계약금도 userTyped 보호가 켜져서 이후 품목수정에도 안 풀림', r1.userTyped === '1', JSON.stringify(r1));
+  ok('2. 불러온 계약금도 depositSource=real 보호가 켜져서 이후 품목수정에도 안 풀림', r1.depositSource === 'real', JSON.stringify(r1));
 
   // 2) 대조군: 계약금이 아예 없는 견적서는 빈 채로 시작(정상 50% 자동추정, 회귀 없음)
   await page.goto(`http://localhost:${port}/dah-estimate.html?loadEstDbId=test-est-2&mode=edit`, { waitUntil: 'domcontentloaded', timeout: 15000 });

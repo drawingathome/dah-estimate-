@@ -188,21 +188,15 @@ function unfreezeEstimateIfEditing() {
   if (window._estEditState && window._estEditState.viewingFrozenEstimate) {
     window._estEditState.viewingFrozenEstimate = false;
   }
-  // 2026-09-18(같은 재현 과정에서 추가 발견): applyFrozenBreakdown()이
-  // 계약금 입력칸에 "수동수정 보호"(dataset.manualEdit) 플래그도 같이
-  // 켜두는데, 이걸 안 풀어주면 얼림 자체는 풀렸어도 계약금 자동계산
-  // (50%/100%)이 여전히 막혀서 예전 계약금 값이 그대로 남아있음.
-  //
-  // 2026-09-22(선혜님 - "선금 75만원 입력했는데 왜 또 50%로 뜨니??
-  // 아까도 물어본건데" - 최금희 고객 실사례로 재현 성공): 위 로직이
-  // manualEdit을 무조건 지워버려서, "예전 얼려둔 스냅샷에서 온 계약금"
-  // 뿐 아니라 "사용자가 방금 이 화면에서 직접 타이핑한 계약금"까지
-  // 함께 보호가 풀려버리고 있었음 - 그 뒤 아무 품목이나 수정하면 50%
-  // 자동계산이 조용히 실제 입금액을 덮어씀. userTyped 플래그(calcDeposit
-  // 에서만 켜짐)가 있으면 "이건 사용자가 방금 넣은 값"이라는 뜻이므로
-  // 그 경우엔 manualEdit을 그대로 보호하고 건드리지 않음.
+  // 2026-09-22(선혜님 - "코드 다시 정리하고... 왜 같은 문제가 발생하는지
+  // 파악해"로 구조 재설계): manualEdit/userTyped 두 불리언을 따로
+  // 관리하다가 매번 하나씩 어긋나는 문제가 반복돼서(8/28, 9/18, 9/21,
+  // 9/22 총 4단계), depositSource 하나의 값으로 통일함 - 'real'(사용자
+  // 직접입력·실제결제액, 절대 안 지움) / 'frozen'(예전 스냅샷 임시보호,
+  // 지금처럼 진짜 편집이 시작되면 풀어줌) / 없음(자동추정, 원래 보호
+  // 대상 아님). 여기서는 'frozen'일 때만 지우고, 'real'은 그대로 둠.
   var depInp = document.getElementById('deposit-input');
-  if (depInp && !depInp.dataset.userTyped) depInp.dataset.manualEdit = '';
+  if (depInp && depInp.dataset.depositSource === 'frozen') depInp.dataset.depositSource = '';
 }
 
 function autoSave() {

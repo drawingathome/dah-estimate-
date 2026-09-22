@@ -53,10 +53,10 @@ async function run() {
   // 진짜 계약금(750,000원)이 가려지지 않고 정확히 채워져야 함
   const r1 = await page.evaluate(() => {
     var depInp = document.getElementById('deposit-input');
-    return { dep: depInp ? depInp.value : '없음', manualEdit: depInp ? depInp.dataset.manualEdit : null, userTyped: depInp ? depInp.dataset.userTyped : null };
+    return { dep: depInp ? depInp.value : '없음', depositSource: depInp ? depInp.dataset.depositSource : null };
   });
   ok('1. [핵심] 할인쿠폰이 있어도 진짜 계약금(750,000원)이 정확히 채워짐 - 임시 50%값에 안 가려짐', r1.dep.indexOf('750,000') !== -1, JSON.stringify(r1));
-  ok('2. 보호 플래그(manualEdit/userTyped)도 정상적으로 켜짐', r1.manualEdit === '1' && r1.userTyped === '1', JSON.stringify(r1));
+  ok('2. 보호 상태(depositSource=real)도 정상적으로 켜짐', r1.depositSource === 'real', JSON.stringify(r1));
 
   // 이어서 품목(블라인드) 삭제 - 아까 신고하신 그 동작
   await page.evaluate(() => {
