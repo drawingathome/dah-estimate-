@@ -268,6 +268,20 @@ function renderCalList(customers, selectedDate) {
         if (dep > 0) payWrap.appendChild((function(){ var s=document.createElement('span'); s.style.cssText='color:#2F6690'; s.innerHTML='선금' + checkSvg; return s; })());
         if (bal > 0) payWrap.appendChild((function(){ var s=document.createElement('span'); s.style.cssText='color:#2F6690'; s.innerHTML='잔금' + checkSvg; return s; })());
         right.appendChild(payWrap);
+      } else {
+        // 2026-09-21(선혜님 지적 - "아직 상담만 한 사람인데 실측/시공
+        // 예정이 떠서 자동으로 일정에 올라가 있었어, 결제가 돼야 넘어가는
+        // 거 아니야??": 전문업체 CRM은 "확정" vs "미확정(잠정)" 일정을
+        // 항상 시각적으로 구분함(Adobe Marketo 등 - 확정 전엔 흐리게/
+        // 별도 표시). 견적서에 실측·시공 예정일을 처음 입력할 때(아직
+        // 상담·가견적 단계, 결제 전) 붙는 날짜라서, 입금 전엔 "미확정"
+        // 임을 명확히 표시 - 지우지는 않되(그 날짜를 미리 아는 것 자체는
+        // 유용하므로) 확정된 일정과 헷갈리지 않게 함.
+        var unconfirmedWrap = document.createElement('div');
+        unconfirmedWrap.style.cssText = 'font-size:11px;font-weight:700;color:#B0A99F;margin-top:2px;text-align:right';
+        unconfirmedWrap.textContent = '미확정(결제 전)';
+        right.appendChild(unconfirmedWrap);
+        row.style.opacity = '0.6'; // 상담과 같은 수준으로 흐리게
       }
     }
 

@@ -129,6 +129,11 @@ if (/dah-dashboard/.test(target)) {
   // 테이블) 두 소스 중 하나만 보다가, 실제 입금 기록이 있는데도 전액
   // 미수금으로 잘못 표시되던 버그 검증 (김은/황남주 실사례로 발견)
   scripts.push(['received_amount_source_mismatch_check.js', []]);
+  // 2026-09-21(선혜님 - "결제가 되어야 넘어가는거 아니야?? 구조를 확실히
+  // 확인해봐" - 최선미 고객 사례): 결제 전(상담/가견적 단계)에 이미
+  // 입력된 실측예정일이 캘린더에서 확정된 일정과 똑같이 보이던 문제 -
+  // "미확정(결제 전)" 표시로 구분되는지 검증
+  scripts.push(['cal-unconfirmed-schedule-check.js', []]);
   // 2026-09-21: 계약금만으로 총액이 다 채워진 경우 잔금 UI가 "완납"과
   // 앞뒤가 맞게 표시되는지 검증 (노지경 두번째 견적서 실사례로 발견)
   scripts.push(['no_balance_needed_ui_check.js', []]);
