@@ -141,6 +141,29 @@ function dahDailyBackup() {
     Logger.log('✅ 중복 의심 건 없음');
   }
 
+  // 2026-09-21(선혜님 지시 - "전문업체처럼 체계적이었으면 해, 지금
+  // 자료는 믿을 수가 없다"로 도입): 오늘 하루 발견한 버그들의 공통
+  // 원인 — "같은 개념(결제, 확정 여부)이 두 군데(고객 레벨/견적서
+  // 레벨, 단계/날짜필드)에 따로 저장돼 서로 어긋난다" — 을 사람이
+  // 우연히 발견하기 전에 매일 자동으로 점검함. dahScanForDuplicates와
+  // 같은 패턴: 아무것도 자동으로 고치지 않고, 발견만 해서 알림.
+  var integrityIssues = dahScanForDataIntegrity(backup);
+  if (integrityIssues.length > 0) {
+    Logger.log('⚠️ 데이터 정합성 의심 ' + integrityIssues.length + '건 발견:\n' + integrityIssues.join('\n'));
+    try {
+      MailApp.sendEmail(
+        Session.getActiveUser().getEmail(),
+        'DAH 데이터 정합성 점검 - 확인 필요 ' + integrityIssues.length + '건 (' + today + ')',
+        '오늘 백업 중 아래와 같은 정합성 의심 건이 발견됐습니다.\n' +
+        '(자동으로 고치지 않습니다 — 실제로 문제인지 확인 후 필요하면 대시보드에서 직접 수정해주세요)\n\n' +
+        integrityIssues.join('\n\n') +
+        '\n\n※ 이 알림은 apps-script-daily-backup.js의 dahScanForDataIntegrity()에서 매일 자동 발송됩니다.'
+      );
+    } catch (e) { Logger.log('정합성알림 이메일 발송 실패: ' + e.message); }
+  } else {
+    Logger.log('✅ 데이터 정합성 문제 없음');
+  }
+
   // 2026-09-05: 클라이언트 에러 로그도 매일 백업할 때마다 함께 확인
   try { dahCheckClientErrors(); } catch (e) { Logger.log('클라이언트 에러 확인 실패: ' + e.message); }
 
@@ -264,6 +287,60 @@ function dahScanForDuplicates(backup) {
 }
 
 /**
+ * ══════════════════════════════════════════════════
+ * 데이터 정합성 자동 점검 (dahScanForDataIntegrity)
+ * ══════════════════════════════════════════════════
+ * 2026-09-21 도입 — 선혜님 지시("전문업체처럼 체계적이었으면 해, 지금
+ * 자료는 믿을 수가 없다")로 만듦. 오늘 하루 발견한 버그들의 공통 원인은
+ * "같은 개념(결제, 확정 여부)이 두 군데(고객 레벨/견적서 레벨, 단계/
+ * 날짜필드)에 따로 저장돼 서로 어긋난다"는 것이었음 - 이걸 사람이
+ * 우연히 알아차리기 전에 매일 자동으로 찾아냄. dahScanForDuplicates와
+ * 마찬가지로 아무것도 자동으로 고치지 않고 "찾아서 보고만" 함.
+ */
+function dahScanForDataIntegrity(backup) {
+  var issues = [];
+  if (!Array.isArray(backup.customers) || !Array.isArray(backup.estimates)) return issues;
+
+  var estsByClientId = {};
+  backup.estimates.forEach(function(e) {
+    if (e.is_archived || !e.client_id) return;
+    (estsByClientId[e.client_id] = estsByClientId[e.client_id] || []).push(e);
+  });
+
+  backup.customers.forEach(function(c) {
+    if (c.is_archived) return;
+    var custDep = Number(c.deposit_amount) || 0;
+    var custBal = Number(c.balance_amount) || 0;
+    var ests = estsByClientId[c.id] || [];
+    var estDepSum = 0, estBalSum = 0;
+    ests.forEach(function(e) { estDepSum += Number(e.deposit_amount) || 0; estBalSum += Number(e.balance_amount) || 0; });
+
+    // 1) 결제 정합성: 고객 레벨과 견적서 레벨 둘 다 결제 기록이 있는데
+    // (둘 다 0이 아닌데) 서로 다른 금액이면 - 오늘 발견한 김은/황남주
+    // 사례처럼 "쓰는 곳과 읽는 곳이 서로 다른 값을 본다"는 신호.
+    if ((custDep + custBal) > 0 && (estDepSum + estBalSum) > 0 && (custDep !== estDepSum || custBal !== estBalSum)) {
+      issues.push('[결제 불일치] ' + c.client_name + '(id:' + c.id + ') — 고객레벨(선금' + custDep.toLocaleString() + '/잔금' + custBal.toLocaleString() +
+        ') vs 견적서합계(선금' + estDepSum.toLocaleString() + '/잔금' + estBalSum.toLocaleString() + ')가 서로 다름');
+    }
+
+    // 2) 미확정 일정 참고 알림: 아직 결제 전(상담/가견적 단계)인데
+    // 실측·시공 예정일이 이미 잡혀있는 경우 - 오늘 최선미 고객 사례로
+    // 발견함. 이건 "틀렸다"는 게 아니라(계획상 미리 적어두는 건 정상)
+    // 참고용으로만 매일 한 번 모아서 보여줌 - 캘린더 화면 자체엔 이미
+    // "미확정(결제 전)" 표시를 붙여둠(dash-calendar.js).
+    var isPrePayment = ['방문예약', '상담', '가견적'].indexOf(c.stage) !== -1;
+    var hasNoPayment = custDep === 0 && custBal === 0 && estDepSum === 0 && estBalSum === 0;
+    if (isPrePayment && hasNoPayment && (c.measure_date || c.install_date)) {
+      issues.push('[참고: 미확정 일정] ' + c.client_name + '(id:' + c.id + ') — "' + c.stage + '" 단계(결제 전)인데 ' +
+        (c.measure_date ? '실측예정 ' + c.measure_date : '') + (c.measure_date && c.install_date ? ', ' : '') +
+        (c.install_date ? '시공예정 ' + c.install_date : '') + '가 이미 입력돼 있음(캘린더엔 미확정으로 표시됨)');
+    }
+  });
+
+  return issues;
+}
+
+/**
  * 수동으로 지금 바로 중복 스캔만 돌려보고 싶을 때 사용 (백업은 안 만듦,
  * 스캔 전용 API 호출 — customers/estimates만 가져와서 검사).
  * 결과는 실행 로그 + 발견되면 이메일로도 발송.
@@ -290,6 +367,37 @@ function dahDuplicateScanOnly() {
     MailApp.sendEmail(
       Session.getActiveUser().getEmail(),
       'DAH 중복 의심 데이터 발견 (수동 스캔)',
+      issues.join('\n\n')
+    );
+  } catch (e) { Logger.log('이메일 발송 실패: ' + e.message); }
+}
+
+/**
+ * 지금 바로 데이터 정합성 점검만 돌려보고 싶을 때 사용 (백업은 안 만듦).
+ * 결과는 실행 로그 + 발견되면 이메일로도 발송.
+ */
+function dahDataIntegrityScanOnly() {
+  var backup = {};
+  var tables = ['customers', 'estimates'];
+  tables.forEach(function(table) {
+    var res = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/rpc/dah_backup_export', {
+      method: 'post', contentType: 'application/json',
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
+      payload: JSON.stringify({ table_name: table }),
+      muteHttpExceptions: true
+    });
+    backup[table] = res.getResponseCode() === 200 ? JSON.parse(res.getContentText()) : [];
+  });
+  var issues = dahScanForDataIntegrity(backup);
+  if (issues.length === 0) {
+    Logger.log('✅ 데이터 정합성 문제 없음');
+    return;
+  }
+  Logger.log('⚠️ 데이터 정합성 의심 ' + issues.length + '건 발견:\n' + issues.join('\n'));
+  try {
+    MailApp.sendEmail(
+      Session.getActiveUser().getEmail(),
+      'DAH 데이터 정합성 점검 (수동 스캔)',
       issues.join('\n\n')
     );
   } catch (e) { Logger.log('이메일 발송 실패: ' + e.message); }
@@ -847,8 +955,9 @@ function doGet(e) {
     else if (action === 'restoreDrill') dahRestoreDrill();
     else if (action === 'peekRawName') dahPeekRawName(e.parameter.phone || '');
     else if (action === 'duplicateScan') dahDuplicateScanOnly();
+    else if (action === 'integrityScan') dahDataIntegrityScanOnly();
     else if (action === 'checkErrors') dahCheckClientErrors();
-    else return ContentService.createTextOutput('❌ 알 수 없는 action: "' + action + '"\n사용가능: dailyBackup, diagnoseSchema, cleanupTestData, restoreDrill, peekRawName, duplicateScan, checkErrors').setMimeType(ContentService.MimeType.TEXT);
+    else return ContentService.createTextOutput('❌ 알 수 없는 action: "' + action + '"\n사용가능: dailyBackup, diagnoseSchema, cleanupTestData, restoreDrill, peekRawName, duplicateScan, integrityScan, checkErrors').setMimeType(ContentService.MimeType.TEXT);
   } catch (err) {
     return ContentService.createTextOutput('❌ 실행 중 오류 발생: ' + err.message + '\n' + err.stack).setMimeType(ContentService.MimeType.TEXT);
   }
