@@ -535,7 +535,19 @@ function _saveEstimateInner(_onDone) {
       client_idempotency_key: window._estEditState.currentEstIdempotencyKey || ((window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('est-' + Date.now() + '-' + Math.random().toString(36).slice(2))),
       customer_name:name, price:grand,
       performance_revenue:perf, staff_name:staffName,
-      estimate_status:currentTab||'ga',
+      // 2026-09-22(선혜님 지적 - "PC에서 확정을 하고 핸드폰에서 보면
+      // 확정이 풀려있어" - 최금희 실사례로 발견): estimate_status가
+      // "확정" 버튼(estimateConfirmedAt)과 무관하게, 그 순간 "가견적서/
+      // 최종견적서" 탭이 뭐였는지(currentTab)만 보고 정해지고 있었음 -
+      // 확정 버튼을 안 눌러도 "최종견적서" 탭만 보고 있다가 저장하면
+      // estimate_status='final'로 저장되고, 반대로 확정 버튼을 눌러도
+      // "가견적서" 탭이면 'ga'로 저장돼서, 대시보드(estimate_status
+      // 기준으로 "확정견적" 표시)와 견적서 앱 자체(estimateConfirmedAt
+      // 기준으로 잠금 표시)가 서로 다른 걸 보여주는 근본 원인이었음.
+      // "확정"이라는 하나의 진짜 기준(확정 버튼)에서만 파생되게 통일 -
+      // 탭 선택은 순전히 화면에 어떤 스타일로 보여줄지 정하는 것일 뿐,
+      // 저장되는 확정 여부와는 무관해야 함.
+      estimate_status: window._estEditState.estimateConfirmedAt ? 'final' : 'ga',
       phone:phone, space:spaceStr, product:fabricStr,
       date: document.getElementById('c-measure')?.value || '',
       // 2026-08-28(선혜님 지적 — "견적서에 시공일을 적어놔도 없어져"):

@@ -268,6 +268,10 @@ if (/dah-dashboard/.test(target)) {
   // 진짜 값"으로 착각해 진짜 계약금을 거부하던 문제 + 품목 복원 과정
   // 자체가 "사용자 편집"으로 오인되던 문제(isRestoringEstimate 플래그로 해결)
   scripts.push(['deposit-with-discount-restore-check.js', []]);
+  // 2026-09-22(선혜님 - "PC에서 확정을 하고 핸드폰에서 보면 확정이
+  // 풀려있어" - 최금희 실사례): estimate_status가 확정 버튼(estimateConfirmedAt)
+  // 과 무관하게 "가견적서/최종견적서" 탭 상태만 보고 저장되던 문제
+  scripts.push(['estimate-status-confirm-sync-check.js', []]);
   // 2026-09-22("쌍둥이함수까지 찾아" 지시로 발견): est-doc-customer.js
   // (고객용 문서)가 renderSvcSummary(내부화면)와 똑같은 4그룹 분류를
   // 각자 다른 기준으로 따로 계산하고 있어서 서로 다른 금액이 나올 수
