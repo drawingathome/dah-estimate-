@@ -328,10 +328,34 @@ function dahCheckClientErrors() {
     // 자체가 실패해도 다음 실행에서 "실패했던 구간"이 계속 누적되어
     // 갑자기 수백건이 한꺼번에 몰리는 걸 방지
     props.setProperty('LAST_ERROR_CHECK_TIME', nowISO);
-    if (rows.length === 0) {
-      Logger.log('✅ 새로운 클라이언트 에러 없음');
+    // 2026-09-21(선혜님 - "이 메일이 진짜 실패만 걸러서 오게 해줘" -
+    // 박윤아 견적서 정상 저장 건이 "오류"처럼 메일로 온 사례로 발견):
+    // logSaveStage()는 저장이 "성공"했을 때도 각 단계를 전부 서버에
+    // 기록하는데(다음에 진짜 문제가 생기면 어디까지 갔는지 보려고
+    // 일부러 그렇게 만든 것), 이 메일은 그걸 성공/실패 구분 없이 전부
+    // "오류"라고 보내고 있었음 - 실제로는 정상 저장인데 매번 놀라게
+    // 만들었음. 문제 신호가 전혀 없는 단계(시작/세션확인-정상/검증통과/
+    // 필수항목검증완료/확인창-진행)는 항상 조용히 넘기고, 응답 단계
+    // (고객저장-응답/견적서저장-응답)는 실제 HTTP 상태코드가 200번대가
+    // 아닐 때만("응답은 받았지만 서버가 거부/오류를 냄") 진짜 문제로
+    // 취급함.
+    function isRoutineStage(r) {
+      var alwaysBenign = ['저장단계: 시작', '저장단계: 세션확인-정상', '저장단계: 검증통과', '저장단계: 필수항목검증완료', '저장단계: 확인창-진행'];
+      if (alwaysBenign.indexOf(r.message) !== -1) return true;
+      if (r.message === '저장단계: 고객저장-응답' || r.message === '저장단계: 견적서저장-응답') {
+        try {
+          var status = r.extra && r.extra.status;
+          return typeof status === 'number' && status >= 200 && status < 300;
+        } catch (e) { return false; } // 상태를 못 읽으면 안전하게 "문제일 수 있음"으로 남김
+      }
+      return false;
+    }
+    var problemRows = rows.filter(function(r) { return !isRoutineStage(r); });
+    if (problemRows.length === 0) {
+      Logger.log('✅ 새로운 클라이언트 에러 없음 (저장 성공 기록 ' + rows.length + '건은 조용히 건너뜀)');
       return;
     }
+    rows = problemRows;
     // 2026-09-12(선혜님 - "그럼 문제가 없는데 이렇게 메일이 온다는거야??"):
     // "저장 실패(동시저장충돌) - 내용 백업됨" 종류는 실패한 그 순간만
     // 기록될 뿐, 나중에 재시도가 성공했는지는 전혀 확인 안 하고 있었음 -
