@@ -184,8 +184,17 @@ function unfreezeEstimateIfEditing() {
   // 계약금 입력칸에 "수동수정 보호"(dataset.manualEdit) 플래그도 같이
   // 켜두는데, 이걸 안 풀어주면 얼림 자체는 풀렸어도 계약금 자동계산
   // (50%/100%)이 여전히 막혀서 예전 계약금 값이 그대로 남아있음.
+  //
+  // 2026-09-22(선혜님 - "선금 75만원 입력했는데 왜 또 50%로 뜨니??
+  // 아까도 물어본건데" - 최금희 고객 실사례로 재현 성공): 위 로직이
+  // manualEdit을 무조건 지워버려서, "예전 얼려둔 스냅샷에서 온 계약금"
+  // 뿐 아니라 "사용자가 방금 이 화면에서 직접 타이핑한 계약금"까지
+  // 함께 보호가 풀려버리고 있었음 - 그 뒤 아무 품목이나 수정하면 50%
+  // 자동계산이 조용히 실제 입금액을 덮어씀. userTyped 플래그(calcDeposit
+  // 에서만 켜짐)가 있으면 "이건 사용자가 방금 넣은 값"이라는 뜻이므로
+  // 그 경우엔 manualEdit을 그대로 보호하고 건드리지 않음.
   var depInp = document.getElementById('deposit-input');
-  if (depInp) depInp.dataset.manualEdit = '';
+  if (depInp && !depInp.dataset.userTyped) depInp.dataset.manualEdit = '';
 }
 
 function autoSave() {

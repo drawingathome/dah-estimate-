@@ -639,7 +639,22 @@ function loadCustByIdx(el) {
 
 function calcDeposit() {
   var depInp = document.getElementById('deposit-input');
-  if(depInp) depInp.dataset.manualEdit = '1';
+  if(depInp) {
+    depInp.dataset.manualEdit = '1';
+    // 2026-09-22(선혜님 - "선금을 75만원 냈어 그래서 기입을 했는데 왜
+    // 또 그냥 50%로 뜨는거지?? 아까도 물어본건데" - 최금희 고객 실사례
+    // 재현 성공): manualEdit 플래그 하나로 "사용자가 방금 직접 타이핑한
+    // 값"과 "예전 견적을 불러올 때 복원된 값"을 구분 없이 같이 쓰고
+    // 있었는데, unfreezeEstimateIfEditing()(est-misc.js)이 품목표 수정시
+    // "얼려둔 예전 스냅샷" 보호를 풀면서 이 플래그까지 통째로 같이
+    // 지워버림 - 그 결과 방금 직접 입력한 계약금(75만원)도 "예전
+    // 스냅샷"과 똑같이 취급돼 함께 지워지고, 그 다음 품목 수정시 50%
+    // 자동계산이 조용히 덮어씀. userTyped는 오직 사용자가 이 입력창에
+    // 직접 타이핑했을 때만 켜지므로, unfreezeEstimateIfEditing()이 이걸
+    // 보고 "이건 예전 스냅샷이 아니라 방금 사용자가 넣은 값"임을 구분해
+    // 지우지 않고 보호함.
+    depInp.dataset.userTyped = '1';
+  }
   var totalEl = document.getElementById('sum-total');
   var grand = parseInt((totalEl?.textContent||'0').replace(/[^0-9]/g,''))||0;
   var dep = getPriceVal(depInp)||0;

@@ -97,6 +97,13 @@ function applyRealDepositToForm(depositAmount) {
   depInp.value = Number(depositAmount).toLocaleString();
   depInp.dataset.raw = String(depositAmount);
   depInp.dataset.manualEdit = '1';
+  // 2026-09-22(선혜님 - "선금 75만원 넣었는데 왜 또 50%로 뜨니??"로
+  // 발견한 것과 같은 계열): 이 함수가 불러오는 값은 "실제로 입금된
+  // 진짜 계약금"이라 사용자가 방금 타이핑한 값과 똑같이 보호돼야
+  // 하는데, userTyped가 없으면 unfreezeEstimateIfEditing()(품목 수정시)
+  // 이 "예전 얼려둔 스냅샷"과 구분 못 하고 보호를 풀어버려 50% 자동
+  // 계산이 실제 입금액을 덮어쓸 위험이 있었음.
+  depInp.dataset.userTyped = '1';
   // 2026-09-21(선혜님 - "계약금은 100만원 걸었는데 왜 이게 불일치
   // 하지????이거 예전에도 같은 오류 있었잖아" - 화면 캡처로 정확히
   // 재현: 계약금 입력창은 1,000,000원인데 검은 요약박스(총액 카드
