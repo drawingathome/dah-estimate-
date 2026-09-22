@@ -276,6 +276,18 @@ if (/dah-dashboard/.test(target)) {
   // 전수 점검 중 발견): 견적서 단위 결제가 매출차트/처리필요배지에도
   // 정확히 반영되는지 검증(매출 계산과 미수금 판단의 핵심 회귀 방지).
   scripts.push(['est-based-pay-sync-check.js', []]);
+  // 2026-09-22(선혜님 - "코드정리 싹 해봐" 요청으로 전수 점검 중 발견):
+  // 다음 5개 테스트가 실제로는 유효한 회귀 검증인데 run-all.js 등록이
+  // 통째로 빠져 있어서, 지금까지 한 번도 CI에서 실행된 적이 없었음 -
+  // 확인 과정에서 실제 결함(payment_order_gating: 타이밍 문제,
+  // customer_count_label: 검증하던 기능 자체가 정책변경으로 사라짐,
+  // detail_tab_overflow/grouped_todo/order_data_gap: 시나리오가 그 뒤
+  // 바뀐 로직과 안 맞음)도 함께 발견해서 수정한 뒤 등록.
+  scripts.push(['payment_order_gating_check.js', []]);
+  scripts.push(['customer_count_label_check.js', [target]]);
+  scripts.push(['detail_tab_overflow_check.js', [target]]);
+  scripts.push(['grouped_todo_check.js', [target]]);
+  scripts.push(['order_data_gap_check.js', [target]]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',

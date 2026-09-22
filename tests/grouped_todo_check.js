@@ -18,7 +18,7 @@ async function run() {
     function daysAgo(n) { var d = new Date(); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); }
     saveCustomers([
       { id: 900, clientName: '결제고객A', phone:'01011110000', stage:'선금결제', staffName:'마스터', date: todayStr(), price: 1000000, orderStatus:{fabric:true,production:true,blind:true,material:true,install:true} },
-      { id: 901, clientName: '발주고객B', phone:'01022220000', stage:'실측준비중', staffName:'마스터', date: todayStr(), price: 1000000, orderStatus:{} },
+      { id: 901, clientName: '발주고객B', phone:'01022220000', stage:'확정견적', staffName:'마스터', date: todayStr(), price: 1000000, orderStatus:{} },
       { id: 902, clientName: '리드고객C', phone:'01033330000', stage:'상담', staffName:'마스터', date: daysAgo(10) }
     ]);
     localStorage.setItem('dah_saved', JSON.stringify([
@@ -37,10 +37,12 @@ async function run() {
   console.log('결제처리 그룹 헤더 존재:', result.hasPaymentGroup ? '✅' : '❌');
   console.log('발주필요 그룹 헤더 존재:', result.hasOrderGroup ? '✅' : '❌');
   console.log('리드팔로업 그룹 헤더 존재:', result.hasLeadGroup ? '✅' : '❌');
-  console.log('순서(결제→발주→리드):', JSON.stringify(result.order), result.order[0] < result.order[1] && result.order[1] < result.order[2] ? '✅' : '❌');
+  var orderOk = result.order[0] < result.order[1] && result.order[1] < result.order[2];
+  console.log('순서(결제→발주→리드):', JSON.stringify(result.order), orderOk ? '✅' : '❌');
 
   await browser.close();
-  process.exit(0);
+  const allOk = result.hasPaymentGroup && result.hasOrderGroup && result.hasLeadGroup && orderOk;
+  process.exit(allOk ? 0 : 1);
 }
 run().catch(e => { console.error(e); process.exit(1); });
 setTimeout(() => process.exit(1), 20000);
