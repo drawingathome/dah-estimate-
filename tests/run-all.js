@@ -250,6 +250,11 @@ if (/dah-dashboard/.test(target)) {
   // 보호를 푸는 로직이 "사용자가 방금 직접 입력한 계약금" 보호까지
   // 같이 지워버려서 50% 자동계산이 실제 입금액을 덮어쓰던 문제
   scripts.push(['deposit-manual-protection-check.js', []]);
+  // 2026-09-22(선혜님 - "확정을 해도 자꾸 풀리는데?? 왜 자꾸 같은 오류가
+  // 생기지" - 최금희 실사례): loadEstDbId URL로 견적서를 불러올 때
+  // 저장된 실제 계약금을 화면에 채우는 코드가 아예 없어서, 인쇄화면이
+  // 매번 50% 자동추정치로 표시되던 문제
+  scripts.push(['est-load-deposit-restore-check.js', []]);
   // 2026-09-22("쌍둥이함수까지 찾아" 지시로 발견): est-doc-customer.js
   // (고객용 문서)가 renderSvcSummary(내부화면)와 똑같은 4그룹 분류를
   // 각자 다른 기준으로 따로 계산하고 있어서 서로 다른 금액이 나올 수

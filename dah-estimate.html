@@ -1336,6 +1336,18 @@ var currentTab = 'ga';
               window._estEditState.estimateConfirmedAt = e.confirmed_at;
               if (typeof renderConfirmBadge === 'function') renderConfirmBadge();
             }
+            // 2026-09-22(선혜님 - "확정을 해도 자꾸 풀리는데?? 왜 자꾸
+            // 같은 오류가 생기지" - 최금희 견적서 인쇄화면에서 계약금
+            // 750,000원 대신 자동 50%(1,791,000원)로 뜨는 실사례로 발견):
+            // 이 견적서를 이 URL(loadEstDbId)로 불러올 때, 저장돼 있던
+            // 실제 계약금(e.deposit_amount)을 화면에 채우는 코드가 아예
+            // 없었음 - 그래서 열 때마다 계약금 입력창이 항상 빈 채로
+            // 시작했고, 인쇄 화면은 "입력 안 됨"으로 보고 50% 추정치를
+            // 대신 보여줬음. 저장된 실제 계약금이 있으면 그대로 채우고
+            // (userTyped 보호도 같이 켜져서, 이후 품목을 고쳐도 안 풀림).
+            if (e.deposit_amount && Number(e.deposit_amount) > 0 && typeof applyRealDepositToForm === 'function') {
+              applyRealDepositToForm(Number(e.deposit_amount));
+            }
             if (loadMode === 'edit') {
               showToast('✏️ '+(e.customer_name||'')+' 견적서를 불러왔어요 — 수정 후 저장하면 이 견적서가 갱신돼요');
             }
