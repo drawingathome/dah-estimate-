@@ -236,6 +236,11 @@ if (/dah-dashboard/.test(target)) {
   // 갱신되고, 기존 행 단가를 직접 고치거나 복제/삭제할 때는 안 갱신되던
   // 문제 + 복제본이 자동관리 태그를 물려받아 원본과 혼선 생기던 문제
   scripts.push(['svc-summary-sync-check.js', []]);
+  // 2026-09-22("쌍둥이함수까지 찾아" 지시로 발견): est-doc-customer.js
+  // (고객용 문서)가 renderSvcSummary(내부화면)와 똑같은 4그룹 분류를
+  // 각자 다른 기준으로 따로 계산하고 있어서 서로 다른 금액이 나올 수
+  // 있던 구조를 categorizeSvcRow 공용함수로 통합 - 검증
+  scripts.push(['svc-categorize-unify-check.js', []]);
   // 2026-09-21(선혜님 - "전문업체는 원인을 어떻게 찾을까"로 저장 흐름
   // 전 구간 재점검 - 로그가 아예 없던 조기종료 지점(버튼 고착) 발견해
   // 수정 + 15초 이상 고착시 자동복구까지 추가): 검증

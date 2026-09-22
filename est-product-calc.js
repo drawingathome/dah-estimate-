@@ -1140,6 +1140,37 @@ function copySvcRow(btn) {
   if (typeof renderSvcSummary === 'function') renderSvcSummary();
 }
 
+// 2026-09-22(선혜님 지적 - "버그를 고치고 고쳐도 왜 같은 버그가 생기지,
+// 쌍둥이함수까지 찾아": est-doc-customer.js가 아래 renderSvcSummary()와
+// 완전히 똑같은 "레일/실측+시공비/전동+부자재/기타" 4그룹 분류를 각자
+// 손으로 따로 짜놨는데, 서로 다른 기준을 쓰고 있었음 - renderSvcSummary는
+// "구분" 드롭다운의 실시간 값을 보는데, est-doc-customer.js는 고정된
+// data-svc-type 속성값만 보고 있어서(수동으로 만든 행이나, 만든 뒤
+// 드롭다운을 바꾼 행에서는 이 속성이 실제 값과 다를 수 있음), 직원이
+// 보는 내부 화면이랑 고객에게 나가는 견적서 문서의 금액이 서로 달라질
+// 수 있는 구조였음. 또한 est-doc-customer.js에만 있던 "블라인드시공"/
+// "옵션추가금"/"부자재" 분류가 renderSvcSummary엔 아예 없어서, 그런
+// 행들이 내부 화면에서만 "기타"로 잘못 묶이고 있었음. 이 분류 로직을
+// 딱 한 곳(이 함수)으로 통합해서, 두 화면이 항상 똑같은 기준으로 같은
+// 결과를 내도록 함 - "실시간 드롭다운 값"을 우선하고, 만들어질 때
+// 붙는 고정 속성은 드롭다운이 아직 없거나 비어있을 때만 보조로 씀.
+function categorizeSvcRow(tr) {
+  var isRailMaterial = tr.hasAttribute('data-rail-src');     // 레일 자재(1,600원×레일수)
+  var isRailInstall  = tr.hasAttribute('data-railcost-src'); // 레일 시공비(25,000원)
+  var isRegionInstall = tr.hasAttribute('data-install-base'); // 지역별 실측·시공비
+  var svcTypeAttr = tr.getAttribute('data-svc-type') || '';
+  var kindSelect = tr.querySelector('.svc-kind')?.value || tr.querySelector('td select')?.value || '';
+
+  if (isRailMaterial) return 'rail';
+  if (isRailInstall || isRegionInstall) return 'measureInstall';
+  if (kindSelect === '전동') return 'motor';
+  if (kindSelect === '실측비' || kindSelect === '시공비') return 'measureInstall';
+  if (svcTypeAttr === '블라인드시공') return 'measureInstall';
+  if (svcTypeAttr === '옵션추가금') return 'motor';
+  if (kindSelect === '부자재') return 'motor';
+  return 'etc';
+}
+
 // 레일/시공비/기타 항목을 그룹으로 묶어 요약카드로 보여줌 (선혜님 피드백: 항목이 너무 많아 한눈에 안 들어옴)
 // - 실측+시공비: 지역별 실측비/시공비(레일시공비 제외)
 // - 레일 자재비: 레일 자재 + 레일 시공비를 합쳐서 표시, 괄호안에 세부 내역 나열
@@ -1158,46 +1189,16 @@ function renderSvcSummary() {
     etc: { label: '기타', sum: 0, details: [] }
   };
 
-  // 2026-08-15: 옵션추가금이 이제 독립된 svc 행(data-svc-type="옵션추가금")으로
-  // 분리되어 있으므로, blind-body를 다시 순회해서 재계산할 필요 없이
-  // 아래 rows.forEach 루프에서 다른 행들과 동일하게 자연스럽게 그룹핑됨.
-
   rows.forEach(function(tr) {
-    var type = tr.querySelector('td select')?.value || '';
     var priceInp = tr.querySelector('.sprice');
     var qtyInp = tr.querySelector('.sqty');
     var price = Math.max(0, getPriceVal(priceInp) || 0);
     var qty = Math.max(0, parseFloat(qtyInp?.value) || 1);
     var amt = price * qty;
     var label = tr.querySelector('.svc-content')?.value || '';
-    var isRailMaterial = tr.hasAttribute('data-rail-src');   // 레일 자재(1,600원×레일수)
-    var isRailInstall  = tr.hasAttribute('data-railcost-src'); // 레일 시공비(25,000원)
-    var isRegionInstall = tr.hasAttribute('data-install-base');
-
-    if (isRailMaterial) {
-      groups.rail.sum += amt;
-      groups.rail.details.push(label);
-    } else if (isRailInstall) {
-      // 2026-08-14: 예전엔 레일 시공비도 "레일 자재비" 그룹에 들어가서, 이름은
-      // 자재비인데 시공비가 섞여있는 모순이 있었음(선혜님 지적). 시공비 성격이
-      // 맞으므로 "실측 + 시공비" 그룹으로 이동.
-      groups.measureInstall.sum += amt;
-      groups.measureInstall.details.push(label);
-    } else if (isRegionInstall) {
-      // 2026-08-15: 옵션추가금이 이제 독립된 행으로 분리되어 지역시공비
-      // 행에는 순수 지역비만 있으므로, 예전처럼 옵션분을 차감할 필요가 없어짐.
-      groups.measureInstall.sum += amt;
-      groups.measureInstall.details.push(label);
-    } else if (type === '전동') {
-      groups.motor.sum += amt;
-      groups.motor.details.push(label);
-    } else if (type === '실측비' || type === '시공비') {
-      groups.measureInstall.sum += amt;
-      groups.measureInstall.details.push(label);
-    } else {
-      groups.etc.sum += amt;
-      groups.etc.details.push(label);
-    }
+    var group = categorizeSvcRow(tr);
+    groups[group].sum += amt;
+    groups[group].details.push(label);
   });
 
   var html = '';

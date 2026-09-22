@@ -205,6 +205,11 @@ function buildCustomerHTML() {
     // 넣었었는데, 선혜님 정정으로 "시공서비스 표 안에" 정리하는 것으로 변경).
     // 2026-08-15: 참고사항을 4줄 고정 구조로 재구성(선혜님 요청):
     // ①실측+시공비(지역별) ②레일 ③전동 및 부자재 ④기타 옵션(블라인드옵션 외)
+    // 2026-09-22(선혜님 - "쌍둥이함수까지 찾아"로 발견/통합): 예전엔
+    // 여기서 이 4그룹 분류를 독자적으로 다시 계산하고 있어서, 위
+    // renderSvcSummary()(est-product-calc.js, 내부 화면용)와 서로 다른
+    // 기준을 쓰다가 어긋날 수 있었음 - 이제 공용함수 categorizeSvcRow로
+    // 통일해서 내부 화면과 고객용 문서가 항상 같은 금액을 보여주게 함.
     var measureInstallSum = 0;
     var railSum = 0, railDetailBits = [];
     var motorMaterialSum = 0;
@@ -215,24 +220,16 @@ function buildCustomerHTML() {
       var qty = parseFloat(tr.querySelector('.sqty')?.value) || 1;
       var amt = price * qty;
       if (!desc || !amt) return;
-      var isRailMaterial = tr.hasAttribute('data-rail-src');
-      var isRailInstall = tr.hasAttribute('data-railcost-src');
-      var isRegionInstall = tr.hasAttribute('data-install-base');
-      var svcTypeAttr = tr.getAttribute('data-svc-type') || '';
-      var kindSelect = tr.querySelector('.svc-kind')?.value || '';
       var svcSpaceVal = tr.querySelector('.svc-space')?.value || '';
-      var isMeasureOrInstall = isRegionInstall || isRailInstall ||
-        svcTypeAttr === '실측비' || svcTypeAttr === '시공비' || svcTypeAttr === '블라인드시공';
-      var isOptionExtra = svcTypeAttr === '옵션추가금'; // 전동 등 블라인드 옵션추가금
-      var isManualMaterial = kindSelect === '부자재'; // 직접 추가한 부자재
-      if (isMeasureOrInstall) {
+      var group = (typeof categorizeSvcRow === 'function') ? categorizeSvcRow(tr) : 'etc';
+      if (group === 'measureInstall') {
         measureInstallSum += amt;
-      } else if (isRailMaterial) {
+      } else if (group === 'rail') {
         railSum += amt;
         // 2026-09-18: 위치가 이제 desc 텍스트에 안 합쳐져 있으므로(별도
         // .svc-space 칸으로 분리됨), 여기 요약 표시에서 다시 붙여줌.
         railDetailBits.push((svcSpaceVal ? svcSpaceVal + ' ' : '') + desc.trim() + (qty > 1 ? ' ' + qty + '개' : ''));
-      } else if (isOptionExtra || isManualMaterial) {
+      } else if (group === 'motor') {
         motorMaterialSum += amt;
       } else {
         etcOptionSum += amt;
