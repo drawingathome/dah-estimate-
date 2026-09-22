@@ -593,6 +593,26 @@ function markSvcManualOverride(el) {
     // 맞춰서, 입력한 값이 곧 최종 금액이 되도록 함.
     var qtyInp = tr.querySelector('.sqty');
     if (qtyInp) qtyInp.value = '1';
+    // 2026-09-22(선혜님 - "오류가 너무 많아서 못쓸 지경이야, 찾아"로
+    // 원인 추적 - 최금희 고객 사례 100% 재현 성공): "직접 수정"된 값은
+    // 지역을 나중에 다시 선택해도 영구히 유지되는데(의도된 설계 -
+    // 2026-09-19 도입), 실측비/시공비처럼 나란히 붙어있는 자동생성
+    // 필드에 실수로 다른 칸의 값을 잘못 입력해도(예: 시공비 칸에
+    // 실측비 금액을 잘못 타이핑) 화면상 자동계산값과 전혀 구분이 안 돼
+    // 몇 시간이 지나서야("서울 시공비 40,000원") 눈치채는 사고가
+    // 실제로 재현됨. 자동생성 필드(실측비/시공비/레일/레일시공비)를
+    // 직접 고치면 눈에 띄게 표시해서, 실수로 잘못 입력한 걸 그 자리에서
+    // 바로 알아챌 수 있게 함 - 의도적 할인/조정이면 그대로 두면 되고,
+    // 실수면 바로 지우고 다시 입력하면 됨.
+    var isAutoManagedField = tr.hasAttribute('data-svc-type') || tr.hasAttribute('data-rail-src') || tr.hasAttribute('data-railcost-src');
+    if (isAutoManagedField) {
+      el.style.background = '#FFF3E0';
+      el.style.borderColor = '#F06E2D';
+      var contentInp = tr.querySelector('.svc-content');
+      if (contentInp && contentInp.value.indexOf(' ✏️직접수정') === -1) {
+        contentInp.value = contentInp.value + ' ✏️직접수정';
+      }
+    }
   }
 }
 

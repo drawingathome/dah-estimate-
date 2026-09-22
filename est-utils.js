@@ -141,6 +141,16 @@ function formatKoreanDate(d) {
 function splitAddrDetail(fullAddr) {
   var addr = (fullAddr || '').trim();
   if (!addr) return { base: '', detail: '' };
+  // 2026-09-22(선혜님 - "동호수가 한번에 다 보임... 예전에도 말한거잖아"
+  // - 아파트/오피스텔 단지명이 숫자-숫자(예: "트리니원 112-1804")로
+  // 붙는 형식은 원래부터 이 패턴에 없었음(9/16 도입 당시 "OOO동 OOO호"
+  // 형식만 다룸)): 도로명(로/길) + 번지수까지가 진짜 주소이고, 그 뒤에
+  // 더 붙는 건 전부 상세주소(단지명·동·호수 등 형식 무관)로 봄 - 그래야
+  // "사평대로 53길 64 101-1502"처럼 도로 번지수(64) 자체가 상세주소로
+  // 잘못 잘려나가는 것도 방지됨. 도로명 표시가 아예 없는 순수 지번주소
+  // (예: "역삼동 823-3")는 이 규칙 대상이 아니라서 안전하게 안 쪼개짐.
+  var roadMatch = addr.match(/^(.*?[가-힣]+(?:로|길)\s*\d+)\s+(\S.*)$/);
+  if (roadMatch && roadMatch[2].trim()) return { base: roadMatch[1].trim(), detail: roadMatch[2].trim() };
   var m = addr.match(/^(.*?)\s+(\d+동\s*\d*호?|\d+호|지하\s*\d*호?|B\d+호)$/);
   if (m && m[1].trim()) return { base: m[1].trim(), detail: m[2].trim() };
   return { base: addr, detail: '' };
