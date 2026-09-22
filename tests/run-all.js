@@ -261,6 +261,13 @@ if (/dah-dashboard/.test(target)) {
   // 값으로 덮어쓸 수 있던 경쟁상태 발견): applyRealDepositToForm에
   // 다운그레이드 방지 가드 추가로 모든 호출 경로 한번에 안전해짐
   scripts.push(['deposit-race-downgrade-check.js', []]);
+  // 2026-09-22(선혜님 - "안바뀌엇고 열면 자꾸 50%로 된다니깐" - 최금희
+  // 실사례 끝까지 추적한 진짜 최종 원인): 할인쿠폰이 있는 견적서를 불러올
+  // 때, 할인 복원이 계약금 복원보다 먼저 실행되면서 생기는 "보호 안 된
+  // 임시 50%값"을 방금 위에서 만든 다운그레이드 방지 가드가 "이미 있는
+  // 진짜 값"으로 착각해 진짜 계약금을 거부하던 문제 + 품목 복원 과정
+  // 자체가 "사용자 편집"으로 오인되던 문제(isRestoringEstimate 플래그로 해결)
+  scripts.push(['deposit-with-discount-restore-check.js', []]);
   // 2026-09-22("쌍둥이함수까지 찾아" 지시로 발견): est-doc-customer.js
   // (고객용 문서)가 renderSvcSummary(내부화면)와 똑같은 4그룹 분류를
   // 각자 다른 기준으로 따로 계산하고 있어서 서로 다른 금액이 나올 수

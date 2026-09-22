@@ -895,7 +895,7 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
   <option value="허니콤 No.1">허니콤 No.1</option>
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
-<script src="/est-utils.js?v=0dc523f9da2a"></script>
+<script src="/est-utils.js?v=cbd77bc4c8c3"></script>
 <script src="/shared-common-utils.js?v=f78f0d883265"></script>
 <script src="/shared-optimistic-lock.js?v=db886eb6aa35"></script>
 <script src="/est-sync-queue.js?v=f2f3fb3e0f4c"></script>
@@ -903,12 +903,12 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
 <script src="/est-form-controls.js?v=a737ee9e83f3"></script>
 <script src="/est-product-calc.js?v=cf7215349f8f"></script>
 <script src="/est-survey.js?v=7a7c7ecd5e16"></script>
-<script src="/est-save.js?v=4aa246548187"></script>
+<script src="/est-save.js?v=4f24184b3ae3"></script>
 <script src="/est-doc-customer.js?v=591f5a0c5579"></script>
 <script src="/est-doc-vendor.js?v=ebcaca546af6"></script>
 <script src="/est-doc-request.js?v=65434c6947c8"></script>
 <script src="/est-customer-load.js?v=c7498b33cb50"></script>
-<script src="/est-misc.js?v=658988b05048"></script>
+<script src="/est-misc.js?v=c0a8ad203e7a"></script>
 <script>
 var currentTab = 'ga';
 
@@ -1054,7 +1054,19 @@ var currentTab = 'ga';
               var e = erows && erows[0];
               var loadedItems = false;
               if (e && e.line_items && typeof restoreLineItemsToForm === 'function') {
+                // 2026-09-22(선혜님 - "안바뀌엇고 열면 자꾸 50%로 된다니깐"
+                // - 최금희 실사례, 이후 estimate-conversion-check.js의
+                // "품목 지우면 계약금이 새로 재계산돼야 함" 케이스를
+                // 부작용으로 깨뜨렸다가 재수정): 이전엔 5초짜리 넓은
+                // 시간창으로 막았다가, 그 시간 안에 일어나는 "진짜" 사용자
+                // 편집(예: 자동화 테스트나 빠른 사용자가 로드 직후 바로
+                // 품목을 지우는 경우)까지 같이 막아버리는 부작용이 있었음
+                // - 품목을 화면에 복원하는 이 한 줄만 정확히 감싸서, 그
+                // 복원 루프 동안만 "이건 사용자 편집이 아니다"로 표시하고
+                // 끝나자마자(비동기 대기 없이 바로) 다시 풀어줌.
+                window._estEditState.isRestoringEstimate = true;
                 loadedItems = restoreLineItemsToForm(e.line_items, e.product);
+                window._estEditState.isRestoringEstimate = false;
               }
               // 2026-08-28: 이 견적서 자체에 저장된 실측일/시공일이 있으면
               // (고객 레코드값보다 더 구체적이므로) 공용함수로 우선 반영.
@@ -1192,7 +1204,12 @@ var currentTab = 'ga';
           }
           var loadedItems = false;
           if (e.line_items && typeof restoreLineItemsToForm === 'function') {
+            // 2026-09-22(선혜님 - "안바뀌엇고 열면 자꾸 50%로 된다니깐" -
+            // 최금희 실사례, loadCustId 경로와 동일한 이유): 이 복원 루프
+            // 동안만 정확히 보호함(넓은 시간창 대신).
+            window._estEditState.isRestoringEstimate = true;
             loadedItems = restoreLineItemsToForm(e.line_items, e.product);
+            window._estEditState.isRestoringEstimate = false;
           }
           // 2026-08-29(선혜님 지적 - "확정견적서를 눌러도 왜 계속
           // 다시 가견적서로 돌아가니"): loadCustId 경로와 정확히 같은

@@ -102,8 +102,19 @@ function applyRealDepositToForm(depositAmount) {
   // 그걸 덮어쓰는 경쟁 상태가 될 수 있었음. 여기 한 곳에서 "이미 있는
   // 값보다 작으면 무시"하도록 막아서, 이 함수를 부르는 모든 경로가
   // 자동으로 안전해지게 함(각 호출부를 일일이 고칠 필요 없음).
-  var existingRaw = Number(depInp.dataset.raw) || 0;
-  if (Number(depositAmount) < existingRaw) return;
+  //
+  // 2026-09-22(같은 날 재발견 - "안바뀌엇고 열면 자꾸 50%로 된다니깐"
+  // 최금희 실사례 끝까지 추적): 이 가드가 스스로를 막는 부작용이 있었음
+  // - 견적서를 불러올 때 할인쿠폰 복원이 이 함수보다 먼저 실행되면서
+  // (아직 진짜 계약금이 안 들어온 시점이라) calcTotal()이 임시로 자동
+  // 50%값(예: 832,500원)을 계산해버리는데, 그 값엔 manualEdit/userTyped
+  // 보호가 전혀 없는데도 이 가드가 "이미 있는 값"으로 착각해서, 그보다
+  // 작은 진짜 계약금(750,000원)을 거부해버렸음. "보호된 값"과 비교할
+  // 때만 다운그레이드를 막아야 함 - 보호 안 된 임시값은 언제든 진짜
+  // 값으로 교체 가능해야 함.
+  var existingProtected = depInp.dataset.userTyped === '1';
+  var existingRaw = existingProtected ? (Number(depInp.dataset.raw) || 0) : 0;
+  if (existingProtected && Number(depositAmount) < existingRaw) return;
   depInp.value = Number(depositAmount).toLocaleString();
   depInp.dataset.raw = String(depositAmount);
   depInp.dataset.manualEdit = '1';

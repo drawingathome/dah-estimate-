@@ -177,6 +177,14 @@ function collectLineItems() {
 // 최신 금액이 반영되게 함 - 이름/전화번호 등 단순 정보 수정까지는
 // 안 건드림(그 정도로는 금액 재계산이 불필요하므로).
 function unfreezeEstimateIfEditing() {
+  // 2026-09-22(선혜님 - "안바뀌엇고 열면 자꾸 50%로 된다니깐" - 최금희
+  // 실사례 끝까지 추적해서 발견): 견적서를 불러올 때 저장된 품목을
+  // 화면에 프로그램이 스스로 다시 그리는 과정(addCurtainRow 등) 자체가
+  // 이 함수를 호출해서 "사용자가 방금 편집했다"로 오인됨 - 그 결과
+  // 방금 정확히 복원한 계약금의 보호가 곧바로 풀려서 50% 자동계산이
+  // 덮어씀. "지금 불러오는 중"일 때는 진짜 사용자 편집이 아니므로
+  // 아무것도 안 하고 그대로 리턴.
+  if (window._estEditState && window._estEditState.isRestoringEstimate) return;
   if (window._estEditState && window._estEditState.viewingFrozenEstimate) {
     window._estEditState.viewingFrozenEstimate = false;
   }

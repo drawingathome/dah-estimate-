@@ -38,7 +38,17 @@ var EST_SESSION_RESET_VALUES = {
   skipTodayDuplicateCheck: false, // "복사해서 새로 만들기" 전용 플래그 - 지금까지 이 목록에 없었음(추가 발견)
   lastCalcBreakdown: null,
   lastDiscountBreakdown: null,
-  lastAppliedDiscounts: null
+  lastAppliedDiscounts: null,
+  // 2026-09-22(선혜님 - "안바뀌엇고 열면 자꾸 50%로 된다니깐" - 최금희
+  // 실사례 끝까지 추적해서 발견): 견적서를 불러올 때 저장된 품목(커튼/
+  // 블라인드)을 화면에 다시 그리는 과정(addCurtainRow 등)이 "사용자가
+  // 방금 품목을 편집했다"는 신호로 오인돼 unfreezeEstimateIfEditing()이
+  // 발동함 - 그 결과 방금 정확히 복원한 계약금(userTyped로 보호된)의
+  // 보호가 곧바로 풀려서, 그 직후 실행되는 자동 재계산이 다시 50%로
+  // 덮어씀. "지금 불러오는 중"임을 나타내는 이 플래그가 켜져있는 동안은
+  // unfreezeEstimateIfEditing()이 아무것도 안 하도록 함(진짜 사용자
+  // 편집과, 프로그램이 데이터를 복원하는 것을 구분).
+  isRestoringEstimate: false
 };
 
 // 2026-09-15: 위 레지스트리를 실제로 담는 상자. 103곳에 흩어져있던
