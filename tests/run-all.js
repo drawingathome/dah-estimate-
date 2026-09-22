@@ -404,6 +404,12 @@ if (/dah-estimate/.test(target)) {
   // 2026-09-15: 저장 버튼을 눌렀는데 검증실패로 조용히 멈춰도 "시도 기록"이
   // 무조건 남는지 검증 - "인테리어오월" 견적서 실종 사건으로 발견한 위험
   scripts.push(['save_attempt_log_check.js', []]);
+  // 2026-09-22(선혜님 - 최금희 견적서 사고 - "쌍둥이함수까지 찾아" 요청
+  // 으로 발견한 심각한 버그): 신규 견적서 재저장시 매출기준금액이
+  // 이중계산돼서 부풀려지던 버그(Prefer 헤더가 isEditMode와 반대로
+  // 되어 있었음) 재발 방지.
+  scripts.push(['est-save-resave-doublecount-check.js', []]);
+  scripts.push(['est-sync-queue-prefer-header-check.js', []]);
 }
 
 let anyFail = false;
