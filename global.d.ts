@@ -22,6 +22,10 @@ interface Window {
   _dahVendorListRaw?: any[];
   _estEditState?: any;
   _estCurrentUser?: { name: string, role: 'master' | 'staff' } | null;
+  // 2026-09-22(선혜님 - "오류를 모두 확인한거 맞니... 개선을 해야지" -
+  // 검증실패 사유를 로그에 남기기 위해 신설): validateEstimate() 실패시
+  // 화면에 보여준 것과 같은 이유를 여기 담아 logSaveStage에 전달함.
+  _lastValidationFailReason?: string | null;
   _estMoreMenuGlobalListenerBound?: boolean;
   _estRetrySyncInProgress?: boolean;
   _curtainRowSeq?: number;
