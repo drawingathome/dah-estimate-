@@ -155,8 +155,16 @@ function showFieldError(fieldId, msg) {
 }
 
 function validateEstimate() {
+  // 2026-09-22(선혜님 - "오류를 모두 확인한거 맞니 누락 없이 개선을
+  // 해야지" - 실제 프로덕션 로그 조회 중 발견: 오지은 실장이 "윤정자"
+  // 고객을 15분 안에 3번 저장 시도했는데 전부 실패, 근데 왜 실패했는지
+  // 로그에 detail이 항상 null로 남아서 원인을 전혀 알 수 없었음): 각
+  // 검증 실패 지점마다 화면에 보여주는 것과 똑같은 이유를 이 변수에도
+  // 남겨서, 다음에 이런 일이 또 생기면 로그만 보고도 바로 원인을 알 수
+  // 있게 함.
+  window._lastValidationFailReason = null;
   var name = document.getElementById('c-name')?.value?.trim();
-  if (!name) { showFieldError('c-name', '고객명을 입력해주세요'); return false; }
+  if (!name) { showFieldError('c-name', '고객명을 입력해주세요'); window._lastValidationFailReason = '고객명 없음'; return false; }
   // 2026-08-29(선혜님 지적 - "이게 중복이 생기는거는 심각한데", 신화경
   // 사례로 발견): 고객명만 필수였고 연락처는 검증이 전혀 없어서, 연락처
   // 없이 저장하면 그런 고객이 그대로 자동 생성됐음 - 나중에 같은 사람을
@@ -165,7 +173,7 @@ function validateEstimate() {
   // - 견적 1,192,000원짜리 빈 고객과 실제 결제완료된 고객이 따로 존재).
   // 연락처도 필수로 만들어서 이 경로 자체를 막음.
   var phone = document.getElementById('c-phone')?.value?.trim();
-  if (!phone) { showFieldError('c-phone', '연락처를 입력해주세요'); return false; }
+  if (!phone) { showFieldError('c-phone', '연락처를 입력해주세요'); window._lastValidationFailReason = '연락처 없음'; return false; }
   var hasProduct = false;
   var missingPriceRows = []; // 가로/높이는 채웠는데 단가를 빼먹은 행 번호(사람이 세는 순서, 1부터)
 
@@ -212,11 +220,12 @@ function validateEstimate() {
     // 증상이 기재되어 있으면 금액 없이도 저장 가능하게 예외 처리 —
     // 예전엔 이 조건이 없어서 무상 AS건은 저장 자체가 막혔었음.
     var asSymptomFilled = (currentCustType === 'as') && (document.getElementById('as-symptom')?.value || '').trim() !== '';
-    if (!asSymptomFilled) { showToast('제품 금액을 1개 이상 입력해주세요', 'error'); return false; }
+    if (!asSymptomFilled) { showToast('제품 금액을 1개 이상 입력해주세요', 'error'); window._lastValidationFailReason = '제품 금액 0개'; return false; }
   }
   // 가로/높이까지 입력해놓고 단가만 빼먹은 행이 있으면 — 조용히 0원으로 저장되는 걸 막고 알려줌
   if (missingPriceRows.length > 0) {
     showToast('⚠️ ' + missingPriceRows.join(', ') + ' 항목의 단가가 비어있어요. 확인 후 다시 저장해주세요', 'error');
+    window._lastValidationFailReason = '단가누락: ' + missingPriceRows.join(', ');
     return false;
   }
 
@@ -236,7 +245,7 @@ function validateEstimate() {
 function _saveEstimateInner(_onDone) {
   var onDone = typeof _onDone === 'function' ? _onDone : function(){};
   clearDraft(); // 저장 완료 시 초안 삭제
-  if (!validateEstimate()) { logSaveStage('검증실패-중단'); onDone(); return; }
+  if (!validateEstimate()) { logSaveStage('검증실패-중단', window._lastValidationFailReason); onDone(); return; }
   logSaveStage('검증통과');
   var name=document.getElementById('c-name').value.trim();
   if(!name) { showToast('⚠️ 고객명을 입력하세요'); onDone(); return; }

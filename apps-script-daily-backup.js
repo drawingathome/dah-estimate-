@@ -551,6 +551,15 @@ function dahCheckClientErrors() {
       if (isSaveConflictRow(r)) {
         tag = checkResolved(r) ? ' [금액/단계 일치 확인됨 - 그래도 한 번 봐주세요]' : ' [확인 안 됨]';
       }
+      // 2026-09-22(선혜님 - "오류를 모두 확인한거 맞니... 개선을 해야지" -
+      // "윤정자" 고객 3회 저장실패 사례로 발견): "검증실패-중단"은 왜
+      // 실패했는지(고객명 없음/연락처 없음/제품금액 0개/단가누락 등)를
+      // est-save.js가 이제 extra.detail에 남기는데, 정작 이 메일 요약은
+      // detail을 안 보여주고 있어서 "실패했다"는 것만 알고 이유는 매번
+      // 직접 DB를 조회해야 알 수 있었음.
+      if (r.message === '저장단계: 검증실패-중단' && r.extra && r.extra.detail) {
+        tag += ' [사유: ' + r.extra.detail + (r.extra.customerName ? ', 고객: ' + r.extra.customerName : '') + ']';
+      }
       return '[' + r.created_at + '] ' + r.message + tag + (r.url ? ' (' + r.url + ')' : '');
     }).join('\n');
     MailApp.sendEmail(
