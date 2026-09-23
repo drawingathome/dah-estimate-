@@ -82,6 +82,59 @@ function renderOrderSection(c, orderBody) {
     var orderStatus = c.orderStatus || {};
     var orderItems = getRelevantOrderItems(c);
 
+    // 2026-09-22(선혜님 - "다 해야지"로 전 영역 재검사 중 발견 - 결제탭
+    // 서버재확인 안전장치와 정확히 같은 계열): getRelevantOrderItems가
+    // 오직 이 기기의 로컬 캐시(dah_saved)만 보고 있어서, 다른 기기에서
+    // 견적서를 작성했거나 캐시가 비어있으면 실제로는 발주할 품목이
+    // 있는데도 "없음"으로 잘못 판단할 위험이 있었음(김은/황남주 결제
+    // 사건과 같은 근본 원인).
+    //
+    // 재검증 과정에서 이 안전장치끼리도 서로 부딪히는 걸 발견함: 결제탭
+    // 안전장치(dash-customer-detail.js)가 먼저 실행돼서 이 고객의 견적서를
+    // 캐시에 이미 넣어두는데, 그건 결제(선금/잔금) 정보만 채우고 품목
+    // (line_items)은 안 채워서, 여기서 "캐시에 이미 뭔가 있으니 됐다"고
+    // 착각해 건너뛸 뻔했음(견적서 id가 이미 있으면 무조건 스킵하던
+    // existingIds 로직 때문) - 이제 "품목 정보가 실제로 있는지"까지
+    // 정확히 확인해서, 다른 안전장치가 남긴 불완전한 항목이면 품목만
+    // 채워 보완하도록 함.
+    var myCachedEsts = [];
+    try {
+      var allCached = JSON.parse(localStorage.getItem('dah_saved')||'[]');
+      myCachedEsts = allCached.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
+    } catch(eReadCache) {}
+    var hasLineItemsInCache = myCachedEsts.some(function(e){ return Array.isArray(e.lineItems) && e.lineItems.length > 0; });
+    if (!hasLineItemsInCache && c.id && typeof sbXHR === 'function') {
+      sbXHR('GET', 'estimates?client_id=eq.' + encodeURIComponent(c.id) + '&select=id,client_id,client_name,price,line_items,contract_status,updated_at,created_at&order=updated_at.desc', null, function(err, rows) {
+        if (err || !Array.isArray(rows) || rows.length === 0) return;
+        var validRows = rows.filter(function(r){ return String(r.client_id) === String(c.id); });
+        if (validRows.length === 0) return;
+        try {
+          var cacheArr = JSON.parse(localStorage.getItem('dah_saved')||'[]');
+          var byId = {}; cacheArr.forEach(function(x, idx){ if (x.id) byId[x.id] = idx; });
+          var changedAny = false;
+          validRows.forEach(function(r){
+            if (!r.line_items || !r.line_items.length) return; // 서버에도 품목이 없으면 채울 게 없음
+            if (byId[r.id] !== undefined) {
+              // 이미 있는 항목(다른 안전장치가 넣어둔 불완전한 것 포함) -
+              // 품목이 비어있으면 이번에 채워서 보완
+              var existingEntry = cacheArr[byId[r.id]];
+              if (!Array.isArray(existingEntry.lineItems) || existingEntry.lineItems.length === 0) {
+                existingEntry.lineItems = r.line_items;
+                changedAny = true;
+              }
+            } else {
+              cacheArr.push({ id: r.id, clientId: r.client_id, clientName: r.client_name, price: r.price, lineItems: r.line_items, contractStatus: r.contract_status, savedAt: r.updated_at || r.created_at });
+              changedAny = true;
+            }
+          });
+          if (changedAny) {
+            localStorage.setItem('dah_saved', JSON.stringify(cacheArr));
+            if (currentDetailId === c.id && typeof renderOrderSection === 'function') renderOrderSection(c, orderBody);
+          }
+        } catch(eCacheFix) {}
+      });
+    }
+
     // 견적서에 이미 입력했던 거래처 정보 가져오기 (2026-07-21 신규)
     // — 견적서 작성시 거래처를 이미 입력했다면, 발주탭에서 또 입력할 필요 없이
     // 자동으로 채워지도록. 여러 곳을 썼으면 자동완성 목록으로 골라잡게 함.

@@ -470,7 +470,13 @@ function printForCustomer() {
   // 구글드라이브에 저장 (2026-08-02 추가, 이후 확정견적서만 저장하도록 조정) —
   // 가견적서는 아직 확정 전이라 자주 바뀔 수 있어서 매번 저장하면 드라이브가
   // 지저분해짐. 확정견적서만 저장.
-  var isFinalForDrive = (document.getElementById('status-final')?.classList.contains('on'));
+  // 2026-09-22(선혜님 - "다 해야지"로 전 영역 재검사 중 발견 - est-save.js의
+  // 확정상태 버그와 정확히 같은 계열): "확정 여부"를 확정 버튼이 아니라
+  // "최종견적서" 탭의 화면 표시(classList)로 판단하고 있었음 - 확정 버튼을
+  // 안 눌러도 그냥 탭만 전환해서 고객용 미리보기를 열면 구글드라이브에
+  // "확정견적서"로 저장돼버려서, 위 주석이 막으려던 바로 그 문제(드라이브가
+  // 아직 확정 안 된 임시 버전으로 지저분해짐)가 실제로 재현 가능했음.
+  var isFinalForDrive = !!window._estEditState.estimateConfirmedAt;
   if (isFinalForDrive) {
     var cNameForDrive2 = document.getElementById('c-name')?.value || '미지정고객';
     var cStaffForDrive2 = document.getElementById('c-staff')?.value || '';

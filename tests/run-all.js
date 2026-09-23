@@ -134,6 +134,11 @@ if (/dah-dashboard/.test(target)) {
   // 입력된 실측예정일이 캘린더에서 확정된 일정과 똑같이 보이던 문제 -
   // "미확정(결제 전)" 표시로 구분되는지 검증
   scripts.push(['cal-unconfirmed-schedule-check.js', []]);
+  // 2026-09-22("다 해야지"로 전 영역 재검사 - 결제탭 서버재확인과 같은
+  // 계열): 발주탭도 로컬캐시만 보고 있어서 다른 기기 견적서의 발주
+  // 품목을 놓칠 위험 발견 + 두 안전장치(결제탭/발주탭)끼리 캐시를 두고
+  // 충돌하던 것도 함께 발견/수정
+  scripts.push(['order-tab-server-verify-check.js', []]);
   // 2026-09-21: 계약금만으로 총액이 다 채워진 경우 잔금 UI가 "완납"과
   // 앞뒤가 맞게 표시되는지 검증 (노지경 두번째 견적서 실사례로 발견)
   scripts.push(['no_balance_needed_ui_check.js', []]);
@@ -281,6 +286,19 @@ if (/dah-dashboard/.test(target)) {
   // 오늘(대시보드/견적서 앱)까지 최소 3번 서로 다른 필드로 잘못 판별돼
   // 재발한 패턴 - 앞으로 또 재발하면 자동으로 잡히게 정적 검사 신설
   scripts.push(['confirm-source-of-truth-check.js', []]);
+  // 2026-09-22("다 해야지" 전영역 재검사): est-doc-customer.js에도 구글드라이브
+  // 저장여부가 탭 상태로 판별되던 같은 계열 버그 발견/수정
+  scripts.push(['drive-save-confirm-check.js', []]);
+  // 2026-09-22("다 해야지" 전영역 재검사): 발주탭도 결제탭과 같은 계열의
+  // 로컬캐시 vs 서버 위험 발견/수정(+ 두 안전장치끼리 충돌하던 것도 함께 수정)
+  scripts.push(['order-tab-server-verify-check.js', []]);
+  // 2026-09-22("다 해야지"로 전 영역 재검사): est-doc-customer.js에서
+  // 같은 확정상태 버그(구글드라이브 저장 여부가 탭 상태로 결정됨) 발견
+  scripts.push(['drive-save-confirm-check.js', []]);
+  // 2026-09-22(선혜님 - "다 해야지"로 전 영역 재검사 - 나머지 파일까지
+  // 확인 중 발견): est-doc-customer.js에도 확정버튼 대신 탭 상태로
+  // 구글드라이브 저장여부를 정하던 같은 계열 버그 발견
+  scripts.push(['drive-save-confirm-check.js', []]);
   // 2026-09-22("쌍둥이함수까지 찾아" 지시로 발견): est-doc-customer.js
   // (고객용 문서)가 renderSvcSummary(내부화면)와 똑같은 4그룹 분류를
   // 각자 다른 기준으로 따로 계산하고 있어서 서로 다른 금액이 나올 수
@@ -345,6 +363,11 @@ if (/dah-dashboard/.test(target)) {
   // 바뀐 로직과 안 맞음)도 함께 발견해서 수정한 뒤 등록.
   scripts.push(['payment_order_gating_check.js', []]);
   scripts.push(['customer_count_label_check.js', [target]]);
+  // 2026-09-22(선혜님 - "다 해야지"로 전 영역 재검사 - 발주탭 발견):
+  // getRelevantOrderItems가 로컬캐시만 보고 있어서 다른 기기에서
+  // 만든 견적서의 발주품목을 놓치던 문제(결제탭과 같은 계열) + 두
+  // 안전장치끼리 충돌하던 부수 문제까지 함께 수정
+  scripts.push(['order-tab-server-verify-check.js', []]);
   scripts.push(['detail_tab_overflow_check.js', [target]]);
   scripts.push(['grouped_todo_check.js', [target]]);
   scripts.push(['order_data_gap_check.js', [target]]);

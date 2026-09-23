@@ -163,7 +163,14 @@ function saveCustomer() {
   // 모달이 안 닫히는 예외상황에 대비해 3초 뒤 안전장치로도 재활성화함.
   var _saveBtn0 = document.getElementById('add-save-btn');
   if (_saveBtn0) {
-    if (_saveBtn0.disabled) return;
+    // 2026-09-22(선혜님 - "다 해야지"로 전 영역 재검사 중 발견 - est-save.js
+    // 저장버튼 고착 사건과 같은 패턴): 이미 3초 자동복구는 있어서 "영원히
+    // 고착"될 위험은 없었지만, 이 지점 자체엔 아무 기록이 안 남아서 실제로
+    // 몇 번 이런 일이 있었는지 알 방법이 없었음 - 기록만 추가.
+    if (_saveBtn0.disabled) {
+      if (typeof reportClientError === 'function') reportClientError('고객추가-버튼-이미비활성-무시');
+      return;
+    }
     _saveBtn0.disabled = true;
     _saveBtn0.style.opacity = '0.6';
     setTimeout(function(){ if (_saveBtn0) { _saveBtn0.disabled = false; _saveBtn0.style.opacity = ''; } }, 3000);
