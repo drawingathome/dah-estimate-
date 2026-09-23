@@ -33,7 +33,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="/dash-utils.js?v=b8c7e75b7c25"></script>
 <script src="/dash-api.js?v=fa90e6eeab22"></script>
-<script src="/shared-common-utils.js?v=f78f0d883265"></script>
+<script src="/shared-common-utils.js?v=3e5177dc502b"></script>
 <script src="/shared-optimistic-lock.js?v=db886eb6aa35"></script>
 <script src="/dash-sync-queue.js?v=6d0c8169a02d"></script>
 <script src="/dash-supabase-auth.js?v=b3ea9d6b2fd5"></script>
@@ -809,8 +809,8 @@
         <label style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:8px">주소 (선택)</label>
         <div id="add-addr-recent" style="display:none;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
         <div style="display:flex;gap:6px;margin-bottom:6px">
-          <input class="form-input" id="add-addr" aria-label="주소" placeholder="주소 검색을 눌러주세요" readonly style="flex:1;background:var(--ivory1);cursor:pointer" onclick="openKakaoAddr('add-addr')">
-          <button type="button" onclick="openKakaoAddr('add-addr')" style="flex-shrink:0;padding:0 16px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer">주소 검색</button>
+          <input class="form-input" id="add-addr" aria-label="주소" placeholder="주소 검색을 눌러주세요" readonly style="flex:1;background:var(--ivory1);cursor:pointer" onclick="openKakaoAddr('add-addr','add-addr-detail')">
+          <button type="button" onclick="openKakaoAddr('add-addr','add-addr-detail')" style="flex-shrink:0;padding:0 16px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer">주소 검색</button>
         </div>
         <input class="form-input" id="add-addr-detail" aria-label="상세주소" placeholder="상세주소 (동/호수 등)" style="width:100%;box-sizing:border-box">
       </div>

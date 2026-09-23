@@ -27,7 +27,22 @@ function escHtml(s) {
     .replace(/'/g, '&#39;');
 }
 
-function openKakaoAddr(targetId) {
+function openKakaoAddr(targetId, detailTargetId) {
+  // 2026-09-22(선혜님 지시 - "2번과 3번 확실히 고쳐" - 주소 상세분리가
+  // 9/15에 두 번, 오늘 한 번 총 세 번 재발한 근본 원인은 "이미 합쳐진
+  // 텍스트를 나중에 정규식으로 추측해서 쪼갠다"는 방식 자체에 있었음 -
+  // 아무리 패턴을 늘려도 사람이 자유롭게 쓰는 주소 형식을 100% 다
+  // 맞힐 수는 없음. 추측을 더 정교하게 다듬는 대신, 애초에 추측이
+  // 필요 없게 만듦: 주소 검색이 끝나는 순간 자동으로 "상세주소" 칸에
+  // 커서를 옮겨서, 사람이 자연스럽게 올바른 칸에 동/호수를 입력하게
+  // 유도함(입주지원서 등에서 흔한 패턴). detailTargetId를 넘긴 화면만
+  // 적용되고, 안 넘기면 기존 동작 그대로.
+  function focusDetailField() {
+    if (detailTargetId) {
+      var detailEl = document.getElementById(detailTargetId);
+      if (detailEl) setTimeout(function(){ detailEl.focus(); }, 50);
+    }
+  }
   var script = document.createElement('script');
   script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
   script.onload = function() {
@@ -40,6 +55,7 @@ function openKakaoAddr(targetId) {
           el.dispatchEvent(new Event('input'));
           el.dispatchEvent(new Event('change'));
         }
+        focusDetailField();
       }
     }).open();
   };
@@ -55,6 +71,7 @@ function openKakaoAddr(targetId) {
           el.dispatchEvent(new Event('input'));
           el.dispatchEvent(new Event('change'));
         }
+        focusDetailField();
       }
     }).open();
   } else {
