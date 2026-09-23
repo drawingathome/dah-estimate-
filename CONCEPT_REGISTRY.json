@@ -84,5 +84,105 @@
     "code_locations": ["dah-estimate.html:autoFillStaffField", "dah-estimate.html (loadCustId/loadEstDbId 두 경로 모두 e.staff_name 복원)"],
     "guard_tests": ["est-load-staffname-restore-check.js"],
     "금지패턴": "새로운 견적서 로드 경로를 추가하면서 staff_name 복원을 빠뜨리는 것 - 9/1에 실제로 발생(bb58be6)"
+  },
+
+  "저장버튼_고착방지": {
+    "의미": "저장 요청 응답이 영원히 안 오면 버튼이 disabled 상태로 영구히 남아 이후 모든 저장이 조용히 씹히는 것을 막음",
+    "single_source_of_truth": "각 저장 함수 시작부의 disabled 체크 + 15초/3초 타임아웃 자동복구",
+    "derived_fields": [],
+    "db_enforcement": "없음(클라이언트 UI 상태)",
+    "code_locations": ["est-save.js:saveEstimate (15초 타임아웃)", "dash-customer-add.js:saveCustomer (3초 타임아웃)"],
+    "guard_tests": ["save_button_stuck_recovery_check.js"],
+    "금지패턴": "새 저장 버튼을 만들면서 disabled=true만 걸고 타임아웃 기반 자동복구를 안 넣는 것 - '인테리어오월'→'민소아' 두 번 재발한 계보"
+  },
+
+  "동시저장충돌_락값갱신": {
+    "의미": "낙관적 잠금(updated_at 조건부 PATCH) 충돌 감지 후, 락값을 갱신 안 해서 재시도해도 계속 같은 이유로 실패하는 것을 막음",
+    "single_source_of_truth": "fetchLatestUpdatedAt() 공용함수 - 충돌 감지시 서버에서 최신 updated_at을 다시 조회해 락값 갱신",
+    "derived_fields": [],
+    "db_enforcement": "없음(낙관적 잠금 자체는 updated_at 컬럼 비교로 앱 레벨에서 구현)",
+    "code_locations": ["est-save.js (견적서 저장)", "dash-api.js (고객정보 저장)"],
+    "guard_tests": ["optimistic-lock-check.js"],
+    "금지패턴": "새 저장 경로에 낙관적 잠금을 추가하면서 fetchLatestUpdatedAt 공용함수 대신 직접 XHR로 락값 갱신 로직을 새로 짜는 것 - est-save.js/dash-api.js가 각자 따로 있다가 '쌍둥이 버그'로 발견됨(9/5)"
+  },
+
+  "고객_중복생성_방지": {
+    "의미": "같은 사람이 여러 레코드로 중복 등록되는 것을 막음(신화경/현은지 등 실사고 계보)",
+    "single_source_of_truth": "연락처 필수 검증(견적서 저장시) + 오늘 이미 저장된 견적 찾기는 created_at이 아니라 updated_at 기준",
+    "derived_fields": [],
+    "db_enforcement": "없음",
+    "code_locations": ["est-save.js:validateEstimate (연락처 필수)", "dash-customer-add.js (연락처 필수)", "est-save.js (오늘 저장된 견적 찾기, updated_at 기준)"],
+    "guard_tests": ["estimate-duplicate-blindspot-check.js"],
+    "금지패턴": "새 고객/견적 생성 경로에 연락처 검증 없이 이름만으로 저장을 허용하는 것 - 신화경 사건의 근본원인"
+  },
+
+  "동명이인_구분": {
+    "의미": "이름이 같은 서로 다른 고객의 견적서/이력이 섞이지 않는지",
+    "single_source_of_truth": "client_id (있으면 항상 이걸로 매칭, 이름은 폴백만)",
+    "derived_fields": [],
+    "db_enforcement": "없음",
+    "code_locations": ["dash-api.js:estimateDbRowToLocal (clientId 매핑)", "dash-customer-detail.js", "dash-kanban.js", "est-customer-load.js"],
+    "guard_tests": ["estimate-customer-link-check.js"],
+    "금지패턴": "customers/estimates 관련 새 매칭 로직을 짜면서 clientId 체크 없이 이름만으로 find/filter하는 것 - 신화경 사건(clientId 매핑 누락)의 근본원인"
+  },
+
+  "권한확인_fail_safe": {
+    "의미": "권한/신원 확인 요청이 실패하거나 응답을 못 받았을 때, 더 높은 권한으로 격상시키지 않고 낮은 권한 쪽으로만 실패하는지",
+    "single_source_of_truth": "doStaffConfirm/doMasterConfirm - 마스터 승격은 입력 이메일이 getMasterEmail()과 정확히 일치할 때만, 그 외 확인 실패는 항상 원래 눌렀던 낮은 권한 유지",
+    "derived_fields": [],
+    "db_enforcement": "없음(클라이언트 로그인 흐름)",
+    "code_locations": ["dah-dashboard.html:doStaffConfirm", "dah-dashboard.html:doMasterConfirm"],
+    "guard_tests": ["full-role-device-audit.js"],
+    "금지패턴": "새 권한 확인 로직에서 '확인 실패시 기본값'을 더 높은 권한으로 설정하는 것(fail-open) - 실장 로그인에서 실제로 2건 발견됨(8/27)"
+  },
+
+  "캐시버전_정합성": {
+    "의미": "코드를 고치면 그 파일을 불러오는 HTML의 버전 쿼리스트링(?v=)도 함께 갱신되는지 - 안 그러면 실사용자 브라우저가 예전 캐시를 계속 씀",
+    "single_source_of_truth": "scripts/bump-cache-versions.js - 각 .js/.css 파일의 실제 내용 해시를 계산해서 자동으로 맞춤",
+    "derived_fields": [],
+    "db_enforcement": "해당없음",
+    "code_locations": ["scripts/bump-cache-versions.js", ".github/workflows/test.yml (--check로 CI에 강제)"],
+    "guard_tests": [],
+    "참고": "guard_test는 Puppeteer 테스트가 아니라 CI 워크플로우 자체에 직접 걸려있음(.github/workflows/test.yml:23) - 코드 수정 후 커밋 전 반드시 node scripts/bump-cache-versions.js 실행할 것"
+  },
+
+  "자동계산항목_수동수정_보존": {
+    "의미": "실측비/시공비/레일 등 자동계산 항목의 단가를 사용자가 직접 수정하면, 저장/복원/재계산 전 과정에서 그 값이 유실되거나 수량이 잘못 곱해지지 않는지",
+    "single_source_of_truth": "markSvcManualOverride(dataset.manualOverride) + autoType(어떤 자동유형이었는지 저장) - 수정시 수량도 함께 1로 고정",
+    "derived_fields": [],
+    "db_enforcement": "없음",
+    "code_locations": ["est-product-calc.js:markSvcManualOverride", "est-misc.js:collectFormData (autoType과 함께 저장)", "est-customer-load.js (복원시 자동유형 마커 재부착)"],
+    "guard_tests": ["svc-manual-override-check.js", "svc-override-qty-print-check.js"],
+    "금지패턴": "새 자동계산 svc 항목 유형을 추가하면서 markSvcManualOverride 연동을 빠뜨리는 것 - 신안라 사건의 근본원인"
+  },
+
+  "iOS_사용자제스처_동기호출": {
+    "의미": "window.print()/window.open() 등 사용자 제스처가 필요한 API가 클릭과 같은 태스크 안에서(비동기 지연 없이) 호출되는지 - iOS 사파리는 지연되면 조용히 차단함",
+    "single_source_of_truth": "각 호출부가 클릭 핸들러 안에서 동기적으로 실행되거나, 비동기가 불가피하면 '미리 빈 탭 열어두고 나중에 location 바꿔치기' 패턴을 씀",
+    "derived_fields": [],
+    "db_enforcement": "해당없음",
+    "code_locations": ["est-customer-load.js:_setPrintTitleAndPrint (동기 호출)", "est-customer-load.js:confirmPdfPrint_fitAsCanvas (미리 열어두기 패턴)"],
+    "guard_tests": ["ios-print-timing-check.js"],
+    "금지패턴": "html2canvas/fetch 등 비동기 작업의 .then() 콜백 안에서 window.open/print를 직접 호출하는 것 - 체크리스트 30번, 최소 3번 재발한 계보"
+  },
+
+  "저장성공_실제확인": {
+    "의미": "서버 응답을 실제로 확인해서 성공/실패를 판정하는지, 아니면 요청만 보내고 무조건 성공으로 표시하는지",
+    "single_source_of_truth": "sbXHR 공용함수 - HTTP 200이어도 0건 반영(zeroRows)이면 실패로 처리",
+    "derived_fields": [],
+    "db_enforcement": "없음(RLS가 조용히 0건 처리하는 것 자체는 DB 정상 동작 - 이걸 감지하는 게 앱 책임)",
+    "code_locations": ["dash-api.js:sbXHR"],
+    "guard_tests": ["unassigned_claim_check.js"],
+    "금지패턴": "새 저장 경로에서 sbXHR 대신 직접 XHR을 짜면서 zeroRows 감지 없이 상태코드 200만 보고 성공 처리하는 것 - 최소 4번 재발한 계보(8/25 최초 발견)"
+  },
+
+  "담당자별_성과_토글_상태유지": {
+    "의미": "홈화면 아코디언(담당자별 성과)이 펼쳐진 상태에서 홈 전체가 재렌더링돼도(이번달/지난달 토글 등) 펼침 상태가 유지되는지",
+    "single_source_of_truth": "window._staffPerfExpanded 전역변수 - 렌더링 시 이 값을 읽어서 display 상태 반영",
+    "derived_fields": [],
+    "db_enforcement": "없음(클라이언트 UI 상태)",
+    "code_locations": ["dash-render.js (renderHome 내 담당자별 성과 섹션)"],
+    "guard_tests": ["staff-perf-toggle-persist-check.js"],
+    "금지패턴": "renderHome(true)로 전체 재렌더링되는 아코디언/토글 UI를 새로 만들면서 펼침 상태를 전역변수로 기억 안 하는 것 - 데이터 검증만으로는 못 잡고 실제 화면(스크린샷)을 봐야만 드러남(9/1)"
   }
 }

@@ -41,6 +41,10 @@ if (!fs.existsSync(registryPath)) {
 }
 const registry = JSON.parse(fs.readFileSync(registryPath, 'utf-8'));
 const runAllContent = fs.readFileSync(runAllPath, 'utf-8');
+// registration-check.js와 동일한 화이트리스트 - run-all.js의 단일target
+// 구조와 안 맞아 의도적으로 별도 커맨드로 실행되는 파일들(두 앱을 동시에
+// 받아야 함). 이런 파일은 run-all.js 미등록이 정상이므로 실패 대신 통과.
+const SEPARATELY_RUN = ['full-role-device-audit.js', 'staff-full-sweep.js', 'staff-full-sweep-estimate.js'];
 
 Object.keys(registry).forEach(function(key) {
   if (key.startsWith('_')) return; // 설명 필드는 건너뜀
@@ -70,6 +74,10 @@ Object.keys(registry).forEach(function(key) {
       return;
     }
     ok('[' + key + '] guard_test 파일 존재: ' + testFile);
+    if (SEPARATELY_RUN.indexOf(testFile) !== -1) {
+      ok('[' + key + '] guard_test는 run-all.js와 별도로 항상 수동 실행되는 화이트리스트 파일(두 앱 동시 필요): ' + testFile);
+      return;
+    }
     const escaped = testFile.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const registered = new RegExp("scripts\\.push\\(\\['" + escaped + "'").test(runAllContent);
     if (registered) {
