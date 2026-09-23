@@ -53,6 +53,13 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['role-permission-check.js', [target]]);
   scripts.push(['dashboard-data-check.js', [target]]);
   scripts.push(['multi-device-sync-check.js', [target]]);
+  // 2026-09-22(선혜님 - "실장으로 로그인했을때 오류도 꽤 많았던거 같은데
+  // 꼼꼼하고 더 많이 찾아" - Q번, 9/1 355c8ef 실제사고 "확인해보고
+  // 검토하고 말하니?? 없잖아" - 담당자별 성과 토글이 홈 재렌더링마다
+  // 닫힘으로 되돌아가던 버그를 지키는 테스트가 하나도 없었던 것 발견):
+  // 헤더 클릭으로 펼친 뒤 renderHome(true)이 다시 실행돼도 펼침 상태가
+  // 유지되는지 검증
+  scripts.push(['staff-perf-toggle-persist-check.js', []]);
   scripts.push(['data-safety-check.js', [target]]);
   scripts.push(['race-condition-check.js', [target]]);
   scripts.push(['home-duplication-check.js', [target]]);
@@ -296,6 +303,12 @@ if (/dah-dashboard/.test(target)) {
   // 실행 테스트 신설): window.print()가 클릭과 같은 태스크 안에서(5ms
   // 이내) 동기 호출되는지 실측 - 비동기 지연되면 iOS 사파리가 조용히 차단함
   scripts.push(['ios-print-timing-check.js', []]);
+  // 2026-09-22(선혜님 - "실장으로 로그인했을때 오류도 꽤 많았던거 같은데
+  // 꼼꼼하고 더 많이 찾아" - O번, 9/1 bb58be6 실제사고 "다른 담당자
+  // 견적서 다시보기시 이름이 잘못 찍히던 버그"를 지키는 테스트가 하나도
+  // 없었던 것 발견): loadEstDbId로 다른 담당자 견적서를 열어도 c-staff가
+  // 정확히 복원되는지(기본값 장선혜로 안 빠지는지) 검증
+  scripts.push(['est-load-staffname-restore-check.js', []]);
   // 2026-09-22(선혜님 - "쌍둥이 버그 잡아볼까? 예전에 이 문제가 있었는데
   // 또 생기는 이유도 확인해봐"): "확정" 개념이 9/14(공개보기 페이지),
   // 오늘(대시보드/견적서 앱)까지 최소 3번 서로 다른 필드로 잘못 판별돼
@@ -303,16 +316,6 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['confirm-source-of-truth-check.js', []]);
   // 2026-09-22("다 해야지" 전영역 재검사): est-doc-customer.js에도 구글드라이브
   // 저장여부가 탭 상태로 판별되던 같은 계열 버그 발견/수정
-  scripts.push(['drive-save-confirm-check.js', []]);
-  // 2026-09-22("다 해야지" 전영역 재검사): 발주탭도 결제탭과 같은 계열의
-  // 로컬캐시 vs 서버 위험 발견/수정(+ 두 안전장치끼리 충돌하던 것도 함께 수정)
-  scripts.push(['order-tab-server-verify-check.js', []]);
-  // 2026-09-22("다 해야지"로 전 영역 재검사): est-doc-customer.js에서
-  // 같은 확정상태 버그(구글드라이브 저장 여부가 탭 상태로 결정됨) 발견
-  scripts.push(['drive-save-confirm-check.js', []]);
-  // 2026-09-22(선혜님 - "다 해야지"로 전 영역 재검사 - 나머지 파일까지
-  // 확인 중 발견): est-doc-customer.js에도 확정버튼 대신 탭 상태로
-  // 구글드라이브 저장여부를 정하던 같은 계열 버그 발견
   scripts.push(['drive-save-confirm-check.js', []]);
   // 2026-09-22("쌍둥이함수까지 찾아" 지시로 발견): est-doc-customer.js
   // (고객용 문서)가 renderSvcSummary(내부화면)와 똑같은 4그룹 분류를
@@ -378,11 +381,6 @@ if (/dah-dashboard/.test(target)) {
   // 바뀐 로직과 안 맞음)도 함께 발견해서 수정한 뒤 등록.
   scripts.push(['payment_order_gating_check.js', []]);
   scripts.push(['customer_count_label_check.js', [target]]);
-  // 2026-09-22(선혜님 - "다 해야지"로 전 영역 재검사 - 발주탭 발견):
-  // getRelevantOrderItems가 로컬캐시만 보고 있어서 다른 기기에서
-  // 만든 견적서의 발주품목을 놓치던 문제(결제탭과 같은 계열) + 두
-  // 안전장치끼리 충돌하던 부수 문제까지 함께 수정
-  scripts.push(['order-tab-server-verify-check.js', []]);
   scripts.push(['detail_tab_overflow_check.js', [target]]);
   scripts.push(['grouped_todo_check.js', [target]]);
   scripts.push(['order_data_gap_check.js', [target]]);
@@ -423,7 +421,6 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['estimate_app_flow_check.js', []]);
   scripts.push(['estimate-calc-check.js', [target]]);
   scripts.push(['estimate-validation-check.js', [target]]);
-  scripts.push(['multi-device-sync-check.js', [target]]);
   scripts.push(['estimate-customer-link-check.js', [target]]);
   scripts.push(['estimate-duplicate-blindspot-check.js', [target]]);
   scripts.push(['master-vs-staff-feature-check.js', []]);
