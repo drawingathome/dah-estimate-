@@ -148,6 +148,10 @@ function dahDailyBackup() {
   // 우연히 발견하기 전에 매일 자동으로 점검함. dahScanForDuplicates와
   // 같은 패턴: 아무것도 자동으로 고치지 않고, 발견만 해서 알림.
   var integrityIssues = dahScanForDataIntegrity(backup);
+  // 2026-09-22(선혜님 - "근본적으로 수정할 부분을 설계해봐"): 핵심 안전
+  // 트리거가 살아있는지도 같은 알림에 합쳐서 확인
+  var triggerIssues = dahScanForMissingTriggers();
+  integrityIssues = integrityIssues.concat(triggerIssues);
   if (integrityIssues.length > 0) {
     Logger.log('⚠️ 데이터 정합성 의심 ' + integrityIssues.length + '건 발견:\n' + integrityIssues.join('\n'));
     try {
@@ -297,9 +301,38 @@ function dahScanForDuplicates(backup) {
  * 우연히 알아차리기 전에 매일 자동으로 찾아냄. dahScanForDuplicates와
  * 마찬가지로 아무것도 자동으로 고치지 않고 "찾아서 보고만" 함.
  */
-function dahScanForDataIntegrity(backup) {
+// 2026-09-22(선혜님 - "근본적으로 수정할 부분을 설계해봐"): 오늘 만든
+// 핵심 안전 트리거(확정상태 강제, 견적서/고객 이력추적)가 누군가 실수로
+// 지우거나, DB 마이그레이션 중 빠뜨리면 조용히 사라질 수 있음 - 이건
+// 앱 코드 문제가 아니라 DB 스키마 문제라 여기(서버 쪽 정기점검)에서만
+// 잡을 수 있음. v_critical_triggers_status 뷰(PostgREST로 조회 가능하게
+// 만들어둔 것)를 조회해서 3개 트리거가 전부 살아있는지 확인.
+function dahScanForMissingTriggers() {
   var issues = [];
-  if (!Array.isArray(backup.customers) || !Array.isArray(backup.estimates)) return issues;
+  var EXPECTED = ['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history'];
+  try {
+    var res = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/v_critical_triggers_status?select=trigger_name', {
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
+      muteHttpExceptions: true
+    });
+    if (res.getResponseCode() !== 200) {
+      issues.push('[트리거 점검 실패] v_critical_triggers_status 조회 자체가 실패함(상태코드 ' + res.getResponseCode() + ') - 뷰가 삭제됐거나 권한 문제일 수 있음');
+      return issues;
+    }
+    var rows = JSON.parse(res.getContentText());
+    var found = rows.map(function(r) { return r.trigger_name; });
+    EXPECTED.forEach(function(name) {
+      if (found.indexOf(name) === -1) {
+        issues.push('[핵심 트리거 누락] ' + name + '이 DB에서 사라짐 - 확정상태 강제 또는 데이터 이력추적 안전장치가 꺼진 상태일 수 있음, 즉시 확인 필요');
+      }
+    });
+  } catch (e) {
+    issues.push('[트리거 점검 실패] ' + e.message);
+  }
+  return issues;
+}
+
+function dahScanForDataIntegrity(backup) {
 
   var estsByClientId = {};
   backup.estimates.forEach(function(e) {
@@ -388,7 +421,7 @@ function dahDataIntegrityScanOnly() {
     });
     backup[table] = res.getResponseCode() === 200 ? JSON.parse(res.getContentText()) : [];
   });
-  var issues = dahScanForDataIntegrity(backup);
+  var issues = dahScanForDataIntegrity(backup).concat(dahScanForMissingTriggers());
   if (issues.length === 0) {
     Logger.log('✅ 데이터 정합성 문제 없음');
     return;

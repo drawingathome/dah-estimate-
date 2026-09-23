@@ -1,0 +1,88 @@
+{
+  "_설명": "이 파일은 '이 앱의 핵심 개념 하나가 코드/DB 어디에 흩어져 있는지'를 사람의 기억이 아니라 기계가 확인 가능한 형태로 관리한다. 2026-09-22(선혜님 - '근본적으로 수정할 부분을 설계해봐') 도입. tests/concept-registry-check.js가 이 파일을 읽고: (1) 각 개념의 모든 code_locations가 실제 파일에 존재하는지, (2) guard_test로 지정된 테스트 파일이 실제로 존재하고 run-all.js에 등록돼 있는지, (3) db_enforcement가 있다고 적힌 개념은 실제 DB에 그 트리거가 있는지를 자동으로 검증한다. 새 개념을 여러 곳에 나눠 구현하기 전에, 또는 기존 개념을 고친 뒤에는 반드시 이 파일부터 갱신한다 - '완료'라는 말은 이 파일이 갱신되고 concept-registry-check.js가 통과한 뒤에만 쓴다.",
+
+  "확정상태": {
+    "의미": "이 견적서가 확정(잠금)됐는지 여부",
+    "single_source_of_truth": "estimates.confirmed_at (timestamp, null이면 미확정)",
+    "derived_fields": ["estimates.estimate_status ('final'/'ga') - DB 트리거로 confirmed_at에서 자동 파생, 앱 코드가 직접 못 건드림"],
+    "db_enforcement": "trg_enforce_estimate_status (BEFORE INSERT/UPDATE, confirmed_at 기준으로 estimate_status 강제)",
+    "code_locations": [
+      "est-form-controls.js:toggleConfirmEstimate (유일한 확정/해제 진입점)",
+      "est-save.js (저장시 estimate_status를 estimateConfirmedAt에서만 파생)",
+      "est-doc-customer.js (구글드라이브 저장여부도 estimateConfirmedAt 기준)"
+    ],
+    "guard_tests": ["confirm-source-of-truth-check.js", "estimate-status-confirm-sync-check.js", "confirm-status-consistency-check.js", "drive-save-confirm-check.js"],
+    "금지패턴": "currentTab이나 DOM classList로 확정여부를 판별하는 코드 - 반드시 estimateConfirmedAt만"
+  },
+
+  "계약금_보호상태": {
+    "의미": "계약금 입력값이 신뢰할 수 있는 실제 값인지, 아직 확정 안 된 추정값인지",
+    "single_source_of_truth": "deposit-input.dataset.depositSource ('real'/'frozen'/없음)",
+    "derived_fields": [],
+    "db_enforcement": "없음 - 순수 클라이언트 상태, DB 저장 시점엔 이미 확정된 숫자만 나감",
+    "code_locations": [
+      "est-utils.js:applyRealDepositToForm (real로 설정, 다운그레이드 방지 가드도 여기)",
+      "est-customer-load.js:calcDeposit (사용자 직접입력시 real로 설정)",
+      "est-misc.js:unfreezeEstimateIfEditing (frozen만 해제, real은 보호)",
+      "est-product-calc.js:applyFrozenBreakdown (frozen으로 설정, real은 덮어쓰지 않음)",
+      "est-product-calc.js:calcTotal (depositSource 없을 때만 자동 50%/100% 재계산)"
+    ],
+    "guard_tests": ["deposit-manual-protection-check.js", "est-load-deposit-restore-check.js", "deposit-race-downgrade-check.js", "deposit-with-discount-restore-check.js"],
+    "금지패턴": "manualEdit/userTyped 같은 별도 불리언 플래그를 새로 추가하는 것 - depositSource 하나로 표현 안 되는 새 상태가 필요하면, 새 문자열 값을 이 필드에 추가할 것"
+  },
+
+  "주소_상세분리": {
+    "의미": "합쳐진 주소 문자열에서 동/호수 등 상세주소를 자동으로 분리",
+    "single_source_of_truth": "splitAddrDetail() (est-utils.js) - 정규식 기반 추측, 100% 정확성 불가능한 유형",
+    "derived_fields": [],
+    "db_enforcement": "해당없음(자유텍스트라 DB 강제 불가능한 유형으로 확인됨, 2026-09-22)",
+    "code_locations": ["est-utils.js:splitAddrDetail", "shared-common-utils.js:openKakaoAddr (주소검색 완료시 상세주소 칸 자동포커스로 추측 필요성 자체를 줄임)"],
+    "guard_tests": ["split-addr-detail-check.js", "addr-detail-autofocus-check.js"],
+    "참고": "이 개념은 구조적으로 100% 해결 불가 - 새 주소 형식이 나올 때마다 split-addr-detail-check.js에 케이스 추가하는 방식으로만 대응 가능"
+  },
+
+  "데이터_이력추적": {
+    "의미": "실수로 덮어쓰거나 지운 레코드를 복구할 수 있는지",
+    "single_source_of_truth": "각 테이블의 _history 테이블 + DB 트리거(수정/삭제 전 스냅샷)",
+    "derived_fields": [],
+    "db_enforcement": "trg_estimate_history (estimates), trg_customer_history (customers, 2026-09-22 신설)",
+    "code_locations": [],
+    "guard_tests": [],
+    "금지패턴": "새 핵심 테이블을 만들면서 _history 트리거를 안 만드는 것 - customers가 한동안 이게 빠져있었음",
+    "미해결": "CI 자동테스트로는 못 지킴(DB 트리거는 Puppeteer가 못 봄) - 대신 apps-script-daily-backup.js:dahScanForMissingTriggers()가 매일 v_critical_triggers_status 뷰를 조회해서 이 3개 트리거가 살아있는지 확인하고, 하나라도 사라지면 이메일로 즉시 알림(2026-09-22 신설). Apps Script 편집기에 수동 반영 필요."
+  },
+
+  "발주_품목_로컬캐시": {
+    "의미": "발주탭/처리필요 판단이 이 기기의 로컬 캐시만 보는지, 서버와 어긋날 수 있는지",
+    "single_source_of_truth": "estimates.line_items (서버가 진실), dah_saved localStorage는 캐시일 뿐",
+    "derived_fields": [],
+    "db_enforcement": "없음(클라이언트 캐시 문제라 DB 강제 불가)",
+    "code_locations": [
+      "dash-customer-order.js:getRelevantOrderItems (캐시가 비어보이면 서버 재확인)",
+      "dash-customer-order.js:renderOrderSection (서버 재확인 후 재렌더링)",
+      "dash-customer-detail.js (결제탭도 같은 패턴 - 캐시가 견적서 없음으로 보면 서버 재확인)"
+    ],
+    "guard_tests": ["order-tab-server-verify-check.js", "pay_tab_server_verify_check.js"],
+    "금지패턴": "이 두 안전장치가 서로의 캐시를 완전한 것으로 착각하는 것 - 반드시 '실제로 필요한 필드(line_items 등)가 있는지'까지 확인할 것, 레코드 존재 여부만으로 판단 금지"
+  },
+
+  "발주서_카테고리": {
+    "의미": "원단/캔가공소/레일자재/블라인드 4개 발주 카테고리가 항상 세트로 처리되는지",
+    "single_source_of_truth": "orderCategory 필드 값('fabric'/'production'/'material'/'blind')",
+    "derived_fields": [],
+    "db_enforcement": "해당없음(클라이언트 문서생성 로직)",
+    "code_locations": ["est-doc-vendor.js:collectVendorGroups (categoryFilter로 4개 카테고리 분기)"],
+    "guard_tests": ["vendor-category-set-consistency-check.js"],
+    "금지패턴": "카테고리 4개 중 하나만 고치고 나머지 안 확인하는 것 - 체크리스트 35번 참고"
+  },
+
+  "담당자_필드": {
+    "의미": "이 견적서/문서에 표시되는 담당자 이름이 실제로 정확한 사람인지",
+    "single_source_of_truth": "estimates.staff_name (견적서 자체에 저장된 값, 로그인한 사람과 다를 수 있음 - 다른 사람 것을 열람/재구매하는 경우)",
+    "derived_fields": ["c-staff 입력칸 - 새 견적서는 로그인한 사람으로 기본채움(비어있을 때만), 기존 견적서 로드시 e.staff_name으로 덮어씀"],
+    "db_enforcement": "없음",
+    "code_locations": ["dah-estimate.html:autoFillStaffField", "dah-estimate.html (loadCustId/loadEstDbId 두 경로 모두 e.staff_name 복원)"],
+    "guard_tests": ["est-load-staffname-restore-check.js"],
+    "금지패턴": "새로운 견적서 로드 경로를 추가하면서 staff_name 복원을 빠뜨리는 것 - 9/1에 실제로 발생(bb58be6)"
+  }
+}

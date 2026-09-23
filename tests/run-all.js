@@ -404,6 +404,11 @@ if (/dah-dashboard/.test(target)) {
   // 2026-09-22: 이 확인(테스트 등록 누락 자동감지) 자체도 등록 - 앞으로
   // 새 테스트를 만들고 등록을 깜빡하면 CI가 바로 잡아주게 함.
   scripts.push(['registration-check.js', []]);
+  // 2026-09-22(선혜님 - "근본적으로 수정할 부분을 설계해봐"): 핵심 개념
+  // 레지스트리(CONCEPT_REGISTRY.json)가 실제 코드/테스트와 어긋나지
+  // 않는지 - 오늘 발견한 10개 계보의 공통 원인("이 개념이 어디 있는지
+  // 사람이 기억에만 의존")에 대한 근본 대응
+  scripts.push(['concept-registry-check.js', []]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',
