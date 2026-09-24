@@ -425,19 +425,6 @@ function buildCustomerHTML() {
 
   out += processHTML;
 
-  try {
-    var photos = JSON.parse(localStorage.getItem('dah_photos')||'[]');
-    if(photos.length > 0) {
-      out += '<div class="pv-photos">';
-      out += '<div class="pv-photos-title">시공 사례</div>';
-      out += '<div class="pv-photos-grid">';
-      photos.slice(0,6).forEach(function(p){
-        out += '<img src="'+p.src+'" alt="시공사례">';
-      });
-      out += '</div></div>';
-    }
-  } catch(e){}
-
   // 계좌정보는 설정탭에 저장된 값을 사용 — 예전엔 여기 문구가 코드에 고정되어 있어서
   // 설정탭에서 계좌번호/은행명을 바꿔도 견적서에는 전혀 반영이 안 되고 있었음
   var _acctSettings = {};
