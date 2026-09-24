@@ -85,7 +85,17 @@ function getDueAlimKeys(c) {
 function refreshAlimSentMapFromServer(c, onNewFound) {
   if (!c.id || typeof sbXHR !== 'function') return;
   sbXHR('GET', 'analytics_events?event_type=eq.alimtalk_send&event_detail->>customerId=eq.' + encodeURIComponent(c.id) + '&select=event_detail,created_at&order=created_at.desc&limit=50', null, function(err, rows) {
-    if (err || !Array.isArray(rows) || rows.length === 0) return;
+    // 2026-09-24(선혜님 - "직접 확인한거야?? 누락이 없니??" - JSONB 필터
+    // 문법(event_detail->>customerId)이 이 환경에선 실제 네트워크로 직접
+    // 검증 못 했음을 인정한 뒤 추가): 혹시 이 문법이 실제 서버에서 거부
+    // 되면(400 등), 지금처럼 err만 보고 조용히 return하면 아무도 모르게
+    // 이 안전장치 자체가 계속 무력화됨 - 오늘 만든 에러 감시망에 명시적
+    //으로 남겨서, 문제가 있으면 내일 오류 메일에 반드시 뜨게 함.
+    if (err) {
+      if (typeof reportClientError === 'function') reportClientError('알림톡 발송이력 서버조회 실패(문법오류 가능성)', null, { customerId: c.id, err: err });
+      return;
+    }
+    if (!Array.isArray(rows) || rows.length === 0) return;
     try {
       var logs = JSON.parse(localStorage.getItem('dah_kakao_log') || '[]');
       var existingTypes = {};
