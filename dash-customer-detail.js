@@ -930,6 +930,15 @@ function renderDetailTodoSection(c, body) {
   // 탭과 다른 로직(단순 단계매칭)을 써서 서로 다른 개수가 나오고 있었음 -
   // 공용 함수(getDueAlimKeys)로 통일해서 두 탭이 항상 같은 답을 보여주게 함.
   var todoKeys = getDueAlimKeys(c);
+  // 2026-09-24(선혜님 - "카카오 등록 전에 한번 더 파자"로 발견): 이
+  // "지금 해야 할 일"도 결국 getAlimSentMap(로컬전용)에 기반해서, 다른
+  // 기기에서 이미 보낸 걸 "아직 안 보냄"으로 잘못 보여줄 위험이 소통탭과
+  // 똑같이 있었음 - 같은 서버재확인 안전장치 적용.
+  if (typeof refreshAlimSentMapFromServer === 'function') {
+    refreshAlimSentMapFromServer(c, function() {
+      if (currentDetailId === c.id && typeof renderDetailTodoSection === 'function') renderDetailTodoSection(c, body);
+    });
+  }
   var manualKeys = todoKeys; // '선택' 태그가 있던 옛 22개 체계의 흔적 - 지금 13개엔 '선택' 태그 자체가 없어져서 그대로 사용
   if (manualKeys.length > 0) {
     var todoSec = div('margin-bottom:14px;padding:var(--sp-3);background:var(--ivory1);border:1.5px solid var(--dark);border-radius:12px', []);

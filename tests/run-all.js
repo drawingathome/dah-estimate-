@@ -146,6 +146,10 @@ if (/dah-dashboard/.test(target)) {
   // 품목을 놓칠 위험 발견 + 두 안전장치(결제탭/발주탭)끼리 캐시를 두고
   // 충돌하던 것도 함께 발견/수정
   scripts.push(['order-tab-server-verify-check.js', []]);
+  // 2026-09-24(선혜님 - "카카오 등록 전에 한번 더 파자" - 알림톡 발송여부가
+  // 결제탭/발주탭과 같은 계열로 로컬전용이던 것 발견): 다른 기기에서 보낸
+  // 알림톡이 이 기기 로컬에도 반영돼 중복발송을 막는지 검증
+  scripts.push(['alimtalk-sent-server-sync-check.js', []]);
   // 2026-09-21: 계약금만으로 총액이 다 채워진 경우 잔금 UI가 "완납"과
   // 앞뒤가 맞게 표시되는지 검증 (노지경 두번째 견적서 실사례로 발견)
   scripts.push(['no_balance_needed_ui_check.js', []]);

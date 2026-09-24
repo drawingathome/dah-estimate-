@@ -74,10 +74,53 @@ function getDueAlimKeys(c) {
   return recommendedKeys.filter(function(k){ return isAlimDueNow(k, c, sentMap[k], now); });
 }
 
+// 2026-09-24(선혜님 - "카카오 등록 전에 한번 더 파자"로 발견): 발송여부
+// (dah_kakao_log)가 오직 이 기기의 로컬저장소에만 있어서, 마스터가 PC에서
+// 보낸 걸 오지은 실장이 본인 폰에서 보면 "아직 안 보냄"으로 보여 같은
+// 고객에게 중복으로 보낼 위험이 있었음(결제탭/발주탭과 같은 계열).
+// logEvent('alimtalk_send', ...)가 이미 analytics_events에 서버 기록을
+// 남기고 있는데, 읽는 쪽(getAlimSentMap)이 로컬만 보고 있었던 것 -
+// "쓰기는 서버로 가는데 읽기는 로컬만 보는" 비대칭. 로컬에 없는 걸
+// 서버에서 찾으면 로컬에 합치고 다시 그려줌.
+function refreshAlimSentMapFromServer(c, onNewFound) {
+  if (!c.id || typeof sbXHR !== 'function') return;
+  sbXHR('GET', 'analytics_events?event_type=eq.alimtalk_send&event_detail->>customerId=eq.' + encodeURIComponent(c.id) + '&select=event_detail,created_at&order=created_at.desc&limit=50', null, function(err, rows) {
+    if (err || !Array.isArray(rows) || rows.length === 0) return;
+    try {
+      var logs = JSON.parse(localStorage.getItem('dah_kakao_log') || '[]');
+      var existingTypes = {};
+      logs.forEach(function(l) { if (l.custId === c.id) existingTypes[l.type] = true; });
+      var addedAny = false;
+      rows.forEach(function(r) {
+        var t = r.event_detail && r.event_detail.type;
+        if (!t || existingTypes[t]) return;
+        var meta = ALIM_META[t];
+        var d = new Date(r.created_at);
+        logs.unshift({
+          name: c.clientName, custId: c.id, type: t,
+          label: meta ? meta.label : t,
+          date: (d.getMonth() + 1) + '월 ' + d.getDate() + '일',
+          time: d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }),
+          method: meta ? meta.tag : ''
+        });
+        existingTypes[t] = true;
+        addedAny = true;
+      });
+      if (addedAny) {
+        localStorage.setItem('dah_kakao_log', JSON.stringify(logs.slice(0, 200)));
+        if (typeof onNewFound === 'function') onNewFound();
+      }
+    } catch (e) {}
+  });
+}
+
 function renderAlimSection(c, alimBody) {
   var alimSec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
 
   var sentMap = getAlimSentMap(c);
+  refreshAlimSentMapFromServer(c, function() {
+    if (currentDetailId === c.id && typeof renderAlimSection === 'function') renderAlimSection(c, alimBody);
+  });
 
   function makeRow(key) {
     var meta = ALIM_META[key]; if(!meta) return null;
