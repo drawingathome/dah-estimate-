@@ -413,6 +413,12 @@ if (/dah-dashboard/.test(target)) {
   // 않는지 - 오늘 발견한 10개 계보의 공통 원인("이 개념이 어디 있는지
   // 사람이 기억에만 의존")에 대한 근본 대응
   scripts.push(['concept-registry-check.js', []]);
+  // 2026-09-24(선혜님 - "우리 설계를 탄탄하게 하는 방법은?" - 원칙2 "로컬은
+  // 캐시일 뿐, 서버가 진실"을 자동 감시로 전환): 새로 생기는 dah_ 로컬저장소
+  // 키가 서버동기화 흔적 없이 방치되면 경고 - 결제/발주/알림톡 세 사건이
+  // 이 패턴이었음. 실행 중 dah_photos(최초 커밋부터 UI 없이 방치된 미완성
+  // 기능) 실제로 찾아냄.
+  scripts.push(['local-only-storage-check.js', []]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',
