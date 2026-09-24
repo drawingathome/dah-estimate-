@@ -562,9 +562,25 @@ function dahCheckClientErrors() {
       }
       return '[' + r.created_at + '] ' + r.message + tag + (r.url ? ' (' + r.url + ')' : '');
     }).join('\n');
+    // 2026-09-22(선혜님 - "저렇게 메일이 많이 오니 체크가 안되거든" -
+    // 이미 하루에 메일이 99통 넘게 쌓이는 상황이라, 메일 하나 더 오는
+    // 걸로는 실제로 안 챙겨보게 됨을 지적받음): 두 가지로 대응.
+    // (1) "동시저장충돌"류가 전부 자동으로 잘 해결된 것으로 확인되면
+    // (다른 진짜 미해결 건이 하나도 없으면) 아예 메일 자체를 안 보냄 -
+    // "확인해봤더니 괜찮았다"는 메일까지 계속 오면 결국 다 안 열어보게
+    // 되므로, 정말 필요할 때만 오게 함.
+    var genuineIssueCount = rows.filter(function(r) {
+      return !(isSaveConflictRow(r) && checkResolved(r));
+    }).length;
+    if (genuineIssueCount === 0) {
+      Logger.log('✅ 오류 ' + rows.length + '건 있었지만 전부 자동복구 확인됨 - 메일 생략');
+      return;
+    }
+    // (2) 하루에 메일이 워낙 많으니, 제목만 보고도 "이건 진짜 열어봐야
+    // 한다"는 게 확 드러나게 함(🚨 + 미해결 건수를 앞세움).
     MailApp.sendEmail(
       Session.getActiveUser().getEmail(),
-      'DAH 새 오류 ' + rows.length + '건 발생',
+      '🚨[DAH] 확인 필요 ' + genuineIssueCount + '건 (전체 ' + rows.length + '건)',
       '최근 확인 이후 아래와 같은 오류가 새로 기록됐습니다.\n' +
       '(대부분은 자동으로 로컬/서버에 백업되어 데이터 유실은 없지만, 반복적으로 발생하면 실제 사용에 불편이 있을 수 있어 확인이 필요합니다.\n' +
       '"저장 실패(동시저장충돌)" 항목은 지금 실제 DB 값과 대조한 결과를 [ ] 안에 참고로 표시했습니다 - 다만 이 대조는 일부 값만 비교하는 거라 완전하지 않으니, "확인됨"이라고 나와도 한 번은 직접 봐주세요.)\n\n' +

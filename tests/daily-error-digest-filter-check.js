@@ -50,6 +50,39 @@ const 상태값없음 = [{ message: '저장단계: 견적서저장-응답' }];
 const 필터결과4 = 상태값없음.filter(function(r) { return !isRoutineStage(r); });
 ok('4. 응답단계인데 status 값 자체를 못 읽으면 안전하게 문제로 남김(숨기지 않음)', 필터결과4.length === 1, 필터결과4);
 
+// 2026-09-22(선혜님 - "저렇게 메일이 많이 오니 체크가 안되거든" - genuineIssueCount
+// 로직 재현): 동시저장충돌류가 전부 자동복구 확인되면(checkResolved=true)
+// 메일 자체를 생략해야 함 - apps-script-daily-backup.js의 실제 로직과 동일하게 재현.
+function isSaveConflictRow(r) { return /저장 실패\(권한문제 또는 동시저장충돌\)/.test(r.message); }
+function genuineIssueCount(rows, checkResolvedFn) {
+  return rows.filter(function(r) { return !(isSaveConflictRow(r) && checkResolvedFn(r)); }).length;
+}
+
+// 5) 동시저장충돌 2건이 전부 자동복구 확인됨 -> 진짜 확인 필요 건수 0(메일 생략)
+const 전부자동복구됨 = [
+  { message: '견적서 저장 실패(권한문제 또는 동시저장충돌) - 내용 백업됨' },
+  { message: '고객정보 저장 실패(권한문제 또는 동시저장충돌) - 내용 백업됨' }
+];
+const 결과5 = genuineIssueCount(전부자동복구됨, function() { return true; });
+ok('5. [핵심] 동시저장충돌이 전부 자동복구 확인되면 진짜확인필요 건수가 0이 됨(메일 생략 대상)', 결과5 === 0, 결과5);
+
+// 6) 대조군: 동시저장충돌 중 하나라도 미해결이면 메일을 계속 보내야 함(회귀 방지)
+const 일부미해결 = [
+  { message: '견적서 저장 실패(권한문제 또는 동시저장충돌) - 내용 백업됨' },
+  { message: '고객정보 저장 실패(권한문제 또는 동시저장충돌) - 내용 백업됨' }
+];
+let callIdx = 0;
+const 결과6 = genuineIssueCount(일부미해결, function() { return (callIdx++) === 0; }); // 첫번째만 해결됨, 두번째는 미해결
+ok('6. [회귀방지] 동시저장충돌 중 하나라도 미해결이면 진짜확인필요 건수가 0이 아님(메일 계속 감)', 결과6 === 1, 결과6);
+
+// 7) 대조군: 동시저장충돌이 아닌(검증실패 등) 다른 문제가 섞여있으면, 그건 항상 진짜 문제로 셈
+const 검증실패섞임 = [
+  { message: '견적서 저장 실패(권한문제 또는 동시저장충돌) - 내용 백업됨' },
+  { message: '저장단계: 검증실패-중단', extra: { detail: '제품 금액 0개', customerName: '윤정자' } }
+];
+const 결과7 = genuineIssueCount(검증실패섞임, function() { return true; }); // 동시저장충돌은 해결됐다고 쳐도
+ok('7. [핵심] 동시저장충돌은 해결됐어도, 검증실패 같은 다른 종류 문제는 항상 진짜확인필요로 셈(숨기지 않음)', 결과7 === 1, 결과7);
+
 log.forEach(l => console.log(l));
 const failed = log.filter(l => l.startsWith('❌'));
 console.log(failed.length === 0 ? '\n전체 통과' : '\n실패 ' + failed.length + '건');
