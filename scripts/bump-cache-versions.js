@@ -25,7 +25,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 const ROOT = path.join(__dirname, '..');
-const HTML_FILES = ['dah-dashboard.html', 'dah-estimate.html'];
+const HTML_FILES = ['dah-dashboard.html', 'dah-estimate.html', 'survey.html'];
 const isCheckMode = process.argv.includes('--check');
 
 function hashFile(filePath) {

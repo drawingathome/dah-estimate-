@@ -63,9 +63,19 @@ Object.keys(registry).forEach(function(key) {
   });
 
   // 2. guard_tests가 실제로 존재하고 run-all.js에 등록돼 있는지
+  // 2026-09-24(선혜님 - "우린 다 지켜졌니??" 재확인 요청으로 발견): guard_tests
+  // 가 비어있어도 "참고"나 "미해결" 필드에 실제로는 다른 방식(CI 워크플로우
+  // 직접 연동, Apps Script 일일점검 등)으로 지켜지고 있다고 적혀있는 경우가
+  // 있었음(캐시버전_정합성, 데이터_이력추적) - 이걸 "아무도 안 지켜지는
+  // 개념"이라고 경고하면 실제보다 더 위험해 보이는 부정확한 신호를 줌.
+  // 그런 설명이 있으면 경고 대신 "다른 방식으로 지켜짐"으로 정확히 표시.
   const guardTests = concept.guard_tests || [];
   if (guardTests.length === 0) {
-    warn('[' + key + '] 이 개념을 지키는 자동 테스트가 하나도 없음(아무도 안 지켜지는 개념)');
+    if (concept.참고 || concept.미해결) {
+      ok('[' + key + '] guard_test는 없지만 다른 방식으로 지켜지고 있음(참고: ' + (concept.참고 || concept.미해결).slice(0, 60) + '...)');
+    } else {
+      warn('[' + key + '] 이 개념을 지키는 자동 테스트가 하나도 없음(아무도 안 지켜지는 개념)');
+    }
   }
   guardTests.forEach(function(testFile) {
     const testPath = path.join(root, 'tests', testFile);

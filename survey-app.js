@@ -191,12 +191,6 @@ function Chip({ label, selected, onClick }) {
   return React.createElement('button', { onClick, style:s.chip(selected) }, label);
 }
 
-function Section({ children, gap }) {
-  return React.createElement('div', {
-    style:{ display:'flex', flexDirection:'column', gap: gap||12 }
-  }, ...children);
-}
-
 // 2026-08-19(선혜님 확인 — "설문지 사라지는 건 말이 안 된다"): 구글시트/Supabase
 // 저장이 둘 다 실패해도 고객 화면엔 "제출 완료"만 뜨고 데이터는 조용히 사라지던
 // 문제. Supabase 저장은 no-cors가 아니라 응답을 읽을 수 있으므로, 이 성공여부를
