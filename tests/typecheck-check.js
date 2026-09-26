@@ -19,6 +19,10 @@ const ROOT = path.join(__dirname, '..');
 const CONFIGS = [
   { name: '대시보드', config: 'tsconfig.dashboard.json', baseline: 'tests/typecheck-baseline/dashboard-baseline.txt' },
   { name: '견적서', config: 'tsconfig.estimate.json', baseline: 'tests/typecheck-baseline/estimate-baseline.txt' },
+  // 2026-09-24(선혜님 - "다른곳에 비슷한 구멍이 더 없는지 찾아봐" - survey.html이
+  // 캐시버전 자동검사에서 빠져있던 것과 정확히 같은 계열로 발견): survey-app.js가
+  // 대시보드/견적서 tsconfig 어디에도 없어서 타입체크 자체를 한 번도 안 받고 있었음.
+  { name: '설문지', config: 'tsconfig.survey.json', baseline: 'tests/typecheck-baseline/survey-baseline.txt' },
 ];
 
 // 2026-09-16(CI에서 실제로 처음 실패해서 발견 - 로컬 sandbox에서 만든
