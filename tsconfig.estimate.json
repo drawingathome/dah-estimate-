@@ -20,6 +20,7 @@
     "est-doc-customer.js",
     "est-doc-request.js",
     "est-doc-vendor.js",
+    "est-doc-vendor-ui.js",
     "est-form-controls.js",
     "est-misc.js",
     "est-product-calc.js",
