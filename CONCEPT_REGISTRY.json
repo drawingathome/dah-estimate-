@@ -121,7 +121,7 @@
     "single_source_of_truth": "client_id (있으면 항상 이걸로 매칭, 이름은 폴백만)",
     "derived_fields": [],
     "db_enforcement": "없음",
-    "code_locations": ["dash-api.js:estimateDbRowToLocal (clientId 매핑)", "dash-customer-detail.js", "dash-kanban.js", "est-customer-load.js"],
+    "code_locations": ["dash-api.js:estimateDbRowToLocal (clientId 매핑)", "dash-customer-detail.js", "dash-customer-detail-tabs.js", "dash-kanban.js", "est-customer-load.js"],
     "guard_tests": ["estimate-customer-link-check.js"],
     "금지패턴": "customers/estimates 관련 새 매칭 로직을 짜면서 clientId 체크 없이 이름만으로 find/filter하는 것 - 신화경 사건(clientId 매핑 누락)의 근본원인"
   },

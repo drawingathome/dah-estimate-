@@ -24,6 +24,7 @@
     "dash-customer-alim.js",
     "dash-customer-as.js",
     "dash-customer-detail.js",
+    "dash-customer-detail-tabs.js",
     "dash-customer-order.js",
     "dash-customer-pay.js",
     "dash-export.js",

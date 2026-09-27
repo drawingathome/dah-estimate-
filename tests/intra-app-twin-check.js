@@ -31,7 +31,10 @@ function readFile(p) { return fs.readFileSync(path.join(__dirname, '..', p), 'ut
 const REGISTRY = [
   {
     name: '알림톡 "지금 할 일" 판단 (정보탭 renderDetailTodoSection ↔ 공용함수 getDueAlimKeys)',
-    file: 'dash-customer-detail.js',
+    // 2026-09-24(선혜님 - "바꿔보자" 큰 파일 쪼개기로 renderDetailTodoSection이
+    // dash-customer-detail.js → dash-customer-detail-tabs.js로 이동함에 따라
+    // 이 검사 자체가 하드코딩된 파일명을 못 찾아서 조용히 실패하고 있었음.
+    file: 'dash-customer-detail-tabs.js',
     fnName: 'renderDetailTodoSection',
     mustCall: 'getDueAlimKeys(',
     forbid: [/STAGE_ALIM\s*\[\s*c\.stage\s*\]/]
@@ -69,7 +72,7 @@ REGISTRY.forEach(function(rule) {
 // getDueAlimKeys/getAlimSentMap 자체가 정확히 한 곳에만 정의돼있는지도 확인
 // (공용함수 여러 벌 만들어놓고 서로 다른 데서 부르면 똑같이 쌍둥이 문제 재발)
 ['getDueAlimKeys', 'getAlimSentMap'].forEach(function(fnName) {
-  const files = ['dash-customer-alim.js', 'dash-customer-detail.js', 'dash-render.js', 'dash-kanban.js'];
+  const files = ['dash-customer-alim.js', 'dash-customer-detail.js', 'dash-customer-detail-tabs.js', 'dash-render.js', 'dash-kanban.js'];
   let defCount = 0;
   files.forEach(function(f) {
     try {
