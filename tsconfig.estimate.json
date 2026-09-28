@@ -23,6 +23,7 @@
     "est-doc-vendor-ui.js",
     "est-form-controls.js",
     "est-misc.js",
+    "est-calc-rules.js",
     "est-product-calc.js",
     "est-calc-curtain.js",
     "est-calc-blind.js",

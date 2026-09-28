@@ -126,10 +126,8 @@ function calcTotal() {
     var kind=tr.querySelector('.blind-kind')?.value||'';
     var price=Math.max(0, getPriceVal(tr.querySelector('.blind-price'))||0);
     var extra=parseFloat(tr.querySelector('.blind-extra')?.value)||0;
-    var sqmRaw=(bw*bh)/10000;
-    var minSqm=getBlindMinSqm(kind);
-    if(sqmRaw<minSqm&&sqmRaw>0) sqmRaw=minSqm;
-    var sqm=Math.ceil(sqmRaw*10)/10;
+    // 청구 면적 규칙은 est-calc-rules.js의 calcBlindBillableSqm 한 곳에만 있음(예전엔 calcBlindRow와 이 자리에 똑같이 2곳 복사돼 있었음)
+    var sqm=calcBlindBillableSqm(bw, bh, getBlindMinSqm(kind)).sqm;
     curtainTotal+=Math.round(price*sqm);
   });
   // 2026-09-15(선혜님 지시 - 침구/러그 등 기타 품목 신설): 커튼/블라인드
@@ -149,25 +147,8 @@ function calcTotal() {
               Math.max(0, (parseFloat(tr.querySelector('.sqty')?.value)||1));
   });
   renderSvcSummary();
-  // 2026-08-14: 할인 다중선택(쿠폰) 순차적용 방식으로 교체(선혜님 확인).
-  // 검증된 공식(기존 견적서 실 데이터로 역산 검증 완료): 각 %할인은 "남은
-  // 제품소계"를 기준으로 순차 계산하고(첫 할인 뺀 금액에서 다음 % 계산),
-  // 계산된 할인액들의 합을 "제품소계+부자재/시공비" 총합계에서 차감한다.
-  var discountRunning = curtainTotal; // 순차 계산용 - 매 쿠폰마다 줄어듦
-  var totalDiscount = 0;
-  var discountBreakdown = [];
-  var appliedCoupons = []; // 저장용 - 쿠폰ID로 불러오기시 정확히 재선택하기 위함
-  // 2026-08-14: 쿠폰 적용 순서를 "설정에 등록한 순서"가 아니라 "타입 기준
-  // 자동 정렬(원단위 항상 먼저 → %는 나중)"로 변경(선혜님 요청).
-  // 수학적으로 증명됨: %할인은 그 시점 "남은 금액"을 기준으로 계산되므로,
-  // 원단위를 먼저 빼서 남은 금액을 줄인 뒤 %를 적용해야 %할인액 자체가
-  // 작아진다(차이 = 원단위금액 × %비율, 항상 0 이상 — 원단위 금액이
-  // 5,000원이든 10만원이든 이 방향은 절대 바뀌지 않음). 즉 이 순서가
-  // 쿠폰 금액이 나중에 바뀌어도 항상 총 할인을 최소화(최종 단가를 최대화)한다.
-  // 여러 원단위끼리, 여러 %끼리는 순서 무관(덧셈 교환법칙 / 반올림오차 수준).
-  // 직접입력도 이 정렬에 함께 포함시킴 — 직접입력을 원단위로 쓰면 등록된
-  // %쿠폰들보다 먼저 적용돼야 같은 원칙이 유지되는데, 예전엔 직접입력이
-  // 무조건 맨 마지막으로 고정돼 있어서 이 원칙이 깨지는 구멍이 있었음.
+  // 쿠폰/직접입력 순차 할인 규칙(원단위 먼저 → % 나중, 각 %는 남은 금액 기준)과 그 역사는
+  // est-calc-rules.js의 applyDiscountItems 한 곳에만 있음. 여기선 화면에서 선택된 쿠폰/직접입력을 읽어 넘기기만 함.
   var discType=document.getElementById('discount-type')?.value||'won';
   var discInput=Math.max(0, parseFloat(document.getElementById('discount')?.value)||0);
   var items = Array.from(document.querySelectorAll('.coupon-check:checked')).map(function(cb){
@@ -177,44 +158,22 @@ function calcTotal() {
   if (discInput > 0) {
     items.push({ source:'manual', type: discType, value: discInput, label: '직접입력' });
   }
-  items.sort(function(a, b) {
-    var aRank = a.type === 'won' ? 0 : 1;
-    var bRank = b.type === 'won' ? 0 : 1;
-    return aRank - bRank;
-  });
-  var manualDiscount = null;
-  items.forEach(function(item) {
-    var amt = item.type === 'pct' ? Math.round(discountRunning * item.value / 100) : Math.min(item.value, discountRunning);
-    amt = Math.max(0, amt);
-    totalDiscount += amt;
-    discountRunning -= amt;
-    if (item.source === 'coupon') {
-      discountBreakdown.push({ label: item.label + ' ' + item.value + (item.type==='pct'?'%':'원'), amount: amt });
-      appliedCoupons.push({ id: item.id, name: item.name, type: item.type, value: item.value, amount: amt });
-    } else {
-      discountBreakdown.push({ label: '직접입력 '+(item.type==='pct'?item.value+'%':item.value.toLocaleString()+'원'), amount: amt });
-      manualDiscount = { type: item.type, value: item.value, amount: amt };
-    }
-  });
+  var discountResult = applyDiscountItems(curtainTotal, items);
+  var totalDiscount = discountResult.totalDiscount;
+  var discountBreakdown = discountResult.discountBreakdown;
+  var appliedCoupons = discountResult.appliedCoupons; // 저장용 - 쿠폰ID로 불러오기시 정확히 재선택하기 위함
+  var manualDiscount = discountResult.manualDiscount;
   var discount = totalDiscount;
-  var grand=curtainTotal-discount+svcTotal;
-  if(grand<0) grand=0;
-  // 2026-08-12: 최종 견적금액 천원단위 절사(내림) 적용 - 당일결제5%/마케팅3%/
-  // 입주10%/재구매5% 등 % 할인 적용 후 끝자리가 지저분하게 나오는 걸 방지
-  // (선혜님 확인: 반올림이 아니라 절사, 천원단위). 계약금/잔금은 이 절사된
-  // 금액을 기준으로 계산되므로 자연히 깔끔한 값이 됨.
-  // 2026-08-14: 절사분도 기존 견적서 방식대로 할인 내역에 별도 줄로
-  // 명시(선혜님 확인) - 예전엔 절사가 최종금액에 조용히 반영만 되고 얼마나
-  // 깎였는지 안 보였음. 쿠폰/직접입력 계산이 끝난 뒤(절사 직전) 절사액을
-  // 구해서 breakdown 맨 마지막 줄에 추가.
+  var grand = calcGrandBeforeTruncation(curtainTotal, discount, svcTotal);
+  // 최종 견적금액 천원단위 절사(내림, 2026-08-12 선혜님 확인)와 그 이유는 est-calc-rules.js의 truncateToThousand에 있음.
+  // 절사분은 할인 내역에 "끝자리 절사" 줄로 명시(2026-08-14 선혜님 확인).
   if (grand > 0) {
-    var flooredGrand = Math.floor(grand/1000)*1000;
-    var truncAmt = grand - flooredGrand;
-    if (truncAmt > 0) {
-      discountBreakdown.push({ label: '끝자리 절사', amount: truncAmt });
-      discount += truncAmt; // sum-discount(할인 총액) 표시에도 절사분 반영
+    var trunc = truncateToThousand(grand);
+    if (trunc.truncAmt > 0) {
+      discountBreakdown.push({ label: '끝자리 절사', amount: trunc.truncAmt });
+      discount += trunc.truncAmt; // sum-discount(할인 총액) 표시에도 절사분 반영
     }
-    grand = flooredGrand;
+    grand = trunc.grand;
   }
   window._estEditState.lastDiscountBreakdown = discountBreakdown; // 영수증 표시용
   window._estEditState.lastAppliedDiscounts = { coupons: appliedCoupons, manual: manualDiscount }; // 저장용(쿠폰ID 포함) - 절사는 매번 계산되므로 저장 불필요
@@ -227,16 +186,12 @@ function calcTotal() {
   }
   var depInp=document.getElementById('deposit-input');
   var depRaw=getPriceVal(depInp)||0;
-  // 2026-09-18(선혜님 - "침구 러그는 결제가 50%가 아니라 100% 결제로
-  // 해야하는데"): 커튼/블라인드는 시공이 남아있어서 계약금 50%+잔금
-  // 50%가 맞지만, 침구/러그는 시공 자체가 없어 배송 시점에 전액을
-  // 받아야 함 - 커튼/블라인드 품목이 하나도 없으면(침구만 있으면)
-  // 자동계산 비율을 100%로, 있으면 기존대로 50%로.
-  var depositRatio = hasCurtainOrBlindItem() ? 0.5 : 1;
+  // 계약금 비율(커튼/블라인드 있으면 50%, 침구/러그만이면 100%)과 그 이유는 est-calc-rules.js의 calcDepositRatio에 있음.
+  var depositRatio = calcDepositRatio(hasCurtainOrBlindItem());
   // 2026-09-22(구조 재설계 - 통합 depositSource 모델): 'real'이든
   // 'frozen'이든 뭔가 보호 대상으로 지정된 값이 있으면 자동 재계산 안 함.
   if(grand>0 && depInp && !depInp.dataset.depositSource){
-    var auto50=Math.round(grand*depositRatio);
+    var auto50=calcAutoDeposit(grand, depositRatio);
     depInp.value=''; depInp.removeAttribute('data-raw');
     depInp.value=auto50.toLocaleString();
     depInp.dataset.raw=String(auto50);
@@ -258,19 +213,19 @@ function calcTotal() {
       depInp.removeAttribute('data-raw');
     }
   }
-  var deposit=depRaw>0 ? depRaw : 0;
-  // 수동입력 등으로 계약금이 총액보다 큰 경우 잔금이 음수가 되는 것도 함께 방지
-  if (deposit > grand) deposit = grand;
-  var balance=grand-deposit;
+  // 계약금/잔금 규칙(계약금이 총액보다 크면 총액으로 제한, 잔금 음수 방지)은 est-calc-rules.js의 calcDepositAndBalance
+  var depositBalance = calcDepositAndBalance(grand, depRaw);
+  var deposit = depositBalance.deposit;
+  var balance = depositBalance.balance;
   // 2026-08-05: 성과매출이 할인을 반영 안 하고 있었음(할인 전 curtainTotal 그대로) —
   // 할인해준 만큼은 실제로 못 받은 돈이니 성과에서도 빠져야 함
-  var perf=Math.max(0, curtainTotal-discount);
+  var perf=calcPerformanceRevenue(curtainTotal, discount);
   document.getElementById('sum-curtain').textContent=curtainTotal.toLocaleString()+'원';
   
   var totalEl = document.getElementById('sum-total');
   if(totalEl) totalEl.textContent = grand.toLocaleString()+'원';
   var depDispEl = document.getElementById('sum-deposit-disp');
-  if(depDispEl) depDispEl.textContent = deposit>0 ? deposit.toLocaleString()+'원' : (grand>0 ? Math.round(grand*depositRatio).toLocaleString()+'원 (예상)' : '—');
+  if(depDispEl) depDispEl.textContent = deposit>0 ? deposit.toLocaleString()+'원' : (grand>0 ? calcAutoDeposit(grand, depositRatio).toLocaleString()+'원 (예상)' : '—');
   var balDispEl = document.getElementById('sum-balance-disp');
   if(balDispEl) balDispEl.textContent = deposit>0 ? balance.toLocaleString()+'원' : '—';
   var discEl=document.getElementById('sum-discount');

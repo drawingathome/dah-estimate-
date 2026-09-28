@@ -56,19 +56,20 @@
 | 6 | `est-sync-queue.js` | DAH 견적서 앱 — 오프라인/네트워크 실패 재시도 큐 (2026-08-05 신규) | 5 |
 | 7 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 15 |
 | 8 | `est-form-controls.js` | DAH 견적서 앱 — 폼 상태/타입 제어 | 13 |
-| 9 | `est-product-calc.js` | DAH 견적서 앱 — 공통 계산: 합계(calcTotal)/얼림 금액/행 삭제/드래그 정렬 | 10 |
-| 10 | `est-calc-curtain.js` | DAH 견적서 앱 — 커튼 행 계산 (추가/폭수·금액 계산/레일 자동/복사) | 4 |
-| 11 | `est-calc-blind.js` | DAH 견적서 앱 — 블라인드 행 계산 (추가/최소면적/옵션 추가금/부자재 자동/복사) | 7 |
-| 12 | `est-calc-svc.js` | DAH 견적서 앱 — 기타품목 · 부자재/서비스(실측비·시공비·레일) 행 계산과 요약 | 13 |
-| 13 | `est-survey.js` | DAH 견적서 앱 — 설문지 연동 | 2 |
-| 14 | `est-save.js` | DAH 견적서 앱 — 저장/검증/토스트 | 9 |
-| 15 | `est-save-stages.js` | DAH 견적서 앱 — 저장 단계 함수 4개 (고객 저장 → 견적서 저장 → 로컬 저장) | 4 |
-| 16 | `est-doc-customer.js` | DAH 견적서 앱 — 고객용 견적서 문서 생성 | 2 |
-| 17 | `est-doc-vendor.js` | DAH 견적서 앱 — 거래처별 발주서 문서 생성 | 5 |
-| 18 | `est-doc-vendor-ui.js` | DAH 견적서 앱 — 발주서: 거래처 정보 입력 모달 + 발주서 선택/인쇄 | 4 |
-| 19 | `est-doc-request.js` | DAH 견적서 앱 — 실측/시공 의뢰서 문서 생성 | 4 |
-| 20 | `est-customer-load.js` | DAH 견적서 앱 — PDF모달 / 고객불러오기 / 계약금계산 | 17 |
-| 21 | `est-misc.js` | DAH 견적서 앱 — 주소검색 / 날짜포맷 / 빈상태 / 공유 / 자동저장 | 8 |
+| 9 | `est-calc-rules.js` | DAH 견적서 앱 — 계산 규칙 (순수 함수: 화면/저장소를 전혀 안 만짐) | 11 |
+| 10 | `est-product-calc.js` | DAH 견적서 앱 — 공통 계산: 합계(calcTotal)/얼림 금액/행 삭제/드래그 정렬 | 10 |
+| 11 | `est-calc-curtain.js` | DAH 견적서 앱 — 커튼 행 계산 (추가/폭수·금액 계산/레일 자동/복사) | 4 |
+| 12 | `est-calc-blind.js` | DAH 견적서 앱 — 블라인드 행 계산 (추가/최소면적/옵션 추가금/부자재 자동/복사) | 6 |
+| 13 | `est-calc-svc.js` | DAH 견적서 앱 — 기타품목 · 부자재/서비스(실측비·시공비·레일) 행 계산과 요약 | 13 |
+| 14 | `est-survey.js` | DAH 견적서 앱 — 설문지 연동 | 2 |
+| 15 | `est-save.js` | DAH 견적서 앱 — 저장/검증/토스트 | 9 |
+| 16 | `est-save-stages.js` | DAH 견적서 앱 — 저장 단계 함수 4개 (고객 저장 → 견적서 저장 → 로컬 저장) | 4 |
+| 17 | `est-doc-customer.js` | DAH 견적서 앱 — 고객용 견적서 문서 생성 | 2 |
+| 18 | `est-doc-vendor.js` | DAH 견적서 앱 — 거래처별 발주서 문서 생성 | 5 |
+| 19 | `est-doc-vendor-ui.js` | DAH 견적서 앱 — 발주서: 거래처 정보 입력 모달 + 발주서 선택/인쇄 | 4 |
+| 20 | `est-doc-request.js` | DAH 견적서 앱 — 실측/시공 의뢰서 문서 생성 | 4 |
+| 21 | `est-customer-load.js` | DAH 견적서 앱 — PDF모달 / 고객불러오기 / 계약금계산 | 17 |
+| 22 | `est-misc.js` | DAH 견적서 앱 — 주소검색 / 날짜포맷 / 빈상태 / 공유 / 자동저장 | 8 |
 
 ## 설문지 (survey.html) — 브라우저가 불러오는 순서대로
 
@@ -121,6 +122,7 @@
 | `addToPendingSyncQueue` | `dash-sync-queue.js` |
 | `App` | `survey-app.js` |
 | `appendPasswordResetFlow` | `dash-settings.js` |
+| `applyDiscountItems` | `est-calc-rules.js` |
 | `applyFrozenBreakdown` | `est-product-calc.js` |
 | `applyPermissions` | `dash-auth.js` |
 | `applyRealDepositToForm` | `est-utils.js` |
@@ -136,11 +138,18 @@
 | `buildRequestHTML` | `est-doc-request.js` |
 | `buildVendorDocForOne` | `est-doc-vendor.js` |
 | `buildVendorHTML` | `est-doc-vendor.js` |
+| `calcAutoDeposit` | `est-calc-rules.js` |
+| `calcBlindBillableSqm` | `est-calc-rules.js` |
 | `calcBlindRow` | `est-calc-blind.js` |
 | `calcCurtainRow` | `est-calc-curtain.js` |
 | `calcDeposit` | `est-customer-load.js` |
+| `calcDepositAndBalance` | `est-calc-rules.js` |
+| `calcDepositRatio` | `est-calc-rules.js` |
+| `calcGrandBeforeTruncation` | `est-calc-rules.js` |
 | `calcOtherItemRow` | `est-calc-svc.js` |
+| `calcPerformanceRevenue` | `est-calc-rules.js` |
 | `calcRailJa` | `est-utils.js` |
+| `calcSuggestedPanels` | `est-calc-rules.js` |
 | `calcSvcRow` | `est-calc-svc.js` |
 | `calcTotal` | `est-product-calc.js` |
 | `categorizeSvcRow` | `est-calc-svc.js` |
@@ -171,6 +180,7 @@
 | `copyOtherItemRow` | `est-calc-svc.js` |
 | `copySvcRow` | `est-calc-svc.js` |
 | `csvSafeCell` | `dash-export.js` |
+| `curtainHeightFeeWarning` | `est-calc-rules.js` |
 | `customerToDbRow` | `dash-api-data.js` |
 | `dahCheckClientErrors` | `apps-script-daily-backup.js` |
 | `dahCleanupTestData` | `apps-script-daily-backup.js` |
@@ -230,7 +240,7 @@
 | `getAuthToken` | `dash-supabase-auth.js` |
 | `getAutoMaterialVendorName` | `est-utils.js` |
 | `getAutoProductionVendorName` | `est-utils.js` |
-| `getBlindMinSqm` | `est-calc-blind.js` |
+| `getBlindMinSqm` | `est-calc-rules.js` |
 | `getCalEvents` | `dash-calendar.js` |
 | `getChosung` | `dash-search.js` |
 | `getCombinedAddr` | `dash-customer-add.js` |
@@ -465,6 +475,7 @@
 | `toggleInternal` | `est-form-controls.js` |
 | `toggleSvcDetail` | `est-calc-svc.js` |
 | `triggerSumPulse` | `est-product-calc.js` |
+| `truncateToThousand` | `est-calc-rules.js` |
 | `unfreezeEstimateIfEditing` | `est-misc.js` |
 | `unparkLead` | `dash-api-writes.js` |
 | `updateEstSyncBanner` | `est-sync-queue.js` |

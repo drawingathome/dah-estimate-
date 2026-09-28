@@ -430,6 +430,13 @@ if (/dah-dashboard/.test(target)) {
   // 몰린 파일): 저장 로직의 "지금 동작"(서버로 나가는 요청/확인창/토스트/로컬저장)을 8개
   // 시나리오로 기록해두고, 앞으로 이 코드를 고칠 때 글자 하나라도 달라지면 알려줌.
   scripts.push(['save-golden-master-check.js', []]);
+  // 2026-09-28(선혜님 - "밑에 세개를 그러면 놔두는게 베스트야?" - est-product-calc.js는 재발 버그의 중심):
+  // 계산 규칙(폭수/블라인드 면적/쿠폰 순차 할인/절사/계약금)을 화면 코드에서 떼어내
+  // est-calc-rules.js(순수 함수)로 모으면서, 그 전에 현재 계산을 4천여 개 조합으로 기록해 둠.
+  //  - calc-golden-master-check: 실제 화면을 통해 돌린 계산 결과가 기록과 글자 단위로 같은지
+  //  - calc-rules-unit-check: 규칙 파일이 화면을 안 만지는지(순수성) + 손으로 계산한 기대값(브라우저 없이 1초)
+  scripts.push(['calc-golden-master-check.js', []]);
+  scripts.push(['calc-rules-unit-check.js', []]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',

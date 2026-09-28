@@ -2,7 +2,7 @@
    DAH 견적서 앱 — 블라인드 행 계산 (추가/최소면적/옵션 추가금/부자재 자동/복사)
    2026-09-28(선혜님 - "밑에 세개를 그러면 놔두는게 베스트야?"): est-product-calc.js에서 "블라인드" 함수만 분리함.
    코드 내용은 한 줄도 안 바꾸고 위치만 옮김(전역 함수 소스 비교로 확인).
-   포함: addBlindRow, refreshBlindVendorOptions, getBlindMinSqm, calcBlindRow, recalcBlindOptionExtras,
+   포함: addBlindRow, refreshBlindVendorOptions, calcBlindRow, recalcBlindOptionExtras,
          autoAddBlindSvc, copyBlindRow
    ══════════════════════════════════════════════════ */
 
@@ -90,24 +90,7 @@ function refreshBlindVendorOptions() {
   });
 }
 
-// 2026-08-09: 블라인드 최소면적 규칙 — 원래 calcBlindRow/calcTotal 두 곳에
-// 각각 따로 정의돼있어서, 규칙이 바뀔 때 한쪽만 고치면 값이 어긋날 위험이
-// 있었음. 공용 함수로 통합.
-// 전체 규칙(선혜님 확인, 2026-08-09): 모든 블라인드 종류에 최소면적이 있음
-// - 로만쉐이드, 롤스크린: 2.0㎡
-// - 우드, 허니콤, 알루미늄, 기타: 1.5㎡
-// 2026-09-11(선혜님 지적 - "더블 블라인드 최소회배가 롤블라인드와
-// 동일하게 2회배리고~ 너는 다르게 해석했지??"): "회배"는 가격에 곱하는
-// 배수가 아니라, 바로 이 최소면적 기준(1.5㎡ 그룹/2.0㎡ 그룹)을 가리키는
-// 말이었음 - 처음엔 "원단이 2겹이라 가격도 2배"로 잘못 해석해서
-// getBlindMultiplier()라는 별도 가격배수 함수를 만들었었는데, 완전히
-// 틀린 해석이었음(제거함). 더블 롤블라인드는 그냥 롤스크린과 같은
-// 최소면적 그룹(2.0㎡)에 속할 뿐, 가격 계산 자체는 다른 블라인드와
-// 동일(price*sqm).
-function getBlindMinSqm(kind) {
-  if (kind === '로만쉐이드' || kind === '롤스크린' || kind === '더블 롤블라인드') return 2.0;
-  return 1.5;
-}
+// getBlindMinSqm(종류별 최소 청구 면적)은 est-calc-rules.js로 옮김(계산 규칙은 그 파일 한 곳에만 둠)
 
 function calcBlindRow(el) {
   var tr = el.closest('tr');
@@ -116,11 +99,12 @@ function calcBlindRow(el) {
   var kind = tr.querySelector('.blind-kind')?.value||'';
   var price = Math.max(0, getPriceVal(tr.querySelector('.blind-price'))||0);
   var extra = parseFloat(tr.querySelector('.blind-extra')?.value)||0;
-  var sqmRaw = (bw*bh)/10000;
+  // 청구 면적 규칙(최소면적 적용 + 0.1㎡ 올림)은 est-calc-rules.js의 calcBlindBillableSqm 한 곳에만 있음
+  // (예전엔 합계 계산(calcTotal)에도 똑같은 계산이 복사돼 있었음)
   var minSqm = getBlindMinSqm(kind);
-  if(sqmRaw<minSqm && sqmRaw>0) sqmRaw=minSqm;
-  
-  var sqm = Math.ceil(sqmRaw*10)/10;
+  var billable = calcBlindBillableSqm(bw, bh, minSqm);
+  var sqmRaw = billable.sqmRaw;
+  var sqm = billable.sqm;
   var sqmEl = tr.querySelector('.bsqm');
   if(sqmEl) sqmEl.textContent = sqm>0 ? sqm.toFixed(1)+'㎡'+(sqmRaw===minSqm&&minSqm>0?' (최소)':'') : '—';
   
