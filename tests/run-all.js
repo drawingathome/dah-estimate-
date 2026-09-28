@@ -437,6 +437,9 @@ if (/dah-dashboard/.test(target)) {
   //  - calc-rules-unit-check: 규칙 파일이 화면을 안 만지는지(순수성) + 손으로 계산한 기대값(브라우저 없이 1초)
   scripts.push(['calc-golden-master-check.js', []]);
   scripts.push(['calc-rules-unit-check.js', []]);
+  // 2026-09-28(선혜님 - "React 전환부터" - dash-customer-as.js를 React 컴포넌트 첫 전환 대상으로 삼기 전,
+  // 지금 화면 동작(폼 상태/목록 표시/서버 요청 내용)을 기록해둠 - React로 다시 짠 뒤 같은지 비교하는 용도.
+  scripts.push(['as-section-golden-master-check.js', []]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',
