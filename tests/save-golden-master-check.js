@@ -71,7 +71,27 @@ const SCENARIOS = [
 ];
 
 function normalize(v) {
-  return JSON.parse(JSON.stringify(v).replace(/localhost:\d+/g, 'localhost:PORT'));
+  // 실행 환경/코드 변경에 따라 달라지는 값들은 비교에서 제외:
+  //  - 포트 번호, 파일 버전 해시(?v=...), 오류 스택의 줄:칸 위치(.js:60:10)
+  return JSON.parse(JSON.stringify(v)
+    .replace(/localhost:\d+/g, 'localhost:PORT')
+    .replace(/\?v=[0-9a-f]{12}/g, '?v=HASH')
+    .replace(/\.js(\?v=HASH)?:\d+:\d+/g, '.js:L:C'));
+}
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// 고정 시간 대신 "요청이 조용해질 때까지" 기다림(느린 CI 서버에서도 같은 상태에서 캡처되게).
+// 2026-09-28: 고정 1.8초 대기 + 요청 순서 비교로 만들었더니, 컴퓨터가 느리면(CPU 부하 실험으로
+// 재현) 같은 코드인데도 기록과 달라져서 GitHub CI가 실패했음.
+async function settle(page, state, quietMs = 3000, maxMs = 25000) {
+  const t0 = Date.now();
+  await sleep(800);
+  while (Date.now() - t0 < maxMs) {
+    const idle = Date.now() - state.lastReqAt;
+    const disabled = await page.evaluate(() => (document.getElementById('save-btn') || {}).disabled === true).catch(() => false);
+    if (idle >= quietMs && !disabled) return;
+    await sleep(200);
+  }
 }
 
 async function runScenario(dir, sc, idx) {
@@ -80,6 +100,7 @@ async function runScenario(dir, sc, idx) {
   const browser = await launchBrowser();
   const page = await browser.newPage();
   const rec = { requests: [], dialogs: [], jsErrors: [] };
+  const state = { lastReqAt: Date.now() };
   page.on('pageerror', e => rec.jsErrors.push(e.message));
   page.on('dialog', async d => { rec.dialogs.push(d.message()); try { await d.accept(); } catch (e) {} });
   await page.evaluateOnNewDocument(FREEZE);
@@ -88,14 +109,26 @@ async function runScenario(dir, sc, idx) {
   const estimates = []; let estN = 0, custN = 0;
   page.on('request', (req) => {
     const url = req.url(); const method = req.method();
-    if (!url.includes('supabase.co')) {
-      if (url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) req.continue(); else req.abort();
+    const host = (() => { try { return new URL(url).hostname; } catch (e) { return ''; } })();
+    if (host === 'localhost' || host === '127.0.0.1') { req.continue(); return; }
+    // 구글 Apps Script 웹훅(고객명단/드라이브 동기화): 실제로는 no-cors라 응답 내용이 필요 없음.
+    // 예전엔 abort해서 "재시도 2회" 로그가 시간에 따라 달라졌으므로, 즉시 성공 응답으로 고정하고
+    // 어떤 내용을 보냈는지(본문)는 기록함.
+    if (/google(usercontent)?\.com$/.test(host)) {
+      if (method === 'OPTIONS') { req.respond({ status: 204, headers: { ...CORS, 'Access-Control-Allow-Methods': '*', 'Access-Control-Allow-Headers': '*' } }); return; }
+      state.lastReqAt = Date.now();
+      let body = null; try { body = JSON.parse(req.postData() || 'null'); } catch (e) { body = req.postData() || null; }
+      const u0 = new URL(url);
+      rec.requests.push({ method, path: 'EXTERNAL:' + host + u0.pathname.replace(/\/macros\/s\/[^/]+/, '/macros/s/ID'), body });
+      req.respond({ status: 200, contentType: 'application/json', headers: CORS, body: '{}' });
       return;
     }
+    if (!url.includes('supabase.co')) { req.abort(); return; }
     if (method === 'OPTIONS') { req.respond({ status: 204, headers: { ...CORS, 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Allow-Headers': '*' } }); return; }
     const u = new URL(url); const p = u.pathname + u.search;
     if (p.includes('/auth/v1/token')) { req.respond({ status: 200, contentType: 'application/json', headers: CORS, body: json({ access_token: 'x', refresh_token: 'y', expires_in: 3600, user: { id: 'u', email: 'a@b.c' } }) }); return; }
     if (p.includes('/rest/v1/app_settings')) { req.respond({ status: 200, contentType: 'application/json', headers: CORS, body: '[]' }); return; }
+    state.lastReqAt = Date.now();
     let body = null; try { body = JSON.parse(req.postData() || 'null'); } catch (e) { body = req.postData() || null; }
     const prefer = req.headers()['prefer'];
     rec.requests.push({ method, path: p, body, ...(prefer ? { prefer } : {}) });
@@ -116,16 +149,16 @@ async function runScenario(dir, sc, idx) {
     return ok(200, []);
   });
   await page.goto(`http://localhost:${port}/dah-estimate.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });
-  await new Promise(r => setTimeout(r, 700));
+  await sleep(700);
   await setupValidSession(page);
-  await new Promise(r => setTimeout(r, 400));
+  await settle(page, state);
   await page.evaluate(sc.pre + '\n' + sc.fill);
   for (const act of sc.acts) {
+    state.lastReqAt = Date.now();
     await page.evaluate(act);
-    await new Promise(r => setTimeout(r, 1800));
+    await settle(page, state);
   }
-  await new Promise(r => setTimeout(r, 1200));
-  const state = await page.evaluate(() => {
+  const st = await page.evaluate(() => {
     const ls = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (!/session|auth|token/i.test(k)) ls[k] = localStorage.getItem(k); }
     const toast = document.getElementById('toast');
     return {
@@ -136,14 +169,15 @@ async function runScenario(dir, sc, idx) {
     };
   });
   await browser.close(); server.kill();
-  // 진단 로그(client_error_logs)/행동 로그(analytics_events)는 저장 도중 다른 요청과 "동시에" 나가서
-  // 어느 게 먼저 관찰되는지가 실행마다 달라짐(2026-09-28 검증 중 실제로 S8이 가끔 실패해서 발견).
-  // 순서가 진짜 의미 있는 업무 요청(고객 저장 → 견적서 저장 등)은 순서까지 그대로 비교하고,
-  // 로그류는 내용만(순서 무관) 비교함.
-  const isLog = (r) => /\/rest\/v1\/(client_error_logs|analytics_events)/.test(r.path);
-  const logs = rec.requests.filter(isLog).map(r => JSON.stringify(r)).sort().map(x => JSON.parse(x));
-  const biz = rec.requests.filter(r => !isLog(r));
-  return normalize({ requests: biz, logs, dialogs: rec.dialogs, jsErrors: rec.jsErrors, ...state });
+  // 비교 구조:
+  //  writes = 고객/견적서를 실제로 "쓰는"(POST/PATCH/DELETE) 요청 - 앞뒤가 정해진 흐름(고객 저장 → 견적서 저장)이라
+  //           순서까지 그대로 비교
+  //  others = 그 밖의 요청(조회 GET, 진단/행동 로그, 외부 동기화) - 서로 무관하게 동시에 나가서 순서가
+  //           실행마다 달라질 수 있으므로 내용만(순서 무관) 비교
+  const isWrite = (r) => ['POST', 'PATCH', 'DELETE'].includes(r.method) && /\/rest\/v1\/(customers|estimates)\b/.test(r.path);
+  const writes = rec.requests.filter(isWrite);
+  const others = rec.requests.filter(r => !isWrite(r)).map(r => JSON.stringify(r)).sort().map(x => JSON.parse(x));
+  return normalize({ writes, others, dialogs: rec.dialogs, jsErrors: rec.jsErrors, ...st });
 }
 
 async function run() {
@@ -152,7 +186,7 @@ async function run() {
   for (let i = 0; i < SCENARIOS.length; i++) {
     process.stdout.write('  · ' + SCENARIOS[i].name + ' ... ');
     result[SCENARIOS[i].name] = await runScenario(dir, SCENARIOS[i], i);
-    console.log('업무요청 ' + result[SCENARIOS[i].name].requests.length + '건 + 로그 ' + result[SCENARIOS[i].name].logs.length + '건 기록');
+    console.log('쓰기요청 ' + result[SCENARIOS[i].name].writes.length + '건 + 기타 ' + result[SCENARIOS[i].name].others.length + '건 기록');
   }
   if (UPDATE) {
     fs.mkdirSync(path.dirname(GOLDEN), { recursive: true });
