@@ -151,7 +151,7 @@
     "single_source_of_truth": "markSvcManualOverride(dataset.manualOverride) + autoType(어떤 자동유형이었는지 저장) - 수정시 수량도 함께 1로 고정",
     "derived_fields": [],
     "db_enforcement": "없음",
-    "code_locations": ["est-product-calc.js:markSvcManualOverride", "est-misc.js:collectFormData (autoType과 함께 저장)", "est-customer-load.js (복원시 자동유형 마커 재부착)"],
+    "code_locations": ["est-calc-svc.js:markSvcManualOverride", "est-misc.js:collectFormData (autoType과 함께 저장)", "est-customer-load.js (복원시 자동유형 마커 재부착)"],
     "guard_tests": ["svc-manual-override-check.js", "svc-override-qty-print-check.js"],
     "금지패턴": "새 자동계산 svc 항목 유형을 추가하면서 markSvcManualOverride 연동을 빠뜨리는 것 - 신안라 사건의 근본원인"
   },
