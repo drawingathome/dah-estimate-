@@ -419,6 +419,13 @@ if (/dah-dashboard/.test(target)) {
   // 이 패턴이었음. 실행 중 dah_photos(최초 커밋부터 UI 없이 방치된 미완성
   // 기능) 실제로 찾아냄.
   scripts.push(['local-only-storage-check.js', []]);
+  // 2026-09-24(선혜님 - "이렇게 나누면 나중에 내가 힘들어지니? 안힘들게 하는 법도 찾아"):
+  // 파일을 나눈 뒤 생기는 두 가지 불편을 자동으로 막음 -
+  // (1) 새 파일을 HTML 태그/타입체크 설정에 등록하는 걸 깜빡함 → 등록 검사
+  // (2) "이 기능이 어느 파일에 있지?"를 찾기 어려워짐 → 자동 생성 코드 지도(CODE_MAP.md)가
+  //     낡으면 알려줌
+  scripts.push(['file-registration-check.js', []]);
+  scripts.push(['code-map-check.js', []]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',
