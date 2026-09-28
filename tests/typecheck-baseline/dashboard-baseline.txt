@@ -94,9 +94,9 @@ dash-customer-alim.js(189,10): error TS2339: 'string | string[]' 형식에 'forE
   'string' 형식에 'forEach' 속성이 없습니다.
 dash-customer-alim.js(326,12): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 dash-customer-alim.js(330,29): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-detail-tabs.js(316,77): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
-dash-customer-detail-tabs.js(647,22): error TS8024: JSDoc '@param' 태그의 이름이 'editName'인데 해당 이름의 매개 변수가 없습니다.
-dash-customer-detail-tabs.js(913,81): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-customer-estimates.js(261,77): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
+dash-customer-estimates.js(264,22): error TS8024: JSDoc '@param' 태그의 이름이 'editName'인데 해당 이름의 매개 변수가 없습니다.
+dash-customer-estimates.js(530,81): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
 dash-failed-saves.js(31,40): error TS2362: 산술 연산의 왼쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
 dash-failed-saves.js(31,62): error TS2363: 산술 연산 오른쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
 dash-kanban.js(113,26): error TS2345: 'EventTarget' 형식의 인수는 'Node' 형식의 매개 변수에 할당될 수 없습니다.
@@ -110,6 +110,8 @@ dash-render-search.js(33,51): error TS2339: 'HTMLElement' 형식에 'value' 속�
 dash-render-search.js(36,63): error TS2339: 'HTMLElement' 형식에 'checked' 속성이 없습니다.
 dash-render.js(211,37): error TS2362: 산술 연산의 왼쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
 dash-render.js(211,46): error TS2363: 산술 연산 오른쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
+dash-settings-sections.js(442,31): error TS2345: 'string | ArrayBuffer' 형식의 인수는 'string' 형식의 매개 변수에 할당될 수 없습니다.
+  'ArrayBuffer' 형식은 'string' 형식에 할당할 수 없습니다.
 dash-settings.js(73,18): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 dash-settings.js(77,18): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 dash-settings.js(81,18): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
@@ -123,8 +125,6 @@ dash-settings.js(232,26): error TS2339: 'Element' 형식에 'value' 속성이 �
 dash-settings.js(238,20): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 dash-settings.js(244,39): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 dash-settings.js(252,49): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
-dash-settings.js(813,31): error TS2345: 'string | ArrayBuffer' 형식의 인수는 'string' 형식의 매개 변수에 할당될 수 없습니다.
-  'ArrayBuffer' 형식은 'string' 형식에 할당할 수 없습니다.
 dash-ui-helpers.js(48,62): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
 dash-ui-helpers.js(49,28): error TS2339: 'Element' 형식에 'click' 속성이 없습니다.
 dash-utils.js(179,22): error TS2362: 산술 연산의 왼쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.

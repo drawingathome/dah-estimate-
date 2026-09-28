@@ -101,7 +101,7 @@
     "single_source_of_truth": "fetchLatestUpdatedAt() 공용함수 - 충돌 감지시 서버에서 최신 updated_at을 다시 조회해 락값 갱신",
     "derived_fields": [],
     "db_enforcement": "없음(낙관적 잠금 자체는 updated_at 컬럼 비교로 앱 레벨에서 구현)",
-    "code_locations": ["est-save.js (견적서 저장)", "dash-api.js (고객정보 저장)"],
+    "code_locations": ["est-save.js (견적서 저장)", "dash-api-writes.js:saveCustomerToDb (고객정보 저장)"],
     "guard_tests": ["optimistic-lock-check.js"],
     "금지패턴": "새 저장 경로에 낙관적 잠금을 추가하면서 fetchLatestUpdatedAt 공용함수 대신 직접 XHR로 락값 갱신 로직을 새로 짜는 것 - est-save.js/dash-api.js가 각자 따로 있다가 '쌍둥이 버그'로 발견됨(9/5)"
   },
@@ -121,7 +121,7 @@
     "single_source_of_truth": "client_id (있으면 항상 이걸로 매칭, 이름은 폴백만)",
     "derived_fields": [],
     "db_enforcement": "없음",
-    "code_locations": ["dash-api.js:estimateDbRowToLocal (clientId 매핑)", "dash-customer-detail.js", "dash-customer-detail-tabs.js", "dash-kanban.js", "est-customer-load.js"],
+    "code_locations": ["dash-api-data.js:estimateDbRowToLocal (clientId 매핑)", "dash-customer-detail.js", "dash-customer-detail-tabs.js", "dash-customer-estimates.js", "dash-kanban.js", "est-customer-load.js"],
     "guard_tests": ["estimate-customer-link-check.js"],
     "금지패턴": "customers/estimates 관련 새 매칭 로직을 짜면서 clientId 체크 없이 이름만으로 find/filter하는 것 - 신화경 사건(clientId 매핑 누락)의 근본원인"
   },

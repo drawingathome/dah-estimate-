@@ -57,6 +57,21 @@ Object.keys(registry).forEach(function(key) {
     const filePath = path.join(root, fileName);
     if (fs.existsSync(filePath)) {
       ok('[' + key + '] 코드 위치 존재: ' + fileName);
+      // 2026-09-24(선혜님 - "나눌수 있는건 다 나눠보자" 큰 파일 쪼개기 중 발견):
+      // "파일명:함수명" 형태로 적힌 항목은, 함수가 다른 파일로 옮겨가도 파일만
+      // 있으면 통과해버려서(파일 쪼개기를 하면 정확히 이 상황이 생김) 레지스트리가
+      // 조용히 거짓이 됨 - 그 함수가 실제로 그 파일 안에 있는지까지 확인.
+      const fnMatch = loc.match(/^[^:\s]+:([A-Za-z_$][\w$]*)/);
+      if (fnMatch) {
+        const fnName = fnMatch[1];
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const fnRe = new RegExp('function\\s+' + fnName + '\\b|\\b' + fnName + '\\s*=\\s*function|\\b' + fnName + '\\s*[:=]\\s*\\(?');
+        if (fnRe.test(content)) {
+          ok('[' + key + '] ' + fileName + ' 안에 ' + fnName + ' 실제로 있음');
+        } else {
+          fail('[' + key + '] ' + fileName + ' 안에 ' + fnName + ' 이(가) 없음(다른 파일로 옮겨졌는데 레지스트리 안 고침?)');
+        }
+      }
     } else {
       fail('[' + key + '] 코드 위치가 실제로 없음(파일 삭제/이동됐는데 레지스트리 안 고침?): ' + fileName);
     }

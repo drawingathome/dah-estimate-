@@ -72,7 +72,7 @@ REGISTRY.forEach(function(rule) {
 // getDueAlimKeys/getAlimSentMap 자체가 정확히 한 곳에만 정의돼있는지도 확인
 // (공용함수 여러 벌 만들어놓고 서로 다른 데서 부르면 똑같이 쌍둥이 문제 재발)
 ['getDueAlimKeys', 'getAlimSentMap'].forEach(function(fnName) {
-  const files = ['dash-customer-alim.js', 'dash-customer-detail.js', 'dash-customer-detail-tabs.js', 'dash-render.js', 'dash-kanban.js'];
+  const files = ['dash-customer-alim.js', 'dash-customer-detail.js', 'dash-customer-detail-tabs.js', 'dash-customer-estimates.js', 'dash-render.js', 'dash-kanban.js'];
   let defCount = 0;
   files.forEach(function(f) {
     try {
