@@ -221,3 +221,27 @@ function regionFeeContent(region, type) {
 function regionFeeHint(prices) {
   return '→ 실측 '+prices['실측비'].toLocaleString()+'원 + 시공 '+prices['시공비'].toLocaleString()+'원 자동추가';
 }
+
+// ── 블라인드 옵션추가금 / 시공비 규칙 ──────────────────────────────────
+// 2026-08-15(선혜님 확인): 옵션추가금(전동 부품비 등)은 지역 시공비 행에 합치지 않고 독립 행으로 -
+// 지역/시공 여부와 무관하게 항상 받아야 하는 금액이라, 지역 미선택 상태에서도 화면에 남고 저장도 막히지 않음.
+// extras: 블라인드 각 행의 [{ value, optName }] - value는 옵션추가금 입력값, optName은 옵션 이름(빈 문자열 가능)
+function summarizeBlindOptionExtras(extras) {
+  var extraSum = 0;
+  var optNames = [];
+  extras.forEach(function(e) {
+    var v = Math.max(0, e.value || 0);
+    extraSum += v;
+    if (v > 0) {
+      var name = (e.optName || '').trim();
+      if (name && optNames.indexOf(name) < 0) optNames.push(name);
+    }
+  });
+  return { extraSum: extraSum, content: optNames.length ? optNames.join(', ') : '옵션 추가금' };
+}
+
+// 블라인드 시공비: 단가 10,000원 × 블라인드 개수(레일과 달리 1개당이 아니라 창문 1개=블라인드 1개 기준)
+var BLIND_INSTALL_UNIT_PRICE = 10000;
+function blindInstallSpec(blindCount) {
+  return { content: '블라인드 시공비 ('+blindCount+'개)', unitPrice: BLIND_INSTALL_UNIT_PRICE, qty: blindCount };
+}

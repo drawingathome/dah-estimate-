@@ -129,24 +129,15 @@ function recalcBlindOptionExtras() {
   var blindBody = document.getElementById('blind-body');
   var svcBody = document.getElementById('svc-body');
   if (!blindBody || !svcBody) return;
-  var extraSum = 0;
-  var optNames = [];
-  blindBody.querySelectorAll('.blind-extra').forEach(function(inp){
+  // 합산/옵션이름 규칙은 est-calc-rules.js의 summarizeBlindOptionExtras 한 곳에만 있음
+  var extras = Array.from(blindBody.querySelectorAll('.blind-extra')).map(function(inp){
     var v = Math.max(0, parseFloat(inp.value.replace(/[^0-9.-]/g,''))||0);
-    extraSum += v;
-    if (v > 0) {
-      var tr = inp.closest('tr');
-      var optName = (tr?.querySelector('.blind-opt')?.value || '').trim();
-      if (optName && optNames.indexOf(optName) < 0) optNames.push(optName);
-    }
+    var tr = inp.closest('tr');
+    return { value: v, optName: (tr?.querySelector('.blind-opt')?.value || '') };
   });
-  // 2026-08-15: 옵션추가금(전동 부품비 등)을 지역 시공비 행에 합산하던 방식을
-  // 독립된 svc 행으로 완전히 분리(선혜님 확인 — 전동 부품비는 지역/시공
-  // 여부와 무관하게 항상 받아야 함, 전동시공비(8~10만원)는 별개의 얘기라
-  // 지금은 시스템화하지 않기로 함). 예전엔 지역을 선택 안 하면 옵션추가금을
-  // "얹을 곳"(지역시공비 행)이 아예 없어서, 화면에서 사라지고 저장도
-  // 막혔었음(validateEstimate가 저장 자체를 차단). 독립 행이라 지역 여부와
-  // 무관하게 항상 정확히 표시/저장됨.
+  var summary = summarizeBlindOptionExtras(extras);
+  var extraSum = summary.extraSum;
+
   var row = svcBody.querySelector('[data-svc-type="옵션추가금"]');
   if (extraSum <= 0) {
     if (row) row.remove();
@@ -160,7 +151,7 @@ function recalcBlindOptionExtras() {
   }
   var tds = row.querySelectorAll('td');
   var sel=row.querySelector('.svc-kind'); if (sel) sel.value='전동';
-  var inp=row.querySelector('.svc-content'); if (inp) inp.value = optNames.length ? optNames.join(', ') : '옵션 추가금';
+  var inp=row.querySelector('.svc-content'); if (inp) inp.value = summary.content;
   if (!row.dataset.manualOverride) {
     var pinp=row.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw', String(extraSum)); pinp.value=extraSum.toLocaleString(); }
   }
@@ -174,6 +165,8 @@ function autoAddBlindSvc() {
   if(!svcBody || !blindBody) return;
   var blindCount = blindBody.querySelectorAll('tr').length;
   if(blindCount === 0) return;
+  // 단가/문구 규칙은 est-calc-rules.js의 blindInstallSpec 한 곳에만 있음
+  var installSpec = blindInstallSpec(blindCount);
 
   // "시공 안함(배송)" 상태(지역 미선택)에서는 블라인드 시공비를 추가하지 않음
   var regionEl = document.getElementById('c-region');
@@ -192,14 +185,14 @@ function autoAddBlindSvc() {
   }
   var tds = row.querySelectorAll('td');
   var sel=row.querySelector('.svc-kind'); if(sel) sel.value='시공비';
-  var inp=row.querySelector('.svc-content'); if(inp) inp.value='블라인드 시공비 ('+blindCount+'개)';
+  var inp=row.querySelector('.svc-content'); if(inp) inp.value=installSpec.content;
   if (!row.dataset.manualOverride) {
-    var pinp=row.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw','10000'); pinp.value=(10000).toLocaleString(); }
+    var pinp=row.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw',String(installSpec.unitPrice)); pinp.value=(installSpec.unitPrice).toLocaleString(); }
   }
   // 2026-09-19: 레일과 동일한 이유로, override 상태에서는 블라인드
   // 개수가 바뀌어도 수량을 되돌리지 않음(단가=최종금액 원칙 유지).
   if (!row.dataset.manualOverride) {
-    var qinp=row.querySelector('.sqty'); if(qinp) qinp.value=blindCount;
+    var qinp=row.querySelector('.sqty'); if(qinp) qinp.value=installSpec.qty;
   }
   calcSvcRow(row.querySelector('.sprice'));
 }

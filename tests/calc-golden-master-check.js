@@ -277,6 +277,66 @@ const RUNNER = `(() => {
   const steps = [];
   for (const r of ['서울', '경기', '기타', '', '서울', '서울', '경기']) { regionSel.value = r; autoAddSvcFee(); steps.push(r + ':' + document.querySelectorAll('#svc-body tr').length + ':' + totals().split('|')[3]); }
   out.regionFeeSwitch.steps = steps.join(' > ');
+  // I. 블라인드 옵션추가금 (recalcBlindOptionExtras) + 블라인드 시공비(autoAddBlindSvc)
+  //    여러 줄의 옵션추가금 합산, 옵션 이름 표시, 0원이면 행 자체가 사라지는지, 수동 수정 유지, 복사시 재계산(2026-08-28 사건)
+  function svcFull3() {
+    return Array.from(document.querySelectorAll('#svc-body tr')).map(tr => {
+      const g = (q) => tr.querySelector(q); const pr = g('.sprice');
+      return [tr.getAttribute('data-svc-type') || '-', tr.dataset.manualOverride ? 'M' : '-', (g('.svc-kind') || {}).value,
+        (g('.svc-content') || {}).value, pr ? pr.value : null, (g('.sqty') || {}).value].join('/');
+    }).join(' ; ');
+  }
+  function addBlindWith(space, extra, opt) {
+    addBlindRow();
+    const tr = document.querySelector('#blind-body tr:last-child');
+    setV(tr, '.space-inp', space); setV(tr, '.blind-kind', '알루미늄'); setV(tr, '.bmw', 100); setV(tr, '.bmh', 100); setV(tr, '.blind-price', 20000);
+    setV(tr, '.blind-extra', extra); setV(tr, '.blind-opt', opt);
+    calcBlindRow(tr.querySelector('.bmw'));
+    return tr;
+  }
+  out.blindOption = {};
+  for (const region of ['', '서울'])
+    for (const extras of [[0, ''], [5000, '전동'], [5000, ''], [0, '전동'], [3000, 'A'], [3000, 'A'], [3000, 'A'], [3000, 'B']])
+      ; // (아래 실제 조합은 여러 줄 케이스라 별도로 구성)
+  const optionCases = {
+    '없음': [], '하나_전동5000': [[5000, '전동']], '문구없이_5000': [[5000, '']], '0원_문구있음': [[0, '전동']],
+    '두줄_같은옵션': [[3000, 'A'], [3000, 'A']], '두줄_다른옵션': [[3000, 'A'], [2000, 'B']], '세줄_일부0원': [[3000, 'A'], [0, ''], [1000, 'B']], '0원인데_이름있음': [[3000, 'A'], [0, 'C']],
+  };
+  for (const region of ['', '서울'])
+    for (const [caseName, rows] of Object.entries(optionCases)) {
+      resetAll(); regionSel.value = region;
+      rows.forEach(([extra, opt], i) => addBlindWith('공간' + i, extra, opt));
+      if (rows.length === 0) { addBlindRow(); const tr = document.querySelector('#blind-body tr'); setV(tr, '.bmw', 100); setV(tr, '.bmh', 100); setV(tr, '.blind-price', 20000); calcBlindRow(tr.querySelector('.bmw')); }
+      out.blindOption[[region || '(빈)', caseName].join('|')] = [svcFull3(), totals()].join(' ## ');
+    }
+  // I2. 옵션추가금을 수동으로 고치면 유지되는지 / 블라인드를 더 추가해도 수동값 유지되는지
+  out.blindOptionManual = {};
+  resetAll(); regionSel.value = '서울'; addBlindWith('거실', 5000, '전동');
+  const extraRow = document.querySelector('#svc-body [data-svc-type="옵션추가금"]');
+  { const pi = extraRow.querySelector('.sprice'); pi.value = '99000'; pi.dispatchEvent(new Event('input', { bubbles: true })); }
+  const m1 = svcFull3();
+  addBlindWith('안방', 2000, '전동');
+  out.blindOptionManual.after_add = [m1, svcFull3()].join(' ## ');
+  // I3. 블라인드 시공비: 개수별, 지역 없음, 수동 수정 유지, 개수가 바뀌어도 수동값은 그대로
+  out.blindInstall = {};
+  for (const region of ['', '서울']) for (const count of [1, 2, 3]) {
+    resetAll(); regionSel.value = region;
+    for (let i = 0; i < count; i++) { addBlindRow(); const tr = document.querySelector('#blind-body tr:last-child'); setV(tr, '.bmw', 100); setV(tr, '.bmh', 100); setV(tr, '.blind-price', 10000); calcBlindRow(tr.querySelector('.bmw')); }
+    out.blindInstall[[region || '(빈)', count].join('|')] = [svcFull3(), totals()].join(' ## ');
+  }
+  resetAll(); regionSel.value = '서울'; addBlindWith('거실', 0, '');
+  const installRow = document.querySelector('#svc-body [data-svc-type="블라인드시공"]');
+  { const pi = installRow.querySelector('.sprice'); pi.value = '55000'; pi.dispatchEvent(new Event('input', { bubbles: true })); }
+  const i1 = svcFull3();
+  addBlindWith('안방', 0, '');
+  out.blindInstall.manual_after_add = [i1, svcFull3()].join(' ## ');
+  // I4. 블라인드 행 복사(2026-08-28 사건): 옵션추가금이 있는 행을 복사하면 합계가 2배로 반영되는지
+  out.blindCopy = {};
+  resetAll(); regionSel.value = '서울'; const orig = addBlindWith('거실', 4000, '전동');
+  const before = svcFull3();
+  const copyBtn = orig.querySelector('button[onclick*="copyBlindRow"]') || Array.from(orig.querySelectorAll('button')).find(b => (b.getAttribute('onclick') || '').includes('copy'));
+  if (copyBtn) copyBlindRow(copyBtn);
+  out.blindCopy.result = [before, svcFull3(), totals()].join(' ## ');
   return out;
 })()`;
 

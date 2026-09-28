@@ -28,7 +28,7 @@ const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const ctx = vm.createContext(Object.create(null));
 vm.runInContext(src, ctx);
 const R = ctx;
-const names = ['resolveRegionPrices', 'isNoInstallFee', 'regionFeeContent', 'regionFeeHint', 'calcRailJa', 'railMaterialSpec', 'railInstallSpec', 'calcSuggestedPanels', 'curtainHeightFeeWarning', 'getBlindMinSqm', 'calcBlindBillableSqm', 'applyDiscountItems', 'calcGrandBeforeTruncation', 'truncateToThousand', 'calcDepositRatio', 'calcAutoDeposit', 'calcDepositAndBalance', 'calcPerformanceRevenue'];
+const names = ['summarizeBlindOptionExtras', 'blindInstallSpec', 'resolveRegionPrices', 'isNoInstallFee', 'regionFeeContent', 'regionFeeHint', 'calcRailJa', 'railMaterialSpec', 'railInstallSpec', 'calcSuggestedPanels', 'curtainHeightFeeWarning', 'getBlindMinSqm', 'calcBlindBillableSqm', 'applyDiscountItems', 'calcGrandBeforeTruncation', 'truncateToThousand', 'calcDepositRatio', 'calcAutoDeposit', 'calcDepositAndBalance', 'calcPerformanceRevenue'];
 names.forEach(n => ok(typeof R[n] === 'function', '함수 존재: ' + n));
 
 // ── 2) 커튼 폭수 추천 (가로 × 배율 ÷ 130, 허용 소수점: 민자형 0.2 / 나비주름형 0.1)
@@ -158,6 +158,19 @@ if (m) eq(JSON.parse(m[1].replace(/'/g, '"')), DEF, '기본 요금표: 서울 40
 const svcSrc = fs.readFileSync(path.join(__dirname, '..', 'est-calc-svc.js'), 'utf-8').replace(/\/\/.*$/gm, '');
 const af = svcSrc.slice(svcSrc.indexOf('function autoAddSvcFee'), svcSrc.indexOf('function autoAddSvcFee') + 3500);
 ok(!/\b(40000|50000|60000|80000)\b/.test(af.split('\nfunction ')[0]), '복사 방지: autoAddSvcFee 안에 기본 요금 숫자를 다시 적지 않음(규칙은 est-calc-rules.js + 요금표는 공용 파일 한 곳)');
+
+// ── 9) 블라인드 옵션추가금 / 시공비 (2026-08-15 선혜님 확인: 옵션추가금은 지역/시공 여부와 무관하게 항상 받음)
+eq(R.summarizeBlindOptionExtras([]), { extraSum: 0, content: '옵션 추가금' }, '옵션추가금: 없으면 0원, 기본 문구');
+eq(R.summarizeBlindOptionExtras([{ value: 5000, optName: '전동' }]), { extraSum: 5000, content: '전동' }, '옵션추가금: 하나면 옵션 이름을 그대로');
+eq(R.summarizeBlindOptionExtras([{ value: 5000, optName: '' }]), { extraSum: 5000, content: '옵션 추가금' }, '옵션추가금: 금액은 있는데 이름이 없으면 기본 문구');
+eq(R.summarizeBlindOptionExtras([{ value: 0, optName: '전동' }]), { extraSum: 0, content: '옵션 추가금' }, '옵션추가금: 0원이면 이름이 있어도 목록에 안 넣음');
+eq(R.summarizeBlindOptionExtras([{ value: 3000, optName: 'A' }, { value: 2000, optName: 'B' }]), { extraSum: 5000, content: 'A, B' }, '옵션추가금: 여러 줄이면 합산 + 이름 나열(등장 순서)');
+eq(R.summarizeBlindOptionExtras([{ value: 3000, optName: 'A' }, { value: 3000, optName: 'A' }]), { extraSum: 6000, content: 'A' }, '옵션추가금: 같은 이름은 한 번만 나열, 금액은 각각 합산');
+eq(R.summarizeBlindOptionExtras([{ value: -100, optName: 'X' }]), { extraSum: 0, content: '옵션 추가금' }, '옵션추가금: 음수는 0으로');
+eq(R.BLIND_INSTALL_UNIT_PRICE, 10000, '블라인드 시공비 단가 10,000원');
+eq(R.blindInstallSpec(1), { content: '블라인드 시공비 (1개)', unitPrice: 10000, qty: 1 }, '블라인드 시공비: 1개');
+eq(R.blindInstallSpec(3), { content: '블라인드 시공비 (3개)', unitPrice: 10000, qty: 3 }, '블라인드 시공비: 3개(레일과 달리 자 수가 아니라 개수 그대로)');
+eq(R.blindInstallSpec(0), { content: '블라인드 시공비 (0개)', unitPrice: 10000, qty: 0 }, '블라인드 시공비: 0개도 계산 자체는 됨(호출 여부는 화면 코드가 판단)');
 
 console.log('\n' + pass + '건 통과, ' + fail + '건 실패');
 process.exit(fail === 0 ? 0 : 1);

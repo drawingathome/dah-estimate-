@@ -56,7 +56,7 @@
 | 6 | `est-sync-queue.js` | DAH 견적서 앱 — 오프라인/네트워크 실패 재시도 큐 (2026-08-05 신규) | 5 |
 | 7 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 15 |
 | 8 | `est-form-controls.js` | DAH 견적서 앱 — 폼 상태/타입 제어 | 13 |
-| 9 | `est-calc-rules.js` | DAH 견적서 앱 — 계산 규칙 (순수 함수: 화면/저장소를 전혀 안 만짐) | 18 |
+| 9 | `est-calc-rules.js` | DAH 견적서 앱 — 계산 규칙 (순수 함수: 화면/저장소를 전혀 안 만짐) | 20 |
 | 10 | `est-product-calc.js` | DAH 견적서 앱 — 공통 계산: 합계(calcTotal)/얼림 금액/행 삭제/드래그 정렬 | 10 |
 | 11 | `est-calc-curtain.js` | DAH 견적서 앱 — 커튼 행 계산 (추가/폭수·금액 계산/레일 자동/복사) | 4 |
 | 12 | `est-calc-blind.js` | DAH 견적서 앱 — 블라인드 행 계산 (추가/최소면적/옵션 추가금/부자재 자동/복사) | 6 |
@@ -133,6 +133,7 @@
 | `autoSave` | `est-misc.js` |
 | `autoUpdateRail` | `est-calc-curtain.js` |
 | `backupData` | `dash-export.js` |
+| `blindInstallSpec` | `est-calc-rules.js` |
 | `btn` | `dash-ui-helpers.js` |
 | `buildCustomerHTML` | `est-doc-customer.js` |
 | `buildRequestHTML` | `est-doc-request.js` |
@@ -461,6 +462,7 @@
 | `startRealtimeSync` | `dash-realtime.js` |
 | `stopAuthAutoRefresh` | `dash-supabase-auth.js` |
 | `stopRealtimeSync` | `dash-realtime.js` |
+| `summarizeBlindOptionExtras` | `est-calc-rules.js` |
 | `summarizeSvcDetails` | `est-calc-svc.js` |
 | `supabaseAuthLogin` | `dash-supabase-auth.js` |
 | `switchDetailTab` | `dash-customer-detail.js` |

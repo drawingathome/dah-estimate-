@@ -274,13 +274,16 @@
       "est-calc-rules.js:resolveRegionPrices (지역별 실측비/시공비 - 설정값 우선 → 기본 요금 → '기타'는 직접 입력)",
       "est-calc-rules.js:isNoInstallFee (둘 다 0이면 시공 없음/배송)",
       "shared-common-utils.js:getRegionFees (기본 요금표 DEFAULT_REGION_FEES의 정식 위치 - 대시보드 설정과 공유)",
-      "est-calc-svc.js:autoAddSvcFee (화면 행을 지우고 다시 만드는 코드 - 요금 규칙은 위 함수에서 가져옴)"
+      "est-calc-svc.js:autoAddSvcFee (화면 행을 지우고 다시 만드는 코드 - 요금 규칙은 위 함수에서 가져옴)",
+      "est-calc-rules.js:summarizeBlindOptionExtras (여러 옵션추가금 합산 + 이름 나열, 2026-08-15 선혜님 확인)",
+      "est-calc-rules.js:blindInstallSpec (블라인드 시공비 10,000원 × 개수)",
+      "est-calc-blind.js:recalcBlindOptionExtras / autoAddBlindSvc (화면 행 - 규칙은 위 함수에서 가져옴, 복사시 재계산 누락이 2026-08-28 실제 사건)"
     ],
     "guard_tests": [
       "calc-rules-unit-check.js",
       "calc-golden-master-check.js"
     ],
     "금지패턴": "est-calc-rules.js에 document/window/localStorage를 쓰는 것, 그리고 같은 계산 규칙을 화면 코드(est-calc-curtain/blind/product-calc)에 다시 복사해 두는 것 - 규칙을 고칠 땐 est-calc-rules.js 한 곳만 고치고, 4천여 개 조합 기록(calc-golden-master)이 바뀌는지 확인할 것",
-    "참고": "2026-09-28 도입. est-product-calc.js(버그 수정 71번 중 51번)의 재발 버그를 근본적으로 줄이려는 것. 분리 완료: 폭수/높이 안내/블라인드 면적/쿠폰 할인/절사/계약금/잔금/성과매출/레일/지역별 실측비·시공비. 아직 분리 안 된 계산: recalcBlindOptionExtras, autoAddBlindSvc, renderSvcSummary - 다음 단계 대상."
+    "참고": "2026-09-28 도입. 분리 완료: 폭수/높이안내/블라인드면적/쿠폰할인/절사/계약금/잔금/성과매출/레일/지역별실측시공비/블라인드옵션추가금·시공비. 남은 계산: renderSvcSummary(구분 분류→요약카드) - 다음 단계 대상."
   }
 }
