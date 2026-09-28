@@ -111,7 +111,10 @@ async function runScenario(dir, sc, idx) {
   const state = { lastReqAt: Date.now() };
   page.on('pageerror', e => rec.jsErrors.push(e.message));
   page.on('dialog', async d => { rec.dialogs.push(d.message()); try { await d.accept(); } catch (e) {} });
-  await page.evaluateOnNewDocument(FREEZE);
+  // 진단/검증용: GM_REVERSE_LS=1 이면 브라우저가 localStorage 키를 "거꾸로 된 순서"로 돌려주는 환경을 흉내냄
+  // (GitHub CI 브라우저가 내 컴퓨터와 다른 순서로 돌려줘서 실패했던 것을 재현/방지 확인하는 용도)
+  const REVERSE = process.env.GM_REVERSE_LS === '1' ? 'const _k = Storage.prototype.key; Storage.prototype.key = function (i) { return _k.call(this, this.length - 1 - i); };' : '';
+  await page.evaluateOnNewDocument(FREEZE + REVERSE);
   // 검증용: GM_REVERSE_KEYS=1 이면 브라우저가 localStorage 항목을 "거꾸로 된 순서"로 알려주게 만듦
   // (GitHub CI에서 실제로 일어난 상황을 내 컴퓨터에서 재현 - 순서가 달라도 통과해야 함)
   if (process.env.GM_REVERSE_KEYS) await page.evaluateOnNewDocument(`(() => {
@@ -195,6 +198,37 @@ async function runScenario(dir, sc, idx) {
   return normalize({ writes, others, dialogs: rec.dialogs, jsErrors: rec.jsErrors, ...st });
 }
 
+// 기록과 지금이 "어디가 어떻게" 다른지 사람이 읽을 수 있게 설명(CI 로그를 직접 못 볼 때도 원인이 보이게).
+function short(x, n = 90) { const t = typeof x === 'string' ? x : JSON.stringify(x); return (t === undefined ? 'undefined' : t).slice(0, n); }
+// 두 값에서 "실제로 다른 항목"의 경로와 값을 콕 집어 알려줌(예: body.performance_revenue : 기록 225000 → 지금 225001)
+function leafDiffs(a, b, path, out) {
+  if (out.length >= 6 || JSON.stringify(a) === JSON.stringify(b)) return out;
+  if (a && b && typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b)) {
+    new Set([...Object.keys(a), ...Object.keys(b)]).forEach(k => leafDiffs(a[k], b[k], path + '.' + k, out));
+  } else if (Array.isArray(a) && Array.isArray(b)) {
+    for (let i = 0; i < Math.max(a.length, b.length); i++) leafDiffs(a[i], b[i], path + '[' + i + ']', out);
+  } else out.push(path + ' : 기록 ' + short(a, 70) + ' → 지금 ' + short(b, 70));
+  return out;
+}
+function explainDiff(g, r) {
+  const out = [];
+  new Set([...Object.keys(g), ...Object.keys(r)]).forEach(k => {
+    if (JSON.stringify(g[k]) === JSON.stringify(r[k])) return;
+    if (k === 'localStorage') {
+      const gk = Object.keys(g[k] || {}), rk = Object.keys(r[k] || {});
+      const onlyG = gk.filter(x => !rk.includes(x)), onlyR = rk.filter(x => !gk.includes(x));
+      if (onlyG.length) out.push('localStorage - 기록에만 있는 항목: ' + onlyG.join(', '));
+      if (onlyR.length) out.push('localStorage - 지금만 있는 항목: ' + onlyR.join(', '));
+      gk.filter(x => rk.includes(x) && g[k][x] !== r[k][x]).forEach(x => out.push('localStorage[' + x + '] 값이 다름 | 기록: ' + short(g[k][x]) + ' | 지금: ' + short(r[k][x])));
+    } else if (Array.isArray(g[k]) && Array.isArray(r[k])) {
+      out.push(k + ': 개수 기록 ' + g[k].length + '개 / 지금 ' + r[k].length + '개');
+      const n = Math.max(g[k].length, r[k].length); let c = 0;
+      for (let i = 0; i < n && c < 3; i++) if (JSON.stringify(g[k][i]) !== JSON.stringify(r[k][i])) { leafDiffs(g[k][i], r[k][i], '  ' + k + '[' + i + ']', []).forEach(x => out.push(x)); c++; }
+    } else out.push(k + ' 다름 | 기록: ' + short(g[k], 120) + ' | 지금: ' + short(r[k], 120));
+  });
+  return out;
+}
+
 async function run() {
   const dir = path.resolve(__dirname, '..');
   const result = {};
@@ -217,9 +251,7 @@ async function run() {
     if (a === b) { console.log('✅ ' + name + ' — 기록과 완전히 동일'); return; }
     fails++;
     console.log('❌ ' + name + ' — 기록과 다름');
-    const al = a.split('\n'), bl = b.split('\n');
-    let shown = 0;
-    for (let i = 0; i < Math.max(al.length, bl.length) && shown < 6; i++) if (al[i] !== bl[i]) { console.log('     기록: ' + (al[i] || '(없음)').slice(0, 140)); console.log('     지금: ' + (bl[i] || '(없음)').slice(0, 140)); shown++; }
+    explainDiff(canon(golden[name]), result[name]).slice(0, 16).forEach(l => console.log('     Δ ' + l));
   });
   Object.keys(golden).filter(k => !(k in result)).forEach(k => { fails++; console.log('❌ ' + k + ' — 시나리오가 사라짐'); });
   console.log(fails === 0 ? '\n✅ 전체 통과(저장 동작이 기록과 동일)' : '\n❌ ' + fails + '건 다름 — 의도한 변경이면 --update, 아니면 코드를 되돌리세요');

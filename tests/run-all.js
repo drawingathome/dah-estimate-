@@ -508,9 +508,9 @@ for (const [script, args] of toRun) {
     failedScripts.push(script);
     if (process.env.GITHUB_ACTIONS) {
       const lines = out.split('\n');
-      const bad = lines.filter(l => /^\s*(❌|Error|TypeError|ReferenceError|기록:|지금:)/.test(l) || /스크립트 자체 에러/.test(l)).slice(0, 24);
+      const bad = lines.filter(l => /^\s*(❌|Δ|Error|TypeError|ReferenceError|기록:|지금:)/.test(l) || /스크립트 자체 에러/.test(l)).slice(0, 60);
       const tail = lines.filter(l => l.trim()).slice(-8);
-      const msg = ['종료코드 ' + r.status + (r.signal ? ' / 신호 ' + r.signal : ''), ...bad, '--- 마지막 줄 ---', ...tail].join('\n').slice(0, 3800);
+      const msg = ['종료코드 ' + r.status + (r.signal ? ' / 신호 ' + r.signal : ''), ...bad, '--- 마지막 줄 ---', ...tail].join('\n').slice(0, 9000);
       console.log('::error title=' + ghEscape('회귀 실패 ' + script).replace(/:/g, '%3A').replace(/,/g, '%2C') + '::' + ghEscape(msg));
     }
   }
