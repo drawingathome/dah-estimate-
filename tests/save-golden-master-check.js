@@ -70,13 +70,21 @@ const SCENARIOS = [
   { name: 'S8_고객저장_서버오류500', pre: EXISTING_CUSTOMER, fill: FILL, acts: ['saveEstimate()'], opt: { customer500: true } }
 ];
 
+// 객체의 키 순서에 의존하지 않도록 재귀적으로 정렬(배열 순서는 그대로).
+// 2026-09-28: GitHub CI에서 골든마스터가 8개 시나리오 전부 실패했는데, 원인은 localStorage 키를
+// 돌려주는 순서가 CI의 브라우저/OS에서 달라서(내용은 같음)였음 - 내 컴퓨터에서만 우연히 맞던 순서에 의존.
+function canon(v) {
+  if (Array.isArray(v)) return v.map(canon);
+  if (v && typeof v === 'object') { const o = {}; Object.keys(v).sort().forEach(k => { o[k] = canon(v[k]); }); return o; }
+  return v;
+}
 function normalize(v) {
   // 실행 환경/코드 변경에 따라 달라지는 값들은 비교에서 제외:
   //  - 포트 번호, 파일 버전 해시(?v=...), 오류 스택의 줄:칸 위치(.js:60:10)
-  return JSON.parse(JSON.stringify(v)
+  return canon(JSON.parse(JSON.stringify(v)
     .replace(/localhost:\d+/g, 'localhost:PORT')
     .replace(/\?v=[0-9a-f]{12}/g, '?v=HASH')
-    .replace(/\.js(\?v=HASH)?:\d+:\d+/g, '.js:L:C'));
+    .replace(/\.js(\?v=HASH)?:\d+:\d+/g, '.js:L:C')));
 }
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
@@ -104,6 +112,12 @@ async function runScenario(dir, sc, idx) {
   page.on('pageerror', e => rec.jsErrors.push(e.message));
   page.on('dialog', async d => { rec.dialogs.push(d.message()); try { await d.accept(); } catch (e) {} });
   await page.evaluateOnNewDocument(FREEZE);
+  // 검증용: GM_REVERSE_KEYS=1 이면 브라우저가 localStorage 항목을 "거꾸로 된 순서"로 알려주게 만듦
+  // (GitHub CI에서 실제로 일어난 상황을 내 컴퓨터에서 재현 - 순서가 달라도 통과해야 함)
+  if (process.env.GM_REVERSE_KEYS) await page.evaluateOnNewDocument(`(() => {
+    const ok = Storage.prototype.key; const len = Object.getOwnPropertyDescriptor(Storage.prototype, 'length').get;
+    Storage.prototype.key = function (i) { const n = len.call(this); const ks = []; for (let j = 0; j < n; j++) ks.push(ok.call(this, j)); ks.sort().reverse(); return i < ks.length ? ks[i] : null; };
+  })();`);
   await page.setRequestInterception(true);
   const opt = sc.opt || {};
   const estimates = []; let estN = 0, custN = 0;
@@ -198,7 +212,7 @@ async function run() {
   const golden = JSON.parse(fs.readFileSync(GOLDEN, 'utf-8'));
   let fails = 0;
   Object.keys(result).forEach(name => {
-    const a = JSON.stringify(golden[name], null, 1), b = JSON.stringify(result[name], null, 1);
+    const a = JSON.stringify(canon(golden[name]), null, 1), b = JSON.stringify(result[name], null, 1);
     if (a === b) { console.log('✅ ' + name + ' — 기록과 완전히 동일'); return; }
     fails++;
     console.log('❌ ' + name + ' — 기록과 다름');
