@@ -486,14 +486,37 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['est-sync-queue-prefer-header-check.js', []]);
 }
 
+// 2026-09-28(선혜님 - CI가 두 번 연속 실패했는데 로그 저장소(github blob 호스트)가 이 환경에서
+// 막혀 있어 "어느 테스트가 왜 실패했는지"를 볼 수 없었음): 실패한 테스트 이름과 실패 줄을
+// GitHub Actions "주석(::error::)"으로도 남기게 함 - 주석은 API로 조회할 수 있어서, 앞으로 CI가
+// 실패하면 원인을 바로 알 수 있음. RUN_ONLY=a.js,b.js 로 일부 테스트만 골라 돌릴 수도 있음.
+const { spawnSync } = require('child_process');
+const ghEscape = (t) => String(t).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+const only = process.env.RUN_ONLY ? process.env.RUN_ONLY.split(',').map(x => x.trim()).filter(Boolean) : null;
+const toRun = only ? scripts.filter(([sc]) => only.includes(sc)) : scripts;
+if (only) console.log('▶ RUN_ONLY: ' + toRun.map(([sc]) => sc).join(', ') + ' (' + toRun.length + '개만 실행)');
+
 let anyFail = false;
-for (const [script, args] of scripts) {
+const failedScripts = [];
+for (const [script, args] of toRun) {
   const scriptPath = path.join(__dirname, script);
-  try {
-    execSync(`node "${scriptPath}" ${args.map(a => `"${a}"`).join(' ')}`, { stdio: 'inherit' });
-  } catch (e) {
+  const r = spawnSync('node', [scriptPath, ...args], { encoding: 'utf8', maxBuffer: 512 * 1024 * 1024 });
+  const out = (r.stdout || '') + (r.stderr || '');
+  process.stdout.write(out);
+  if (r.status !== 0) {
     anyFail = true;
+    failedScripts.push(script);
+    if (process.env.GITHUB_ACTIONS) {
+      const lines = out.split('\n');
+      const bad = lines.filter(l => /^\s*(❌|Error|TypeError|ReferenceError)/.test(l) || /스크립트 자체 에러/.test(l)).slice(0, 12);
+      const tail = lines.filter(l => l.trim()).slice(-8);
+      const msg = ['종료코드 ' + r.status + (r.signal ? ' / 신호 ' + r.signal : ''), ...bad, '--- 마지막 줄 ---', ...tail].join('\n').slice(0, 3800);
+      console.log('::error title=' + ghEscape('회귀 실패 ' + script).replace(/:/g, '%3A').replace(/,/g, '%2C') + '::' + ghEscape(msg));
+    }
   }
+}
+if (process.env.GITHUB_ACTIONS && failedScripts.length) {
+  console.log('::error title=' + ghEscape('회귀 실패 요약').replace(/:/g, '%3A') + '::' + ghEscape(failedScripts.length + '개 실패: ' + failedScripts.join(', ')));
 }
 
 console.log('\n========================================');
