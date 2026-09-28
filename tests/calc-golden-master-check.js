@@ -231,6 +231,52 @@ const RUNNER = `(() => {
     if (delBtn) delRow(delBtn);
     out.railMulti[region] = [both, svcFull(), totals()].join(' ## ');
   }
+  // H. 지역별 실측비/시공비 자동 추가 (autoAddSvcFee): 요금 설정(기본/직접 등록/0원) × 지역 × '기타' 금액 × 커튼·블라인드 유무
+  //    (지역을 나중에 골라도 커튼 레일/블라인드 시공비가 빠지지 않아야 함 - 2026-08-14 사건)
+  function svcFull2() {
+    return Array.from(document.querySelectorAll('#svc-body tr')).map(tr => {
+      const g = (q) => tr.querySelector(q); const pr = g('.sprice');
+      return [tr.getAttribute('data-svc-type') || '-', tr.hasAttribute('data-rail-src') ? 'R' : '-', tr.hasAttribute('data-railcost-src') ? 'C' : '-',
+        tr.getAttribute('data-install-base') || '-', tr.dataset.manualOverride ? 'M' : '-', (g('.svc-kind') || {}).value, (g('.svc-content') || {}).value,
+        pr ? pr.value : null, pr ? pr.getAttribute('data-raw') : null, (g('.sqty') || {}).value].join('/');
+    }).join(' ; ');
+  }
+  const regionPrice = document.getElementById('c-region-price');
+  function hintState() { return [(document.getElementById('region-hint') || {}).textContent, regionPrice.style.display].join('@'); }
+  function setFees(v) { if (v === null) localStorage.removeItem('dah_region_fees'); else localStorage.setItem('dah_region_fees', JSON.stringify(v)); }
+  const feeSets = { 기본: null, 직접등록: { '서울': { '실측비': 45000, '시공비': 55000 } }, 서울0원: { '서울': { '실측비': 0, '시공비': 0 }, '경기': { '실측비': 70000, '시공비': 90000 } },
+    // 하나만 0인 경우("시공 없음" 판단은 둘 다 0일 때만 - 단위 테스트가 먼저 잡아서 발견한 기록의 구멍)
+    서울실측만0: { '서울': { '실측비': 0, '시공비': 50000 } }, 서울시공만0: { '서울': { '실측비': 40000, '시공비': 0 } } };
+  out.regionFee = {};
+  for (const [fn, fees] of Object.entries(feeSets))
+    for (const region of ['', '서울', '경기', '기타'])
+      for (const custom of ['', '0', '35000'])
+        for (const withCurtain of [false, true])
+          for (const withBlind of [false, true]) {
+            resetAll(); setFees(fees); regionSel.value = ''; regionPrice.value = '';
+            if (withCurtain) { addCurtainRow(); const tr = document.querySelector('#curtain-body tr'); setV(tr, '.space-inp', '거실'); setV(tr, '.pleat-type', '민자형'); setV(tr, '.mw', 200); setV(tr, '.mh', 240); setV(tr, '.cprice', 30000); calcCurtainRow(tr.querySelector('.mw')); }
+            if (withBlind) { addBlindRow(); const tr = document.querySelector('#blind-body tr'); setV(tr, '.blind-kind', '롤스크린'); setV(tr, '.bmw', 100); setV(tr, '.bmh', 150); setV(tr, '.blind-price', 30000); calcBlindRow(tr.querySelector('.bmw')); }
+            regionSel.value = region; regionPrice.value = custom; autoAddSvcFee();
+            out.regionFee[[fn, region || '(빈)', custom || '(빈)', withCurtain ? '커튼' : '-', withBlind ? '블라인드' : '-'].join('|')] = [svcFull2(), hintState(), totals()].join(' ## ');
+          }
+  setFees(null);
+  // H2. 수동으로 고친 실측비/시공비는 지역을 바꿔도 유지되는지
+  out.regionFeeManual = {};
+  for (const [a, b] of [['서울', '경기'], ['경기', '서울'], ['서울', '기타'], ['서울', '']]) {
+    resetAll(); setFees(null); regionPrice.value = '20000';
+    regionSel.value = a; autoAddSvcFee();
+    const rows = document.querySelectorAll('#svc-body [data-svc-type]');
+    rows.forEach((r, i) => { const pi = r.querySelector('.sprice'); pi.value = String(111000 + i * 1000); pi.dispatchEvent(new Event('input', { bubbles: true })); });
+    const s1 = svcFull2();
+    regionSel.value = b; autoAddSvcFee();
+    out.regionFeeManual[a + '→' + b] = [s1, svcFull2(), hintState(), totals()].join(' ## ');
+  }
+  // H3. 지역을 계속 바꿔도 행이 쌓이지 않는지
+  out.regionFeeSwitch = {};
+  resetAll(); setFees(null); regionPrice.value = '30000';
+  const steps = [];
+  for (const r of ['서울', '경기', '기타', '', '서울', '서울', '경기']) { regionSel.value = r; autoAddSvcFee(); steps.push(r + ':' + document.querySelectorAll('#svc-body tr').length + ':' + totals().split('|')[3]); }
+  out.regionFeeSwitch.steps = steps.join(' > ');
   return out;
 })()`;
 

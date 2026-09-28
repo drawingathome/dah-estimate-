@@ -193,3 +193,31 @@ function railMaterialSpec(mw) {
 function railInstallSpec() {
   return { content: '레일 시공비', price: RAIL_INSTALL_FEE, qty: 1 };
 }
+
+// ── 지역별 실측비/시공비 규칙 ────────────────────────────────────────
+// 요금 결정: 설정(regionFees)에 등록된 값이 우선, 없으면 기본 요금(defaults), '기타'는 직접 입력한 금액을
+// 실측비/시공비 둘 다에 씀. 서울/경기/기타 밖(지역 미선택 등)이면 undefined.
+// 기본 요금표의 정식 위치는 shared-common-utils.js의 DEFAULT_REGION_FEES(대시보드 설정 화면과 공유) -
+// 예전엔 autoAddSvcFee 안에 같은 기본값이 3곳 더 복사돼 있었음(2026-09-28 정리).
+function resolveRegionPrices(region, regionFees, customBase, defaults) {
+  var priceMap = {
+    '서울': regionFees['서울'] || defaults['서울'],
+    '경기': regionFees['경기'] || defaults['경기'],
+    '기타': {'실측비':customBase, '시공비':customBase}
+  };
+  return priceMap[region];
+}
+
+// 실측비/시공비가 둘 다 0이거나 요금 자체가 없으면 "시공 없음(배송)" 취급 - 실측비/시공비/레일 행을 모두 지움
+function isNoInstallFee(prices) {
+  return !prices || (prices['실측비']===0 && prices['시공비']===0);
+}
+var NO_INSTALL_HINT = '시공 없음 (배송)';
+
+// 서비스 행 문구("서울 실측비" / "서울 시공비")와 지역 옆 안내 문구
+function regionFeeContent(region, type) {
+  return region + (type==='실측비' ? ' 실측비' : ' 시공비');
+}
+function regionFeeHint(prices) {
+  return '→ 실측 '+prices['실측비'].toLocaleString()+'원 + 시공 '+prices['시공비'].toLocaleString()+'원 자동추가';
+}

@@ -28,7 +28,7 @@ const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const ctx = vm.createContext(Object.create(null));
 vm.runInContext(src, ctx);
 const R = ctx;
-const names = ['calcRailJa', 'railMaterialSpec', 'railInstallSpec', 'calcSuggestedPanels', 'curtainHeightFeeWarning', 'getBlindMinSqm', 'calcBlindBillableSqm', 'applyDiscountItems', 'calcGrandBeforeTruncation', 'truncateToThousand', 'calcDepositRatio', 'calcAutoDeposit', 'calcDepositAndBalance', 'calcPerformanceRevenue'];
+const names = ['resolveRegionPrices', 'isNoInstallFee', 'regionFeeContent', 'regionFeeHint', 'calcRailJa', 'railMaterialSpec', 'railInstallSpec', 'calcSuggestedPanels', 'curtainHeightFeeWarning', 'getBlindMinSqm', 'calcBlindBillableSqm', 'applyDiscountItems', 'calcGrandBeforeTruncation', 'truncateToThousand', 'calcDepositRatio', 'calcAutoDeposit', 'calcDepositAndBalance', 'calcPerformanceRevenue'];
 names.forEach(n => ok(typeof R[n] === 'function', '함수 존재: ' + n));
 
 // ── 2) 커튼 폭수 추천 (가로 × 배율 ÷ 130, 허용 소수점: 민자형 0.2 / 나비주름형 0.1)
@@ -131,6 +131,33 @@ eq(R.railMaterialSpec(300), { ja: 10, content: '조절레일(타공형) 10자', 
 // (손계산) 150cm = 5자 → 홀수라 6자 → 6 × 1,600 = 9,600원
 eq(R.railMaterialSpec(150).qty * R.railMaterialSpec(150).unitPrice, 9600, '레일 자재비: 150cm → 6자 × 1,600원 = 9,600원');
 eq(R.railInstallSpec(), { content: '레일 시공비', price: 25000, qty: 1 }, '레일 시공비 행: 25,000원 × 1개(레일수와 무관)');
+
+// ── 8) 지역별 실측비/시공비 (설정값 우선 → 기본 요금 → '기타'는 직접 입력)
+const DEF = { '서울': { '실측비': 40000, '시공비': 50000 }, '경기': { '실측비': 60000, '시공비': 80000 } };
+eq(R.resolveRegionPrices('서울', {}, 0, DEF), { '실측비': 40000, '시공비': 50000 }, '지역요금: 서울 기본 40,000 / 50,000');
+eq(R.resolveRegionPrices('경기', {}, 0, DEF), { '실측비': 60000, '시공비': 80000 }, '지역요금: 경기 기본 60,000 / 80,000');
+eq(R.resolveRegionPrices('서울', { '서울': { '실측비': 45000, '시공비': 55000 } }, 0, DEF), { '실측비': 45000, '시공비': 55000 }, '지역요금: 설정에 등록한 서울 요금이 기본보다 우선');
+eq(R.resolveRegionPrices('경기', { '서울': { '실측비': 45000, '시공비': 55000 } }, 0, DEF), { '실측비': 60000, '시공비': 80000 }, '지역요금: 경기는 설정에 없어서 기본값');
+eq(R.resolveRegionPrices('기타', {}, 35000, DEF), { '실측비': 35000, '시공비': 35000 }, "지역요금: '기타'는 직접 입력한 금액을 실측비/시공비 둘 다에");
+eq(R.resolveRegionPrices('', {}, 0, DEF), undefined, '지역요금: 지역 미선택이면 요금 없음');
+eq(R.resolveRegionPrices('부산', {}, 0, DEF), undefined, '지역요금: 모르는 지역이면 요금 없음');
+eq(R.isNoInstallFee(undefined), true, '시공없음: 요금이 없으면 시공 없음(배송)');
+eq(R.isNoInstallFee({ '실측비': 0, '시공비': 0 }), true, '시공없음: 둘 다 0이면 시공 없음');
+eq(R.isNoInstallFee({ '실측비': 0, '시공비': 50000 }), false, '시공없음: 하나라도 0이 아니면 시공 있음');
+eq(R.isNoInstallFee({ '실측비': 40000, '시공비': 0 }), false, '시공없음: 시공비만 0이어도 시공 있음(실측비가 있으니까)');
+eq(R.NO_INSTALL_HINT, '시공 없음 (배송)', '시공없음 안내 문구');
+eq(R.regionFeeContent('서울', '실측비'), '서울 실측비', '행 문구: 서울 실측비');
+eq(R.regionFeeContent('경기', '시공비'), '경기 시공비', '행 문구: 경기 시공비');
+eq(R.regionFeeHint({ '실측비': 40000, '시공비': 50000 }), '→ 실측 ' + (40000).toLocaleString() + '원 + 시공 ' + (50000).toLocaleString() + '원 자동추가', '안내 문구: 실측/시공 금액 표시');
+// 기본 요금표의 정식 위치(shared-common-utils.js)가 우리가 아는 값 그대로인지(누가 몰래 바꾸면 알림)
+const shared = fs.readFileSync(path.join(__dirname, '..', 'shared-common-utils.js'), 'utf-8');
+const m = shared.match(/var DEFAULT_REGION_FEES = (\{[^;]*\});/);
+ok(!!m, '기본 요금표(DEFAULT_REGION_FEES)가 shared-common-utils.js에 있음');
+if (m) eq(JSON.parse(m[1].replace(/'/g, '"')), DEF, '기본 요금표: 서울 40,000/50,000, 경기 60,000/80,000 (바꾸려면 이 테스트도 같이 - 선혜님 확인 사항)');
+// autoAddSvcFee 안에 기본 요금 숫자를 다시 적어두지 않았는지(예전엔 3곳 복사돼 있었음)
+const svcSrc = fs.readFileSync(path.join(__dirname, '..', 'est-calc-svc.js'), 'utf-8').replace(/\/\/.*$/gm, '');
+const af = svcSrc.slice(svcSrc.indexOf('function autoAddSvcFee'), svcSrc.indexOf('function autoAddSvcFee') + 3500);
+ok(!/\b(40000|50000|60000|80000)\b/.test(af.split('\nfunction ')[0]), '복사 방지: autoAddSvcFee 안에 기본 요금 숫자를 다시 적지 않음(규칙은 est-calc-rules.js + 요금표는 공용 파일 한 곳)');
 
 console.log('\n' + pass + '건 통과, ' + fail + '건 실패');
 process.exit(fail === 0 ? 0 : 1);

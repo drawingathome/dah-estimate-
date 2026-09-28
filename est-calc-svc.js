@@ -152,13 +152,10 @@ function autoAddSvcFee() {
   var customInp = document.getElementById('c-region-price');
   customInp.style.display = region==='기타' ? 'inline-block' : 'none';
   var customBase = parseFloat(document.getElementById('c-region-price').value)||0;
-  var regionFees = (typeof getRegionFees === 'function') ? getRegionFees() : { '서울': {'실측비':40000, '시공비':50000}, '경기': {'실측비':60000, '시공비':80000} };
-  var priceMap = {
-    '서울': regionFees['서울'] || {'실측비':40000, '시공비':50000},
-    '경기': regionFees['경기'] || {'실측비':60000, '시공비':80000},
-    '기타': {'실측비':customBase, '시공비':customBase}
-  };
-  var prices = priceMap[region];
+  // 요금 결정 규칙(설정값 우선 → 기본 요금 → '기타'는 직접 입력)은 est-calc-rules.js의 resolveRegionPrices 한 곳에만 있음.
+  // 기본 요금표의 정식 위치는 shared-common-utils.js의 DEFAULT_REGION_FEES(대시보드 설정 화면과 공유).
+  var regionFees = (typeof getRegionFees === 'function') ? getRegionFees() : {};
+  var prices = resolveRegionPrices(region, regionFees, customBase, DEFAULT_REGION_FEES);
   if(!svcBody) return;
   var rows = svcBody.querySelectorAll('[data-svc-type="실측비"],[data-svc-type="시공비"]');
   // 2026-09-19(선혜님 - "다시 열어보니 실측+레일비가... 이게 말이
@@ -176,12 +173,12 @@ function autoAddSvcFee() {
     }
   });
   rows.forEach(function(r){ r.remove(); });
-  if(!prices || (prices['실측비']===0 && prices['시공비']===0)) {
+  if (isNoInstallFee(prices)) {
     Array.from(svcBody.querySelectorAll('tr')).forEach(function(r){
       var type=r.querySelector('select')?.value||'';
       if(type==='실측비'||type==='시공비'||type==='레일') r.remove();
     });
-    if(hint) hint.textContent='시공 없음 (배송)';
+    if(hint) hint.textContent=NO_INSTALL_HINT;
     calcTotal(); return;
   }
   ['실측비','시공비'].forEach(function(type) {
@@ -191,7 +188,7 @@ function autoAddSvcFee() {
     row.setAttribute('data-svc-type', type);
     var tds = row.querySelectorAll('td');
     var sel=row.querySelector('.svc-kind'); if(sel) sel.value=type==='실측비'?'실측비':'시공비';
-    var inp=row.querySelector('.svc-content'); if(inp) inp.value=region+(type==='실측비'?' 실측비':' 시공비');
+    var inp=row.querySelector('.svc-content'); if(inp) inp.value=regionFeeContent(region, type);
     var pinp=row.querySelector('.sprice');
     if (manualOverrides[type]) {
       // 삭제 전 기억해둔 수동 지정값을 그대로 복원 - 지역이 바뀌어도
@@ -203,7 +200,7 @@ function autoAddSvcFee() {
     var qinp=row.querySelector('.sqty'); if(qinp) qinp.value=1;
     calcSvcRow(pinp);
   });
-  if(hint) hint.textContent='→ 실측 '+prices['실측비'].toLocaleString()+'원 + 시공 '+prices['시공비'].toLocaleString()+'원 자동추가';
+  if(hint) hint.textContent=regionFeeHint(prices);
   // 2026-08-14: 블라인드를 먼저 입력하고 나중에 지역을 선택하면 블라인드
   // 시공비(10,000원×개수)가 통째로 누락되던 버그 수정(실장님 실사용에서 발견,
   // 재현으로 확인). 지역 미선택 상태에선 autoAddBlindSvc()가 시공비 행을
