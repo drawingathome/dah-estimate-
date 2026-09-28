@@ -26,6 +26,7 @@
     "est-product-calc.js",
     "est-public-view.js",
     "est-save.js",
+    "est-save-stages.js",
     "est-survey.js",
     "est-sync-queue.js",
     "est-utils.js"

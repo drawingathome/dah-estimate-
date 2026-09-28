@@ -426,6 +426,10 @@ if (/dah-dashboard/.test(target)) {
   //     낡으면 알려줌
   scripts.push(['file-registration-check.js', []]);
   scripts.push(['code-map-check.js', []]);
+  // 2026-09-28(선혜님 - "전문업체서 잡으면 어떻게 하겠니" - est-save.js는 재발 버그가 가장 많이
+  // 몰린 파일): 저장 로직의 "지금 동작"(서버로 나가는 요청/확인창/토스트/로컬저장)을 8개
+  // 시나리오로 기록해두고, 앞으로 이 코드를 고칠 때 글자 하나라도 달라지면 알려줌.
+  scripts.push(['save-golden-master-check.js', []]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',

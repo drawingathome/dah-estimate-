@@ -8,7 +8,7 @@
     "db_enforcement": "trg_enforce_estimate_status (BEFORE INSERT/UPDATE, confirmed_at 기준으로 estimate_status 강제)",
     "code_locations": [
       "est-form-controls.js:toggleConfirmEstimate (유일한 확정/해제 진입점)",
-      "est-save.js (저장시 estimate_status를 estimateConfirmedAt에서만 파생)",
+      "est-save-stages.js:_saveStage_estimatesActual (저장시 estimate_status를 estimateConfirmedAt에서만 파생)",
       "est-doc-customer.js (구글드라이브 저장여부도 estimateConfirmedAt 기준)"
     ],
     "guard_tests": ["confirm-source-of-truth-check.js", "estimate-status-confirm-sync-check.js", "confirm-status-consistency-check.js", "drive-save-confirm-check.js"],
@@ -101,7 +101,7 @@
     "single_source_of_truth": "fetchLatestUpdatedAt() 공용함수 - 충돌 감지시 서버에서 최신 updated_at을 다시 조회해 락값 갱신",
     "derived_fields": [],
     "db_enforcement": "없음(낙관적 잠금 자체는 updated_at 컬럼 비교로 앱 레벨에서 구현)",
-    "code_locations": ["est-save.js (견적서 저장)", "dash-api-writes.js:saveCustomerToDb (고객정보 저장)"],
+    "code_locations": ["est-save-stages.js:_saveStage_estimatesActual (견적서 저장 - 낙관적 잠금 fetchLatestUpdatedAt 사용)", "dash-api-writes.js:saveCustomerToDb (고객정보 저장)"],
     "guard_tests": ["optimistic-lock-check.js"],
     "금지패턴": "새 저장 경로에 낙관적 잠금을 추가하면서 fetchLatestUpdatedAt 공용함수 대신 직접 XHR로 락값 갱신 로직을 새로 짜는 것 - est-save.js/dash-api.js가 각자 따로 있다가 '쌍둥이 버그'로 발견됨(9/5)"
   },
@@ -111,7 +111,7 @@
     "single_source_of_truth": "연락처 필수 검증(견적서 저장시) + 오늘 이미 저장된 견적 찾기는 created_at이 아니라 updated_at 기준",
     "derived_fields": [],
     "db_enforcement": "없음",
-    "code_locations": ["est-save.js:validateEstimate (연락처 필수)", "dash-customer-add.js (연락처 필수)", "est-save.js (오늘 저장된 견적 찾기, updated_at 기준)"],
+    "code_locations": ["est-save.js:validateEstimate (연락처 필수)", "dash-customer-add.js (연락처 필수)", "est-save-stages.js:_saveStage_estimates (오늘 저장된 견적 찾기, updated_at 기준)"],
     "guard_tests": ["estimate-duplicate-blindspot-check.js"],
     "금지패턴": "새 고객/견적 생성 경로에 연락처 검증 없이 이름만으로 저장을 허용하는 것 - 신화경 사건의 근본원인"
   },

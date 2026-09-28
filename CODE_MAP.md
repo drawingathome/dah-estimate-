@@ -59,12 +59,13 @@
 | 9 | `est-product-calc.js` | DAH 견적서 앱 — 커튼/블라인드/부자재 계산 | 34 |
 | 10 | `est-survey.js` | DAH 견적서 앱 — 설문지 연동 | 2 |
 | 11 | `est-save.js` | DAH 견적서 앱 — 저장/검증/토스트 | 9 |
-| 12 | `est-doc-customer.js` | DAH 견적서 앱 — 고객용 견적서 문서 생성 | 2 |
-| 13 | `est-doc-vendor.js` | DAH 견적서 앱 — 거래처별 발주서 문서 생성 | 5 |
-| 14 | `est-doc-vendor-ui.js` | DAH 견적서 앱 — 발주서: 거래처 정보 입력 모달 + 발주서 선택/인쇄 | 4 |
-| 15 | `est-doc-request.js` | DAH 견적서 앱 — 실측/시공 의뢰서 문서 생성 | 4 |
-| 16 | `est-customer-load.js` | DAH 견적서 앱 — PDF모달 / 고객불러오기 / 계약금계산 | 17 |
-| 17 | `est-misc.js` | DAH 견적서 앱 — 주소검색 / 날짜포맷 / 빈상태 / 공유 / 자동저장 | 8 |
+| 12 | `est-save-stages.js` | DAH 견적서 앱 — 저장 단계 함수 4개 (고객 저장 → 견적서 저장 → 로컬 저장) | 4 |
+| 13 | `est-doc-customer.js` | DAH 견적서 앱 — 고객용 견적서 문서 생성 | 2 |
+| 14 | `est-doc-vendor.js` | DAH 견적서 앱 — 거래처별 발주서 문서 생성 | 5 |
+| 15 | `est-doc-vendor-ui.js` | DAH 견적서 앱 — 발주서: 거래처 정보 입력 모달 + 발주서 선택/인쇄 | 4 |
+| 16 | `est-doc-request.js` | DAH 견적서 앱 — 실측/시공 의뢰서 문서 생성 | 4 |
+| 17 | `est-customer-load.js` | DAH 견적서 앱 — PDF모달 / 고객불러오기 / 계약금계산 | 17 |
+| 18 | `est-misc.js` | DAH 견적서 앱 — 주소검색 / 날짜포맷 / 빈상태 / 공유 / 자동저장 | 8 |
 
 ## 설문지 (survey.html) — 브라우저가 불러오는 순서대로
 
@@ -102,6 +103,10 @@
 | `_saveEstimateInner` | `est-save.js` |
 | `_saveNewCustomerActual` | `dash-customer-add.js` |
 | `_savePendingSyncQueue` | `dash-sync-queue.js` |
+| `_saveStage_customers` | `est-save-stages.js` |
+| `_saveStage_estimates` | `est-save-stages.js` |
+| `_saveStage_estimatesActual` | `est-save-stages.js` |
+| `_saveStage_localStorage` | `est-save-stages.js` |
 | `_setPrintTitleAndPrint` | `est-customer-load.js` |
 | `_showRealtimeUpdateBanner` | `dash-realtime.js` |
 | `_showRequestPreview` | `est-doc-request.js` |

@@ -25,7 +25,9 @@ function readFile(name) {
 
 console.log('\n[확정 상태 단일 소스 감시] confirm-source-of-truth-check.js');
 
-const estSave = readFile('est-save.js');
+// 2026-09-28: est-save.js의 저장 단계 함수 4개가 est-save-stages.js로 옮겨져서(큰 파일 쪼개기),
+// 두 파일을 합쳐서 검사함(안 그러면 필수 패턴을 못 찾아 실패하거나, 금지 패턴 검사가 빈 파일만 보고 무력화됨)
+const estSave = readFile('est-save.js') + '\n' + readFile('est-save-stages.js');
 
 // 금지 패턴: currentTab(가견적서/최종견적서 탭 변수)이나 DOM classList로
 // "확정견적"/estimate_status 같은 확정 관련 값을 판별하는 코드가 다시
@@ -36,7 +38,7 @@ const forbiddenPatterns = [
 ];
 
 forbiddenPatterns.forEach(function(fp) {
-  check('est-save.js에 금지 패턴 없음: ' + fp.desc, !fp.pattern.test(estSave));
+  check('est-save.js/est-save-stages.js에 금지 패턴 없음: ' + fp.desc, !fp.pattern.test(estSave));
 });
 
 // 필수 패턴: 실제로 estimateConfirmedAt을 확정 여부 판별에 쓰고 있어야 함
@@ -48,7 +50,7 @@ const requiredUsages = [
   'isFinal = !!window._estEditState.estimateConfirmedAt'
 ];
 requiredUsages.forEach(function(snippet) {
-  check('est-save.js가 estimateConfirmedAt 기준으로 정확히 판별함: "' + snippet.slice(0, 50) + '..."', estSave.indexOf(snippet) !== -1, '해당 코드를 못 찾음 - 다른 방식으로 리팩토링됐다면 이 검사도 같이 갱신 필요');
+  check('est-save.js/est-save-stages.js가 estimateConfirmedAt 기준으로 정확히 판별함: "' + snippet.slice(0, 50) + '..."', estSave.indexOf(snippet) !== -1, '해당 코드를 못 찾음 - 다른 방식으로 리팩토링됐다면 이 검사도 같이 갱신 필요');
 });
 
 console.log(passCount + '건 통과, ' + failCount + '건 실패');

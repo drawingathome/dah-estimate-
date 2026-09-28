@@ -66,7 +66,8 @@ async function run() {
   //    (직접 XHR을 새로 만드는 방식으로 되돌아가지 않았는지 - 쌍둥이 재발 방지)
   const usageCheck = await page.evaluate(() => {
     return {
-      estSaveUsesShared: typeof saveEstimate === 'function' && _saveEstimateInner.toString().includes('fetchLatestUpdatedAt')
+      // 2026-09-28: 견적서 실제 저장 로직이 _saveEstimateInner 안 → est-save-stages.js의 _saveStage_estimatesActual로 옮겨짐
+      estSaveUsesShared: typeof saveEstimate === 'function' && typeof _saveStage_estimatesActual === 'function' && _saveStage_estimatesActual.toString().includes('fetchLatestUpdatedAt')
     };
   });
   console.log(usageCheck.estSaveUsesShared ? '✅' : '❌', 'est-save.js가 공용 fetchLatestUpdatedAt을 실제로 사용 중(개별 XHR로 되돌아가지 않음)');
