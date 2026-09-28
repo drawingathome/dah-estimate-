@@ -28,7 +28,7 @@ const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const ctx = vm.createContext(Object.create(null));
 vm.runInContext(src, ctx);
 const R = ctx;
-const names = ['summarizeBlindOptionExtras', 'blindInstallSpec', 'resolveRegionPrices', 'isNoInstallFee', 'regionFeeContent', 'regionFeeHint', 'calcRailJa', 'railMaterialSpec', 'railInstallSpec', 'calcSuggestedPanels', 'curtainHeightFeeWarning', 'getBlindMinSqm', 'calcBlindBillableSqm', 'applyDiscountItems', 'calcGrandBeforeTruncation', 'truncateToThousand', 'calcDepositRatio', 'calcAutoDeposit', 'calcDepositAndBalance', 'calcPerformanceRevenue'];
+const names = ['classifySvcRow', 'summarizeSvcGroups', 'summarizeSvcDetails', 'summarizeBlindOptionExtras', 'blindInstallSpec', 'resolveRegionPrices', 'isNoInstallFee', 'regionFeeContent', 'regionFeeHint', 'calcRailJa', 'railMaterialSpec', 'railInstallSpec', 'calcSuggestedPanels', 'curtainHeightFeeWarning', 'getBlindMinSqm', 'calcBlindBillableSqm', 'applyDiscountItems', 'calcGrandBeforeTruncation', 'truncateToThousand', 'calcDepositRatio', 'calcAutoDeposit', 'calcDepositAndBalance', 'calcPerformanceRevenue'];
 names.forEach(n => ok(typeof R[n] === 'function', '함수 존재: ' + n));
 
 // ── 2) 커튼 폭수 추천 (가로 × 배율 ÷ 130, 허용 소수점: 민자형 0.2 / 나비주름형 0.1)
@@ -171,6 +171,31 @@ eq(R.BLIND_INSTALL_UNIT_PRICE, 10000, '블라인드 시공비 단가 10,000원')
 eq(R.blindInstallSpec(1), { content: '블라인드 시공비 (1개)', unitPrice: 10000, qty: 1 }, '블라인드 시공비: 1개');
 eq(R.blindInstallSpec(3), { content: '블라인드 시공비 (3개)', unitPrice: 10000, qty: 3 }, '블라인드 시공비: 3개(레일과 달리 자 수가 아니라 개수 그대로)');
 eq(R.blindInstallSpec(0), { content: '블라인드 시공비 (0개)', unitPrice: 10000, qty: 0 }, '블라인드 시공비: 0개도 계산 자체는 됨(호출 여부는 화면 코드가 판단)');
+
+// ── 10) 서비스 요약카드 분류 (2026-09-22 "쌍둥이함수까지 찾아" - est-doc-customer.js와 기준 통일)
+const F = (o) => Object.assign({ isRailMaterial: false, isRailInstall: false, isRegionInstall: false, svcTypeAttr: '', kindSelect: '' }, o);
+eq(R.classifySvcRow(F({ isRailMaterial: true })), 'rail', '분류: 레일 자재(data-rail-src)');
+eq(R.classifySvcRow(F({ isRailInstall: true })), 'measureInstall', '분류: 레일 시공비 → 실측+시공비 그룹');
+eq(R.classifySvcRow(F({ isRegionInstall: true })), 'measureInstall', '분류: 지역별 실측·시공비');
+eq(R.classifySvcRow(F({ kindSelect: '전동' })), 'motor', '분류: 구분이 전동');
+eq(R.classifySvcRow(F({ kindSelect: '실측비' })), 'measureInstall', '분류: 구분이 실측비');
+eq(R.classifySvcRow(F({ kindSelect: '시공비' })), 'measureInstall', '분류: 구분이 시공비');
+eq(R.classifySvcRow(F({ svcTypeAttr: '블라인드시공' })), 'measureInstall', '분류: 블라인드시공 태그');
+eq(R.classifySvcRow(F({ svcTypeAttr: '옵션추가금' })), 'motor', '분류: 옵션추가금 태그');
+eq(R.classifySvcRow(F({ kindSelect: '부자재' })), 'motor', '분류: 구분이 부자재');
+eq(R.classifySvcRow(F({})), 'etc', '분류: 아무 것도 해당 없으면 기타');
+eq(R.classifySvcRow(F({ isRailMaterial: true, kindSelect: '전동' })), 'rail', '분류: 태그가 드롭다운 값보다 우선(레일 태그가 최우선)');
+eq(R.classifySvcRow(F({ svcTypeAttr: '옵션추가금', kindSelect: '실측비' })), 'measureInstall', '분류: 실시간 드롭다운값(실측비)이 고정 태그(옵션추가금)보다 먼저 검사돼 실측+시공비로 분류(코드 순서 확인 - 처음 내 기대값이 틀렸었음)');
+eq(R.summarizeSvcDetails([]), '', '상세내역: 없으면 빈 문자열');
+eq(R.summarizeSvcDetails(['출장비']), '출장비', '상세내역: 하나면 그대로');
+eq(R.summarizeSvcDetails(['출장비', '출장비', '출장비']), '출장비 3개', '상세내역: 같은 이름 3번 → "이름 3개"');
+eq(R.summarizeSvcDetails(['A', 'B', 'A']), 'A 2개, B', '상세내역: 등장 순서 유지 + 개수 표기');
+eq(R.summarizeSvcDetails(['', 'A', '']), 'A', '상세내역: 빈 이름은 무시');
+eq(R.SVC_GROUP_ORDER, ['measureInstall', 'rail', 'motor', 'etc'], '그룹 표시 순서: 실측시공비 → 레일 → 옵션 → 기타');
+eq(R.SVC_GROUP_LABELS.measureInstall, '실측 + 시공비', '그룹 이름: 실측+시공비');
+const g1 = R.summarizeSvcGroups([{ group: 'rail', label: '조절레일(타공형) 8자', amt: 12800 }, { group: 'rail', label: '레일 시공비', amt: 25000 }, { group: 'motor', label: '전동', amt: 4000 }]);
+eq(g1, [{ key: 'rail', label: '레일 자재비', sum: 37800, detailText: '조절레일(타공형) 8자, 레일 시공비' }, { key: 'motor', label: '옵션 추가금', sum: 4000, detailText: '전동' }], '그룹 요약: 합계+상세, 비어있는 그룹(실측+시공비/기타)은 결과에서 빠짐');
+eq(R.summarizeSvcGroups([]), [], '그룹 요약: 항목이 없으면 빈 배열');
 
 console.log('\n' + pass + '건 통과, ' + fail + '건 실패');
 process.exit(fail === 0 ? 0 : 1);

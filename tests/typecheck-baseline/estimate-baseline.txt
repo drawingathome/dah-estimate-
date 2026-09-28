@@ -47,8 +47,8 @@ est-calc-svc.js(196,66): error TS2339: 'Element' 형식에 'dataset' 속성이 �
 est-calc-svc.js(197,11): error TS2339: 'Element' 형식에 'dataset' 속성이 없습니다.
 est-calc-svc.js(198,76): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
 est-calc-svc.js(200,56): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
-est-calc-svc.js(306,46): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
-est-calc-svc.js(308,51): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
+est-calc-svc.js(295,46): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
+est-calc-svc.js(296,84): error TS2339: 'Element' 형식에 'value' 속성이 없습니다.
 est-customer-load.js(40,54): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 est-customer-load.js(53,29): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
 est-customer-load.js(54,32): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.

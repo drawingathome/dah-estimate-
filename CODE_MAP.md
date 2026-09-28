@@ -56,11 +56,11 @@
 | 6 | `est-sync-queue.js` | DAH 견적서 앱 — 오프라인/네트워크 실패 재시도 큐 (2026-08-05 신규) | 5 |
 | 7 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 15 |
 | 8 | `est-form-controls.js` | DAH 견적서 앱 — 폼 상태/타입 제어 | 13 |
-| 9 | `est-calc-rules.js` | DAH 견적서 앱 — 계산 규칙 (순수 함수: 화면/저장소를 전혀 안 만짐) | 20 |
+| 9 | `est-calc-rules.js` | DAH 견적서 앱 — 계산 규칙 (순수 함수: 화면/저장소를 전혀 안 만짐) | 23 |
 | 10 | `est-product-calc.js` | DAH 견적서 앱 — 공통 계산: 합계(calcTotal)/얼림 금액/행 삭제/드래그 정렬 | 10 |
 | 11 | `est-calc-curtain.js` | DAH 견적서 앱 — 커튼 행 계산 (추가/폭수·금액 계산/레일 자동/복사) | 4 |
 | 12 | `est-calc-blind.js` | DAH 견적서 앱 — 블라인드 행 계산 (추가/최소면적/옵션 추가금/부자재 자동/복사) | 6 |
-| 13 | `est-calc-svc.js` | DAH 견적서 앱 — 기타품목 · 부자재/서비스(실측비·시공비·레일) 행 계산과 요약 | 13 |
+| 13 | `est-calc-svc.js` | DAH 견적서 앱 — 기타품목 · 부자재/서비스(실측비·시공비·레일) 행 계산과 요약 | 12 |
 | 14 | `est-survey.js` | DAH 견적서 앱 — 설문지 연동 | 2 |
 | 15 | `est-save.js` | DAH 견적서 앱 — 저장/검증/토스트 | 9 |
 | 16 | `est-save-stages.js` | DAH 견적서 앱 — 저장 단계 함수 4개 (고객 저장 → 견적서 저장 → 로컬 저장) | 4 |
@@ -160,6 +160,7 @@
 | `Chip` | `survey-app.js` |
 | `claimCustomer` | `dash-api-writes.js` |
 | `claimUnassignedCustomer` | `dash-render.js` |
+| `classifySvcRow` | `est-calc-rules.js` |
 | `cleanupJunkCustomerRows` | `apps-script-automation-hub.js` |
 | `cleanupJunkDriveDocuments` | `apps-script-automation-hub.js` |
 | `clearAuthSession` | `dash-supabase-auth.js` |
@@ -463,7 +464,8 @@
 | `stopAuthAutoRefresh` | `dash-supabase-auth.js` |
 | `stopRealtimeSync` | `dash-realtime.js` |
 | `summarizeBlindOptionExtras` | `est-calc-rules.js` |
-| `summarizeSvcDetails` | `est-calc-svc.js` |
+| `summarizeSvcDetails` | `est-calc-rules.js` |
+| `summarizeSvcGroups` | `est-calc-rules.js` |
 | `supabaseAuthLogin` | `dash-supabase-auth.js` |
 | `switchDetailTab` | `dash-customer-detail.js` |
 | `syncCustomerRow` | `apps-script-automation-hub.js` |

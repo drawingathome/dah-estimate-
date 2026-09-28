@@ -265,20 +265,14 @@ function copySvcRow(btn) {
 // 결과를 내도록 함 - "실시간 드롭다운 값"을 우선하고, 만들어질 때
 // 붙는 고정 속성은 드롭다운이 아직 없거나 비어있을 때만 보조로 씀.
 function categorizeSvcRow(tr) {
-  var isRailMaterial = tr.hasAttribute('data-rail-src');     // 레일 자재(1,600원×레일수)
-  var isRailInstall  = tr.hasAttribute('data-railcost-src'); // 레일 시공비(25,000원)
-  var isRegionInstall = tr.hasAttribute('data-install-base'); // 지역별 실측·시공비
-  var svcTypeAttr = tr.getAttribute('data-svc-type') || '';
-  var kindSelect = tr.querySelector('.svc-kind')?.value || tr.querySelector('td select')?.value || '';
-
-  if (isRailMaterial) return 'rail';
-  if (isRailInstall || isRegionInstall) return 'measureInstall';
-  if (kindSelect === '전동') return 'motor';
-  if (kindSelect === '실측비' || kindSelect === '시공비') return 'measureInstall';
-  if (svcTypeAttr === '블라인드시공') return 'measureInstall';
-  if (svcTypeAttr === '옵션추가금') return 'motor';
-  if (kindSelect === '부자재') return 'motor';
-  return 'etc';
+  // 분류 규칙은 est-calc-rules.js의 classifySvcRow 한 곳에만 있음 - 여기선 화면에서 값만 읽어 넘김
+  return classifySvcRow({
+    isRailMaterial: tr.hasAttribute('data-rail-src'),
+    isRailInstall: tr.hasAttribute('data-railcost-src'),
+    isRegionInstall: tr.hasAttribute('data-install-base'),
+    svcTypeAttr: tr.getAttribute('data-svc-type') || '',
+    kindSelect: tr.querySelector('.svc-kind')?.value || tr.querySelector('td select')?.value || ''
+  });
 }
 
 // 레일/시공비/기타 항목을 그룹으로 묶어 요약카드로 보여줌 (선혜님 피드백: 항목이 너무 많아 한눈에 안 들어옴)
@@ -292,33 +286,22 @@ function renderSvcSummary() {
   var rows = Array.from(document.querySelectorAll('#svc-body tr'));
   if (rows.length === 0) { card.innerHTML = '<div style="font-size:11px;color:#B0A99F">레일/시공비/기타 항목이 없습니다</div>'; return; }
 
-  var groups = {
-    measureInstall: { label: '실측 + 시공비', sum: 0, details: [] },
-    rail: { label: '레일 자재비', sum: 0, details: [] },
-    motor: { label: '옵션 추가금', sum: 0, details: [] },
-    etc: { label: '기타', sum: 0, details: [] }
-  };
-
-  rows.forEach(function(tr) {
+  // 그룹 분류/합계/상세내역 계산은 est-calc-rules.js의 summarizeSvcGroups 한 곳에만 있음
+  // (2026-09-22 사건: est-doc-customer.js가 이 계산을 따로 복붙해서 서로 다른 결과를 냈던 것 - 재발 방지)
+  var entries = rows.map(function(tr) {
     var priceInp = tr.querySelector('.sprice');
     var qtyInp = tr.querySelector('.sqty');
     var price = Math.max(0, getPriceVal(priceInp) || 0);
     var qty = Math.max(0, parseFloat(qtyInp?.value) || 1);
-    var amt = price * qty;
-    var label = tr.querySelector('.svc-content')?.value || '';
-    var group = categorizeSvcRow(tr);
-    groups[group].sum += amt;
-    groups[group].details.push(label);
+    return { group: categorizeSvcRow(tr), label: tr.querySelector('.svc-content')?.value || '', amt: price * qty };
   });
+  var groupSummaries = summarizeSvcGroups(entries);
 
   var html = '';
-  ['measureInstall', 'rail', 'motor', 'etc'].forEach(function(key) {
-    var g = groups[key];
-    if (g.details.length === 0) return;
-    var detailText = summarizeSvcDetails(g.details);
+  groupSummaries.forEach(function(g) {
     html += '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:4px 0">'
       + '<div><span style="font-size:12px;font-weight:700;color:#282828">' + escHtml(g.label) + '</span>'
-      + (detailText ? '<div style="font-size:11px;color:#B0A99F;margin-top:1px">' + escHtml(detailText) + '</div>' : '')
+      + (g.detailText ? '<div style="font-size:11px;color:#B0A99F;margin-top:1px">' + escHtml(g.detailText) + '</div>' : '')
       + '</div>'
       + '<span style="font-size:13px;font-weight:700;color:#282828;white-space:nowrap">' + g.sum.toLocaleString() + '원</span>'
       + '</div>';
@@ -332,16 +315,6 @@ function renderSvcSummary() {
 // 발견): 같은 텍스트(예: "레일 시공비")가 여러 번 반복되면 "레일
 // 시공비 24개"처럼 묶어서 보여줌 - 서로 다른 길이(예: "16자"/"18자")는
 // 각자 그대로 두되, 같은 길이가 여러 개면 그것끼리는 묶임.
-function summarizeSvcDetails(details) {
-  var counts = {}, order = [];
-  details.filter(Boolean).forEach(function(d) {
-    if (!(d in counts)) { counts[d] = 0; order.push(d); }
-    counts[d]++;
-  });
-  return order.map(function(d) {
-    return counts[d] > 1 ? d + ' ' + counts[d] + '개' : d;
-  }).join(', ');
-}
 
 function toggleSvcDetail() {
   var wrap = document.getElementById('svc-detail-wrap');

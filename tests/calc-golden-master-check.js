@@ -38,6 +38,7 @@ const RUNNER = `(() => {
     const dep = document.getElementById('deposit-input');
     if (dep) { dep.value = ''; dep.removeAttribute('data-raw'); dep.removeAttribute('data-deposit-source'); }
     window._estEditState = window._estEditState || {};
+    if (typeof renderSvcSummary === 'function') renderSvcSummary();
   }
   function totals() {
     const dep = document.getElementById('deposit-input');
@@ -337,6 +338,43 @@ const RUNNER = `(() => {
   const copyBtn = orig.querySelector('button[onclick*="copyBlindRow"]') || Array.from(orig.querySelectorAll('button')).find(b => (b.getAttribute('onclick') || '').includes('copy'));
   if (copyBtn) copyBlindRow(copyBtn);
   out.blindCopy.result = [before, svcFull3(), totals()].join(' ## ');
+  // J. 서비스 요약카드 (renderSvcSummary): 구분별(실측+시공비/레일 자재비/옵션 추가금/기타) 합계와 상세 내역,
+  //    같은 이름 항목은 "이름 N개"로 묶이는지, 빈 상태 문구
+  function summaryCard() { return (document.getElementById('svc-summary-card') || {}).innerHTML || ''; }
+  out.svcSummary = {};
+  resetAll(); out.svcSummary.empty = summaryCard();
+  // 레일만(지역 있음): 레일 자재비 그룹에 레일+레일시공비가 같이 들어가는지
+  resetAll(); regionSel.value = '서울'; addCurtainRow();
+  { const tr = document.querySelector('#curtain-body tr'); setV(tr, '.mw', 200); setV(tr, '.mh', 240); setV(tr, '.cprice', 30000); calcCurtainRow(tr.querySelector('.mw')); }
+  out.svcSummary.rail_only = summaryCard();
+  // 실측+시공비만(지역, 커튼/블라인드 없음)
+  resetAll(); regionSel.value = '경기'; autoAddSvcFee();
+  out.svcSummary.measureInstall_only = summaryCard();
+  // 블라인드 옵션추가금(모터 그룹) + 블라인드 시공비(실측+시공비 그룹)
+  resetAll(); regionSel.value = '서울'; addBlindWith('거실', 4000, '전동'); addBlindWith('안방', 4000, '전동');
+  out.svcSummary.blind_option_and_install = summaryCard();
+  // 기타(직접 추가한 서비스 행, 자동관리 태그 없음) 여러 개 - 같은 이름은 "N개"로 묶임
+  resetAll();
+  ['출장비', '출장비', '출장비', '기타경비'].forEach(name => { addSvcRow(); const tr = document.querySelector('#svc-body tr:last-child'); setV(tr, '.svc-content', name); setV(tr, '.sprice', 10000); setV(tr, '.sqty', 1); calcSvcRow(tr.querySelector('.sprice')); });
+  out.svcSummary.etc_dedup = summaryCard();
+  // 정확히 2번 등장(threshold 2 vs 3 경계) + '부자재' 구분(kindSelect) 케이스
+  resetAll();
+  addSvcRow(); { const tr = document.querySelector('#svc-body tr:last-child'); setV(tr, '.svc-content', '자재비'); setV(tr, '.svc-kind', '부자재'); setV(tr, '.sprice', 5000); setV(tr, '.sqty', 1); calcSvcRow(tr.querySelector('.sprice')); }
+  addSvcRow(); { const tr = document.querySelector('#svc-body tr:last-child'); setV(tr, '.svc-content', '자재비'); setV(tr, '.svc-kind', '부자재'); setV(tr, '.sprice', 5000); setV(tr, '.sqty', 1); calcSvcRow(tr.querySelector('.sprice')); }
+  out.svcSummary.material_kind_twice = summaryCard();
+  // 전부 다 있는 종합 상태(레일+지역실측시공+블라인드옵션+블라인드시공+기타)
+  resetAll(); regionSel.value = '서울'; addCurtainRow();
+  { const tr = document.querySelector('#curtain-body tr'); setV(tr, '.mw', 200); setV(tr, '.mh', 240); setV(tr, '.cprice', 30000); calcCurtainRow(tr.querySelector('.mw')); }
+  addBlindWith('안방', 4000, '전동');
+  addSvcRow(); { const tr = document.querySelector('#svc-body tr:last-child'); setV(tr, '.svc-content', '보양작업'); setV(tr, '.sprice', 15000); setV(tr, '.sqty', 1); calcSvcRow(tr.querySelector('.sprice')); }
+  out.svcSummary.everything = summaryCard();
+  // 행 삭제 후에도 요약이 갱신되는지(2026-09-22 사건: 삭제시 요약 안 갱신)
+  { const delBtn = document.querySelector('#svc-body tr:last-child button[onclick*="delSvcRow"]') || document.querySelector('#svc-body tr:last-child button');
+    if (delBtn) delSvcRow(delBtn); }
+  out.svcSummary.after_delete_last = summaryCard();
+  // 단가를 직접 고친 후에도 요약이 갱신되는지(2026-09-22 사건 본문: "상세 내역 합이... 위 요약카드엔... 차이나던 것")
+  { const firstPriceInp = document.querySelector('#svc-body tr:first-child .sprice'); firstPriceInp.value = '77777'; firstPriceInp.dispatchEvent(new Event('input', { bubbles: true })); }
+  out.svcSummary.after_edit_price = summaryCard();
   return out;
 })()`;
 

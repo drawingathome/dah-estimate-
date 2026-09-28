@@ -245,3 +245,51 @@ var BLIND_INSTALL_UNIT_PRICE = 10000;
 function blindInstallSpec(blindCount) {
   return { content: '블라인드 시공비 ('+blindCount+'개)', unitPrice: BLIND_INSTALL_UNIT_PRICE, qty: blindCount };
 }
+
+// ── 서비스 요약카드 분류 규칙 ──────────────────────────────────────
+// "레일/시공비/기타" 항목을 4개 그룹(실측+시공비/레일 자재비/옵션 추가금/기타)으로 분류.
+// 2026-09-22(선혜님 지적 - "버그를 고치고 고쳐도 왜 같은 버그가 생기지, 쌍둥이함수까지 찾아"):
+// est-doc-customer.js가 이 분류를 완전히 똑같이 각자 손으로 따로 짜놨는데 서로 다른 기준을
+// 쓰고 있었음(직원 내부화면 vs 고객 견적서 문서 금액이 서로 달라질 수 있는 구조였음) - 이 함수
+// 하나로 통합. "실시간 드롭다운 값(kindSelect)"을 우선하고, 만들어질 때 붙는 고정 속성
+// (data-svc-type)은 드롭다운이 아직 없거나 비어있을 때만 보조로 씀.
+// flags: { isRailMaterial, isRailInstall, isRegionInstall, svcTypeAttr, kindSelect }
+function classifySvcRow(flags) {
+  if (flags.isRailMaterial) return 'rail';
+  if (flags.isRailInstall || flags.isRegionInstall) return 'measureInstall';
+  if (flags.kindSelect === '전동') return 'motor';
+  if (flags.kindSelect === '실측비' || flags.kindSelect === '시공비') return 'measureInstall';
+  if (flags.svcTypeAttr === '블라인드시공') return 'measureInstall';
+  if (flags.svcTypeAttr === '옵션추가금') return 'motor';
+  if (flags.kindSelect === '부자재') return 'motor';
+  return 'etc';
+}
+
+// 그룹 표시 이름과 순서(요약카드에 이 순서대로 나옴)
+var SVC_GROUP_ORDER = ['measureInstall', 'rail', 'motor', 'etc'];
+var SVC_GROUP_LABELS = { measureInstall: '실측 + 시공비', rail: '레일 자재비', motor: '옵션 추가금', etc: '기타' };
+
+// 같은 이름의 항목은 "이름 N개"로 묶어서 보여줌(등장 순서 유지, 빈 이름은 무시)
+function summarizeSvcDetails(details) {
+  var counts = {}, order = [];
+  details.filter(Boolean).forEach(function(d) {
+    if (!(d in counts)) { counts[d] = 0; order.push(d); }
+    counts[d]++;
+  });
+  return order.map(function(d) {
+    return counts[d] > 1 ? d + ' ' + counts[d] + '개' : d;
+  }).join(', ');
+}
+
+// entries: [{ group, label, amt }] → 그룹별 합계 + 상세 내역 텍스트(표시할 그룹만, 순서대로)
+function summarizeSvcGroups(entries) {
+  var sums = {}, details = {};
+  SVC_GROUP_ORDER.forEach(function(k){ sums[k] = 0; details[k] = []; });
+  entries.forEach(function(e) {
+    sums[e.group] += e.amt;
+    details[e.group].push(e.label);
+  });
+  return SVC_GROUP_ORDER.filter(function(k){ return details[k].length > 0; }).map(function(k) {
+    return { key: k, label: SVC_GROUP_LABELS[k], sum: sums[k], detailText: summarizeSvcDetails(details[k]) };
+  });
+}
