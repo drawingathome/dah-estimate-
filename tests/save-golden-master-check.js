@@ -111,10 +111,7 @@ async function runScenario(dir, sc, idx) {
   const state = { lastReqAt: Date.now() };
   page.on('pageerror', e => rec.jsErrors.push(e.message));
   page.on('dialog', async d => { rec.dialogs.push(d.message()); try { await d.accept(); } catch (e) {} });
-  // 진단/검증용: GM_REVERSE_LS=1 이면 브라우저가 localStorage 키를 "거꾸로 된 순서"로 돌려주는 환경을 흉내냄
-  // (GitHub CI 브라우저가 내 컴퓨터와 다른 순서로 돌려줘서 실패했던 것을 재현/방지 확인하는 용도)
-  const REVERSE = process.env.GM_REVERSE_LS === '1' ? 'const _k = Storage.prototype.key; Storage.prototype.key = function (i) { return _k.call(this, this.length - 1 - i); };' : '';
-  await page.evaluateOnNewDocument(FREEZE + REVERSE);
+  await page.evaluateOnNewDocument(FREEZE);
   // 검증용: GM_REVERSE_KEYS=1 이면 브라우저가 localStorage 항목을 "거꾸로 된 순서"로 알려주게 만듦
   // (GitHub CI에서 실제로 일어난 상황을 내 컴퓨터에서 재현 - 순서가 달라도 통과해야 함)
   if (process.env.GM_REVERSE_KEYS) await page.evaluateOnNewDocument(`(() => {
