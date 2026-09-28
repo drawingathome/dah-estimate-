@@ -172,8 +172,9 @@ async function runScenario(dir, sc, idx) {
     await page.evaluate(act);
     await settle(page, state);
   }
-  const st = await page.evaluate(() => {
-    const ls = {}; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (!/session|auth|token/i.test(k)) ls[k] = localStorage.getItem(k); }
+  const st = await page.evaluate((rev) => {
+    const ls = {}; const idxs = []; for (let i = 0; i < localStorage.length; i++) idxs.push(i); if (rev) idxs.reverse();
+    idxs.forEach(i => { const k = localStorage.key(i); if (!/session|auth|token/i.test(k)) ls[k] = localStorage.getItem(k); });
     const toast = document.getElementById('toast');
     return {
       localStorage: ls,
@@ -181,7 +182,7 @@ async function runScenario(dir, sc, idx) {
       estEditState: JSON.parse(JSON.stringify(window._estEditState || {})),
       saveBtnDisabled: (document.getElementById('save-btn') || {}).disabled === true
     };
-  });
+  }, process.env.GM_REVERSE_LS === '1');
   await browser.close(); server.kill();
   // 비교 구조:
   //  writes = 고객/견적서를 실제로 "쓰는"(POST/PATCH/DELETE) 요청 - 앞뒤가 정해진 흐름(고객 저장 → 견적서 저장)이라
