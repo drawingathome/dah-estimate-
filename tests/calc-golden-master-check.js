@@ -173,6 +173,64 @@ const RUNNER = `(() => {
         if (depSource === 'real') { dep.value = '77,000'; dep.dataset.raw = '77000'; dep.dataset.depositSource = 'real'; calcTotal(); }
         out.deposit[[kind, depSource, total].join('|')] = totals();
       }
+  // G. 레일 자동 계산 (autoUpdateRail): 지역 선택 × 가로 구간 × 공간 이름
+  //    (지역이 비어 있으면 레일 행을 안 만들고 기존 것도 지움). data-rail-src 등의 값(행 번호표)은 실행 순서에
+  //    따라 달라져서 기록하지 않고, "있다/없다"만 기록함.
+  const regionSel = document.getElementById('c-region');
+  const regions = Array.from(regionSel.options).map(o => o.value);
+  out.meta.regions = regions.join(',');
+  function svcFull() {
+    return Array.from(document.querySelectorAll('#svc-body tr')).map(tr => {
+      const g = (s) => tr.querySelector(s);
+      const pr = g('.sprice');
+      return [tr.hasAttribute('data-rail-src') ? 'R' : '-', tr.hasAttribute('data-railcost-src') ? 'C' : '-', tr.hasAttribute('data-install-base') ? 'I' : '-', tr.dataset.manualOverride ? 'M' : '-',
+        (g('.svc-kind') || {}).value, (g('.svc-space') || {}).value, (g('.svc-content') || {}).value, pr ? pr.value : null, pr ? pr.getAttribute('data-raw') : null, (g('.sqty') || {}).value].join('/');
+    }).join(' ; ');
+  }
+  function setRegion(v) { regionSel.value = v; }
+  out.rail = {};
+  for (const region of regions)
+    for (const mw of [0, 20, 29, 30, 31, 59, 60, 61, 90, 91, 120, 121, 150, 151, 180, 181, 200, 299, 300, 301, 400, 590, 600, 601, 700])
+      for (const space of ['', '거실']) {
+        resetAll(); setRegion(region); addCurtainRow();
+        const tr = document.querySelector('#curtain-body tr');
+        setV(tr, '.space-inp', space); setV(tr, '.pleat-type', '나비주름형'); setV(tr, '.mw', mw); setV(tr, '.mh', 240); setV(tr, '.cprice', 45000);
+        calcCurtainRow(tr.querySelector('.mw'));
+        out.rail[[region || '(빈)', mw, space || '(빈)'].join('|')] = [svcFull(), totals()].join(' ## ');
+      }
+  // G2. 가로를 바꾸면 같은 행이 갱신되는지(중복 생성 안 됨) / 수동으로 고친 단가는 유지되는지 / 지역을 비우면 지워지는지
+  out.railEdit = {};
+  for (const region of regions.filter(r => r !== '')) {
+    resetAll(); setRegion(region); addCurtainRow();
+    const tr = document.querySelector('#curtain-body tr');
+    setV(tr, '.space-inp', '안방'); setV(tr, '.pleat-type', '나비주름형'); setV(tr, '.mw', 150); setV(tr, '.mh', 240); setV(tr, '.cprice', 45000);
+    calcCurtainRow(tr.querySelector('.mw'));
+    const s1 = svcFull();
+    setV(tr, '.mw', 310); calcCurtainRow(tr.querySelector('.mw'));
+    const s2 = svcFull(); const cnt2 = document.querySelectorAll('#svc-body tr').length;
+    // 레일 행의 단가를 수동으로 고친 상태(manualOverride)에서 가로를 다시 바꿈
+    const railRow = document.querySelector('#svc-body [data-rail-src]'); const costRow = document.querySelector('#svc-body [data-railcost-src]');
+    // 진짜 사람이 단가를 입력하는 것과 같게: input 이벤트 → 화면의 oninput(fmtPrice + markSvcManualOverride)이 실행됨
+    // (수량을 1로 고정하고 문구에 "✏️직접수정"을 붙이는 실제 동작까지 포함해서 기록)
+    if (railRow) { const pi = railRow.querySelector('.sprice'); pi.value = '2000'; pi.dispatchEvent(new Event('input', { bubbles: true })); }
+    if (costRow) { const pi = costRow.querySelector('.sprice'); pi.value = '30000'; pi.dispatchEvent(new Event('input', { bubbles: true })); }
+    setV(tr, '.mw', 450); calcCurtainRow(tr.querySelector('.mw'));
+    const s3 = svcFull();
+    setRegion(''); calcCurtainRow(tr.querySelector('.mw'));
+    out.railEdit[region] = [s1, s2, cnt2, s3, svcFull(), totals()].join(' ## ');
+  }
+  // G3. 커튼 두 줄(공간 다름): 줄마다 레일 행/시공비 행이 따로 생기는지, 한 줄을 지우면
+  out.railMulti = {};
+  for (const region of regions.filter(r => r !== '')) {
+    resetAll(); setRegion(region);
+    addCurtainRow(); addCurtainRow();
+    const trs = document.querySelectorAll('#curtain-body tr');
+    [['거실', 300], ['안방', 180]].forEach((v, i) => { setV(trs[i], '.space-inp', v[0]); setV(trs[i], '.pleat-type', '민자형'); setV(trs[i], '.mw', v[1]); setV(trs[i], '.mh', 240); setV(trs[i], '.cprice', 30000); calcCurtainRow(trs[i].querySelector('.mw')); });
+    const both = svcFull();
+    const delBtn = trs[0].querySelector('button[onclick*="delRow"]') || trs[0].querySelector('.del-btn') || trs[0].querySelector('button');
+    if (delBtn) delRow(delBtn);
+    out.railMulti[region] = [both, svcFull(), totals()].join(' ## ');
+  }
   return out;
 })()`;
 

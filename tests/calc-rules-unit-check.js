@@ -28,7 +28,7 @@ const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const ctx = vm.createContext(Object.create(null));
 vm.runInContext(src, ctx);
 const R = ctx;
-const names = ['calcSuggestedPanels', 'curtainHeightFeeWarning', 'getBlindMinSqm', 'calcBlindBillableSqm', 'applyDiscountItems', 'calcGrandBeforeTruncation', 'truncateToThousand', 'calcDepositRatio', 'calcAutoDeposit', 'calcDepositAndBalance', 'calcPerformanceRevenue'];
+const names = ['calcRailJa', 'railMaterialSpec', 'railInstallSpec', 'calcSuggestedPanels', 'curtainHeightFeeWarning', 'getBlindMinSqm', 'calcBlindBillableSqm', 'applyDiscountItems', 'calcGrandBeforeTruncation', 'truncateToThousand', 'calcDepositRatio', 'calcAutoDeposit', 'calcDepositAndBalance', 'calcPerformanceRevenue'];
 names.forEach(n => ok(typeof R[n] === 'function', '함수 존재: ' + n));
 
 // ── 2) 커튼 폭수 추천 (가로 × 배율 ÷ 130, 허용 소수점: 민자형 0.2 / 나비주름형 0.1)
@@ -111,6 +111,26 @@ eq(R.calcDepositAndBalance(1000000, -5), { deposit: 0, balance: 1000000 }, '음�
 eq(R.calcDepositAndBalance(0, 0), { deposit: 0, balance: 0 }, '총액 0이면 둘 다 0');
 eq(R.calcPerformanceRevenue(1000000, 145000), 855000, '성과매출: 제품소계 - 할인(2026-08-05: 할인해준 만큼은 성과에서 빠짐)');
 eq(R.calcPerformanceRevenue(100, 500), 0, '성과매출: 음수 없음');
+
+// ── 7) 레일 자동 산정 (원단 폭 → 자(尺) 수, 항상 짝수로 올림 / 자재 단가 1,600원 / 시공비 25,000원)
+// (손계산) 30cm = 1자 → 홀수라 짝수로 올려 2자 / 60cm = 2자 그대로 / 61cm = 2.03 → 3 → 짝수로 4자
+eq(R.calcRailJa(30), 2, '레일: 30cm(1자) → 홀수라 2자로 올림');
+eq(R.calcRailJa(29), 2, '레일: 29cm(0.97자→1) → 2자');
+eq(R.calcRailJa(60), 2, '레일: 60cm → 2자 그대로');
+eq(R.calcRailJa(61), 4, '레일: 61cm(2.03→3) → 짝수 4자');
+eq(R.calcRailJa(90), 4, '레일: 90cm(3자) → 4자');
+eq(R.calcRailJa(300), 10, '레일: 300cm → 10자');
+eq(R.calcRailJa(301), 12, '레일: 301cm(10.03→11) → 12자');
+eq(R.calcRailJa(450), 16, '레일: 450cm(15자) → 16자');
+eq(R.calcRailJa(600), 20, '레일: 600cm → 20자');
+eq(R.calcRailJa(601), 22, '레일: 601cm(20.03→21) → 22자');
+eq(R.calcRailJa(0), 0, '레일: 0cm → 0');
+eq(R.RAIL_UNIT_PRICE, 1600, '레일 자재 단가 1,600원');
+eq(R.RAIL_INSTALL_FEE, 25000, '레일 시공비 25,000원');
+eq(R.railMaterialSpec(300), { ja: 10, content: '조절레일(타공형) 10자', unitPrice: 1600, qty: 10 }, '레일 자재 행: 300cm → 10자 × 1,600원');
+// (손계산) 150cm = 5자 → 홀수라 6자 → 6 × 1,600 = 9,600원
+eq(R.railMaterialSpec(150).qty * R.railMaterialSpec(150).unitPrice, 9600, '레일 자재비: 150cm → 6자 × 1,600원 = 9,600원');
+eq(R.railInstallSpec(), { content: '레일 시공비', price: 25000, qty: 1 }, '레일 시공비 행: 25,000원 × 1개(레일수와 무관)');
 
 console.log('\n' + pass + '건 통과, ' + fail + '건 실패');
 process.exit(fail === 0 ? 0 : 1);

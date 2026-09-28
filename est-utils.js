@@ -72,15 +72,7 @@ const SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
 // buildVendorHTML/buildRequestHTML 세 곳에 완전히 동일한 코드로 각자
 // 독립 구현되어 있었음 - 날짜 형식을 바꿔야 할 때 한 곳만 고치고
 // 나머지를 놓치기 쉬운 구조. 전역 헬퍼로 통일.
-// 2026-09-11(선혜님이 알려주신 실제 레일 계산 방식 - "우리가 레일
-// 계산할때 -자 조절레일로 적는거 아니야?"): 원단 폭(cm)을 자(尺)
-// 단위로 환산 - est-product-calc.js(견적 화면 표시용)와
-// est-doc-vendor.js(발주서용) 둘 다 이 계산이 필요해서 전역 헬퍼로 통일.
-function calcRailJa(mwCm) {
-  var ja = mwCm / 30, jaR = Math.ceil(ja);
-  if (jaR % 2 !== 0) jaR++;
-  return jaR;
-}
+// calcRailJa(원단 폭 → 레일 자 수 환산)는 est-calc-rules.js로 옮김(계산 규칙은 그 파일 한 곳에만 둠)
 // 2026-09-11(선혜님 지적 - "이 오류가 다음에 또 나올 수도 있니?? 이
 // 오류는 심각한거야 돈을 덜 받을 수 있었어"로 재검토 중 발견): 계약금
 // 입력창은 "직접 수정했다"는 표시(data-manualEdit)가 없으면 저장할

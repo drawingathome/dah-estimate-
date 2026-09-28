@@ -201,11 +201,9 @@ function autoUpdateRail(curtainTr) {
   }
 
   var space = curtainTr.querySelector('.space-inp')?.value||'';
-  var jaR = calcRailJa(mw);
-
-  // 2026-08-05: 레일단가(1,600원)를 변수로 추출 — 예전엔 아래 두 분기(기존행 수정/신규행 생성)에
-  // 리터럴 '1600'이 각각 따로 있어서, 나중에 단가가 바뀌면 한쪽만 고치고 다른쪽을 놓칠 위험이 있었음.
-  var RAIL_UNIT_PRICE = 1600;
+  // 레일 자수/단가/문구 규칙은 est-calc-rules.js의 railMaterialSpec 한 곳에만 있음
+  var railSpec = railMaterialSpec(mw);
+  var jaR = railSpec.ja;
 
   // 레일 (자재) 행: 단가 1,600원 × 레일수
   var existing = svcBody.querySelector('[data-rail-src="'+rowIdx+'"]');
@@ -219,7 +217,7 @@ function autoUpdateRail(curtainTr) {
     // 찾도록 바꿈 - 컬럼이 나중에 또 바뀌어도 안 깨지게. 위치는 이제
     // 내용 텍스트에 안 합치고 별도 칸(.svc-space)에 정확히 넣음.
     var spaceInp = existing.querySelector('.svc-space'); if(spaceInp) spaceInp.value = space||'';
-    var inp=existing.querySelector('.svc-content'); if(inp) inp.value='조절레일(타공형) '+jaR+'자';
+    var inp=existing.querySelector('.svc-content'); if(inp) inp.value=railSpec.content;
     // 2026-09-19(선혜님 - "다시 열어보니 실측+레일비가... 이게 말이
     // 되니?????????"): 사용자가 이 단가를 직접 수정해뒀으면(manualOverride)
     // 자동계산이 그 값을 덮어쓰지 않고 그대로 둠. 수량도 마찬가지 -
@@ -228,7 +226,7 @@ function autoUpdateRail(curtainTr) {
     // 않음 - 안 그러면 단가는 유지돼도 수량이 곱해져서 최종금액이 다시
     // 부풀려짐(2026-09-19 "안됐잖아!!!!!"로 실제 재현된 바로 그 문제).
     if (!existing.dataset.manualOverride) {
-      var pinp=existing.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw',String(RAIL_UNIT_PRICE)); pinp.value=(RAIL_UNIT_PRICE).toLocaleString(); }
+      var pinp=existing.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw',String(railSpec.unitPrice)); pinp.value=(railSpec.unitPrice).toLocaleString(); }
       var qinp=existing.querySelector('.sqty'); if(qinp) qinp.value=jaR;
     }
     calcSvcRow(existing.querySelector('.sprice'));
@@ -238,24 +236,24 @@ function autoUpdateRail(curtainTr) {
     newRow.setAttribute('data-rail-src', rowIdx);
     var sel=newRow.querySelector('.svc-kind'); if(sel) sel.value='레일';
     var spaceInp=newRow.querySelector('.svc-space'); if(spaceInp) spaceInp.value = space||'';
-    var inp=newRow.querySelector('.svc-content'); if(inp) inp.value='조절레일(타공형) '+jaR+'자';
-    var pinp=newRow.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw',String(RAIL_UNIT_PRICE)); pinp.value=(RAIL_UNIT_PRICE).toLocaleString(); }
+    var inp=newRow.querySelector('.svc-content'); if(inp) inp.value=railSpec.content;
+    var pinp=newRow.querySelector('.sprice'); if(pinp){ pinp.setAttribute('data-raw',String(railSpec.unitPrice)); pinp.value=(railSpec.unitPrice).toLocaleString(); }
     var qinp=newRow.querySelector('.sqty'); if(qinp) qinp.value=jaR;
     calcSvcRow(pinp);
   }
 
-  // 2026-08-05: 레일시공비(25,000원)도 동일한 이유로 변수 추출
-  var RAIL_INSTALL_FEE = 25000;
+  // 레일 시공비 규칙은 est-calc-rules.js의 railInstallSpec 한 곳에만 있음
+  var installSpec = railInstallSpec();
 
   // 레일 시공비 행: 단가 25,000원 × 1개 (레일수와 무관, 창문 1개 시공당 고정)
   var existingCost = svcBody.querySelector('[data-railcost-src="'+rowIdx+'"]');
   if(existingCost) {
     var cSpaceInp=existingCost.querySelector('.svc-space'); if(cSpaceInp) cSpaceInp.value = space||'';
-    var cinp=existingCost.querySelector('.svc-content'); if(cinp) cinp.value='레일 시공비';
+    var cinp=existingCost.querySelector('.svc-content'); if(cinp) cinp.value=installSpec.content;
     if (!existingCost.dataset.manualOverride) {
-      var cpinp=existingCost.querySelector('.sprice'); if(cpinp){ cpinp.setAttribute('data-raw',String(RAIL_INSTALL_FEE)); cpinp.value=(RAIL_INSTALL_FEE).toLocaleString(); }
+      var cpinp=existingCost.querySelector('.sprice'); if(cpinp){ cpinp.setAttribute('data-raw',String(installSpec.price)); cpinp.value=(installSpec.price).toLocaleString(); }
     }
-    var cqinp=existingCost.querySelector('.sqty'); if(cqinp) cqinp.value=1;
+    var cqinp=existingCost.querySelector('.sqty'); if(cqinp) cqinp.value=installSpec.qty;
     calcSvcRow(existingCost.querySelector('.sprice'));
   } else {
     addSvcRow();
@@ -263,9 +261,9 @@ function autoUpdateRail(curtainTr) {
     newCostRow.setAttribute('data-railcost-src', rowIdx);
     var csel=newCostRow.querySelector('.svc-kind'); if(csel) csel.value='시공비';
     var cSpaceInp=newCostRow.querySelector('.svc-space'); if(cSpaceInp) cSpaceInp.value = space||'';
-    var cinp=newCostRow.querySelector('.svc-content'); if(cinp) cinp.value='레일 시공비';
-    var cpinp=newCostRow.querySelector('.sprice'); if(cpinp){ cpinp.setAttribute('data-raw',String(RAIL_INSTALL_FEE)); cpinp.value=(RAIL_INSTALL_FEE).toLocaleString(); }
-    var cqinp=newCostRow.querySelector('.sqty'); if(cqinp) cqinp.value=1;
+    var cinp=newCostRow.querySelector('.svc-content'); if(cinp) cinp.value=installSpec.content;
+    var cpinp=newCostRow.querySelector('.sprice'); if(cpinp){ cpinp.setAttribute('data-raw',String(installSpec.price)); cpinp.value=(installSpec.price).toLocaleString(); }
+    var cqinp=newCostRow.querySelector('.sqty'); if(cqinp) cqinp.value=installSpec.qty;
     calcSvcRow(cpinp);
   }
 

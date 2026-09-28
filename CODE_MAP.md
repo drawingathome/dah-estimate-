@@ -50,13 +50,13 @@
 |---|---|---|---|
 | 1 | `shared-staging-guard.js` | DAH 공용 — 스테이징 환경 쓰기 차단 안전장치 | 0 |
 | 2 | `est-public-view.js` | DAH 견적서 앱 — 고객용 공개보기 모드 | 5 |
-| 3 | `est-utils.js` | DAH 견적서 앱 — 유틸함수 + API 설정 | 23 |
+| 3 | `est-utils.js` | DAH 견적서 앱 — 유틸함수 + API 설정 | 22 |
 | 4 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 6 |
 | 5 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 2 |
 | 6 | `est-sync-queue.js` | DAH 견적서 앱 — 오프라인/네트워크 실패 재시도 큐 (2026-08-05 신규) | 5 |
 | 7 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 15 |
 | 8 | `est-form-controls.js` | DAH 견적서 앱 — 폼 상태/타입 제어 | 13 |
-| 9 | `est-calc-rules.js` | DAH 견적서 앱 — 계산 규칙 (순수 함수: 화면/저장소를 전혀 안 만짐) | 11 |
+| 9 | `est-calc-rules.js` | DAH 견적서 앱 — 계산 규칙 (순수 함수: 화면/저장소를 전혀 안 만짐) | 14 |
 | 10 | `est-product-calc.js` | DAH 견적서 앱 — 공통 계산: 합계(calcTotal)/얼림 금액/행 삭제/드래그 정렬 | 10 |
 | 11 | `est-calc-curtain.js` | DAH 견적서 앱 — 커튼 행 계산 (추가/폭수·금액 계산/레일 자동/복사) | 4 |
 | 12 | `est-calc-blind.js` | DAH 견적서 앱 — 블라인드 행 계산 (추가/최소면적/옵션 추가금/부자재 자동/복사) | 6 |
@@ -148,7 +148,7 @@
 | `calcGrandBeforeTruncation` | `est-calc-rules.js` |
 | `calcOtherItemRow` | `est-calc-svc.js` |
 | `calcPerformanceRevenue` | `est-calc-rules.js` |
-| `calcRailJa` | `est-utils.js` |
+| `calcRailJa` | `est-calc-rules.js` |
 | `calcSuggestedPanels` | `est-calc-rules.js` |
 | `calcSvcRow` | `est-calc-svc.js` |
 | `calcTotal` | `est-product-calc.js` |
@@ -341,6 +341,8 @@
 | `printRequest` | `est-doc-request.js` |
 | `processNewSurveys` | `apps-script-survey-to-customer.js` |
 | `ProgressBar` | `survey-app.js` |
+| `railInstallSpec` | `est-calc-rules.js` |
+| `railMaterialSpec` | `est-calc-rules.js` |
 | `recalcBlindOptionExtras` | `est-calc-blind.js` |
 | `refreshAlimSentMapFromServer` | `dash-customer-alim.js` |
 | `refreshAuthSessionIfNeeded` | `dash-supabase-auth.js` |

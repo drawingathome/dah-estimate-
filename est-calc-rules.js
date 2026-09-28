@@ -162,3 +162,34 @@ function calcDepositAndBalance(grand, depositRaw) {
 function calcPerformanceRevenue(curtainTotal, discount) {
   return Math.max(0, curtainTotal - discount);
 }
+
+// ── 레일 자동 산정 규칙 ────────────────────────────────────────────
+// 2026-09-11(선혜님이 알려주신 실제 레일 계산 방식 - "우리가 레일
+// 계산할때 -자 조절레일로 적는거 아니야?"): 원단 폭(cm)을 자(尺)
+// 단위로 환산 - est-calc-curtain.js의 autoUpdateRail(견적 화면 표시용)와
+// est-doc-vendor.js(발주서용) 둘 다 이 계산이 필요해서 전역 헬퍼로 통일.
+function calcRailJa(mwCm) {
+  var ja = mwCm / 30, jaR = Math.ceil(ja);
+  if (jaR % 2 !== 0) jaR++;
+  return jaR;
+}
+
+// 2026-08-05: 레일단가(1,600원)를 변수로 추출 — 예전엔 autoUpdateRail의 두 분기(기존행 수정/신규행 생성)에
+// 리터럴 '1600'이 각각 따로 있어서, 나중에 단가가 바뀌면 한쪽만 고치고 다른쪽을 놓칠 위험이 있었음.
+// 2026-09-28: 그 변수마저 함수 안 지역변수였는데, 이제 코드 전체에서 이 한 곳에만 둠.
+var RAIL_UNIT_PRICE = 1600;
+// 2026-08-05: 레일시공비(25,000원)도 동일한 이유로 변수 추출. 레일수와 무관, 창문(커튼 한 줄) 1개 시공당 고정.
+var RAIL_INSTALL_FEE = 25000;
+
+// 레일 (자재) 행: 단가 1,600원 × 레일수(자). 2026-09-01(선혜님 - "조절레일 (타공형) 이 기본이야"):
+// 그냥 "레일"이라고만 나오던 것을 실제 기본 레일 종류(조절레일/타공형)로 명시 - 시공요청서도 이 텍스트에서
+// 레일길이를 추출해 보여줌. (발주서는 "6자 조절레일(타공형)"처럼 일부러 다른 어순으로 est-doc-vendor.js가 만듦)
+function railMaterialSpec(mw) {
+  var ja = calcRailJa(mw);
+  return { ja: ja, content: '조절레일(타공형) ' + ja + '자', unitPrice: RAIL_UNIT_PRICE, qty: ja };
+}
+
+// 레일 시공비 행: 단가 25,000원 × 1개
+function railInstallSpec() {
+  return { content: '레일 시공비', price: RAIL_INSTALL_FEE, qty: 1 };
+}
