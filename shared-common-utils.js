@@ -142,3 +142,6 @@ function formatPhoneDigits(digits) {
 // (기존 동작 변화 없음) - 각 파일은 이제 이 상수를 그대로 참조.
 var DAH_STAGE_ORDER = ['방문예약','상담','가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'];
 var DAH_PRE_CONTRACT_STAGES = ['방문예약','상담','가견적'];
+// 2026-09-30(코드정리 - 계약 이후 6단계도 dash-customer-estimates.js/dash-utils.js에 각각
+// 하드코딩돼 있던 것 발견): DAH_STAGE_ORDER에서 계약 이전 3단계를 뺀 나머지와 정확히 같음.
+var DAH_POST_CONTRACT_STAGES = ['선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'];

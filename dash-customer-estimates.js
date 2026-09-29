@@ -79,7 +79,7 @@ function renderDetailEstTabInner(estEl) {
     // 2026-09-08: isContracted도 위와 같은 이유로 stage 기준으로 통일 -
     // 배지(현재단계)와 카드 배경색이 서로 다른 기준을 쓰면 오히려 더
     // 헷갈림(예: 배지는 "시공준비중"인데 카드는 흰색/미계약 배경).
-    var isContracted = ['선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'].indexOf(currentCustomerStage) >= 0;
+        var isContracted = DAH_POST_CONTRACT_STAGES.indexOf(currentCustomerStage) >= 0;
 
     var card = div(
       'border:1px solid '+(isContracted?'#B0D4B0':'var(--border)')+';border-radius:12px;padding:14px;margin-bottom:10px;' +

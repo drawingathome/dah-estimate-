@@ -36,7 +36,11 @@ function renderStaffBadge(staffName, sizePx) {
 // 알림 둘 다 이 함수 하나를 재사용함(체크리스트 24번). 결제가 실제로
 // 시작된 단계(선금결제~시공완료)만 대상 - 가견적/상담처럼 아직 청구
 // 전인 단계는 "미수금"이 아니라 "아직 청구 전"이므로 0을 반환.
-var UNPAID_RELEVANT_STAGES = ['선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'];
+// 계약 이후 6단계는 shared-common-utils.js의 DAH_POST_CONTRACT_STAGES 한 곳에만 있음(2026-09-30 코드정리).
+// 2026-09-30: dash-utils.js가 shared-common-utils.js보다 먼저 로드돼서, 선언 시점에 곧바로
+// 값을 대입하면 아직 정의 안 된 상수를 참조하게 됨(실제로 JS 에러 발생 확인) - 변수 자체를
+// 없애고 사용하는 곳(아래 getUnpaidBalance 등)에서 직접 공용 상수를 참조하도록 변경(함수는
+// 호출되는 시점에 실행되니 그때는 이미 모든 스크립트가 로드된 뒤라 문제 없음).
 // 2026-09-21(선혜님 - "그럼 언제 하라는거지??????" → 견적서별 결제
 // 관리로 구조 전환): 결제(선금/잔금)가 이제 고객이 아니라 견적서
 // 각각에 저장되는데, 이 함수(및 이 함수를 안 쓰고 직접 c.depositAmount/
@@ -71,7 +75,7 @@ function getReceivedAmount(c) {
   return Math.max(estSum, customerLevelSum);
 }
 function getUnpaidAmount(c) {
-  if (UNPAID_RELEVANT_STAGES.indexOf(c.stage) < 0) return 0;
+  if (DAH_POST_CONTRACT_STAGES.indexOf(c.stage) < 0) return 0;
   var price = Number(c.price) || 0;
   if (price <= 0) return 0;
   var received = getReceivedAmount(c);

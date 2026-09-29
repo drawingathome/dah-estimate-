@@ -90,11 +90,13 @@ REGISTRY.forEach(function(rule) {
 // 밖에 다시 나타나는지 감시.
 (function () {
   var pattern = /\[\s*'방문예약'\s*,\s*'상담'\s*,\s*'가견적'/;
-  var checkFiles = ['dash-render.js', 'dash-kanban.js', 'dash-customer-detail.js', 'dash-chart.js', 'dash-customer-pay.js', 'dash-customer-detail-tabs.js', 'dash-customer-estimates.js', 'dash-render-search.js', 'dash-render-est.js'];
+  var pattern2 = /\[\s*'선금결제'\s*,\s*'실측준비중'\s*,\s*'확정견적'\s*,\s*'잔금결제'\s*,\s*'시공준비중'\s*,\s*'시공완료'/; // 2026-09-30: 계약 이후 6단계(DAH_POST_CONTRACT_STAGES)도 추가
+  var checkFiles = ['dash-render.js', 'dash-kanban.js', 'dash-customer-detail.js', 'dash-chart.js', 'dash-customer-pay.js', 'dash-customer-detail-tabs.js', 'dash-customer-estimates.js', 'dash-render-search.js', 'dash-render-est.js', 'dash-utils.js'];
   checkFiles.forEach(function (f) {
     var c;
     try { c = readFile(f); } catch (e) { return; }
     check('고객 진행단계 리터럴이 ' + f + '에 재등장하지 않음(공용상수 DAH_STAGE_ORDER/DAH_PRE_CONTRACT_STAGES 대신 쓸 것)', !pattern.test(c));
+    check('계약 이후 6단계 리터럴이 ' + f + '에 재등장하지 않음(공용상수 DAH_POST_CONTRACT_STAGES 대신 쓸 것)', !pattern2.test(c));
   });
 })();
 
