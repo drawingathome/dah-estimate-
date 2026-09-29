@@ -440,6 +440,10 @@ if (/dah-dashboard/.test(target)) {
   // 2026-09-28(선혜님 - "React 전환부터" - dash-customer-as.js를 React 컴포넌트 첫 전환 대상으로 삼기 전,
   // 지금 화면 동작(폼 상태/목록 표시/서버 요청 내용)을 기록해둠 - React로 다시 짠 뒤 같은지 비교하는 용도.
   scripts.push(['as-section-golden-master-check.js', []]);
+  // 2026-09-29(선혜님 - "고객 추가 모달의 로직 통합부터" - dash-customer-add.js와 dah-dashboard.html
+  // 인라인 스크립트에 흩어져 있던 saveCustomer/openAdd 로직을 dash-customer-add.js 한 곳으로 합침):
+  // 통합 전 동작을 기록해두고 비교.
+  scripts.push(['customer-add-golden-master-check.js', []]);
   const dashDir = path.dirname(target);
   const dashJsFiles = ['dash-api.js','dash-auth.js','dash-calendar.js','dash-chart.js','dash-core.js',
     'dash-customer-detail.js','dash-export.js','dash-kanban.js','dash-memo.js','dash-render.js',

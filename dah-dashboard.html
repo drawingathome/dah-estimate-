@@ -61,7 +61,7 @@
 <script src="/dash-customer-detail.js?v=504aaab3bdc2"></script>
 <script src="/dash-customer-detail-tabs.js?v=224dac9ee23f"></script>
 <script src="/dash-customer-estimates.js?v=ba8e769e3d50"></script>
-<script src="/dash-customer-add.js?v=d1e8f6bd32cb"></script>
+<script src="/dash-customer-add.js?v=1582859c992d"></script>
 <script src="/dash-auth.js?v=6feea4b3ac3c"></script>
 <script src="/dash-settings.js?v=a0657b4908d6"></script>
 <script src="/dash-settings-sections.js?v=3debc519608f"></script>
@@ -857,56 +857,7 @@
 
 /* ── 스켈레톤 UI 렌더 ── */
 
-// saveCustomer 전 유효성 검증 통합
-var _origSaveCustomer = window.saveCustomer;
-window.saveCustomer = function() {
-  var nameEl  = document.getElementById('add-name');
-  var phoneEl = document.getElementById('add-phone');
-  var hasError = false;
-
-  if (nameEl) {
-    var nameResult = validateName(nameEl.value);
-    if (!nameResult.ok) {
-      showFieldError(nameEl, nameResult.msg);
-      hasError = true;
-    } else {
-      clearFieldError(nameEl);
-    }
-  }
-  if (phoneEl) {
-    var phoneResult = validatePhone(phoneEl.value);
-    if (!phoneResult.ok) {
-      showFieldError(phoneEl, phoneResult.msg);
-      hasError = true;
-    } else {
-      clearFieldError(phoneEl);
-      // 자동 포맷 적용
-      phoneEl.value = formatPhone(phoneEl.value);
-    }
-  }
-  var dateEl = document.getElementById('add-date');
-  if (dateEl && dateEl.value) {
-    var dateResult = validateDate(dateEl.value);
-    if (!dateResult.ok) {
-      showFieldError(dateEl, dateResult.msg);
-      hasError = true;
-    } else {
-      clearFieldError(dateEl);
-    }
-  }
-  if (hasError) return;
-
-  // 중복 고객(전화번호/이름) 체크 — 수정 모드일 때는 자기 자신과의 중복은 무시
-  if (nameEl && phoneEl && nameResult.ok && phoneResult.ok) {
-    var dupCheck = checkDuplicate(nameEl.value, phoneEl.value);
-    var isEditingSelf = typeof editingCustomerName !== 'undefined' && editingCustomerName &&
-      dupCheck.customer && dupCheck.customer.clientName === editingCustomerName;
-    if (dupCheck.isDup && !isEditingSelf) {
-      if (!confirm(dupCheck.msg)) return;
-    }
-  }
-  if (_origSaveCustomer) _origSaveCustomer.apply(this, arguments);
-};
+// saveCustomer 유효성 검증/중복확인은 2026-09-29에 dash-customer-add.js의 saveCustomer() 안으로 합침(로직 통합)
 
 // 2026-08-29(선혜님 지시 - "이 부분도 다 확인한거니"로 이어서 발견): 이
 // 리스너(formatPhone 사용)와 아래쪽(1009번 근처, fmtPhone 사용)에 정확히
@@ -968,21 +919,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* ── 고객 등록 모달 담당자 칩 ── */
 
-// openAdd 함수 후킹 — 모달 열릴 때 칩 초기화
-var _origOpenAdd = window.openAdd;
-window.openAdd = function(editName) {
-  if (_origOpenAdd) _origOpenAdd.apply(this, arguments);
-  setTimeout(function() {
-    initAddModalChips();
-    loadSettings();
-    // 입금 계좌 힌트 업데이트
-    var s = getSettings();
-    var accountHint = document.getElementById('add-account-hint');
-    if (accountHint && s.account) {
-      accountHint.textContent = '국민은행 ' + s.account + ' ' + (s.holder || '장선혜');
-    }
-  }, 100);
-};
+// openAdd의 담당자칩 초기화/계좌힌트는 2026-09-29에 dash-customer-add.js의 openAdd() 안으로 합침(로직 통합)
 
 /* ── 로딩 스피너 제어 ── */
 

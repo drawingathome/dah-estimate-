@@ -84,6 +84,20 @@ function openAdd(editName) {
   // 발견(선혜님이 실제 화면에서 모달이 잘려보인다고 알려주심). 인라인 스타일은
   // CSS보다 항상 우선하기 때문. 이 속성들은 전부 CSS #add-overlay 기본규칙에
   // 이미 정의돼 있어 중복이었어서, 전체 제거하고 CSS가 담당하도록 함.
+
+  // 2026-09-29(선혜님 - "고객 추가 모달의 로직 통합부터"): 예전엔 dah-dashboard.html 인라인
+  // <script>가 openAdd를 몽키패치해서(원본 호출 뒤 setTimeout 100ms) 담당자칩 초기화와 계좌
+  // 힌트 표시를 끼워넣고 있었음 - 여기로 합침. add-account-hint 엘리먼트 자체가 HTML에 없어서
+  // 계좌 힌트는 원래부터 죽은 코드(절대 안 뜸)였음 - 동작을 안 바꾸는 원칙에 따라 그대로 옮김.
+  setTimeout(function() {
+    initAddModalChips();
+    loadSettings();
+    var s2 = getSettings();
+    var accountHint = document.getElementById('add-account-hint');
+    if (accountHint && s2.account) {
+      accountHint.textContent = '국민은행 ' + s2.account + ' ' + (s2.holder || '장선혜');
+    }
+  }, 100);
 }
 function closeAdd() {
   var _ov = document.getElementById('add-overlay');
@@ -158,6 +172,55 @@ function parseNaverReservationPaste() {
 }
 
 function saveCustomer() {
+  // 2026-09-29(선혜님 - "고객 추가 모달의 로직 통합부터"): 예전엔 dah-dashboard.html 안의 인라인
+  // <script>가 window.saveCustomer를 몽키패치해서 이 검증을 앞에 끼워넣고 있었음(saveCustomer 전
+  // 유효성 검증 통합) - 로직이 파일 두 곳에 흩어져 있으면 한쪽만 보고 고치기 쉬워서 여기로 합침.
+  // 동작은 한 글자도 안 바꿈(순서·조건 전부 그대로) - tests/customer-add-golden-master-check.js로 확인.
+  var nameEl  = document.getElementById('add-name');
+  var phoneEl = document.getElementById('add-phone');
+  var hasError = false;
+  var nameResult, phoneResult;
+
+  if (nameEl) {
+    nameResult = validateName(nameEl.value);
+    if (!nameResult.ok) {
+      showFieldError(nameEl, nameResult.msg);
+      hasError = true;
+    } else {
+      clearFieldError(nameEl);
+    }
+  }
+  if (phoneEl) {
+    phoneResult = validatePhone(phoneEl.value);
+    if (!phoneResult.ok) {
+      showFieldError(phoneEl, phoneResult.msg);
+      hasError = true;
+    } else {
+      clearFieldError(phoneEl);
+      phoneEl.value = formatPhone(phoneEl.value);
+    }
+  }
+  var dateEl = document.getElementById('add-date');
+  if (dateEl && dateEl.value) {
+    var dateResult = validateDate(dateEl.value);
+    if (!dateResult.ok) {
+      showFieldError(dateEl, dateResult.msg);
+      hasError = true;
+    } else {
+      clearFieldError(dateEl);
+    }
+  }
+  if (hasError) return;
+
+  if (nameEl && phoneEl && nameResult.ok && phoneResult.ok) {
+    var dupCheck = checkDuplicate(nameEl.value, phoneEl.value);
+    var isEditingSelf = typeof editingCustomerName !== 'undefined' && editingCustomerName &&
+      dupCheck.customer && dupCheck.customer.clientName === editingCustomerName;
+    if (dupCheck.isDup && !isEditingSelf) {
+      if (!confirm(dupCheck.msg)) return;
+    }
+  }
+
   // 2026-08-29: 위 참고 - 저장 진행 중 중복클릭 방지. 모달이 닫히면(성공/
   // 실패 무관, closeAdd에서) 재활성화됨. 혹시 어떤 이유로 콜백을 못 타서
   // 모달이 안 닫히는 예외상황에 대비해 3초 뒤 안전장치로도 재활성화함.

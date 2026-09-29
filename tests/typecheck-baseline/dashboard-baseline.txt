@@ -57,34 +57,42 @@ dash-customer-add.js(43,58): error TS2339: 'Element' 형식에 'style' 속성이
 dash-customer-add.js(43,109): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
 dash-customer-add.js(43,137): error TS2339: 'Element' 형식에 'style' 속성이 없습니다.
 dash-customer-add.js(70,21): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(98,28): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
-dash-customer-add.js(107,64): error TS2339: 'HTMLElement | {}' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(112,28): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
+dash-customer-add.js(121,64): error TS2339: 'HTMLElement | {}' 형식에 'value' 속성이 없습니다.
   'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(117,42): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(124,41): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(132,41): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(139,14): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(139,29): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(139,45): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(156,38): error TS2339: 'Element' 형식에 'click' 속성이 없습니다.
-dash-customer-add.js(170,19): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
-dash-customer-add.js(174,15): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
-dash-customer-add.js(176,55): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
-dash-customer-add.js(178,50): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(179,52): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(182,32): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
-dash-customer-add.js(194,136): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(194,215): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(194,263): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(194,321): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(194,379): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(194,427): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(268,122): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(268,231): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(268,279): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(268,337): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(268,395): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
-dash-customer-add.js(268,443): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(131,42): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(138,41): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(146,41): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(153,14): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(153,29): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(153,45): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(170,38): error TS2339: 'Element' 형식에 'click' 속성이 없습니다.
+dash-customer-add.js(185,38): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(194,41): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(200,15): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(200,43): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(204,24): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(205,42): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(216,42): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(216,57): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(233,19): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
+dash-customer-add.js(237,15): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
+dash-customer-add.js(239,55): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
+dash-customer-add.js(241,50): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(242,52): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(245,32): error TS2339: 'HTMLElement' 형식에 'disabled' 속성이 없습니다.
+dash-customer-add.js(257,136): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(257,215): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(257,263): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(257,321): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(257,379): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(257,427): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(331,122): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(331,231): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(331,279): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(331,337): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(331,395): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+dash-customer-add.js(331,443): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
 dash-customer-alim.js(19,22): error TS2362: 산술 연산의 왼쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
 dash-customer-alim.js(19,26): error TS2363: 산술 연산 오른쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.
 dash-customer-alim.js(28,19): error TS2363: 산술 연산 오른쪽은 'any', 'number', 'bigint' 또는 열거형 형식이어야 합니다.

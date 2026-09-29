@@ -1,0 +1,176 @@
+{
+ "S1_신규_유효성실패": {
+  "dialogs": [],
+  "jsErrors": [],
+  "requests": [],
+  "snap1": {
+   "accountHint": null,
+   "fieldErrors": [],
+   "isOpen": true,
+   "name": "",
+   "phone": "",
+   "saveBtnDisabled": false,
+   "staffChips": [
+    "마스터*",
+    "미배정"
+   ],
+   "title": "고객 추가"
+  },
+  "snap2": {
+   "accountHint": null,
+   "fieldErrors": [
+    "고객명은 2자 이상 입력해주세요",
+    "연락처 형식이 올바르지 않습니다 (예: 010-1234-5678)"
+   ],
+   "isOpen": true,
+   "name": "김",
+   "phone": "123",
+   "saveBtnDisabled": false,
+   "staffChips": [
+    "마스터*",
+    "미배정"
+   ],
+   "title": "고객 추가"
+  }
+ },
+ "S2_신규_정상저장": {
+  "dialogs": [],
+  "jsErrors": [],
+  "requests": [
+   {
+    "body": {
+     "phone_input": "010-1111-2222"
+    },
+    "method": "POST",
+    "path": "rpc/check_phone_duplicate"
+   },
+   {
+    "body": {
+     "addr": "",
+     "balance_amount": 0,
+     "balance_date": "",
+     "balance_method": "",
+     "balance_receipt": false,
+     "branch": "반포점",
+     "client_name": "신규고객",
+     "confirm_date": null,
+     "date": "2026-09-29",
+     "deposit_amount": 0,
+     "deposit_date": "",
+     "deposit_method": "",
+     "deposit_receipt": false,
+     "install_date": "",
+     "install_date_tbd": false,
+     "measure_date": "",
+     "measure_date_tbd": false,
+     "memo": "",
+     "order_status": {},
+     "payment_link": "",
+     "performance_revenue": 0,
+     "phone": "010-1111-2222",
+     "price": 0,
+     "space": "",
+     "staff_name": "마스터",
+     "stage": "상담",
+     "visit_count": 1
+    },
+    "method": "POST",
+    "path": "/rest/v1/customers"
+   }
+  ],
+  "snap1": {
+   "accountHint": null,
+   "fieldErrors": [],
+   "isOpen": false,
+   "name": "신규고객",
+   "phone": "010-1111-2222",
+   "saveBtnDisabled": false,
+   "staffChips": [
+    "마스터*",
+    "미배정"
+   ],
+   "title": "고객 추가"
+  },
+  "snap2": null
+ },
+ "S3_전화번호중복": {
+  "dialogs": [
+   "이미 등록된 연락처예요 (기존폰중복)"
+  ],
+  "jsErrors": [],
+  "requests": [],
+  "snap1": {
+   "accountHint": null,
+   "fieldErrors": [],
+   "isOpen": true,
+   "name": "신규이름",
+   "phone": "010-5555-6666",
+   "saveBtnDisabled": false,
+   "staffChips": [
+    "마스터*",
+    "미배정"
+   ],
+   "title": "고객 추가"
+  },
+  "snap2": null
+ },
+ "S4_동명이인": {
+  "dialogs": [
+   "같은 이름의 고객이 있어요 (기존이름중복). 그래도 등록할까요?"
+  ],
+  "jsErrors": [],
+  "requests": [],
+  "snap1": {
+   "accountHint": null,
+   "fieldErrors": [],
+   "isOpen": true,
+   "name": "기존이름중복",
+   "phone": "010-0000-1111",
+   "saveBtnDisabled": false,
+   "staffChips": [
+    "마스터*",
+    "미배정"
+   ],
+   "title": "고객 추가"
+  },
+  "snap2": null
+ },
+ "S5_수정모드_열기_계좌힌트": {
+  "dialogs": [],
+  "jsErrors": [],
+  "requests": [],
+  "snap1": {
+   "accountHint": null,
+   "fieldErrors": [],
+   "isOpen": true,
+   "name": "기존폰중복",
+   "phone": "01055556666",
+   "saveBtnDisabled": false,
+   "staffChips": [
+    "마스터*",
+    "미배정"
+   ],
+   "title": "고객 정보 수정"
+  },
+  "snap2": null
+ },
+ "S6_네이버붙여넣기": {
+  "dialogs": [],
+  "jsErrors": [],
+  "requests": [],
+  "snap1": {
+   "accountHint": null,
+   "fieldErrors": [],
+   "isOpen": true,
+   "name": "김철수",
+   "phone": "010-2222-3333",
+   "saveBtnDisabled": false,
+   "staffChips": [
+    "마스터",
+    "미배정*"
+   ],
+   "title": "고객 추가"
+  },
+  "snap2": null
+ }
+}
