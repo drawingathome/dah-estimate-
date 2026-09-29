@@ -275,12 +275,28 @@ async function setupValidSession(page) {
   });
 }
 
+// 2026-09-29(dash-customer-add.js를 React 컴포넌트로 바꾸면서 발견): React가 관리하는 입력칸
+// (controlled input)에 .value= 로 직접 값을 넣으면 화면엔 보여도 React의 내부 상태는 안 바뀜 -
+// 실제 사람이 타이핑한 것처럼 input 이벤트를 같이 보내야 함(원본 바닐라 DOM에선 .value= 만으로
+// 충분했음). 이 함정에 걸렸던 곳: as-section-golden-master-check.js(직접 겪음), as_management_check.js,
+// customer-add-golden-master-check.js, dashboard-data-check.js, naver_paste_parse_check.js,
+// race-condition-check.js(모두 이 헬퍼로 수정). 이후 React로 바뀐 입력칸에 값을 넣을 땐 항상 이 함수를 씀.
+async function setReactInputValue(page, elementId, value) {
+  await page.evaluate((id, v) => {
+    var el = document.getElementById(id);
+    var proto = el.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+    Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, v);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  }, elementId, value);
+}
+
 module.exports = {
   launchBrowser,
   blockRealNetwork,
   startServer,
   loginAs,
   setupValidSession,
+  setReactInputValue,
   SKIP_TAGS,
   ALLOWED_FONT_SIZES,
   MIN_TOUCH_TARGET

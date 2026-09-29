@@ -1,336 +1,299 @@
-// ══════════════════════════════════════════════════
-// DAH 고객 추가/수정 모달 (openAdd/closeAdd/saveCustomer)
-// dash-customer-detail.js에서 분리됨 (2026-07-19, 책임 분리)
-// ══════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════
+   고객 추가/수정 모달 (React 전환 2호)
+   2026-09-29(선혜님 - "고객추가모달은 어떻게 해야하니" → React 재작성 진행): 이전 단계(로직 통합
+   25ab379, 버튼 정리 68d1cb8)로 흩어진 로직을 이미 한 곳으로 모아둔 상태에서 재작성.
+   바깥 인터페이스(openAdd(editName)/closeAdd())는 그대로 유지 - 다른 파일(dash-customer-detail.js,
+   dash-render.js)이 이 이름으로 호출하므로 그쪽은 한 글자도 안 바꿔도 됨.
 
-// 주소(도로명) + 상세주소(동/호수 등)를 하나로 합침 — 저장은 항상 합쳐서 한 필드(addr)로
-function getCombinedAddr() {
-  var base = (document.getElementById('add-addr').value || '').trim();
-  var detail = (document.getElementById('add-addr-detail').value || '').trim();
-  return detail ? (base + ' ' + detail) : base;
-}
+   구조: #add-overlay(열림/닫힘 className은 지금처럼 순수 JS가 관리) 안의 #add-modal-box를
+   React root로 삼아, 폼 전체(헤더/네이버붙여넣기/입력칸/담당자칩/주소/저장버튼)를 그 안에 그림.
+   전환 전 동작은 tests/customer-add-golden-master-check.js(10개 시나리오)에 기록해뒀음.
+
+   재작성 중 발견한, 이번에 함께 정리한 것들:
+   - "저장 + 예약확인 알림톡 발송"/"저장만 하기" 중복 버튼(알림톡 미구현) → 이미 68d1cb8에서 정리됨.
+   - initAddModalChips()(dash-settings.js): .add-staff-chip/.add-stage-chip 클래스를 찾는데, 이
+     클래스를 가진 엘리먼트가 코드베이스 전체에 하나도 없음 - 완전히 죽은 함수. 지금 폼의 담당자
+     칩은 클래스가 .staff-btn이라 애초에 이 함수와 무관.
+   - loadSettings()(dash-settings.js): 설정화면 전용 엘리먼트(set-bank 등)를 채우는 함수라, 고객
+     추가 모달이 열려있는 시점에 불러도 아무 효과 없음(엉뚱한 곳에서 호출되고 있었음).
+   - 계좌 힌트 표시: add-account-hint 엘리먼트 자체가 HTML에 없어 원래부터 죽은 코드(2026-09-29
+     로직 통합 때 이미 발견, 이번에도 동일).
+   - 담당자칩 활성 색상이 두 곳에서 다르게 구현돼 있었음: openAdd()가 처음 그릴 때는
+     var(--terra)(주황), document 레벨 클릭 위임 리스너(dah-dashboard.html)는 클릭 시 #282828
+     (검정)을 칠해서 실제로는 클릭 후 색이 바뀌는 미스매치가 있었음 - React로 통합하며 하나로
+     고정(클릭 위임 리스너가 사실상 "최종적으로 보이는 색"이었으므로 #282828 활성색으로 통일,
+     동작 결과 자체는 동일).
+   위 죽은 코드/무관한 호출들은 React 컴포넌트로 옮기지 않음(호출해도 원래 아무 효과 없었으므로
+   빠뜨려도 화면·데이터 동작에 차이 없음 - tests/customer-add-golden-master-check.js로 확인).
+   ══════════════════════════════════════════════════ */
+
+var _addModalApi = null;
 
 function openAdd(editName) {
-  editingCustomerName = editName || null;
-  editingCustomerId = editName ? currentDetailId : null; // 상세화면에서 열렸다면 그 정확한 id를 이어받음
-  document.getElementById('add-modal-title').textContent = editName ? '고객 정보 수정' : '고객 추가';
-  if (editName) {
-    
-    document.getElementById('add-modal-title').textContent = '고객 정보 수정';
-    var arr = loadCustomers(); var c = editingCustomerId ? arr.find(function(x) { return String(x.id) === String(editingCustomerId); }) : arr.find(function(x) { return x.clientName === editName; });
-    if (c) { document.getElementById('add-name').value = c.clientName; document.getElementById('add-phone').value = c.phone || ''; document.getElementById('add-addr').value = c.addr || ''; document.getElementById('add-addr-detail').value = ''; document.getElementById('add-space').value = c.space || ''; document.getElementById('add-stage').value = c.stage || '상담'; document.getElementById('add-date').value = c.date || todayStr(); document.getElementById('add-memo').value = c.memo || ''; document.getElementById('add-measure').value = c.measureDate || ''; document.getElementById('add-install').value = c.installDate || ''; }
-  } else { document.getElementById('add-name').value = ''; document.getElementById('add-phone').value = ''; document.getElementById('add-addr').value = ''; document.getElementById('add-addr-detail').value = ''; document.getElementById('add-space').value = ''; document.getElementById('add-stage').value = '상담'; document.getElementById('add-date').value = todayStr(); document.getElementById('add-memo').value = ''; document.getElementById('add-measure').value = ''; document.getElementById('add-install').value = ''; }
-  var defaultStaff = editName ? (function() { var arr = loadCustomers(); var c = editingCustomerId ? arr.find(function(x) { return x.id === editingCustomerId; }) : arr.find(function(x) { return x.clientName === editName; }); return c ? (c.staffName || '마스터') : '마스터'; })() : (currentUser ? currentUser.name : '마스터');
-  var isStaffUser = currentUser && currentUser.role === 'staff';
-  
-  var staffWrap = document.getElementById('staff-btn-wrap');
-  if (staffWrap) {
-    staffWrap.innerHTML = '';
-    var staffList2 = ['마스터'].concat(getStaffList()).concat(['미배정']);
-    staffList2.forEach(function(sn) {
-      var isActive = sn === defaultStaff;
-      var sb = document.createElement('button');
-      sb.setAttribute('data-staff', sn);
-      sb.className = 'staff-btn';
-      sb.textContent = sn;
-      sb.style.cssText = 'padding:6px 12px;border-radius:10px;border:1px solid '+(isActive?'var(--terra)':'var(--border)')+';font-size:11px;font-weight:'+(isActive?'700':'500')+';font-family:inherit;cursor:pointer;background:'+(isActive?'var(--terra)':'#fff')+';color:'+(isActive?'#fff':'var(--sub)');
-      staffWrap.appendChild(sb);
-    });
-  }
-  document.querySelectorAll('.staff-btn').forEach(function(b) {
-    var isActive = b.getAttribute('data-staff') === defaultStaff;
-    b.classList.toggle('active', isActive); b.style.background = isActive ? 'var(--terra)' : '#fff'; b.style.color = isActive ? '#fff' : '#8E8078'; b.style.borderRadius = 'var(--r-btn)'; b.style.border = '1.5px solid ' + (isActive ? 'var(--terra)' : 'var(--border)'); b.style.fontWeight = isActive ? '700' : '400';
-    if (isStaffUser) { b.style.pointerEvents = 'none'; b.style.opacity = isActive ? '1' : '0.3'; } else { b.style.pointerEvents = ''; b.style.opacity = ''; }
-  });
   var _ov = document.getElementById('add-overlay');
-
-  // 최근 사용 주소 자동완성 — 카카오 주소검색(팝업 열기->검색->선택 3단계)을
-  // 반복 지역(같은 아파트 단지 등) 고객에 한해 원클릭으로 줄여줌
-  var recentWrap = document.getElementById('add-addr-recent');
-  if (recentWrap) {
-    recentWrap.innerHTML = '';
-    var allC = loadCustomers();
-    var seen = {};
-    var recentAddrs = [];
-    allC.slice().reverse().forEach(function(cust) {
-      var a = (cust.addr || '').trim();
-      if (a && !seen[a]) { seen[a] = true; recentAddrs.push(a); }
-    });
-    recentAddrs = recentAddrs.slice(0, 5);
-    if (recentAddrs.length > 0) {
-      recentWrap.style.display = 'flex';
-      recentAddrs.forEach(function(a) {
-        var chip = document.createElement('button');
-        chip.type = 'button';
-        chip.textContent = a.length > 16 ? a.slice(0, 16) + '…' : a;
-        chip.title = a;
-        chip.style.cssText = 'font-size:11px;color:var(--dark);background:var(--ivory1);border:1px solid var(--border);border-radius:var(--r-btn);padding:5px 10px;cursor:pointer;font-family:inherit;white-space:nowrap';
-        chip.addEventListener('click', function() {
-          var addrInput = document.getElementById('add-addr');
-          addrInput.value = a;
-          addrInput.dispatchEvent(new Event('change'));
-        });
-        recentWrap.appendChild(chip);
-      });
-    } else {
-      recentWrap.style.display = 'none';
-    }
+  if (!document.getElementById('add-modal-box')._reactRoot) {
+    document.getElementById('add-modal-box')._reactRoot = ReactDOM.createRoot(document.getElementById('add-modal-box'));
   }
-
+  document.getElementById('add-modal-box')._reactRoot.render(
+    React.createElement(AddCustomerModal, { editName: editName || null, registerApi: function (api) { _addModalApi = api; } })
+  );
   _ov.className = 'overlay open';
   _ov.style.display = 'flex';
-  // 2026-08-05: 여기서 style.alignItems='flex-end'를 인라인으로 강제하고 있어서,
-  // CSS의 PC 반응형 규칙(1024px 이상에서 화면 중앙정렬)이 전혀 먹히지 않던 버그
-  // 발견(선혜님이 실제 화면에서 모달이 잘려보인다고 알려주심). 인라인 스타일은
-  // CSS보다 항상 우선하기 때문. 이 속성들은 전부 CSS #add-overlay 기본규칙에
-  // 이미 정의돼 있어 중복이었어서, 전체 제거하고 CSS가 담당하도록 함.
-
-  // 2026-09-29(선혜님 - "고객 추가 모달의 로직 통합부터"): 예전엔 dah-dashboard.html 인라인
-  // <script>가 openAdd를 몽키패치해서(원본 호출 뒤 setTimeout 100ms) 담당자칩 초기화와 계좌
-  // 힌트 표시를 끼워넣고 있었음 - 여기로 합침. add-account-hint 엘리먼트 자체가 HTML에 없어서
-  // 계좌 힌트는 원래부터 죽은 코드(절대 안 뜸)였음 - 동작을 안 바꾸는 원칙에 따라 그대로 옮김.
-  setTimeout(function() {
-    initAddModalChips();
-    loadSettings();
-    var s2 = getSettings();
-    var accountHint = document.getElementById('add-account-hint');
-    if (accountHint && s2.account) {
-      accountHint.textContent = '국민은행 ' + s2.account + ' ' + (s2.holder || '장선혜');
-    }
-  }, 100);
 }
 function closeAdd() {
   var _ov = document.getElementById('add-overlay');
   _ov.className = 'overlay';
   _ov.style.display = 'none';
-  // 2026-08-29(선혜님이 견적서 중복저장 건 확인 요청으로 발견 — "비슷한
-  // 오류 찾아": saveCustomer()도 견적서저장과 정확히 같은 근본 문제를
-  // 갖고 있었음 - 저장버튼 연타시 중복클릭 방지가 전혀 없어서, 실제
-  // 재현 테스트로 3번 연타→고객 3명 생성 확인함) 모달을 닫을 때 저장
-  // 버튼도 함께 재활성화 - 아래 saveCustomer()에서 저장 시작시 비활성화함.
-  var _saveBtn = document.getElementById('add-save-btn');
-  if (_saveBtn) { _saveBtn.disabled = false; _saveBtn.style.opacity = ''; }
+  if (_addModalApi && _addModalApi.reset) _addModalApi.reset();
 }
 
-// 2026-09-11(선혜님 지시): 네이버예약 API가 없어서 완전자동은 불가능함이
-// 확인됨(스마트플레이스/토스포스/업종별CRM 전부 확인, 인테리어업종용은 없음).
-// 대신 예약 상세화면을 통째로 복사→붙여넣기하면 이름/전화번호/일시를 자동
-// 추출해서 채워주는 것으로 수동입력 속도만 개선. 완전 자동화 아니므로
-// 결과는 항상 사람이 눈으로 확인 후 저장 버튼을 눌러야 함(자동저장 아님).
-function parseNaverReservationPaste() {
-  var raw = (document.getElementById('add-naver-paste') || {}).value || '';
-  if (!raw.trim()) { showToast('붙여넣은 내용이 없어요'); return; }
+// 오버레이 배경(자기 자신) 클릭시 닫기 - 예전엔 dah-dashboard.html의 document 리스너가 담당
+document.addEventListener('DOMContentLoaded', function () {
+  var ov = document.getElementById('add-overlay');
+  if (ov) ov.addEventListener('click', function (e) { if (e.target === ov) closeAdd(); });
+});
 
-  var filled = [];
+function AddCustomerModal({ editName, registerApi }) {
+  const e = React.createElement;
+  const isEdit = !!editName;
 
-  // 전화번호: 010-XXXX-XXXX 형식, 다른 텍스트에 섞여있어도 안정적으로 찾음
-  var phoneMatch = raw.match(/01[0-9]-?\s*\d{3,4}-?\s*\d{4}/);
-  if (phoneMatch) {
-    var digits = phoneMatch[0].replace(/[^0-9]/g, '');
-    var formatted = digits.length === 11 ? digits.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3') : digits.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
-    document.getElementById('add-phone').value = formatted;
-    filled.push('전화번호');
-  }
-
-  // 이름: "예약자" 라벨 다음 줄의 한글 이름 (2~5자, 다음 줄의 "전화번호" 라벨 전까지)
-  var nameMatch = raw.match(/예약자\s*[\r\n:]+\s*([가-힣]{2,5})/);
-  if (nameMatch) {
-    document.getElementById('add-name').value = nameMatch[1];
-    filled.push('이름');
-  }
-
-  // 이용일시: "2026. 9. 17.(목) 오전 11:00" 형태
-  var dtMatch = raw.match(/(\d{4})\s*[.\-]\s*(\d{1,2})\s*[.\-]\s*(\d{1,2})\.?\s*\([가-힣]\)\s*(오전|오후)?\s*(\d{1,2}):(\d{2})/);
-  if (dtMatch) {
-    var y = dtMatch[1], m = ('0' + dtMatch[2]).slice(-2), d = ('0' + dtMatch[3]).slice(-2);
-    document.getElementById('add-date').value = y + '-' + m + '-' + d;
-    filled.push('날짜');
-    var ampm = dtMatch[4] || '';
-    var hh = dtMatch[5], mm = dtMatch[6];
-    var memoEl = document.getElementById('add-memo');
-    if (memoEl) {
-      var timeNote = '네이버예약 방문시간: ' + ampm + ' ' + hh + ':' + mm;
-      memoEl.value = memoEl.value ? (memoEl.value + '\n' + timeNote) : timeNote;
+  // 수정모드용 숨김 필드(memo/stage/measureDate/installDate) - 화면엔 없지만 저장시 그대로 실려야 함
+  const initial = React.useMemo(function () {
+    editingCustomerName = editName || null;
+    if (isEdit) {
+      var arr = loadCustomers();
+      var c = editingCustomerId ? arr.find(function (x) { return String(x.id) === String(editingCustomerId); }) : arr.find(function (x) { return x.clientName === editName; });
+      if (c) editingCustomerId = c.id;
+      return {
+        name: c ? c.clientName : '', phone: c ? (c.phone || '') : '',
+        date: c ? (c.date || todayStr()) : todayStr(), addr: c ? (c.addr || '') : '', addrDetail: '', space: c ? (c.space || '') : '',
+        staffName: c ? (c.staffName || '마스터') : '마스터',
+        stage: c ? (c.stage || '상담') : '상담', memo: c ? (c.memo || '') : '', measureDate: c ? (c.measureDate || '') : '', installDate: c ? (c.installDate || '') : ''
+      };
     }
-  }
+    editingCustomerId = null;
+    // 2026-09-29(원본과 동일하게 유지): role 구분 없이 로그인한 사람 이름이 기본값 - 마스터로 로그인하면 currentUser.name도 '마스터'라 결과는 같음
+    return { name: '', phone: '', date: todayStr(), addr: '', addrDetail: '', space: '', staffName: currentUser ? currentUser.name : '마스터', stage: '상담', memo: '', measureDate: '', installDate: '' };
+  }, [editName]);
 
-  if (filled.length === 0) {
-    showToast('자동으로 못 찾았어요, 직접 입력해주세요');
-  } else {
-    showToast(filled.join('·') + ' 자동으로 채웠어요, 확인 후 저장해주세요');
-    // 2026-09-14(선혜님 지시 - "고객정보가 양쪽에서 보이게 하고 내가
-    // 상담할 고객으로 지정이 될 수 있게" 논의 중 "네이버 예약으로 새
-    // 고객 등록할 땐 미배정으로 두자"로 확정): 지금까지는 이 모달을
-    // 연 사람(currentUser)이 자동으로 담당자 기본값이 돼서, 네이버
-    // 예약을 처음 발견한 사람이 자동으로 담당자가 돼버렸음 - 실제
-    // 상담은 나중에 다른 사람이 할 수도 있으니, 네이버 붙여넣기로
-    // 채운 경우만 "미배정"으로 바꿔서 나중에 담당할 사람이 직접
-    // 지정하게 함(수동으로 입력하는 경우는 기존처럼 본인 담당 유지).
-    var unassignedBtn = document.querySelector('.staff-btn[data-staff="미배정"]');
-    if (unassignedBtn) unassignedBtn.click();
-  }
-}
+  const [name, setName] = React.useState(initial.name);
+  const [phone, setPhone] = React.useState(initial.phone);
+  const [date, setDate] = React.useState(initial.date);
+  const [addr, setAddr] = React.useState(initial.addr);
+  const [addrDetail, setAddrDetail] = React.useState(initial.addrDetail);
+  const [space, setSpace] = React.useState(initial.space);
+  const [naverPaste, setNaverPaste] = React.useState('');
+  const [staffName, setStaffName] = React.useState(initial.staffName);
+  const [stage] = React.useState(initial.stage); // 화면엔 안 나오지만 저장시 그대로 실림(수정모드에서 기존 단계 유지)
+  const [memo, setMemo] = React.useState(initial.memo);
+  const [measureDate] = React.useState(initial.measureDate);
+  const [installDate] = React.useState(initial.installDate);
+  const [fieldErrors, setFieldErrors] = React.useState({});
+  const [saving, setSaving] = React.useState(false);
 
-function saveCustomer() {
-  // 2026-09-29(선혜님 - "고객 추가 모달의 로직 통합부터"): 예전엔 dah-dashboard.html 안의 인라인
-  // <script>가 window.saveCustomer를 몽키패치해서 이 검증을 앞에 끼워넣고 있었음(saveCustomer 전
-  // 유효성 검증 통합) - 로직이 파일 두 곳에 흩어져 있으면 한쪽만 보고 고치기 쉬워서 여기로 합침.
-  // 동작은 한 글자도 안 바꿈(순서·조건 전부 그대로) - tests/customer-add-golden-master-check.js로 확인.
-  var nameEl  = document.getElementById('add-name');
-  var phoneEl = document.getElementById('add-phone');
-  var hasError = false;
-  var nameResult, phoneResult;
+  const isStaffUser = currentUser && currentUser.role === 'staff';
+  const staffList = React.useMemo(function () { return ['마스터'].concat(getStaffList()).concat(['미배정']); }, []);
 
-  if (nameEl) {
-    nameResult = validateName(nameEl.value);
-    if (!nameResult.ok) {
-      showFieldError(nameEl, nameResult.msg);
-      hasError = true;
-    } else {
-      clearFieldError(nameEl);
-    }
-  }
-  if (phoneEl) {
-    phoneResult = validatePhone(phoneEl.value);
-    if (!phoneResult.ok) {
-      showFieldError(phoneEl, phoneResult.msg);
-      hasError = true;
-    } else {
-      clearFieldError(phoneEl);
-      phoneEl.value = formatPhone(phoneEl.value);
-    }
-  }
-  var dateEl = document.getElementById('add-date');
-  if (dateEl && dateEl.value) {
-    var dateResult = validateDate(dateEl.value);
-    if (!dateResult.ok) {
-      showFieldError(dateEl, dateResult.msg);
-      hasError = true;
-    } else {
-      clearFieldError(dateEl);
-    }
-  }
-  if (hasError) return;
-
-  if (nameEl && phoneEl && nameResult.ok && phoneResult.ok) {
-    var dupCheck = checkDuplicate(nameEl.value, phoneEl.value);
-    var isEditingSelf = typeof editingCustomerName !== 'undefined' && editingCustomerName &&
-      dupCheck.customer && dupCheck.customer.clientName === editingCustomerName;
-    if (dupCheck.isDup && !isEditingSelf) {
-      if (!confirm(dupCheck.msg)) return;
-    }
-  }
-
-  // 2026-08-29: 위 참고 - 저장 진행 중 중복클릭 방지. 모달이 닫히면(성공/
-  // 실패 무관, closeAdd에서) 재활성화됨. 혹시 어떤 이유로 콜백을 못 타서
-  // 모달이 안 닫히는 예외상황에 대비해 3초 뒤 안전장치로도 재활성화함.
-  var _saveBtn0 = document.getElementById('add-save-btn');
-  if (_saveBtn0) {
-    // 2026-09-22(선혜님 - "다 해야지"로 전 영역 재검사 중 발견 - est-save.js
-    // 저장버튼 고착 사건과 같은 패턴): 이미 3초 자동복구는 있어서 "영원히
-    // 고착"될 위험은 없었지만, 이 지점 자체엔 아무 기록이 안 남아서 실제로
-    // 몇 번 이런 일이 있었는지 알 방법이 없었음 - 기록만 추가.
-    if (_saveBtn0.disabled) {
-      if (typeof reportClientError === 'function') reportClientError('고객추가-버튼-이미비활성-무시');
-      return;
-    }
-    _saveBtn0.disabled = true;
-    _saveBtn0.style.opacity = '0.6';
-    setTimeout(function(){ if (_saveBtn0) { _saveBtn0.disabled = false; _saveBtn0.style.opacity = ''; } }, 3000);
-  }
-  var name = document.getElementById('add-name').value.trim();
-  var phone = document.getElementById('add-phone').value.trim();
-  if (!name || !phone) {
-    alert('이름과 연락처는 필수입니다.');
-    if (_saveBtn0) { _saveBtn0.disabled = false; _saveBtn0.style.opacity = ''; }
-    return;
-  }
-  var arr = loadCustomers();
-  if (editingCustomerName) {
-    var matched = false;
-    arr = arr.map(function(c) {
-      // editingCustomerId가 있으면 정확히 그 레코드만, 없으면(예전 id없는 데이터) 이름 매칭 중 첫 건만 수정
-      var isTarget = editingCustomerId ? (c.id === editingCustomerId) : (!matched && c.clientName === editingCustomerName);
-      if (isTarget) {
-        matched = true;
-        var staffName2; if (currentUser && currentUser.role === 'staff') { staffName2 = currentUser.name; } else { var asb2 = document.querySelector('.staff-btn.active'); staffName2 = asb2 ? asb2.getAttribute('data-staff') : (c.staffName||'마스터'); }
-        return Object.assign({}, c, { clientName:name, phone:phone, addr:getCombinedAddr(), space:document.getElementById('add-space').value.trim(), staffName:staffName2, stage:document.getElementById('add-stage').value, date:document.getElementById('add-date').value, measureDate:document.getElementById('add-measure').value, installDate:document.getElementById('add-install').value, memo:document.getElementById('add-memo').value.trim() });
-      } return c;
+  const recentAddrs = React.useMemo(function () {
+    var allC = loadCustomers();
+    var seen = {}; var out = [];
+    allC.slice().reverse().forEach(function (cust) {
+      var a = (cust.addr || '').trim();
+      if (a && !seen[a]) { seen[a] = true; out.push(a); }
     });
-    saveCustomers(arr);
-    var savedTarget = editingCustomerId ? arr.find(function(c){ return c.id === editingCustomerId; }) : arr.find(function(c){ return c.clientName === name; });
-    closeAdd(); renderHome(true); openDetail(name, savedTarget && savedTarget.id);
-    if (savedTarget) {
-      saveCustomerToDb(savedTarget, function(err){
-        showToast(err ? '⚠️ 고객정보: 로컬엔 저장됨(서버 재시도 대기)' : '고객 정보가 수정됐습니다');
-      });
-    } else {
-      showToast('고객 정보가 수정됐습니다');
-    }
-  } else {
-    // 2026-08-27(선혜님 발견 — "고객명단에 중복이 너무 많다", 김작미/조승희
-    // 실제 중복 사례): 아래 로컬 중복확인(samePersonExisting)이 이 브라우저의
-    // loadCustomers()(로컬 저장소) 기준으로만 판단되고 있었음 - 오늘 견적서
-    // 중복생성 버그를 고칠 때와 정확히 같은 사각지대(다른 기기/세션에서 방금
-    // 등록한 고객을 이 브라우저가 모르면 못 걸러냄). 저장 버튼을 누른 시점에
-    // 서버에 직접 "이 전화번호로 이미 등록된 고객이 있는지" 한 번 더 확인한
-    // 뒤에 진행하도록 함.
-    var phoneNorm = (phone||'').replace(/\D/g,'');
-    // 2026-09-08(선혜님 발견 — "황남주 내가 입력한 고객인데 오지은 실장님쪽
-    // 에서 또 입력이 되는데?!", 실제 DB로 재현 확인): 기존엔 customers 테이블을
-    // 직접(GET customers?phone=eq...) 조회해서 중복을 확인했는데, RLS 정책상
-    // 스태프는 본인이 담당자인 고객만 조회할 수 있어서 - 마스터가 등록한
-    // "황남주"가 오지은 실장 권한으로는 아예 안 보여 "중복 없음"으로 잘못
-    // 판단되고 완전히 별개의 새 레코드로 등록되고 있었음(RLS 보안정책과
-    // 중복방지 기능이 서로 충돌하던 구조적 문제). 담당자 제한 없이 "이
-    // 전화번호가 이미 있는지/누구 담당인지"만 확인해주는 RPC(SECURITY
-    // DEFINER, 다른 민감정보는 노출 안 함)를 새로 만들어 사용.
-    if (typeof sbXHR === 'function' && phoneNorm) {
-      sbXHR('POST', 'rpc/check_phone_duplicate', { phone_input: phone }, function(err, rows) {
-        var serverMatch = (!err && Array.isArray(rows) && rows[0] && rows[0].exists_flag) ? { client_name: name, phone: phone, staff_name: rows[0].staff_name } : null;
-        _saveNewCustomerActual(name, phone, arr, serverMatch);
-      });
-      return;
-    }
-    _saveNewCustomerActual(name, phone, arr, null);
-  }
-}
+    return out.slice(0, 5);
+  }, []);
 
-function _saveNewCustomerActual(name, phone, arr, serverMatch) {
-    // 재구매 판단은 이름만으로 하지 않고 전화번호까지 같아야 "같은 사람"으로 봄.
-    // 이름만 같고 전화번호가 다르면 동명이인일 가능성이 높으므로, 기존 사람을
-    // 덮어쓰지 않고 명확히 안내한 뒤 완전히 별도의 새 레코드로 등록함.
-    // 2026-08-27: 로컬(arr) 확인에 더해, 저장 직전 서버에서 직접 확인한
-    // serverMatch도 함께 반영 - 로컬 캐시가 모르는(다른 기기/세션에서 방금
-    // 등록된) 기존 고객도 "이미 있음" 판단에 걸리게 함.
-    // 2026-08-28(선혜님 재지적 — "내가 다시 등록했는데 여전히 안되네", 배재연
-    // 재현): checkDuplicate()(dash-ui-helpers.js)의 보관고객 제외 수정과는
-    // 완전히 별개로, 이 함수 안의 samePersonExisting 판정도 똑같이
-    // is_archived를 안 걸러서 "이미 있습니다. 재구매 고객으로 업데이트할까요?"
-    // 라는 혼란스러운 경고가 보관된(이미 지운) 고객 때문에 떴었음 - 정확히
-    // 같은 종류의 버그가 서로 다른 두 곳에 따로 있던 사례(체크리스트 24번).
-    var samePersonExisting = arr.find(function(c) { return !c.is_archived && c.clientName === name && (c.phone||'').replace(/\D/g,'') === (phone||'').replace(/\D/g,''); })
+  React.useEffect(function () {
+    if (registerApi) registerApi({ reset: function () { setSaving(false); } });
+  }, [registerApi]);
+
+  function getCombinedAddr() { return addrDetail ? (addr.trim() + ' ' + addrDetail.trim()) : addr.trim(); }
+
+  function handlePhoneInput(v) { setPhone(fmtPhone(v)); }
+
+  function handleNaverParse() {
+    var raw = naverPaste;
+    if (!raw.trim()) { showToast('붙여넣은 내용이 없어요'); return; }
+    var filled = [];
+    var phoneMatch = raw.match(/01[0-9]-?\s*\d{3,4}-?\s*\d{4}/);
+    var newPhone = phone, newName = name, newDate = date, newStaff = staffName;
+    if (phoneMatch) {
+      var digits = phoneMatch[0].replace(/[^0-9]/g, '');
+      newPhone = digits.length === 11 ? digits.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3') : digits.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+      filled.push('전화번호');
+    }
+    var nameMatch = raw.match(/예약자\s*[\r\n:]+\s*([가-힣]{2,5})/);
+    if (nameMatch) { newName = nameMatch[1]; filled.push('이름'); }
+    var dtMatch = raw.match(/(\d{4})\s*[.\-]\s*(\d{1,2})\s*[.\-]\s*(\d{1,2})\.?\s*\([가-힣]\)\s*(오전|오후)?\s*(\d{1,2}):(\d{2})/);
+    var newMemo = memo;
+    if (dtMatch) {
+      var y = dtMatch[1], m = ('0' + dtMatch[2]).slice(-2), d = ('0' + dtMatch[3]).slice(-2);
+      newDate = y + '-' + m + '-' + d;
+      filled.push('날짜');
+      var ampm = dtMatch[4] || '', hh = dtMatch[5], mm = dtMatch[6];
+      var timeNote = '네이버예약 방문시간: ' + ampm + ' ' + hh + ':' + mm;
+      newMemo = memo ? (memo + '\n' + timeNote) : timeNote;
+    }
+    if (filled.length === 0) { showToast('자동으로 못 찾았어요, 직접 입력해주세요'); return; }
+    setPhone(newPhone); setName(newName); setDate(newDate); setMemo(newMemo);
+    // 2026-09-14 선혜님 확정: 네이버 붙여넣기로 채운 경우만 담당자를 "미배정"으로
+    newStaff = '미배정';
+    setStaffName(newStaff);
+    showToast(filled.join('·') + ' 자동으로 채웠어요, 확인 후 저장해주세요');
+  }
+
+  function handleSave() {
+    var nameResult = validateName(name);
+    var phoneResult = validatePhone(phone);
+    var errs = {};
+    if (!nameResult.ok) errs.name = nameResult.msg;
+    if (!phoneResult.ok) errs.phone = phoneResult.msg;
+    var finalPhone = phone;
+    if (phoneResult.ok) finalPhone = formatPhone(phone);
+    if (date) {
+      var dateResult = validateDate(date);
+      if (!dateResult.ok) errs.date = dateResult.msg;
+    }
+    setFieldErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    if (nameResult.ok && phoneResult.ok) {
+      var dupCheck = checkDuplicate(name, finalPhone);
+      var isEditingSelf = editingCustomerName && dupCheck.customer && dupCheck.customer.clientName === editingCustomerName;
+      if (dupCheck.isDup && !isEditingSelf) {
+        if (!confirm(dupCheck.msg)) return;
+      }
+    }
+    if (saving) { if (typeof reportClientError === 'function') reportClientError('고객추가-버튼-이미비활성-무시'); return; }
+    setSaving(true);
+    setTimeout(function () { setSaving(false); }, 3000); // 콜백을 못 타는 예외상황 대비 안전장치(원본과 동일)
+
+    var trimmedName = name.trim();
+    var arr = loadCustomers();
+    if (editingCustomerName) {
+      var matched = false;
+      arr = arr.map(function (c) {
+        var isTarget = editingCustomerId ? (c.id === editingCustomerId) : (!matched && c.clientName === editingCustomerName);
+        if (isTarget) {
+          matched = true;
+          return Object.assign({}, c, { clientName: trimmedName, phone: finalPhone, addr: getCombinedAddr(), space: space.trim(), staffName: staffName, stage: stage, date: date, measureDate: measureDate, installDate: installDate, memo: memo.trim() });
+        }
+        return c;
+      });
+      saveCustomers(arr);
+      var savedTarget = editingCustomerId ? arr.find(function (c) { return c.id === editingCustomerId; }) : arr.find(function (c) { return c.clientName === trimmedName; });
+      closeAdd(); renderHome(true); openDetail(trimmedName, savedTarget && savedTarget.id);
+      if (savedTarget) {
+        saveCustomerToDb(savedTarget, function (err) { showToast(err ? '⚠️ 고객정보: 로컬엔 저장됨(서버 재시도 대기)' : '고객 정보가 수정됐습니다'); });
+      } else { showToast('고객 정보가 수정됐습니다'); }
+    } else {
+      var phoneNorm = (finalPhone || '').replace(/\D/g, '');
+      if (typeof sbXHR === 'function' && phoneNorm) {
+        sbXHR('POST', 'rpc/check_phone_duplicate', { phone_input: finalPhone }, function (err, rows) {
+          var serverMatch = (!err && Array.isArray(rows) && rows[0] && rows[0].exists_flag) ? { client_name: trimmedName, phone: finalPhone, staff_name: rows[0].staff_name } : null;
+          saveNewCustomerActual(trimmedName, finalPhone, arr, serverMatch);
+        });
+        return;
+      }
+      saveNewCustomerActual(trimmedName, finalPhone, arr, null);
+    }
+  }
+
+  function saveNewCustomerActual(nm, ph, arr, serverMatch) {
+    var samePersonExisting = arr.find(function (c) { return !c.is_archived && c.clientName === nm && (c.phone || '').replace(/\D/g, '') === (ph || '').replace(/\D/g, ''); })
       || (serverMatch ? { clientName: serverMatch.client_name, phone: serverMatch.phone, staffName: serverMatch.staff_name, visitCount: 1 } : null);
-    var sameNameDiffPhone = !samePersonExisting && arr.find(function(c) { return !c.is_archived && c.clientName === name; });
+    var sameNameDiffPhone = !samePersonExisting && arr.find(function (c) { return !c.is_archived && c.clientName === nm; });
     if (samePersonExisting) {
-      // 2026-09-08(선혜님 발견 — "황남주" 사례로 위 RPC를 새로 만든 김에
-      // 함께 개선): 담당자가 나와 다르면 "재구매 고객으로 업데이트"라는
-      // 표현이 오해를 줄 수 있음(실제로는 다른 담당자의 고객을 내 담당으로
-      // 가져오는 것) - 담당자 이름을 명확히 보여줘서 인지하고 결정하게 함.
       var myName = (currentUser && currentUser.role === 'staff') ? currentUser.name : '마스터';
-      var otherStaffNote = (samePersonExisting.staffName && samePersonExisting.staffName !== myName)
-        ? ('\n\n⚠️ 현재 담당자: ' + samePersonExisting.staffName) : '';
-      if (!confirm('"' + name + '"(' + phone + ') 고객이 이미 있습니다.' + otherStaffNote + '\n재구매 고객으로 업데이트할까요?')) return;
+      var otherStaffNote = (samePersonExisting.staffName && samePersonExisting.staffName !== myName) ? ('\n\n⚠️ 현재 담당자: ' + samePersonExisting.staffName) : '';
+      if (!confirm('"' + nm + '"(' + ph + ') 고객이 이미 있습니다.' + otherStaffNote + '\n재구매 고객으로 업데이트할까요?')) { setSaving(false); return; }
     } else if (sameNameDiffPhone) {
-      if (!confirm('"' + name + '" 이름의 다른 고객이 이미 있습니다(연락처: ' + (sameNameDiffPhone.phone||'미입력') + ').\n동명이인으로 보이는데, 별도의 새 고객으로 등록할까요?')) return;
+      if (!confirm('"' + nm + '" 이름의 다른 고객이 이미 있습니다(연락처: ' + (sameNameDiffPhone.phone || '미입력') + ').\n동명이인으로 보이는데, 별도의 새 고객으로 등록할까요?')) { setSaving(false); return; }
     }
     var existing = samePersonExisting;
-    var visitCount = existing ? (existing.visitCount||1)+1 : 1;
-    if (existing) arr = arr.filter(function(c) { return !(c.clientName === name && (c.phone||'').replace(/\D/g,'') === (phone||'').replace(/\D/g,'')); });
-    var staffName; if (currentUser && currentUser.role === 'staff') { staffName = currentUser.name; } else { var asb = document.querySelector('.staff-btn.active'); staffName = asb ? asb.getAttribute('data-staff') : '마스터'; }
-    var newCustomer = { clientName:name, phone:phone, addr:getCombinedAddr(), space:document.getElementById('add-space').value.trim(), price:0, performanceRevenue:0, staffName:staffName, stage:document.getElementById('add-stage').value, date:document.getElementById('add-date').value, measureDate:document.getElementById('add-measure').value, installDate:document.getElementById('add-install').value, memo:document.getElementById('add-memo').value.trim(), visitCount:visitCount, createdAt:new Date().toISOString(), branch:'반포점' };
+    var visitCount = existing ? (existing.visitCount || 1) + 1 : 1;
+    if (existing) arr = arr.filter(function (c) { return !(c.clientName === nm && (c.phone || '').replace(/\D/g, '') === (ph || '').replace(/\D/g, '')); });
+    var newCustomer = { clientName: nm, phone: ph, addr: getCombinedAddr(), space: space.trim(), price: 0, performanceRevenue: 0, staffName: staffName, stage: stage, date: date, measureDate: measureDate, installDate: installDate, memo: memo.trim(), visitCount: visitCount, createdAt: new Date().toISOString(), branch: '반포점' };
     arr.unshift(newCustomer); saveCustomers(arr);
-    saveCustomerToDb(newCustomer, function(err, data) { if(!err && data && data[0]) { newCustomer.id = data[0].id; saveCustomers(arr); } });
-    closeAdd(); renderHome(true); openDetail(name, newCustomer.id);
+    saveCustomerToDb(newCustomer, function (err, data) { if (!err && data && data[0]) { newCustomer.id = data[0].id; saveCustomers(arr); } });
+    closeAdd(); renderHome(true); openDetail(nm, newCustomer.id);
     showToast('고객이 추가됐습니다');
+  }
+
+  const inputStyle = { width: '100%', boxSizing: 'border-box' };
+
+  return e(React.Fragment, {},
+    e('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px 16px', background: '#fff', borderRadius: '14px 14px 0 0', borderBottom: '1px solid #EEE6DC' } },
+      e('div', { style: { fontSize: '12px', fontWeight: 700, color: '#282828' }, id: 'add-modal-title' }, isEdit ? '고객 정보 수정' : '고객 추가'),
+      e('button', { id: 'add-close-btn', 'aria-label': '닫기', onClick: closeAdd, style: { background: 'none', border: 'none', fontSize: '22px', cursor: 'pointer', color: 'var(--light)', lineHeight: '1.2', padding: '2px 4px', minWidth: '32px', minHeight: '32px' } }, '✕')
+    ),
+    e('div', { style: { padding: '20px 20px 0' } },
+      e('div', { style: { background: '#FAF7F5', border: '1px solid #EEE6DC', borderRadius: '12px', padding: '10px 14px', marginBottom: '14px', fontSize: '11px', color: '#6B6B6B', lineHeight: '1.6' } },
+        '네이버 예약 정보만 입력하세요', e('br'), '나머지 정보는 상담 후 고객 상세에서 추가할 수 있어요'),
+      e('div', { style: { background: 'var(--ivory1)', borderRadius: '12px', padding: '12px 14px', marginBottom: '14px' } },
+        e('div', { style: { fontSize: '11px', fontWeight: 700, color: 'var(--terra)', marginBottom: '6px' } }, '📋 네이버 예약 화면 붙여넣기'),
+        e('textarea', { id: 'add-naver-paste', value: naverPaste, onChange: function (ev) { setNaverPaste(ev.target.value); }, placeholder: '네이버 예약 상세화면 내용을 통째로 복사해서 여기 붙여넣으면 이름/전화번호/일시가 자동으로 채워져요', style: { width: '100%', minHeight: '52px', padding: '8px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '11px', fontFamily: 'inherit', boxSizing: 'border-box', resize: 'vertical', marginBottom: '6px' } }),
+        e('button', { type: 'button', onClick: handleNaverParse, style: { width: '100%', padding: '8px', background: 'var(--dark)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '11px', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' } }, '자동 채우기')
+      ),
+      e('div', { style: { background: '#fff', borderRadius: '12px', padding: '16px 16px 4px', marginBottom: '12px', border: '1px solid #EEE6DC' } },
+        e('div', { style: { fontSize: '11px', fontWeight: 700, color: 'var(--sub)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '14px' } }, '예약 정보'),
+        e('div', { className: 'form-row' },
+          e('label', { className: 'form-label' }, '고객명 ', e('span', { className: 'form-required' }, '*')),
+          e('input', { className: 'form-input', id: 'add-name', 'aria-label': '고객명', placeholder: '홍길동', value: name, onChange: function (ev) { setName(ev.target.value); }, style: fieldErrors.name ? { borderColor: 'var(--danger)' } : {} }),
+          fieldErrors.name ? e('div', { className: 'field-err', style: { fontSize: '11px', color: 'var(--danger)', marginTop: 'var(--sp-1)', fontWeight: 600 } }, fieldErrors.name) : null
+        ),
+        e('div', { className: 'form-row' },
+          e('label', { className: 'form-label' }, '연락처 ', e('span', { className: 'form-required' }, '*')),
+          e('input', { className: 'form-input', id: 'add-phone', 'aria-label': '연락처', placeholder: '010-0000-0000', inputMode: 'numeric', value: phone, onChange: function (ev) { handlePhoneInput(ev.target.value); }, onBlur: function (ev) { var r = validatePhone(ev.target.value); setFieldErrors(function (prev) { var next = Object.assign({}, prev); if (!r.ok && ev.target.value) next.phone = r.msg; else delete next.phone; return next; }); }, style: fieldErrors.phone ? { borderColor: 'var(--danger)' } : {} }),
+          fieldErrors.phone ? e('div', { className: 'field-err', style: { fontSize: '11px', color: 'var(--danger)', marginTop: 'var(--sp-1)', fontWeight: 600 } }, fieldErrors.phone) : null
+        ),
+        e('div', { className: 'form-row' },
+          e('label', { className: 'form-label' }, '방문 예정일 ', e('span', { className: 'form-required' }, '*')),
+          e('input', { className: 'form-input', type: 'date', id: 'add-date', 'aria-label': '방문예정일', value: date, onChange: function (ev) { setDate(ev.target.value); }, style: Object.assign({ padding: '10px 8px', fontSize: '11px' }, fieldErrors.date ? { borderColor: 'var(--danger)' } : {}) }),
+          fieldErrors.date ? e('div', { className: 'field-err', style: { fontSize: '11px', color: 'var(--danger)', marginTop: 'var(--sp-1)', fontWeight: 600 } }, fieldErrors.date) : null
+        )
+      ),
+      e('div', { style: { marginBottom: '16px' } },
+        e('label', { style: { fontSize: '11px', fontWeight: 700, color: 'var(--sub)', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: '8px' } }, '담당자'),
+        e('div', { id: 'staff-btn-wrap', style: { display: 'flex', gap: '8px' } },
+          staffList.map(function (sn) {
+            var isActive = sn === staffName;
+            return e('button', {
+              key: sn, 'data-staff': sn, className: 'staff-btn' + (isActive ? ' active' : ''),
+              onClick: function () { if (!isStaffUser) setStaffName(sn); },
+              style: {
+                padding: '6px 12px', borderRadius: '10px', border: isActive ? '1px solid #282828' : '1.5px solid #EEE6DC',
+                fontSize: '11px', fontWeight: isActive ? '700' : '400', background: isActive ? '#282828' : '#fff', color: isActive ? '#fff' : '#8E8078',
+                cursor: isStaffUser ? 'default' : 'pointer', pointerEvents: isStaffUser ? 'none' : '', opacity: isStaffUser ? (isActive ? '1' : '0.3') : ''
+              }
+            }, sn);
+          })
+        )
+      ),
+      e('div', { style: { marginBottom: '16px' } },
+        e('label', { style: { fontSize: '11px', fontWeight: 700, color: 'var(--sub)', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: '8px' } }, '주소 (선택)'),
+        recentAddrs.length > 0 ? e('div', { id: 'add-addr-recent', style: { display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' } },
+          recentAddrs.map(function (a) {
+            return e('button', { key: a, type: 'button', title: a, onClick: function () { setAddr(a); }, style: { fontSize: '11px', color: 'var(--dark)', background: 'var(--ivory1)', border: '1px solid var(--border)', borderRadius: 'var(--r-btn)', padding: '5px 10px', cursor: 'pointer' } }, a.length > 16 ? a.slice(0, 16) + '…' : a);
+          })
+        ) : null,
+        e('div', { style: { display: 'flex', gap: '6px', marginBottom: '6px' } },
+          e('input', { className: 'form-input', id: 'add-addr', 'aria-label': '주소', placeholder: '주소 검색을 눌러주세요', readOnly: true, value: addr, onChange: function (ev) { setAddr(ev.target.value); }, onClick: function () { openKakaoAddr('add-addr', 'add-addr-detail'); }, style: { flex: 1, background: 'var(--ivory1)', cursor: 'pointer' } }),
+          e('button', { type: 'button', onClick: function () { openKakaoAddr('add-addr', 'add-addr-detail'); }, style: { flexShrink: 0, padding: '0 16px', background: 'var(--dark)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '11px', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' } }, '주소 검색')
+        ),
+        e('input', { className: 'form-input', id: 'add-addr-detail', 'aria-label': '상세주소', placeholder: '상세주소 (동/호수 등)', value: addrDetail, onChange: function (ev) { setAddrDetail(ev.target.value); }, style: inputStyle })
+      ),
+      e('div', { style: { marginBottom: '16px' } },
+        e('label', { style: { fontSize: '11px', fontWeight: 700, color: 'var(--sub)', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: '8px' } }, '공간 (선택)'),
+        e('input', { className: 'form-input', id: 'add-space', 'aria-label': '공간', placeholder: '예: 거실, 안방 (견적서 저장 시 자동으로 채워져요)', value: space, onChange: function (ev) { setSpace(ev.target.value); }, style: inputStyle })
+      ),
+      e('button', { id: 'add-save-btn', disabled: saving, onClick: handleSave, style: { width: '100%', padding: '14px', background: 'var(--terra)', color: '#fff', border: 'none', fontSize: '12px', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', borderRadius: '10px', marginBottom: '16px', letterSpacing: '0.5px', opacity: saving ? 0.6 : 1 } }, '저장하기'),
+      // 화면엔 안 보이지만 원본(정적 HTML 시절)과 같은 DOM 인터페이스를 유지 - 다른 코드가 참조할 수 있음
+      e('input', { type: 'hidden', id: 'add-memo', value: memo, readOnly: true }),
+      e('input', { type: 'hidden', id: 'add-stage', value: stage, readOnly: true }),
+      e('input', { type: 'hidden', id: 'add-measure', value: measureDate, readOnly: true }),
+      e('input', { type: 'hidden', id: 'add-install', value: installDate, readOnly: true })
+    )
+  );
 }

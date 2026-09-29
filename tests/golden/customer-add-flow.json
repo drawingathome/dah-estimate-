@@ -172,5 +172,137 @@
    "title": "고객 추가"
   },
   "snap2": null
+ },
+ "S7_실시간전화번호포맷": {
+  "dialogs": [],
+  "jsErrors": [],
+  "requests": [],
+  "snap1": {
+   "accountHint": null,
+   "fieldErrors": [],
+   "isOpen": true,
+   "name": "",
+   "phone": "010-1111-2222",
+   "saveBtnDisabled": false,
+   "staffChips": [
+    "마스터*",
+    "미배정"
+   ],
+   "title": "고객 추가"
+  },
+  "snap2": null
+ },
+ "S8_담당자칩클릭": {
+  "dialogs": [],
+  "jsErrors": [],
+  "requests": [
+   {
+    "body": {
+     "phone_input": "010-7777-8888"
+    },
+    "method": "POST",
+    "path": "rpc/check_phone_duplicate"
+   },
+   {
+    "body": {
+     "addr": "",
+     "balance_amount": 0,
+     "balance_date": "",
+     "balance_method": "",
+     "balance_receipt": false,
+     "branch": "반포점",
+     "client_name": "담당자테스트",
+     "confirm_date": null,
+     "date": "2026-09-29",
+     "deposit_amount": 0,
+     "deposit_date": "",
+     "deposit_method": "",
+     "deposit_receipt": false,
+     "install_date": "",
+     "install_date_tbd": false,
+     "measure_date": "",
+     "measure_date_tbd": false,
+     "memo": "",
+     "order_status": {},
+     "payment_link": "",
+     "performance_revenue": 0,
+     "phone": "010-7777-8888",
+     "price": 0,
+     "space": "",
+     "staff_name": "미배정",
+     "stage": "상담",
+     "visit_count": 1
+    },
+    "method": "POST",
+    "path": "/rest/v1/customers"
+   }
+  ],
+  "snap1": {
+   "accountHint": null,
+   "fieldErrors": [],
+   "isOpen": true,
+   "name": "",
+   "phone": "",
+   "saveBtnDisabled": false,
+   "staffChips": [
+    "마스터",
+    "미배정*"
+   ],
+   "title": "고객 추가"
+  },
+  "snap2": null
+ },
+ "S9_바깥클릭닫기": {
+  "dialogs": [],
+  "jsErrors": [],
+  "requests": [],
+  "snap1": {
+   "after": {
+    "accountHint": null,
+    "fieldErrors": [],
+    "isOpen": false,
+    "name": "",
+    "phone": "",
+    "saveBtnDisabled": false,
+    "staffChips": [
+     "마스터*",
+     "미배정"
+    ],
+    "title": "고객 추가"
+   },
+   "before": {
+    "accountHint": null,
+    "fieldErrors": [],
+    "isOpen": true,
+    "name": "",
+    "phone": "",
+    "saveBtnDisabled": false,
+    "staffChips": [
+     "마스터*",
+     "미배정"
+    ],
+    "title": "고객 추가"
+   }
+  },
+  "snap2": null
+ },
+ "S10_닫기버튼": {
+  "dialogs": [],
+  "jsErrors": [],
+  "requests": [],
+  "snap1": {
+   "accountHint": null,
+   "fieldErrors": [],
+   "isOpen": false,
+   "name": "",
+   "phone": "",
+   "saveBtnDisabled": false,
+   "staffChips": [
+    "마스터*",
+    "미배정"
+   ],
+   "title": "고객 추가"
+  },
+  "snap2": null
  }
 }

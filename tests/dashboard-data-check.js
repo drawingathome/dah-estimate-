@@ -6,7 +6,7 @@
 // 사용법: node tests/dashboard-data-check.js dah-dashboard.html
 
 const path = require('path');
-const { launchBrowser, blockRealNetwork, startServer, loginAs } = require('./_helpers');
+const { launchBrowser, blockRealNetwork, startServer, loginAs, setReactInputValue } = require('./_helpers');
 
 async function run() {
   const filePath = process.argv[2];
@@ -50,11 +50,9 @@ async function run() {
     page.on('dialog', async d => { dupDialogMsg = d.message(); await d.dismiss(); });
     await page.evaluate(() => { openAdd(); });
     await new Promise(r => setTimeout(r, 300));
-    await page.evaluate((suffix) => {
-      document.getElementById('add-name').value = '회귀중복시도' + suffix;
-      document.getElementById('add-phone').value = '01099998888';
-      saveCustomer();
-    }, label);
+    await setReactInputValue(page, 'add-name', '회귀중복시도' + label);
+    await setReactInputValue(page, 'add-phone', '01099998888');
+    await page.click('#add-save-btn');
     await new Promise(r => setTimeout(r, 500));
     const custCountAfterCancel = await page.evaluate(() => JSON.parse(localStorage.getItem('dah_customers') || '[]').length);
     check(`[${label}] 중복 연락처 등록시 확인창이 뜸`, dupDialogMsg.includes('이미 등록된 연락처'), '실제메시지="' + dupDialogMsg + '"');
@@ -71,20 +69,16 @@ async function run() {
     await page3.evaluate(() => { localStorage.removeItem('dah_customers'); });
     await page3.evaluate(() => { openAdd(); });
     await new Promise(r => setTimeout(r, 300));
-    await page3.evaluate((suffix) => {
-      document.getElementById('add-name').value = '회귀날짜테스트' + suffix;
-      document.getElementById('add-phone').value = '01011112222';
-      document.getElementById('add-date').value = '1900-01-01';
-      saveCustomer();
-    }, label);
+    await setReactInputValue(page3, 'add-name', '회귀날짜테스트' + label);
+    await setReactInputValue(page3, 'add-phone', '01011112222');
+    await setReactInputValue(page3, 'add-date', '1900-01-01');
+    await page3.click('#add-save-btn');
     await new Promise(r => setTimeout(r, 500));
     const custCountBadDate = await page3.evaluate(() => JSON.parse(localStorage.getItem('dah_customers') || '[]').length);
     check(`[${label}] 1900년 같은 비합리적 날짜 저장이 차단됨`, custCountBadDate === 0, '실제 저장건수=' + custCountBadDate);
 
-    await page3.evaluate(() => {
-      document.getElementById('add-date').value = '2026-08-01';
-      saveCustomer();
-    });
+    await setReactInputValue(page3, 'add-date', '2026-08-01');
+    await page3.click('#add-save-btn');
     await new Promise(r => setTimeout(r, 800));
     const custCountGoodDate = await page3.evaluate((suffix) => {
       var arr = JSON.parse(localStorage.getItem('dah_customers') || '[]');

@@ -117,7 +117,7 @@
     "db_enforcement": "없음(클라이언트 UI 상태)",
     "code_locations": [
       "est-save.js:saveEstimate (15초 타임아웃)",
-      "dash-customer-add.js:saveCustomer (3초 타임아웃)"
+      "dash-customer-add.js:handleSave (3초 타임아웃, 2026-09-29 React 전환 전 saveCustomer에서 이름 변경)"
     ],
     "guard_tests": [
       "save_button_stuck_recovery_check.js"

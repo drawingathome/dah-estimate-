@@ -55,7 +55,7 @@ const EXTRACT = `(() => {
   };
 })()`;
 
-const SCENARIOS = ['S1_신규_유효성실패', 'S2_신규_정상저장', 'S3_전화번호중복', 'S4_동명이인', 'S5_수정모드_열기_계좌힌트', 'S6_네이버붙여넣기'];
+const SCENARIOS = ['S1_신규_유효성실패', 'S2_신규_정상저장', 'S3_전화번호중복', 'S4_동명이인', 'S5_수정모드_열기_계좌힌트', 'S6_네이버붙여넣기', 'S7_실시간전화번호포맷', 'S8_담당자칩클릭', 'S9_바깥클릭닫기', 'S10_닫기버튼'];
 
 async function runScenario(dir, name, idx) {
   const port = 30500 + idx;
@@ -133,8 +133,38 @@ async function runScenario(dir, name, idx) {
     await page.evaluate(() => openAdd());
     await new Promise(r => setTimeout(r, 200));
     await page.evaluate(setNative('add-naver-paste', '예약자\n김철수\n전화번호\n010-2222-3333\n이용일시\n2026. 10. 5.(월) 오후 2:00'));
-    await page.click('button[onclick="parseNaverReservationPaste()"]');
+    // 2026-09-29(React 전환으로 발견): onclick 속성이 아니라 React 이벤트로 연결되므로 텍스트로 찾음
+    await page.evaluate(() => { Array.from(document.querySelectorAll('#add-overlay button')).find(b => b.textContent.trim() === '자동 채우기').click(); });
     await new Promise(r => setTimeout(r, 300));
+    snap1 = await page.evaluate(EXTRACT);
+  } else if (name === 'S7_실시간전화번호포맷') {
+    await page.evaluate(() => openAdd());
+    await new Promise(r => setTimeout(r, 200));
+    for (const ch of '01011112222') await page.type('#add-phone', ch, { delay: 10 });
+    snap1 = await page.evaluate(EXTRACT);
+  } else if (name === 'S8_담당자칩클릭') {
+    await page.evaluate(() => openAdd());
+    await new Promise(r => setTimeout(r, 200));
+    await page.evaluate(() => { const chips = Array.from(document.querySelectorAll('.staff-btn')); const target = chips.find(c => c.textContent === '미배정'); target.click(); });
+    await new Promise(r => setTimeout(r, 150));
+    snap1 = await page.evaluate(EXTRACT);
+    // 저장해서 실제로 그 담당자로 반영되는지까지 확인
+    await page.evaluate(setNative('add-name', '담당자테스트'));
+    await page.evaluate(setNative('add-phone', '01077778888'));
+    await page.click('#add-save-btn');
+    await new Promise(r => setTimeout(r, 400));
+  } else if (name === 'S9_바깥클릭닫기') {
+    await page.evaluate(() => openAdd());
+    await new Promise(r => setTimeout(r, 200));
+    const before = await page.evaluate(EXTRACT);
+    await page.evaluate(() => document.getElementById('add-overlay').click()); // 오버레이 자기 자신(배경) 클릭
+    await new Promise(r => setTimeout(r, 150));
+    snap1 = { before, after: await page.evaluate(EXTRACT) };
+  } else if (name === 'S10_닫기버튼') {
+    await page.evaluate(() => openAdd());
+    await new Promise(r => setTimeout(r, 200));
+    await page.click('#add-close-btn');
+    await new Promise(r => setTimeout(r, 150));
     snap1 = await page.evaluate(EXTRACT);
   }
 

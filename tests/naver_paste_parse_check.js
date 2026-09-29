@@ -1,5 +1,5 @@
 const path = require('path');
-const { launchBrowser, startServer, loginAs, blockRealNetwork } = require('./_helpers');
+const { launchBrowser, startServer, loginAs, blockRealNetwork, setReactInputValue } = require('./_helpers');
 
 async function run() {
   const dir = path.resolve(__dirname, '..');
@@ -45,16 +45,15 @@ eunhi76@naver.com
   await page.evaluate(() => { openAdd(); });
   await new Promise(r => setTimeout(r, 300));
 
-  let r = await page.evaluate((text) => {
-    document.getElementById('add-naver-paste').value = text;
-    parseNaverReservationPaste();
-    return {
-      name: document.getElementById('add-name').value,
-      phone: document.getElementById('add-phone').value,
-      date: document.getElementById('add-date').value,
-      memo: document.getElementById('add-memo').value
-    };
-  }, sampleText);
+  await setReactInputValue(page, 'add-naver-paste', sampleText);
+  await page.evaluate(() => { Array.from(document.querySelectorAll('#add-overlay button')).find(b => b.textContent.trim() === '자동 채우기').click(); });
+  await new Promise(r => setTimeout(r, 100));
+  let r = await page.evaluate(() => ({
+    name: document.getElementById('add-name').value,
+    phone: document.getElementById('add-phone').value,
+    date: document.getElementById('add-date').value,
+    memo: document.getElementById('add-memo').value
+  }));
 
   ok('1. 이름 자동추출', r.name === '정은희', r.name);
   ok('2. 전화번호 자동추출', r.phone === '010-7452-1077', r.phone);
@@ -62,25 +61,20 @@ eunhi76@naver.com
   ok('4. 방문시간이 메모에 기록됨', r.memo.indexOf('오전 11:00') !== -1, r.memo);
 
   // 붙여넣은 내용이 없을 때 안내
-  r = await page.evaluate(() => {
-    document.getElementById('add-naver-paste').value = '';
-    var toastMsgs = [];
-    window.showToast = function(m) { toastMsgs.push(m); };
-    parseNaverReservationPaste();
-    return toastMsgs;
-  });
+  await setReactInputValue(page, 'add-naver-paste', '');
+  await page.evaluate(() => { window.showToast = function(m) { (window.__toastMsgs = window.__toastMsgs || []).push(m); }; });
+  await page.evaluate(() => { Array.from(document.querySelectorAll('#add-overlay button')).find(b => b.textContent.trim() === '자동 채우기').click(); });
+  await new Promise(r => setTimeout(r, 100));
+  r = await page.evaluate(() => window.__toastMsgs || []);
   ok('5. 빈 값일 때 안내 문구', r.some(m => m.indexOf('없어요') !== -1), JSON.stringify(r));
 
   // 형식이 다른(못 알아보는) 텍스트일 때 안내
-  r = await page.evaluate(() => {
-    document.getElementById('add-naver-paste').value = '알 수 없는 형식의 텍스트입니다';
-    var toastMsgs = [];
-    window.showToast = function(m) { toastMsgs.push(m); };
-    document.getElementById('add-name').value = '';
-    document.getElementById('add-phone').value = '';
-    parseNaverReservationPaste();
-    return { toastMsgs: toastMsgs, name: document.getElementById('add-name').value };
-  });
+  await setReactInputValue(page, 'add-naver-paste', '알 수 없는 형식의 텍스트입니다');
+  await page.evaluate(() => { window.__toastMsgs = []; window.showToast = function(m) { window.__toastMsgs.push(m); }; });
+  await setReactInputValue(page, 'add-name', '');
+  await page.evaluate(() => { Array.from(document.querySelectorAll('#add-overlay button')).find(b => b.textContent.trim() === '자동 채우기').click(); });
+  await new Promise(r => setTimeout(r, 100));
+  r = await page.evaluate(() => ({ toastMsgs: window.__toastMsgs || [], name: document.getElementById('add-name').value }));
   ok('6. 못 알아보는 텍스트는 안내만 하고 기존 값 안 건드림', r.toastMsgs.some(m => m.indexOf('못 찾았어요') !== -1) && r.name === '');
 
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));

@@ -5,7 +5,7 @@
 // 사용법: node tests/race-condition-check.js dah-dashboard.html
 
 const path = require('path');
-const { launchBrowser, startServer } = require('./_helpers');
+const { launchBrowser, startServer, setReactInputValue } = require('./_helpers');
 
 async function run() {
   const filePath = process.argv[2];
@@ -62,12 +62,9 @@ async function run() {
 
     await page.evaluate(() => { openAdd(); });
     await new Promise(r => setTimeout(r, 300));
-    await page.evaluate((suffix) => {
-      document.getElementById('add-name').value = '경쟁조건회귀테스트고객' + suffix;
-      document.getElementById('add-phone').value = '01077778888';
-      document.getElementById('add-date').value = (typeof todayStr === 'function' ? todayStr() : '');
-      saveCustomer();
-    }, label);
+    await setReactInputValue(page, 'add-name', '경쟁조건회귀테스트고객' + label);
+    await setReactInputValue(page, 'add-phone', '01077778888');
+    await page.click('#add-save-btn');
     await new Promise(r => setTimeout(r, 1000));
 
     const afterSave = await page.evaluate(() => JSON.parse(localStorage.getItem('dah_customers') || '[]').length);

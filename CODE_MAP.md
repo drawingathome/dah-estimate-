@@ -37,7 +37,7 @@
 | 26 | `dash-customer-detail.js` | DAH 대시보드 — 고객상세 모달 기능 | 8 |
 | 27 | `dash-customer-detail-tabs.js` | DAH 대시보드 — 고객상세 모달: 정보탭/할일 + 하단 버튼·단계변경·삭제·복구 | 8 |
 | 28 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 8 |
-| 29 | `dash-customer-add.js` | DAH 고객 추가/수정 모달 (openAdd/closeAdd/saveCustomer) | 6 |
+| 29 | `dash-customer-add.js` | 고객 추가/수정 모달 (React 전환 2호) | 3 |
 | 30 | `dash-auth.js` | DAH 대시보드 — 로그인/세션/권한 기능 | 5 |
 | 31 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 9 |
 | 32 | `dash-settings-sections.js` | DAH 대시보드 — 설정 화면 구역별 렌더링 (거래처/메모/지역비/쿠폰/연동/데이터) | 6 |
@@ -105,7 +105,6 @@
 | `_openAlimtalkPreview` | `dash-customer-alim.js` |
 | `_reRenderVisibleListScreen` | `dash-realtime.js` |
 | `_saveEstimateInner` | `est-save.js` |
-| `_saveNewCustomerActual` | `dash-customer-add.js` |
 | `_savePendingSyncQueue` | `dash-sync-queue.js` |
 | `_saveStage_customers` | `est-save-stages.js` |
 | `_saveStage_estimates` | `est-save-stages.js` |
@@ -116,6 +115,7 @@
 | `_showRequestPreview` | `est-doc-request.js` |
 | `addBlindRow` | `est-calc-blind.js` |
 | `addCurtainRow` | `est-calc-curtain.js` |
+| `AddCustomerModal` | `dash-customer-add.js` |
 | `addOtherItemRow` | `est-calc-svc.js` |
 | `addSvcRow` | `est-calc-svc.js` |
 | `addToEstPendingQueue` | `est-sync-queue.js` |
@@ -246,7 +246,6 @@
 | `getBlindMinSqm` | `est-calc-rules.js` |
 | `getCalEvents` | `dash-calendar.js` |
 | `getChosung` | `dash-search.js` |
-| `getCombinedAddr` | `dash-customer-add.js` |
 | `getCustomerCurrentStage` | `dash-customer-detail.js` |
 | `getCustomerOrderStatus` | `est-utils.js` |
 | `getDateFilterRange` | `dash-search.js` |
@@ -333,7 +332,6 @@
 | `pad2` | `dash-utils.js` |
 | `parkLead` | `dash-api-writes.js` |
 | `parkLeadFromHome` | `dash-render.js` |
-| `parseNaverReservationPaste` | `dash-customer-add.js` |
 | `parseProductString` | `est-customer-load.js` |
 | `parseRecoveryTokenFromUrl` | `dash-supabase-auth.js` |
 | `permanentlyDeleteCustomer` | `dash-customer-detail-tabs.js` |
@@ -411,7 +409,6 @@
 | `retryPendingSync` | `dash-sync-queue.js` |
 | `runSelfDiagnosis` | `est-save.js` |
 | `saveAuthSession` | `dash-supabase-auth.js` |
-| `saveCustomer` | `dash-customer-add.js` |
 | `saveCustomers` | `dash-api-data.js` |
 | `saveCustomerToDb` | `dash-api-writes.js` |
 | `saveDocumentFile` | `apps-script-automation-hub.js` |

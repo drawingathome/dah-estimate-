@@ -61,7 +61,7 @@
 <script src="/dash-customer-detail.js?v=504aaab3bdc2"></script>
 <script src="/dash-customer-detail-tabs.js?v=224dac9ee23f"></script>
 <script src="/dash-customer-estimates.js?v=ba8e769e3d50"></script>
-<script src="/dash-customer-add.js?v=1582859c992d"></script>
+<script src="/dash-customer-add.js?v=8aee786e54bb"></script>
 <script src="/dash-auth.js?v=6feea4b3ac3c"></script>
 <script src="/dash-settings.js?v=a0657b4908d6"></script>
 <script src="/dash-settings-sections.js?v=3debc519608f"></script>
@@ -762,83 +762,9 @@
   </div>
 </div>
 
-<!-- 고객 추가 모달 -->
+<!-- 고객 추가 모달 (내용은 dash-customer-add.js의 React 컴포넌트가 그림, 2026-09-29 전환) -->
 <div class="overlay" id="add-overlay">
-  <div class="modal-box">
-    <!-- 헤더 -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 16px;background:#fff;border-radius:14px 14px 0 0;border-bottom:1px solid #EEE6DC">
-      <div style="font-size:12px;font-weight:700;color:#282828" id="add-modal-title">고객 추가</div>
-      <button id="add-close-btn" aria-label="닫기" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--light);line-height:1.2;padding:2px 4px;min-width:32px;min-height:32px">✕</button>
-    </div>
-    <!-- 폼 본문 -->
-    <div style="padding:20px 20px 0">
-
-      <!-- 안내 -->
-      <div style="background:#FAF7F5;border:1px solid #EEE6DC;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:11px;color:#6B6B6B;line-height:1.6">
-        네이버 예약 정보만 입력하세요<br>
-        나머지 정보는 상담 후 고객 상세에서 추가할 수 있어요
-      </div>
-
-      <!-- 2026-09-11(선혜님 지시 — 네이버예약 자동연동이 안 돼서 수동입력 속도라도
-           개선): 네이버 예약 상세화면(예약자/전화번호/이용일시 등)을 통째로
-           복사해서 붙여넣으면 이름/전화번호/일시를 자동으로 채워줌. 완전자동은
-           아니지만 하나씩 타이핑하는 것보다 훨씬 빠름. -->
-      <div style="background:var(--ivory1);border-radius:12px;padding:12px 14px;margin-bottom:14px">
-        <div style="font-size:11px;font-weight:700;color:var(--terra);margin-bottom:6px">📋 네이버 예약 화면 붙여넣기</div>
-        <textarea id="add-naver-paste" placeholder="네이버 예약 상세화면 내용을 통째로 복사해서 여기 붙여넣으면 이름/전화번호/일시가 자동으로 채워져요" style="width:100%;min-height:52px;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:11px;font-family:inherit;box-sizing:border-box;resize:vertical;margin-bottom:6px"></textarea>
-        <button type="button" onclick="parseNaverReservationPaste()" style="width:100%;padding:8px;background:var(--dark);color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer">자동 채우기</button>
-      </div>
-
-      <!-- 필수 정보 (3개만) -->
-      <div style="background:#fff;border-radius:12px;padding:16px 16px 4px;margin-bottom:12px;border:1px solid #EEE6DC">
-        <div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">예약 정보</div>
-        <div class="form-row">
-          <label class="form-label">고객명 <span class="form-required">*</span></label>
-          <input class="form-input" id="add-name" aria-label="고객명" placeholder="홍길동">
-        </div>
-        <div class="form-row">
-          <label class="form-label">연락처 <span class="form-required">*</span></label>
-          <input class="form-input" id="add-phone" aria-label="연락처" placeholder="010-0000-0000" inputmode="numeric">
-        </div>
-        <div class="form-row">
-          <label class="form-label">방문 예정일 <span class="form-required">*</span></label>
-          <input class="form-input" type="date" id="add-date" aria-label="방문예정일" style="padding:10px 8px;font-size:11px">
-        </div>
-      </div>
-
-      <!-- 담당자 -->
-      <div style="margin-bottom:16px">
-        <label style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:8px">담당자</label>
-        <div id="staff-btn-wrap" style="display:flex;gap:8px"></div>
-      </div>
-
-      <!-- 주소 (선택) -->
-      <div style="margin-bottom:16px">
-        <label style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:8px">주소 (선택)</label>
-        <div id="add-addr-recent" style="display:none;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
-        <div style="display:flex;gap:6px;margin-bottom:6px">
-          <input class="form-input" id="add-addr" aria-label="주소" placeholder="주소 검색을 눌러주세요" readonly style="flex:1;background:var(--ivory1);cursor:pointer" onclick="openKakaoAddr('add-addr','add-addr-detail')">
-          <button type="button" onclick="openKakaoAddr('add-addr','add-addr-detail')" style="flex-shrink:0;padding:0 16px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer">주소 검색</button>
-        </div>
-        <input class="form-input" id="add-addr-detail" aria-label="상세주소" placeholder="상세주소 (동/호수 등)" style="width:100%;box-sizing:border-box">
-      </div>
-
-      <!-- 2026-08-05: 캘린더/고객목록/엑셀에 표시되는데 입력할 곳이 없던 필드 -->
-      <div style="margin-bottom:16px">
-        <label style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:8px">공간 (선택)</label>
-        <input class="form-input" id="add-space" aria-label="공간" placeholder="예: 거실, 안방 (견적서 저장 시 자동으로 채워져요)" style="width:100%;box-sizing:border-box">
-      </div>
-
-      <!-- 숨겨진 필드 (수정 모드용) -->
-      <input type="hidden" id="add-memo" value="">
-      <input type="hidden" id="add-stage" value="상담">
-      <input type="hidden" id="add-measure" value="">
-      <input type="hidden" id="add-install" value="">
-
-      <!-- 저장 버튼 -->
-      <button id="add-save-btn" style="width:100%;padding:14px;background:var(--terra);color:#fff;border:none;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:16px;letter-spacing:0.5px">저장하기</button>
-    </div>
-  </div>
+  <div class="modal-box" id="add-modal-box"></div>
 </div>
 
 <div id="toast"></div>
@@ -864,19 +790,7 @@
 // 타이핑할 때마다 포맷 처리가 두 번 실행되는 불필요한 중복. formatPhone과
 // fmtPhone 로직을 오늘 통일해서 결과는 같지만, 하나만 남기고 정리 -
 // fmtPhone(더 널리 쓰이고 오늘 만든 자동감시테스트 대상) 쪽만 유지.
-document.addEventListener('DOMContentLoaded', function() {
-  var phoneEl = document.getElementById('add-phone');
-  if (phoneEl) {
-    phoneEl.addEventListener('blur', function() {
-      var result = validatePhone(this.value);
-      if (!result.ok && this.value) {
-        showFieldError(this, result.msg);
-      } else {
-        clearFieldError(this);
-      }
-    });
-  }
-});
+// (2026-09-29 React 전환으로 전화번호 blur 검증 리스너 제거)
 
 /* ── 글로벌 에러 핸들러 ── */
 window.addEventListener('error', function(e) {
@@ -959,17 +873,12 @@ var currentUser = null;
 document.querySelectorAll('.tab').forEach(function(b) { b.addEventListener('click', function() { goTab(b.getAttribute('data-tab')); }); });
 document.querySelectorAll('.chart-tab').forEach(function(b) { b.addEventListener('click', function() { renderChart(b.getAttribute('data-period')); }); });
 document.getElementById('btn-add-customer').addEventListener('click', function() { openAdd(null); });
-document.getElementById('add-close-btn').addEventListener('click', closeAdd);
+// (2026-09-29 React 전환으로 닫기버튼 리스너 제거)
 // 2026-09-29(선혜님 - "고객추가모달은 어떻게 해야하니" - 버튼 정리): "저장만 하기"/"저장 + 예약확인 알림톡 발송" 두 버튼이 실제로는 완전히 같은 동작(saveCustomer만 호출, 알림톡 발송 기능은 애초에 구현된 적 없음 - 2026-07-07 최초 커밋부터 버튼 문구만 있던 상태)이었음. 알림톡은 별도 기능(카카오 등록 완료 후 검토)으로 미루고, 지금은 실제로 하는 일(저장)만 정직하게 말하는 버튼 하나로 정리.
 var _dcb=document.getElementById('detail-close-btn'); if(_dcb) _dcb.addEventListener('click', closeDetail);
-document.getElementById('add-save-btn').addEventListener('click', saveCustomer);
-document.getElementById('add-phone').addEventListener('input', function() { this.value = fmtPhone(this.value); });
-document.addEventListener('click', function(e) {
-  if (e.target.classList.contains('staff-btn')) {
-    document.querySelectorAll('.staff-btn').forEach(function(b) { b.classList.remove('active'); b.style.background = '#fff'; b.style.color = '#8E8078'; b.style.borderRadius = '4px'; b.style.border = '1.5px solid #EEE6DC'; b.style.fontWeight = '400'; });
-    e.target.classList.add('active'); e.target.style.background = '#282828'; e.target.style.color = '#fff'; e.target.style.border = '1px solid #282828'; e.target.style.fontWeight = '700';
-  }
-});
+// (2026-09-29 React 전환으로 저장버튼 리스너 제거)
+// (2026-09-29 React 전환으로 전화번호 실시간포맷 리스너 제거)
+// (2026-09-29 React 전환으로 담당자칩 클릭 위임 리스너 제거)
 document.getElementById('pipe-search').addEventListener('input', renderPipe);
 
 document.addEventListener('click', function(e) {
@@ -990,7 +899,7 @@ document.addEventListener('click', function(e) {
 });
 document.getElementById('cust-search').addEventListener('input', renderSearch);
 document.getElementById('detail-overlay').addEventListener('click', function(e) { if (e.target === this) closeDetail(); });
-document.getElementById('add-overlay').addEventListener('click', function(e) { if (e.target === this) closeAdd(); });
+// (2026-09-29 React 전환으로 오버레이 배경클릭 리스너 제거)
 
 (function() {
   try {
