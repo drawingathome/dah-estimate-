@@ -22,7 +22,13 @@ async function run() {
   // 문지윤 사례 재현: 시공준비중 단계, 방문일이 아직 D-1이 아닌 경우
   // (8번 일정확정=즉시성이라 항상 뜸, 3번 방문전날안내=D-1 타이밍이라 아직 안 떠야 함)
   await page.evaluate(() => {
-    saveCustomers([{ id: 8001, clientName: '탭일치테스트', phone: '01066660000', stage: '시공준비중', staffName: '마스터', installDate: '2026-09-30' }]);
+    // 2026-09-29(선혜님 - React 전환 커밋 CI가 실패해서 발견): 시공일을 절대 날짜(2026-09-30)로
+    // 고정해뒀는데 시간을 얼리지 않아서, 실제 날짜가 그 D-1(2026-09-29)에 닿는 순간부터 이 테스트
+    // 자체가 저절로 깨지는 시한폭탄이었음 - "아직 D-1 아님"을 검증하려는 의도였으니, 항상 오늘부터
+    // 이틀 뒤(D-2)가 되도록 상대 날짜로 계산.
+    var d = new Date(); d.setDate(d.getDate() + 2);
+    var installDateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    saveCustomers([{ id: 8001, clientName: '탭일치테스트', phone: '01066660000', stage: '시공준비중', staffName: '마스터', installDate: installDateStr }]);
     openDetail('탭일치테스트', 8001, 'info');
   });
   await new Promise(res => setTimeout(res, 500));
