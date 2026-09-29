@@ -33,7 +33,7 @@
 | 22 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 1 |
 | 23 | `dash-customer-alim.js` | 고객상세 - 소통(알림톡) 탭 렌더링 | 11 |
 | 24 | `dash-customer-order.js` | 고객상세 - 발주 탭 렌더링 | 5 |
-| 25 | `dash-customer-as.js` | 고객상세 - AS 탭 렌더링 | 1 |
+| 25 | `dash-customer-as.js` | 고객상세 - AS 탭 렌더링 (React 전환 1호) | 2 |
 | 26 | `dash-customer-detail.js` | DAH 대시보드 — 고객상세 모달 기능 | 8 |
 | 27 | `dash-customer-detail-tabs.js` | DAH 대시보드 — 고객상세 모달: 정보탭/할일 + 하단 버튼·단계변경·삭제·복구 | 8 |
 | 28 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 8 |
@@ -128,6 +128,7 @@
 | `applyRealDepositToForm` | `est-utils.js` |
 | `applyVendorArrivalDefaults` | `est-doc-vendor.js` |
 | `archiveEstimate` | `dash-api-writes.js` |
+| `ASSection` | `dash-customer-as.js` |
 | `autoAddBlindSvc` | `est-calc-blind.js` |
 | `autoAddSvcFee` | `est-calc-svc.js` |
 | `autoSave` | `est-misc.js` |

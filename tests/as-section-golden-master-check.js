@@ -115,13 +115,29 @@ async function runScenario(dir, sc, idx) {
   if (!sc.serverError) {
     // 접수 등록 폼 실제 입력 → 등록 (S1에서만: 등록 후 폼이 초기화되고 목록이 갱신되는지)
     if (sc.name === 'S1_목록없음') {
-      await page.evaluate(() => {
+      // 2026-09-29(React 전환 검증 중 발견): React가 관리하는 입력칸(controlled input)은
+      // .value= 로 직접 값을 넣어도 화면엔 보여도 React의 내부 상태(state)는 안 바뀜 -
+      // 반드시 input/change 이벤트를 같이 보내야 실제 사람이 타이핑한 것처럼 인식됨.
+      // 원본(바닐라 DOM, uncontrolled)에선 .value= 만으로 충분했는데 React로 바꾸면서
+      // 이 차이가 드러남(테스트 스크립트 수정 - 컴포넌트 코드는 그대로).
+      const setNative = (el, v) => {
+        const proto = el.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+        Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, v);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      };
+      await page.evaluate((setNativeSrc) => {
+        eval('window.__setNative = ' + setNativeSrc);
         const body = document.getElementById('detail-as-body');
-        body.querySelector('textarea').value = '새 접수 테스트';
-        body.querySelector('input[type=date]').value = '2026-10-01';
+        window.__setNative(body.querySelector('textarea'), '새 접수 테스트');
+        window.__setNative(body.querySelector('input[type=date]'), '2026-10-01');
         const sel = body.querySelector('select'); sel.value = '유상'; sel.dispatchEvent(new Event('change', { bubbles: true }));
-        body.querySelectorAll('input[type=number]')[0].value = '20000';
-      });
+      }, setNative.toString());
+      await new Promise(r => setTimeout(r, 100)); // feeType 반영 후 금액칸이 나타날 시간
+      await page.evaluate((setNativeSrc) => {
+        eval('window.__setNative = ' + setNativeSrc);
+        const body = document.getElementById('detail-as-body');
+        window.__setNative(body.querySelectorAll('input[type=number]')[0], '20000');
+      }, setNative.toString());
       await page.click('#detail-as-body button');
       await new Promise(r => setTimeout(r, 700));
       snap2 = await page.evaluate(EXTRACT);

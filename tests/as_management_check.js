@@ -50,10 +50,15 @@ async function run() {
   ok('3. 이력 없을 때 안내문구 노출', r.hasEmpty);
 
   // 접수 등록
+  // 2026-09-29(dash-customer-as.js React 전환으로 발견): React가 관리하는 입력칸(controlled
+  // input)은 .value= 로 직접 값을 넣어도 화면엔 보여도 React의 내부 상태는 안 바뀜 - 실제
+  // 타이핑처럼 input 이벤트를 같이 보내야 함(원본 바닐라 DOM에선 .value= 만으로 충분했음).
   r = await page.evaluate(() => {
     var body = document.getElementById('detail-as-body');
     var textarea = body.querySelector('textarea');
-    textarea.value = '리모컨 작동 안 됨';
+    var setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+    setter.call(textarea, '리모컨 작동 안 됨');
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
     var addBtn = Array.from(body.querySelectorAll('button')).find(function(b){ return b.textContent === '접수 등록'; });
     addBtn.click();
     return { found: !!addBtn };

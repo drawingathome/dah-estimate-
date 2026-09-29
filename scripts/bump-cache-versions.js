@@ -44,9 +44,13 @@ for (const htmlFile of HTML_FILES) {
   // <script src="/파일명.js?v=아무값"></script> 와
   // <link rel="stylesheet" href="/파일명.css?v=아무값"> 패턴을 전부 찾아서,
   // 그 파일명이 실제로 저장소에 존재하면 현재 내용의 해시로 교체.
+  // 2026-09-29(React 정식판을 vendor/ 하위 폴더에 추가하면서 발견): 예전 정규식은 파일명에
+  // 점이 두 개 이상(react.production.min.js)이거나 경로에 슬래시(vendor/...)가 있으면 아예
+  // 매칭을 못 해서, "확인했다"는 --check 결과가 사실은 "그 태그 자체를 못 본 것"이었음 -
+  // 하위 폴더 경로와 여러 점을 모두 허용하도록 넓힘(파일명 자체에 dash/underscore/점 허용).
   const patterns = [
-    /<script src="\/([a-zA-Z0-9_-]+\.js)\?v=[^"]*"><\/script>/g,
-    /<link rel="stylesheet" href="\/([a-zA-Z0-9_-]+\.css)\?v=[^"]*">/g,
+    /<script src="\/((?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_.-]+\.js)\?v=[^"]*"><\/script>/g,
+    /<link rel="stylesheet" href="\/((?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_.-]+\.css)\?v=[^"]*">/g,
   ];
   for (const scriptTagPattern of patterns) {
     html = html.replace(scriptTagPattern, (match, fileName) => {

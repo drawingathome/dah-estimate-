@@ -1,3 +1,14 @@
+// 2026-09-29(선혜님 - "React 전환부터"): React 18 전역 타입 정의(@types/react, @types/react-dom)를
+// 설치해서 참조함 - 이 프로젝트는 CDN/모듈 없이 <script> 태그로 React 자체를 로드하는 방식(JSX 아님,
+// React.createElement)이라, "import React from 'react'" 없이도 전역 React/ReactDOM 이름을 타입체커가
+// 알아보게 해야 함. 예전엔 survey-app.js가 이미 이 방식으로 React를 썼는데 타입 정의가 아예 없어서
+// 관련 오류 148건이 그냥 베이스라인에 묻혀있었음 - 이번에 제대로 갖춤(향후 모든 React 코드의 실제
+// 타입 실수를 잡을 수 있게).
+/// <reference types="react" />
+/// <reference types="react-dom" />
+declare const React: typeof import('react');
+declare const ReactDOM: typeof import('react-dom/client');
+
 // global.d.ts
 // ══════════════════════════════════════════════════
 // DAH 견적서/대시보드 앱 — 가벼운 타입체크(tsc --noEmit)용 전역 선언.
