@@ -329,7 +329,7 @@ function renderPaySection(c, payBody, est) {
       savePayData(newPd, function(){
         // 2026-08-05: 0원인데도 무조건 다음 단계로 넘어가던 버그 수정 —
         // 실제로 입금액이 0보다 클 때만 "선금결제 완료"로 간주해 단계 전환
-        if (inputAmt > 0 && ['방문예약','상담','가견적'].indexOf(c.stage) >= 0) changeStage('선금결제');
+        if (inputAmt > 0 && DAH_PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) changeStage('선금결제');
         closeDetail(); openDetail(c.clientName, c.id);
       });
     });

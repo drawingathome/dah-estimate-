@@ -132,3 +132,13 @@ function formatPhoneDigits(digits) {
   if (d.length <= 7) return d.slice(0,3) + '-' + d.slice(3);
   return d.slice(0,3) + '-' + d.slice(3,7) + '-' + d.slice(7,11);
 }
+
+// ── 고객 진행 단계(9단계) 공용 정의 ──────────────────────────────
+// 2026-09-29(코드정리 - 선혜님 "하자"): 같은 9단계 순서(STAGES/STAGE_ORDER)와 "계약 이전 3단계"
+// (PRE_CONTRACT_STAGES, 매출/전환 집계에서 제외되는 단계)가 dash-render.js/dash-kanban.js/
+// dash-customer-detail.js/dash-chart.js/dash-customer-pay.js 등 여러 파일에 각각 하드코딩돼
+// 있었음 - 나중에 단계를 추가/변경할 때 하나라도 놓치면 조용히 어긋나는 위험이 있어서 여기 하나로
+// 모음(2026-08-28 formatPhoneDigits를 여기로 모았던 것과 같은 이유). 값 자체는 전부 동일했음
+// (기존 동작 변화 없음) - 각 파일은 이제 이 상수를 그대로 참조.
+var DAH_STAGE_ORDER = ['방문예약','상담','가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'];
+var DAH_PRE_CONTRACT_STAGES = ['방문예약','상담','가견적'];

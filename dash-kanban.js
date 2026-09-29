@@ -23,7 +23,8 @@ var PIPE_STAGES = [
 // 자동 매핑됨: 상담(그대로) / 계약금→선금결제 / 실측→실측준비중 /
 // 잔금→잔금결제 / 시공→시공준비중 / 완료→시공완료.
 // "방문예약/가견적/확정견적"은 신규 고객부터 실제로 거치는 새 단계.
-var STAGE_ORDER = ['방문예약','상담','가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'];
+// 단계 순서는 shared-common-utils.js의 DAH_STAGE_ORDER 한 곳에만 있음(2026-09-29 코드정리)
+var STAGE_ORDER = DAH_STAGE_ORDER;
 
 function changeStageByName(customerName, newStage, id) {
   try {

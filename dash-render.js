@@ -154,7 +154,7 @@ function renderHome(skipServerFetch) {
 
     // ── 스테이지별 카운트 ────────────────────────────
     var stageCounts = {};
-    ['방문예약','상담','가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'].forEach(function(s) { stageCounts[s] = 0; });
+    DAH_STAGE_ORDER.forEach(function(s) { stageCounts[s] = 0; });
     customers.forEach(function(c) { if (stageCounts[c.stage] !== undefined) stageCounts[c.stage]++; });
 
     // ── 처리 필요 항목 ───────────────────────────────
@@ -207,7 +207,7 @@ function renderHome(skipServerFetch) {
         // 판단 자체가 불가능한 경우는 별도 이유로 계속 표시해서 놓치지 않게 함.
         else if (typeof hasOrderDataGap === 'function' && hasOrderDataGap(c)) reasons.push('발주정보 확인 필요(견적서 재입력 필요)');
       }
-      if (['방문예약','상담','가견적'].indexOf(c.stage) >= 0 && c.date && !c.leadParked) {
+      if (DAH_PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0 && c.date && !c.leadParked) {
         var daysSince = Math.floor((_today - new Date(c.date)) / (1000*60*60*24));
         if (daysSince >= LEAD_STALE_DAYS) reasons.push(getDisplayStageLabel(c) + ' 후 ' + daysSince + '일째 진행없음');
       }
@@ -285,9 +285,9 @@ function renderHome(skipServerFetch) {
       '<div id="sec-stage" style="background:#fff;padding:14px 20px 12px;border-bottom:1px solid var(--border)">',
         '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:10px;text-transform:uppercase">진행 현황</div>',
         '<div style="display:flex;gap:6px;flex-wrap:wrap">',
-          ['방문예약','상담','가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'].map(function(stage) {
+          DAH_STAGE_ORDER.map(function(stage) {
             var cnt = stageCounts[stage] || 0;
-            var isGray = ['방문예약','상담','가견적'].indexOf(stage) >= 0;
+            var isGray = DAH_PRE_CONTRACT_STAGES.indexOf(stage) >= 0;
             var isGreen = stage === '시공완료';
             var bg    = isGray ? '#F0EFEC' : isGreen ? '#EAF3F0' : 'var(--bg-org)';
             var color = isGray ? '#8A8378' : isGreen ? '#2F6690' : 'var(--terra)';
@@ -353,7 +353,7 @@ function renderHome(skipServerFetch) {
               // 작업이 어려웠음. 한 고객이 여러 사유에 해당하면(예: 선금결제 처리 +
               // 발주 필요 둘 다) 해당하는 그룹에 각각 나타남 — 그룹별로 그 사유만 표시.
               function renderRow(c, reasonText, targetTab, showParkBtn) {
-                var stageColor = (['방문예약','상담','가견적'].indexOf(c.stage) >= 0) ? '#8A8378' : (c.stage === '시공완료') ? '#2F6690' : 'var(--terra)';
+                var stageColor = (DAH_PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) ? '#8A8378' : (c.stage === '시공완료') ? '#2F6690' : 'var(--terra)';
                 // 2026-08-28(선혜님 지시 - "3번만 지우고 나머지는 살려보자"):
                 // parkLeadFromHome(홈화면에서 바로 리드를 "대기중"으로 보관
                 // 처리하는 기능, 2026-08-02 신규)이 UI 연결이 끊겨서 죽은

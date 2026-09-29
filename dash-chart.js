@@ -24,7 +24,8 @@ function isLegacyNoPaymentRecord(c) {
 }
 
 // 2026-08-05: 9단계 체계 - 계약(선금결제) 이전 3단계는 매출/전환 계산에서 제외
-var PRE_CONTRACT_STAGES = ['방문예약','상담','가견적'];
+// 계약 이전 3단계는 shared-common-utils.js의 DAH_PRE_CONTRACT_STAGES 한 곳에만 있음(2026-09-29 코드정리)
+var PRE_CONTRACT_STAGES = DAH_PRE_CONTRACT_STAGES;
 
 function splitCustomerPayments(c) {
   // 2026-09-21(선혜님 - "위 내용 코드 정리해줘 버그가 많을꺼 같은데" 요청

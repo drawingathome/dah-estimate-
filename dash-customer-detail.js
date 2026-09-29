@@ -20,12 +20,13 @@ function getCustomerCurrentStage(clientName, clientId) {
   } catch(eStage) { return ''; }
 }
 function stageColorFor(stage) {
-  if (['방문예약','상담','가견적'].indexOf(stage) >= 0) return '#8A8378';
+  if (DAH_PRE_CONTRACT_STAGES.indexOf(stage) >= 0) return '#8A8378';
   if (stage === '시공완료') return '#2F6690';
   return 'var(--terra)';
 }
 
-var STAGES = ['방문예약','상담','가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'];
+// 단계 순서는 shared-common-utils.js의 DAH_STAGE_ORDER 한 곳에만 있음(2026-09-29 코드정리)
+var STAGES = DAH_STAGE_ORDER;
 // 2026-08-05: STAGES_ALL(옛 6단계 이름 배열)은 코드베이스 어디서도 참조되지 않는
 // 죽은 코드였고 이름까지 옛것이라 혼동 소지가 있어 제거함
 
@@ -593,7 +594,7 @@ function renderDetailStageSection(c, body, isMaster) {
     });
     kebabMenu.appendChild(cancelBtn);
     kebabMenu.appendChild(noshowBtn);
-    if (['방문예약','상담','가견적'].indexOf(c.stage) >= 0) {
+    if (DAH_PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) {
       var parkBtn = btn('display:block;width:100%;padding:10px 14px;border:none;background:#fff;font-size:12px;color:var(--dark);font-family:inherit;cursor:pointer;text-align:left;border-top:1px solid var(--border)','리드 보관', function(){
         if(confirm(c.clientName+'님을 대기 리드로 보관할까요? (고객목록에서는 계속 찾아볼 수 있어요)')) {
           var all = loadCustomers();
