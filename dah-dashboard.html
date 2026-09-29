@@ -818,8 +818,8 @@ window.addEventListener('unhandledrejection', function(e) {
 /* ── 매출 차트 실데이터 ── */
 /* ── 설정 화면 저장/불러오기 ── */
 
-// 설정 탭 진입 시 로드
-var _origGoTab = window.goTab;
+// 2026-09-29(코드정리 - 선혜님 "하자"): 여기 있던 _origGoTab = window.goTab는 저장만 되고 실제로
+// window.goTab을 재정의(몽키패치)하는 코드가 어디에도 없어서 완전히 죽은 변수였음 - 제거함.
 
 // 입력 필드 변경 시 자동 저장
 document.addEventListener('DOMContentLoaded', function() {
