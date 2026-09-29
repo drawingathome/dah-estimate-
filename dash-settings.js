@@ -106,29 +106,10 @@ function getSettings() {
   try { return JSON.parse(localStorage.getItem('dah_settings') || '{}'); } catch(e) { return {}; }
 }
 
-function initAddModalChips() {
-  // 스테이지 칩
-  document.querySelectorAll('.add-stage-chip').forEach(function(chip) {
-    chip.addEventListener('click', function() {
-      document.querySelectorAll('.add-stage-chip').forEach(function(c) {
-        c.classList.remove('on');
-      });
-      this.classList.add('on');
-      var stageEl = document.getElementById('add-stage');
-      if (stageEl) stageEl.value = this.getAttribute('data-stage') || this.textContent.trim();
-    });
-  });
-
-  // 담당자 칩
-  document.querySelectorAll('.add-staff-chip').forEach(function(chip) {
-    chip.addEventListener('click', function() {
-      document.querySelectorAll('.add-staff-chip').forEach(function(c) {
-        c.classList.remove('on');
-      });
-      this.classList.add('on');
-    });
-  });
-}
+// 2026-09-29(선혜님 - "코드정리는 해야하지 않겠니"로 발견/제거): initAddModalChips()가 여기 있었는데,
+// .add-stage-chip/.add-staff-chip 클래스를 가진 엘리먼트가 코드베이스 전체에 하나도 없어서(고객추가
+// 모달의 실제 담당자칩은 클래스가 .staff-btn) 완전히 죽은 함수였음 - 호출하는 곳도 없어서(고객추가
+// 모달을 React로 바꾸며 이 호출 자체를 이미 안 옮김) 제거함. 동작 변화 없음(원래 아무 효과 없었음).
 
 // 설정화면 아코디언 중 현재 열려있는 섹션 id를 기억 (2026-08-02 버그수정) —
 // 예전엔 renderSettings()가 재호출될 때마다(거래처 카테고리 배지 클릭 등으로

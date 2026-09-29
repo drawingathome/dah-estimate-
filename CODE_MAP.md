@@ -39,7 +39,7 @@
 | 28 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 8 |
 | 29 | `dash-customer-add.js` | 고객 추가/수정 모달 (React 전환 2호) | 3 |
 | 30 | `dash-auth.js` | DAH 대시보드 — 로그인/세션/권한 기능 | 5 |
-| 31 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 9 |
+| 31 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 8 |
 | 32 | `dash-settings-sections.js` | DAH 대시보드 — 설정 화면 구역별 렌더링 (거래처/메모/지역비/쿠폰/연동/데이터) | 6 |
 | 33 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
 | 34 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
@@ -286,7 +286,6 @@
 | `hasOrderDataGap` | `dash-customer-order.js` |
 | `hideLoading` | `dash-ui-helpers.js` |
 | `hideQuickNav` | `dash-ui-helpers.js` |
-| `initAddModalChips` | `dash-settings.js` |
 | `insertCustomer` | `apps-script-survey-to-customer.js` |
 | `isAlimDueNow` | `dash-customer-alim.js` |
 | `isArchived` | `dash-utils.js` |
