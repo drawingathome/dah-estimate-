@@ -84,5 +84,19 @@ REGISTRY.forEach(function(rule) {
   check(fnName + '() 정의가 정확히 1곳에만 있음(중복정의 없음)', defCount === 1, '정의 개수=' + defCount);
 });
 
+// 2026-09-29(코드정리 - 선혜님 "하자"): 고객 진행 9단계 순서(DAH_STAGE_ORDER)와 계약 이전 3단계
+// (DAH_PRE_CONTRACT_STAGES)를 shared-common-utils.js 한 곳으로 모았는데, 예전처럼 누가 다시
+// 하드코딩된 배열을 만들면 조용히 어긋나는 문제가 재발할 수 있음 - 그 리터럴 패턴이 공용파일
+// 밖에 다시 나타나는지 감시.
+(function () {
+  var pattern = /\[\s*'방문예약'\s*,\s*'상담'\s*,\s*'가견적'/;
+  var checkFiles = ['dash-render.js', 'dash-kanban.js', 'dash-customer-detail.js', 'dash-chart.js', 'dash-customer-pay.js', 'dash-customer-detail-tabs.js', 'dash-customer-estimates.js', 'dash-render-search.js', 'dash-render-est.js'];
+  checkFiles.forEach(function (f) {
+    var c;
+    try { c = readFile(f); } catch (e) { return; }
+    check('고객 진행단계 리터럴이 ' + f + '에 재등장하지 않음(공용상수 DAH_STAGE_ORDER/DAH_PRE_CONTRACT_STAGES 대신 쓸 것)', !pattern.test(c));
+  });
+})();
+
 console.log('\n결과: ' + passCount + '건 통과, ' + failCount + '건 실패');
 process.exit(failCount === 0 ? 0 : 1);
