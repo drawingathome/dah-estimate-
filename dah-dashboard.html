@@ -836,8 +836,7 @@
       <input type="hidden" id="add-install" value="">
 
       <!-- 저장 버튼 -->
-      <button id="add-save-btn" style="width:100%;padding:14px;background:var(--terra);color:#fff;border:none;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:8px;letter-spacing:0.5px">저장 + 예약확인 알림톡 발송</button>
-      <button id="add-save-only-btn" style="width:100%;padding:12px;background:var(--ivory1);color:var(--dark);border:1px solid var(--border);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:16px">저장만 하기</button>
+      <button id="add-save-btn" style="width:100%;padding:14px;background:var(--terra);color:#fff;border:none;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;border-radius:10px;margin-bottom:16px;letter-spacing:0.5px">저장하기</button>
     </div>
   </div>
 </div>
@@ -961,9 +960,7 @@ document.querySelectorAll('.tab').forEach(function(b) { b.addEventListener('clic
 document.querySelectorAll('.chart-tab').forEach(function(b) { b.addEventListener('click', function() { renderChart(b.getAttribute('data-period')); }); });
 document.getElementById('btn-add-customer').addEventListener('click', function() { openAdd(null); });
 document.getElementById('add-close-btn').addEventListener('click', closeAdd);
-document.getElementById('add-save-only-btn').addEventListener('click', function() {
-  document.getElementById('add-save-btn').click();
-});
+// 2026-09-29(선혜님 - "고객추가모달은 어떻게 해야하니" - 버튼 정리): "저장만 하기"/"저장 + 예약확인 알림톡 발송" 두 버튼이 실제로는 완전히 같은 동작(saveCustomer만 호출, 알림톡 발송 기능은 애초에 구현된 적 없음 - 2026-07-07 최초 커밋부터 버튼 문구만 있던 상태)이었음. 알림톡은 별도 기능(카카오 등록 완료 후 검토)으로 미루고, 지금은 실제로 하는 일(저장)만 정직하게 말하는 버튼 하나로 정리.
 var _dcb=document.getElementById('detail-close-btn'); if(_dcb) _dcb.addEventListener('click', closeDetail);
 document.getElementById('add-save-btn').addEventListener('click', saveCustomer);
 document.getElementById('add-phone').addEventListener('input', function() { this.value = fmtPhone(this.value); });
