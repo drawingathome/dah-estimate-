@@ -314,7 +314,8 @@ function openCustomDatePicker(anchorEl, initialValue, onConfirm) {
   var popup = div('position:fixed;z-index:100000;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.15);padding:12px;width:260px', []);
   popup.id = 'custom-date-picker-popup';
 
-  function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+  // pad2()는 dash-utils.js에 이미 있는 전역 함수와 완전히 같은 로직이라(2026-09-29 코드정리로 발견),
+  // 굳이 다시 만들지 않고 그 전역 함수를 그대로 씀.
   function toDateStr(y, m, d) { return y + '-' + pad2(m + 1) + '-' + pad2(d); }
 
   function render() {
