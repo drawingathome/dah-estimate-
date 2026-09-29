@@ -17,6 +17,22 @@ const { launchBrowser, startServer, loginAs } = require('./_helpers');
 const GOLDEN = path.join(__dirname, 'golden', 'as-section-flow.json');
 const UPDATE = process.argv.includes('--update');
 const CORS = { 'Access-Control-Allow-Origin': '*' };
+
+// 2026-09-29(선혜님 - React 전환 커밋 CI가 실패해서 발견): dash-customer-as.js의 접수등록이
+// receipt_date: todayStr()로 실제 오늘 날짜를 쓰는데, 시간을 얼리지 않아서 기록을 만든 날과
+// 비교하는 날이 다르면 그 자체로 깨지는 시한폭탄이었음(save-golden-master-check.js에 이미 있던
+// FREEZE 패턴을 이 파일엔 빠뜨렸던 것 - 내 실수). 시간을 고정해서 재현.
+const FREEZE = `(() => {
+  const FIXED = new Date('2026-09-28T12:00:00+09:00').getTime();
+  const RealDate = Date;
+  function FakeDate(...a) {
+    if (!(this instanceof FakeDate)) return new RealDate(FIXED).toString();
+    return a.length ? new RealDate(...a) : new RealDate(FIXED);
+  }
+  FakeDate.prototype = RealDate.prototype;
+  FakeDate.now = () => FIXED; FakeDate.parse = RealDate.parse; FakeDate.UTC = RealDate.UTC;
+  window.Date = FakeDate;
+})();`;
 const json = (o) => JSON.stringify(o);
 
 function canon(v) {
@@ -65,6 +81,7 @@ async function runScenario(dir, sc, idx) {
   const rec = { requests: [], jsErrors: [], dialogs: [] };
   page.on('pageerror', e => rec.jsErrors.push(e.message));
   page.on('dialog', async d => { rec.dialogs.push(d.message()); try { await d.accept(); } catch (e) {} });
+  await page.evaluateOnNewDocument(FREEZE);
   await page.setRequestInterception(true);
   page.on('request', (req) => {
     const url = req.url(); const method = req.method();
