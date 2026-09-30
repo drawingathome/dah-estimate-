@@ -42,6 +42,7 @@
      "fee_amount": 20000,
      "fee_type": "유상",
      "install_date": "2026-08-01",
+     "is_archived": false,
      "receipt_date": "2026-09-28",
      "staff_name": "마스터",
      "status": "접수",

@@ -68,7 +68,14 @@ function ASSection({ customer }) {
       fee_type: feeType,
       fee_amount: feeType === '유상' ? (Number(feeAmount) || 0) : 0,
       staff_name: (currentUser && currentUser.role === 'staff') ? currentUser.name : '마스터',
-      status: '접수'
+      status: '접수',
+      // 2026-09-30(선혜님 - "이 문제의 쌍둥이함수도 찾아봤니" - est-save-stages.js에서 발견한
+      // 것과 정확히 같은 클래스의 위험을 전수검색으로 여기서도 발견): 이 화면의 목록 조회가
+      // "as_records?...&is_archived=eq.false"를 쓰는데, 방금 등록한 이 payload엔 is_archived
+      // 필드 자체가 없어 DB 기본값에 의존하고 있었음 - PostgREST의 IS FALSE는 NULL을 걸러내는
+      // 특성이 있어, DB 기본값이 NULL이면 방금 등록한 접수가 목록에서 조용히 빠질 수 있음.
+      // 신규 접수는 항상 보관 안 된 상태로 시작해야 하므로 명시적으로 false를 보냄.
+      is_archived: false
     };
     setSubmitting(true);
     sbXHR('POST', 'as_records', payload, function (err) {

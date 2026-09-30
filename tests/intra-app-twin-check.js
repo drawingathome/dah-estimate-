@@ -100,5 +100,19 @@ REGISTRY.forEach(function(rule) {
   });
 })();
 
+// 2026-09-30(선혜님 - "이 문제의 쌍둥이함수도 찾아봤니" - est-save-stages.js의 is_archived 미명시
+// 버그를 고친 뒤 전수검색으로 dash-customer-as.js에서도 같은 클래스의 위험 발견): 서버에서
+// "is_archived=eq.false/is.false"로 필터링해서 목록을 조회하는데, 신규 생성 payload에 이 필드가
+// 없으면 DB 기본값(NULL일 경우) 때문에 방금 만든 레코드가 목록에서 조용히 빠질 수 있음. 이
+// 필드가 신규생성 payload에서 빠지는 재발을 감시.
+(function () {
+  var files = ['dash-customer-as.js', 'est-save-stages.js'];
+  files.forEach(function (f) {
+    var c;
+    try { c = readFile(f); } catch (e) { return; }
+    check('신규 생성 payload에 is_archived가 명시돼 있음(' + f + ') - 서버측 is_archived=false 필터 조회에서 누락되지 않도록', /is_archived\s*:\s*(false|window\._estEditState\.editingEstDbId)/.test(c));
+  });
+})();
+
 console.log('\n결과: ' + passCount + '건 통과, ' + failCount + '건 실패');
 process.exit(failCount === 0 ? 0 : 1);
