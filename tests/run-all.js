@@ -436,6 +436,9 @@ if (/dah-dashboard/.test(target)) {
   // 2026-09-30(선혜님 - "전문업체 기준으로 봤을때 맞아?" 지적으로 발견): idempotency key
   // 자기치유 로직이 모든 진입경로(빈화면/edit/copy)에서 실제로 작동하는지 회귀 감시.
   scripts.push(['idempotency-key-self-heal-check.js', []]);
+  // 2026-09-30(선혜님 - "니가 다 해결됐다고 말해도... 한번더 확인해" 요청): 오늘 고친 4가지
+  // 문제가 전부 함께 작동하는 하루 전체 업무 흐름을 통째로 재현하는 통합 테스트.
+  scripts.push(['estimate-lifecycle-integration-check.js', []]);
   // 2026-09-28(선혜님 - "밑에 세개를 그러면 놔두는게 베스트야?" - est-product-calc.js는 재발 버그의 중심):
   // 계산 규칙(폭수/블라인드 면적/쿠폰 순차 할인/절사/계약금)을 화면 코드에서 떼어내
   // est-calc-rules.js(순수 함수)로 모으면서, 그 전에 현재 계산을 4천여 개 조합으로 기록해 둠.
