@@ -243,8 +243,21 @@ function _saveStage_estimatesActual(ctx) {
   // 동일한 값을 유지. "서버는 실제로 성공했는데 응답을 못 받아 실패로 오판"해서
   // 재시도했을 때, DB의 유니크 제약(estimates_idempotency_key_uniq)이 중복 삽입을
   // 막아주고, 그 409 응답을 "이미 저장됨"으로 해석해서 정상 처리함.
+  // 2026-09-30(선혜님 - "전문업체 기준으로 봤을때 맞아?" 지적으로 발견한 구조적 결함 수정):
+  // 이 키는 원래 resetEstEditingState()가 편집 세션 시작 시점에 한 번만 만들어 두는
+  // 전제였는데, 실제로 그 함수를 부르는 진입경로가 "고객 불러오기"와 "새 견적서" 버튼
+  // 단 둘뿐이었음 - 빈 화면으로 새로 열기/mode=edit/mode=copy로 들어오면 이 함수 자체가
+  // 안 불려서 키가 계속 비어있었고, 그러면 매번 여기서 즉석으로 새 키를 만들기만 하고
+  // 어디에도 저장을 안 해서(다음 저장 시도 때 또 새 키) idempotency가 사실상 무력화돼
+  // 있었음. 진입경로를 하나씩 찾아 고치는 대신(똑같은 클래스의 "깜빡함"이 나중에 또
+  // 재발할 수 있음), 저장이 실제로 실행되는 이 한 지점 자체가 "키가 없으면 지금 만들고
+  // 앞으로 계속 재사용"하도록 스스로 보장하게 함 - 어떤 새 진입경로가 생기더라도 구조적으로
+  // 안전.
+  if (!window._estEditState.currentEstIdempotencyKey) {
+    window._estEditState.currentEstIdempotencyKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('est-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+  }
   var estPayloadForRetry = Object.assign({
-    client_idempotency_key: window._estEditState.currentEstIdempotencyKey || ((window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('est-' + Date.now() + '-' + Math.random().toString(36).slice(2))),
+    client_idempotency_key: window._estEditState.currentEstIdempotencyKey,
     customer_name:name, price:grand,
     performance_revenue:perf, staff_name:staffName,
     // 2026-09-22(선혜님 지적 - "PC에서 확정을 하고 핸드폰에서 보면

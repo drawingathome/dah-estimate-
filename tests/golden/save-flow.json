@@ -2,6 +2,7 @@
  "S1_신규고객_신규견적": {
   "dialogs": [],
   "estEditState": {
+   "currentEstIdempotencyKey": "00000000-0000-4000-8000-000000000001",
    "editingEstDbId": "srv-est-1",
    "editingEstUpdatedAt": null,
    "estSaveCustomerId": 901,
@@ -266,6 +267,7 @@
  "S2_기존고객_견적추가_후_재저장": {
   "dialogs": [],
   "estEditState": {
+   "currentEstIdempotencyKey": "00000000-0000-4000-8000-000000000001",
    "editingEstDbId": "srv-est-1",
    "editingEstUpdatedAt": null,
    "estSaveCustomerId": 221,
@@ -701,7 +703,7 @@
      },
      "branch": "반포점",
      "client_id": 221,
-     "client_idempotency_key": "00000000-0000-4000-8000-000000000002",
+     "client_idempotency_key": "00000000-0000-4000-8000-000000000001",
      "confirmed_at": null,
      "cust_type": "new",
      "customer_name": "골든고객",
@@ -761,6 +763,7 @@
  "S3_수정모드": {
   "dialogs": [],
   "estEditState": {
+   "currentEstIdempotencyKey": "00000000-0000-4000-8000-000000000001",
    "editingEstDbId": "srv-est-EDIT",
    "editingEstUpdatedAt": null,
    "estSaveCustomerId": 221,
@@ -1125,6 +1128,7 @@
  "S5_확정상태_저장": {
   "dialogs": [],
   "estEditState": {
+   "currentEstIdempotencyKey": "00000000-0000-4000-8000-000000000001",
    "editingEstDbId": "srv-est-1",
    "editingEstUpdatedAt": null,
    "estSaveCustomerId": 221,
@@ -1406,6 +1410,7 @@
  "S6_수정모드_0건반영(권한/충돌)": {
   "dialogs": [],
   "estEditState": {
+   "currentEstIdempotencyKey": "00000000-0000-4000-8000-000000000001",
    "editingEstDbId": "srv-est-EDIT",
    "editingEstUpdatedAt": null,
    "estSaveCustomerId": 221,
@@ -1749,6 +1754,7 @@
  "S7_신규견적_서버오류500": {
   "dialogs": [],
   "estEditState": {
+   "currentEstIdempotencyKey": "00000000-0000-4000-8000-000000000001",
    "editingEstDbId": null,
    "editingEstUpdatedAt": null,
    "estSaveCustomerId": 221,
@@ -2018,6 +2024,7 @@
  "S8_고객저장_서버오류500": {
   "dialogs": [],
   "estEditState": {
+   "currentEstIdempotencyKey": "00000000-0000-4000-8000-000000000001",
    "editingEstDbId": "srv-est-1",
    "editingEstUpdatedAt": null,
    "estSaveCustomerId": 221,
