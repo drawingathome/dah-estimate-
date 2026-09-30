@@ -321,6 +321,16 @@ function _saveStage_estimatesActual(ctx) {
     client_id: window._estEditState.estSaveCustomerId || null,
     line_items: lineItems,
     cust_type: currentCustType || 'new',
+    // 2026-09-30(선혜님 - "복사해서 견적서 하나를 더 만들었는데 없어졌어"로 발견): 신규 저장
+    // payload에 is_archived 필드 자체가 없어서 DB 컬럼 기본값에 의존하고 있었음 - 견적서 목록
+    // 조회가 "&is_archived=is.false"를 쓰는데, PostgREST/SQL의 IS FALSE는 NULL을 걸러내는
+    // 특성이 있어(NULL이 false로 자동 취급되지 않음), 만약 DB 기본값이 NULL이면 방금 만든
+    // 견적서가 목록 조회에서 조용히 빠져 "사라진 것"처럼 보일 수 있음. 신규 견적서는 항상
+    // 보관 안 된 상태로 시작해야 하는 게 맞으므로 명시적으로 false를 보냄(DB 기본값이 뭐든
+    // 무관하게 항상 안전) - 단, 이 payload는 PATCH(수정저장)에도 그대로 재사용되므로, 수정일
+    // 때는 이 필드를 아예 안 보내서(undefined는 JSON.stringify에서 키째 빠짐) 이미 보관 처리된
+    // 견적서를 열어서 그냥 저장만 해도 조용히 보관 해제되는 새 부작용을 만들지 않도록 함.
+    is_archived: window._estEditState.editingEstDbId ? undefined : false,
     region: document.getElementById('c-region')?.value || '',
     // 2026-08-14: 할인 정보 자체가 지금까지 저장 안 되고 있던 필드누락을
     // 쿠폰 다중선택 기능 만들면서 같이 발견/해결 - 재구매/열어서수정시

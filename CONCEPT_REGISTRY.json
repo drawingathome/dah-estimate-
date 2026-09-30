@@ -289,5 +289,19 @@
     ],
     "금지패턴": "est-calc-rules.js에 document/window/localStorage를 쓰는 것, 그리고 같은 계산 규칙을 화면 코드(est-calc-curtain/blind/product-calc)에 다시 복사해 두는 것 - 규칙을 고칠 땐 est-calc-rules.js 한 곳만 고치고, 4천여 개 조합 기록(calc-golden-master)이 바뀌는지 확인할 것",
     "참고": "2026-09-28 도입/완료. 분리 완료: 폭수/높이안내/블라인드면적/쿠폰할인/절사/계약금/잔금/성과매출/레일/지역별실측시공비/블라인드옵션추가금·시공비/서비스요약분류. est-product-calc.js(1,340줄, 버그 수정 71번 중 51번)에서 시작한 계산-화면 분리가 일단락됨."
+  },
+  "신규견적서_보관상태_명시": {
+    "의미": "신규 견적서 저장(POST) payload에 is_archived:false를 명시적으로 안 보내면, DB 컬럼 기본값에 의존하게 되는데 PostgREST의 is_archived=is.false 필터는 NULL을 걸러내는 특성이 있어(IS FALSE는 NULL에 대해 false) 방금 만든 견적서가 목록 조회에서 조용히 빠질 수 있음(2026-09-30 \"복사해서 견적서 하나를 더 만들었는데 없어졌어\" 실사례로 발견)",
+    "single_source_of_truth": "est-save-stages.js:_saveStage_estimatesActual의 estPayloadForRetry - 신규(POST)일 때만 is_archived:false 명시, 수정(PATCH)일 때는 undefined로 키 자체를 빼서 기존 값 보존",
+    "derived_fields": [],
+    "db_enforcement": "없음(클라이언트가 명시 안 하면 DB 기본값에 의존하는 구조 - 이번에 클라이언트에서 항상 명시하도록 방어)",
+    "code_locations": [
+      "est-save-stages.js:_saveStage_estimatesActual (payload 구성)",
+      "dash-customer-estimates.js:374 (is_archived=is.false로 목록 조회하는 곳)"
+    ],
+    "guard_tests": [
+      "save-golden-master-check.js"
+    ],
+    "금지패턴": "estPayloadForRetry에 is_archived를 무조건 true/false 고정값으로 넣는 것(PATCH에도 강제 적용되면 이미 보관 처리된 견적서가 열어서 저장만 해도 조용히 보관 해제되는 부작용) - 반드시 isEditMode 여부(정확히는 window._estEditState.editingEstDbId 존재 여부)에 따라 조건부로."
   }
 }
