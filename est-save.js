@@ -35,7 +35,11 @@ var EST_SESSION_RESET_VALUES = {
   viewingFrozenEstimate: false,
   estSaveCustomerId: null,
   estimateConfirmedAt: null, // 9/15: 확정 상태 - 안 넣었다가 "허서진 데이터 실종" 사건 발생
-  skipTodayDuplicateCheck: false, // "복사해서 새로 만들기" 전용 플래그 - 지금까지 이 목록에 없었음(추가 발견)
+  // skipTodayDuplicateCheck(2026-09-15 도입 "복사해서 새로 만들기" 전용 플래그)는 2026-09-30에
+  // 제거함 - 이 플래그를 읽던 "오늘 이미 저장된 견적 찾기" 안전장치 자체를 없앴으니(전문업체
+  // 판단 - 실수로 중복저장 방지는 이미 idempotency key가 더 정확하게 하고 있었음, 날짜+고객
+  // 기준의 이 안전장치는 의도적인 두 번째 견적서까지 하나로 합쳐버리는 문제가 있었음) 이제
+  // 아무도 안 읽는 플래그였음.
   lastCalcBreakdown: null,
   lastDiscountBreakdown: null,
   lastAppliedDiscounts: null,

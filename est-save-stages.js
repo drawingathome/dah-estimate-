@@ -215,66 +215,24 @@ function proceed(otherEstGrand, otherEstPerf) {
 }
 }
 function _saveStage_estimates(ctx) {
-  // ctx에서 꺼낸 값들 - 예전엔 바깥 함수(_saveEstimateInner)의 변수를 몰래 같이 쓰던 것들
-  // (바깥에서 읽는 값 없음)
-  // 2026-08-26(선혜님 발견 — 김채은/유경진 견적서 중복 생성 사례):
-  // "오늘 이미 만든 견적이면 PATCH로 이어서 수정"하는 판단(est-customer-load.js)이
-  // 이 브라우저의 로컬 저장소(dah_saved)만 보고 내려졌음 — 그래서 (1) 다른
-  // 기기/다른 탭에서 방금 저장한 걸 이 브라우저가 모르거나, (2) 같은 브라우저라도
-  // 탭을 두 개 열어 거의 동시에 저장하면(유경진 사례: 19초 간격) 양쪽 다
-  // "처음 저장하는 줄" 알고 각자 새로 생성해버림. 로컬 판단을 믿지 말고, 실제
-  // POST/PATCH를 결정하기 직전에 서버에 "이 고객, 오늘, 아직 안 지워진 견적이
-  // 이미 있는지"를 직접 한 번 더 물어봐서 있으면 그 레코드로 PATCH하도록 함.
-  // (완벽한 동시성 보장은 아님 - 두 탭이 이 확인마저 같은 찰나에 동시에 하면
-  // 여전히 둘 다 생성될 수 있음. 그 마지막 좁은 틈은 DB의
-  // estimates_idempotency_key_uniq 유니크 제약과는 별개 문제라 여기선 못 막음 -
-  // 대신 그 경우를 대비해 8-2번처럼 주기적으로 견적서 목록에서 중복을
-  // 스캔하는 걸 권장.)
-  if (!window._estEditState.editingEstDbId && !window._estEditState.skipTodayDuplicateCheck && window._estEditState.estSaveCustomerId && typeof SUPABASE_URL !== 'undefined') {
-    var todayStart = new Date(); todayStart.setHours(0,0,0,0);
-    var xhrCheck = new XMLHttpRequest();
-    // 2026-08-31(선혜님 지적 — "현은지 왜 또 중복이 되지????", 개판이네
-    // 진짜!!!!): 이 "오늘 이미 저장된 견적 찾기" 안전장치가 created_at
-    // (최초 생성일) 기준으로만 찾고 있었음 - 현은지 원본 견적서는
-    // 8/4에 처음 만들어졌는데, 오늘(8/31) 그 견적을 열어서 수정저장까지
-    // 했음에도 "오늘 생성된 것"에는 안 걸려서 못 찾음. 그 상태로
-    // window._estEditState.editingEstDbId도 어떤 이유로(정확한 재현은 못 했으나 mode=edit
-    // 아닌 경로로 재진입했을 가능성) 유실된 채 "확정" 저장을 하니,
-    // 이 안전장치도 원본을 못 찾아 완전히 새 레코드(POST)를 만들어버림.
-    // "오늘 작업 중인 견적"을 정확히 찾으려면 최초 생성일이 아니라
-    // 최근 수정일(updated_at) 기준이어야 함.
-    xhrCheck.open('GET', SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(window._estEditState.estSaveCustomerId) +
-      '&is_archived=eq.false&updated_at=gte.' + encodeURIComponent(todayStart.toISOString()) +
-      '&select=id,updated_at&order=updated_at.desc&limit=1', true);
-    xhrCheck.setRequestHeader('apikey', SUPABASE_KEY);
-    xhrCheck.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
-    xhrCheck.timeout = 5000;
-    var proceeded = false;
-    var proceed = function() {
-      if (proceeded) return; proceeded = true;
-      _saveStage_estimatesActual(ctx);
-    };
-    xhrCheck.onload = function() {
-      try {
-        if (xhrCheck.status >= 200 && xhrCheck.status < 300) {
-          var rows = JSON.parse(xhrCheck.responseText || '[]');
-          if (rows && rows.length) {
-            window._estEditState.editingEstDbId = rows[0].id;
-            window._estEditState.editingEstUpdatedAt = rows[0].updated_at || null;
-            showToast('오늘 이미 저장된 견적을 찾아 이어서 수정합니다(중복 방지)');
-          }
-        }
-      } catch (e) { /* 파싱 실패시에도 아래 proceed()로 정상 진행(신규 저장 취급) */ }
-      proceed();
-    };
-    // 이 확인 자체가 실패(네트워크/타임아웃)해도 저장 흐름 전체를 막지는 않음 —
-    // "중복 방지 확인 한 번 더" 실패가 "아예 저장이 안 됨"보다 훨씬 나쁜 결과이므로,
-    // 확인이 안 되면 예전처럼 로컬 판단 그대로 신규 저장을 진행함.
-    xhrCheck.onerror = proceed;
-    xhrCheck.ontimeout = proceed;
-    xhrCheck.send();
-    return;
-  }
+  // 2026-09-30(선혜님 - "하자" - "둘 다 안 맞는거 같은데 전문업체서는 어떻게 하니" 요청으로
+  // 제거): 여기 있던 "오늘 이미 저장된 견적 찾기" 안전장치(2026-08-26 도입, 08-31 한 번 더
+  // 보강)를 완전히 제거함. 실제로 "노지경 고객에게 견적서를 4개 연속으로 만들면 몇 개가
+  // 남는가"를 직접 재현해서 확인한 결과, 이 안전장치가 매번 오늘 만든 이전 견적서를 찾아
+  // PATCH로 계속 덮어써서 4개를 만들어도 서버엔 항상 1개만 남는 것을 확인함 - "실수로
+  // 중복 저장"과 "의도적으로 두 번째 견적서를 만드는 것"을 이 로직(같은 날 + 같은 고객
+  // 이라는 조건만 봄)은 구분할 방법이 없어서, 후자를 전자로 착각해 데이터를 조용히
+  // 합쳐버리고 있었음.
+  //
+  // "실수로 중복 저장"을 막는 진짜 안전장치는 이미 따로 있음 - 이 저장 시도(재시도 포함)
+  // 전체에서 동일하게 유지되는 client_idempotency_key + DB의
+  // estimates_idempotency_key_uniq 유니크 제약. 같은 저장 시도가 반복되면(네트워크 재시도,
+  // 따닥 클릭) 이 키가 정확히 막아주고, 다른 저장 시도(사용자가 의도적으로 새로 만든 것)는
+  // 항상 새 키를 받으므로 절대 안 걸림 - "날짜+고객"이라는 이 안전장치보다 훨씬 정확한
+  // 판단 기준. est-sync-queue.js가 이미 밝힌 원칙("데이터 유실보다 가끔 중복행이 훨씬
+  // 나은 선택")을 여기에도 동일하게 적용 - 아주 드물게 진짜 중복행이 생기더라도(이미
+  // dahScanForDuplicates가 매일 스캔해서 알려줌), 서로 다른 두 견적서를 조용히 하나로
+  // 합쳐 데이터를 잃는 것보다 훨씬 안전함.
   _saveStage_estimatesActual(ctx);
 }
 function _saveStage_estimatesActual(ctx) {

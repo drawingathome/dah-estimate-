@@ -1,17 +1,19 @@
 #!/usr/bin/env node
 // tests/estimate-duplicate-blindspot-check.js
-// 2026-08-26(선혜님 발견 — 김채은/유경진 견적서 중복 생성 사례) 회귀 테스트
+// 2026-08-26(선혜님 발견 — 김채은/유경진 견적서 중복 생성 사례)에서 시작된 회귀 테스트.
 //
-// 배경: "오늘 이미 만든 견적이면 PATCH로 이어서 수정"하는 판단이 이 브라우저의
-// 로컬 저장소(dah_saved)만 보고 내려지고 있었음 — 그래서 다른 탭/다른 기기에서
-// 방금 저장한 걸 이 브라우저가 모르면 그대로 새 견적(POST)을 또 만들어버렸음.
+// 2026-09-30(선혜님 - "하자", "전문업체서는 어떻게 하니" 요청으로 방향이 완전히 반대로
+// 바뀜): 위 2026-08-26 수정("오늘 이미 저장된 견적이 있으면 PATCH로 합침")이, 실제로는
+// "실수로 중복 저장"과 "의도적으로 두 번째 견적서를 만드는 것"을 구분 못 해서 후자까지
+// 하나로 합쳐버리는 훨씬 심각한 문제였음을 실제 재현(노지경 고객에게 견적서 4개를 연속
+// 생성했더니 서버엔 항상 1개만 남는 것을 직접 확인)으로 발견 - 그 안전장치 자체를 제거함.
+// "실수로 중복 저장"은 이미 client_idempotency_key + DB 유니크 제약이 더 정확하게 막고
+// 있어서 이 안전장치는 애초에 불필요했음(est-sync-queue.js의 "데이터 유실보다 가끔
+// 중복행이 훨씬 나은 선택" 원칙과 동일 적용).
 //
-// 수정: saveToEstimates()가 POST/PATCH를 결정하기 직전에 서버에 "이 고객,
-// 오늘, 아직 안 지워진 견적이 이미 있는지"를 직접 GET으로 확인하도록 변경.
-//
-// 이 테스트는 "이 탭은 오늘 이미 저장한 적이 없는 것처럼(로컬엔 기록 없음)"
-// 시작하되, 서버(GET 응답)에는 이미 오늘자 견적이 있는 것처럼 흉내내서,
-// 실제로 새 POST가 아니라 그 기존 레코드로 PATCH가 나가는지 확인한다.
+// 이 테스트는 이제 정반대를 검증함: 서버에 "오늘 이미 저장된 견적"이 있는 것처럼 응답해도,
+// 그걸 확인하는 GET 자체를 안 보내고 항상 새 POST로 저장되며, 기존 레코드를 PATCH로
+// 덮어쓰지 않는지.
 //
 // 사용법: node tests/estimate-duplicate-blindspot-check.js dah-estimate.html
 
@@ -56,8 +58,11 @@ async function run() {
           req.respond({ status: req.method() === 'POST' ? 201 : 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[{"id":"test-known-customer-id"}]' });
           return;
         }
-        // 신규 저장 사각지대 확인용 GET - "오늘 이미 있음"으로 응답
-        if (url.includes('/estimates') && req.method() === 'GET' && url.includes('client_id=eq.')) {
+        // 2026-09-30: 원래 이 안전장치(오늘 이미 있는지 확인하는 GET, select=id,updated_at +
+        // updated_at=gte. 특징)만 정확히 카운트 - "다른 견적서 합계" 조회(select=id,price,
+        // performance_revenue, est-save-stages.js:_saveStage_customers)는 이 안전장치와
+        // 무관한 별개의 정상 기능이라 여기 안 섞이게 구분.
+        if (url.includes('/estimates') && req.method() === 'GET' && url.includes('client_id=eq.') && url.includes('updated_at=gte.')) {
           estCheckGetCount++;
           req.respond({
             status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
@@ -108,57 +113,16 @@ async function run() {
     await page.evaluate(() => { saveEstimate(); });
     await new Promise(r => setTimeout(r, 1500));
 
-    check('[' + label + '] 저장 전 서버에 "오늘 이미 있는지" GET으로 확인함', estCheckGetCount >= 1, `GET 확인 호출 ${estCheckGetCount}회`);
-    check('[' + label + '] 서버가 기존 견적을 알려주면 새로 생성(POST)하지 않음', estPostCount === 0, `POST ${estPostCount}회 발생함(0회여야 정상)`);
-    check('[' + label + '] 대신 기존 레코드로 PATCH함', estPatchCount >= 1 && patchedId === EXISTING_EST_ID, `PATCH ${estPatchCount}회, 대상id=${patchedId}`);
+    check('[' + label + '] 서버에 "오늘 이미 있는지" 확인하는 GET을 더 이상 보내지 않음(그 안전장치 자체를 제거했으므로)', estCheckGetCount === 0, `GET 확인 호출 ${estCheckGetCount}회(0회여야 정상)`);
+    check('[' + label + '] [핵심] 서버에 오늘자 견적이 있어도 항상 새로 생성(POST)됨 - 의도적인 두 번째 견적서가 조용히 합쳐지지 않음', estPostCount === 1, `POST ${estPostCount}회 발생함(1회여야 정상)`);
+    check('[' + label + '] 기존 레코드를 PATCH로 덮어쓰지 않음', estPatchCount === 0 && patchedId === null, `PATCH ${estPatchCount}회, 대상id=${patchedId}(둘 다 없어야 정상)`);
 
-    await page.close();
-  }
-
-  // 서버 확인 자체가 실패해도(네트워크 문제) 저장 자체는 막히지 않아야 함(안전장치)
-  async function testFailSafeFallback(vw, label) {
-    const page = await browser.newPage();
-    page.on('dialog', async d => { try { await d.accept(''); } catch (e) {} });
-    let estPostCount = 0;
-    await page.setRequestInterception(true);
-    page.on('request', (req) => {
-      const url = req.url();
-      if ((url.includes('supabase.co') || url.includes('script.google.com'))) {
-        if (req.method() === 'OPTIONS') { req.respond({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Allow-Headers': '*' } }); return; }
-        if (url.includes('/customers') && (req.method() === 'PATCH' || req.method() === 'POST')) { req.respond({ status: req.method() === 'POST' ? 201 : 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[{"id":"test-known-customer-id"}]' }); return; }
-        if (url.includes('/estimates') && req.method() === 'GET') { req.abort('failed'); return; } // 확인 요청 자체가 실패
-        if (url.includes('/estimates') && req.method() === 'POST') { estPostCount++; req.respond({ status: 201, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[{"id":"fallback-created-id"}]' }); return; }
-        req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[]' });
-        return;
-      }
-      if (url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) { req.continue(); } else { req.abort(); }
-    });
-    await page.setViewport({ width: vw, height: 900, isMobile: vw < 500, hasTouch: vw < 500 });
-    await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
-    await page.evaluate(() => { localStorage.removeItem('dah_customers'); localStorage.removeItem('dah_saved'); });
-    await new Promise(r => setTimeout(r, 700));
-    await page.evaluate(() => {
-      window._estEditState.estSaveCustomerId = 'test-known-customer-id';
-      window._estEditState.editingEstDbId = null;
-      document.getElementById('c-name').value = '_사각지대폴백테스트고객';
-      document.getElementById('c-phone').value = '01044443333';
-      const tr = document.querySelector('.row-curtain');
-      tr.querySelector('.mw').value = '300'; tr.querySelector('.mw').dispatchEvent(new Event('input'));
-      calcCurtainRow(tr.querySelector('.mw'));
-      tr.querySelector('.cprice').value = '50000'; calcCurtainRow(tr.querySelector('.cprice'));
-    });
-    await new Promise(r => setTimeout(r, 300));
-    await setupValidSession(page);
-    await page.evaluate(() => { saveEstimate(); });
-    await new Promise(r => setTimeout(r, 1500));
-    check('[' + label + '] 확인요청 자체가 실패해도 저장 흐름이 멈추지 않고 진행됨(fail-safe)', estPostCount >= 1, `POST ${estPostCount}회(1회 이상이어야 정상 - 막히면 안 됨)`);
     await page.close();
   }
 
   try {
     await testBlindspotFix(1280, 'PC');
     await testBlindspotFix(390, '모바일');
-    await testFailSafeFallback(1280, 'PC-확인실패시');
     process.exitCode = failCount === 0 ? 0 : 1;
   } finally {
     await browser.close();

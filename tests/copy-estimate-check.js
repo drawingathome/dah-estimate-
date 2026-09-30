@@ -78,12 +78,13 @@ async function run() {
   const loadedCheck = await page.evaluate(() => ({
     name: document.getElementById('c-name')?.value,
     phone: document.getElementById('c-phone')?.value,
-    skipFlag: window._estEditState?.skipTodayDuplicateCheck,
     editingEstDbId: window._estEditState?.editingEstDbId
   }));
   ok('1. 복사모드 진입시 원본 데이터가 화면에 채워짐', loadedCheck.name === '복사테스트고객' && loadedCheck.phone === '010-9999-8888', JSON.stringify(loadedCheck));
-  ok('2. 복사모드에서 skipTodayDuplicateCheck 플래그가 켜짐(중복방지 안전장치가 원본을 찾아 덮어쓰지 않도록)', loadedCheck.skipFlag === true);
-  ok('3. 복사모드에서 editingEstDbId는 비어있음(새 견적서로 저장돼야 함)', !loadedCheck.editingEstDbId);
+  // 2026-09-30: skipTodayDuplicateCheck 플래그 자체가 제거됨("오늘 이미 저장된 견적 찾기"
+  // 안전장치 자체를 없앴으므로) - 아래 항목들(POST로만 저장되고 PATCH로 원본을 덮어쓰지
+  // 않는지)이 실질적으로 더 정확하게 같은 것을 검증하므로 이 항목은 제거.
+  ok('2. 복사모드에서 editingEstDbId는 비어있음(새 견적서로 저장돼야 함)', !loadedCheck.editingEstDbId);
 
   await page.evaluate(() => {
     const priceInput = document.querySelector('.cprice');
@@ -96,12 +97,12 @@ async function run() {
 
   const estimateRequests = requests.filter(r => r.url.includes('/estimates'));
   const customerRequests = requests.filter(r => r.url.includes('/customers'));
-  ok('4. 견적서 저장 요청이 실제로 발생함', estimateRequests.length > 0, JSON.stringify(estimateRequests.map(r => r.method)));
-  ok('5. 견적서는 PATCH(원본 덮어쓰기)가 아니라 POST(새로 생성)로 저장됨 - 한 고객에 2개 견적서 생성 확인', estimateRequests.some(r => r.method === 'POST') && !estimateRequests.some(r => r.method === 'PATCH'), JSON.stringify(estimateRequests.map(r => r.method)));
-  ok('6. 고객 레코드는 PATCH(중복 고객 생성 안 됨)', customerRequests.some(r => r.method === 'PATCH') && !customerRequests.some(r => r.method === 'POST'), JSON.stringify(customerRequests.map(r => r.method)));
+  ok('3. 견적서 저장 요청이 실제로 발생함', estimateRequests.length > 0, JSON.stringify(estimateRequests.map(r => r.method)));
+  ok('4. 견적서는 PATCH(원본 덮어쓰기)가 아니라 POST(새로 생성)로 저장됨 - 한 고객에 2개 견적서 생성 확인', estimateRequests.some(r => r.method === 'POST') && !estimateRequests.some(r => r.method === 'PATCH'), JSON.stringify(estimateRequests.map(r => r.method)));
+  ok('5. 고객 레코드는 PATCH(중복 고객 생성 안 됨)', customerRequests.some(r => r.method === 'PATCH') && !customerRequests.some(r => r.method === 'POST'), JSON.stringify(customerRequests.map(r => r.method)));
 
   const toastText = await page.evaluate(() => document.getElementById('toast')?.textContent);
-  ok('7. 저장 완료 토스트가 정상적으로 뜸', toastText && toastText.includes('저장 완료'), toastText);
+  ok('6. 저장 완료 토스트가 정상적으로 뜸', toastText && toastText.includes('저장 완료'), toastText);
 
   console.log(log.join('\n'));
   console.log(jsErrors.length ? 'JS 에러: ' + jsErrors.join('\n') : 'JS 에러 없음');

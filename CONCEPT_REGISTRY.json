@@ -140,13 +140,12 @@
   },
   "고객_중복생성_방지": {
     "의미": "같은 사람이 여러 레코드로 중복 등록되는 것을 막음(신화경/현은지 등 실사고 계보)",
-    "single_source_of_truth": "연락처 필수 검증(견적서 저장시) + 오늘 이미 저장된 견적 찾기는 created_at이 아니라 updated_at 기준",
+    "single_source_of_truth": "연락처 필수 검증(견적서 저장시). \"오늘 이미 저장된 견적 찾기\"(updated_at 기준으로 합치던 안전장치)는 2026-09-30에 제거함 - 실수로 중복저장 방지는 client_idempotency_key + DB 유니크 제약이 이미 더 정확하게 하고 있었고, 이 안전장치는 의도적인 두 번째 견적서까지 하나로 합쳐버리는 문제가 있었음(직접 재현으로 확인: 같은 고객에게 4개 연속 생성해도 서버엔 1개만 남음).",
     "derived_fields": [],
     "db_enforcement": "없음",
     "code_locations": [
       "est-save.js:validateEstimate (연락처 필수)",
-      "dash-customer-add.js (연락처 필수)",
-      "est-save-stages.js:_saveStage_estimates (오늘 저장된 견적 찾기, updated_at 기준)"
+      "dash-customer-add.js (연락처 필수)"
     ],
     "guard_tests": [
       "estimate-duplicate-blindspot-check.js"

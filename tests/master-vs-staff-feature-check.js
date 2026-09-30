@@ -97,12 +97,13 @@ async function testRoleAndViewport(role, vw, label, port) {
   });
   await new Promise(r => setTimeout(r, 300));
 
-  // 1) 견적서 중복방지: 서버가 "오늘 이미 있음"이라 하면 PATCH로 전환되는지
-  await page.evaluate(() => { window._estEditState.estSaveCustomerId = 'role-check-customer-id'; window._estEditState.editingEstDbId = null; });
+  // 2026-09-30: 여기 있던 "견적서 중복방지"(서버가 "오늘 이미 있음"이라 하면 PATCH로
+  // 전환) 검증은 제거함 - 그 안전장치 자체를 없앴으므로(전문업체 판단 - 의도적인 두 번째
+  // 견적서까지 하나로 합쳐버리던 문제, est-save-stages.js 참고). 이제는 마스터/실장 둘 다
+  // 항상 새로 생성(POST)돼야 정상이고, 이건 이미 별도로 마스터/실장 구분 없이
+  // copy-estimate-check.js/estimate-duplicate-blindspot-check.js가 검증함.
   await page.evaluate(() => { saveEstimate(); });
   await new Promise(r => setTimeout(r, 1200));
-  if (estPostCount > 0) findings.push(`[중복방지] 새로 생성(POST)됨(0이어야 정상) POST=${estPostCount}`);
-  if (estPatchCount < 1) findings.push(`[중복방지] 기존 레코드로 PATCH 안 됨`);
 
   // 2) 설치기사 자동입력 (2026-09-09: window.prompt() 3연발이 큰 팝업
   // 화면으로 바뀌면서, printRequest() 호출 직후엔 이 팝업이 먼저 뜸 -
@@ -153,7 +154,7 @@ async function testRoleAndViewport(role, vw, label, port) {
     const tag = `${role === 'master' ? '마스터' : '실장'}-${label}`;
     const findings = await testRoleAndViewport(role, vw, label, port);
     if (findings.length === 0) {
-      console.log(`✅ [${tag}] 3가지 기능 전부 정상`);
+      console.log(`✅ [${tag}] 2가지 기능 전부 정상`);
     } else {
       console.log(`❌ [${tag}] 문제 발견:`);
       findings.forEach(f => console.log('   - ' + f));

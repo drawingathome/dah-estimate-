@@ -22,7 +22,6 @@
     "productSubtotal": 225000
    },
    "lastDiscountBreakdown": [],
-   "skipTodayDuplicateCheck": false,
    "viewingFrozenEstimate": false
   },
   "jsErrors": [],
@@ -34,11 +33,6 @@
    "dah_saved": "[{\"id\":\"srv-est-1\",\"no\":\"DAH-20260928-01\",\"dbId\":\"srv-est-1\",\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"addr\":\"서울 서초구\",\"space\":\"거실\",\"fabric\":\"\",\"itemCount\":1,\"curtainCount\":1,\"blindCount\":0,\"curtainVendors\":[],\"blindVendors\":[],\"price\":225000,\"performanceRevenue\":225000,\"staffName\":\"\",\"status\":\"ga\",\"contractStatus\":\"pending\",\"savedAt\":\"2026-09-28T03:00:00.000Z\",\"expiryAt\":\"2026-10-05T03:00:00.000Z\",\"date\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"memo\":\"\",\"confirmedAt\":null,\"branch\":\"반포점\",\"lineItems\":[{\"type\":\"curtain\",\"space\":\"거실\",\"displayName\":\"\",\"fabric\":\"\",\"vendor\":\"\",\"color\":\"\",\"railVendor\":\"\",\"pleatType\":\"나비주름형\",\"openType\":\"양개형\",\"heightAdjust\":\"-3\",\"hemType\":\"리드\",\"mw\":\"300\",\"mh\":\"240\",\"pnum\":\"5\",\"yardage\":\"\",\"shapeProcess\":true,\"fabricUnitPrice\":\"\",\"price\":45000,\"amt\":\"225,000원\"}],\"custType\":\"new\",\"region\":\"\",\"appliedDiscounts\":{\"coupons\":[],\"manual\":null},\"clientId\":901}]"
   },
   "others": [
-   {
-    "body": null,
-    "method": "GET",
-    "path": "/rest/v1/estimates?client_id=eq.901&is_archived=eq.false&updated_at=gte.2026-09-28T00%3A00%3A00.000Z&select=id,updated_at&order=updated_at.desc&limit=1"
-   },
    {
     "body": {
      "app": "estimate",
@@ -292,7 +286,6 @@
     "productSubtotal": 225000
    },
    "lastDiscountBreakdown": [],
-   "skipTodayDuplicateCheck": false,
    "viewingFrozenEstimate": false
   },
   "jsErrors": [],
@@ -304,11 +297,6 @@
    "dah_saved": "[{\"id\":\"srv-est-1\",\"no\":\"DAH-20260928-01\",\"dbId\":\"srv-est-1\",\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"addr\":\"서울 서초구\",\"space\":\"거실\",\"fabric\":\"\",\"itemCount\":1,\"curtainCount\":1,\"blindCount\":0,\"curtainVendors\":[],\"blindVendors\":[],\"price\":225000,\"performanceRevenue\":225000,\"staffName\":\"\",\"status\":\"ga\",\"contractStatus\":\"pending\",\"savedAt\":\"2026-09-28T03:00:00.000Z\",\"expiryAt\":\"2026-10-05T03:00:00.000Z\",\"date\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"memo\":\"\",\"confirmedAt\":null,\"branch\":\"반포점\",\"lineItems\":[{\"type\":\"curtain\",\"space\":\"거실\",\"displayName\":\"\",\"fabric\":\"\",\"vendor\":\"\",\"color\":\"\",\"railVendor\":\"\",\"pleatType\":\"나비주름형\",\"openType\":\"양개형\",\"heightAdjust\":\"-3\",\"hemType\":\"리드\",\"mw\":\"300\",\"mh\":\"240\",\"pnum\":\"5\",\"yardage\":\"\",\"shapeProcess\":true,\"fabricUnitPrice\":\"\",\"price\":45000,\"amt\":\"225,000원\"}],\"custType\":\"new\",\"region\":\"\",\"appliedDiscounts\":{\"coupons\":[],\"manual\":null},\"clientId\":221}]"
   },
   "others": [
-   {
-    "body": null,
-    "method": "GET",
-    "path": "/rest/v1/estimates?client_id=eq.221&is_archived=eq.false&updated_at=gte.2026-09-28T00%3A00%3A00.000Z&select=id,updated_at&order=updated_at.desc&limit=1"
-   },
    {
     "body": null,
     "method": "GET",
@@ -793,7 +781,6 @@
     "productSubtotal": 225000
    },
    "lastDiscountBreakdown": [],
-   "skipTodayDuplicateCheck": false,
    "viewingFrozenEstimate": false
   },
   "jsErrors": [],
@@ -1061,7 +1048,6 @@
     "productSubtotal": 225000
    },
    "lastDiscountBreakdown": [],
-   "skipTodayDuplicateCheck": false,
    "viewingFrozenEstimate": false
   },
   "jsErrors": [],
@@ -1159,7 +1145,6 @@
     "productSubtotal": 225000
    },
    "lastDiscountBreakdown": [],
-   "skipTodayDuplicateCheck": false,
    "viewingFrozenEstimate": false
   },
   "jsErrors": [],
@@ -1171,11 +1156,6 @@
    "dah_saved": "[{\"id\":\"srv-est-1\",\"no\":\"DAH-20260928-01\",\"dbId\":\"srv-est-1\",\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"addr\":\"서울 서초구\",\"space\":\"거실\",\"fabric\":\"\",\"itemCount\":1,\"curtainCount\":1,\"blindCount\":0,\"curtainVendors\":[],\"blindVendors\":[],\"price\":225000,\"performanceRevenue\":225000,\"staffName\":\"\",\"status\":\"final\",\"contractStatus\":\"contracted\",\"savedAt\":\"2026-09-28T03:00:00.000Z\",\"expiryAt\":\"2026-10-05T03:00:00.000Z\",\"date\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"memo\":\"\",\"confirmedAt\":\"2026-09-28T00:00:00.000Z\",\"branch\":\"반포점\",\"lineItems\":[{\"type\":\"curtain\",\"space\":\"거실\",\"displayName\":\"\",\"fabric\":\"\",\"vendor\":\"\",\"color\":\"\",\"railVendor\":\"\",\"pleatType\":\"나비주름형\",\"openType\":\"양개형\",\"heightAdjust\":\"-3\",\"hemType\":\"리드\",\"mw\":\"300\",\"mh\":\"240\",\"pnum\":\"5\",\"yardage\":\"\",\"shapeProcess\":true,\"fabricUnitPrice\":\"\",\"price\":45000,\"amt\":\"225,000원\"}],\"custType\":\"new\",\"region\":\"\",\"appliedDiscounts\":{\"coupons\":[],\"manual\":null},\"clientId\":221}]"
   },
   "others": [
-   {
-    "body": null,
-    "method": "GET",
-    "path": "/rest/v1/estimates?client_id=eq.221&is_archived=eq.false&updated_at=gte.2026-09-28T00%3A00%3A00.000Z&select=id,updated_at&order=updated_at.desc&limit=1"
-   },
    {
     "body": null,
     "method": "GET",
@@ -1446,7 +1426,6 @@
     "productSubtotal": 225000
    },
    "lastDiscountBreakdown": [],
-   "skipTodayDuplicateCheck": false,
    "viewingFrozenEstimate": false
   },
   "jsErrors": [],
@@ -1790,7 +1769,6 @@
     "productSubtotal": 225000
    },
    "lastDiscountBreakdown": [],
-   "skipTodayDuplicateCheck": false,
    "viewingFrozenEstimate": false
   },
   "jsErrors": [],
@@ -1803,11 +1781,6 @@
    "dah_saved": "[{\"id\":\"DAH-20260928-01\",\"no\":\"DAH-20260928-01\",\"dbId\":null,\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"addr\":\"서울 서초구\",\"space\":\"거실\",\"fabric\":\"\",\"itemCount\":1,\"curtainCount\":1,\"blindCount\":0,\"curtainVendors\":[],\"blindVendors\":[],\"price\":225000,\"performanceRevenue\":225000,\"staffName\":\"\",\"status\":\"ga\",\"contractStatus\":\"pending\",\"savedAt\":\"2026-09-28T03:00:00.000Z\",\"expiryAt\":\"2026-10-05T03:00:00.000Z\",\"date\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"memo\":\"\",\"confirmedAt\":null,\"branch\":\"반포점\",\"lineItems\":[{\"type\":\"curtain\",\"space\":\"거실\",\"displayName\":\"\",\"fabric\":\"\",\"vendor\":\"\",\"color\":\"\",\"railVendor\":\"\",\"pleatType\":\"나비주름형\",\"openType\":\"양개형\",\"heightAdjust\":\"-3\",\"hemType\":\"리드\",\"mw\":\"300\",\"mh\":\"240\",\"pnum\":\"5\",\"yardage\":\"\",\"shapeProcess\":true,\"fabricUnitPrice\":\"\",\"price\":45000,\"amt\":\"225,000원\"}],\"custType\":\"new\",\"region\":\"\",\"appliedDiscounts\":{\"coupons\":[],\"manual\":null},\"clientId\":221}]"
   },
   "others": [
-   {
-    "body": null,
-    "method": "GET",
-    "path": "/rest/v1/estimates?client_id=eq.221&is_archived=eq.false&updated_at=gte.2026-09-28T00%3A00%3A00.000Z&select=id,updated_at&order=updated_at.desc&limit=1"
-   },
    {
     "body": null,
     "method": "GET",
@@ -2065,7 +2038,6 @@
     "productSubtotal": 225000
    },
    "lastDiscountBreakdown": [],
-   "skipTodayDuplicateCheck": false,
    "viewingFrozenEstimate": false
   },
   "jsErrors": [],
@@ -2077,11 +2049,6 @@
    "dah_saved": "[{\"id\":\"srv-est-1\",\"no\":\"DAH-20260928-01\",\"dbId\":\"srv-est-1\",\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"addr\":\"서울 서초구\",\"space\":\"거실\",\"fabric\":\"\",\"itemCount\":1,\"curtainCount\":1,\"blindCount\":0,\"curtainVendors\":[],\"blindVendors\":[],\"price\":225000,\"performanceRevenue\":225000,\"staffName\":\"\",\"status\":\"ga\",\"contractStatus\":\"pending\",\"savedAt\":\"2026-09-28T03:00:00.000Z\",\"expiryAt\":\"2026-10-05T03:00:00.000Z\",\"date\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"memo\":\"\",\"confirmedAt\":null,\"branch\":\"반포점\",\"lineItems\":[{\"type\":\"curtain\",\"space\":\"거실\",\"displayName\":\"\",\"fabric\":\"\",\"vendor\":\"\",\"color\":\"\",\"railVendor\":\"\",\"pleatType\":\"나비주름형\",\"openType\":\"양개형\",\"heightAdjust\":\"-3\",\"hemType\":\"리드\",\"mw\":\"300\",\"mh\":\"240\",\"pnum\":\"5\",\"yardage\":\"\",\"shapeProcess\":true,\"fabricUnitPrice\":\"\",\"price\":45000,\"amt\":\"225,000원\"}],\"custType\":\"new\",\"region\":\"\",\"appliedDiscounts\":{\"coupons\":[],\"manual\":null},\"clientId\":221}]"
   },
   "others": [
-   {
-    "body": null,
-    "method": "GET",
-    "path": "/rest/v1/estimates?client_id=eq.221&is_archived=eq.false&updated_at=gte.2026-09-28T00%3A00%3A00.000Z&select=id,updated_at&order=updated_at.desc&limit=1"
-   },
    {
     "body": null,
     "method": "GET",

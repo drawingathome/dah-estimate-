@@ -30,13 +30,11 @@ async function run() {
     });
     return { totalKeys: Object.keys(EST_SESSION_RESET_VALUES).length, stillDirty: stillDirty };
   });
-  ok('1. 등록된 9개 값 전부(skipTodayDuplicateCheck 포함) 정확히 초기값으로 리셋됨', r1.stillDirty.length === 0, JSON.stringify(r1));
+  ok('1. 등록된 9개 값 전부 정확히 초기값으로 리셋됨', r1.stillDirty.length === 0, JSON.stringify(r1));
 
-  // 2) 이번에 새로 찾은 것: skipTodayDuplicateCheck가 예전엔 이 목록에
-  // 아예 없었음(복사모드 플래그가 새 견적서 시작해도 안 지워지던 문제) -
-  // 명시적으로 다시 확인
-  const r2 = await page.evaluate(() => 'skipTodayDuplicateCheck' in EST_SESSION_RESET_VALUES);
-  ok('2. skipTodayDuplicateCheck가 레지스트리에 등록돼 있음(예전엔 누락)', r2 === true);
+  // 2026-09-30: skipTodayDuplicateCheck는 이 값을 읽던 "오늘 이미 저장된 견적 찾기" 안전장치
+  // 자체를 제거하면서(전문업체 판단 - 의도적인 두 번째 견적서까지 하나로 합쳐버리던 문제)
+  // 이 레지스트리에서도 함께 제거됨 - 더 이상 아무도 안 읽는 값이라 검증 대상에서 뺌.
 
   // 3) "새 변수를 등록만 하면 자동으로 리셋된다"는 구조 자체가 실제로
   // 작동하는지 - 지금 없는 새 값을 하나 등록해보고 검증(객체를 통째로
@@ -49,7 +47,7 @@ async function run() {
     delete EST_SESSION_RESET_VALUES.testNewFutureVar; // 테스트 정리
     return result;
   });
-  ok('3. 앞으로 새 값을 레지스트리에 "이름만" 추가해도 자동으로 리셋 대상에 포함됨(구조 검증)', r3 === true);
+  ok('2. 앞으로 새 값을 레지스트리에 "이름만" 추가해도 자동으로 리셋 대상에 포함됨(구조 검증)', r3 === true);
 
   // 4) 실제 newEstimate() 흐름에서도 정상 작동하는지(회귀 없음)
   const r4 = await page.evaluate(() => {
@@ -59,7 +57,7 @@ async function run() {
     newEstimate();
     return { editingId: window._estEditState.editingEstDbId, confirmedAt: window._estEditState.estimateConfirmedAt, nameValue: document.getElementById('c-name').value };
   });
-  ok('4. newEstimate() 실행시 실제로 편집ID/확정상태 리셋 + 이름칸도 비워짐(회귀 없음)', r4.editingId === null && r4.confirmedAt === null && r4.nameValue === '', JSON.stringify(r4));
+  ok('3. newEstimate() 실행시 실제로 편집ID/확정상태 리셋 + 이름칸도 비워짐(회귀 없음)', r4.editingId === null && r4.confirmedAt === null && r4.nameValue === '', JSON.stringify(r4));
 
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));
