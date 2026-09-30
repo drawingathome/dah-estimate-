@@ -110,10 +110,24 @@ function _doRetryEstPendingSync(q) {
     xhr.setRequestHeader('apikey', SUPABASE_KEY);
     xhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
     xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.setRequestHeader('Prefer', isEdit ? 'return=minimal' : 'return=representation');
+    xhr.setRequestHeader('Prefer', 'return=representation');
     xhr.onload = function() {
       done++;
-      if ((xhr.status < 200 || xhr.status >= 300) && xhr.status !== 409) {
+      var isHttpFail = (xhr.status < 200 || xhr.status >= 300) && xhr.status !== 409;
+      var isZeroRowFail = false;
+      // 2026-09-30(선혜님 - "지금 고쳐야지" - 노지경 견적서 사례로 발견한 근본원인):
+      // PATCH가 HTTP상 성공(2xx)해도 낙관적 잠금/권한(RLS) 문제로 실제로는 0건 매칭될 수
+      // 있는데, 이 재시도 경로는 그동안 이걸 전혀 확인 안 해서 "성공"으로 착각하고 조용히
+      // 큐에서 지워버렸음 - 원본 저장(est-save-stages.js)이 2026-08-25에 이미 고친 것과
+      // 똑같은 버그가 재시도라는 별개 코드 경로엔 반영이 안 돼 남아있던 것. 위에서
+      // return=minimal을 representation으로 바꿔 실제 반영 건수를 확인할 수 있게 함.
+      if (!isHttpFail && isEdit) {
+        try {
+          var checkRows = JSON.parse(xhr.responseText || '[]');
+          if (Array.isArray(checkRows) && checkRows.length === 0) isZeroRowFail = true;
+        } catch (eCheck) { isZeroRowFail = true; } // 응답을 못 읽으면 안전하게 "확인 필요"로 취급
+      }
+      if (isHttpFail) {
         remaining.push(item);
         // 2026-08-25(선혜님 지적 — "니 테스트가 어떤방식인지 궁금해"): 지금까지
         // 제가 몇 번을 "이게 원인이다" 추측해서 고쳤는데도 똑같은 403이
@@ -143,6 +157,21 @@ function _doRetryEstPendingSync(q) {
             _doRetryEstPendingSync(getEstPendingQueue());
           });
         }
+      } else if (isZeroRowFail) {
+        // 서버에 실제로 반영 안 됨(권한 문제/동시저장충돌 추정) - 무한 재시도해도 같은
+        // 이유로 계속 실패할 가능성이 높으니 큐에는 다시 안 남기되(무한반복 방지), 절대
+        // 조용히 사라지지 않도록 영구 백업 + 서버 진단로그에도 남김(est-save-stages.js와
+        // 동일한 방식 - dah_failed_saves).
+        try {
+          var failedSaves = JSON.parse(localStorage.getItem('dah_failed_saves')||'[]');
+          failedSaves.push({ savedAt: new Date().toISOString(), reason: '재시도 큐: 0건 반영(권한문제 또는 동시저장충돌 추정)', editingEstDbId: item.dbId, payload: item.payload });
+          if (failedSaves.length > 50) failedSaves = failedSaves.slice(-50);
+          localStorage.setItem('dah_failed_saves', JSON.stringify(failedSaves));
+        } catch (eBackup) {}
+        if (typeof reportClientError === 'function') {
+          reportClientError('견적서 저장 실패(재시도 큐 0건 반영) - 내용 백업됨', null, { estPayload: item.payload, dbId: item.dbId });
+        }
+        failReasons.push('0건 반영(권한 문제 또는 동시저장충돌 추정) — 내용은 안전하게 백업됨, 확인 필요');
       }
       if (done === pending) {
         try { localStorage.setItem(EST_PENDING_KEY, JSON.stringify(remaining)); } catch(e) {}
@@ -152,8 +181,8 @@ function _doRetryEstPendingSync(q) {
         // 중이므로, 여기서 또 alert까지 뜨면 팝업 두 개가 겹쳐서 혼란스러움.
         // 재로그인 관련 실패가 아닌 다른 이유(400 등)로 남은 게 있을 때만 alert.
         var nonAuthFail = failReasons.some(function(r){ return r.indexOf('401') === -1 && r.indexOf('403') === -1; });
-        if (remaining.length > 0 && nonAuthFail) {
-          alert('⚠️ 서버 저장 재시도 실패\n\n로그인 세션 있음: ' + hasSession + '\n실패 사유: ' + failReasons.join(', ') + '\n\n이 화면을 캡처해서 보내주세요.');
+        if ((remaining.length > 0 || failReasons.length > 0) && nonAuthFail) {
+          alert('⚠️ 서버 저장 재시도 결과 확인 필요\n\n로그인 세션 있음: ' + hasSession + '\n사유: ' + failReasons.join(', ') + '\n\n이 화면을 캡처해서 보내주세요.');
         }
       }
     };

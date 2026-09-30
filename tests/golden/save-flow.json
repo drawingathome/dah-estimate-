@@ -1955,7 +1955,7 @@
    }
   ],
   "saveBtnDisabled": false,
-  "toast": "저장 완료 (로컬) — DB 동기화는 실패했어요",
+  "toast": "⚠️ 서버 저장 실패 — 이 기기에만 임시 저장됐어요, 자동 재시도할게요",
   "writes": [
    {
     "body": {

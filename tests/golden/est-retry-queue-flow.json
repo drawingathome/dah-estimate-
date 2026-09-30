@@ -1,0 +1,62 @@
+{
+ "S1_0건반영_가짜성공": {
+  "alertCount": 1,
+  "alertFirstLine": "⚠️ 서버 저장 재시도 결과 확인 필요",
+  "bannerText": null,
+  "failedSaveReason": "재시도 큐: 0건 반영(권한문제 또는 동시저장충돌 추정)",
+  "failedSavesLen": 1,
+  "jsErrors": [],
+  "pendingQueueLen": 0,
+  "sentPreferHeader": "return=representation"
+ },
+ "S2_정상성공_1건반영": {
+  "alertCount": 0,
+  "alertFirstLine": null,
+  "bannerText": null,
+  "failedSaveReason": null,
+  "failedSavesLen": 0,
+  "jsErrors": [],
+  "pendingQueueLen": 0,
+  "sentPreferHeader": "return=representation"
+ },
+ "S3_진짜HTTP실패_500": {
+  "alertCount": 1,
+  "alertFirstLine": "⚠️ 서버 저장 재시도 결과 확인 필요",
+  "bannerText": "⚠️ 견적서 1건 서버 저장 대기중 — 탭해서 재시도",
+  "failedSaveReason": null,
+  "failedSavesLen": 0,
+  "jsErrors": [],
+  "pendingQueueLen": 1,
+  "sentPreferHeader": "return=representation"
+ },
+ "S4_409_이미성공한것으로간주": {
+  "alertCount": 0,
+  "alertFirstLine": null,
+  "bannerText": null,
+  "failedSaveReason": null,
+  "failedSavesLen": 0,
+  "jsErrors": [],
+  "pendingQueueLen": 0,
+  "sentPreferHeader": "return=representation"
+ },
+ "S5_401_인증문제": {
+  "alertCount": 0,
+  "alertFirstLine": null,
+  "bannerText": "⚠️ 견적서 1건 서버 저장 대기중 — 탭해서 재시도",
+  "failedSaveReason": null,
+  "failedSavesLen": 0,
+  "jsErrors": [],
+  "pendingQueueLen": 1,
+  "sentPreferHeader": "return=representation"
+ },
+ "S6_응답파싱실패": {
+  "alertCount": 1,
+  "alertFirstLine": "⚠️ 서버 저장 재시도 결과 확인 필요",
+  "bannerText": null,
+  "failedSaveReason": "재시도 큐: 0건 반영(권한문제 또는 동시저장충돌 추정)",
+  "failedSavesLen": 1,
+  "jsErrors": [],
+  "pendingQueueLen": 0,
+  "sentPreferHeader": "return=representation"
+ }
+}

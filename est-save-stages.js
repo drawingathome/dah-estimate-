@@ -514,7 +514,7 @@ function _saveStage_estimatesActual(ctx) {
         showToast('저장 완료! (DB+로컬)');
       } else {
         console.warn('Supabase 견적서 저장 실패 (status='+xhr2.status+'):', xhr2.responseText);
-        showToast('저장 완료 (로컬) — DB 동기화는 실패했어요');
+        showToast('⚠️ 서버 저장 실패 — 이 기기에만 임시 저장됐어요, 자동 재시도할게요');
         // 2026-08-05: 실패하면 그걸로 끝이라 나중에 수동으로 다시 저장해야 했음 —
         // 재시도 큐에 등록해서 네트워크 복구시 자동으로 다시 시도되도록 함
         if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId);
@@ -524,7 +524,7 @@ function _saveStage_estimatesActual(ctx) {
     xhr2.onerror=function(){
       logSaveStage('견적서저장-네트워크오류', null);
       console.warn('Supabase 견적서 저장 실패 (localStorage는 완료)');
-      showToast('저장 완료 (로컬) — DB 동기화는 실패했어요');
+      showToast('⚠️ 서버 저장 실패 — 이 기기에만 임시 저장됐어요, 자동 재시도할게요');
       if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId);
       onDone();
     };
@@ -532,7 +532,7 @@ function _saveStage_estimatesActual(ctx) {
   } catch(e) {
     logSaveStage('견적서저장-예외', { message: e && e.message, stack: e && e.stack });
     console.warn('Supabase 연결 오류:', e);
-    showToast('저장 완료 (로컬) — DB 동기화는 실패했어요');
+    showToast('⚠️ 서버 저장 실패 — 이 기기에만 임시 저장됐어요, 자동 재시도할게요');
     if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId);
     onDone();
   }

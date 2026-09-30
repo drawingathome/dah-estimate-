@@ -6,11 +6,16 @@
 // return=minimal'을 쓰고 있었음 - 삼항연산자 양쪽이 완전히 같은 값이라
 // 조건을 넣은 의미가 없었고, 신규 저장(POST)이 성공해도 서버 응답이
 // 항상 비어있어 새로 생성된 견적서의 id를 절대 받을 수 없는 구조였음.
-// 이 재시도 경로로 신규 견적서가 저장되면 editingEstDbId가 계속
-// 비어있게 남아, 다음 재저장에서 est-save.js의 "다른 견적서 합계"
-// 로직이 자기 자신을 이중 계산하는 것과 완전히 같은 위험을 안고 있음.
-// 이 테스트는 실제 저장 흐름 전체를 재현하기보다, 코드 자체가 신규
-// 저장에 대해 정확한 Prefer 헤더를 요청하는지를 직접 확인.
+// 이때는 POST(신규)만 고치고 PATCH(수정)는 그대로 둬서(반쪽만 수정),
+// 정확히 같은 문제(반영 건수 확인 불가)가 수정 저장 쪽에 그대로 남았음.
+//
+// 2026-09-30(선혜님 - "지금 고쳐야지" - 노지경 견적서 사례로 발견): 그
+// 남아있던 절반짜리 문제가 실제로 터짐 - PATCH(수정 저장) 재시도가
+// return=minimal이라 실제 반영 건수(0건=권한문제/동시저장충돌)를 전혀
+// 확인 못 해서, 서버에 아무것도 안 바뀌었는데도 "성공"으로 착각하고
+// 조용히 큐에서 지워버림. 이번엔 PATCH/POST 양쪽 다 항상
+// return=representation으로 통일해서, 이런 "절반만 고침"이 구조적으로
+// 다시 생길 수 없게 함 - isEdit 조건 자체를 없앰.
 const fs = require('fs');
 const path = require('path');
 
@@ -19,13 +24,18 @@ const src = fs.readFileSync(path.join(__dirname, '..', 'est-sync-queue.js'), 'ut
 const log = [];
 function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-// 신규 저장(POST, isEdit=false)일 때 return=minimal을 쓰는 패턴이 남아있는지 확인
-const badPattern = /Prefer',\s*isEdit\s*\?\s*'return=minimal'\s*:\s*'return=minimal'/;
-ok('1. [핵심] 신규 저장(POST) 성공시 새 id를 받을 수 있도록 Prefer 헤더가 정확함(양쪽 다 minimal이던 버그 없음)', !badPattern.test(src));
+// PATCH/POST 어느 쪽이든 return=minimal을 쓰는 조건부 패턴이 남아있으면 안 됨(과거 두 번
+// 재발한 "isEdit에 따라 다른 Prefer를 쓰다가 한쪽을 놓치는" 클래스의 문제 자체를 봉쇄)
+const conditionalPreferPattern = /Prefer',\s*isEdit\s*\?/;
+ok('1. [핵심] Prefer 헤더가 isEdit(PATCH/POST) 조건에 따라 갈리지 않음(항상 같은 값 - "한쪽만 고침" 재발 구조적으로 차단)', !conditionalPreferPattern.test(src));
 
-// 정확한 수정이 적용됐는지 - isEdit=false일 때 return=representation
-const goodPattern = /Prefer',\s*isEdit\s*\?\s*'return=minimal'\s*:\s*'return=representation'/;
-ok('2. 신규 저장(POST)시 return=representation을 요청함(새 id를 받아 editingEstDbId 복구 가능)', goodPattern.test(src));
+// PATCH/POST 둘 다 실제 반영 건수를 확인할 수 있는 return=representation을 씀
+const fixedPreferPattern = /Prefer',\s*'return=representation'\s*\)/;
+ok('2. Prefer 헤더가 항상 return=representation(신규는 새 id 복구, 수정은 0건 반영 감지 둘 다 가능)', fixedPreferPattern.test(src));
+
+// 2026-09-30 신설: PATCH(수정)가 0건 반영됐을 때 성공으로 착각하지 않고 실제로 확인하는지
+const zeroRowCheckPattern = /isZeroRowFail/;
+ok('3. [핵심] PATCH 응답이 0건(빈 배열)이면 성공으로 착각하지 않고 별도로 감지함(조용한 데이터유실 방지)', zeroRowCheckPattern.test(src));
 
 console.log(log.join('\n'));
 const failed = log.filter(l => l.startsWith('❌'));
