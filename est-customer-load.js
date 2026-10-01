@@ -596,12 +596,16 @@ function loadCustByIdx(el) {
   if(c.clientName && document.getElementById('c-name')) document.getElementById('c-name').value=c.clientName;
   if(c.phone && document.getElementById('c-phone')) document.getElementById('c-phone').value=c.phone;
   if(c.addr && document.getElementById('c-addr')) {
-    // 2026-09-15(선혜님 - "위험도가 있든 없든 고쳐야지!!"): est-utils.js가
-    // 이 파일보다 항상 먼저 로드되는 게 이미 확인됐으므로, 매번 함수
-    // 존재를 방어적으로 검사하던 반복 코드를 없애고 그냥 직접 호출.
-    var splitAddr = splitAddrDetail(c.addr);
-    document.getElementById('c-addr').value = splitAddr.base;
-    if (splitAddr.detail && document.getElementById('c-addr2')) document.getElementById('c-addr2').value = splitAddr.detail;
+    // 2026-10-01(선혜님 - 이민선 고객 사례로 발견: "실제 도로명주소를 넣었는데
+    // 상세주소만 저렇게 보이는거야" - 2026-09-22에 "이미 합쳐진 텍스트를 정규식
+    // 으로 추측해서 쪼개는 방식 자체가 세 번 재발한 근본 원인"이라고 이미 결론
+    // 내고 고객 추가 화면(openKakaoAddr)은 다른 방식으로 바꿨는데, 여기(견적서가
+    // 고객 정보를 불러오는 경로)는 그 옛날 방식(splitAddrDetail 정규식 추측)이
+    // 그대로 남아있었음 - 아파트 단지명 등 패턴에 안 맞는 주소를 만나면 실제
+    // 도로명주소가 통째로 사라지고 동/호수만 남는 정보손실이 발생함. 추측해서
+    // 쪼개려다 틀리는 것보다, 쪼개지 않고 전체를 그대로 보여주는 쪽이 항상 더
+    // 안전함(정보 손실 없음) - 상세주소 칸은 비워서 사용자가 필요하면 직접 확인.
+    document.getElementById('c-addr').value = c.addr;
   }
   // 2026-09-15(선혜님 - "고객 불러오기 해봤는데 기존 견적이 불러와지던데"
   // → "고객정보만 가져오고 품목은 항상 비워두게"로 확정): 예전엔(2026-08-05)

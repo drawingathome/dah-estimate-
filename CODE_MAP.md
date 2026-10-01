@@ -50,7 +50,7 @@
 |---|---|---|---|
 | 1 | `shared-staging-guard.js` | DAH 공용 — 스테이징 환경 쓰기 차단 안전장치 | 0 |
 | 2 | `est-public-view.js` | DAH 견적서 앱 — 고객용 공개보기 모드 | 5 |
-| 3 | `est-utils.js` | DAH 견적서 앱 — 유틸함수 + API 설정 | 22 |
+| 3 | `est-utils.js` | DAH 견적서 앱 — 유틸함수 + API 설정 | 21 |
 | 4 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 6 |
 | 5 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 2 |
 | 6 | `est-sync-queue.js` | DAH 견적서 앱 — 오프라인/네트워크 실패 재시도 큐 (2026-08-05 신규) | 5 |
@@ -453,7 +453,6 @@
 | `showVendorOrderFromEstimate` | `dash-customer-estimates.js` |
 | `sortCustomers` | `dash-kanban.js` |
 | `span` | `dash-ui-helpers.js` |
-| `splitAddrDetail` | `est-utils.js` |
 | `splitCustomerPayments` | `dash-chart.js` |
 | `stageColorFor` | `dash-customer-detail.js` |
 | `startAuthAutoRefresh` | `dash-supabase-auth.js` |

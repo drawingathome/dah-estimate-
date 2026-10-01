@@ -41,19 +41,22 @@
     "금지패턴": "manualEdit/userTyped 같은 별도 불리언 플래그를 새로 추가하는 것 - depositSource 하나로 표현 안 되는 새 상태가 필요하면, 새 문자열 값을 이 필드에 추가할 것"
   },
   "주소_상세분리": {
-    "의미": "합쳐진 주소 문자열에서 동/호수 등 상세주소를 자동으로 분리",
-    "single_source_of_truth": "splitAddrDetail() (est-utils.js) - 정규식 기반 추측, 100% 정확성 불가능한 유형",
+    "의미": "고객/설문 데이터를 불러와 c-addr에 채울 때, 합쳐진 주소를 \"쪼개지 않고 그대로\" 표시 - 2026-10-01(이민선 고객 사례 \"실제 도로명주소를 넣었는데 상세주소만 저렇게 보이는거야\")로 발견: 정규식 추측 쪼개기(splitAddrDetail)는 2026-09-22에 이미 \"세 번 재발한 근본 원인\"으로 결론났었는데, 그 결론이 고객 추가 화면에만 적용되고 불러오기 경로 4곳(est-customer-load.js/est-survey.js/dah-estimate.html 2곳)엔 안 퍼져서 네 번째로 재발함 - 쪼개는 시도 자체를 완전히 제거해 100% 안전하게 만듦(이전엔 \"구조적으로 100% 해결 불가\"로 결론났었으나, \"추측해서 쪼개지 않고 전체를 그대로 보존\"하면 완전히 해결 가능함을 재확인).",
+    "single_source_of_truth": "쪼개지 않고 원본 그대로 c-addr에 표시 - est-customer-load.js/est-survey.js/dah-estimate.html(2곳)가 각자 \"document.getElementById('c-addr').value = c.addr' (원본 그대로) 패턴을 공유. splitAddrDetail()은 완전히 제거됨.",
     "derived_fields": [],
     "db_enforcement": "해당없음(자유텍스트라 DB 강제 불가능한 유형으로 확인됨, 2026-09-22)",
     "code_locations": [
-      "est-utils.js:splitAddrDetail",
-      "shared-common-utils.js:openKakaoAddr (주소검색 완료시 상세주소 칸 자동포커스로 추측 필요성 자체를 줄임)"
+      "est-customer-load.js (고객 불러오기)",
+      "est-survey.js (설문 데이터 불러오기)",
+      "dah-estimate.html (고객정보 자동완성 2곳)",
+      "shared-common-utils.js:openKakaoAddr (주소검색 완료시 상세주소 칸 자동포커스 - 신규 입력 경로는 그대로 유지)"
     ],
     "guard_tests": [
-      "split-addr-detail-check.js",
+      "addr-no-split-check.js",
       "addr-detail-autofocus-check.js"
     ],
-    "참고": "이 개념은 구조적으로 100% 해결 불가 - 새 주소 형식이 나올 때마다 split-addr-detail-check.js에 케이스 추가하는 방식으로만 대응 가능"
+    "참고": "2026-09-22엔 \"구조적으로 100% 해결 불가\"로 결론났었으나 틀렸음 - 추측해서 쪼개려는 시도 자체를 없애면(원본을 그대로 보존) 어떤 주소 형식이 와도 정보 손실 없이 100% 안전함. 새 주소 형식이 나와도 더 이상 대응(케이스 추가) 자체가 필요 없음.",
+    "금지패턴": "불러오기 경로에서 주소를 다시 쪼개려고 시도하는 모든 코드(정규식이든 다른 방식이든) - 쪼개려는 시도 자체가 정보손실 위험을 다시 들여오는 것"
   },
   "데이터_이력추적": {
     "의미": "실수로 덮어쓰거나 지운 레코드를 복구할 수 있는지",

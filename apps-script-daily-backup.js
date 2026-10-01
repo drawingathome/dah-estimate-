@@ -984,6 +984,84 @@ function dahDiagnoseSchema() {
  * "설문진단테스트_..."가 남아있는 게 발견됨. 이 함수는 그 패턴에
  * 정확히 일치하는 레코드만 찾아서 삭제함(실제 고객 데이터는 절대 안 건드림).
  */
+// 2026-10-01(선혜님 - 최금희 고객 "컴퓨터에서는 결제완료, 아이패드에서는 미수금"
+// 신고 - "니가 해" 요청으로, SQL을 직접 짜서 달라고 하는 대신 이미 열려있는 이
+// 진단 도구에 전용 함수를 추가함. 대상 고객명만 아래에서 바꿔서 실행하면 됨 -
+// customers/estimates 원본 데이터를 그대로 보여주고, 클라이언트(dash-utils.js의
+// getReceivedAmount/getUnpaidAmount)와 똑같은 계산을 여기서도 재현해서 "왜
+// 미수금으로 뜨는지"를 바로 계산까지 해서 보여줌.
+function dahCheckCustomerPaymentMismatch() {
+  var TARGET_NAME = '최금희'; // 다른 고객을 확인하려면 이 이름만 바꿔서 다시 실행
+  report('=== "' + TARGET_NAME + '" 결제상태 불일치 진단 ===');
+
+  var custRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?client_name=eq.' + encodeURIComponent(TARGET_NAME) + '&select=*', {
+    method: 'get',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
+    muteHttpExceptions: true
+  });
+  if (custRes.getResponseCode() >= 300) {
+    report('❌ customers 조회 실패 — HTTP ' + custRes.getResponseCode() + ' ' + custRes.getContentText());
+    report('=== 진단 완료 ===');
+    return;
+  }
+  var customers = JSON.parse(custRes.getContentText());
+  if (customers.length === 0) {
+    report('⚠️ customers 테이블에 "' + TARGET_NAME + '"이라는 이름의 고객이 없습니다(이름 오타 확인 필요).');
+    report('=== 진단 완료 ===');
+    return;
+  }
+  report('customers 테이블 레코드 ' + customers.length + '건 발견:');
+  customers.forEach(function (c) {
+    report('  id=' + c.id + ' price=' + c.price + ' deposit_amount=' + c.deposit_amount + ' balance_amount=' + c.balance_amount + ' stage=' + c.stage + ' updated_at=' + c.updated_at);
+  });
+  if (customers.length > 1) {
+    report('⚠️⚠️⚠️ [중요] 같은 이름의 고객이 ' + customers.length + '건 있습니다 - 혹시 실수로 중복 등록된 건 아닌지, 서로 다른 사람인지 확인이 필요합니다.');
+  }
+
+  var estRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?customer_name=eq.' + encodeURIComponent(TARGET_NAME) + '&select=id,client_id,customer_name,price,deposit_amount,balance_amount,is_archived,created_at,updated_at&order=created_at.asc', {
+    method: 'get',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
+    muteHttpExceptions: true
+  });
+  if (estRes.getResponseCode() >= 300) {
+    report('❌ estimates 조회 실패 — HTTP ' + estRes.getResponseCode() + ' ' + estRes.getContentText());
+    report('=== 진단 완료 ===');
+    return;
+  }
+  var estimates = JSON.parse(estRes.getContentText());
+  report('');
+  report('estimates 테이블 레코드 ' + estimates.length + '건 발견(오래된순):');
+  var estSum = 0;
+  estimates.forEach(function (e, idx) {
+    var paid = (Number(e.deposit_amount) || 0) + (Number(e.balance_amount) || 0);
+    estSum += paid;
+    report('  [' + (idx + 1) + '번째] id=' + e.id + ' client_id=' + e.client_id + ' price=' + e.price +
+      ' deposit=' + e.deposit_amount + ' balance=' + e.balance_amount + ' (입금합계=' + paid + ')' +
+      ' is_archived=' + e.is_archived + ' created_at=' + e.created_at);
+  });
+
+  report('');
+  report('=== 클라이언트 계산 로직(dash-utils.js getReceivedAmount/getUnpaidAmount) 재현 ===');
+  customers.forEach(function (c) {
+    var customerLevelSum = (Number(c.deposit_amount) || 0) + (Number(c.balance_amount) || 0);
+    var myEstSum = estimates.filter(function (e) { return e.client_id === c.id; })
+      .reduce(function (sum, e) { return sum + (Number(e.deposit_amount) || 0) + (Number(e.balance_amount) || 0); }, 0);
+    var received = Math.max(myEstSum, customerLevelSum);
+    var price = Number(c.price) || 0;
+    var unpaid = Math.max(0, price - received);
+    report('customers.id=' + c.id + ' 기준:');
+    report('  고객레벨 입금합계(customerLevelSum) = ' + customerLevelSum);
+    report('  이 고객(client_id=' + c.id + ')과 연결된 견적서들의 입금합계(myEstSum) = ' + myEstSum +
+      ' (전체 견적서 입금합계는 ' + estSum + ' - 다르면 client_id가 안 맞는 견적서가 있다는 뜻)');
+    report('  최종 받은금액(둘 중 큰값, received) = ' + received);
+    report('  기준금액(c.price) = ' + price);
+    report('  → 계산 결과 미수금 = ' + unpaid + (unpaid > 0 ? ' (홈화면에 "미수금"으로 뜨는 이유)' : ' (미수금 0 - 홈화면에 정상적으로 안 떠야 함)'));
+  });
+
+  report('');
+  report('=== 진단 완료 — 위 결과를 그대로 복사해서 알려주세요 ===');
+}
+
 function dahCleanupTestData() {
   var log = [];
   function report(msg) { log.push(msg); Logger.log(msg); }

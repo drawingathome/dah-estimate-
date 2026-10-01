@@ -49,16 +49,11 @@ function loadSurveyFromSheet() {
       document.getElementById('c-phone').value = data.phone;
     }
     if(data.addr && !document.getElementById('c-addr').value) {
-      // 2026-09-15(전수조사 중 발견): 고객이 설문(실측신청서)에 직접 입력한
-      // 주소도 "OOO동 OOO호"로 끝나는 경우가 많아, 다른 곳과 동일하게
-      // 자동 분리 적용 - 패턴이 안 맞으면 안전하게 그대로 기본주소에 둠.
-      // 2026-09-15(선혜님 - "위험도가 있든 없든 고쳐야지!!"): 방어적
-      // typeof 검사 반복 제거, 직접 호출로 통일.
-      var splitSurveyAddr = splitAddrDetail(data.addr);
-      document.getElementById('c-addr').value = splitSurveyAddr.base;
-      if (splitSurveyAddr.detail && document.getElementById('c-addr2') && !document.getElementById('c-addr2').value) {
-        document.getElementById('c-addr2').value = splitSurveyAddr.detail;
-      }
+      // 2026-10-01(선혜님 - 이민선 고객 사례로 발견한 것과 같은 쌍둥이: 정규식
+      // 추측 쪼개기는 2026-09-22에 이미 "세 번 재발한 근본 원인"으로 결론나서
+      // 다른 화면은 다 바꿨는데 여기 남아있었음) - 쪼개지 않고 전체를 그대로
+      // 넣음(정보 손실 없음이 항상 더 안전).
+      document.getElementById('c-addr').value = data.addr;
     }
     displaySurvey(data);
   }

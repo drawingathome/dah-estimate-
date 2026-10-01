@@ -895,7 +895,7 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
   <option value="허니콤 No.1">허니콤 No.1</option>
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
-<script src="/est-utils.js?v=5dbec71e0a16"></script>
+<script src="/est-utils.js?v=a6fd71231888"></script>
 <script src="/shared-common-utils.js?v=76683959d26c"></script>
 <script src="/shared-optimistic-lock.js?v=db886eb6aa35"></script>
 <script src="/est-sync-queue.js?v=c357e0cec7fc"></script>
@@ -906,14 +906,14 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
 <script src="/est-calc-curtain.js?v=a14f71fbfaa1"></script>
 <script src="/est-calc-blind.js?v=bb50880a48cb"></script>
 <script src="/est-calc-svc.js?v=9fc2319e2cdd"></script>
-<script src="/est-survey.js?v=7a7c7ecd5e16"></script>
+<script src="/est-survey.js?v=0e4bacb22873"></script>
 <script src="/est-save.js?v=cf2a5d8c5855"></script>
 <script src="/est-save-stages.js?v=3400cff6ba41"></script>
 <script src="/est-doc-customer.js?v=e8be36d530e2"></script>
 <script src="/est-doc-vendor.js?v=3b6860a47faf"></script>
 <script src="/est-doc-vendor-ui.js?v=485ee9acf535"></script>
 <script src="/est-doc-request.js?v=65434c6947c8"></script>
-<script src="/est-customer-load.js?v=edafe935327b"></script>
+<script src="/est-customer-load.js?v=14f0dfe7298a"></script>
 <script src="/est-misc.js?v=fa08a6ff2482"></script>
 <script>
 var currentTab = 'ga';
@@ -1031,11 +1031,11 @@ var currentTab = 'ga';
           if (c.client_name) document.getElementById('c-name').value = c.client_name;
           if (c.phone) document.getElementById('c-phone').value = c.phone;
           if (c.addr) {
-            // 2026-09-15(선혜님 - "위험도가 있든 없든 고쳐야지!!"): 방어적
-            // typeof 검사 반복 제거, 직접 호출로 통일.
-            var splitAddr2 = splitAddrDetail(c.addr);
-            document.getElementById('c-addr').value = splitAddr2.base;
-            if (splitAddr2.detail && document.getElementById('c-addr2')) document.getElementById('c-addr2').value = splitAddr2.detail;
+            // 2026-10-01(선혜님 - 이민선 고객 사례로 발견한 것과 같은 쌍둥이):
+            // 정규식 추측 쪼개기는 2026-09-22에 이미 "세 번 재발한 근본 원인"으로
+            // 결론나서 다른 화면은 다 바꿨는데 여기 남아있었음 - 쪼개지 않고
+            // 전체를 그대로 넣음(정보 손실 없음이 항상 더 안전).
+            document.getElementById('c-addr').value = c.addr;
           }
           if (c.staff_name) document.getElementById('c-staff').value = c.staff_name;
           if (c.memo) document.getElementById('c-memo').value = c.memo;
@@ -1186,11 +1186,11 @@ var currentTab = 'ga';
                 var arows = JSON.parse(axhr.responseText);
                 var cRow = arows && arows[0];
                 if (cRow && cRow.addr && document.getElementById('c-addr')) {
-                  // 2026-09-15(선혜님 - "위험도가 있든 없든 고쳐야지!!"):
-                  // 방어적 typeof 검사 반복 제거, 직접 호출로 통일.
-                  var splitAddr3 = splitAddrDetail(cRow.addr);
-                  document.getElementById('c-addr').value = splitAddr3.base;
-                  if (splitAddr3.detail && document.getElementById('c-addr2') && !document.getElementById('c-addr2').value) document.getElementById('c-addr2').value = splitAddr3.detail;
+                  // 2026-10-01(선혜님 - 이민선 고객 사례로 발견한 것과 같은 쌍둥이):
+                  // 정규식 추측 쪼개기는 2026-09-22에 이미 "세 번 재발한 근본 원인"
+                  // 으로 결론나서 다른 화면은 다 바꿨는데 여기 남아있었음 - 쪼개지
+                  // 않고 전체를 그대로 넣음(정보 손실 없음이 항상 더 안전).
+                  document.getElementById('c-addr').value = cRow.addr;
                 }
                 // 2026-08-28(선혜님 지적 — "실측일 넣고 선금을 넣어도
                 // 견적서에는 적용이 안돼!!", 유경진 사례): 대시보드↔견적서
