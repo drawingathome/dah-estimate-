@@ -197,10 +197,20 @@ function Chip({ label, selected, onClick }) {
 // 신뢰 가능한 기준으로 삼아 실패시 localStorage에 백업해두고, 페이지 로드시마다
 // 자동으로 재전송을 시도함(성공하면 목록에서 제거).
 var SURVEY_PENDING_KEY = 'dah_survey_pending_v1';
+// 2026-09-30(선혜님 - "쌍둥이 함수 찾아" 요청으로 견적서(est-sync-queue.js)에서 고친 것과
+// 정확히 같은 클래스의 위험을 전수검색으로 발견): 이 재시도가 idempotency key 없이
+// payload를 그대로 재전송하고 있었음 - 페이지를 열 때마다 자동 재시도되는 구조라
+// (useEffect, 아래), 같은 기기에서 같은 설문 링크를 여러 탭으로 열어두고 둘 다 재시도가
+// 걸리면 같은 설문이 중복 제출될 위험이 있었음. 제출(submit) 시점에 매번 새로 만든
+// client_idempotency_key를 payload에 포함시켜 재시도마다 그대로 재사용되게 하고, 서버가
+// 중복을 거부(409)하면 "이미 저장됨"으로 정상 처리. 추가로 같은 탭 안에서 재시도 함수
+// 자체가 겹쳐 실행되지 않도록 진행중 플래그도 둠(est-sync-queue.js와 동일한 안전장치).
 function retryPendingSurveys() {
+  if (window._surveyRetryInProgress) return;
   var pending = [];
   try { pending = JSON.parse(localStorage.getItem(SURVEY_PENDING_KEY) || '[]'); } catch(e) { return; }
   if (!pending.length) return;
+  window._surveyRetryInProgress = true;
   var SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_9nYjQBzwiyausr7-Cd-elw_S9inJlge';
   var stillPending = [];
@@ -215,13 +225,14 @@ function retryPendingSurveys() {
       },
       body: JSON.stringify(item.payload)
     }).then(function(res) {
-      if (!res.ok) stillPending.push(item);
+      if (!res.ok && res.status !== 409) stillPending.push(item); // 409=idempotency key 중복=이미 저장됨(정상)
     }).catch(function() {
       stillPending.push(item);
     });
   });
   Promise.all(promises).then(function() {
     try { localStorage.setItem(SURVEY_PENDING_KEY, JSON.stringify(stillPending)); } catch(e) {}
+    window._surveyRetryInProgress = false;
   });
 }
 function App() {
@@ -291,7 +302,11 @@ function App() {
         budget: form.budget, sizeNote: form.sizeNote
       },
       memo: form.memo,
-      status: '신규'
+      status: '신규',
+      // 2026-09-30: 이 제출 하나를 식별하는 키 - 재시도(재전송)는 전부 이 payload를 그대로
+      // 재사용하므로 자동으로 같은 키가 유지됨. 서버가 같은 키의 중복 삽입을 막아주면
+      // (409), 재시도가 겹쳐도 설문이 두 번 쌓이지 않음.
+      client_idempotency_key: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('survey-' + Date.now() + '-' + Math.random().toString(36).slice(2))
     };
     // 2026-08-19(선혜님 확인 — "설문지 사라지는 건 말이 안 된다"): 저장이 실패해도
     // 화면엔 조용히 "제출 완료"만 뜨고 데이터는 영영 사라지던 문제. res.ok로 실제
@@ -311,7 +326,7 @@ function App() {
         },
         body: JSON.stringify(supabasePayload)
       });
-      saved = res.ok;
+      saved = res.ok || res.status === 409; // 409=idempotency key 중복=이미 저장됨(정상, 예: 따닥클릭)
     } catch(e) { console.warn('Supabase 저장 실패:', e); }
 
     if (!saved) {
