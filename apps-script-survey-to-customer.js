@@ -213,8 +213,12 @@ function testProcessSurveys() {
 
 // ── 수동 테스트용 (customers 테이블 직접 등록 테스트) ──
 function testInsert() {
+  // 2026-09-30(선혜님 - 이 함수를 실제로 실행했더니 정리 코드가 없어서 진짜 고객 목록에
+  // "테스트 고객"이 그대로 남은 걸 발견): 이름에 타임스탬프를 넣어 매번 구분되게 하고,
+  // insertCustomer 성공 직후 바로 보관처리(is_archived:true)해서 운영 화면에 안 보이게
+  // 자동 정리 — dahDiagnoseSchema가 이미 쓰던 것과 같은 방식.
   var testCustomer = {
-    client_name: '테스트 고객',
+    client_name: '테스트 고객_' + new Date().getTime(),
     phone: '010-0000-0000',
     stage: '상담',
     staff_name: '마스터',
@@ -222,4 +226,19 @@ function testInsert() {
   };
   var result = insertCustomer(testCustomer);
   Logger.log(JSON.stringify(result));
+  if (result && result[0] && result[0].id) {
+    var cleanupUrl = SUPABASE_URL + '/rest/v1/customers?id=eq.' + result[0].id;
+    UrlFetchApp.fetch(cleanupUrl, {
+      method: 'patch',
+      headers: {
+        'apikey': SUPABASE_SERVICE_ROLE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      payload: JSON.stringify({ is_archived: true }),
+      muteHttpExceptions: true
+    });
+    Logger.log('테스트 레코드 정리 완료(보관처리): id=' + result[0].id);
+  }
 }
