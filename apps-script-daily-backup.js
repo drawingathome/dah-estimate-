@@ -881,13 +881,17 @@ function dahDiagnoseSchema() {
       report('✅ surveys 테이블의 실제 컬럼 목록: ' + Object.keys(surveyPeekData[0]).join(', '));
     }
   }
-  // 설문 앱(survey-app.js)이 실제로 보내는 필드 그대로 테스트
+  // 2026-09-30(선혜님 - "체크리스트 안 지켰잖아" 지적으로 긴급 추가): survey-app.js에 오늘
+  // client_idempotency_key 필드를 새로 추가해서 payload에 실어 보내기 시작했는데, 이 컬럼이
+  // surveys 테이블에 실제로 있는지 한 번도 확인 안 한 채 이미 배포함 - 만약 없으면 PostgREST가
+  // "그런 컬럼 없음" 오류로 모든 설문 제출을 거부하고 있을 수 있음(가장 긴급하게 확인해야 할 것).
   var surveyTestName = '설문진단테스트_' + new Date().getTime();
   var surveyRow = {
     client_name: surveyTestName, phone: '010-0000-0000', addr: '테스트주소',
     space: '거실, 안방',
     answers: { pyeong: '30', homeDir: '남향', wallTone: '화이트', floorType: '원목마루', moods: ['모던'], functions: ['암막'], budget: '100만원대', sizeNote: '' },
-    memo: '진단테스트', status: '신규'
+    memo: '진단테스트', status: '신규',
+    client_idempotency_key: 'schema-diag-' + new Date().getTime()
   };
   var surveyInsertRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/surveys', {
     method: 'post',
@@ -896,15 +900,75 @@ function dahDiagnoseSchema() {
     muteHttpExceptions: true
   });
   if (surveyInsertRes.getResponseCode() >= 300) {
-    report('❌ surveys INSERT 실패 (설문 제출이 실제로 이렇게 실패하고 있을 수 있습니다) — HTTP ' + surveyInsertRes.getResponseCode());
+    report('❌❌❌ [긴급] surveys INSERT 실패 — HTTP ' + surveyInsertRes.getResponseCode());
     report('   상세: ' + surveyInsertRes.getContentText());
+    report('   → 2026-09-30에 client_idempotency_key 필드를 새로 보내기 시작했는데, 이 컬럼이');
+    report('      surveys 테이블에 없으면 바로 이 오류가 남 - 지금 실제 설문 제출이 전부 막혀');
+    report('      있을 수 있습니다. 오류 메시지에 "client_idempotency_key"가 보이면 그 컬럼을');
+    report('      surveys 테이블에 추가해야 합니다(Supabase SQL: ALTER TABLE surveys ADD COLUMN');
+    report('      client_idempotency_key text;)');
   } else {
-    report('✅ surveys INSERT 성공 — 설문 제출이 정상적으로 서버에 저장됩니다');
+    report('✅ surveys INSERT 성공 — 설문 제출이 정상적으로 서버에 저장됩니다(client_idempotency_key 컬럼 존재 확인됨)');
     var surveyId = JSON.parse(surveyInsertRes.getContentText())[0].id;
     UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/surveys?id=eq.' + surveyId, {
       method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
     });
     report('   (테스트 레코드 정리 완료)');
+  }
+
+  // 2026-09-30(선혜님 - "체크리스트 안 지켰잖아" 지적으로 긴급 추가): is_archived 필드를
+  // "아예 안 보내면" DB가 실제로 뭘 채우는지(NULL인지 false인지) - 지금까지는 이걸 한 번도
+  // 실제로 확인 안 하고 "NULL일 것"이라고 추측만 한 채로 코드를 고쳤음. INSERT 직후 다시
+  // 조회해서 실제 값을 눈으로 확인.
+  report('');
+  report('=== is_archived 필드 생략시 DB 기본값 실측 (추측이 아니라 실제 확인) ===');
+  [
+    { table: 'estimates', row: { customer_name: '기본값진단_' + new Date().getTime(), price: 0, performance_revenue: 0, staff_name: '마스터', estimate_status: 'ga', phone: '010-0000-0000', branch: '반포점' } },
+    { table: 'customers', row: { client_name: '기본값진단_' + new Date().getTime(), phone: '010-0000-0000', staff_name: '마스터', stage: '상담', branch: '반포점' } },
+    { table: 'as_records', row: { customer_name: '기본값진단_' + new Date().getTime(), receipt_date: '2026-01-01', symptom: '진단테스트', fee_type: '무상', staff_name: '마스터', status: '접수' } }
+  ].forEach(function (t) {
+    var insRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + t.table, {
+      method: 'post',
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      payload: JSON.stringify(t.row), // is_archived 필드 자체를 의도적으로 안 넣음
+      muteHttpExceptions: true
+    });
+    if (insRes.getResponseCode() >= 300) {
+      report('❌ ' + t.table + ' 기본값 진단용 INSERT 실패 — HTTP ' + insRes.getResponseCode() + ' ' + insRes.getContentText());
+      return;
+    }
+    var row = JSON.parse(insRes.getContentText())[0];
+    var actual = row.is_archived;
+    report((actual === false ? '✅' : '⚠️') + ' ' + t.table + '.is_archived 필드를 생략했을 때 DB 기본값 = ' + JSON.stringify(actual) +
+      (actual === false ? ' (false — 명시 안 해도 안전, 추측이 맞았음)' : ' (false가 아님! 명시적으로 안 보내면 목록 조회에서 조용히 빠질 수 있다는 그동안의 우려가 실제로 맞았음)'));
+    UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + t.table + '?id=eq.' + row.id, {
+      method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
+    });
+  });
+
+  // 2026-09-30: client_idempotency_key 유니크 제약이 2026-08-05에 도입됐다고 코드 주석에
+  // 기록은 돼 있지만, 그 이후 실제로 지금까지 살아있는지 재확인한 적이 없었음 - 같은 키로
+  // 두 번 INSERT를 시도해서 두 번째가 정말 막히는지(409) 직접 확인.
+  report('');
+  report('=== estimates의 idempotency 유니크 제약이 지금도 실제로 작동하는지 실측 ===');
+  var idemKey = 'schema-diag-uniq-' + new Date().getTime();
+  var idemRow = { customer_name: '중복키진단_' + new Date().getTime(), price: 0, performance_revenue: 0, staff_name: '마스터', estimate_status: 'ga', phone: '010-0000-0000', branch: '반포점', client_idempotency_key: idemKey, is_archived: false };
+  var firstIns = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates', { method: 'post', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, payload: JSON.stringify(idemRow), muteHttpExceptions: true });
+  if (firstIns.getResponseCode() >= 300) {
+    report('❌ 1차 INSERT 자체가 실패해서 유니크 제약 테스트를 못 함 — ' + firstIns.getContentText());
+  } else {
+    var firstId = JSON.parse(firstIns.getContentText())[0].id;
+    var secondIns = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates', { method: 'post', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, payload: JSON.stringify(idemRow), muteHttpExceptions: true });
+    if (secondIns.getResponseCode() === 409) {
+      report('✅ 같은 idempotency key로 두 번째 INSERT 시도 → 409로 정확히 거부됨(유니크 제약이 지금도 살아있음, 재시도 중복방지가 실제로 작동함)');
+    } else if (secondIns.getResponseCode() < 300) {
+      report('❌❌❌ [심각] 같은 idempotency key로 두 번째 INSERT가 성공해버림(HTTP ' + secondIns.getResponseCode() + ') - 유니크 제약이 없거나 깨져있음! 오늘 고친 중복방지 로직들이 전부 이 제약에 의존하고 있어서, 이게 없으면 재시도/동시클릭시 실제로 중복 견적서가 생길 수 있습니다. Supabase SQL로 확인: ALTER TABLE estimates ADD CONSTRAINT estimates_idempotency_key_uniq UNIQUE (client_idempotency_key);');
+      var secondId = JSON.parse(secondIns.getContentText())[0].id;
+      UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?id=eq.' + secondId, { method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true });
+    } else {
+      report('⚠️ 2차 INSERT가 409도 200대도 아닌 예상 밖 응답 — HTTP ' + secondIns.getResponseCode() + ' ' + secondIns.getContentText());
+    }
+    UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?id=eq.' + firstId, { method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true });
   }
 
   report('=== 진단 완료 — 위 결과를 그대로 복사해서 알려주세요 ===');
