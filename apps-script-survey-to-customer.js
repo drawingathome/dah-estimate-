@@ -119,9 +119,14 @@ function fetchNewSurveys() {
 function findExistingCustomerByPhone(phone) {
   if (!phone) return null;
   var url = SUPABASE_URL + '/rest/v1/customers?phone=eq.' + encodeURIComponent(phone) + '&select=id,client_name&limit=1';
+  // 2026-09-30(선혜님 - "누락된거 없어?" 요청으로 전수검색 중 발견한 심각한 쌍둥이 버그):
+  // Authorization 헤더 없이 apikey만 보내고 있었음 - 이러면 Supabase가 익명 사용자로 취급해서
+  // RLS에 막혀 이 조회가 항상 실패하고, 바로 아래 "기존고객 조회 실패... 그냥 등록 진행"으로
+  // 빠지게 됨. 즉 이 함수의 존재 목적(전화번호 중복 체크로 같은 고객이 설문으로 두 번
+  // 등록되는 걸 막는 것) 자체가 처음부터 조용히 무력화돼 있었을 가능성이 있음.
   var options = {
     method: 'get',
-    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY },
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
     muteHttpExceptions: true
   };
   var response = UrlFetchApp.fetch(url, options);

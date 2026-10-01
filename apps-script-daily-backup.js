@@ -76,7 +76,7 @@ function dahDailyBackup() {
         method: 'post',
         contentType: 'application/json',
         headers: {
-          'apikey': SUPABASE_SERVICE_ROLE_KEY,
+          'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY,
           'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY
         },
         payload: JSON.stringify({ table_name: table }),
@@ -681,7 +681,7 @@ function dahRestoreDrill() {
   };
   var insertRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers', {
     method: 'post',
-    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
     payload: JSON.stringify(testRow),
     muteHttpExceptions: true
   });
@@ -694,7 +694,7 @@ function dahRestoreDrill() {
   // 4. 저장된 게 실제로 맞는지 다시 조회해서 확인
   var checkRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?client_name=eq.' + encodeURIComponent(testName) + '&select=*', {
     method: 'get',
-    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY },
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
     muteHttpExceptions: true
   });
   var checkData = JSON.parse(checkRes.getContentText());
@@ -708,7 +708,7 @@ function dahRestoreDrill() {
   //    PATCH(is_archived=true 보관처리)로 확실하게 화면에서 숨김)
   var deleteRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?client_name=eq.' + encodeURIComponent(testName), {
     method: 'patch',
-    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
     payload: JSON.stringify({ is_archived: true }),
     muteHttpExceptions: true
   });
@@ -746,7 +746,7 @@ function dahDiagnoseSchema() {
   report('=== estimates 테이블 실제 컬럼 확인 ===');
   var peekRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?select=*&limit=1', {
     method: 'get',
-    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY },
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
     muteHttpExceptions: true
   });
   if (peekRes.getResponseCode() >= 300) {
@@ -776,7 +776,7 @@ function dahDiagnoseSchema() {
   };
   var insertRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers', {
     method: 'post',
-    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
     payload: JSON.stringify(fullRow),
     muteHttpExceptions: true
   });
@@ -791,7 +791,7 @@ function dahDiagnoseSchema() {
     // 2) PATCH(수정) 시도 — 어제 발견된 updated_at 트리거 문제가 여기서 재현됐었음
     var patchRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?id=eq.' + createdId, {
       method: 'patch',
-      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
       payload: JSON.stringify({ stage: '계약금', deposit_amount: 60000 }),
       muteHttpExceptions: true
     });
@@ -805,7 +805,7 @@ function dahDiagnoseSchema() {
 
     // 정리
     UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?id=eq.' + createdId, {
-      method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
+      method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
     });
     report('   (테스트 레코드 정리 완료)');
   }
@@ -829,7 +829,7 @@ function dahDiagnoseSchema() {
   };
   var estInsertRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates', {
     method: 'post',
-    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
     payload: JSON.stringify(estRow),
     muteHttpExceptions: true
   });
@@ -846,7 +846,7 @@ function dahDiagnoseSchema() {
     // 여기서 바로 잡힘(오늘 measure_date 오탈자 버그가 정확히 이 경로).
     var estPatchRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?id=eq.' + estId, {
       method: 'patch',
-      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
       payload: JSON.stringify({ date: '2026-02-01', measure_date_tbd: false, install_date: '2026-02-03', install_date_tbd: false, deposit_amount: 60000 }),
       muteHttpExceptions: true
     });
@@ -859,7 +859,7 @@ function dahDiagnoseSchema() {
     }
 
     UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?id=eq.' + estId, {
-      method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
+      method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
     });
     report('   (테스트 레코드 정리 완료)');
   }
@@ -868,7 +868,7 @@ function dahDiagnoseSchema() {
   report('=== surveys 테이블 진단 시작 ===');
   var surveyPeekRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/surveys?select=*&limit=1', {
     method: 'get',
-    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY },
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
     muteHttpExceptions: true
   });
   if (surveyPeekRes.getResponseCode() >= 300) {
@@ -895,7 +895,7 @@ function dahDiagnoseSchema() {
   };
   var surveyInsertRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/surveys', {
     method: 'post',
-    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
     payload: JSON.stringify(surveyRow),
     muteHttpExceptions: true
   });
@@ -911,7 +911,7 @@ function dahDiagnoseSchema() {
     report('✅ surveys INSERT 성공 — 설문 제출이 정상적으로 서버에 저장됩니다(client_idempotency_key 컬럼 존재 확인됨)');
     var surveyId = JSON.parse(surveyInsertRes.getContentText())[0].id;
     UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/surveys?id=eq.' + surveyId, {
-      method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
+      method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
     });
     report('   (테스트 레코드 정리 완료)');
   }
@@ -929,7 +929,7 @@ function dahDiagnoseSchema() {
   ].forEach(function (t) {
     var insRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + t.table, {
       method: 'post',
-      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
       payload: JSON.stringify(t.row), // is_archived 필드 자체를 의도적으로 안 넣음
       muteHttpExceptions: true
     });
@@ -942,7 +942,7 @@ function dahDiagnoseSchema() {
     report((actual === false ? '✅' : '⚠️') + ' ' + t.table + '.is_archived 필드를 생략했을 때 DB 기본값 = ' + JSON.stringify(actual) +
       (actual === false ? ' (false — 명시 안 해도 안전, 추측이 맞았음)' : ' (false가 아님! 명시적으로 안 보내면 목록 조회에서 조용히 빠질 수 있다는 그동안의 우려가 실제로 맞았음)'));
     UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + t.table + '?id=eq.' + row.id, {
-      method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
+      method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
     });
   });
 
@@ -953,22 +953,22 @@ function dahDiagnoseSchema() {
   report('=== estimates의 idempotency 유니크 제약이 지금도 실제로 작동하는지 실측 ===');
   var idemKey = 'schema-diag-uniq-' + new Date().getTime();
   var idemRow = { customer_name: '중복키진단_' + new Date().getTime(), price: 0, performance_revenue: 0, staff_name: '마스터', estimate_status: 'ga', phone: '010-0000-0000', branch: '반포점', client_idempotency_key: idemKey, is_archived: false };
-  var firstIns = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates', { method: 'post', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, payload: JSON.stringify(idemRow), muteHttpExceptions: true });
+  var firstIns = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates', { method: 'post', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, payload: JSON.stringify(idemRow), muteHttpExceptions: true });
   if (firstIns.getResponseCode() >= 300) {
     report('❌ 1차 INSERT 자체가 실패해서 유니크 제약 테스트를 못 함 — ' + firstIns.getContentText());
   } else {
     var firstId = JSON.parse(firstIns.getContentText())[0].id;
-    var secondIns = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates', { method: 'post', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, payload: JSON.stringify(idemRow), muteHttpExceptions: true });
+    var secondIns = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates', { method: 'post', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, payload: JSON.stringify(idemRow), muteHttpExceptions: true });
     if (secondIns.getResponseCode() === 409) {
       report('✅ 같은 idempotency key로 두 번째 INSERT 시도 → 409로 정확히 거부됨(유니크 제약이 지금도 살아있음, 재시도 중복방지가 실제로 작동함)');
     } else if (secondIns.getResponseCode() < 300) {
       report('❌❌❌ [심각] 같은 idempotency key로 두 번째 INSERT가 성공해버림(HTTP ' + secondIns.getResponseCode() + ') - 유니크 제약이 없거나 깨져있음! 오늘 고친 중복방지 로직들이 전부 이 제약에 의존하고 있어서, 이게 없으면 재시도/동시클릭시 실제로 중복 견적서가 생길 수 있습니다. Supabase SQL로 확인: ALTER TABLE estimates ADD CONSTRAINT estimates_idempotency_key_uniq UNIQUE (client_idempotency_key);');
       var secondId = JSON.parse(secondIns.getContentText())[0].id;
-      UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?id=eq.' + secondId, { method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true });
+      UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?id=eq.' + secondId, { method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true });
     } else {
       report('⚠️ 2차 INSERT가 409도 200대도 아닌 예상 밖 응답 — HTTP ' + secondIns.getResponseCode() + ' ' + secondIns.getContentText());
     }
-    UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?id=eq.' + firstId, { method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true });
+    UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?id=eq.' + firstId, { method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true });
   }
 
   report('=== 진단 완료 — 위 결과를 그대로 복사해서 알려주세요 ===');
@@ -996,14 +996,14 @@ function dahCleanupTestData() {
   tables.forEach(function(t) {
     patterns.forEach(function(p) {
       var url = SUPABASE_URL + '/rest/v1/' + t.name + '?' + t.nameCol + '=like.' + encodeURIComponent(p + '*') + '&is_archived=eq.false&select=id,' + t.nameCol;
-      var res = UrlFetchApp.fetch(url, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
+      var res = UrlFetchApp.fetch(url, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
       if (res.getResponseCode() !== 200) { report('❌ ' + t.name + ' 조회 실패: ' + res.getContentText()); return; }
       var rows = JSON.parse(res.getContentText());
       if (rows.length === 0) return;
       rows.forEach(function(row) {
         // ⚠️ 이 프로젝트는 DELETE가 RLS로 막혀있어(2026-07-17 확인) 실제 삭제 대신 보관처리(PATCH)를 씀
         var patchRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + t.name + '?id=eq.' + row.id, {
-          method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
           payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
         });
         report((patchRes.getResponseCode() < 300 ? '✅ 보관처리됨: ' : '❌ 처리실패(HTTP ' + patchRes.getResponseCode() + '): ') + t.name + ' — ' + row[t.nameCol] + (patchRes.getResponseCode() >= 300 ? ' | 상세: ' + patchRes.getContentText() : ''));
@@ -1026,7 +1026,7 @@ function dahPeekRawName(phone) {
   var log = [];
   function report(msg) { log.push(msg); Logger.log(msg); }
   var url = SUPABASE_URL + '/rest/v1/customers?phone=eq.' + encodeURIComponent(phone) + '&select=id,client_name,phone,addr,created_at';
-  var res = UrlFetchApp.fetch(url, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
+  var res = UrlFetchApp.fetch(url, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
   if (res.getResponseCode() !== 200) { report('❌ 조회 실패: ' + res.getContentText()); return; }
   var rows = JSON.parse(res.getContentText());
   report('전화번호 "' + phone + '"로 찾은 레코드 수: ' + rows.length);
