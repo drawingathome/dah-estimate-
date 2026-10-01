@@ -308,12 +308,12 @@
   },
   "고객레벨_결제동기화": {
     "의미": "견적서 단위로 저장되는 결제(deposit_amount/balance_amount)가, 홈화면 카드 등이 보는 customers 레벨 금액에도 항상 반영되게 함 - 2026-10-01(최금희 고객 \"컴퓨터에서는 결제완료, 아이패드에서는 미수금\" 신고로 발견): 2026-09-21에 \"결제를 견적서 단위로 관리\"하도록 바꾸면서 est가 있으면 customers 동기화를 아예 건너뛰게(return) 됐었음 - customers 레벨 값이 영원히 낡은 채로 남아, getUnpaidAmount가 참조하는 로컬 견적서 캐시(dah_saved)가 있는 기기와 없는 기기에서 결과가 달라지는 원인이 됨.",
-    "single_source_of_truth": "dash-customer-pay.js:savePayData - est가 있을 때도 estimates PATCH 성공 후 이 고객(client_id)의 보관 안 된 모든 견적서 입금합계를 서버에서 재집계해 customers에도 PATCH. Math.max(재집계값, 기존 c.depositAmount/balanceAmount)로 절대 기존 값보다 작아지지 않게 방어(2026-09-21 이전 레거시 고객은 견적서 쪽엔 입금기록이 없고 customers 레벨에만 과거 거액이 있어, 그대로 덮어쓰면 그 기록이 사라짐 - 배포 전 실제 DB 전수조회로 발견).",
+    "single_source_of_truth": "DB 트리거(trg_sync_customer_payment, migration_auto_sync_customer_payment.sql) - estimates의 deposit_amount/balance_amount/is_archived/client_id가 insert/update/delete될 때마다 자동으로 그 고객의 전체 견적서 합계를 재계산해 customers에 반영(GREATEST로 기존값보다 작아지지 않게 보호). 2026-10-01(\"또 발생 안 하겠어??\" 질문으로 결정): 클라이언트 JS가 매번 동기화를 기억해야 하는 구조(dash-customer-pay.js의 수동 동기화)는 2026-09-21에 한 번 깜빡해서 재발했던 전력이 있어, 사람이 기억 안 해도 항상 맞는 DB 트리거로 구조 자체를 바꿈 - dash-customer-pay.js의 수동 동기화 코드는 이중 안전장치로 그대로 유지.",
     "derived_fields": [
       "customers.deposit_amount",
       "customers.balance_amount (항상 그 고객의 전체 견적서 합계여야 함, 특정 견적서 하나의 값을 그대로 덮어쓰면 안 됨)"
     ],
-    "db_enforcement": "없음(클라이언트가 매번 재계산해서 명시적으로 동기화)",
+    "db_enforcement": "trg_sync_customer_payment 트리거로 강제됨(2026-10-01 신설, 실제 INSERT/UPDATE로 직접 검증 완료) - 이제 어떤 코드 경로(대시보드/견적서앱/Apps Script/향후 신규 기능)로 estimates가 바뀌어도 customers가 자동으로 맞춰짐.",
     "code_locations": [
       "dash-customer-pay.js:savePayData (est 분기 안의 합계 재계산+customers PATCH)",
       "dash-utils.js:getReceivedAmount/getUnpaidAmount (customers 레벨 값을 읽는 소비자 쪽)"
