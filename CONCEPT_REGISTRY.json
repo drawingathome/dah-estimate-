@@ -290,10 +290,10 @@
     "참고": "2026-09-28 도입/완료. 분리 완료: 폭수/높이안내/블라인드면적/쿠폰할인/절사/계약금/잔금/성과매출/레일/지역별실측시공비/블라인드옵션추가금·시공비/서비스요약분류. est-product-calc.js(1,340줄, 버그 수정 71번 중 51번)에서 시작한 계산-화면 분리가 일단락됨."
   },
   "신규견적서_보관상태_명시": {
-    "의미": "신규 견적서 저장(POST) payload에 is_archived:false를 명시적으로 안 보내면, DB 컬럼 기본값에 의존하게 되는데 PostgREST의 is_archived=is.false 필터는 NULL을 걸러내는 특성이 있어(IS FALSE는 NULL에 대해 false) 방금 만든 견적서가 목록 조회에서 조용히 빠질 수 있음(2026-09-30 \"복사해서 견적서 하나를 더 만들었는데 없어졌어\" 실사례로 발견)",
+    "의미": "신규 견적서 저장(POST) payload에 is_archived:false를 명시적으로 보냄 - 2026-09-30 \"복사해서 견적서 하나를 더 만들었는데 없어졌어\" 사례 당시 \"DB 기본값이 NULL이라 PostgREST의 is.false 필터에서 빠진다\"는 이론으로 도입했으나, 같은 날 dahDiagnoseSchema로 실제 DB를 확인한 결과 estimates.is_archived의 실제 기본값은 false였음(이론은 틀렸음, db_enforcement 항목 참고). 그 사례의 진짜 원인은 별개로 발견·제거한 \"오늘 이미 저장된 견적 찾기\" 병합 로직이었음. 이 explicit false 자체는 DB 기본값이 무엇이든 옳은 방어적 습관이라 유지함.",
     "single_source_of_truth": "est-save-stages.js:_saveStage_estimatesActual의 estPayloadForRetry - 신규(POST)일 때만 is_archived:false 명시, 수정(PATCH)일 때는 undefined로 키 자체를 빼서 기존 값 보존",
     "derived_fields": [],
-    "db_enforcement": "없음(클라이언트가 명시 안 하면 DB 기본값에 의존하는 구조 - 이번에 클라이언트에서 항상 명시하도록 방어)",
+    "db_enforcement": "2026-09-30 dahDiagnoseSchema 실측으로 확인됨: estimates/customers/as_records 전부 is_archived 기본값 = false. 클라이언트가 생략해도 DB가 안전하게 false를 채움 - 이 명시적 전송은 방어적 중복 안전장치일 뿐, 필수는 아니었음.",
     "code_locations": [
       "est-save-stages.js:_saveStage_estimatesActual (payload 구성)",
       "dash-customer-estimates.js:374 (is_archived=is.false로 목록 조회하는 곳)"

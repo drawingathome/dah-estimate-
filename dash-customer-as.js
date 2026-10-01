@@ -70,11 +70,11 @@ function ASSection({ customer }) {
       staff_name: (currentUser && currentUser.role === 'staff') ? currentUser.name : '마스터',
       status: '접수',
       // 2026-09-30(선혜님 - "이 문제의 쌍둥이함수도 찾아봤니" - est-save-stages.js에서 발견한
-      // 것과 정확히 같은 클래스의 위험을 전수검색으로 여기서도 발견): 이 화면의 목록 조회가
-      // "as_records?...&is_archived=eq.false"를 쓰는데, 방금 등록한 이 payload엔 is_archived
-      // 필드 자체가 없어 DB 기본값에 의존하고 있었음 - PostgREST의 IS FALSE는 NULL을 걸러내는
-      // 특성이 있어, DB 기본값이 NULL이면 방금 등록한 접수가 목록에서 조용히 빠질 수 있음.
-      // 신규 접수는 항상 보관 안 된 상태로 시작해야 하므로 명시적으로 false를 보냄.
+      // 것과 같은 클래스의 위험으로 보여 전수검색으로 여기도 함께 고쳤음): 당시 "DB 기본값이
+      // NULL일 수 있다"는 이론이었으나, 같은 날 dahDiagnoseSchema로 as_records.is_archived의
+      // 실제 기본값을 확인해보니 false였음(이론은 틀렸음). 즉 이 필드 생략이 실제 사고로
+      // 이어진 적은 확인되지 않았고 예방 차원의 수정이었음 - 다만 명시적으로 false를 보내는
+      // 것 자체는 DB 기본값이 무엇이든 옳은 방어적 습관이라 그대로 둠.
       is_archived: false
     };
     setSubmitting(true);

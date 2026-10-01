@@ -292,15 +292,17 @@ function _saveStage_estimatesActual(ctx) {
     client_id: window._estEditState.estSaveCustomerId || null,
     line_items: lineItems,
     cust_type: currentCustType || 'new',
-    // 2026-09-30(선혜님 - "복사해서 견적서 하나를 더 만들었는데 없어졌어"로 발견): 신규 저장
-    // payload에 is_archived 필드 자체가 없어서 DB 컬럼 기본값에 의존하고 있었음 - 견적서 목록
-    // 조회가 "&is_archived=is.false"를 쓰는데, PostgREST/SQL의 IS FALSE는 NULL을 걸러내는
-    // 특성이 있어(NULL이 false로 자동 취급되지 않음), 만약 DB 기본값이 NULL이면 방금 만든
-    // 견적서가 목록 조회에서 조용히 빠져 "사라진 것"처럼 보일 수 있음. 신규 견적서는 항상
-    // 보관 안 된 상태로 시작해야 하는 게 맞으므로 명시적으로 false를 보냄(DB 기본값이 뭐든
-    // 무관하게 항상 안전) - 단, 이 payload는 PATCH(수정저장)에도 그대로 재사용되므로, 수정일
-    // 때는 이 필드를 아예 안 보내서(undefined는 JSON.stringify에서 키째 빠짐) 이미 보관 처리된
-    // 견적서를 열어서 그냥 저장만 해도 조용히 보관 해제되는 새 부작용을 만들지 않도록 함.
+    // 2026-09-30(선혜님 - "복사해서 견적서 하나를 더 만들었는데 없어졌어"로 발견): 당시
+    // "신규 저장 payload에 is_archived가 없으면 DB 기본값(NULL로 추정)에 의존하게 되고,
+    // PostgREST의 IS FALSE가 NULL을 걸러내서 목록에서 빠질 수 있다"는 이론으로 이 수정을
+    // 넣었음 - 그런데 같은 날 dahDiagnoseSchema로 실제 DB를 열어 직접 확인해보니, estimates.
+    // is_archived의 실제 기본값은 NULL이 아니라 false였음(이론이 틀렸음을 인정). 즉 그 "사라짐"
+    // 증상의 진짜 원인은 이 필드와 무관하게, 같은 날 함께 발견·제거한 "오늘 이미 저장된 견적
+    // 찾기" 병합 로직(아래 _saveStage_estimates 참고)이었음. 이 explicit false 자체는 틀린
+    // 진단에서 나온 수정이지만 해롭지는 않으므로 그대로 둠 - 신규 레코드가 항상 명시적으로
+    // 보관 안 된 상태로 시작하는 건 DB 기본값이 무엇이든 옳은 방어적 습관임. PATCH(수정저장)
+    // 때는 이 필드를 아예 안 보내서(undefined는 JSON.stringify에서 키째 빠짐) 이미 보관
+    // 처리된 견적서가 열어서 저장만 해도 조용히 보관 해제되는 부작용은 계속 방지함.
     is_archived: window._estEditState.editingEstDbId ? undefined : false,
     region: document.getElementById('c-region')?.value || '',
     // 2026-08-14: 할인 정보 자체가 지금까지 저장 안 되고 있던 필드누락을
