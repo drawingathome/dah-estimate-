@@ -186,6 +186,7 @@
 | `curtainHeightFeeWarning` | `est-calc-rules.js` |
 | `customerToDbRow` | `dash-api-data.js` |
 | `dahCheckClientErrors` | `apps-script-daily-backup.js` |
+| `dahCheckCustomerPaymentMismatch` | `apps-script-daily-backup.js` |
 | `dahCleanupTestData` | `apps-script-daily-backup.js` |
 | `dahDailyBackup` | `apps-script-daily-backup.js` |
 | `dahDataIntegrityScanOnly` | `apps-script-daily-backup.js` |

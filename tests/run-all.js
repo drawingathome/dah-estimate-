@@ -262,6 +262,18 @@ if (/dah-dashboard/.test(target)) {
   // split-addr-detail-check.js는 그 제거된 함수의 단위테스트라 함께 삭제하고
   // addr-no-split-check.js로 교체.
   scripts.push(['addr-no-split-check.js', []]);
+  // 2026-10-01(선혜님 - 최금희 고객 "컴퓨터에서는 결제완료, 아이패드에서는
+  // 미수금" 신고): est가 있으면 customers 테이블 동기화가 영원히 안 되던
+  // 문제를 고친 뒤 회귀 감시.
+  scripts.push(['customer-level-pay-sync-check.js', []]);
+  // 2026-10-01(선혜님 - "최금희 외 다른 고객이 문제있는건 확인 가능하니?? 쌍둥이 함수
+  // 모두 확인해" - 배포 전 실제 DB 전수조회로 발견한 긴급 위험): 레거시 고객(견적서엔
+  // 입금기록 0, customers 레벨에만 과거 거액 입금)이 새 견적서에 결제 입력시 과거
+  // 기록이 지워지지 않는지 감시.
+  scripts.push(['legacy-customer-pay-protection-check.js', []]);
+  // 같은 세션에서 발견한 쌍둥이: customers.price/performance_revenue 동기화도 다른
+  // 견적서 합계 조회가 실패하면 0으로 간주해 과거 누적금액을 지울 위험이 있었음 - 감시.
+  scripts.push(['customer-price-sum-fail-protection-check.js', []]);
   // 2026-09-22(선혜님 - "선금 75만원 입력했는데 왜 또 50%로 뜨니?? 아까도
   // 물어본건데" - 최금희 실사례): 품목표 수정시 "얼려둔 예전 스냅샷"
   // 보호를 푸는 로직이 "사용자가 방금 직접 입력한 계약금" 보호까지

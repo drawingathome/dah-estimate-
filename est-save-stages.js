@@ -31,7 +31,7 @@ function _saveStage_customers(ctx) {
     sumXhr.setRequestHeader('apikey', SUPABASE_KEY);
     sumXhr.setRequestHeader('Authorization', 'Bearer '+(typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
     sumXhr.onload = function() {
-      var otherGrand = 0, otherPerf = 0;
+      var otherGrand = 0, otherPerf = 0, sumFailed = false;
       try {
         if (sumXhr.status >= 200 && sumXhr.status < 300) {
           var rows = JSON.parse(sumXhr.responseText || '[]');
@@ -40,16 +40,29 @@ function _saveStage_customers(ctx) {
             otherGrand += Number(r.price) || 0;
             otherPerf += Number(r.performance_revenue) || 0;
           });
+        } else {
+          // 2026-10-01: HTTP 에러 응답(권한 문제 등)도 네트워크 오류와 똑같이 "합계를
+          // 몰라서 이번엔 안 건드림"으로 취급 - 0으로 간주해서 덮어쓰면 안 됨.
+          sumFailed = true;
+          console.warn('다른 견적서 합계 조회 실패(HTTP ' + sumXhr.status + ') - price/performance_revenue는 이번엔 안 건드림(기존 서버값 보존)');
         }
-      } catch (eSum) { console.warn('다른 견적서 합계 조회 파싱 실패:', eSum); }
-      proceed(otherGrand, otherPerf);
+      } catch (eSum) { sumFailed = true; console.warn('다른 견적서 합계 조회 파싱 실패:', eSum); }
+      proceed(otherGrand, otherPerf, sumFailed);
     };
-    sumXhr.onerror = function() { console.warn('다른 견적서 합계 조회 실패(네트워크) - 이번 견적서 금액만으로 진행'); proceed(0, 0); };
+    // 2026-10-01(선혜님 - "최금희 외 다른 고객이 문제있는건 확인 가능하니?? 쌍둥이 함수
+    // 모두 확인해" 요청으로 발견): 조회가 네트워크 오류로 실패하면 "다른 견적서 금액=0"으로
+    // 간주해서 proceed(0,0)으로 넘기고 있었음 - 그러면 아래에서 custPayload.price/
+    // performance_revenue가 "이번 견적서 금액만"으로 서버값을 덮어써서, 이 고객의 다른
+    // 견적서들의 과거 누적 금액이 통째로 사라질 위험이 있었음(오늘 dash-customer-pay.js의
+    // deposit/balance 동기화에서 발견한 것과 정확히 같은 클래스의 위험). "합계를 몰라서
+    // 0으로 간주"하는 대신 "합계를 몰라서 이번엔 이 필드를 아예 안 건드린다"로 변경 -
+    // 세 번째 인자(sumFailed)로 조회 실패를 알려서 proceed가 필드 자체를 생략하게 함.
+    sumXhr.onerror = function() { console.warn('다른 견적서 합계 조회 실패(네트워크) - price/performance_revenue는 이번엔 안 건드림(기존 서버값 보존)'); proceed(0, 0, true); };
     sumXhr.send();
   } else {
     proceed(0, 0);
   }
-function proceed(otherEstGrand, otherEstPerf) {
+function proceed(otherEstGrand, otherEstPerf, sumFailed) {
   
   _saveStage_localStorage(ctx);
 
@@ -208,8 +221,11 @@ function proceed(otherEstGrand, otherEstPerf) {
     // perf 변수 자체가 이미 "커튼·블라인드 총액-할인"(레일·시공비는
     // 애초에 안 들어감, 순수 제품비용)이라 확정 여부와 무관하게 항상
     // 동기화해도 실적 왜곡 위험이 없음 - price와 동일하게 gate 제거.
-    custPayload.price = grand + otherEstGrand;
-    custPayload.performance_revenue = perf + otherEstPerf;
+    // 2026-10-01: 다른 견적서 합계 조회가 실패(sumFailed)했으면 이 두 필드 자체를
+    // payload에서 뺌(JSON.stringify는 undefined 값을 가진 키를 자동으로 제외함) - "합계를
+    // 몰라서 0으로 간주해 덮어쓰기"보다 "합계를 몰라서 이번엔 안 건드리기"가 항상 안전함.
+    custPayload.price = sumFailed ? undefined : (grand + otherEstGrand);
+    custPayload.performance_revenue = sumFailed ? undefined : (perf + otherEstPerf);
     xhr.send(JSON.stringify(custPayload));
   } catch(e) { logSaveStage('고객저장-예외', { message: e && e.message, stack: e && e.stack }); console.warn('Supabase 연결 오류:', e); _saveStage_estimates(ctx); }
 }
