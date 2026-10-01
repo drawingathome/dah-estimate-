@@ -100,10 +100,14 @@ function processNewSurveys() {
 // status='신규'인 설문 목록 조회
 function fetchNewSurveys() {
   var url = SUPABASE_URL + '/rest/v1/surveys?status=eq.' + encodeURIComponent('신규') + '&select=*';
+  // 2026-09-30(선혜님 - "누락된거 없어?" 요청으로 전수검색 중 발견): Authorization 헤더가
+  // 빠져있어 신규 설문 조회 자체가 RLS로 계속 실패하고 있었을 가능성 있음(=이 자동화 전체가
+  // 작동을 안 했을 수 있음).
   var options = {
     method: 'get',
     headers: {
-      'apikey': SUPABASE_SERVICE_ROLE_KEY
+      'apikey': SUPABASE_SERVICE_ROLE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY
     },
     muteHttpExceptions: true
   };
@@ -141,10 +145,13 @@ function findExistingCustomerByPhone(phone) {
 // customers 테이블에 등록
 function insertCustomer(customer) {
   var url = SUPABASE_URL + '/rest/v1/customers';
+  // 2026-09-30: 여기도 Authorization 헤더 누락 - 설문에서 들어온 고객을 실제로 등록하는
+  // 이 호출이 RLS로 계속 실패하고 있었을 가능성 있음.
   var options = {
     method: 'post',
     headers: {
       'apikey': SUPABASE_SERVICE_ROLE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY,
       'Content-Type': 'application/json',
       'Prefer': 'return=representation'
     },
@@ -162,10 +169,13 @@ function markSurveyProcessed(surveyId) {
     return;
   }
   var url = SUPABASE_URL + '/rest/v1/surveys?id=eq.' + surveyId;
+  // 2026-09-30: 여기도 Authorization 헤더 누락 - 처리완료 표시(중복 재등록 방지용)가
+  // RLS로 계속 실패하고 있었을 가능성 있음.
   var options = {
     method: 'patch',
     headers: {
       'apikey': SUPABASE_SERVICE_ROLE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY,
       'Content-Type': 'application/json',
       'Prefer': 'return=minimal'
     },
