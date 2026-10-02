@@ -102,11 +102,23 @@ function AddCustomerModal({ editName, registerApi }) {
   const staffList = React.useMemo(function () { return ['마스터'].concat(getStaffList()).concat(['미배정']); }, []);
 
   const recentAddrs = React.useMemo(function () {
+    // 2026-10-02(선혜님 - "검색을 항상 눌러서 적은거야" 지적으로 재조사해 발견): 직접
+    // 타이핑(readOnly로 이미 막음)뿐 아니라, 이 "최근 주소" 칩을 클릭해서 과거에 저장된
+    // 주소를 그대로 재사용하는 경로가 있었음 - 한 번 짧게(도로명주소 없이) 저장된 주소가
+    // 같은 단지의 다음 고객 등록시 칩으로 다시 뜨고, 그걸 클릭하면 그 짧은 값이 그대로
+    // 복제·전파됨(트리니원 단지에 사흘 연속 3명이 똑같이 깨진 패턴으로 등록된 것이 이
+    // 경로로 설명됨). 도로명주소의 필수요소(로/길, 또는 시/도 이름)가 전혀 없는 과거
+    // 주소는 애초에 칩 후보에서 제외해 재전파를 막음.
+    function looksLikeRealAddr(a) {
+      if (/(로|길)\s*[0-9]/.test(a)) return true;
+      if (/(서울|경기|인천|부산|대구|광주|대전|울산|세종|강원|충북|충남|전북|전남|경북|경남|제주)/.test(a)) return true;
+      return false;
+    }
     var allC = loadCustomers();
     var seen = {}; var out = [];
     allC.slice().reverse().forEach(function (cust) {
       var a = (cust.addr || '').trim();
-      if (a && !seen[a]) { seen[a] = true; out.push(a); }
+      if (a && !seen[a] && looksLikeRealAddr(a)) { seen[a] = true; out.push(a); }
     });
     return out.slice(0, 5);
   }, []);

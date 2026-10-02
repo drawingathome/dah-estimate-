@@ -266,6 +266,9 @@ if (/dah-dashboard/.test(target)) {
   // 진짜 원인은 불러오기 로직이 아니라 c-addr 입력칸이 자유 타이핑 가능했던 것 - readOnly +
   // 클릭시 자동 주소검색 연결로 전환, 재발 감시.
   scripts.push(['addr-input-readonly-check.js', []]);
+  // 2026-10-02(선혜님 - "검색을 항상 눌러서 적은거야" 지적으로 발견한 진짜 전파 경로):
+  // "최근 주소" 칩으로 과거의 깨진 주소가 재사용되는 걸 막는지 회귀 감시.
+  scripts.push(['recent-addr-chip-filter-check.js', []]);
   // 2026-10-01(선혜님 - "전문가입장에서도 보라니깐 놔둬도 될 정도이니??" 지적으로 재점검):
   // 견적서 공개보기가 테이블 전체 직접조회 대신 좁은 rpc 함수만 쓰는지 회귀 감시.
   scripts.push(['public-estimate-view-narrowed-check.js', []]);
