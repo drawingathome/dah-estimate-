@@ -180,21 +180,50 @@ function waitForServerReady(port, maxWaitMs) {
   });
 }
 
+const MIME_TYPES = {
+  '.html': 'text/html; charset=utf-8', '.htm': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif',
+  '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.webp': 'image/webp',
+  '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.otf': 'font/otf',
+  '.txt': 'text/plain; charset=utf-8', '.xml': 'application/xml; charset=utf-8',
+  '.pdf': 'application/pdf', '.wasm': 'application/wasm'
+};
+
 function startServer(dir, port) {
-  // 2026-09-13(위 waitForServerReady 도입 중 추가로 발견 - 55개 테스트
-  // 파일 중 33개만 server.kill()을 호출하고 있었음): 성공적으로 끝난
-  // 테스트조차 스폰한 서버 프로세스를 정리 안 하고 남겨두는 경우가 많아서,
-  // 같은 포트를 쓰는 "다음" 테스트가 포트 충돌로 실패하는 연쇄 문제가
-  // 있었음(방금 재현 중 실제로 겪음). 55개 파일을 하나하나 고치는 대신,
-  // 여기 한 곳에서 서버를 새로 띄우기 전에 그 포트를 이미 쓰고 있는
-  // 프로세스가 있으면(이전 테스트가 남긴 것으로 간주) 먼저 정리 - 근본
-  // 원인(개별 테스트의 정리 누락)은 아니지만, 그 여파가 다음 테스트로
-  // 번지는 걸 이 지점에서 막음.
-  try { execSync('pkill -f "http.server ' + port + '\\\\b"', { stdio: 'ignore' }); } catch (e) { /* 쓰는 프로세스가 없으면 실패하는 게 정상(exit code 1) - 무시 */ }
-  const proc = spawn('python3', ['-m', 'http.server', String(port)], { cwd: dir });
-  return waitForServerReady(port, 5000)
-    .then(() => proc)
-    .catch((err) => { try { proc.kill(); } catch (e) {} throw err; });
+  // 2026-10-02(선혜님 - CI에서 "spawn python3 ENOENT"로 신규 테스트 2개가 실패하던 것을
+  // 발견·해결): 이전엔(2026-09-13 주석 참고) python3 외부 프로세스를 매번 스폰하는 방식이었음 -
+  // 55개 넘는 테스트 파일 중 상당수가 server.kill()을 안 불러 프로세스가 누적되는 고질적
+  // 문제가 있었는데, 테스트 개수가 늘면서 CI 환경(로컬보다 자원이 빠듯함)의 한계를 넘어 특정
+  // 시점 이후 테스트들의 spawn 자체가 실패하기 시작함(로컬 재현은 안 됨 - 환경 차이). 외부
+  // 프로세스 의존 자체를 없애 근본적으로 해결 - Node 내장 http 모듈로 같은 프로세스 안에서
+  // 정적 파일 서버를 직접 띄움(스폰 실패도, 프로세스 누적도 원천적으로 사라짐). 기존 55개+
+  // 테스트가 전부 server.kill()을 호출하는 인터페이스에 의존하므로, 리턴 객체에 그대로
+  // .kill()을 달아 내부적으로 서버를 닫도록 해 기존 호출부를 전혀 안 건드림.
+  const http = require('http');
+  const path = require('path');
+  const server = http.createServer(function (req, res) {
+    try {
+      var urlPath = decodeURIComponent((req.url || '/').split('?')[0]);
+      if (urlPath.endsWith('/')) urlPath += 'index.html';
+      var filePath = path.join(dir, urlPath);
+      if (!filePath.startsWith(path.resolve(dir))) { res.writeHead(403); res.end('Forbidden'); return; }
+      fs.readFile(filePath, function (err, data) {
+        if (err) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('Not Found'); return; }
+        var ext = path.extname(filePath).toLowerCase();
+        res.writeHead(200, { 'Content-Type': MIME_TYPES[ext] || 'application/octet-stream' });
+        res.end(data);
+      });
+    } catch (e) { try { res.writeHead(500); res.end('Internal Error'); } catch (e2) {} }
+  });
+  return new Promise(function (resolve, reject) {
+    server.on('error', reject);
+    server.listen(port, '127.0.0.1', function () {
+      server.kill = function () { try { server.close(); } catch (e) {} };
+      resolve(server);
+    });
+  });
 }
 
 async function loginAs(page, role, masterPw, staffName) {
