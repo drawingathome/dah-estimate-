@@ -45,10 +45,21 @@ function openKakaoAddr(targetId, detailTargetId) {
   }
   var script = document.createElement('script');
   script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+  // 2026-10-02(선혜님 - "검색창 눌러서 쓰지, 최근주소는 쓰지도 않았다!!" 지적으로 재조사해
+  // 발견): Daum 우편번호 서비스 공식 Q&A - "사용자가 지번-도로명 1:N 관계에서 메인 지번주소를
+  // 선택할 경우, 도로명 주소는 roadAddress가 아니라 별도 필드인 autoRoadAddress에 들어간다."
+  // 지금까지는 data.roadAddress || data.jibunAddress만 읽어서 autoRoadAddress를 전혀 안 봤음 -
+  // 대단지 아파트(반포자이, 트리니원 등)는 검색 결과에 여러 줄이 뜨는 경우가 많아, 그중
+  // "지번" 쪽 줄을 선택하면 roadAddress가 비고 jibunAddress도 건물명 위주로 짧게 나오는 경우가
+  // 있어 "반포자이 138동 1504호"처럼 도로명 없이 저장되는 정확한 메커니즘으로 보임. 이제
+  // autoRoadAddress/autoJibunAddress까지 전부 순서대로 확인.
+  function extractAddr(data) {
+    return data.roadAddress || data.autoRoadAddress || data.jibunAddress || data.autoJibunAddress || '';
+  }
   script.onload = function() {
     new daum.Postcode({
       oncomplete: function(data) {
-        var addr = data.roadAddress || data.jibunAddress;
+        var addr = extractAddr(data);
         var el = document.getElementById(targetId);
         if (el) {
           el.value = addr;
@@ -64,7 +75,7 @@ function openKakaoAddr(targetId, detailTargetId) {
     script.onload = null;
     new daum.Postcode({
       oncomplete: function(data) {
-        var addr = data.roadAddress || data.jibunAddress;
+        var addr = extractAddr(data);
         var el = document.getElementById(targetId);
         if (el) {
           el.value = addr;
