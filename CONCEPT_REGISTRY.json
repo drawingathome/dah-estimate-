@@ -337,5 +337,23 @@
       "public-estimate-view-narrowed-check.js"
     ],
     "금지패턴": "anon 역할에게 estimates(또는 다른 민감 테이블) 전체에 qual=true 같은 무조건 허용 SELECT 정책을 다시 추가하는 것 - 공개가 필요하면 반드시 이런 좁은 SECURITY DEFINER 함수를 통해서만"
+  },
+  "주소_입력_안전장치": {
+    "의미": "고객 주소를 \"새로 입력/수정\"하는 단계(위 주소_상세분리는 이미 저장된 주소를 \"불러올 때\" 쪼개지 않는 것과는 다른, 별개 단계) - 2026-10-02 선혜님이 \"검색 안 눌렀을 리 없다\"고 반복 지적해 재조사한 끝에, 검색을 정상적으로 쓰고 결과를 선택해도 깨질 수 있는 Daum 우편번호 API 자체의 특성(지번-도로명 1:N 관계에서 메인 지번주소를 선택하면 도로명주소가 roadAddress가 아니라 autoRoadAddress에 들어감 - 공식 Q&A로 확인)을 진짜 원인으로 확정. 이 과정에서 직접 타이핑(readOnly 전환)과 과거 깨진 주소 재사용(최근주소 칩 필터링)도 별개의 실제 위험으로 확인돼 함께 막음 - 세 가지 방어가 서로 다른 경로를 막으므로 전부 유지.",
+    "single_source_of_truth": "shared-common-utils.js의 openKakaoAddr() 하나(모든 화면이 공유) - extractAddr()가 data.roadAddress || data.autoRoadAddress || data.jibunAddress || data.autoJibunAddress 순서로 fallback.",
+    "derived_fields": [],
+    "db_enforcement": "해당없음(자유텍스트)",
+    "code_locations": [
+      "shared-common-utils.js:openKakaoAddr (extractAddr 함수 - autoRoadAddress fallback)",
+      "dah-estimate.html (c-addr input readonly 전환)",
+      "dash-customer-add.js (add-addr input readonly는 원래부터 적용돼 있었음 / recentAddrs 계산시 도로명 요소 없는 과거주소는 후보에서 제외)"
+    ],
+    "guard_tests": [
+      "addr-input-readonly-check.js",
+      "recent-addr-chip-filter-check.js",
+      "daum-autoroadaddress-fallback-check.js"
+    ],
+    "참고": "13~16건(김현정·조정미·고근영·김다정·이지영·박미림·이정민·이정미·배수희·신안라·김작미·성지윤·안수정 등)이 이 경로로 과거에 깨진 것으로 추정 - 이미 저장된 데이터라 코드 수정으로 복구 불가, 선혜님이 직접 재입력하기로 함.",
+    "금지패턴": "openKakaoAddr() 바깥에서 주소 입력칸(c-addr/add-addr)에 readOnly를 풀거나 onChange로 자유 타이핑을 허용하는 모든 코드 / data.roadAddress만 보고 autoRoadAddress를 빼먹는 모든 신규 주소검색 구현"
   }
 }
