@@ -13,10 +13,17 @@ function loadEstimateForPublicView(estId) {
   document.body.classList.add('public-view-mode');
   showPublicViewLoading();
 
+  // 2026-10-01(선혜님 - "전문가입장에서도 보라니깐 놔둬도 될 정도이니??" 지적으로 재점검):
+  // 예전엔 estimates 테이블 전체를 "id=eq.특정값"으로 필터링해서 요청했는데, 실제 서버
+  // 권한은 "조건 없이 전체 테이블을 봐도 된다"(anon, qual=true)로 열려 있어서, 계약금/잔금/
+  // 내부메모까지 포함한 전체 데이터가 anon 키 하나로 통째로 긁힐 수 있는 구조였음. 이제
+  // "딱 1건, 딱 필요한 6개 필드만" 돌려주는 전용 함수(get_public_estimate)로 교체 -
+  // rpc 엔드포인트는 테이블 전체 접근 자체가 막혀있어 다른 방법으로 더 긁어갈 길이 없음.
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(estId) + '&select=*', true);
+  xhr.open('POST', SUPABASE_URL + '/rest/v1/rpc/get_public_estimate', true);
   xhr.setRequestHeader('apikey', SUPABASE_KEY);
-  xhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_KEY); // 로그인 없이 anon 키로만 조회(공개 SELECT 정책)
+  xhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_KEY); // 로그인 없이 anon 키로만 호출(이 함수만 공개 실행권한 보유)
+  xhr.setRequestHeader('Content-Type', 'application/json');
   xhr.onload = function() {
     var rows;
     try { rows = JSON.parse(xhr.responseText); } catch (e) { showPublicViewError('견적서를 불러오는 중 문제가 발생했어요.'); return; }
@@ -29,7 +36,7 @@ function loadEstimateForPublicView(estId) {
     }
   };
   xhr.onerror = function() { showPublicViewError('네트워크 연결을 확인해주세요.'); };
-  xhr.send();
+  xhr.send(JSON.stringify({ p_id: estId }));
 }
 
 function renderPublicViewFromRow(row) {

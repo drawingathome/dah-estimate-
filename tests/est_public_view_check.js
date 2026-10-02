@@ -27,16 +27,17 @@ async function run() {
       });
       return;
     }
-    if (url.includes('/rest/v1/estimates') && url.includes('id=eq.test-est-001')) {
+    // 2026-10-01(선혜님 - "전문가입장에서도 보라니깐 놔둬도 될 정도이니??" 지적 후 공개보기를
+    // 테이블 전체 직접조회에서 좁은 rpc 함수(get_public_estimate)로 교체 - 이 테스트의 목업도
+    // 같은 방식(POST .../rpc/get_public_estimate, body의 p_id로 분기)으로 맞춤.
+    if (req.method() === 'POST' && url.includes('/rest/v1/rpc/get_public_estimate') && (req.postData() || '').includes('test-est-001')) {
       req.respond({
         status: 200, contentType: 'application/json',
         headers: { 'Access-Control-Allow-Origin': '*' },
         body: JSON.stringify([{
-          id: 'test-est-001',
           customer_name: '홍길동',
           phone: '01012345678',
           staff_name: '마스터',
-          contract_status: null,
           estimate_status: null,
           install_date: '',
           line_items: [
@@ -46,16 +47,14 @@ async function run() {
       });
       return;
     }
-    if (url.includes('/rest/v1/estimates') && url.includes('id=eq.test-est-002')) {
+    if (req.method() === 'POST' && url.includes('/rest/v1/rpc/get_public_estimate') && (req.postData() || '').includes('test-est-002')) {
       req.respond({
         status: 200, contentType: 'application/json',
         headers: { 'Access-Control-Allow-Origin': '*' },
         body: JSON.stringify([{
-          id: 'test-est-002',
           customer_name: '김철수',
           phone: '01099998888',
           staff_name: '마스터',
-          contract_status: 'contracted',
           estimate_status: 'final',
           install_date: '2026-09-20',
           line_items: [
@@ -103,13 +102,13 @@ async function run() {
       req.respond({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Allow-Headers': '*' } });
       return;
     }
-    if (url.includes('/rest/v1/estimates') && url.includes('id=eq.test-est-002')) {
+    if (req.method() === 'POST' && url.includes('/rest/v1/rpc/get_public_estimate') && (req.postData() || '').includes('test-est-002')) {
       req.respond({
         status: 200, contentType: 'application/json',
         headers: { 'Access-Control-Allow-Origin': '*' },
         body: JSON.stringify([{
-          id: 'test-est-002', customer_name: '김철수', phone: '01099998888', staff_name: '마스터',
-          contract_status: 'contracted', estimate_status: 'final', install_date: '2026-09-20',
+          customer_name: '김철수', phone: '01099998888', staff_name: '마스터',
+          estimate_status: 'final', install_date: '2026-09-20',
           line_items: [{ type: 'curtain', space: '안방', displayName: '굿나잇 암막 커튼', mw: '240', mh: '253', pnum: '3', price: 99000, amt: '297,000원', pleatType: '민자형', openType: '양개형', hemType: '8cm', vendor: '', fabric: '', color: '' }]
         }])
       });

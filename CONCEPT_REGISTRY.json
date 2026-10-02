@@ -323,5 +323,19 @@
       "legacy-customer-pay-protection-check.js"
     ],
     "금지패턴": "est 분기에서 customers PATCH를 다시 생략하는 것, 또는 재집계값을 Math.max 없이 그대로 customers에 덮어쓰는 것(레거시 고객의 과거 거액 입금기록이 지워짐) - 반드시 기존 값과 비교해 더 큰 쪽을 쓸 것"
+  },
+  "견적서_공개보기_권한": {
+    "의미": "알림톡으로 보내는 \"견적서 공개보기\" 링크가 로그인 없이도 딱 1건, 딱 필요한 정보만 보여주게 함 - 2026-10-01(\"전문가입장에서도 보라니깐 놔둬도 될 정도이니??\" 재점검으로 발견): 예전엔 estimates 테이블 전체를 anon(비로그인) 역할에 qual=true로 열어둬서, 코드가 id로 필터링해서 요청하는 것과 무관하게 서버 권한 자체는 계약금/잔금/내부메모까지 전부 포함한 테이블 전체를 공개키 하나로 긁어갈 수 있는 구조였음.",
+    "single_source_of_truth": "Postgres 함수 get_public_estimate(uuid) - SECURITY DEFINER + search_path 고정 + 파라미터화된 쿼리 + is_archived=false 필터 + anon에게만 명시적 EXECUTE 부여. 테이블 전체를 보던 옛 정책(estimates_public_view)은 완전히 제거. 클라이언트(est-public-view.js)는 이 함수(rpc)만 호출.",
+    "derived_fields": [],
+    "db_enforcement": "함수가 딱 6개 필드(customer_name/phone/staff_name/install_date/estimate_status/line_items)만 반환 - price/deposit_amount/balance_amount/memo 등은 서버에서부터 아예 안 나감. 2026-10-01 Supabase MCP로 anon 역할 전환해 직접 재현 검증: 정상 ID→필요한 필드만 정확히 반환, 랜덤 ID→빈 결과, 테이블 직접 SELECT 시도→0건(완전 차단).",
+    "code_locations": [
+      "est-public-view.js:loadEstimateForPublicView (클라이언트 호출부)",
+      "migration_narrow_public_estimate_view_function.sql (DB 함수 get_public_estimate 기록)"
+    ],
+    "guard_tests": [
+      "public-estimate-view-narrowed-check.js"
+    ],
+    "금지패턴": "anon 역할에게 estimates(또는 다른 민감 테이블) 전체에 qual=true 같은 무조건 허용 SELECT 정책을 다시 추가하는 것 - 공개가 필요하면 반드시 이런 좁은 SECURITY DEFINER 함수를 통해서만"
   }
 }

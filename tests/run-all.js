@@ -262,6 +262,9 @@ if (/dah-dashboard/.test(target)) {
   // split-addr-detail-check.js는 그 제거된 함수의 단위테스트라 함께 삭제하고
   // addr-no-split-check.js로 교체.
   scripts.push(['addr-no-split-check.js', []]);
+  // 2026-10-01(선혜님 - "전문가입장에서도 보라니깐 놔둬도 될 정도이니??" 지적으로 재점검):
+  // 견적서 공개보기가 테이블 전체 직접조회 대신 좁은 rpc 함수만 쓰는지 회귀 감시.
+  scripts.push(['public-estimate-view-narrowed-check.js', []]);
   // 2026-10-01(선혜님 - 최금희 고객 "컴퓨터에서는 결제완료, 아이패드에서는
   // 미수금" 신고): est가 있으면 customers 테이블 동기화가 영원히 안 되던
   // 문제를 고친 뒤 회귀 감시.
