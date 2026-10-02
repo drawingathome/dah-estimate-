@@ -262,6 +262,10 @@ if (/dah-dashboard/.test(target)) {
   // split-addr-detail-check.js는 그 제거된 함수의 단위테스트라 함께 삭제하고
   // addr-no-split-check.js로 교체.
   scripts.push(['addr-no-split-check.js', []]);
+  // 2026-10-02(선혜님 - 김현정 고객 사례 "주소 왜 여전히 안되냐 너 확인한거 맞다면서!!"):
+  // 진짜 원인은 불러오기 로직이 아니라 c-addr 입력칸이 자유 타이핑 가능했던 것 - readOnly +
+  // 클릭시 자동 주소검색 연결로 전환, 재발 감시.
+  scripts.push(['addr-input-readonly-check.js', []]);
   // 2026-10-01(선혜님 - "전문가입장에서도 보라니깐 놔둬도 될 정도이니??" 지적으로 재점검):
   // 견적서 공개보기가 테이블 전체 직접조회 대신 좁은 rpc 함수만 쓰는지 회귀 감시.
   scripts.push(['public-estimate-view-narrowed-check.js', []]);
