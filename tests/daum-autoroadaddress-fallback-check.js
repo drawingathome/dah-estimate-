@@ -16,12 +16,13 @@
 //
 // 사용법: node tests/daum-autoroadaddress-fallback-check.js
 // ══════════════════════════════════════════════════
+const path = require('path');
 const { launchBrowser, startServer } = require('./_helpers');
 const CORS = { 'Access-Control-Allow-Origin': '*' };
 
 (async () => {
   const port = 36000;
-  const server = await startServer('/home/claude/dah-repo', port);
+  const server = await startServer(path.resolve(__dirname, '..'), port);
   const browser = await launchBrowser();
   const page = await browser.newPage();
   const jsErrors = [];
