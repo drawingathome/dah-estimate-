@@ -333,6 +333,12 @@ function dahScanForMissingTriggers() {
 }
 
 function dahScanForDataIntegrity(backup) {
+  // 2026-10-02(선혜님 - "전문업체 기준으로 확인해" 지적으로 자동 감시 추가하다
+  // 발견): 이 함수 안에 issues 배열이 선언 없이 쓰이고 있었음(Apps Script의
+  // non-strict 환경에서 암묵적 전역변수로 우연히 작동했을 뿐, 명시적 선언이
+  // 아니었음) - 다른 함수의 지역변수 issues와 이름이 겹치면 서로 오염될 위험이
+  // 있던 잠재적 결함. 명시적으로 선언.
+  var issues = [];
 
   var estsByClientId = {};
   backup.estimates.forEach(function(e) {
@@ -367,6 +373,63 @@ function dahScanForDataIntegrity(backup) {
       issues.push('[참고: 미확정 일정] ' + c.client_name + '(id:' + c.id + ') — "' + c.stage + '" 단계(결제 전)인데 ' +
         (c.measure_date ? '실측예정 ' + c.measure_date : '') + (c.measure_date && c.install_date ? ', ' : '') +
         (c.install_date ? '시공예정 ' + c.install_date : '') + '가 이미 입력돼 있음(캘린더엔 미확정으로 표시됨)');
+    }
+
+    // 2026-10-02(선혜님 - "이민선/김현정 결제했는데 상담에 뜨니 ... 전체 확인해" /
+    // "전문업체 기준으로 확인해" 요청으로 추가한 자동 감시 3종): 전부 오늘 실제로
+    // 터진 사고 패턴 - 사용자 신고로 발견되기 전에 매일 밤 자동으로 먼저 잡아내기 위함.
+    // 실제 운영 DB로 미리 검증(아래 3~5번 조건) 중, "입금날짜 누락"이 62건이나 나오는
+    // 것을 발견 - 대부분 플러그 이관 당시부터 날짜 정보 자체가 없었던 오래된 데이터라,
+    // 매일 리포트에 그대로 넣으면 매번 같은 62건이 반복돼 "경고 피로"로 무시당할
+    // 위험이 큼. 이 리포트의 목적은 "오늘/최근 새로 생긴 이상"을 잡는 것이지 과거
+    // 누적 결함을 매일 알리는 게 아니므로, 아래 3개(3~5번)는 "최근 7일 이내에 실제로
+    // 변경된 레코드"만 대상으로 좁힘 - 과거 데이터는 한 번(선혜님이 직접 확인한 16건
+    // 등)만 별도로 정리하고, 이후로는 새로 발생하는 것만 매일 감시.
+    var RECENT_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    var recentCutoff = new Date(Date.now() - RECENT_DAYS_MS);
+    function isRecentlyUpdated(c) {
+      if (!c.updated_at) return false;
+      var t = new Date(c.updated_at);
+      return !isNaN(t.getTime()) && t >= recentCutoff;
+    }
+
+    var recent = isRecentlyUpdated(c);
+
+    // 3) 결제(선금 또는 잔금)는 있는데 아직 방문예약/상담/가견적 단계에 머물러
+    // 있음 - 이민선/김현정 사례(estimates PATCH는 됐는데 customers 동기화가
+    // 안 되거나, 단계전환이 조용히 실패한 신호).
+    if (recent && isPrePayment && (custDep > 0 || custBal > 0)) {
+      issues.push('[결제-단계 불일치] ' + c.client_name + '(id:' + c.id + ') — "' + c.stage +
+        '" 단계인데 입금 기록(선금' + custDep.toLocaleString() + '/잔금' + custBal.toLocaleString() + ')이 있음 - 단계전환이 안 된 것으로 보임');
+    }
+
+    // 4) 입금액은 있는데 입금날짜가 비어있음 - 이민선/김현정 사례의 정확한 증상
+    // (estimates엔 날짜가 있는데 customers 동기화에서 날짜만 빠지는 패턴). 최근
+    // 변경분만 - 과거 이관 데이터는 원래부터 날짜가 없는 경우가 많아 매일 반복
+    // 경고하면 의미가 없음.
+    if (recent && custDep > 0 && !c.deposit_date) {
+      issues.push('[입금날짜 누락] ' + c.client_name + '(id:' + c.id + ') — 선금 ' + custDep.toLocaleString() + '원은 기록됐는데 입금날짜가 비어있음');
+    }
+    if (recent && custBal > 0 && !c.balance_date) {
+      issues.push('[입금날짜 누락] ' + c.client_name + '(id:' + c.id + ') — 잔금 ' + custBal.toLocaleString() + '원은 기록됐는데 입금날짜가 비어있음');
+    }
+
+    // 5) 시공완료 단계인데 매출(performance_revenue)이 0 - 오늘 플러그 이관
+    // 19건에서 발견된 패턴(견적서가 가견적 상태로 남아 매출 미인식). 최근
+    // 변경분만 - 아직 정리 안 된 과거 이관 잔여건을 매일 반복 경고하지 않도록.
+    if (recent && c.stage === '시공완료' && !(Number(c.performance_revenue) > 0) && Number(c.price) > 0) {
+      issues.push('[매출 미인식] ' + c.client_name + '(id:' + c.id + ') — "시공완료"인데 매출이 0으로 집계됨(제품가격 ' + Number(c.price).toLocaleString() + '원)');
+    }
+
+    // 6) 주소에 도로명주소 요소(로/길+숫자, 또는 시/도 이름)가 전혀 없음 -
+    // Daum API의 autoRoadAddress 누락으로 생기던 패턴(16건 발견 사례). 최근
+    // 변경분만 - 이미 아는 과거 16건은 선혜님이 별도로 정리 중이므로 매일
+    // 반복하지 않고, "새로 또 발생했는지"만 감시.
+    if (recent && c.addr) {
+      var hasRoadMarker = /(로|길)\s*[0-9]/.test(c.addr) || /(서울|경기|인천|부산|대구|광주|대전|울산|세종|강원|충북|충남|전북|전남|경북|경남|제주)/.test(c.addr);
+      if (!hasRoadMarker) {
+        issues.push('[주소 확인 필요] ' + c.client_name + '(id:' + c.id + ') — 주소 "' + c.addr + '"에 도로명/시도 표기가 없어 보임(확인 필요)');
+      }
     }
   });
 

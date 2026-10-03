@@ -277,6 +277,11 @@ if (/dah-dashboard/.test(target)) {
   // 앞으로 이런 버그 안생기게 하는 방향도 찾아" 요청으로 구조 개선): customers
   // deposit/balance 동기화는 이제 DB 트리거가 전담 - JS에 그 책임이 다시 생기면 잡아냄.
   scripts.push(['no-js-side-payment-sync-check.js', []]);
+  // 2026-10-02(선혜님 - "전문업체 기준으로 확인해" / "해결방법은 뭔데" 요청으로
+  // 추가): 매일 자동 이상탐지 스캔(dahScanForDataIntegrity)에 오늘 발견한 3가지
+  // 사고 패턴이 정확히 반영되는지, 그리고 "최근 7일" 필터로 경고피로가 방지되는지
+  // 감시.
+  scripts.push(['daily-scan-anomaly-detection-check.js', []]);
   // 2026-10-01(선혜님 - "전문가입장에서도 보라니깐 놔둬도 될 정도이니??" 지적으로 재점검):
   // 견적서 공개보기가 테이블 전체 직접조회 대신 좁은 rpc 함수만 쓰는지 회귀 감시.
   scripts.push(['public-estimate-view-narrowed-check.js', []]);
