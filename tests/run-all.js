@@ -273,6 +273,9 @@ if (/dah-dashboard/.test(target)) {
   // 원인): Daum 우편번호 API의 autoRoadAddress fallback 누락 - 정상 검색 흐름에서도 발생
   // 가능했던 버그. 재발 감시.
   scripts.push(['daum-autoroadaddress-fallback-check.js', []]);
+  // 2026-10-02(선혜님 - "이민선 100만원 선금 입금 했는데 돼 상담에 뜨니" 신고로 발견):
+  // customers 결제동기화시 날짜/수단/영수확인 필드 누락 재발 감시.
+  scripts.push(['customer-pay-sync-date-fields-check.js', []]);
   // 2026-10-01(선혜님 - "전문가입장에서도 보라니깐 놔둬도 될 정도이니??" 지적으로 재점검):
   // 견적서 공개보기가 테이블 전체 직접조회 대신 좁은 rpc 함수만 쓰는지 회귀 감시.
   scripts.push(['public-estimate-view-narrowed-check.js', []]);

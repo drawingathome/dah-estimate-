@@ -111,14 +111,29 @@ function renderPaySection(c, payBody, est) {
           // 견적서" 입금 합계를 서버에서 다시 집계해서 customers에 반영함.
           try {
             var sumXhr = new XMLHttpRequest();
-            sumXhr.open('GET', SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(c.id) + '&is_archived=eq.false&select=deposit_amount,balance_amount', true);
+            sumXhr.open('GET', SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + encodeURIComponent(c.id) + '&is_archived=eq.false&select=deposit_amount,deposit_date,deposit_method,deposit_receipt,balance_amount,balance_date,balance_method,balance_receipt', true);
             sumXhr.setRequestHeader('apikey', SUPABASE_KEY);
             sumXhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
             sumXhr.onload = function() {
               try {
                 var rows = JSON.parse(sumXhr.responseText) || [];
                 var sumDep = 0, sumBal = 0;
-                rows.forEach(function (r) { sumDep += Number(r.deposit_amount) || 0; sumBal += Number(r.balance_amount) || 0; });
+                // 2026-10-02(선혜님 - "이민선 100만원 선금 입금 했는데 돼 상담에 뜨니" 신고로
+                // 발견): 위 select절이 deposit_amount/balance_amount 금액만 가져오고
+                // deposit_date/deposit_method/deposit_receipt(잔금도 동일)는 아예 조회를
+                // 안 해서, 이 아래 customers PATCH에 날짜·수단·영수확인 필드가 통째로
+                // 빠지고 있었음 - estimates(진짜 소스)엔 날짜가 정확히 있는데 customers만
+                // 빈 채로 남아, 화면에서 "입금액은 있는데 날짜가 없어 미완료로 보이는" 불일치가
+                // 생김. 금액은 여러 견적서 합산이 맞지만 날짜/수단/영수확인은 합산이 안 되는
+                // 값이라, dash-utils.js getReceivedSummary와 같은 패턴으로 "가장 최근(늦은)
+                // 날짜를 가진 값"을 대표로 채택.
+                var repDepDate = '', repDepMethod = '', repDepReceipt = false;
+                var repBalDate = '', repBalMethod = '', repBalReceipt = false;
+                rows.forEach(function (r) {
+                  sumDep += Number(r.deposit_amount) || 0; sumBal += Number(r.balance_amount) || 0;
+                  if (r.deposit_date && r.deposit_date > repDepDate) { repDepDate = r.deposit_date; repDepMethod = r.deposit_method || ''; repDepReceipt = !!r.deposit_receipt; }
+                  if (r.balance_date && r.balance_date > repBalDate) { repBalDate = r.balance_date; repBalMethod = r.balance_method || ''; repBalReceipt = !!r.balance_receipt; }
+                });
                 // 2026-10-01(선혜님 - "최금희 외 다른 고객이 문제있는건 확인 가능하니??" 질문으로
                 // 배포 전 실제 DB 전수조회해서 발견한 긴급 위험): 2026-09-21 구조전환 이전 고객
                 // 수십 명이 "견적서엔 입금기록 0, customers 레벨에만 거액 입금"으로 남아있음
@@ -136,7 +151,11 @@ function renderPaySection(c, payBody, est) {
                 custSyncXhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
                 custSyncXhr.setRequestHeader('Content-Type', 'application/json');
                 custSyncXhr.setRequestHeader('Prefer', 'return=minimal');
-                custSyncXhr.send(JSON.stringify({ deposit_amount: finalDep, balance_amount: finalBal }));
+                custSyncXhr.send(JSON.stringify({
+                  deposit_amount: finalDep, balance_amount: finalBal,
+                  deposit_date: repDepDate, deposit_method: repDepMethod, deposit_receipt: repDepReceipt,
+                  balance_date: repBalDate, balance_method: repBalMethod, balance_receipt: repBalReceipt
+                }));
               } catch (eSyncParse) {}
             };
             sumXhr.send();
