@@ -309,7 +309,11 @@ function dahScanForDuplicates(backup) {
 // 만들어둔 것)를 조회해서 3개 트리거가 전부 살아있는지 확인.
 function dahScanForMissingTriggers() {
   var issues = [];
-  var EXPECTED = ['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history'];
+  // 2026-10-02(선혜님 - "1-4까지 확실하게 된건지 직접 확인했니? 누락된건 없니??"
+  // 재확인 요청으로 발견): 오늘 만든 결제동기화 트리거(trg_sync_customer_payment)가
+  // 이 핵심 트리거 감시 목록에 빠져 있었음 - 이게 삭제되거나 깨져도 아무도 알아채지
+  // 못하는 사각지대였음. v_critical_triggers_status 뷰도 함께 확장해 추가.
+  var EXPECTED = ['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment'];
   try {
     var res = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/v_critical_triggers_status?select=trigger_name', {
       headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
