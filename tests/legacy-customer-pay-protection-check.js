@@ -10,12 +10,16 @@
 // 로직이 "그 고객의 견적서 합계"(새 견적서 하나뿐이라 작음)로 customers를 그대로
 // 덮어써서 과거 거액 입금기록을 통째로 지워버릴 뻔했음.
 //
-// 수정: Math.max(새로 합산한 견적서 합계, 기존 customers 값)로 절대 기존 값보다
-// 작아지지 않도록 방어.
+// 수정(2026-10-01 당시): Math.max(새로 합산한 견적서 합계, 기존 customers 값)로
+// 절대 기존 값보다 작아지지 않도록 방어.
 //
-// 이 테스트는 "견적서엔 입금기록이 적고(또는 0), customers 레벨엔 과거의 거액
-// 입금기록이 있는 레거시 고객"이 새 견적서에 결제를 입력해도, customers의 기존
-// 거액 기록이 절대 지워지지 않는지 검증.
+// 2026-10-02(선혜님 - "이민선/김현정 결제했는데 상담에 뜨니, 쌍둥이 함수도 찾고
+// 앞으로 이런 버그 안생기게 하는 방향도 찾아" 요청으로 구조 변경): 위 보호 로직
+// 자체가 JS 코드에서 DB 트리거(sync_customer_payment_from_estimates, GREATEST
+// 로직 그대로 이전됨)로 옮겨감. 이 브라우저 테스트(모킹된 서버 응답)로는 실제
+// Postgres 트리거 동작까지 검증할 수 없으므로, 여기서는 "JS가 더 이상 customers를
+// 직접 PATCH하지 않는지"만 확인 - GREATEST 보호 로직 자체는 Supabase에서 실제
+// 데이터로 직접 재현해 별도로 검증함(이 파일 상단 참고 커밋 메시지).
 //
 // 사용법: node tests/legacy-customer-pay-protection-check.js
 // ══════════════════════════════════════════════════
@@ -106,10 +110,7 @@ async function run() {
   await new Promise(r => setTimeout(r, 1200));
 
   const custPatch = reqLog.find(r => r.method === 'PATCH' && r.path.includes('/rest/v1/customers') && r.path.includes('id=eq.502'));
-  ok('1. customers로 PATCH가 나감', !!custPatch, JSON.stringify(custPatch));
-  const body = custPatch ? JSON.parse(custPatch.body) : {};
-  ok('2. [핵심] 과거 잔금(1,697,000원)이 새 견적서 합계(0원)로 덮어써지지 않고 그대로 보존됨', Number(body.balance_amount) === 1697000, JSON.stringify(body));
-  ok('3. [핵심] 과거 계약금(500,000원)이 새 견적서 계약금(100,000원)보다 작지 않게 안전하게 유지됨', Number(body.deposit_amount) === 500000, JSON.stringify(body));
+  ok('1. [구조변경] customers로 JS의 직접 PATCH가 더 이상 안 나감(보호 로직이 DB 트리거 GREATEST로 이전됨)', !custPatch, JSON.stringify(custPatch));
 
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));

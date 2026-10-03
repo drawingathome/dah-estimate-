@@ -11,9 +11,16 @@
 // 실제 DB로 재현·확인: 최금희 - price 2,985,000 / 견적서엔 잔금 2,235,000까지
 // 전부 입금(완납)인데 customers.balance_amount는 0으로 그대로 남아있었음.
 //
-// 수정: 견적서 PATCH 성공 후, 이 고객(client_id)의 보관 안 된 모든 견적서의
-// 입금 합계를 서버에서 다시 집계해 customers에도 반영 - 여러 견적서를 가진
-// 고객도 정확하게 안전함(이번 견적서 하나로 덮어쓰지 않고 항상 합계로).
+// 2026-10-02(선혜님 - "이민선/김현정 결제했는데 상담에 뜨니, 쌍둥이 함수도 찾고
+// 앞으로 이런 버그 안생기게 하는 방향도 찾아" 요청으로 구조 변경): 위 "JS가 합계를
+// 재계산해서 customers에 PATCH" 방식 자체가, 날짜/수단/영수확인 필드를 깜빡 빠뜨리는
+// 새 버그(이민선/김현정 사례)로 이어짐 - 알고보니 똑같은 책임을 지는 DB 트리거
+// (sync_customer_payment_from_estimates)가 이미 있었는데 그 트리거도 날짜 관련 필드를
+// 안 다루는 같은 결함이 있었음("쌍둥이"). 트리거 쪽을 확장해 DB가 항상 정확히
+// 보장하도록 만들고, 이 JS 중복 로직은 완전히 제거함. 그래서 이 테스트의 기대값도
+// 바뀜: est PATCH는 여전히 일어나야 하지만(1,2번), customers에 대한 직접 PATCH는
+// 이제 "절대 없어야" 정상(3,4번) - 트리거가 DB 레벨에서 전담하는 구조가 유지되는지
+// 감시.
 //
 // 이 테스트는 실제 "잔금 저장" 버튼을 클릭하는 실제 UI 흐름으로 검증함
 // (savePayData는 클로저라 직접 호출이 안 되므로, 로직을 수동 재현하는 대신
@@ -120,12 +127,10 @@ async function run() {
   ok('2. PATCH 본문에 정확한 잔금(2235000)이 담김', Number(estPatchBody.balance_amount) === 2235000, JSON.stringify(estPatchBody));
 
   const sumGet = reqLog.find(r => r.method === 'GET' && r.path.includes('/rest/v1/estimates') && r.path.includes('client_id=eq.501') && r.path.includes('select=deposit_amount'));
-  ok('3. [핵심] est 저장 성공 후, 이 고객의 전체 견적서 합계를 다시 조회함(customers 동기화 전 단계)', !!sumGet, JSON.stringify(sumGet));
+  ok('3. [구조변경] 더 이상 JS가 이 고객의 전체 견적서 합계를 재조회하지 않음(책임이 DB 트리거로 이전됨)', !sumGet, JSON.stringify(sumGet));
 
   const custPatch = reqLog.find(r => r.method === 'PATCH' && r.path.includes('/rest/v1/customers') && r.path.includes('id=eq.501'));
-  ok('4. [핵심] customers 테이블에도 PATCH가 나감(2026-09-21 이후 처음 - 이게 빠져서 기기마다 다르게 보이던 원인)', !!custPatch, JSON.stringify(custPatch));
-  const custPatchBody = custPatch ? JSON.parse(custPatch.body) : {};
-  ok('5. customers PATCH 본문에 전체 견적서 합계(deposit=1,050,000 / balance=300,000)가 정확히 담김', Number(custPatchBody.deposit_amount) === 1050000 && Number(custPatchBody.balance_amount) === 300000, JSON.stringify(custPatchBody));
+  ok('4. [구조변경] customers 테이블에 JS의 직접 PATCH가 더 이상 안 나감(DB 트리거가 estimates 변경을 보고 자동 동기화)', !custPatch, JSON.stringify(custPatch));
 
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));
