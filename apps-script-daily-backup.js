@@ -76,8 +76,7 @@ function dahDailyBackup() {
         method: 'post',
         contentType: 'application/json',
         headers: {
-          'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY,
-          'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY
+          'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY
         },
         payload: JSON.stringify({ table_name: table }),
         muteHttpExceptions: true
@@ -1058,6 +1057,11 @@ function dahDiagnoseSchema() {
 // getReceivedAmount/getUnpaidAmount)와 똑같은 계산을 여기서도 재현해서 "왜
 // 미수금으로 뜨는지"를 바로 계산까지 해서 보여줌.
 function dahCheckCustomerPaymentMismatch() {
+  // 2026-10-04(선혜님 - "전수검사!!" 요청으로 ESLint 전체 검사하다 발견): report()가
+  // 선언 없이 호출되고 있었음(issues 변수 선언 누락과 같은 유형의 버그) - 이 함수를
+  // 실제로 실행하면 첫 report() 호출에서 바로 ReferenceError로 터졌을 것. 함수 설명
+  // 주석의 "실행 로그에서 확인"이라는 용도에 맞게 Logger.log로 연결하는 로컬 헬퍼로 수정.
+  var report = function (msg) { Logger.log(msg); };
   var TARGET_NAME = '최금희'; // 다른 고객을 확인하려면 이 이름만 바꿔서 다시 실행
   report('=== "' + TARGET_NAME + '" 결제상태 불일치 진단 ===');
 

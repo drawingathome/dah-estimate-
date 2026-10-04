@@ -282,6 +282,11 @@ if (/dah-dashboard/.test(target)) {
   // 사고 패턴이 정확히 반영되는지, 그리고 "최근 7일" 필터로 경고피로가 방지되는지
   // 감시.
   scripts.push(['daily-scan-anomaly-detection-check.js', []]);
+  // 2026-10-04(선혜님 - "오류 없는거 확실해??? 전수검사!!" 요청으로 추가): Apps
+  // Script 파일 전체(브라우저 테스트 대상 밖이라 기존 회귀망에서 완전히 벗어나
+  // 있었음)에서 issues/report 선언누락 같은 숨은 ReferenceError를 ESLint로 전수
+  // 감시.
+  scripts.push(['apps-script-lint-check.js', []]);
   // 2026-10-01(선혜님 - "전문가입장에서도 보라니깐 놔둬도 될 정도이니??" 지적으로 재점검):
   // 견적서 공개보기가 테이블 전체 직접조회 대신 좁은 rpc 함수만 쓰는지 회귀 감시.
   scripts.push(['public-estimate-view-narrowed-check.js', []]);
