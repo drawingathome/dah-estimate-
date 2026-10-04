@@ -1,0 +1,460 @@
+/* ══════════════════════════════════════════════════
+   DAH 대시보드 — 설정 화면 기능
+   월목표매출/계좌정보 불러오기·저장, 고객추가모달 칩 초기화,
+   설정탭 전체 렌더링.
+   ══════════════════════════════════════════════════ */
+
+// 비밀번호 재설정 흐름 공용 헬퍼 (2026-08-02 신규) — 마스터/스태프 둘 다 재사용.
+// 이메일 발송 버튼 누르면 바로 아래에 "인증코드+새비밀번호" 입력창이 나타남.
+// 링크를 눌러야 하는 방식이 아니라 코드를 직접 타이핑하는 방식이라, 메일
+// 앱이 링크를 미리 스캔해서 토큰을 조기 소진시키는 문제가 아예 발생 안 함.
+function appendPasswordResetFlow(card, email) {
+  var codeSection = div('display:none;margin-top:12px;padding-top:12px;border-top:1px solid #F5F2EE', [
+    span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', email + '로 6자리 인증코드를 보냈어요. 코드와 새 비밀번호를 입력해주세요.')
+  ]);
+  var codeInput = el('input', {type:'text', inputmode:'numeric', placeholder:'인증코드 6자리', style:'width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;outline:none;margin-bottom:8px;box-sizing:border-box'});
+  var newPwInput = el('input', {type:'password', placeholder:'새 비밀번호 (6자 이상)', autocomplete:'new-password', style:'width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;outline:none;margin-bottom:8px;box-sizing:border-box'});
+  var confirmPwInput = el('input', {type:'password', placeholder:'새 비밀번호 확인', autocomplete:'new-password', style:'width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px;font-family:inherit;outline:none;margin-bottom:8px;box-sizing:border-box'});
+  var codeError = span('font-size:11px;color:#E4483A;display:none;margin-bottom:8px', '');
+  var confirmBtn = btn('width:100%;padding:11px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '비밀번호 변경 확인', function() {
+    var code = codeInput.value.trim();
+    var pw1 = newPwInput.value;
+    var pw2 = confirmPwInput.value;
+    codeError.style.display = 'none';
+    if (!code) { codeError.textContent = '인증코드를 입력해주세요'; codeError.style.display = 'block'; return; }
+    if (pw1.length < 6) { codeError.textContent = '새 비밀번호는 6자 이상이어야 합니다'; codeError.style.display = 'block'; return; }
+    if (pw1 !== pw2) { codeError.textContent = '새 비밀번호가 일치하지 않습니다'; codeError.style.display = 'block'; return; }
+    confirmBtn.disabled = true; confirmBtn.textContent = '확인 중...';
+    verifyRecoveryCode(email, code, function(err, accessToken) {
+      if (err) {
+        confirmBtn.disabled = false; confirmBtn.textContent = '비밀번호 변경 확인';
+        codeError.textContent = err.message || '코드가 올바르지 않습니다';
+        codeError.style.display = 'block';
+        return;
+      }
+      updatePasswordWithRecoveryToken(accessToken, pw1, function(err2) {
+        confirmBtn.disabled = false; confirmBtn.textContent = '비밀번호 변경 확인';
+        if (err2) {
+          codeError.textContent = err2.message || '변경에 실패했습니다';
+          codeError.style.display = 'block';
+          return;
+        }
+        codeSection.style.display = 'none';
+        codeInput.value = ''; newPwInput.value = ''; confirmPwInput.value = '';
+        showToast('비밀번호가 변경됐습니다. 새 비밀번호로 로그인해주세요');
+      });
+    });
+  });
+  codeSection.appendChild(codeInput);
+  codeSection.appendChild(newPwInput);
+  codeSection.appendChild(confirmPwInput);
+  codeSection.appendChild(codeError);
+  codeSection.appendChild(confirmBtn);
+
+  var sendBtn = btn('width:100%;padding:11px;background:var(--dark);color:#fff;border:none;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px', '비밀번호 재설정 이메일 받기', function() {
+    if (typeof sendPasswordResetEmail !== 'function') { showToast('재설정 기능을 불러오지 못했어요'); return; }
+    sendBtn.disabled = true; sendBtn.textContent = '발송 중...';
+    sendPasswordResetEmail(email, function(err) {
+      sendBtn.disabled = false; sendBtn.textContent = '비밀번호 재설정 이메일 받기';
+      if (err) { showToast('발송 실패: ' + (err.message || '잠시 후 다시 시도해주세요')); return; }
+      showToast(email + '로 인증코드를 보냈어요. 메일함을 확인해주세요');
+      codeSection.style.display = 'block';
+    });
+  });
+  card.appendChild(sendBtn);
+  card.appendChild(codeSection);
+}
+
+function loadSettings() {
+  try {
+    var s = JSON.parse(localStorage.getItem('dah_settings') || '{}');
+    if (s.monthlyGoal) {
+      var el = document.getElementById('set-monthly-goal');
+      if (el) el.value = s.monthlyGoal;
+    }
+    if (s.bank) {
+      var el = document.getElementById('set-bank');
+      if (el) el.value = s.bank;
+    }
+    if (s.account) {
+      var el = document.getElementById('set-account');
+      if (el) el.value = s.account;
+    }
+    if (s.holder) {
+      var el = document.getElementById('set-holder');
+      if (el) el.value = s.holder;
+    }
+  } catch(e) {}
+}
+
+function saveSettings() {
+  try {
+    var s = {
+      monthlyGoal: document.getElementById('set-monthly-goal')?.value || '5,000만원',
+      bank:        document.getElementById('set-bank')?.value || '',
+      account:     document.getElementById('set-account')?.value || '015401-04-258798',
+      holder:      document.getElementById('set-holder')?.value || '장선혜',
+      savedAt:     new Date().toISOString(),
+    };
+    localStorage.setItem('dah_settings', JSON.stringify(s));
+    sbSyncSetting('settings', s);
+    showToast('설정이 저장되었습니다');
+  } catch(e) { showToast('저장 실패'); }
+}
+
+function getSettings() {
+  try { return JSON.parse(localStorage.getItem('dah_settings') || '{}'); } catch(e) { return {}; }
+}
+
+// 2026-09-29(선혜님 - "코드정리는 해야하지 않겠니"로 발견/제거): initAddModalChips()가 여기 있었는데,
+// .add-stage-chip/.add-staff-chip 클래스를 가진 엘리먼트가 코드베이스 전체에 하나도 없어서(고객추가
+// 모달의 실제 담당자칩은 클래스가 .staff-btn) 완전히 죽은 함수였음 - 호출하는 곳도 없어서(고객추가
+// 모달을 React로 바꾸며 이 호출 자체를 이미 안 옮김) 제거함. 동작 변화 없음(원래 아무 효과 없었음).
+
+// 설정화면 아코디언 중 현재 열려있는 섹션 id를 기억 (2026-08-02 버그수정) —
+// 예전엔 renderSettings()가 재호출될 때마다(거래처 카테고리 배지 클릭 등으로
+// 화면 전체가 다시 그려질 때) 모든 아코디언이 코드에 박힌 초기값으로 리셋돼서,
+// 사용자가 방금 열어둔 "거래처 관리"가 갑자기 닫히고 엉뚱하게 "매출·목표"가
+// 열리는 매우 혼란스러운 버그가 있었음. 이 변수로 마지막 상태를 기억해둠.
+var _openSettingsGroupId = null;
+
+function renderSettings() {
+  var wrap = document.getElementById('settings');
+  wrap.innerHTML = '';
+  var isMaster = currentUser && currentUser.role === 'master';
+  if (!isMaster) {
+    // 2026-08-01: 예전엔 스태프가 설정탭에 아예 접근 못 해서, 비밀번호를
+    // 바꾸고 싶어도 방법이 전혀 없었음(로그아웃밖에 못 함). 사업설정
+    // 전체는 마스터 전용으로 유지하되, 본인 계정 비밀번호 재설정만은 열어줌.
+    var myEmail = (typeof getStaffEmail === 'function' && currentUser) ? getStaffEmail(currentUser.name) : '';
+    var staffAcctCard = div('padding:24px 16px', [
+      span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:10px', '내 계정'),
+      span('font-size:11px;color:var(--sub);display:block;margin-bottom:14px', myEmail ? myEmail + ' 계정으로 로그인 중이에요.' : '계정 정보를 불러오는 중이에요.')
+    ]);
+    if (myEmail) {
+      appendPasswordResetFlow(staffAcctCard, myEmail);
+    }
+    var staffAcctWrap = div('', [staffAcctCard]);
+    staffAcctWrap.appendChild(span('font-size:11px;color:var(--sub);display:block;text-align:center;padding:16px 0', '그 외 설정은 마스터만 접근할 수 있습니다'));
+    wrap.appendChild(staffAcctWrap);
+    var staffLogoutCard = div('background:#fff;margin-bottom:10px;border-radius:12px;border:1px solid var(--border);padding:16px', [
+      btn('width:100%;padding:12px;background:#fff;color:#E4483A;border:1px solid #F3D9D5;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer', '로그아웃', function() {
+        if (confirm('로그아웃 하시겠습니까?')) logout();
+      })
+    ]);
+    staffLogoutCard.className = 'settings-acc-group';
+    wrap.appendChild(staffLogoutCard);
+    return;
+  }
+
+  // 아코디언 그룹 컨테이너 생성 헬퍼 — 헤더 클릭시 펼침/접힘, 기본은 접힌 상태
+  function makeGroup(id, title, cards, openByDefault) {
+    // 이 화면을 처음 그릴 때(_openSettingsGroupId가 아직 아무것도 안 정해졌을 때)만
+    // openByDefault를 기준으로 삼고, 그 이후엔 사용자가 마지막으로 연 섹션을 기억해서 그대로 유지
+    var isOpen = (_openSettingsGroupId === null) ? !!openByDefault : (_openSettingsGroupId === id);
+    var group = div('background:#fff;margin-bottom:10px;border-radius:12px;border:1px solid var(--border);overflow:hidden', []);
+    group.className = 'settings-acc-group';
+    group.id = id;
+    var body = div('padding:0 16px 16px', []);
+    body.style.display = isOpen ? 'block' : 'none';
+    cards.forEach(function(c){ body.appendChild(c); });
+    var chevron = span('font-size:11px;color:var(--sub);transition:transform 0.15s', isOpen ? '▾' : '▸');
+    var header = div('display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer', [
+      span('font-size:12px;font-weight:700;color:var(--dark);letter-spacing:0.02em', title),
+      chevron
+    ]);
+    header.addEventListener('click', function(){
+      var nowOpen = body.style.display !== 'none';
+      body.style.display = nowOpen ? 'none' : 'block';
+      chevron.textContent = nowOpen ? '▸' : '▾';
+      _openSettingsGroupId = nowOpen ? null : id;
+    });
+    group.appendChild(header);
+    group.appendChild(body);
+    return group;
+  }
+
+  
+  // ── 월목표 설정 카드 ──
+  var s = getSettings ? getSettings() : {};
+  var goalCard = div('padding-top:4px', []);
+  goalCard.innerHTML = '<div style="display:flex;align-items:center;padding-bottom:12px;border-bottom:1px solid #F5F2EE;margin-bottom:var(--sp-3)">' +
+      '<div style="flex:1"><div style="font-size:12px;font-weight:600;color:var(--dark)">월 목표 매출</div>' +
+      '<div style="font-size:11px;color:var(--sub);margin-top:2px">홈 화면 목표 달성률 기준</div></div>' +
+      '<input id="set-monthly-goal" type="text" value="' + escHtml(String(s.monthlyGoal || '5000')) + '" placeholder="5000" onchange="saveSettings()" style="text-align:right;border:none;outline:none;font-size:11px;color:var(--dark);background:transparent;font-family:inherit;width:70px">' +
+      '<span style="font-size:11px;color:#8E8078;margin-left:4px">만원</span>' +
+    '</div>';
+
+  // ── 담당자별 월 목표 ──
+  var staffGoalCard = div('', []);
+  var allStaffs = ['마스터'].concat(getStaffList());
+  allStaffs.forEach(function(staff) {
+    var goalKey = 'dah_goal_'+staff;
+    var curGoal = Number(localStorage.getItem(goalKey)||0);
+    var gRow = div('margin-bottom:10px', [
+      span('font-size:12px;font-weight:700;display:block;margin-bottom:var(--sp-1)', staff)
+    ]);
+    var gInput = el('input', {type:'number', 'data-staff-goal':staff, placeholder:'목표 금액 (원)', value:curGoal>0?String(curGoal):'', style:'width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:10px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box'});
+    (function(k, s) {
+      gInput.addEventListener('change', function() {
+        var v = Number(this.value.replace(/[^0-9]/g,''));
+        if(v>0) { localStorage.setItem(k, String(v)); syncStaffGoalsToCloud(); showToast(s+' 목표 설정됐습니다'); }
+      });
+    })(goalKey, staff);
+    gRow.appendChild(gInput);
+    staffGoalCard.appendChild(gRow);
+  });
+
+
+  // ── 전체 저장 (항상 최상단 고정) ──
+  var saveAllBtn = btn('width:100%;padding:14px;background:var(--terra);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:10px', '전체 저장', function() {
+    saveSettings();
+    document.querySelectorAll('[data-staff-goal]').forEach(function(inp) {
+      var v = Number(inp.value.replace(/[^0-9]/g,''));
+      if (v > 0) { try { localStorage.setItem('dah_goal_'+inp.getAttribute('data-staff-goal'), String(v)); } catch(e){} }
+    });
+    syncStaffGoalsToCloud();
+    var wh = document.getElementById('set-webhook-url');
+    if (wh) {
+      var url = wh.value.trim();
+      try { localStorage.setItem('dah_webhook_url', url); } catch(e){}
+      sbSyncSetting('webhook_url', url);
+    }
+    var leadDaysInput = document.getElementById('set-lead-stale-days');
+    if (leadDaysInput) {
+      var days = Number(leadDaysInput.value);
+      if (days > 0) setLeadStaleDays(days);
+    }
+    var newRegionFees = {};
+    document.querySelectorAll('[data-region][data-field]').forEach(function(inp) {
+      var region = inp.getAttribute('data-region');
+      var field = inp.getAttribute('data-field');
+      if (!newRegionFees[region]) newRegionFees[region] = {};
+      newRegionFees[region][field] = Number(inp.value) || 0;
+    });
+    if (Object.keys(newRegionFees).length > 0) setRegionFees(newRegionFees);
+    showToast('전체 설정이 저장되고 클라우드에 동기화됐습니다');
+  });
+  wrap.appendChild(saveAllBtn);
+
+  var groupGoal = makeGroup('sec-set-goal', '매출 · 목표', [goalCard, labelDiv('담당자별 월 목표'), staffGoalCard], true);
+  wrap.appendChild(groupGoal);
+
+  // ── 마스터 로그인 이메일 ──
+  var masterEmailCard = div('padding-top:4px', [
+    span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', 'Supabase 대시보드(Authentication)에서 먼저 마스터 계정을 이메일+비밀번호로 만든 뒤, 그 이메일을 여기에 등록해주세요.')
+  ]);
+  var masterEmailInput = el('input', {type:'email', id:'set-master-email', placeholder:'마스터 로그인 이메일', value: getMasterEmail(), style:'width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:10px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box'});
+  masterEmailInput.addEventListener('change', function(){
+    setMasterEmail(masterEmailInput.value.trim());
+    showToast('마스터 로그인 이메일이 저장됐습니다');
+  });
+  masterEmailCard.appendChild(masterEmailInput);
+
+  // ── 비밀번호 변경 ──
+  // 2026-08-01 수정: 예전엔 이메일 등록 후에도 "비밀번호 변경" 입력창+버튼이
+  // 그대로 남아있어서, 눌러도 "변경됐습니다" 토스트가 떠서 실제로 바뀐 줄
+  // 착각하기 쉬웠음(실제로는 로그인에 안 쓰이는 예전 필드만 바뀜). 이제
+  // 이메일이 등록된 상태면 그 UI 자체를 숨기고, 진짜 비밀번호를 바꾸는
+  // 정확한 방법(재설정 이메일)으로 교체함.
+  var pwCard;
+  var _masterEmailNow = (typeof getMasterEmail === 'function') ? getMasterEmail() : '';
+  if (_masterEmailNow) {
+    pwCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:var(--sp-3)', [
+      span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:var(--sp-1)', '비밀번호 변경'),
+      span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '실제 로그인 비밀번호는 "' + _masterEmailNow + '" 계정의 비밀번호입니다. 아래 버튼을 누르면 그 이메일로 재설정 링크가 발송돼요.')
+    ]);
+    appendPasswordResetFlow(pwCard, _masterEmailNow);
+  } else {
+  // 2026-08-29(선혜님 지적 - "그럼 이부분은 다 했다는거야????" 정리 완료
+  // 요청으로 재검토): 여기 있던 평문 비밀번호(MASTER_PW 전역변수) 검증
+  // 방식은 실제 로그인(Supabase Auth)과 완전히 무관한 예전 레거시였음.
+  // "완전 죽은 코드"는 아니고 마스터 이메일 미등록 상태에선 여전히
+  // 나타날 수 있는 조건부 경로였지만, 그 상태에서 사용자가 해야 할
+  // 진짜 다음 행동은 "비밀번호 변경"이 아니라 "위에서 마스터 이메일부터
+  // 등록하는 것"이므로, 혼란을 주고 평문 비밀번호 위험만 남기던 예전
+  // 방식 전체를 제거하고 올바른 경로로 안내만 함.
+  pwCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:var(--sp-3)', [
+    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:var(--sp-1)', '비밀번호 변경'),
+    span('font-size:11px;color:var(--sub);display:block', '먼저 위에서 마스터 로그인 이메일을 등록해주세요. 등록하면 이메일로 안전하게 비밀번호를 재설정할 수 있어요.')
+  ]);
+  }
+
+  
+  // ── 담당자 관리 ──
+  var staffCard = div('padding-top:12px;border-top:1px solid #F5F2EE;margin-top:var(--sp-3)', [
+    span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:var(--sp-1)', '담당자 관리'),
+    span('font-size:11px;color:var(--sub);display:block;margin-bottom:10px', '로그인용 이메일과 비밀번호는 Supabase 대시보드(Authentication)에서 먼저 계정을 만든 뒤, 아래에 그 이메일을 연결해주세요.')
+  ]);
+  // 2026-09-11(선혜님 지시 — 퇴사 시 고객 일괄이관): 기존엔 "삭제" 버튼이
+  // 로그인 계정만 끊고 고객은 그대로 그 이름에 남아, 마스터 말고는 아무도
+  // 못 보는 상태로 방치됐음(자동화 대상에서도 소외됨). 그동안 쌓인 매출은
+  // 그 실장 실적으로 그대로 두고(소급 안 함), "이후 담당자"만 일괄로 옮기고,
+  // 인수인계 메모 없이는 진행 못 하게 강제. customers/estimates 둘 다 옮김.
+  function startStaffOffboarding(name) {
+    sbXHR('GET', 'customers?staff_name=eq.' + encodeURIComponent(name) + '&select=id', null, function(err, rows) {
+      var count = (!err && Array.isArray(rows)) ? rows.length : 0;
+      if (count === 0) {
+        if (!confirm(name + ' 담당자를 삭제할까요? (담당 중인 고객 없음)')) return;
+        finishStaffRemoval(name);
+        return;
+      }
+      var otherStaff = getStaffList().filter(function(s) { return s !== name; });
+      var targetChoices = ['마스터'].concat(otherStaff);
+      var target = targetChoices.length === 1 ? targetChoices[0]
+        : prompt(name + ' 담당 고객 ' + count + '명을 누구에게 이관할까요?\n(' + targetChoices.join(' / ') + ')', targetChoices[0]);
+      if (!target || targetChoices.indexOf(target) === -1) { showToast('이관 대상이 올바르지 않아 취소했습니다'); return; }
+      var note = prompt(name + ' → ' + target + '로 ' + count + '명 이관합니다.\n인수인계 메모를 남겨주세요(필수) — 예: "미결정 사항, 진행 중인 클레임 등"');
+      if (!note || !note.trim()) { showToast('인수인계 메모 없이는 이관할 수 없습니다'); return; }
+      if (!confirm(name + ' 담당 고객·견적 ' + count + '건을 ' + target + '로 이관하고 로그인을 차단합니다.\n(그동안의 매출 실적은 ' + name + ' 것으로 그대로 유지됩니다)\n진행할까요?')) return;
+      sbXHR('PATCH', 'customers?staff_name=eq.' + encodeURIComponent(name), { staff_name: target }, function(err2, rows2) {
+        var custMoved = (!err2 && Array.isArray(rows2)) ? rows2.length : 0;
+        sbXHR('PATCH', 'estimates?staff_name=eq.' + encodeURIComponent(name), { staff_name: target }, function(err3, rows3) {
+          var estMoved = (!err3 && Array.isArray(rows3)) ? rows3.length : 0;
+          if (typeof logEvent === 'function') logEvent('staff_offboard', { from: name, to: target, customerCount: custMoved, estimateCount: estMoved, note: note.trim() });
+          finishStaffRemoval(name);
+          showToast(name + ' → ' + target + ' 이관 완료 (고객 ' + custMoved + '명, 견적 ' + estMoved + '건), 로그인 차단됨');
+        });
+      });
+    });
+  }
+  function finishStaffRemoval(name) {
+    var list = getStaffList().filter(function(s){ return s !== name; });
+    try { localStorage.setItem('dah_staff_list', JSON.stringify(list)); } catch(e){}
+    sbSyncSetting('staff_list', list);
+    removeStaffEmail(name);
+    renderSettings();
+  }
+
+  var staffList = getStaffList();
+  staffList.forEach(function(name) {
+    var emailInput = el('input', {type:'email', placeholder:'로그인용 이메일', value: getStaffEmail(name), style:'width:100%;padding:6px 8px;border:1px solid var(--border);font-size:11px;font-family:inherit;outline:none;margin-top:var(--sp-1);box-sizing:border-box'});
+    emailInput.addEventListener('change', function(){
+      setStaffEmail(name, emailInput.value.trim());
+      showToast(name + '의 로그인 이메일이 저장됐습니다');
+    });
+    var row = div('padding:8px 0;border-bottom:1px solid var(--border)', [
+      div('display:flex;justify-content:space-between;align-items:center', [
+        span('font-size:12px;font-weight:700', name),
+        btn('font-size:11px;color:#E4483A;background:none;border:none;cursor:pointer;font-family:inherit', '퇴사 처리', function() {
+          startStaffOffboarding(name);
+        })
+      ]),
+      emailInput
+    ]);
+    staffCard.appendChild(row);
+  });
+  var addStaffWrap = div('display:flex;gap:var(--sp-2);margin-top:10px', []);
+  var staffInput = el('input', {type:'text', placeholder:'새 담당자 이름', style:'flex:1;padding:9px 10px;border:1px solid var(--border);font-size:11px;font-family:inherit;outline:none'});
+  addStaffWrap.appendChild(staffInput);
+  addStaffWrap.appendChild(btn('padding:9px 14px;background:var(--dark);color:#fff;border:none;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer', '추가', function() {
+    var name = staffInput.value.trim();
+    if(!name) return;
+    var list = getStaffList();
+    if(list.indexOf(name) >= 0) { showToast('이미 있는 담당자입니다'); return; }
+    list.push(name);
+    try { localStorage.setItem('dah_staff_list', JSON.stringify(list)); } catch(e){}
+    sbSyncSetting('staff_list', list);
+    staffInput.value = '';
+    renderSettings(); showToast(name + ' 담당자가 추가됐습니다 — 로그인하려면 이메일도 등록해주세요');
+  }));
+  staffCard.appendChild(addStaffWrap);
+  staffCard.appendChild(div('margin-top:10px;padding-top:10px;border-top:1px solid var(--border)', [
+    btn('font-size:12px;font-weight:700;color:var(--dark);background:none;border:none;cursor:pointer;font-family:inherit;padding:0', '📋 변경 이력 보기', function() {
+      showAuditLogModal();
+    })
+  ]));
+
+  var groupAccount = makeGroup('sec-set-account', '계정 · 보안', [masterEmailCard, pwCard, staffCard], false);
+  wrap.appendChild(groupAccount);
+
+  renderSettingsVendorGroup(wrap, makeGroup); // → dash-settings-sections.js
+
+  renderSettingsMemoLeadGroup(wrap, makeGroup); // → dash-settings-sections.js
+
+  renderSettingsRegionFeesGroup(wrap, makeGroup); // → dash-settings-sections.js
+
+  renderSettingsCouponGroup(wrap, makeGroup); // → dash-settings-sections.js
+
+  
+  renderSettingsIntegrationGroup(wrap, makeGroup, s); // → dash-settings-sections.js
+
+  
+  renderSettingsDataGroup(wrap, makeGroup); // → dash-settings-sections.js
+
+  // 로그아웃 — 2026-08-02: 접힌 그룹 안에 숨어있어서 찾기 불편하다는 피드백으로,
+  // 어떤 아코디언에도 속하지 않는 독립 카드로 분리해서 설정 화면 맨 아래에
+  // 항상(접지 않고) 보이게 함
+  var logoutStandalone = div('background:#fff;margin-bottom:10px;border-radius:12px;border:1px solid var(--border);padding:16px', [
+    btn('width:100%;padding:12px;background:#fff;color:#E4483A;border:1px solid #F3D9D5;border-radius:10px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer', '로그아웃', function() {
+      if (confirm('로그아웃 하시겠습니까?')) logout();
+    })
+  ]);
+  wrap.appendChild(logoutStandalone);
+
+  // 빠른이동 내비게이션 (PC 전용) — 그룹 단위로 축소
+  if (typeof renderQuickNav === 'function') {
+    renderQuickNav([
+      {id:'sec-set-goal', label:'매출목표'},
+      {id:'sec-set-account', label:'계정보안'},
+      {id:'sec-set-integration', label:'계좌연동'},
+      {id:'sec-set-data', label:'데이터관리'}
+    ]);
+  }
+}
+
+function labelDiv(text) { return span('font-size:11px;font-weight:700;color:var(--sub);letter-spacing:1.2px;display:block;margin-bottom:var(--sp-2)', text); }
+
+// 2026-09-11(선혜님 지시 — 감사로그/변경이력 조회 화면): 오늘 만든 기능들
+// (퇴사이관/선착순배정)과 기존 핵심 변경(단계변경/결제/알림톡발송)을
+// 한 화면에서 시간순으로 볼 수 있게 함 — "왜 이렇게 됐지?"를 나중에
+// 추적할 유일한 단서. tab_view/detail_open/order_check처럼 사용성
+// 분석용 로그는 여기선 노이즈라 제외하고, 책임소재가 걸리는 5종류만 표시.
+var AUDIT_EVENT_TYPES = ['stage_change','payment_save','alimtalk_send','claim_unassigned','staff_offboard'];
+function formatAuditEvent(ev) {
+  var d = ev.event_detail || {};
+  switch (ev.event_type) {
+    case 'stage_change':
+      return (d.customerName || '고객') + ' 단계 변경: ' + (d.from||'?') + ' → ' + (d.to||'?');
+    case 'payment_save':
+      return (d.customerName || '고객') + ' 결제정보 저장 (계약금:' + (d.hasDeposit?'있음':'없음') + ', 잔금:' + (d.hasBalance?'있음':'없음') + ')';
+    case 'alimtalk_send':
+      return (d.customerName || '고객') + '에게 [' + (d.label||d.type||'') + '] 발송';
+    case 'claim_unassigned':
+      return (d.name || '고객') + ' 담당 확정 (' + (d.by||'') + ')';
+    case 'staff_offboard':
+      return (d.from||'') + ' → ' + (d.to||'') + ' 이관 (고객 ' + (d.customerCount||0) + '명, 견적 ' + (d.estimateCount||0) + '건)' + (d.note ? ' — 메모: ' + d.note : '');
+    default:
+      return ev.event_type;
+  }
+}
+function showAuditLogModal() {
+  var existing = document.getElementById('audit-log-overlay');
+  if (existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'audit-log-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99998;display:flex;align-items:center;justify-content:center';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#fff;border-radius:12px;padding:var(--sp-5);width:380px;max-width:90vw;max-height:80vh;overflow-y:auto';
+  box.innerHTML = '<div style="font-size:15px;font-weight:700;color:var(--dark);margin-bottom:var(--sp-3)">📋 변경 이력</div><div id="audit-log-list" style="font-size:12px;color:var(--sub)">불러오는 중...</div>' +
+    '<button id="audit-log-close-btn" style="margin-top:var(--sp-3);width:100%;padding:11px;background:#fff;border:1px solid var(--border);border-radius:12px;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;color:var(--dark)">닫기</button>';
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+  document.getElementById('audit-log-close-btn').addEventListener('click', function(){ overlay.remove(); });
+
+  var filterParam = 'event_type=in.(' + AUDIT_EVENT_TYPES.join(',') + ')';
+  sbXHR('GET', 'analytics_events?' + filterParam + '&order=created_at.desc&limit=100', null, function(err, rows) {
+    var listEl = document.getElementById('audit-log-list');
+    if (!listEl) return; // 로딩 중 모달 닫힘
+    if (err || !Array.isArray(rows)) { listEl.textContent = '불러오지 못했어요. 다시 시도해주세요.'; return; }
+    if (rows.length === 0) { listEl.textContent = '아직 기록된 변경 이력이 없어요.'; return; }
+    listEl.innerHTML = rows.map(function(ev) {
+      var dt = new Date(ev.created_at);
+      var dateStr = (dt.getMonth()+1) + '/' + dt.getDate() + ' ' + dt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+      return '<div style="padding:8px 0;border-bottom:1px solid var(--ivory1)">' +
+        '<div style="font-size:11px;color:var(--sub);margin-bottom:2px">' + escHtml(dateStr) + ' · ' + escHtml(ev.staff_name||'') + '</div>' +
+        '<div style="font-size:12px;color:var(--dark)">' + escHtml(formatAuditEvent(ev)) + '</div>' +
+      '</div>';
+    }).join('');
+  });
+}

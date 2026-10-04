@@ -1,0 +1,1982 @@
+/* ══════════════════════════════════════════════════
+   DAH Dashboard 전체 스타일시트
+   원래 dah-dashboard.html 안에 <style> 태그로 내장되어 있던 CSS를
+   분리한 파일입니다. 기능 변경 없음 — 순수 위치 이동만 수행함.
+   ══════════════════════════════════════════════════ */
+
+/* 2026-08-06: 실제 아이폰 사파리(WebKit)에서만 재현되는 미세한 가로스크롤
+   문제 발견(선혜님 실기기 확인, 헤드리스 Chrome 테스트로는 원인 특정 불가 —
+   WebKit과 Blink의 서브픽셀 렌더링 차이로 추정). 이 앱은 의도적으로 가로
+   스크롤이 필요한 화면이 없으므로(.sort-wrap 등 개별 요소는 이미 자체
+   overflow-x:auto가 있어 영향 없음), 원인을 정확히 특정하지 않고도 body
+   레벨에서 가로스크롤 자체를 원천 차단. */
+html, body { overflow-x: hidden; max-width: 100%; }
+/* 2026-08-08: 사파리(WebKit) 전용 폭 계산 차이를 제 크롬 테스트환경에서
+   재현 못하는 경우를 대비한 이중 안전장치 - 주요 카드/섹션 컨테이너가
+   부모를 넘지 못하도록 명시적으로 고정 */
+.card, .kanban-col, #sec-hero, #sec-goal, #sec-stage, #sec-todo, #sec-kpi > div {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── 토스트 알림 (기존엔 스타일이 아예 없어서 저장확인 등이 화면에 안 보였음) ── */
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  transform: translateX(-50%);
+  background: #282828;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 99999;
+  max-width: 90vw;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+}
+
+/* ── 빠른이동 내비게이션 (섹션 많은 화면 우측 고정 목차, PC 전용) ── */
+.quick-nav {
+  position: fixed;
+  top: 140px;
+  right: 14px;
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: #fff;
+  border: 1px solid #EEE6DC;
+  border-radius: 12px;
+  padding: 8px 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.quick-nav a {
+  font-size: 11px;
+  font-weight: 600;
+  color: #756E62;
+  text-decoration: none;
+  padding: 7px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+  text-align: center;
+  transition: background 0.15s, color 0.15s;
+}
+.quick-nav a:hover {
+  background: #FAF7F5;
+  color: #282828;
+}
+@media (max-width: 1199px) {
+  .quick-nav { display: none; }
+}
+/* quick-nav가 떠 있을 때는 본문 오른쪽에 여백을 줘서 콘텐츠와 겹치지 않게 함 */
+@media (min-width: 1200px) {
+  body.has-quicknav .wrap { padding-right: 108px; }
+}
+
+/* ── Pretendard 직접 내장 (CDN 불필요) ── */
+@font-face {
+  font-family: 'Pretendard Variable';
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: swap;
+  src: url('/pretendard-variable.woff2') format('woff2-variations');
+}
+
+html, body, input, button, select, textarea {
+  font-family: 'Pretendard Variable', Pretendard, -apple-system,
+    BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+
+
+
+
+
+/* ③ 진행현황 칸반 min-height */
+.kanban-col,
+[class*=pipe-col],
+[class*=kanban-col] {
+  min-height: 140px !important;
+}
+/* 칸반 빈 상태 — 2026-08-06: 240px/140px로 채워진 컬럼만큼 크게 차지하던 것을
+   축소(디자인 감사에서 "빈 여백 리듬이 불균일하다"고 지적된 부분) */
+.kanban-empty {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 80px !important;
+  gap: 6px !important;
+  padding: 20px 16px;
+  font-size: 12px;
+  color: #C8C2BA;
+  font-weight: 500;
+}
+
+
+
+/* ① 페이지 타이틀 (홈 7월 목표 텍스트) */
+.home-title, .page-title-area h2,
+#home > .wrap > .card:first-child h2,
+#home .goal-title {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+  letter-spacing: -0.5px !important;
+}
+
+/* ② KPI 숫자 — 36px */
+
+
+
+/* ③ KPI 라벨 — 11px Bold */
+
+
+
+/* ⑥ 진행현황 칩 — 너무 큰 문제 수정 */
+
+/* ⑦ 탭 네비 */
+.tab, .tab-item, .tabs button {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  color: #756E62 !important;
+}
+.tab.on, .tab-item.on, .tabs button.on, .tabs button.active {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+}
+
+/* ⑩ 날짜·보조 */
+.date-label, .home-date, #home .date {
+  font-size: 11px !important;
+  font-weight: 400 !important;
+  color: #756E62 !important;
+}
+
+/* ⑪ 버튼 통일 */
+button {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  font-family: inherit !important;
+  cursor: pointer !important;
+}
+/* 예외: 탭 버튼은 위 ⑦ 적용 (font-size:12px는 위쪽에 이미 정의되어 있어 중복 제거함) */
+/* 예외: 작은 버튼 */
+
+
+/* ⑫ 입력창·플레이스홀더 */
+input, select, textarea {
+  font-size: 15px !important;
+  font-family: inherit !important;
+}
+/* (input::placeholder 규칙은 위쪽 ⑫번에 이미 정의되어 있어 중복 제거함) */
+
+/* ⑬ 설정 화면 라벨 */
+
+
+
+
+
+/* ② 모바일 진행현황 — 2열 그리드 */
+@media (max-width: 640px) {
+  #pipe .kanban-col {
+    min-height: 120px !important;
+    border-radius: 12px !important;
+  }
+  /* 완료 컬럼 — 2열에서 전체 너비 */
+  #pipe .kanban-col:last-child {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+/* ③ 매출 탭 active 강화 */
+/* 기간 탭 (전체/이번달/지난달/3개월/6개월) */
+
+
+/* (매출탭 활성상태는 date-filter-btn.on / chart-tab.on 에 이미 정의되어 있어
+   여기 있던 period-tabs/view-tabs 관련 죽은 규칙 제거함 - 그 클래스 자체가 안 쓰임) */
+/* 일/주/월/연 탭 */
+
+
+
+/* ════════════════════════════════════════════════
+   DAH 폰트 위계 시스템 확정 2026.07.07
+   ════════════════════════════════════════════════
+
+   페이지 타이틀    22px / 700 / #282828
+   KPI 숫자        36px / 700 / #282828
+   KPI 단위        13px / 400 / #756E62
+   KPI 라벨        11px / 700 / #756E62
+   섹션 타이틀      12px / 700 / #756E62 (대문자)
+   본문 텍스트      15px / 400 / #282828
+   서브 텍스트      12px / 400 / #756E62
+   버튼 텍스트      13px / 700
+   탭 라벨          12px / 500(off) 700(on)
+   칸반 스테이지    12px / 700
+   날짜/보조        11px / 400 / #756E62
+   ════════════════════════════════════════════════ */
+
+/* ① 페이지 타이틀 — 위쪽 첫 번째 정의와 완전히 동일하여 중복 제거함 */
+
+
+/* ════════════════════════════════════════════════════════
+   DAH 폰트 위계 시스템 — 전 페이지 일괄 적용 2026.07.07
+   ════════════════════════════════════════════════════════
+   페이지 타이틀  22px / 700 / #282828
+   KPI 숫자      36px / 700 / #282828
+   KPI 단위      13px / 400 / #756E62
+   KPI 라벨      11px / 700 / #756E62 (uppercase)
+   섹션 타이틀   12px / 700 / #756E62 (uppercase)
+   본문          15px / 400 / #282828
+   서브텍스트    12px / 400 / #756E62
+   버튼          13px / 700
+   탭 라벨       12px / 500(off) 700(on)
+   날짜/보조     11px / 400 / #756E62
+   ════════════════════════════════════════════════════════ */
+
+/* ── 전역 기본 ── */
+html { font-size: 15px; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body {
+  color: #282828;
+  -moz-osx-font-smoothing: grayscale;
+}
+* { -webkit-font-smoothing: antialiased; }
+/* 2026-08-08: box-sizing:border-box 전역 리셋이 없어서, 패딩 있는 요소들이
+   지정된 폭보다 (좌우패딩만큼) 더 넓게 렌더링되고 있었음 - 실기기에서
+   카드 오른쪽이 잘려보이던 근본 원인으로 추정. 모든 요소에 적용 */
+*, *::before, *::after { box-sizing: border-box; }
+
+
+/* ── 버튼 13px ── */
+/* (button 폰트 규칙은 위쪽 ⑪번에 이미 정의되어 있어 중복 제거함) */
+/* 탭 버튼 예외 (est-tab/est-status-btn 포함, 위쪽 ⑦번과 별개로 필요) */
+.tab, .tab-item, .tabs button,
+.est-tab, .est-status-btn {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+.tab.on, .tab.active, .tab-item.on,
+.tabs button.on, .tabs button.active,
+.est-tab.on, .est-status-btn.on {
+  font-weight: 700 !important;
+}
+
+/* ── 입력창 15px ── */
+/* (input/select/textarea 폰트 규칙은 위쪽 ⑫번에 이미 정의되어 있어 중복 제거함) */
+input::placeholder, textarea::placeholder {
+  font-size: 13px !important;
+  color: #C8C2BA !important;
+  font-weight: 400 !important;
+}
+
+/* ── 날짜/보조 11px ── */
+
+
+/* ── 서브텍스트 12px ── */
+
+/* ── 홈 칩 28px 높이 ── */
+
+
+/* ── 매출 탭 active 강화 ── */
+
+
+/* (위와 동일한 죽은 규칙 중복 - 제거함) */
+
+/* ── 견적서 ── */
+
+
+
+
+
+/* ── 설정 ── */
+
+
+
+
+/* 칸반 레이아웃 — PC: 5열 가로, 모바일: 2열 그리드 */
+.kanban-col {
+  background: #fff;
+  border: 1px solid #EEE6DC;
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  min-height: 200px;
+}
+.kanban-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #EEE6DC;
+  background: #FAF7F5;
+}
+.kanban-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.kanban-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #282828;
+  flex: 1;
+}
+.kanban-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: #756E62;
+  background: #F5F2EE;
+  padding: 1px 7px;
+  border-radius: 4px;
+}
+.kanban-item {
+  padding: 12px 14px;
+  border-bottom: 1px solid #F5F2EE;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.kanban-item:hover { background: #FAF7F5; }
+.kanban-item:last-child { border-bottom: none; }
+
+
+
+/* ② 모바일 홈 타이틀 크기 */
+@media (max-width: 640px) {
+  #home [style*="font-size:36px;font-weight:700;color:var(--dark)"] {
+    font-size: 22px !important;
+    line-height: 1.35 !important;
+  }
+  #home [style*="font-size:36px;font-weight:700;color:var(--dark);line-height:1"] {
+    font-size: 26px !important;
+  }
+}
+
+/* ③ PC KPI 위계 강화 */
+
+
+/* (.kpi-num em 규칙은 뒤쪽에 이미 정의되어 있어 중복 제거함) */
+
+/* 기간 탭 (전체/이번달 등) */
+#chart [class*=period] button,
+#chart [class*=tab] button {
+  height: 30px; padding: 0 12px; border-radius: 4px;
+  font-size: 12px; font-weight: 600; color: #756E62;
+  background: transparent; border: none; cursor: pointer;
+  font-family: inherit; transition: all 0.12s;
+}
+#chart [class*=period] button.on,
+#chart [class*=period] button.active {
+  background: #282828 !important; color: #fff !important;
+  font-weight: 700 !important; border-radius: 4px !important;
+}
+
+/* ⑤ 엑셀 버튼 너비 제한 */
+
+
+
+/* ④ 매출 탭 — 정확한 클래스명으로 */
+.date-filter-btn {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #756E62;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+}
+.date-filter-btn.on, .date-filter-btn.active {
+  background: #282828 !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  border-radius: 4px !important;
+}
+/* 일/주/월/연 탭 */
+.chart-tab {
+  flex: 1;
+  height: 32px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #756E62;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  transition: all 0.12s;
+}
+.chart-tab.on, .chart-tab.active {
+  border-bottom: 2px solid #F06E2D;
+  color: #F06E2D;
+  font-weight: 700;
+}
+
+/* ⑤ 엑셀 버튼 — onclick="exportExcel()" */
+button[onclick="exportExcel()"] {
+  background: #FAF7F5 !important;
+  color: #282828 !important;
+  border: 1px solid #EEE6DC !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  height: 32px !important;
+  padding: 0 14px !important;
+  width: auto !important;
+}
+
+
+
+
+/* 고객목록 체크박스 라벨 + 카운트 11px */
+
+
+/* 매출 차트 축 숫자 11px */
+#chart canvas ~ * [style*="font-size:9px"],
+#chart canvas ~ * [style*="font-size:10px"],
+#chart [style*="font-size:9px"],
+#chart [style*="font-size:10px"],
+#chart text,
+#chart .chart-label,
+#chart .axis-label {
+  font-size: 11px !important;
+}
+/* chart.js 캔버스 폰트 — CSS로 직접 불가, JS로 처리 필요 */
+
+/* 칸반 열 가변 — 1fr */
+.kanban-wrap {
+  display: grid !important;
+  grid-template-columns: repeat(5, 1fr) !important;
+  gap: 12px !important;
+  padding: 12px 20px 20px !important;
+}
+@media (max-width: 640px) {
+  .kanban-wrap {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+    padding: 12px !important;
+  }
+  .kanban-col:last-child {
+    grid-column: 1 / -1 !important;
+  }
+}
+
+
+
+/* ── 빈 상태 화면 확정 ── */
+
+.empty-state-title {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: var(--dark) !important;
+  letter-spacing: -0.3px;
+  margin-bottom: 6px;
+}
+.empty-state-desc {
+  font-size: 12px !important;
+  color: var(--sub) !important;
+  line-height: 1.6;
+}
+
+
+/* ── 여백 체계 (8px 기반) ── */
+#home .wrap > * { margin-bottom: 0; }
+
+
+/* ── 태블릿 반응형 (641px ~ 1024px) ── */
+@media (min-width: 641px) and (max-width: 1024px) {
+  /* 헤더 */
+  .hd { padding: 0 16px; height: 48px; }
+  .hd-logo { font-size: 13px; }
+  .hd-btn-new { height: 32px; padding: 0 12px; font-size: 12px; }
+
+  /* 탭 */
+  .tabs { gap: 0; }
+  .tab { padding: 8px 12px; font-size: 11px; }
+
+  /* 홈 KPI */
+  .kpi-num { font-size: 28px !important; letter-spacing: -0.5px !important; }
+
+  /* 홈 칩 */
+
+  /* 칸반 — 태블릿에서 3열 */
+  .kanban-wrap {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 10px !important;
+    padding: 10px 16px 16px !important;
+  }
+  .kanban-col:last-child,
+  .kanban-col:nth-last-child(2) {
+    grid-column: auto !important;
+  }
+
+  /* 고객목록 */
+  #search .search-bar { font-size: 13px; }
+
+  /* 설정 */
+  #settings .wrap { padding: 16px; }
+}
+
+
+/* 태블릿 KPI 크기 — 최우선 */
+@media (min-width: 641px) and (max-width: 1024px) {
+  body .kpi-num,
+  #home .kpi-num,
+  div.kpi-num {
+    font-size: 26px !important;
+    letter-spacing: -0.5px !important;
+    line-height: 1 !important;
+  }
+}
+
+
+/* ── 수정 ① 모바일 칩 줄바꿈 + ② 빈섹션 높이 ── */
+
+
+/* ② PC 빈 섹션 (처리필요 / 오늘일정) — 최소 높이 */
+.empty-inline {
+  padding: 28px 16px !important;
+  font-size: 12px !important;
+  color: var(--sub) !important;
+  text-align: center !important;
+  line-height: 1.7;
+}
+
+
+/* ── 로딩 오버레이 ── */
+.loading-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 8000;
+  background: rgba(250,247,245,0.85);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+}
+.loading-overlay.show {
+  display: flex;
+}
+.loading-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #EEE6DC;
+  border-top-color: #F06E2D;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  font-size: 13px;
+  color: #756E62;
+  font-weight: 500;
+}
+
+
+/* ── 개선점 수정 ── */
+
+/* ② 모바일 정렬버튼 한줄 가로스크롤 */
+.sort-wrap {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  gap: 6px !important;
+  padding-bottom: 2px !important;
+}
+.sort-wrap::-webkit-scrollbar { display: none; }
+.sort-btn, .filter-btn {
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  height: 32px !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
+  border: 1px solid #EEE6DC;
+  background: #FAF7F5 !important;
+  color: #756E62 !important;
+  cursor: pointer !important;
+  font-family: inherit !important;
+  transition: all 0.15s;
+}
+.sort-btn.on, .filter-btn.on, .sort-btn.active {
+  background: #282828 !important;
+  color: #fff !important;
+  border-color: #282828;
+}
+
+
+/* ── 대기업 디자인팀 최종 3가지 수정 ── */
+
+/* ① PC 홈 섹션 헤더 배경 — 아이보리2로 구분 */
+#home [style*="padding:14px 20px 10px"][style*="display:flex"],
+#home [style*="padding:14px 20px 10px"] {
+  background: #F5F2EE !important;
+  border-bottom: 1px solid #EEE6DC !important;
+}
+
+/* ② 모달 오버레이 dim — 배경만 수정 */
+
+/* ③ 매출 차트 Y축 레이블 스타일 */
+#chart canvas {
+  max-width: 100%;
+}
+
+
+/* ① PC 홈 KPI 구분 강화 */
+/* KPI 카드 3개 배경 차별화 */
+/* 목표 달성률 바 진행률 표시 강화 */
+#home .goal-progress-bar,
+#home [id*="goal-progress-bar"] {
+  background: #F06E2D !important;
+  border-radius: 2px !important;
+  min-width: 2px !important;
+}
+
+/* 섹션 블록 구분 더 명확하게 */
+#home [style*="border-bottom:1px solid var(--border)"][style*="background:#fff"] {
+  border-left: 3px solid #EEE6DC !important;
+}
+
+/* ② 모바일 칩 — 모든 칩 항상 보이도록 */
+@media (max-width: 640px) {
+  #home [style*="flex-wrap:nowrap"],
+  #home [style*="flex-wrap: nowrap"] {
+    flex-wrap: nowrap !important;
+    gap: 4px !important;
+  }
+  /* 각 칩 크기 최소화하여 6개 한눈에 보이도록 */
+  #home [style*="flex-wrap:nowrap"] > div,
+  #home [style*="flex-wrap: nowrap"] > div {
+    padding: 0 7px !important;
+    font-size: 11px !important;
+    min-width: 0 !important;
+    flex-shrink: 1 !important;
+  }
+}
+
+
+/* ── 마스터 로그인 버튼 ── */
+.login-master-btn {
+  width: 100%;
+  height: 48px;
+  background: #282828 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  font-family: inherit !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  margin: 16px 0 !important;
+  transition: background 0.15s !important;
+}
+.login-master-btn:hover {
+  background: #3a3a3a !important;
+}
+
+/* ── 마스터 비밀번호 확인 영역 (기존엔 스타일이 아예 없어서 브라우저 기본 UI로 보였음) ── */
+.master-pw-area {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: -8px 0 16px;
+}
+.master-pw-area .pw-input-row {
+  display: flex;
+  gap: 8px;
+}
+#master-pw-input, #staff-pw-input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--border, #EEE6DC);
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--dark, #282828);
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+}
+#master-pw-input:focus, #staff-pw-input:focus {
+  border-color: #282828;
+}
+.login-confirm-btn {
+  width: 72px;
+  height: 44px;
+  background: #282828;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.login-confirm-btn:hover {
+  background: #3a3a3a;
+}
+.login-pw-error {
+  font-size: 11px;
+  color: var(--danger, #E4483A);
+  text-align: center;
+  display: none;
+}
+
+/* ── 로그인 화면: 담당자 선택 영역 (기존엔 스타일이 아예 없어서 브라우저 기본 UI로 어색하게 겹쳐보였음) ── */
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 14px;
+  font-size: 12px;
+  color: #756E62;
+}
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #EEE6DC;
+}
+.staff-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.staff-grid-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 8px;
+  min-height: 44px;
+  background: #fff;
+  border: 1.5px solid #EEE6DC;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #282828;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  box-sizing: border-box;
+}
+.staff-grid-btn:hover {
+  border-color: #282828;
+  background: #FAF7F5;
+}
+.staff-avatar-sm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--orange, #F06E2D);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ══════════════ 캘린더(일정) 탭 ══════════════ */
+.cal-day-cell {
+  min-height: 56px;
+  padding: 4px 2px;
+  background: #fff;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: background 0.15s;
+}
+.cal-day-cell:hover { background: #FAF7F5; }
+.cal-day-cell.other-month { opacity: 0.35; }
+.cal-day-cell.today .cal-day-num {
+  background: var(--orange, #F06E2D);
+  color: #fff;
+}
+.cal-day-cell.selected {
+  background: #F5F2EE;
+  outline: 1.5px solid #282828;
+  outline-offset: -1.5px;
+}
+.cal-day-num {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 700;
+  color: #282828;
+}
+.cal-ev-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 4px;
+  border-bottom: 1px solid #EEE6DC;
+}
+.cal-ev-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 36px;
+  flex-shrink: 0;
+}
+.cal-ev-day { color: #282828; }
+.cal-ev-dow { font-size: 11px; color: #756E62; }
+.cal-ev-info { flex: 1; min-width: 0; }
+.cal-ev-name { color: #282828; }
+.cal-ev-sub { font-size: 12px; color: #756E62; margin-top: 2px; }
+.cal-ev-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 4px;
+  color: #fff;
+  flex-shrink: 0;
+}
+.cal-ev-badge.type-상담 { background: #282828; }
+.cal-ev-badge.type-실측 { background: #A67C52; }
+.cal-ev-badge.type-시공 { background: #F06E2D; }
+.cal-ev-type {
+  width: 4px;
+  align-self: stretch;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.cal-ev-type.type-상담 { background: #282828; }
+.cal-ev-type.type-실측 { background: #A67C52; }
+.cal-ev-type.type-시공 { background: #F06E2D; }
+
+/* ══════════════ 칸반 카드 ══════════════ */
+.kanban-item-name { font-size: 13px; font-weight: 700; color: #282828; }
+.kanban-item-sub { font-size: 11px; color: #756E62; margin-top: 2px; }
+.kanban-item-price { font-size: 12px; font-weight: 700; color: #282828; margin-top: 4px; }
+
+/* ══════════════ KPI / 매출 진행바 ══════════════ */
+
+
+.goal-pct { font-size: 11px; font-weight: 700; color: var(--orange, #F06E2D); }
+
+/* ══════════════ 매출(차트) 탭 ══════════════ */
+.chart-tab-bar { display: flex; gap: 4px; margin-bottom: 10px; }
+.sec { font-size: 12px; font-weight: 700; color: #282828; margin-bottom: 8px; }
+.chart-value { font-size: 11px; fill: #282828; font-weight: 700; }
+
+/* ══════════════ 고객 목록 항목 ══════════════ */
+.cust-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 4px;
+  border-bottom: 1px solid #EEE6DC;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.cust-item:hover { background: #FAF7F5; }
+.ci-left { flex: 1; min-width: 0; }
+.ci-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.ci-price { font-size: 12px; font-weight: 700; color: #282828; }
+
+/* 2026-08-05: 기본 스타일(글자색 등)이 아예 없어서, 배경이 진한 상담(#282828)
+   단계에서 텍스트가 배경에 묻혀 안 보이던 문제 — 흰 글자로 명확히 표시 */
+.ci-stage.stage-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+}
+.stage-pill.방문예약 { background: #8A8378; }
+.stage-pill.상담 { background: #8A8378; }
+.stage-pill.가견적 { background: #8A8378; }
+.stage-pill.선금결제 { background: #F06E2D; }
+.stage-pill.실측준비중 { background: #F06E2D; }
+.stage-pill.확정견적 { background: #F06E2D; }
+.stage-pill.잔금결제 { background: #F06E2D; }
+.stage-pill.시공준비중 { background: #F06E2D; }
+.stage-pill.시공완료 { background: #2F6690; }
+.rebuy-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--orange, #F06E2D);
+  border: 1px solid var(--orange, #F06E2D);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-left: 6px;
+}
+
+/* ══════════════ 기타 ══════════════ */
+.card-head-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; width: 100%; }
+.date-filter-wrap { display: flex; gap: 6px; margin-bottom: 10px; }
+.field-err { font-size: 11px; color: var(--danger, #E4483A); margin-top: 4px; }
+.form-row { margin-bottom: 12px; }
+.login-footer { font-size: 11px; color: #756E62; text-align: center; margin-top: 16px; }
+.memo-quick-btn {
+  font-size: 11px;
+  padding: 5px 10px;
+  border-radius: 14px;
+  border: 1px solid #EEE6DC;
+  background: #fff;
+  color: #282828;
+  cursor: pointer;
+  font-family: inherit;
+}
+.modal-top-bar { width: 36px; height: 4px; background: #EEE6DC; border-radius: 2px; margin: 8px auto 4px; }
+.archived-check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #756E62; cursor: pointer; }
+.empty-state-emoji { font-size: 28px; display: block; margin-bottom: 8px; }
+
+
+
+
+
+
+@keyframes skeleton-pulse { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+/* 로그인 카드 내부 */
+.login-card-title {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+  margin-bottom: 6px !important;
+}
+.login-card-sub {
+  font-size: 13px !important;
+  color: #756E62 !important;
+  line-height: 1.6 !important;
+  margin-bottom: 4px !important;
+}
+
+
+/* ── 고객추가 모달 최종 확정 ── */
+
+
+/* ══════════════════════════════════════════════════
+   DAH Dashboard — 통합 디자인 시스템 CSS
+   ══════════════════════════════════════════════════ */
+
+:root {
+  /* ── 브랜드 컬러 ── */
+  --orange:   #F06E2D;   /* Primary */
+  --dark:     #282828;
+  --ivory1:   #FAF7F5;
+  --ivory2:   #F5F2EE;
+  --border:   #EEE6DC;
+  --sub:      #756E62;   /* 서브텍스트 (2026-07-19: 대비 2.33->5.04로 개선, WCAG AA 충족) */
+  --danger:   #C0392B;
+  --bg-org:   #FFF3EE;   /* 오렌지 강조배경 */
+  --bg-red:   #FDECEA;   /* 빨강 강조배경 */
+  /* ── 스테이지 ── */
+  --stage-hot: #F06E2D;  /* 계약금·실측 */
+  --stage-dark:#282828;  /* 잔금·시공 */
+  /* ── Border Radius ── */
+  --r-btn:    10px;  /* 버튼·뱃지·태그 */
+  --r-input:  10px;  /* 입력창·검색바 */
+  --r-card:   12px;  /* 카드·테이블 */
+  --r-icon:   14px;  /* 빠른액션 아이콘 */
+  /* ── 하위호환 alias ── */
+  --terra:    #F06E2D;
+  --mid:      #756E62;
+  --light:    #756E62;
+  --green:    #2F6690;
+  --blue:     #282828;
+  --terra-dark:#D4601F;
+  --kakao-dark:#F5D800;
+  /* ── 여백(4px 격자) — 새 코드부터 이 변수로 통일 예정, 기존 코드는 미변경 ── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 32px;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+
+body {
+  background:var(--ivory2);
+  word-break:keep-all;
+  min-height:100vh;
+}
+input,button,select,textarea { font-family:inherit; }
+
+/* ── 헤더 ── */
+.hd {
+  position:sticky; top:0; z-index:100;
+  background:var(--dark);
+  height:52px;
+  display:flex; align-items:center;
+  justify-content:space-between;
+  padding:0 20px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.hd-logo-img {
+  height:22px; display:block;
+  object-fit:contain; object-position:left;
+  ;
+}
+.hd-right { display:flex; align-items:center; gap:8px; }
+.hd-badge { font-size:11px; color:rgba(255,255,255,0.45); font-weight:600; letter-spacing:0.04em; display:inline-flex; align-items:center; min-height:32px; padding:0 4px; flex-shrink:0; }
+.hd-btn {
+  height:32px; padding:0 14px;
+  border-radius:4px; font-size:13px;
+  font-weight:700; cursor:pointer; border:none;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.hd-btn-est {
+  background:var(--orange); color:#fff; font-weight:700; border:none;
+}
+
+
+/* ── 탭바 ── */
+.tabs {
+  background:#FFFFFF; border-top:1px solid var(--border);
+  display:flex;
+  background:var(--ivory2);
+  border-bottom:1px solid var(--border);
+  position:sticky; top:52px; z-index:98;
+}
+.tab {
+  flex:1; padding:12px 0 10px;
+  display:flex; flex-direction:column;
+  align-items:center; gap:4px;
+  font-size:11px; font-weight:600; color:var(--light);
+  background:none; border:none; cursor:pointer;
+  border-bottom:2px solid transparent;
+  transition:color 0.15s;
+  font-family:inherit;
+}
+.tab svg { display:block; }
+.tab.on,.tab.active {
+  color:var(--terra);
+  border-bottom-color:var(--terra);
+  font-weight:700;
+}
+.tab.on svg,.tab.active svg { stroke:var(--terra); }
+
+/* ── wrap (콘텐츠 영역) ── */
+.wrap { padding:12px 16px 80px; background:var(--ivory2); max-width:1200px; margin:0 auto; }
+
+/* ── 카드 ── */
+.card {
+  background:#fff; border-radius:var(--r-card);
+  border:1px solid var(--border);
+  box-shadow: var(--shadow-card);
+  margin-bottom:10px; overflow:hidden;
+}
+.card-head {
+  padding:12px 16px; border-bottom:1px solid var(--ivory2);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.card-title { font-size:11px; font-weight:700; color:var(--mid); letter-spacing:0.08em; text-transform:uppercase; }
+.card-count { font-size:11px; color:var(--sub); }
+
+/* ── 고객 행 ── */
+
+
+
+
+.ci-name { font-size:11px; font-weight:700; color:var(--dark); }
+.ci-sub { font-size:11px; color:var(--sub); margin-top:2px; }
+
+
+/* ── 검색 ── */
+.search-top {
+  padding:10px 16px 8px;
+  position:sticky; top:52px; z-index:90;
+  background:var(--ivory2);
+}
+.search-bar-wrap {
+  display:flex; align-items:center; gap:8px;
+  background:#fff; border:1px solid var(--border);
+  border-radius:var(--r-input); padding:9px 14px;
+}
+.search-icon { flex-shrink:0; }
+.search-input-clean {
+  flex:1; min-width:0; border:none; outline:none;
+  font-size:11px; color:var(--dark); background:transparent;
+  font-family:inherit;
+}
+.search-input-clean::placeholder { color:var(--light); }
+
+/* ── 입력창 ── */
+.form-input {
+  width:100%; height:40px;
+  border:1px solid var(--border); border-radius:var(--r-input);
+  padding:0 12px; font-size:11px; color:var(--dark);
+  background:#fff; outline:none; transition:border-color 0.15s;
+}
+.form-input:focus { border-color:var(--terra); }
+.form-input::placeholder { color:var(--light); }
+
+.form-label { font-size:11px; font-weight:600; color:var(--mid); margin-bottom:5px; }
+.form-required { color:var(--terra); }
+
+/* ── 버튼 ── */
+
+
+
+
+
+/* ── 모달 (고객 추가/편집) ── */
+
+/* ── 모달 오버레이 완전 확정 ── */
+/* ── 고객추가 모달 오버레이 ── */
+/* (.modal-box는 뒤쪽에 이미 완전히 정의되어 있어 중복 제거함) */
+
+
+
+.add-modal-title { font-size:11px; font-weight:700; color:var(--dark); }
+
+
+
+
+/* ── 로그인 화면 ── */
+.login-screen {
+  min-height:100vh; background:var(--ivory2);
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:40px 24px;
+  position:fixed; inset:0; z-index:9000;
+}
+.login-logo-wrap { text-align:center; margin-bottom:32px; }
+.login-logo-wrap img { height:28px; width:auto; display:block; margin:0 auto 10px; }
+.login-brand-sub {
+  font-size:11px; color:var(--sub);
+  letter-spacing:0.12em; font-weight:600;
+}
+.login-card {
+  background:#fff; border-radius:var(--r-card);
+  border:1px solid var(--border);
+  padding:24px 20px; width:100%; max-width:340px;
+}
+
+
+.user-btn.master { border-color:var(--terra); background:var(--bg-org); }
+
+
+
+.master-pw-wrap { margin-top:8px; }
+.master-pw-wrap input {
+  width:100%; height:44px; border:1.5px solid var(--border);
+  border-radius:var(--r-input); padding:0 14px;
+  font-size:11px; outline:none; margin-bottom:8px;
+  font-family:inherit;
+}
+.master-pw-wrap input:focus { border-color:var(--terra); }
+
+.master-pw-error { font-size:11px; color:var(--danger); text-align:center; display:none; }
+
+/* ── 토스트 ── */
+.toast {
+  position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+  background:var(--dark); color:#fff;
+  padding:10px 20px; border-radius:var(--r-input);
+  font-size:11px; font-weight:600;
+  opacity:0; transition:opacity 0.3s; pointer-events:none;
+  white-space:nowrap; z-index:9999;
+}
+.toast.show { opacity:1; }
+
+/* ── 차트 탭 ── */
+.tab-bar { display:flex; background:#fff; border-bottom:1px solid var(--border); margin-bottom:8px; }
+
+/* ── 매출 테이블 ── */
+
+
+
+
+
+/* ── 모바일 대응 ── */
+.mob-bottom-nav {
+  display:none; position:fixed; bottom:0; left:0; right:0; z-index:200;
+  background:#FFFFFF; border-top:1px solid var(--border);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.mob-bottom-nav-inner { display:flex; height:56px; width:100%; }
+.mob-nav-btn {
+  flex:1; min-width:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:4px;
+  border:none; background:transparent;
+  font-family:inherit; cursor:pointer;
+  color:var(--light);
+}
+.mob-fab {
+  display:none; position:fixed; bottom:72px; right:16px;
+  width:48px; height:48px; background:#F06E2D; color:#fff;
+  border:none; border-radius:50%; line-height:1.2;
+  box-shadow:0 4px 16px rgba(196,103,58,0.4); cursor:pointer;
+  align-items:center; justify-content:center;
+}
+
+@media (max-width:640px) {
+  .hd { display:none; }
+  .tabs { display:none !important; }
+  .mob-app-header { display:flex; }
+  .mob-bottom-nav { display:block; }
+  .wrap { padding:0 0 calc(56px + env(safe-area-inset-bottom) + 40px); }
+  
+  .search-input-clean { font-size:11px !important; }
+  .login-screen { padding:40px 20px 32px; }
+  .login-card { max-width:100%; }
+}
+
+/* ── 기타 ── */
+
+
+
+/* ══════════════════════════════════════════
+   확정 디자인 시스템 — 버튼 4종
+   ══════════════════════════════════════════ */
+
+/* Primary */
+
+
+
+/* Secondary */
+
+
+/* Danger */
+
+
+/* 알림톡 */
+
+
+/* ── 스테이지 칩 컬러 규칙 ── */
+
+
+
+/* ── 담당자 버튼 (active) ── */
+.staff-btn.active {
+  background: #F06E2D !important;
+  color: #fff !important;
+  border: 1px solid #F06E2D;
+  border-radius: 4px;
+  font-weight: 700 !important;
+}
+.staff-btn {
+  background: #fff !important;
+  color: #756E62 !important;
+  border: 1px solid #EEE6DC;
+  border-radius: 4px;
+  padding: 6px 14px;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ── + 고객 추가 버튼 ── */
+/* (아래쪽 .hd-btn-primary 정의에서 이미 처리되어 중복 제거함) */
+
+/* ── 저장 버튼 ── */
+/* (아래쪽 #add-save-btn 정의에서 이미 처리되어 중복 제거함) */
+
+/* ── FAB ── */
+
+/* ── 탭바 active ── */
+.tab.on, .mob-nav-btn.on {
+  color: var(--orange) !important;
+}
+.tab.on svg, .mob-nav-btn.on svg {
+  stroke: var(--orange) !important;
+}
+
+/* ── 스테이지 칩 홈화면 (2026-08-04 삭제) ── */
+/* 계약금·실측 색상은 홈화면에서 인라인 스타일로 이미 처리되어 이 규칙은
+   원래 대상엔 적용조차 안 됐고, data-stage 속성을 실제로 쓰는 유일한 곳인
+   고객목록 필터버튼에만 의도치 않게 주황 테두리가 새어들어가고 있었음 */
+
+
+/* ── 헤더 버튼 확정 ── */
+
+
+
+
+
+/* ── 빈 상태 화면 ── */
+
+
+
+/* ── 헤더 + 고객 버튼 (.hd-btn-new) ── */
+.hd-btn-new {
+  background: var(--terra) !important;
+  color: #fff !important;
+  border: none;
+  border-radius: var(--r-btn);
+  font-weight: 700 !important;
+  cursor: pointer;
+  font-family: inherit;
+}
+.hd-btn-new:hover { background: var(--terra-dark) !important; }
+
+
+/* ── 모달 오버레이 완전 수정 ── */
+
+/* (.modal-box z-index는 뒤쪽에 이미 정의되어 있어 중복 제거함) */
+
+
+/* ── 고객추가 모달 버튼 완전 확정 ── */
+#add-save-btn {
+  background: var(--terra) !important;
+  color: #fff !important;
+  border: none;
+  border-radius: var(--r-btn);
+  width: 100%;
+  padding: 14px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 8px;
+}
+#add-save-only-btn {
+  background: var(--ivory1) !important;
+  color: var(--dark) !important;
+  border: 1px solid var(--border);
+  border-radius: var(--r-btn);
+  width: 100%;
+  padding: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+
+/* ── 모바일 앱 헤더 ── */
+/* 2026-08-08: 실제 요소(#mob-app-header)에 인라인 스타일로 display/height/
+   z-index/padding 등 핵심속성이 이미 다 강제되어 있어서, 여기 두 벌의
+   중복정의는 전부 무력화된 죽은 코드였음 - 삭제. background/color만
+   !important로 실제 적용되고 있어 그 규칙만 유지. */
+
+/* ── 모달 박스 배경 강제 ── */
+.modal-box {
+  background: #fff !important;
+  border-radius: 16px 16px 0 0;
+  position: relative;
+  z-index: 9999 !important;
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.18);
+}
+
+
+/* ── 헤더 +고객 버튼 확정 ── */
+
+
+/* ── 검색바 radius 8px 확정 ── */
+.search-input-clean,
+input[type="text"][placeholder*="검색"],
+input[placeholder*="검색"],
+#pipe-search, #cust-search, #est-search {
+  border-radius: 8px;
+}
+
+
+/* ── 설정 화면 입력창 radius 8px 확정 ── */
+#settings input[type="text"],
+#settings input[type="password"],
+#settings input[type="number"],
+#settings input[type="url"],
+#settings textarea {
+  border-radius: 8px;
+}
+
+
+/* ── 백업 버튼 숨김 ── */
+
+
+
+/* ── (버그였던 10px 일괄 강제 블록 제거됨 — 아래 확정 타입스케일 시스템만 사용) ── */
+
+
+/* ══════════════════════════════════════════
+   확정 타입스케일: 10/12/13/15/17/22/36px
+   가독성 = weight로 구분
+   ══════════════════════════════════════════ */
+
+/* body 기본 */
+html, body { font-size: 15px; line-height: 1.5; }
+
+/* 36px — 대형 수치 */
+
+
+/* 22px — 섹션 주요 수치/제목 */
+
+
+/* 17px — 강조 본문 / 카드 제목 */
+
+
+/* 15px — 본문 (기본) */
+
+/* (button 폰트크기는 위쪽 ⑪번에 이미 정의되어 중복 제거함) */
+/* (input,select,textarea 폰트크기는 위쪽 ⑫번에 이미 정의되어 있어 중복 제거함) */
+
+/* 13px — 서브 본문 / 라벨 */
+.text-13, .tab { font-size: 13px; }
+label { font-size: 13px; }
+
+/* 12px — 보조 텍스트 / 뱃지 */
+
+
+/* 10px — 최소 (UPPERCASE 태그 등) */
+
+
+
+/* ── 모바일 앱헤더 다크 확정 ── */
+.mob-app-header {
+  background: #282828 !important;
+  color: #fff !important;
+}
+.mob-app-header * {
+  color: rgba(255,255,255,0.85);
+}
+
+
+/* ── Pretendard 폰트 적용 ── */
+/* (font-family는 뒤쪽에 이미 강제지정 규칙으로 정의되어 중복 제거함) */
+
+
+/* ── 빈 상태 화면 ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px;
+  text-align: center;
+  gap: 8px;
+}
+/* 칸반 빈 상태 */
+
+
+
+/* ── 여백 체계 (4px 기반) ── */
+:root {
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+}
+/* 섹션 간격 */
+
+
+
+/* 카드 내부 패딩 */
+
+
+
+
+/* ── 콘텐츠 영역 ── */
+@media (min-width: 641px) {
+  #home {
+    min-height: auto;
+    padding-bottom: 24px;
+  }
+}
+/* 2026-08-08: 이 규칙에 media query가 없어서 항상 적용됐는데, ID선택자
+   조합이라 특이성이 높아 모바일 전용 하단여백(.wrap의 calc(...) 규칙)을
+   항상 이기고 있었음 — 그래서 모바일에서 리스트 마지막 항목이 계속
+   하단 네비게이션에 가려졌던 진짜 원인. PC 전용으로 한정함. */
+@media (min-width: 641px) {
+  #pipe, #search, #est-list, #cal, #chart, #settings {
+    padding-bottom: var(--sp-8);
+  }
+}
+/* 홈 섹션 카드 */
+
+
+
+
+/* ── 모바일 콘텐츠 하단 여백 (탭바 높이 + 여유) ── */
+@media (max-width: 640px) {
+  .wrap { padding-bottom: calc(56px + env(safe-area-inset-bottom) + 40px); }
+  /* 2026-08-08: 예전(2026-08-02)엔 #settings 로그아웃 버튼이 하단 네비에
+     가려지는 문제 때문에 #home,#pipe,#search,#est-list,#cal,#chart의
+     padding-bottom을 전부 0으로 강제하는 규칙이 있었음. 근데 #settings만
+     빼고 나머지 화면은 그대로 남아서, 캘린더 등에서 마지막 항목이 계속
+     하단 네비에 가려지는 문제가 반복됐음(부분적으로만 고쳐졌던 버그).
+     .wrap의 원래 padding-bottom을 그대로 두는 게 맞아서 이 강제 규칙 자체를
+     제거함 — 어느 화면도 예외 없이 정상 하단여백을 받음. */
+}
+
+
+/* ── 고객추가 모달 오버레이 최종 확정 ── */
+
+
+/* ── 폰트 통일 ── */
+body, input, button, select, textarea {
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+
+
+
+/* ━━ 모바일 앱헤더/탭바 확정 ━━ */
+@media (max-width: 640px) {
+  #mob-app-header {
+    display: flex;
+    background: #282828 !important;
+    min-height: 48px;
+    position: sticky;
+    top: 0 !important;
+    z-index: 200 !important;
+  }
+  #mob-bottom-nav {
+    display: flex !important;
+    background: #fff !important;
+    border-top: 1px solid #EEE6DC;
+    position: fixed;
+    bottom: 0 !important;
+    width: 100%;
+    z-index: 200 !important;
+  }
+  .mob-fab {
+    display: flex !important;
+    position: fixed;
+    z-index: 150 !important;
+  }
+  .hd, .tabs { display: none !important; }
+}
+
+
+/* ━━ 모바일 앱헤더 min-height 확정 ━━ */
+#mob-app-header {
+  position: fixed;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 48px;
+  min-height: 48px;
+  background: #282828 !important;
+  color: #fff !important;
+  z-index: 200 !important;
+  padding: 0 16px;
+  box-sizing: border-box;
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+}
+
+
+@media (max-width: 640px) {
+  .wrap, #home, #pipe, #search, #est-list, #cal, #chart, #settings {
+    padding-top: 48px;
+  }
+}
+
+
+
+/* ━━ 버튼 폰트 강제 ━━ */
+.hd-btn-new, #btn-add-customer { font-size: 13px !important; }
+
+#add-save-btn, #add-save-only-btn { font-size: 13px !important; }
+
+
+/* ━━ 모달 최종 확정 ━━ */
+#add-overlay {
+  display: none;
+  position: fixed;
+  top: 0 !important; left: 0 !important;
+  right: 0 !important; bottom: 0 !important;
+  width: 100%;
+  height: 100%;
+  z-index: 99999 !important;
+  background: rgba(0,0,0,0.55) !important;
+  align-items: flex-end;
+  justify-content: center;
+}
+#add-overlay.open { display: flex !important; }
+
+/* ── detail-overlay 표시 규칙 ── */
+#detail-overlay { display: none; position: fixed; inset: 0 !important; z-index: 9998 !important; background: rgba(0,0,0,0.65) !important; align-items: flex-end; justify-content: center; }
+#detail-overlay.open { display: flex !important; }
+#detail-overlay .modal-box { width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; overflow-x: hidden; }
+/* 2026-08-05: PC(1024px 이상)에서는 모바일 바텀시트 스타일(항상 화면 맨 아래 붙음)
+   대신 화면 중앙에 뜨도록 수정 — 세로로 긴 PC 창에서 위에 큰 빈 여백이 생기고
+   모달이 아래로 밀려 잘려 보이던 문제(선혜님이 실제로 발견) */
+@media (min-width: 1024px) {
+  #detail-overlay { align-items: center; }
+  #detail-overlay .modal-box { max-height: 85vh; border-radius: 16px; }
+}
+
+#add-overlay .modal-box {
+  background: #fff !important;
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  z-index: 100000 !important;
+}
+
+
+/* ━━ 엑셀 버튼 radius 4px 확정 ━━ */
+/* (해당 버튼들은 전역 button 모서리 규칙(--r-btn)을 그대로 따라가므로 중복 규칙 제거함) */
+
+
+/* ═══════════════════════════════════════════════════
+   대기업 디자인팀 기준 수정 — 2026.07.07
+   ═══════════════════════════════════════════════════ */
+
+/* ── 1. KPI 숫자 강조 ── */
+
+
+
+/* 홈 KPI 박스 내부 숫자 — 실제 렌더 기준 */
+
+
+/* ── 3. 고객목록 엑셀 버튼 → Secondary ── */
+button[onclick*="export"], button[onclick*="Excel"],
+button[onclick*="excel"], button[onclick*="download"] {
+  background: #FAF7F5 !important;
+  color: #282828 !important;
+  border: 1px solid #EEE6DC;
+  border-radius: 4px;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+}
+button[onclick*="export"]:hover, button[onclick*="Excel"]:hover {
+  background: #F0ECE8 !important;
+  border-color: #D4CEC8;
+}
+
+/* ── 4. 모달 타이틀 ── */
+#add-modal-title {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+  letter-spacing: -0.3px;
+}
+/* 모달 섹션 라벨 */
+
+/* 모달 입력창 */
+#add-overlay input, #add-overlay select, #add-overlay textarea {
+  font-size: 15px !important;
+  border-radius: 8px;
+  border: 1px solid #EEE6DC;
+  padding: 10px 14px;
+}
+#add-overlay input:focus, #add-overlay select:focus {
+  border-color: #F06E2D;
+  box-shadow: 0 0 0 3px rgba(240,110,45,0.1) !important;
+  outline: none;
+}
+
+/* ── 5. 엑셀 다운로드 버튼 크기 통일 ── */
+/* 2026-08-08: 같은 블록에 있던 "고객용출력"/"저장" 버튼 규칙은 대시보드
+   앱에 해당 버튼(#btn-print-customer, #btn-save) 자체가 없는 완전히 죽은
+   코드였음(견적서 앱 스타일이 잘못 복사돼 있었던 것) - 삭제함.
+   exportExcel만 실제 고객목록 엑셀버튼에 적용되고 있어 유지. */
+button[onclick*="exportAll"],
+button[onclick*="exportExcel"] {
+  height: 52px;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  border-radius: 4px;
+  background: #FAF7F5 !important;
+  color: #282828 !important;
+  border: 1px solid #EEE6DC;
+  flex: 1.5 !important;
+}
+
+/* ── 6. 탭 네비게이션 폰트 위계 ── */
+/* (.tab, .tab-item 규칙 — 위쪽 ⑦번 .tabs button 조합의 특이성이 항상 더 높아서
+   여기 정의된 값(600)이 절대 적용되지 않고, .tab-item 클래스는 실사용 요소가 없어
+   완전히 죽은 코드였음. 2026-08-01 확인 후 제거함) */
+.tab.on, .tab-item.on, .tab.active {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #282828 !important;
+}
+
+/* ── 8. 스테이지 칩 크기 통일 ── */
+
+
+/* ── 9. 정렬 버튼 그룹 ── */
+
+/* ── 10. 빈 상태 텍스트 일관성 ── */
+
+
+/* ── 11. 설정 화면 라벨 ── */
+
+
+
+
+/* ── 13. 헤더 버튼 크기 통일 (위쪽 .hd-btn에 통합됨) ── */
+.hd-btn-sub {
+  background: transparent !important;
+  color: rgba(255,255,255,0.75) !important;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.hd-btn-sub:hover { background: rgba(255,255,255,0.1) !important; }
+
+/* ── 14. 매출 화면 ── */
+
+
+
+
+
+/* ── 15. 전체 카드 일관성 ── */
+.card, .section-card {
+  background: #fff !important;
+  border-radius: 12px;
+  border: 1px solid #EEE6DC;
+  overflow: hidden;
+}
+
+
+
+/* ━━ 수정 2: 견적서 검색 버튼 → Secondary ━━ */
+/* (견적서에서 처리) */
+
+/* ━━ 수정 3: 모달 입력창 플레이스홀더 색 ━━ */
+/* 2026-08-08: #756E62는 앱 전체 플레이스홀더(#C8C2BA)와 다른 진하기라
+   모달만 유독 진해 보이던 불일치였음 - 통일함 */
+#add-overlay input::placeholder,
+#add-overlay textarea::placeholder {
+  color: #C8C2BA !important;
+  font-size: 13px !important;
+}
+
+/* ━━ 수정 4: 모달 모바일 바텀시트 ━━ */
+@media (max-width: 640px) {
+  #add-overlay .modal-box {
+    max-height: 95vh;
+    border-radius: 20px 20px 0 0;
+  }
+}
+
+/* 2026-08-05: PC에서도 고객추가 모달이 항상 화면 맨 아래에 붙는 바텀시트
+   스타일이었음 — detail-overlay와 동일한 문제라 같은 방식으로 수정 */
+@media (min-width: 1024px) {
+  #add-overlay { align-items: center; }
+  #add-overlay .modal-box { max-height: 85vh; border-radius: 16px; }
+}
+
+/* ━━ 수정 5: 홈 하단 빈 공간 ━━ */
+/* ━━ 수정 6: 진행현황 칩 완료 색상 ━━ */
+
+
+/* ━━ 수정 7: 탭 아이콘 크기 통일 ━━ */
+.tab svg, .tabs svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ━━ 수정 8: 전체 버튼 cursor 통일 ━━ */
+/* (button cursor는 위쪽에 이미 정의되어 중복 제거함) */
+
+/* ━━ 2026-07-19 추가: 전체 버튼 호버 피드백 ━━
+   개별 클래스 없이 동적 생성된 버튼(btn() 헬퍼)까지 전부 커버하기 위해
+   filter로 배경색 종류 상관없이 살짝 어둡게 처리. 이미 개별 :hover가
+   있는 버튼(.btn-primary 등)은 그쪽이 더 구체적이라 자연스럽게 우선 적용됨. */
+button:hover:not(:disabled) { filter: brightness(0.95); transition: filter 0.15s; }
+button:active:not(:disabled) { filter: brightness(0.9); }
+
+/* ━━ 수정 10: 헤더 로고 폰트 ━━ */
+.hd-logo {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em;
+  color: #fff !important;
+}
+
+
+/* ━━ KPI 숫자 최최우선 확정 ━━ */
+
+
+
+
+
+@media screen and (min-width: 641px) {
+  #mob-app-header,
+  div#mob-app-header {
+    display: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+}
+
+/* 2026-08-06: PC(1024px+) 홈화면 2단 레이아웃 — 예전엔 모바일 레이아웃을 그냥
+   넓혀서 오른쪽에 큰 빈 공간이 생기고 화면 아래는 텅 비어보이던 문제(디자인
+   감사에서 발견: "PC 화면이 그냥 모바일을 넓힌 것"). 왼쪽엔 목표/매출/진행현황,
+   오른쪽엔 처리필요+오늘일정/담당자성과를 배치해서 화면을 실제로 활용함. */
+@media (min-width: 1024px) {
+  #home {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    grid-template-rows: auto auto 1fr;
+    column-gap: 16px;
+    align-items: start;
+  }
+  /* 맨 앞 헤드라인(날짜+목표문구+CTA)은 id가 없어 :first-child로 지정 */
+  #home > div:first-child { grid-column: 1; grid-row: 1; }
+  #sec-goal { grid-column: 1; grid-row: 2; }
+  #sec-stage { grid-column: 1; grid-row: 3; border-bottom: 1px solid var(--border); border-radius: 0 0 var(--r-card) var(--r-card); }
+  /* 2026-08-31(선혜님 지적 - "보기 편한 구도인거 같니??"로 발견): sec-todo가
+     grid-row:1/4로 왼쪽 컬럼 3개 행 전체 높이만큼 공간을 강제로 예약하고
+     있었음 - align-self:start로 자기 콘텐츠는 위쪽에 짧게 표시되지만, 그
+     예약된 공간 자체는 그대로 남아서, 오른쪽 다음 섹션(sec-staff-perf)이
+     쓸데없이 아래로 밀려나 그 사이에 큰 빈 공백이 생기고 있었음. 자동
+     흐름(grid-row 지정 안 함)으로 바꿔서, 오른쪽 컬럼도 왼쪽처럼 내용이
+     있는 만큼만 차곡차곡 쌓이게 함. */
+  #home-right-col { grid-column: 2; grid-row: 1 / 4; align-self: start; }
+  #sec-todo { border-radius: var(--r-card); overflow: hidden; }
+  #sec-staff-perf { border-radius: var(--r-card); overflow: hidden; margin-top: 16px; }
+  #sec-todo, #sec-staff-perf { border: 1px solid var(--border); }
+}
+
+/* 2026-08-06: PC(1024px+) 고객목록을 카드 그리드로 재배치 — 예전엔 모바일
+   리스트를 그냥 늘린 것뿐이라 오른쪽 절반이 텅 빈 여백이었음(디자인 감사에서
+   발견). auto-fill로 화면 폭에 맞춰 2~3열이 자동으로 잡힘. */
+@media (min-width: 1024px) {
+  #search-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 10px;
+    padding: 12px;
+  }
+  #search-list .cust-item {
+    border: 1px solid var(--border);
+    border-radius: var(--r-card);
+    padding: 14px 16px;
+    align-items: flex-start;
+  }
+}
+
+/* 2026-08-06 디자인 개선 1단계: PC 매출 탭 2단 배치 —
+   왼쪽엔 차트(넓게), 오른쪽엔 요약+담당자별매출을 세로로 쌓아서
+   예전에 그래프 하나만 덩그러니 있고 아래는 텅 비던 문제 해결. */
+@media (min-width: 1024px) {
+  #chart[style*="display: block"] {
+    display: grid !important;
+    grid-template-columns: 1fr 360px;
+    grid-template-rows: auto auto auto;
+    column-gap: 16px;
+    align-items: start;
+  }
+  .date-filter-wrap { grid-column: 1 / 3; grid-row: 1; }
+  .chart-tab-bar { grid-column: 1 / 3; grid-row: 2; }
+  #chart-card-main { grid-column: 1; grid-row: 3; }
+  #chart-card-summary { grid-column: 2; grid-row: 3; margin-top: 0; }
+  #chart-card-staffrank { grid-column: 2; grid-row: 4; }
+}
+
+/* 2026-08-06 디자인 개선 1단계: 모달 등장 애니메이션 — 예전엔 배경/박스
+   둘 다 아무 애니메이션 없이 즉시 팝업돼서 정적으로 느껴졌음.
+   display:none↔flex 전환과 함께 써도 안전하도록 @keyframes 방식 사용
+   (opacity transition은 display:none에서 안 먹혀서 keyframes가 필요함). */
+@keyframes dahModalBgFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes dahModalSlideUp { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+#detail-overlay.open, #add-overlay.open { animation: dahModalBgFade 0.18s ease; }
+#detail-overlay.open .modal-box, #add-overlay.open .modal-box { animation: dahModalSlideUp 0.22s cubic-bezier(0.2,0.8,0.3,1); }
+
+/* 2026-08-06 디자인개선 3단계: PC(1024px+) 견적서목록도 고객목록과 동일하게
+   카드 그리드로 재배치 — 한 줄에 하나씩만 넓게 늘어나서 오른쪽 여백이
+   크게 남던 문제 해결. */
+@media (min-width: 1024px) {
+  #est-list-body .card {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 10px;
+    padding: 12px;
+  }
+  #est-list-body .card-head {
+    grid-column: 1 / -1;
+    padding: 0 0 8px;
+  }
+  #est-list-body .est-list-item {
+    border: 1px solid var(--border);
+    border-radius: var(--r-card);
+    padding: 14px 16px;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   2026-08-08 디자인개선 5단계: 홈화면 카드 입체감(elevation)
+   예전엔 흰 배경 섹션들이 서로 붙어서 얇은 선으로만 구분되던
+   "평면 리스트" 느낌이었음. 아이보리 배경 위에 살짝 띄운
+   카드 스택으로 전환 — 대기업 프로덕트 UI에서 흔히 쓰는
+   soft-elevation 패턴. 기능/구조는 그대로, 시각적 표현만 개선.
+   ══════════════════════════════════════════════════ */
+:root {
+  --shadow-card: 0 1px 2px rgba(40,32,24,0.04), 0 4px 16px rgba(40,32,24,0.06);
+  --shadow-card-hover: 0 2px 4px rgba(40,32,24,0.06), 0 8px 24px rgba(40,32,24,0.09);
+}
+
+#home #sec-hero,
+#home #sec-goal,
+#home #sec-stage,
+#home #sec-todo {
+  border-radius: var(--r-card) !important;
+  box-shadow: var(--shadow-card);
+  border-bottom: none !important;
+  margin: 0 0 10px;
+  overflow: hidden;
+}
+
+/* KPI 3분할 — 하나의 회색 grid-gap 대신 각자 독립된 카드로 */
+#home #sec-kpi {
+  background: transparent !important;
+  border-top: none !important;
+  gap: 8px !important;
+  padding: 0 12px 12px;
+}
+#home #sec-kpi > div {
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-card);
+}
+
+/* 스테이지 칩 섹션도 카드 처리 */
+#home #sec-stage { padding-top: 14px; }
+
+/* 처리필요/일정 카드 내부 행에는 상단 구분선 유지(카드 안에서는 여전히 필요) */
+#home #sec-todo [style*="border-top:1px solid var(--ivory2)"] {
+  border-top: 1px solid var(--ivory2) !important;
+}
+
+/* 2026-08-08 디자인개선 6단계: 설정 화면 아코디언 그룹 elevation */
+#settings .settings-acc-group {
+  box-shadow: var(--shadow-card);
+  border: none !important;
+}

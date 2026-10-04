@@ -1,0 +1,359 @@
+{
+  "_설명": "이 파일은 '이 앱의 핵심 개념 하나가 코드/DB 어디에 흩어져 있는지'를 사람의 기억이 아니라 기계가 확인 가능한 형태로 관리한다. 2026-09-22(선혜님 - '근본적으로 수정할 부분을 설계해봐') 도입. tests/concept-registry-check.js가 이 파일을 읽고: (1) 각 개념의 모든 code_locations가 실제 파일에 존재하는지, (2) guard_test로 지정된 테스트 파일이 실제로 존재하고 run-all.js에 등록돼 있는지, (3) db_enforcement가 있다고 적힌 개념은 실제 DB에 그 트리거가 있는지를 자동으로 검증한다. 새 개념을 여러 곳에 나눠 구현하기 전에, 또는 기존 개념을 고친 뒤에는 반드시 이 파일부터 갱신한다 - '완료'라는 말은 이 파일이 갱신되고 concept-registry-check.js가 통과한 뒤에만 쓴다.",
+  "확정상태": {
+    "의미": "이 견적서가 확정(잠금)됐는지 여부",
+    "single_source_of_truth": "estimates.confirmed_at (timestamp, null이면 미확정)",
+    "derived_fields": [
+      "estimates.estimate_status ('final'/'ga') - DB 트리거로 confirmed_at에서 자동 파생, 앱 코드가 직접 못 건드림"
+    ],
+    "db_enforcement": "trg_enforce_estimate_status (BEFORE INSERT/UPDATE, confirmed_at 기준으로 estimate_status 강제)",
+    "code_locations": [
+      "est-form-controls.js:toggleConfirmEstimate (유일한 확정/해제 진입점)",
+      "est-save-stages.js:_saveStage_estimatesActual (저장시 estimate_status를 estimateConfirmedAt에서만 파생)",
+      "est-doc-customer.js (구글드라이브 저장여부도 estimateConfirmedAt 기준)"
+    ],
+    "guard_tests": [
+      "confirm-source-of-truth-check.js",
+      "estimate-status-confirm-sync-check.js",
+      "confirm-status-consistency-check.js",
+      "drive-save-confirm-check.js"
+    ],
+    "금지패턴": "currentTab이나 DOM classList로 확정여부를 판별하는 코드 - 반드시 estimateConfirmedAt만"
+  },
+  "계약금_보호상태": {
+    "의미": "계약금 입력값이 신뢰할 수 있는 실제 값인지, 아직 확정 안 된 추정값인지",
+    "single_source_of_truth": "deposit-input.dataset.depositSource ('real'/'frozen'/없음)",
+    "derived_fields": [],
+    "db_enforcement": "없음 - 순수 클라이언트 상태, DB 저장 시점엔 이미 확정된 숫자만 나감",
+    "code_locations": [
+      "est-utils.js:applyRealDepositToForm (real로 설정, 다운그레이드 방지 가드도 여기)",
+      "est-customer-load.js:calcDeposit (사용자 직접입력시 real로 설정)",
+      "est-misc.js:unfreezeEstimateIfEditing (frozen만 해제, real은 보호)",
+      "est-product-calc.js:applyFrozenBreakdown (frozen으로 설정, real은 덮어쓰지 않음)",
+      "est-product-calc.js:calcTotal (depositSource 없을 때만 자동 50%/100% 재계산)"
+    ],
+    "guard_tests": [
+      "deposit-manual-protection-check.js",
+      "est-load-deposit-restore-check.js",
+      "deposit-race-downgrade-check.js",
+      "deposit-with-discount-restore-check.js"
+    ],
+    "금지패턴": "manualEdit/userTyped 같은 별도 불리언 플래그를 새로 추가하는 것 - depositSource 하나로 표현 안 되는 새 상태가 필요하면, 새 문자열 값을 이 필드에 추가할 것"
+  },
+  "주소_상세분리": {
+    "의미": "고객/설문 데이터를 불러와 c-addr에 채울 때, 합쳐진 주소를 \"쪼개지 않고 그대로\" 표시 - 2026-10-01(이민선 고객 사례 \"실제 도로명주소를 넣었는데 상세주소만 저렇게 보이는거야\")로 발견: 정규식 추측 쪼개기(splitAddrDetail)는 2026-09-22에 이미 \"세 번 재발한 근본 원인\"으로 결론났었는데, 그 결론이 고객 추가 화면에만 적용되고 불러오기 경로 4곳(est-customer-load.js/est-survey.js/dah-estimate.html 2곳)엔 안 퍼져서 네 번째로 재발함 - 쪼개는 시도 자체를 완전히 제거해 100% 안전하게 만듦(이전엔 \"구조적으로 100% 해결 불가\"로 결론났었으나, \"추측해서 쪼개지 않고 전체를 그대로 보존\"하면 완전히 해결 가능함을 재확인).",
+    "single_source_of_truth": "쪼개지 않고 원본 그대로 c-addr에 표시 - est-customer-load.js/est-survey.js/dah-estimate.html(2곳)가 각자 \"document.getElementById('c-addr').value = c.addr' (원본 그대로) 패턴을 공유. splitAddrDetail()은 완전히 제거됨.",
+    "derived_fields": [],
+    "db_enforcement": "해당없음(자유텍스트라 DB 강제 불가능한 유형으로 확인됨, 2026-09-22)",
+    "code_locations": [
+      "est-customer-load.js (고객 불러오기)",
+      "est-survey.js (설문 데이터 불러오기)",
+      "dah-estimate.html (고객정보 자동완성 2곳)",
+      "shared-common-utils.js:openKakaoAddr (주소검색 완료시 상세주소 칸 자동포커스 - 신규 입력 경로는 그대로 유지)"
+    ],
+    "guard_tests": [
+      "addr-no-split-check.js",
+      "addr-detail-autofocus-check.js"
+    ],
+    "참고": "2026-09-22엔 \"구조적으로 100% 해결 불가\"로 결론났었으나 틀렸음 - 추측해서 쪼개려는 시도 자체를 없애면(원본을 그대로 보존) 어떤 주소 형식이 와도 정보 손실 없이 100% 안전함. 새 주소 형식이 나와도 더 이상 대응(케이스 추가) 자체가 필요 없음.",
+    "금지패턴": "불러오기 경로에서 주소를 다시 쪼개려고 시도하는 모든 코드(정규식이든 다른 방식이든) - 쪼개려는 시도 자체가 정보손실 위험을 다시 들여오는 것"
+  },
+  "데이터_이력추적": {
+    "의미": "실수로 덮어쓰거나 지운 레코드를 복구할 수 있는지",
+    "single_source_of_truth": "각 테이블의 _history 테이블 + DB 트리거(수정/삭제 전 스냅샷)",
+    "derived_fields": [],
+    "db_enforcement": "trg_estimate_history (estimates), trg_customer_history (customers, 2026-09-22 신설)",
+    "code_locations": [],
+    "guard_tests": [],
+    "금지패턴": "새 핵심 테이블을 만들면서 _history 트리거를 안 만드는 것 - customers가 한동안 이게 빠져있었음",
+    "미해결": "CI 자동테스트로는 못 지킴(DB 트리거는 Puppeteer가 못 봄) - 대신 apps-script-daily-backup.js:dahScanForMissingTriggers()가 매일 v_critical_triggers_status 뷰를 조회해서 이 3개 트리거가 살아있는지 확인하고, 하나라도 사라지면 이메일로 즉시 알림(2026-09-22 신설). Apps Script 편집기에 수동 반영 필요."
+  },
+  "발주_품목_로컬캐시": {
+    "의미": "발주탭/처리필요 판단이 이 기기의 로컬 캐시만 보는지, 서버와 어긋날 수 있는지",
+    "single_source_of_truth": "estimates.line_items (서버가 진실), dah_saved localStorage는 캐시일 뿐",
+    "derived_fields": [],
+    "db_enforcement": "없음(클라이언트 캐시 문제라 DB 강제 불가)",
+    "code_locations": [
+      "dash-customer-order.js:getRelevantOrderItems (캐시가 비어보이면 서버 재확인)",
+      "dash-customer-order.js:renderOrderSection (서버 재확인 후 재렌더링)",
+      "dash-customer-detail.js (결제탭도 같은 패턴 - 캐시가 견적서 없음으로 보면 서버 재확인)"
+    ],
+    "guard_tests": [
+      "order-tab-server-verify-check.js",
+      "pay_tab_server_verify_check.js"
+    ],
+    "금지패턴": "이 두 안전장치가 서로의 캐시를 완전한 것으로 착각하는 것 - 반드시 '실제로 필요한 필드(line_items 등)가 있는지'까지 확인할 것, 레코드 존재 여부만으로 판단 금지"
+  },
+  "발주서_카테고리": {
+    "의미": "원단/캔가공소/레일자재/블라인드 4개 발주 카테고리가 항상 세트로 처리되는지",
+    "single_source_of_truth": "orderCategory 필드 값('fabric'/'production'/'material'/'blind')",
+    "derived_fields": [],
+    "db_enforcement": "해당없음(클라이언트 문서생성 로직)",
+    "code_locations": [
+      "est-doc-vendor.js:collectVendorGroups (categoryFilter로 4개 카테고리 분기)"
+    ],
+    "guard_tests": [
+      "vendor-category-set-consistency-check.js"
+    ],
+    "금지패턴": "카테고리 4개 중 하나만 고치고 나머지 안 확인하는 것 - 체크리스트 35번 참고"
+  },
+  "담당자_필드": {
+    "의미": "이 견적서/문서에 표시되는 담당자 이름이 실제로 정확한 사람인지",
+    "single_source_of_truth": "estimates.staff_name (견적서 자체에 저장된 값, 로그인한 사람과 다를 수 있음 - 다른 사람 것을 열람/재구매하는 경우)",
+    "derived_fields": [
+      "c-staff 입력칸 - 새 견적서는 로그인한 사람으로 기본채움(비어있을 때만), 기존 견적서 로드시 e.staff_name으로 덮어씀"
+    ],
+    "db_enforcement": "없음",
+    "code_locations": [
+      "dah-estimate.html:autoFillStaffField",
+      "dah-estimate.html (loadCustId/loadEstDbId 두 경로 모두 e.staff_name 복원)"
+    ],
+    "guard_tests": [
+      "est-load-staffname-restore-check.js"
+    ],
+    "금지패턴": "새로운 견적서 로드 경로를 추가하면서 staff_name 복원을 빠뜨리는 것 - 9/1에 실제로 발생(bb58be6)"
+  },
+  "저장버튼_고착방지": {
+    "의미": "저장 요청 응답이 영원히 안 오면 버튼이 disabled 상태로 영구히 남아 이후 모든 저장이 조용히 씹히는 것을 막음",
+    "single_source_of_truth": "각 저장 함수 시작부의 disabled 체크 + 15초/3초 타임아웃 자동복구",
+    "derived_fields": [],
+    "db_enforcement": "없음(클라이언트 UI 상태)",
+    "code_locations": [
+      "est-save.js:saveEstimate (15초 타임아웃)",
+      "dash-customer-add.js:handleSave (3초 타임아웃, 2026-09-29 React 전환 전 saveCustomer에서 이름 변경)"
+    ],
+    "guard_tests": [
+      "save_button_stuck_recovery_check.js"
+    ],
+    "금지패턴": "새 저장 버튼을 만들면서 disabled=true만 걸고 타임아웃 기반 자동복구를 안 넣는 것 - '인테리어오월'→'민소아' 두 번 재발한 계보"
+  },
+  "동시저장충돌_락값갱신": {
+    "의미": "낙관적 잠금(updated_at 조건부 PATCH) 충돌 감지 후, 락값을 갱신 안 해서 재시도해도 계속 같은 이유로 실패하는 것을 막음",
+    "single_source_of_truth": "fetchLatestUpdatedAt() 공용함수 - 충돌 감지시 서버에서 최신 updated_at을 다시 조회해 락값 갱신",
+    "derived_fields": [],
+    "db_enforcement": "없음(낙관적 잠금 자체는 updated_at 컬럼 비교로 앱 레벨에서 구현)",
+    "code_locations": [
+      "est-save-stages.js:_saveStage_estimatesActual (견적서 저장 - 낙관적 잠금 fetchLatestUpdatedAt 사용)",
+      "dash-api-writes.js:saveCustomerToDb (고객정보 저장)"
+    ],
+    "guard_tests": [
+      "optimistic-lock-check.js"
+    ],
+    "금지패턴": "새 저장 경로에 낙관적 잠금을 추가하면서 fetchLatestUpdatedAt 공용함수 대신 직접 XHR로 락값 갱신 로직을 새로 짜는 것 - est-save.js/dash-api.js가 각자 따로 있다가 '쌍둥이 버그'로 발견됨(9/5)"
+  },
+  "고객_중복생성_방지": {
+    "의미": "같은 사람이 여러 레코드로 중복 등록되는 것을 막음(신화경/현은지 등 실사고 계보)",
+    "single_source_of_truth": "연락처 필수 검증(견적서 저장시). \"오늘 이미 저장된 견적 찾기\"(updated_at 기준으로 합치던 안전장치)는 2026-09-30에 제거함 - 실수로 중복저장 방지는 client_idempotency_key + DB 유니크 제약이 이미 더 정확하게 하고 있었고, 이 안전장치는 의도적인 두 번째 견적서까지 하나로 합쳐버리는 문제가 있었음(직접 재현으로 확인: 같은 고객에게 4개 연속 생성해도 서버엔 1개만 남음).",
+    "derived_fields": [],
+    "db_enforcement": "없음",
+    "code_locations": [
+      "est-save.js:validateEstimate (연락처 필수)",
+      "dash-customer-add.js (연락처 필수)"
+    ],
+    "guard_tests": [
+      "estimate-duplicate-blindspot-check.js"
+    ],
+    "금지패턴": "새 고객/견적 생성 경로에 연락처 검증 없이 이름만으로 저장을 허용하는 것 - 신화경 사건의 근본원인"
+  },
+  "동명이인_구분": {
+    "의미": "이름이 같은 서로 다른 고객의 견적서/이력이 섞이지 않는지",
+    "single_source_of_truth": "client_id (있으면 항상 이걸로 매칭, 이름은 폴백만)",
+    "derived_fields": [],
+    "db_enforcement": "없음",
+    "code_locations": [
+      "dash-api-data.js:estimateDbRowToLocal (clientId 매핑)",
+      "dash-customer-detail.js",
+      "dash-customer-detail-tabs.js",
+      "dash-customer-estimates.js",
+      "dash-kanban.js",
+      "est-customer-load.js"
+    ],
+    "guard_tests": [
+      "estimate-customer-link-check.js"
+    ],
+    "금지패턴": "customers/estimates 관련 새 매칭 로직을 짜면서 clientId 체크 없이 이름만으로 find/filter하는 것 - 신화경 사건(clientId 매핑 누락)의 근본원인"
+  },
+  "권한확인_fail_safe": {
+    "의미": "권한/신원 확인 요청이 실패하거나 응답을 못 받았을 때, 더 높은 권한으로 격상시키지 않고 낮은 권한 쪽으로만 실패하는지",
+    "single_source_of_truth": "doStaffConfirm/doMasterConfirm - 마스터 승격은 입력 이메일이 getMasterEmail()과 정확히 일치할 때만, 그 외 확인 실패는 항상 원래 눌렀던 낮은 권한 유지",
+    "derived_fields": [],
+    "db_enforcement": "없음(클라이언트 로그인 흐름)",
+    "code_locations": [
+      "dah-dashboard.html:doStaffConfirm",
+      "dah-dashboard.html:doMasterConfirm"
+    ],
+    "guard_tests": [
+      "full-role-device-audit.js"
+    ],
+    "금지패턴": "새 권한 확인 로직에서 '확인 실패시 기본값'을 더 높은 권한으로 설정하는 것(fail-open) - 실장 로그인에서 실제로 2건 발견됨(8/27)"
+  },
+  "캐시버전_정합성": {
+    "의미": "코드를 고치면 그 파일을 불러오는 HTML의 버전 쿼리스트링(?v=)도 함께 갱신되는지 - 안 그러면 실사용자 브라우저가 예전 캐시를 계속 씀",
+    "single_source_of_truth": "scripts/bump-cache-versions.js - 각 .js/.css 파일의 실제 내용 해시를 계산해서 자동으로 맞춤",
+    "derived_fields": [],
+    "db_enforcement": "해당없음",
+    "code_locations": [
+      "scripts/bump-cache-versions.js",
+      ".github/workflows/test.yml (--check로 CI에 강제)"
+    ],
+    "guard_tests": [],
+    "참고": "guard_test는 Puppeteer 테스트가 아니라 CI 워크플로우 자체에 직접 걸려있음(.github/workflows/test.yml:23) - 코드 수정 후 커밋 전 반드시 node scripts/bump-cache-versions.js 실행할 것"
+  },
+  "자동계산항목_수동수정_보존": {
+    "의미": "실측비/시공비/레일 등 자동계산 항목의 단가를 사용자가 직접 수정하면, 저장/복원/재계산 전 과정에서 그 값이 유실되거나 수량이 잘못 곱해지지 않는지",
+    "single_source_of_truth": "markSvcManualOverride(dataset.manualOverride) + autoType(어떤 자동유형이었는지 저장) - 수정시 수량도 함께 1로 고정",
+    "derived_fields": [],
+    "db_enforcement": "없음",
+    "code_locations": [
+      "est-calc-svc.js:markSvcManualOverride",
+      "est-misc.js:collectFormData (autoType과 함께 저장)",
+      "est-customer-load.js (복원시 자동유형 마커 재부착)"
+    ],
+    "guard_tests": [
+      "svc-manual-override-check.js",
+      "svc-override-qty-print-check.js"
+    ],
+    "금지패턴": "새 자동계산 svc 항목 유형을 추가하면서 markSvcManualOverride 연동을 빠뜨리는 것 - 신안라 사건의 근본원인"
+  },
+  "iOS_사용자제스처_동기호출": {
+    "의미": "window.print()/window.open() 등 사용자 제스처가 필요한 API가 클릭과 같은 태스크 안에서(비동기 지연 없이) 호출되는지 - iOS 사파리는 지연되면 조용히 차단함",
+    "single_source_of_truth": "각 호출부가 클릭 핸들러 안에서 동기적으로 실행되거나, 비동기가 불가피하면 '미리 빈 탭 열어두고 나중에 location 바꿔치기' 패턴을 씀",
+    "derived_fields": [],
+    "db_enforcement": "해당없음",
+    "code_locations": [
+      "est-customer-load.js:_setPrintTitleAndPrint (동기 호출)",
+      "est-customer-load.js:confirmPdfPrint_fitAsCanvas (미리 열어두기 패턴)"
+    ],
+    "guard_tests": [
+      "ios-print-timing-check.js"
+    ],
+    "금지패턴": "html2canvas/fetch 등 비동기 작업의 .then() 콜백 안에서 window.open/print를 직접 호출하는 것 - 체크리스트 30번, 최소 3번 재발한 계보"
+  },
+  "저장성공_실제확인": {
+    "의미": "서버 응답을 실제로 확인해서 성공/실패를 판정하는지, 아니면 요청만 보내고 무조건 성공으로 표시하는지",
+    "single_source_of_truth": "sbXHR 공용함수 - HTTP 200이어도 0건 반영(zeroRows)이면 실패로 처리",
+    "derived_fields": [],
+    "db_enforcement": "없음(RLS가 조용히 0건 처리하는 것 자체는 DB 정상 동작 - 이걸 감지하는 게 앱 책임)",
+    "code_locations": [
+      "dash-api.js:sbXHR"
+    ],
+    "guard_tests": [
+      "unassigned_claim_check.js"
+    ],
+    "금지패턴": "새 저장 경로에서 sbXHR 대신 직접 XHR을 짜면서 zeroRows 감지 없이 상태코드 200만 보고 성공 처리하는 것 - 최소 4번 재발한 계보(8/25 최초 발견)"
+  },
+  "담당자별_성과_토글_상태유지": {
+    "의미": "홈화면 아코디언(담당자별 성과)이 펼쳐진 상태에서 홈 전체가 재렌더링돼도(이번달/지난달 토글 등) 펼침 상태가 유지되는지",
+    "single_source_of_truth": "window._staffPerfExpanded 전역변수 - 렌더링 시 이 값을 읽어서 display 상태 반영",
+    "derived_fields": [],
+    "db_enforcement": "없음(클라이언트 UI 상태)",
+    "code_locations": [
+      "dash-render.js (renderHome 내 담당자별 성과 섹션)"
+    ],
+    "guard_tests": [
+      "staff-perf-toggle-persist-check.js"
+    ],
+    "금지패턴": "renderHome(true)로 전체 재렌더링되는 아코디언/토글 UI를 새로 만들면서 펼침 상태를 전역변수로 기억 안 하는 것 - 데이터 검증만으로는 못 잡고 실제 화면(스크린샷)을 봐야만 드러남(9/1)"
+  },
+  "계산규칙_순수함수분리": {
+    "의미": "폭수/높이 안내/블라인드 면적/쿠폰 순차 할인/천원 절사/계약금·잔금/성과매출 같은 '계산 규칙'이 화면 읽기·쓰기와 섞이지 않고, 한 곳에만 있는지",
+    "single_source_of_truth": "est-calc-rules.js (순수 함수 - document/window/localStorage 사용 금지, 단위 테스트가 강제)",
+    "derived_fields": [],
+    "db_enforcement": "해당없음(클라이언트 계산)",
+    "code_locations": [
+      "est-calc-rules.js:calcSuggestedPanels (커튼 폭수 추천 - 주름형태별 허용 소수점)",
+      "est-calc-rules.js:calcBlindBillableSqm (블라인드 청구 면적 - 예전엔 calcBlindRow와 calcTotal에 복사돼 2곳)",
+      "est-calc-rules.js:applyDiscountItems (쿠폰/직접입력 순차 할인 - 원단위 먼저 → % 나중)",
+      "est-calc-rules.js:truncateToThousand (천 원 미만 절사)",
+      "est-calc-rules.js:calcAutoDeposit (자동 계약금 - 예전엔 calcTotal 안에 2곳 복사)",
+      "est-calc-curtain.js:calcCurtainRow (화면에서 값을 읽어 규칙 함수를 부르고 결과를 화면에 씀)",
+      "est-calc-blind.js:calcBlindRow (같음)",
+      "est-product-calc.js:calcTotal (같음)",
+      "est-calc-rules.js:calcRailJa (원단 폭 → 레일 자 수, 항상 짝수 - 예전엔 est-utils.js에 있었음)",
+      "est-calc-rules.js:railMaterialSpec (레일 자재 행: 1,600원 × 자 수 - 예전엔 autoUpdateRail 지역변수)",
+      "est-calc-rules.js:railInstallSpec (레일 시공비 25,000원 × 1)",
+      "est-calc-curtain.js:autoUpdateRail (화면 행을 만들고 고치는 코드 - 규칙은 위 함수에서 가져옴)",
+      "est-calc-rules.js:resolveRegionPrices (지역별 실측비/시공비 - 설정값 우선 → 기본 요금 → '기타'는 직접 입력)",
+      "est-calc-rules.js:isNoInstallFee (둘 다 0이면 시공 없음/배송)",
+      "shared-common-utils.js:getRegionFees (기본 요금표 DEFAULT_REGION_FEES의 정식 위치 - 대시보드 설정과 공유)",
+      "est-calc-svc.js:autoAddSvcFee (화면 행을 지우고 다시 만드는 코드 - 요금 규칙은 위 함수에서 가져옴)",
+      "est-calc-rules.js:summarizeBlindOptionExtras (여러 옵션추가금 합산 + 이름 나열, 2026-08-15 선혜님 확인)",
+      "est-calc-rules.js:blindInstallSpec (블라인드 시공비 10,000원 × 개수)",
+      "est-calc-blind.js:recalcBlindOptionExtras / autoAddBlindSvc (화면 행 - 규칙은 위 함수에서 가져옴, 복사시 재계산 누락이 2026-08-28 실제 사건)",
+      "est-calc-rules.js:classifySvcRow (레일/시공비/기타 4그룹 분류 - 2026-09-22 est-doc-customer.js와 기준 통일)",
+      "est-calc-rules.js:summarizeSvcGroups (그룹별 합계+상세내역, est-doc-customer.js도 이 함수를 씀)",
+      "est-calc-rules.js:summarizeSvcDetails (같은 이름 'N개'로 묶기 - 예전엔 est-calc-svc.js에 있었음)",
+      "est-calc-svc.js:categorizeSvcRow / renderSvcSummary (화면 - 규칙은 위 함수에서 가져오고 HTML 조립만 함)"
+    ],
+    "guard_tests": [
+      "calc-rules-unit-check.js",
+      "calc-golden-master-check.js"
+    ],
+    "금지패턴": "est-calc-rules.js에 document/window/localStorage를 쓰는 것, 그리고 같은 계산 규칙을 화면 코드(est-calc-curtain/blind/product-calc)에 다시 복사해 두는 것 - 규칙을 고칠 땐 est-calc-rules.js 한 곳만 고치고, 4천여 개 조합 기록(calc-golden-master)이 바뀌는지 확인할 것",
+    "참고": "2026-09-28 도입/완료. 분리 완료: 폭수/높이안내/블라인드면적/쿠폰할인/절사/계약금/잔금/성과매출/레일/지역별실측시공비/블라인드옵션추가금·시공비/서비스요약분류. est-product-calc.js(1,340줄, 버그 수정 71번 중 51번)에서 시작한 계산-화면 분리가 일단락됨."
+  },
+  "신규견적서_보관상태_명시": {
+    "의미": "신규 견적서 저장(POST) payload에 is_archived:false를 명시적으로 보냄 - 2026-09-30 \"복사해서 견적서 하나를 더 만들었는데 없어졌어\" 사례 당시 \"DB 기본값이 NULL이라 PostgREST의 is.false 필터에서 빠진다\"는 이론으로 도입했으나, 같은 날 dahDiagnoseSchema로 실제 DB를 확인한 결과 estimates.is_archived의 실제 기본값은 false였음(이론은 틀렸음, db_enforcement 항목 참고). 그 사례의 진짜 원인은 별개로 발견·제거한 \"오늘 이미 저장된 견적 찾기\" 병합 로직이었음. 이 explicit false 자체는 DB 기본값이 무엇이든 옳은 방어적 습관이라 유지함.",
+    "single_source_of_truth": "est-save-stages.js:_saveStage_estimatesActual의 estPayloadForRetry - 신규(POST)일 때만 is_archived:false 명시, 수정(PATCH)일 때는 undefined로 키 자체를 빼서 기존 값 보존",
+    "derived_fields": [],
+    "db_enforcement": "2026-09-30 dahDiagnoseSchema 실측으로 확인됨: estimates/customers/as_records 전부 is_archived 기본값 = false. 클라이언트가 생략해도 DB가 안전하게 false를 채움 - 이 명시적 전송은 방어적 중복 안전장치일 뿐, 필수는 아니었음.",
+    "code_locations": [
+      "est-save-stages.js:_saveStage_estimatesActual (payload 구성)",
+      "dash-customer-estimates.js:374 (is_archived=is.false로 목록 조회하는 곳)"
+    ],
+    "guard_tests": [
+      "save-golden-master-check.js"
+    ],
+    "금지패턴": "estPayloadForRetry에 is_archived를 무조건 true/false 고정값으로 넣는 것(PATCH에도 강제 적용되면 이미 보관 처리된 견적서가 열어서 저장만 해도 조용히 보관 해제되는 부작용) - 반드시 isEditMode 여부(정확히는 window._estEditState.editingEstDbId 존재 여부)에 따라 조건부로."
+  },
+  "고객레벨_결제동기화": {
+    "의미": "견적서 단위로 저장되는 결제(deposit_amount/balance_amount)가, 홈화면 카드 등이 보는 customers 레벨 금액에도 항상 반영되게 함 - 2026-10-01(최금희 고객 \"컴퓨터에서는 결제완료, 아이패드에서는 미수금\" 신고로 발견): 2026-09-21에 \"결제를 견적서 단위로 관리\"하도록 바꾸면서 est가 있으면 customers 동기화를 아예 건너뛰게(return) 됐었음 - customers 레벨 값이 영원히 낡은 채로 남아, getUnpaidAmount가 참조하는 로컬 견적서 캐시(dah_saved)가 있는 기기와 없는 기기에서 결과가 달라지는 원인이 됨.",
+    "single_source_of_truth": "DB 트리거(trg_sync_customer_payment, migration_auto_sync_customer_payment.sql) - estimates의 deposit_amount/balance_amount/is_archived/client_id가 insert/update/delete될 때마다 자동으로 그 고객의 전체 견적서 합계를 재계산해 customers에 반영(GREATEST로 기존값보다 작아지지 않게 보호). 2026-10-01(\"또 발생 안 하겠어??\" 질문으로 결정): 클라이언트 JS가 매번 동기화를 기억해야 하는 구조(dash-customer-pay.js의 수동 동기화)는 2026-09-21에 한 번 깜빡해서 재발했던 전력이 있어, 사람이 기억 안 해도 항상 맞는 DB 트리거로 구조 자체를 바꿈 - dash-customer-pay.js의 수동 동기화 코드는 이중 안전장치로 그대로 유지.",
+    "derived_fields": [
+      "customers.deposit_amount",
+      "customers.balance_amount (항상 그 고객의 전체 견적서 합계여야 함, 특정 견적서 하나의 값을 그대로 덮어쓰면 안 됨)"
+    ],
+    "db_enforcement": "trg_sync_customer_payment 트리거로 강제됨(2026-10-01 신설, 실제 INSERT/UPDATE로 직접 검증 완료) - 이제 어떤 코드 경로(대시보드/견적서앱/Apps Script/향후 신규 기능)로 estimates가 바뀌어도 customers가 자동으로 맞춰짐.",
+    "code_locations": [
+      "dash-customer-pay.js:savePayData (est 분기 안의 합계 재계산+customers PATCH)",
+      "dash-utils.js:getReceivedAmount/getUnpaidAmount (customers 레벨 값을 읽는 소비자 쪽)"
+    ],
+    "guard_tests": [
+      "customer-level-pay-sync-check.js",
+      "legacy-customer-pay-protection-check.js"
+    ],
+    "금지패턴": "est 분기에서 customers PATCH를 다시 생략하는 것, 또는 재집계값을 Math.max 없이 그대로 customers에 덮어쓰는 것(레거시 고객의 과거 거액 입금기록이 지워짐) - 반드시 기존 값과 비교해 더 큰 쪽을 쓸 것"
+  },
+  "견적서_공개보기_권한": {
+    "의미": "알림톡으로 보내는 \"견적서 공개보기\" 링크가 로그인 없이도 딱 1건, 딱 필요한 정보만 보여주게 함 - 2026-10-01(\"전문가입장에서도 보라니깐 놔둬도 될 정도이니??\" 재점검으로 발견): 예전엔 estimates 테이블 전체를 anon(비로그인) 역할에 qual=true로 열어둬서, 코드가 id로 필터링해서 요청하는 것과 무관하게 서버 권한 자체는 계약금/잔금/내부메모까지 전부 포함한 테이블 전체를 공개키 하나로 긁어갈 수 있는 구조였음.",
+    "single_source_of_truth": "Postgres 함수 get_public_estimate(uuid) - SECURITY DEFINER + search_path 고정 + 파라미터화된 쿼리 + is_archived=false 필터 + anon에게만 명시적 EXECUTE 부여. 테이블 전체를 보던 옛 정책(estimates_public_view)은 완전히 제거. 클라이언트(est-public-view.js)는 이 함수(rpc)만 호출.",
+    "derived_fields": [],
+    "db_enforcement": "함수가 딱 6개 필드(customer_name/phone/staff_name/install_date/estimate_status/line_items)만 반환 - price/deposit_amount/balance_amount/memo 등은 서버에서부터 아예 안 나감. 2026-10-01 Supabase MCP로 anon 역할 전환해 직접 재현 검증: 정상 ID→필요한 필드만 정확히 반환, 랜덤 ID→빈 결과, 테이블 직접 SELECT 시도→0건(완전 차단).",
+    "code_locations": [
+      "est-public-view.js:loadEstimateForPublicView (클라이언트 호출부)",
+      "migration_narrow_public_estimate_view_function.sql (DB 함수 get_public_estimate 기록)"
+    ],
+    "guard_tests": [
+      "public-estimate-view-narrowed-check.js"
+    ],
+    "금지패턴": "anon 역할에게 estimates(또는 다른 민감 테이블) 전체에 qual=true 같은 무조건 허용 SELECT 정책을 다시 추가하는 것 - 공개가 필요하면 반드시 이런 좁은 SECURITY DEFINER 함수를 통해서만"
+  },
+  "주소_입력_안전장치": {
+    "의미": "고객 주소를 \"새로 입력/수정\"하는 단계(위 주소_상세분리는 이미 저장된 주소를 \"불러올 때\" 쪼개지 않는 것과는 다른, 별개 단계) - 2026-10-02 선혜님이 \"검색 안 눌렀을 리 없다\"고 반복 지적해 재조사한 끝에, 검색을 정상적으로 쓰고 결과를 선택해도 깨질 수 있는 Daum 우편번호 API 자체의 특성(지번-도로명 1:N 관계에서 메인 지번주소를 선택하면 도로명주소가 roadAddress가 아니라 autoRoadAddress에 들어감 - 공식 Q&A로 확인)을 진짜 원인으로 확정. 이 과정에서 직접 타이핑(readOnly 전환)과 과거 깨진 주소 재사용(최근주소 칩 필터링)도 별개의 실제 위험으로 확인돼 함께 막음 - 세 가지 방어가 서로 다른 경로를 막으므로 전부 유지.",
+    "single_source_of_truth": "shared-common-utils.js의 openKakaoAddr() 하나(모든 화면이 공유) - extractAddr()가 data.roadAddress || data.autoRoadAddress || data.jibunAddress || data.autoJibunAddress 순서로 fallback.",
+    "derived_fields": [],
+    "db_enforcement": "해당없음(자유텍스트)",
+    "code_locations": [
+      "shared-common-utils.js:openKakaoAddr (extractAddr 함수 - autoRoadAddress fallback)",
+      "dah-estimate.html (c-addr input readonly 전환)",
+      "dash-customer-add.js (add-addr input readonly는 원래부터 적용돼 있었음 / recentAddrs 계산시 도로명 요소 없는 과거주소는 후보에서 제외)"
+    ],
+    "guard_tests": [
+      "addr-input-readonly-check.js",
+      "recent-addr-chip-filter-check.js",
+      "daum-autoroadaddress-fallback-check.js"
+    ],
+    "참고": "13~16건(김현정·조정미·고근영·김다정·이지영·박미림·이정민·이정미·배수희·신안라·김작미·성지윤·안수정 등)이 이 경로로 과거에 깨진 것으로 추정 - 이미 저장된 데이터라 코드 수정으로 복구 불가, 선혜님이 직접 재입력하기로 함.",
+    "금지패턴": "openKakaoAddr() 바깥에서 주소 입력칸(c-addr/add-addr)에 readOnly를 풀거나 onChange로 자유 타이핑을 허용하는 모든 코드 / data.roadAddress만 보고 autoRoadAddress를 빼먹는 모든 신규 주소검색 구현"
+  }
+}

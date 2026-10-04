@@ -1,0 +1,1236 @@
+/**
+ * ══════════════════════════════════════════════════
+ * DAH 데이터 자동 백업 → 구글 드라이브
+ * ══════════════════════════════════════════════════
+ *
+ * 설치 방법:
+ * 1. script.google.com 접속 → 새 프로젝트
+ * 2. 이 코드 전체를 붙여넣기
+ * 3. 저장 (프로젝트 이름: "DAH 자동백업" 등)
+ * 4. 왼쪽 시계 아이콘(트리거) 클릭 → "트리거 추가"
+ *    - 실행할 함수: dahDailyBackup
+ *    - 이벤트 소스: 시간 기반
+ *    - 시간 기반 트리거 유형: 일 타이머
+ *    - 원하는 시간대 선택 (예: 오전 3시~4시) → 저장
+ * 5. 저장 시 구글 계정 권한 승인 요청 뜨면 허용
+ * 6. 처음 한 번은 수동으로 dahDailyBackup()을 직접 실행해서
+ *    정상 작동하는지 확인 (실행 버튼 옆 드롭다운에서 함수 선택 후 실행)
+ *
+ * 백업 파일은 구글드라이브 > "DAH_자동백업" 폴더에
+ * 날짜별로 영구 저장됩니다 (예: DAH_백업_2026-07-10.json)
+ * 자동 삭제 없음 — 10년 이상 장기 보관 목적이라 오래된 백업도
+ * 절대 지우지 않습니다 (JSON 텍스트 파일이라 용량 부담 거의 없음:
+ * 10년치 매일 백업해도 보통 1~2GB 수준으로 무료 용량 내에서 충분)
+ *
+ * 2026-08-26 추가: 매일 백업할 때마다 "중복 의심 데이터"도 함께 자동
+ * 스캔합니다(같은 전화번호의 고객이 2건 이상, 또는 같은 고객명+금액+날짜의
+ * 견적서가 2건 이상 있으면 의심 대상). 발견되면 자동으로 지우지 않고,
+ * 트리거를 설정한 구글 계정 이메일로 알림만 보냅니다 — 실제 정리는 직접
+ * 확인 후 처리. 지금 당장 한 번만 확인하고 싶으면 함수 목록에서
+ * dahDuplicateScanOnly()를 선택해 수동 실행하면 됩니다(백업은 안 만들고
+ * 스캔+알림만 함).
+ * ══════════════════════════════════════════════════
+ */
+
+var SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
+// ⚠️ 이 키는 RLS(권한잠금)를 우회하는 관리자 전용 키(service_role)입니다.
+// 이 저장소는 공개(public) 저장소이므로, 절대 여기에 실제 키 값을 하드코딩하지 않습니다.
+// 대신 Google Apps Script의 "스크립트 속성"(Project Settings > Script Properties)에
+// SUPABASE_SERVICE_ROLE_KEY라는 이름으로 등록해두면, 아래 코드가 안전하게 읽어옵니다.
+// 등록 방법: Apps Script 에디터 왼쪽 톱니바퀴(프로젝트 설정) → 맨 아래 "스크립트 속성" →
+// "속성 추가" → 속성: SUPABASE_SERVICE_ROLE_KEY, 값: (Supabase Legacy API Keys의 service_role 키, eyJ로 시작)
+//
+// ⚠️ 반드시 "Legacy API Keys" 탭의 service_role 키(JWT, eyJ로 시작)를 써야 합니다.
+// 신규 형식 키(sb_secret_...)는 Supabase가 User-Agent 헤더로 브라우저 여부를 판별해 차단하는데,
+// Google Apps Script(UrlFetchApp)는 구조적으로 User-Agent를 커스텀 설정할 수 없어(항상 자체
+// 고정값 전송) 항상 401로 거부됩니다. 레거시 service_role 키는 이 검사 자체가 없어 정상 작동합니다.
+var SUPABASE_SERVICE_ROLE_KEY = PropertiesService.getScriptProperties().getProperty('SUPABASE_SERVICE_ROLE_KEY');
+var BACKUP_FOLDER_NAME = 'DAH_자동백업';
+// 자동 삭제 없음(영구보관) — 이전엔 KEEP_DAYS로 30일 지나면 지웠으나
+// 10년 이상 보관해야 하는 요구사항이라 완전히 제거함
+
+function dahDailyBackup() {
+  // 2026-08-24(선혜님 지적 — "우리쪽 백업데이터도 잘 짜야겠는데"): customers/
+  // estimates/surveys 세 개만 백업하고 있었는데, app_settings(마스터/담당자
+  // 이메일, 할인쿠폰, 지역출장비 설정 — 이거 하나 날아가면 로그인부터 막힘),
+  // as_records(A/S 기록), staff_profiles(직원 계정)가 통째로 빠져있었음.
+  // analytics_events는 단순 사용로그라 우선순위 낮지만 비용 거의 안 드니 같이 포함.
+  // 2026-08-27(선혜님 요청 - "에러 모니터링 도입하자"): client_error_logs도
+  // 백업 대상에 포함 + 아래에서 새로 쌓인 에러가 있으면 이메일로 알림.
+  var tables = ['customers', 'estimates', 'surveys', 'app_settings', 'as_records', 'staff_profiles', 'analytics_events', 'client_error_logs'];
+  var backup = { exportedAt: new Date().toISOString(), version: '1.0' };
+  var errors = [];
+
+  tables.forEach(function(table) {
+    try {
+      // 2026-08-27(선혜님과 함께 디버깅 — service_role 키가 정확한데도
+      // 계속 0건이 나오던 문제): Supabase 서버 로그로 확인해보니 요청 자체는
+      // service_role로 정상 인식되고 200 응답까지 왔는데도 결과가 계속
+      // 빈 배열이었음(원인 불명 - PostgREST 단의 이례적 동작으로 추정).
+      // 원인을 더 캐는 대신, DB에 SECURITY DEFINER 함수(dah_backup_export)를
+      // 만들어서 그 함수를 통해 데이터를 가져오는 방식으로 우회함 - 이
+      // 함수는 함수 소유자 권한으로 실행되어 이 이례적 문제와 무관하게
+      // 항상 정상 작동함.
+      var url = SUPABASE_URL + '/rest/v1/rpc/dah_backup_export';
+      var res = UrlFetchApp.fetch(url, {
+        method: 'post',
+        contentType: 'application/json',
+        headers: {
+          'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY
+        },
+        payload: JSON.stringify({ table_name: table }),
+        muteHttpExceptions: true
+      });
+      if (res.getResponseCode() === 200) {
+        backup[table] = JSON.parse(res.getContentText());
+      } else {
+        errors.push(table + ': HTTP ' + res.getResponseCode());
+        backup[table] = { error: res.getContentText() };
+      }
+    } catch (e) {
+      errors.push(table + ': ' + e.message);
+      backup[table] = { error: e.message };
+    }
+  });
+
+  // 구글드라이브 폴더 찾기/생성
+  var folders = DriveApp.getFoldersByName(BACKUP_FOLDER_NAME);
+  var folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(BACKUP_FOLDER_NAME);
+
+  // 파일 저장 (영구 보관 — 자동 삭제 로직 없음)
+  var today = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
+  var fileName = 'DAH_백업_' + today + '.json';
+  var content = JSON.stringify(backup, null, 2);
+  // 2026-08-05: 구글드라이브는 같은 이름의 파일이 여러 개 있어도 허용해서,
+  // 같은 날 두 번 실행되면(수동 실행 + 자동 트리거가 겹치는 경우 등) 완전히
+  // 똑같은 이름의 백업 파일이 중복 생성될 수 있었음. 기존 파일이 있으면
+  // 지우고 새로 만들어서 항상 "그날의 최신 백업 1개"만 남도록 함.
+  var existingBackups = folder.getFilesByName(fileName);
+  while (existingBackups.hasNext()) { existingBackups.next().setTrashed(true); }
+  folder.createFile(fileName, content, MimeType.PLAIN_TEXT);
+
+  // 결과 요약 (실행 로그에서 확인 가능: 보기 > 실행 로그)
+  // 2026-08-24: 하드코딩된 3개 대신 tables 배열 전체를 자동으로 순회하도록
+  // 바꿔서, 나중에 테이블이 더 추가돼도 이 요약 로그를 또 고칠 필요 없게 함.
+  var summary = '백업 완료: ' + today + ' | ' + tables.map(function(t) {
+    return t + ' ' + (Array.isArray(backup[t]) ? backup[t].length : '실패') + '건';
+  }).join(' | ');
+  Logger.log(summary);
+
+  // 2026-08-26(선혜님과 함께 도입 — "중복탐지 자동알림"): 백업 때 이미
+  // customers/estimates 전체를 한 번 가져오므로, 그 데이터를 그대로 재사용해서
+  // 중복 의심 건이 있는지 매일 스캔함(API 호출을 따로 더 늘리지 않음).
+  // 8/26에 실제로 발견했던 패턴 그대로: 고객은 "전화번호가 같은데 둘 다
+  // 안 지워진(is_archived=false) 레코드가 2건 이상", 견적은 "같은 고객명+
+  // 같은 금액+같은 날짜에 생성된 게 2건 이상"인 경우를 의심 대상으로 봄.
+  var dupIssues = dahScanForDuplicates(backup);
+  if (dupIssues.length > 0) {
+    Logger.log('⚠️ 중복 의심 ' + dupIssues.length + '건 발견:\n' + dupIssues.join('\n'));
+    try {
+      MailApp.sendEmail(
+        Session.getActiveUser().getEmail(),
+        'DAH 중복 의심 데이터 발견 (' + today + ')',
+        '오늘 백업 중 아래와 같은 중복 의심 건이 발견됐습니다. 실제 중복인지 확인 후 필요하면 정리해주세요.\n' +
+        '(자동으로 지우지 않습니다 — 실제 다른 사람일 수도 있어서 반드시 직접 확인 후 처리)\n\n' +
+        dupIssues.join('\n\n') +
+        '\n\n※ 이 알림은 apps-script-daily-backup.js의 dahScanForDuplicates()에서 매일 자동 발송됩니다.'
+      );
+    } catch (e) { Logger.log('중복알림 이메일 발송 실패: ' + e.message); }
+  } else {
+    Logger.log('✅ 중복 의심 건 없음');
+  }
+
+  // 2026-09-21(선혜님 지시 - "전문업체처럼 체계적이었으면 해, 지금
+  // 자료는 믿을 수가 없다"로 도입): 오늘 하루 발견한 버그들의 공통
+  // 원인 — "같은 개념(결제, 확정 여부)이 두 군데(고객 레벨/견적서
+  // 레벨, 단계/날짜필드)에 따로 저장돼 서로 어긋난다" — 을 사람이
+  // 우연히 발견하기 전에 매일 자동으로 점검함. dahScanForDuplicates와
+  // 같은 패턴: 아무것도 자동으로 고치지 않고, 발견만 해서 알림.
+  var integrityIssues = dahScanForDataIntegrity(backup);
+  // 2026-09-22(선혜님 - "근본적으로 수정할 부분을 설계해봐"): 핵심 안전
+  // 트리거가 살아있는지도 같은 알림에 합쳐서 확인
+  var triggerIssues = dahScanForMissingTriggers();
+  integrityIssues = integrityIssues.concat(triggerIssues);
+  if (integrityIssues.length > 0) {
+    Logger.log('⚠️ 데이터 정합성 의심 ' + integrityIssues.length + '건 발견:\n' + integrityIssues.join('\n'));
+    try {
+      MailApp.sendEmail(
+        Session.getActiveUser().getEmail(),
+        'DAH 데이터 정합성 점검 - 확인 필요 ' + integrityIssues.length + '건 (' + today + ')',
+        '오늘 백업 중 아래와 같은 정합성 의심 건이 발견됐습니다.\n' +
+        '(자동으로 고치지 않습니다 — 실제로 문제인지 확인 후 필요하면 대시보드에서 직접 수정해주세요)\n\n' +
+        integrityIssues.join('\n\n') +
+        '\n\n※ 이 알림은 apps-script-daily-backup.js의 dahScanForDataIntegrity()에서 매일 자동 발송됩니다.'
+      );
+    } catch (e) { Logger.log('정합성알림 이메일 발송 실패: ' + e.message); }
+  } else {
+    Logger.log('✅ 데이터 정합성 문제 없음');
+  }
+
+  // 2026-09-05: 클라이언트 에러 로그도 매일 백업할 때마다 함께 확인
+  try { dahCheckClientErrors(); } catch (e) { Logger.log('클라이언트 에러 확인 실패: ' + e.message); }
+
+  // 실패한 테이블이 있으면 이메일로 알림 (선택사항 — 본인 이메일로 변경)
+  if (errors.length > 0) {
+    try {
+      MailApp.sendEmail(
+        Session.getActiveUser().getEmail(),
+        'DAH 백업 일부 실패 알림',
+        '다음 테이블 백업에 실패했습니다:\n\n' + errors.join('\n') + '\n\n나머지는 정상 백업되었습니다.'
+      );
+    } catch (e) { /* 이메일 발송 실패는 무시 */ }
+  }
+
+  // 2026-08-27(선혜님 요청 - "에러 모니터링 도입하자"): 백업 때 이미 가져온
+  // client_error_logs 안에서, 최근 24시간 안에 새로 쌓인 에러가 있으면
+  // 이메일로 알림. (client_error_logs_insert RLS 정책도 오늘 함께 손봄 -
+  // 예전엔 로그인 세션 없을 때 조용히 실패하던 구멍이 있었음, 지금은
+  // 로그인 여부와 무관하게 항상 기록되도록 고쳐놓음)
+  if (Array.isArray(backup.client_error_logs)) {
+    var oneDayAgo = new Date(Date.now() - 24*60*60*1000);
+    var recentErrors = backup.client_error_logs.filter(function(e) {
+      return new Date(e.created_at) > oneDayAgo;
+    });
+    if (recentErrors.length > 0) {
+      Logger.log('⚠️ 최근 24시간 신규 에러 ' + recentErrors.length + '건 발견');
+      try {
+        var errorSummary = recentErrors.slice(0, 20).map(function(e) {
+          return '[' + e.app + '/' + (e.user_role||'?') + '] ' + e.message + ' (' + e.created_at + ')';
+        }).join('\n');
+        MailApp.sendEmail(
+          Session.getActiveUser().getEmail(),
+          'DAH 신규 에러 ' + recentErrors.length + '건 발견 (' + today + ')',
+          '최근 24시간 안에 화면에서 발생한 에러입니다:\n\n' + errorSummary +
+          (recentErrors.length > 20 ? '\n\n... 외 ' + (recentErrors.length-20) + '건 더' : '')
+        );
+      } catch (e) { Logger.log('에러알림 이메일 발송 실패: ' + e.message); }
+    } else {
+      Logger.log('✅ 최근 24시간 신규 에러 없음');
+    }
+  }
+}
+
+/**
+ * ══════════════════════════════════════════════════
+ * 중복 의심 데이터 스캔 (dahScanForDuplicates)
+ * ══════════════════════════════════════════════════
+ * 2026-08-26 도입 — 8/26에 실제로 발견했던 중복 사례(김채은/유경진 견적서,
+ * 정은송/박소진 마이그레이션 중복)를 계기로, "사람이 우연히 발견하기 전에
+ * 자동으로 걸러내자"는 취지로 만듦.
+ *
+ * backup 객체(customers/estimates 배열 포함)를 받아서:
+ *  - 고객: 같은 전화번호로 안 지워진(is_archived=false) 레코드가 2건 이상
+ *  - 견적: 같은 고객명 + 같은 금액 + 같은 날짜(생성일 기준)로 안 지워진
+ *    레코드가 2건 이상
+ * 인 경우를 의심 목록으로 반환. 아무것도 안 지우거나 고치지 않는 순수
+ * "찾아서 보고만" 하는 함수 — 실제 정리는 사람이 확인 후 직접 처리.
+ */
+function dahScanForDuplicates(backup) {
+  var issues = [];
+
+  // 1) 고객 중복 의심 (전화번호 기준)
+  if (Array.isArray(backup.customers)) {
+    var byPhone = {};
+    backup.customers.forEach(function(c) {
+      if (c.is_archived || !c.phone) return;
+      var key = String(c.phone).replace(/[^0-9]/g, '');
+      if (!key) return;
+      (byPhone[key] = byPhone[key] || []).push(c);
+    });
+    Object.keys(byPhone).forEach(function(phone) {
+      var group = byPhone[phone];
+      if (group.length > 1) {
+        issues.push('[고객 중복의심] 전화번호 ' + phone + ' — ' + group.length + '건: ' +
+          group.map(function(c) { return c.client_name + '(id:' + c.id + ')'; }).join(', '));
+      }
+    });
+  }
+
+  // 2) 견적서 중복 의심 (고객명+금액+생성일 기준)
+  if (Array.isArray(backup.estimates)) {
+    var byKey = {};
+    backup.estimates.forEach(function(e) {
+      if (e.is_archived || !e.customer_name) return;
+      var day = (e.created_at || '').slice(0, 10);
+      var key = e.customer_name + '|' + e.price + '|' + day;
+      (byKey[key] = byKey[key] || []).push(e);
+    });
+    Object.keys(byKey).forEach(function(key) {
+      var group = byKey[key];
+      if (group.length > 1) {
+        var parts = key.split('|');
+        issues.push('[견적서 중복의심] ' + parts[0] + ' / ' + Number(parts[1]).toLocaleString() + '원 / ' + parts[2] +
+          ' — ' + group.length + '건: ' + group.map(function(e) { return e.id; }).join(', '));
+      }
+    });
+  }
+
+  // 3) 고아 데이터 의심 (2026-08-27 추가 — 선혜님과 함께 실제로 발견한
+  // 최시내 고객님 사례가 계기: 선금결제 단계까지 갔는데 정작 확정된
+  // 견적서가 하나도 없던 상태. "결제 단계인데 뒷받침하는 견적이 없다"는
+  // 건을 자동으로 걸러냄.)
+  if (Array.isArray(backup.customers) && Array.isArray(backup.estimates)) {
+    var PAID_STAGES = ['선금결제', '잔금결제', '시공준비중', '시공완료'];
+    var estByClientId = {};
+    backup.estimates.forEach(function(e) {
+      if (e.is_archived || !e.client_id) return;
+      (estByClientId[e.client_id] = estByClientId[e.client_id] || []).push(e);
+    });
+    backup.customers.forEach(function(c) {
+      if (c.is_archived) return;
+      if (PAID_STAGES.indexOf(c.stage) === -1) return;
+      var ests = estByClientId[c.id] || [];
+      if (ests.length === 0) {
+        issues.push('[고아데이터의심] ' + c.client_name + '(id:' + c.id + ') — "' + c.stage + '" 단계인데 연결된 견적서가 없음');
+      }
+    });
+  }
+
+  return issues;
+}
+
+/**
+ * ══════════════════════════════════════════════════
+ * 데이터 정합성 자동 점검 (dahScanForDataIntegrity)
+ * ══════════════════════════════════════════════════
+ * 2026-09-21 도입 — 선혜님 지시("전문업체처럼 체계적이었으면 해, 지금
+ * 자료는 믿을 수가 없다")로 만듦. 오늘 하루 발견한 버그들의 공통 원인은
+ * "같은 개념(결제, 확정 여부)이 두 군데(고객 레벨/견적서 레벨, 단계/
+ * 날짜필드)에 따로 저장돼 서로 어긋난다"는 것이었음 - 이걸 사람이
+ * 우연히 알아차리기 전에 매일 자동으로 찾아냄. dahScanForDuplicates와
+ * 마찬가지로 아무것도 자동으로 고치지 않고 "찾아서 보고만" 함.
+ */
+// 2026-09-22(선혜님 - "근본적으로 수정할 부분을 설계해봐"): 오늘 만든
+// 핵심 안전 트리거(확정상태 강제, 견적서/고객 이력추적)가 누군가 실수로
+// 지우거나, DB 마이그레이션 중 빠뜨리면 조용히 사라질 수 있음 - 이건
+// 앱 코드 문제가 아니라 DB 스키마 문제라 여기(서버 쪽 정기점검)에서만
+// 잡을 수 있음. v_critical_triggers_status 뷰(PostgREST로 조회 가능하게
+// 만들어둔 것)를 조회해서 3개 트리거가 전부 살아있는지 확인.
+function dahScanForMissingTriggers() {
+  var issues = [];
+  // 2026-10-02(선혜님 - "1-4까지 확실하게 된건지 직접 확인했니? 누락된건 없니??"
+  // 재확인 요청으로 발견): 오늘 만든 결제동기화 트리거(trg_sync_customer_payment)가
+  // 이 핵심 트리거 감시 목록에 빠져 있었음 - 이게 삭제되거나 깨져도 아무도 알아채지
+  // 못하는 사각지대였음. v_critical_triggers_status 뷰도 함께 확장해 추가.
+  var EXPECTED = ['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment'];
+  try {
+    var res = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/v_critical_triggers_status?select=trigger_name', {
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
+      muteHttpExceptions: true
+    });
+    if (res.getResponseCode() !== 200) {
+      issues.push('[트리거 점검 실패] v_critical_triggers_status 조회 자체가 실패함(상태코드 ' + res.getResponseCode() + ') - 뷰가 삭제됐거나 권한 문제일 수 있음');
+      return issues;
+    }
+    var rows = JSON.parse(res.getContentText());
+    var found = rows.map(function(r) { return r.trigger_name; });
+    EXPECTED.forEach(function(name) {
+      if (found.indexOf(name) === -1) {
+        issues.push('[핵심 트리거 누락] ' + name + '이 DB에서 사라짐 - 확정상태 강제 또는 데이터 이력추적 안전장치가 꺼진 상태일 수 있음, 즉시 확인 필요');
+      }
+    });
+  } catch (e) {
+    issues.push('[트리거 점검 실패] ' + e.message);
+  }
+  return issues;
+}
+
+function dahScanForDataIntegrity(backup) {
+  // 2026-10-02(선혜님 - "전문업체 기준으로 확인해" 지적으로 자동 감시 추가하다
+  // 발견): 이 함수 안에 issues 배열이 선언 없이 쓰이고 있었음(Apps Script의
+  // non-strict 환경에서 암묵적 전역변수로 우연히 작동했을 뿐, 명시적 선언이
+  // 아니었음) - 다른 함수의 지역변수 issues와 이름이 겹치면 서로 오염될 위험이
+  // 있던 잠재적 결함. 명시적으로 선언.
+  var issues = [];
+
+  var estsByClientId = {};
+  backup.estimates.forEach(function(e) {
+    if (e.is_archived || !e.client_id) return;
+    (estsByClientId[e.client_id] = estsByClientId[e.client_id] || []).push(e);
+  });
+
+  backup.customers.forEach(function(c) {
+    if (c.is_archived) return;
+    var custDep = Number(c.deposit_amount) || 0;
+    var custBal = Number(c.balance_amount) || 0;
+    var ests = estsByClientId[c.id] || [];
+    var estDepSum = 0, estBalSum = 0;
+    ests.forEach(function(e) { estDepSum += Number(e.deposit_amount) || 0; estBalSum += Number(e.balance_amount) || 0; });
+
+    // 1) 결제 정합성: 고객 레벨과 견적서 레벨 둘 다 결제 기록이 있는데
+    // (둘 다 0이 아닌데) 서로 다른 금액이면 - 오늘 발견한 김은/황남주
+    // 사례처럼 "쓰는 곳과 읽는 곳이 서로 다른 값을 본다"는 신호.
+    if ((custDep + custBal) > 0 && (estDepSum + estBalSum) > 0 && (custDep !== estDepSum || custBal !== estBalSum)) {
+      issues.push('[결제 불일치] ' + c.client_name + '(id:' + c.id + ') — 고객레벨(선금' + custDep.toLocaleString() + '/잔금' + custBal.toLocaleString() +
+        ') vs 견적서합계(선금' + estDepSum.toLocaleString() + '/잔금' + estBalSum.toLocaleString() + ')가 서로 다름');
+    }
+
+    // 2) 미확정 일정 참고 알림: 아직 결제 전(상담/가견적 단계)인데
+    // 실측·시공 예정일이 이미 잡혀있는 경우 - 오늘 최선미 고객 사례로
+    // 발견함. 이건 "틀렸다"는 게 아니라(계획상 미리 적어두는 건 정상)
+    // 참고용으로만 매일 한 번 모아서 보여줌 - 캘린더 화면 자체엔 이미
+    // "미확정(결제 전)" 표시를 붙여둠(dash-calendar.js).
+    var isPrePayment = ['방문예약', '상담', '가견적'].indexOf(c.stage) !== -1;
+    var hasNoPayment = custDep === 0 && custBal === 0 && estDepSum === 0 && estBalSum === 0;
+    if (isPrePayment && hasNoPayment && (c.measure_date || c.install_date)) {
+      issues.push('[참고: 미확정 일정] ' + c.client_name + '(id:' + c.id + ') — "' + c.stage + '" 단계(결제 전)인데 ' +
+        (c.measure_date ? '실측예정 ' + c.measure_date : '') + (c.measure_date && c.install_date ? ', ' : '') +
+        (c.install_date ? '시공예정 ' + c.install_date : '') + '가 이미 입력돼 있음(캘린더엔 미확정으로 표시됨)');
+    }
+
+    // 2026-10-02(선혜님 - "이민선/김현정 결제했는데 상담에 뜨니 ... 전체 확인해" /
+    // "전문업체 기준으로 확인해" 요청으로 추가한 자동 감시 3종): 전부 오늘 실제로
+    // 터진 사고 패턴 - 사용자 신고로 발견되기 전에 매일 밤 자동으로 먼저 잡아내기 위함.
+    // 실제 운영 DB로 미리 검증(아래 3~5번 조건) 중, "입금날짜 누락"이 62건이나 나오는
+    // 것을 발견 - 대부분 플러그 이관 당시부터 날짜 정보 자체가 없었던 오래된 데이터라,
+    // 매일 리포트에 그대로 넣으면 매번 같은 62건이 반복돼 "경고 피로"로 무시당할
+    // 위험이 큼. 이 리포트의 목적은 "오늘/최근 새로 생긴 이상"을 잡는 것이지 과거
+    // 누적 결함을 매일 알리는 게 아니므로, 아래 3개(3~5번)는 "최근 7일 이내에 실제로
+    // 변경된 레코드"만 대상으로 좁힘 - 과거 데이터는 한 번(선혜님이 직접 확인한 16건
+    // 등)만 별도로 정리하고, 이후로는 새로 발생하는 것만 매일 감시.
+    var RECENT_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+    var recentCutoff = new Date(Date.now() - RECENT_DAYS_MS);
+    function isRecentlyUpdated(c) {
+      if (!c.updated_at) return false;
+      var t = new Date(c.updated_at);
+      return !isNaN(t.getTime()) && t >= recentCutoff;
+    }
+
+    var recent = isRecentlyUpdated(c);
+
+    // 3) 결제(선금 또는 잔금)는 있는데 아직 방문예약/상담/가견적 단계에 머물러
+    // 있음 - 이민선/김현정 사례(estimates PATCH는 됐는데 customers 동기화가
+    // 안 되거나, 단계전환이 조용히 실패한 신호).
+    if (recent && isPrePayment && (custDep > 0 || custBal > 0)) {
+      issues.push('[결제-단계 불일치] ' + c.client_name + '(id:' + c.id + ') — "' + c.stage +
+        '" 단계인데 입금 기록(선금' + custDep.toLocaleString() + '/잔금' + custBal.toLocaleString() + ')이 있음 - 단계전환이 안 된 것으로 보임');
+    }
+
+    // 4) 입금액은 있는데 입금날짜가 비어있음 - 이민선/김현정 사례의 정확한 증상
+    // (estimates엔 날짜가 있는데 customers 동기화에서 날짜만 빠지는 패턴). 최근
+    // 변경분만 - 과거 이관 데이터는 원래부터 날짜가 없는 경우가 많아 매일 반복
+    // 경고하면 의미가 없음.
+    if (recent && custDep > 0 && !c.deposit_date) {
+      issues.push('[입금날짜 누락] ' + c.client_name + '(id:' + c.id + ') — 선금 ' + custDep.toLocaleString() + '원은 기록됐는데 입금날짜가 비어있음');
+    }
+    if (recent && custBal > 0 && !c.balance_date) {
+      issues.push('[입금날짜 누락] ' + c.client_name + '(id:' + c.id + ') — 잔금 ' + custBal.toLocaleString() + '원은 기록됐는데 입금날짜가 비어있음');
+    }
+
+    // 5) 시공완료 단계인데 매출(performance_revenue)이 0 - 오늘 플러그 이관
+    // 19건에서 발견된 패턴(견적서가 가견적 상태로 남아 매출 미인식). 최근
+    // 변경분만 - 아직 정리 안 된 과거 이관 잔여건을 매일 반복 경고하지 않도록.
+    if (recent && c.stage === '시공완료' && !(Number(c.performance_revenue) > 0) && Number(c.price) > 0) {
+      issues.push('[매출 미인식] ' + c.client_name + '(id:' + c.id + ') — "시공완료"인데 매출이 0으로 집계됨(제품가격 ' + Number(c.price).toLocaleString() + '원)');
+    }
+
+    // 6) 주소에 도로명주소 요소(로/길+숫자, 또는 시/도 이름)가 전혀 없음 -
+    // Daum API의 autoRoadAddress 누락으로 생기던 패턴(16건 발견 사례). 최근
+    // 변경분만 - 이미 아는 과거 16건은 선혜님이 별도로 정리 중이므로 매일
+    // 반복하지 않고, "새로 또 발생했는지"만 감시.
+    if (recent && c.addr) {
+      var hasRoadMarker = /(로|길)\s*[0-9]/.test(c.addr) || /(서울|경기|인천|부산|대구|광주|대전|울산|세종|강원|충북|충남|전북|전남|경북|경남|제주)/.test(c.addr);
+      if (!hasRoadMarker) {
+        issues.push('[주소 확인 필요] ' + c.client_name + '(id:' + c.id + ') — 주소 "' + c.addr + '"에 도로명/시도 표기가 없어 보임(확인 필요)');
+      }
+    }
+  });
+
+  return issues;
+}
+
+/**
+ * 수동으로 지금 바로 중복 스캔만 돌려보고 싶을 때 사용 (백업은 안 만듦,
+ * 스캔 전용 API 호출 — customers/estimates만 가져와서 검사).
+ * 결과는 실행 로그 + 발견되면 이메일로도 발송.
+ */
+function dahDuplicateScanOnly() {
+  var backup = {};
+  var tables = ['customers', 'estimates'];
+  tables.forEach(function(table) {
+    var res = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/rpc/dah_backup_export', {
+      method: 'post', contentType: 'application/json',
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
+      payload: JSON.stringify({ table_name: table }),
+      muteHttpExceptions: true
+    });
+    backup[table] = res.getResponseCode() === 200 ? JSON.parse(res.getContentText()) : [];
+  });
+  var issues = dahScanForDuplicates(backup);
+  if (issues.length === 0) {
+    Logger.log('✅ 중복 의심 건 없음');
+    return;
+  }
+  Logger.log('⚠️ 중복 의심 ' + issues.length + '건 발견:\n' + issues.join('\n'));
+  try {
+    MailApp.sendEmail(
+      Session.getActiveUser().getEmail(),
+      'DAH 중복 의심 데이터 발견 (수동 스캔)',
+      issues.join('\n\n')
+    );
+  } catch (e) { Logger.log('이메일 발송 실패: ' + e.message); }
+}
+
+/**
+ * 지금 바로 데이터 정합성 점검만 돌려보고 싶을 때 사용 (백업은 안 만듦).
+ * 결과는 실행 로그 + 발견되면 이메일로도 발송.
+ */
+function dahDataIntegrityScanOnly() {
+  var backup = {};
+  var tables = ['customers', 'estimates'];
+  tables.forEach(function(table) {
+    var res = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/rpc/dah_backup_export', {
+      method: 'post', contentType: 'application/json',
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
+      payload: JSON.stringify({ table_name: table }),
+      muteHttpExceptions: true
+    });
+    backup[table] = res.getResponseCode() === 200 ? JSON.parse(res.getContentText()) : [];
+  });
+  var issues = dahScanForDataIntegrity(backup).concat(dahScanForMissingTriggers());
+  if (issues.length === 0) {
+    Logger.log('✅ 데이터 정합성 문제 없음');
+    return;
+  }
+  Logger.log('⚠️ 데이터 정합성 의심 ' + issues.length + '건 발견:\n' + issues.join('\n'));
+  try {
+    MailApp.sendEmail(
+      Session.getActiveUser().getEmail(),
+      'DAH 데이터 정합성 점검 (수동 스캔)',
+      issues.join('\n\n')
+    );
+  } catch (e) { Logger.log('이메일 발송 실패: ' + e.message); }
+}
+
+// 2026-09-05(선혜님 지시 - "둘 다 해", 전문업체 수준 개선점으로 지적된
+// "모니터링이 사람이 우연히 물어봐야 발견되는 방식" 문제 해결): 실제로
+// client_error_logs에 반복 저장실패(동시저장충돌) 15건이 쌓여있었는데,
+// "용량 정리할 거 있냐"는 질문이 없었으면 계속 몰랐을 뻔한 사례가 있었음.
+// 이 함수는 "마지막으로 확인한 시점 이후 새로 생긴 에러"만 조회해서,
+// 있으면 이메일로 알림 - 매일 자동백업(dahDailyBackup)에 편승해서 함께
+// 실행되므로 별도 설정 없이 매일 한 번씩 자동으로 확인됨. 마지막 확인
+// 시점은 스크립트 속성에 저장해서, 같은 에러를 중복으로 알리지 않음.
+function dahCheckClientErrors() {
+  var props = PropertiesService.getScriptProperties();
+  var lastCheck = props.getProperty('LAST_ERROR_CHECK_TIME');
+  // 최초 실행이라 마지막 확인시점이 없으면, 지난 24시간만 확인(그 이전
+  // 것까지 한꺼번에 몰아서 알리면 오히려 무슨 일인지 파악하기 어려움)
+  if (!lastCheck) {
+    lastCheck = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  }
+  var nowISO = new Date().toISOString();
+  try {
+    var url = SUPABASE_URL + '/rest/v1/client_error_logs?created_at=gt.' + encodeURIComponent(lastCheck) + '&order=created_at.asc&select=created_at,message,url,extra';
+    var res = UrlFetchApp.fetch(url, {
+      method: 'get',
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
+      muteHttpExceptions: true
+    });
+    if (res.getResponseCode() !== 200) {
+      Logger.log('client_error_logs 조회 실패: HTTP ' + res.getResponseCode());
+      return;
+    }
+    var rows = JSON.parse(res.getContentText());
+    // 마지막 확인 시점은 조회 성공 여부와 무관하게 항상 갱신 - 조회
+    // 자체가 실패해도 다음 실행에서 "실패했던 구간"이 계속 누적되어
+    // 갑자기 수백건이 한꺼번에 몰리는 걸 방지
+    props.setProperty('LAST_ERROR_CHECK_TIME', nowISO);
+    // 2026-09-21(선혜님 - "이 메일이 진짜 실패만 걸러서 오게 해줘" -
+    // 박윤아 견적서 정상 저장 건이 "오류"처럼 메일로 온 사례로 발견):
+    // logSaveStage()는 저장이 "성공"했을 때도 각 단계를 전부 서버에
+    // 기록하는데(다음에 진짜 문제가 생기면 어디까지 갔는지 보려고
+    // 일부러 그렇게 만든 것), 이 메일은 그걸 성공/실패 구분 없이 전부
+    // "오류"라고 보내고 있었음 - 실제로는 정상 저장인데 매번 놀라게
+    // 만들었음. 문제 신호가 전혀 없는 단계(시작/세션확인-정상/검증통과/
+    // 필수항목검증완료/확인창-진행)는 항상 조용히 넘기고, 응답 단계
+    // (고객저장-응답/견적서저장-응답)는 실제 HTTP 상태코드가 200번대가
+    // 아닐 때만("응답은 받았지만 서버가 거부/오류를 냄") 진짜 문제로
+    // 취급함.
+    function isRoutineStage(r) {
+      var alwaysBenign = ['저장단계: 시작', '저장단계: 세션확인-정상', '저장단계: 검증통과', '저장단계: 필수항목검증완료', '저장단계: 확인창-진행'];
+      if (alwaysBenign.indexOf(r.message) !== -1) return true;
+      if (r.message === '저장단계: 고객저장-응답' || r.message === '저장단계: 견적서저장-응답') {
+        try {
+          var status = r.extra && r.extra.status;
+          return typeof status === 'number' && status >= 200 && status < 300;
+        } catch (e) { return false; } // 상태를 못 읽으면 안전하게 "문제일 수 있음"으로 남김
+      }
+      return false;
+    }
+    var problemRows = rows.filter(function(r) { return !isRoutineStage(r); });
+    if (problemRows.length === 0) {
+      Logger.log('✅ 새로운 클라이언트 에러 없음 (저장 성공 기록 ' + rows.length + '건은 조용히 건너뜀)');
+      return;
+    }
+    rows = problemRows;
+    // 2026-09-12(선혜님 - "그럼 문제가 없는데 이렇게 메일이 온다는거야??"):
+    // "저장 실패(동시저장충돌) - 내용 백업됨" 종류는 실패한 그 순간만
+    // 기록될 뿐, 나중에 재시도가 성공했는지는 전혀 확인 안 하고 있었음 -
+    // 그래서 1분 뒤 저절로 잘 저장돼도 똑같이 "오류 발생" 메일이 나감.
+    // 이제 그런 종류(견적서/고객정보 저장 실패)는 지금 실제 DB 값과
+    // 백업해둔 값을 비교해서, 이미 일치하면(자동 복구됨) "확인 필요"에서
+    // 빼고 별도로 가볍게만 표시함 - 실제로 지금도 다른 값이면(진짜 미해결)
+    // 그대로 "확인 필요"에 남김.
+    function isSaveConflictRow(r) {
+      return /저장 실패\(권한문제 또는 동시저장충돌\)/.test(r.message);
+    }
+    function checkResolved(r) {
+      try {
+        var extra = r.extra || {};
+        if (extra.estPayload) {
+          var ep = extra.estPayload;
+          if (!ep.client_id) return false;
+          var eurl = SUPABASE_URL + '/rest/v1/estimates?client_id=eq.' + ep.client_id + '&select=price,line_items&order=updated_at.desc&limit=1';
+          var eres = UrlFetchApp.fetch(eurl, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
+          if (eres.getResponseCode() !== 200) return false;
+          var erows = JSON.parse(eres.getContentText());
+          if (erows.length === 0) return false;
+          var cur = erows[0];
+          var curItemCount = Array.isArray(cur.line_items) ? cur.line_items.length : -1;
+          var backedUpItemCount = Array.isArray(ep.line_items) ? ep.line_items.length : -2;
+          return String(cur.price) === String(ep.price) && curItemCount === backedUpItemCount;
+        }
+        if (extra.customerPayload) {
+          var cp = extra.customerPayload;
+          if (!cp.phone) return false;
+          var curl = SUPABASE_URL + '/rest/v1/customers?phone=eq.' + encodeURIComponent(cp.phone) + '&select=price,stage&order=updated_at.desc&limit=1';
+          var cres = UrlFetchApp.fetch(curl, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
+          if (cres.getResponseCode() !== 200) return false;
+          var crows = JSON.parse(cres.getContentText());
+          if (crows.length === 0) return false;
+          return String(crows[0].price) === String(cp.price) && crows[0].stage === cp.stage;
+        }
+      } catch (e) { /* 비교 자체가 실패하면 안전하게 "미해결"로 취급 */ }
+      return false;
+    }
+
+    // 2026-09-12(선혜님 지적 - "메일이 오게해서 오류 잡을려고 한거 아니야??
+    // 일 똑바로 안할래"): 방금 "이미 해결된 것 같으면 메일에서 아예 빼자"로
+    // 고쳤었는데, 이건 위험한 판단이었음 - 비교 기준(견적서는 금액+품목수,
+    // 고객정보는 금액+단계) 딱 두 가지만 맞으면 "해결됨"으로 치는데, 주소·
+    // 메모 등 다른 값이 실제로는 안 맞을 수도 있음 - 알림을 줄이려다가
+    // 진짜 문제를 조용히 숨겨버릴 위험이 있었음. 숨기지 않고, 전부 다
+    // 메일에 그대로 넣되 확인 결과만 옆에 표시하는 방식으로 수정 -
+    // 최종 판단은 항상 선혜님이 직접 하시게 함.
+    var summary = rows.map(function(r) {
+      var tag = '';
+      if (isSaveConflictRow(r)) {
+        tag = checkResolved(r) ? ' [금액/단계 일치 확인됨 - 그래도 한 번 봐주세요]' : ' [확인 안 됨]';
+      }
+      // 2026-09-22(선혜님 - "오류를 모두 확인한거 맞니... 개선을 해야지" -
+      // "윤정자" 고객 3회 저장실패 사례로 발견): "검증실패-중단"은 왜
+      // 실패했는지(고객명 없음/연락처 없음/제품금액 0개/단가누락 등)를
+      // est-save.js가 이제 extra.detail에 남기는데, 정작 이 메일 요약은
+      // detail을 안 보여주고 있어서 "실패했다"는 것만 알고 이유는 매번
+      // 직접 DB를 조회해야 알 수 있었음.
+      if (r.message === '저장단계: 검증실패-중단' && r.extra && r.extra.detail) {
+        tag += ' [사유: ' + r.extra.detail + (r.extra.customerName ? ', 고객: ' + r.extra.customerName : '') + ']';
+      }
+      return '[' + r.created_at + '] ' + r.message + tag + (r.url ? ' (' + r.url + ')' : '');
+    }).join('\n');
+    // 2026-09-22(선혜님 - "저렇게 메일이 많이 오니 체크가 안되거든" -
+    // 이미 하루에 메일이 99통 넘게 쌓이는 상황이라, 메일 하나 더 오는
+    // 걸로는 실제로 안 챙겨보게 됨을 지적받음): 두 가지로 대응.
+    // (1) "동시저장충돌"류가 전부 자동으로 잘 해결된 것으로 확인되면
+    // (다른 진짜 미해결 건이 하나도 없으면) 아예 메일 자체를 안 보냄 -
+    // "확인해봤더니 괜찮았다"는 메일까지 계속 오면 결국 다 안 열어보게
+    // 되므로, 정말 필요할 때만 오게 함.
+    var genuineIssueCount = rows.filter(function(r) {
+      return !(isSaveConflictRow(r) && checkResolved(r));
+    }).length;
+    if (genuineIssueCount === 0) {
+      Logger.log('✅ 오류 ' + rows.length + '건 있었지만 전부 자동복구 확인됨 - 메일 생략');
+      return;
+    }
+    // (2) 하루에 메일이 워낙 많으니, 제목만 보고도 "이건 진짜 열어봐야
+    // 한다"는 게 확 드러나게 함(🚨 + 미해결 건수를 앞세움).
+    MailApp.sendEmail(
+      Session.getActiveUser().getEmail(),
+      '🚨[DAH] 확인 필요 ' + genuineIssueCount + '건 (전체 ' + rows.length + '건)',
+      '최근 확인 이후 아래와 같은 오류가 새로 기록됐습니다.\n' +
+      '(대부분은 자동으로 로컬/서버에 백업되어 데이터 유실은 없지만, 반복적으로 발생하면 실제 사용에 불편이 있을 수 있어 확인이 필요합니다.\n' +
+      '"저장 실패(동시저장충돌)" 항목은 지금 실제 DB 값과 대조한 결과를 [ ] 안에 참고로 표시했습니다 - 다만 이 대조는 일부 값만 비교하는 거라 완전하지 않으니, "확인됨"이라고 나와도 한 번은 직접 봐주세요.)\n\n' +
+      summary +
+      '\n\n※ 이 알림은 apps-script-daily-backup.js의 dahCheckClientErrors()에서 매일 자동 발송됩니다.'
+    );
+    Logger.log('⚠️ 오류 ' + rows.length + '건 이메일 발송함');
+  } catch (e) {
+    Logger.log('dahCheckClientErrors 실패: ' + e.message);
+  }
+}
+
+/**
+ * 수동 복원 도우미: 특정 날짜 백업 파일 내용을 로그로 확인하고 싶을 때 사용
+ * (실제 복원은 JSON 파일을 열어서 Supabase Table Editor로 직접 넣거나,
+ *  개발자에게 파일을 전달하면 복원 스크립트로 처리 가능)
+ */
+function dahPeekBackup(dateStr) {
+  var folders = DriveApp.getFoldersByName(BACKUP_FOLDER_NAME);
+  if (!folders.hasNext()) { Logger.log('백업 폴더가 없습니다'); return; }
+  var folder = folders.next();
+  var fileName = 'DAH_백업_' + (dateStr || Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd')) + '.json';
+  var files = folder.getFilesByName(fileName);
+  if (!files.hasNext()) { Logger.log('해당 날짜 백업 파일이 없습니다: ' + fileName); return; }
+  var content = files.next().getBlob().getDataAsString();
+  var data = JSON.parse(content);
+  Logger.log('백업일: ' + data.exportedAt);
+  Logger.log('고객 수: ' + (data.customers ? data.customers.length : 0));
+  Logger.log('견적 수: ' + (data.estimates ? data.estimates.length : 0));
+  Logger.log('설문 수: ' + (data.surveys ? data.surveys.length : 0));
+}
+
+/**
+ * ══════════════════════════════════════════════════
+ * 복구 드릴(Restore Drill) — "백업 파일로 실제 복구가 되는지" 검증
+ * ══════════════════════════════════════════════════
+ *
+ * 실제 운영 데이터는 절대 건드리지 않고, 안전하게 검증합니다:
+ * 1. 가장 최근 백업 파일을 구글드라이브에서 읽어옴
+ * 2. 백업 안의 각 테이블(customers/estimates/surveys) 데이터가
+ *    구조적으로 온전한지 확인 (레코드 개수, 필수 필드 존재 여부)
+ * 3. 실제 복구 파이프라인이 작동하는지 증명하기 위해, 백업에서
+ *    고객 1건을 골라 이름 앞에 "복구드릴테스트_"를 붙인 완전히
+ *    새로운 임시 레코드로 Supabase에 저장
+ * 4. 저장이 실제로 됐는지 다시 조회해서 내용이 정확히 일치하는지 확인
+ * 5. 검증이 끝나면 방금 만든 임시 레코드를 즉시 삭제해 흔적을 남기지 않음
+ *
+ * 실행: 함수 목록에서 dahRestoreDrill 선택 후 실행. 결과는 실행 로그에서 확인.
+ */
+function dahRestoreDrill() {
+  var log = [];
+  function report(msg) { log.push(msg); Logger.log(msg); }
+
+  // 1. 가장 최근 백업 파일 찾기
+  var folders = DriveApp.getFoldersByName(BACKUP_FOLDER_NAME);
+  if (!folders.hasNext()) { report('❌ 실패: 백업 폴더(' + BACKUP_FOLDER_NAME + ')가 없습니다'); return; }
+  var folder = folders.next();
+  var files = folder.getFilesByType(MimeType.PLAIN_TEXT);
+  var latestFile = null, latestDate = null;
+  while (files.hasNext()) {
+    var f = files.next();
+    var d = f.getLastUpdated();
+    if (!latestDate || d > latestDate) { latestDate = d; latestFile = f; }
+  }
+  if (!latestFile) { report('❌ 실패: 백업 파일을 하나도 찾을 수 없습니다'); return; }
+  report('1단계 완료: 최근 백업파일 발견 — ' + latestFile.getName());
+
+  // 2. 백업 파일 파싱 및 구조 검증
+  var backup;
+  try {
+    backup = JSON.parse(latestFile.getBlob().getDataAsString());
+  } catch (e) {
+    report('❌ 실패: 백업 파일이 손상되어 JSON으로 읽을 수 없습니다 — ' + e.message);
+    return;
+  }
+  var tables = ['customers', 'estimates', 'surveys'];
+  var counts = {};
+  tables.forEach(function(t) {
+    if (!Array.isArray(backup[t])) { report('❌ 실패: 백업 안에 "' + t + '" 데이터가 배열 형태로 없습니다'); return; }
+    counts[t] = backup[t].length;
+  });
+  report('2단계 완료: 백업 구조 정상 — customers ' + (counts.customers||0) + '건, estimates ' + (counts.estimates||0) + '건, surveys ' + (counts.surveys||0) + '건');
+
+  if (!backup.customers || backup.customers.length === 0) {
+    report('⚠️ 참고: 백업에 고객 데이터가 없어 3~5단계(실제 복구 파이프라인 검증)는 건너뜁니다');
+    report('=== 드릴 완료 (구조 검증만) ===');
+    return;
+  }
+
+  // 3. 실제 복구 시뮬레이션: 백업의 첫 고객 데이터를 복사해 임시 테스트 레코드로 저장
+  var sample = backup.customers[0];
+  var testName = '복구드릴테스트_' + new Date().getTime();
+  var testRow = {
+    client_name: testName,
+    phone: sample.phone || '010-0000-0000',
+    stage: '상담',
+    is_archived: false
+  };
+  var insertRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers', {
+    method: 'post',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    payload: JSON.stringify(testRow),
+    muteHttpExceptions: true
+  });
+  if (insertRes.getResponseCode() >= 300) {
+    report('❌ 실패: 복구 테스트 레코드 저장 실패 — HTTP ' + insertRes.getResponseCode() + ' ' + insertRes.getContentText());
+    return;
+  }
+  report('3단계 완료: 백업 데이터 기반 임시 테스트 레코드를 실제로 Supabase에 저장 성공 (' + testName + ')');
+
+  // 4. 저장된 게 실제로 맞는지 다시 조회해서 확인
+  var checkRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?client_name=eq.' + encodeURIComponent(testName) + '&select=*', {
+    method: 'get',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
+    muteHttpExceptions: true
+  });
+  var checkData = JSON.parse(checkRes.getContentText());
+  if (!checkData || checkData.length === 0) {
+    report('❌ 실패: 저장은 성공했다는데 다시 조회하니 안 나옵니다 — 뭔가 이상합니다');
+    return;
+  }
+  report('4단계 완료: 저장된 테스트 레코드를 다시 조회해서 정확히 확인됨 (phone: ' + checkData[0].phone + ')');
+
+  // 5. 테스트 레코드 정리 (이 프로젝트는 DELETE가 RLS로 막혀있어 실제로 안 지워짐이 확인됨 →
+  //    PATCH(is_archived=true 보관처리)로 확실하게 화면에서 숨김)
+  var deleteRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?client_name=eq.' + encodeURIComponent(testName), {
+    method: 'patch',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    payload: JSON.stringify({ is_archived: true }),
+    muteHttpExceptions: true
+  });
+  if (deleteRes.getResponseCode() >= 300) {
+    report('⚠️ 경고: 테스트 레코드 정리 실패 — 수동으로 "' + testName + '"를 찾아 보관처리해주세요 (HTTP ' + deleteRes.getResponseCode() + ')');
+  } else {
+    report('5단계 완료: 테스트 레코드 보관처리 완료 — 실제 화면엔 더 이상 안 보입니다');
+  }
+
+  report('=== ✅ 복구 드릴 전체 성공 — 백업 파일로 실제 복구가 가능함을 확인했습니다 ===');
+}
+
+/**
+ * ══════════════════════════════════════════════════
+ * 실제 데이터베이스 종합 진단 (dahDiagnoseSchema)
+ * ══════════════════════════════════════════════════
+ *
+ * 2026-07-17 발견: customers 테이블에 저장할 때마다 "record new has no
+ * field updated_at" 오류로 모든 PATCH(수정)가 실패하고 있었음 - DB 트리거가
+ * updated_at 컬럼을 기대하는데 실제로는 없었던 것. 이 문제는 앱 코드가 아니라
+ * 실제 운영 데이터베이스의 스키마/트리거 문제라서, 코드만 봐서는 절대 못 잡고
+ * 실제 DB에 진짜로 요청을 보내봐야만 발견할 수 있었다.
+ *
+ * 이 함수는 앱 코드가 customers/estimates 테이블에 실제로 쓰려고 하는 모든
+ * 필드를 하나하나 진짜 저장/수정해보면서, 어떤 필드가 실패하는지 전부 찾아냄.
+ * 진짜 데이터는 전혀 안 건드리고, 테스트용 임시 레코드만 만들었다가 끝나면 지움.
+ *
+ * 실행: 함수 목록에서 dahDiagnoseSchema 선택 후 실행. 결과는 실행 로그에서 확인.
+ */
+function dahDiagnoseSchema() {
+  var log = [];
+  function report(msg) { log.push(msg); Logger.log(msg); }
+
+  // 0) estimates 테이블의 실제 컬럼이 뭔지 먼저 확인 (기존 레코드 1건 조회)
+  report('=== estimates 테이블 실제 컬럼 확인 ===');
+  var peekRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?select=*&limit=1', {
+    method: 'get',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
+    muteHttpExceptions: true
+  });
+  if (peekRes.getResponseCode() >= 300) {
+    report('❌ estimates 테이블 조회 실패 — HTTP ' + peekRes.getResponseCode() + ' ' + peekRes.getContentText());
+  } else {
+    var peekData = JSON.parse(peekRes.getContentText());
+    if (peekData.length === 0) {
+      report('⚠️ estimates 테이블에 기존 레코드가 하나도 없어서, 실제 컬럼 목록을 조회로는 못 봅니다');
+    } else {
+      report('✅ estimates 테이블의 실제 컬럼 목록: ' + Object.keys(peekData[0]).join(', '));
+    }
+  }
+  report('');
+
+  report('=== customers 테이블 진단 시작 ===');
+  var testName = '스키마진단테스트_' + new Date().getTime();
+
+  // 1) 앱이 실제로 저장하는 모든 필드를 포함해 INSERT 시도
+  var fullRow = {
+    client_name: testName, phone: '010-0000-0000', addr: '테스트주소', space: '거실',
+    price: 100000, performance_revenue: 90000, staff_name: '마스터', stage: '상담',
+    date: '2026-01-01', measure_date: '2026-01-02', install_date: '2026-01-03', memo: '진단테스트',
+    visit_count: 1,
+    deposit_amount: 50000, deposit_date: '2026-01-01', deposit_method: '카드', deposit_receipt: false,
+    balance_amount: 50000, balance_date: '2026-01-01', balance_method: '현금', balance_receipt: false,
+    order_status: { fabric: true }, branch: '반포점', is_archived: false
+  };
+  var insertRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers', {
+    method: 'post',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    payload: JSON.stringify(fullRow),
+    muteHttpExceptions: true
+  });
+  if (insertRes.getResponseCode() >= 300) {
+    report('❌ customers INSERT 실패 (필드가 하나라도 문제면 전체가 실패함) — HTTP ' + insertRes.getResponseCode());
+    report('   상세: ' + insertRes.getContentText());
+    report('   → 위 오류 메시지의 필드명을 확인해서, 해당 컬럼을 테이블에 추가하거나 코드에서 제외해야 합니다');
+  } else {
+    report('✅ customers INSERT 성공 — 모든 필드가 정상적으로 테이블에 존재합니다');
+    var createdId = JSON.parse(insertRes.getContentText())[0].id;
+
+    // 2) PATCH(수정) 시도 — 어제 발견된 updated_at 트리거 문제가 여기서 재현됐었음
+    var patchRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?id=eq.' + createdId, {
+      method: 'patch',
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      payload: JSON.stringify({ stage: '계약금', deposit_amount: 60000 }),
+      muteHttpExceptions: true
+    });
+    if (patchRes.getResponseCode() >= 300) {
+      report('❌ customers PATCH(수정) 실패 — HTTP ' + patchRes.getResponseCode());
+      report('   상세: ' + patchRes.getContentText());
+      report('   → 이 오류가 나면 앱에서 계약금 저장/단계변경/발주체크 등 모든 "수정" 기능이 실제로는 서버에 반영 안 되고 있는 것입니다');
+    } else {
+      report('✅ customers PATCH(수정) 성공 — 계약금 저장, 단계변경 등이 정상적으로 서버에 반영됩니다');
+    }
+
+    // 정리
+    UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?id=eq.' + createdId, {
+      method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
+    });
+    report('   (테스트 레코드 정리 완료)');
+  }
+
+  report('');
+  report('=== estimates 테이블 진단 시작 ===');
+  // 2026-09-21(선혜님 - "전문업체라면 어떻게 하겠니? 제대로 좀 해봐" 요청
+  // 으로 전체 스키마 재점검 중 발견한 심각한 회귀를 계기로 확장):
+  // estRow에 오늘(9/21) 견적서별 결제 관리 전환과 실측/시공일 미정
+  // 플래그 수정으로 새로 추가된 10개 필드(결제 8개 + tbd 2개)가 전혀
+  // 없었음 - 이 진단이 있었다면, dash-customer-detail.js가 estimates에
+  // 없는 컬럼(measure_date)으로 PATCH를 보내던 버그를 배포 전에 바로
+  // 잡아냈을 것. INSERT뿐 아니라 customers처럼 PATCH 테스트도 추가.
+  var estRow = {
+    customer_name: testName, price: 100000, performance_revenue: 90000, staff_name: '마스터',
+    estimate_status: 'ga', phone: '010-0000-0000', space: '거실', product: '테스트원단',
+    date: '2026-01-01', memo: '진단테스트', confirmed_at: null, branch: '반포점', client_id: null,
+    install_date: '2026-01-03', measure_date_tbd: false, install_date_tbd: false,
+    deposit_amount: 50000, deposit_date: '2026-01-01', deposit_method: '카드', deposit_receipt: false,
+    balance_amount: 50000, balance_date: '2026-01-01', balance_method: '현금', balance_receipt: false
+  };
+  var estInsertRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates', {
+    method: 'post',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    payload: JSON.stringify(estRow),
+    muteHttpExceptions: true
+  });
+  if (estInsertRes.getResponseCode() >= 300) {
+    report('❌ estimates INSERT 실패 — HTTP ' + estInsertRes.getResponseCode());
+    report('   상세: ' + estInsertRes.getContentText());
+    report('   → 위 오류 메시지의 필드명을 확인해서, 해당 컬럼을 테이블에 추가하거나 코드에서 제외해야 합니다');
+  } else {
+    report('✅ estimates INSERT 성공 — 모든 필드가 정상적으로 테이블에 존재합니다');
+    var estId = JSON.parse(estInsertRes.getContentText())[0].id;
+
+    // dash-customer-detail.js가 "실측/시공 예정일 클릭수정" 시 실제로
+    // 보내는 필드 그대로 PATCH 시도 - 컬럼명이 실제 스키마와 안 맞으면
+    // 여기서 바로 잡힘(오늘 measure_date 오탈자 버그가 정확히 이 경로).
+    var estPatchRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?id=eq.' + estId, {
+      method: 'patch',
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      payload: JSON.stringify({ date: '2026-02-01', measure_date_tbd: false, install_date: '2026-02-03', install_date_tbd: false, deposit_amount: 60000 }),
+      muteHttpExceptions: true
+    });
+    if (estPatchRes.getResponseCode() >= 300) {
+      report('❌ estimates PATCH(수정) 실패 — HTTP ' + estPatchRes.getResponseCode());
+      report('   상세: ' + estPatchRes.getContentText());
+      report('   → 이 오류가 나면 대시보드에서 실측/시공 예정일·결제 수정이 이 견적서에 실제로는 반영 안 되고 있는 것입니다');
+    } else {
+      report('✅ estimates PATCH(수정) 성공 — 실측/시공 예정일, 결제 수정이 정상적으로 견적서에 반영됩니다');
+    }
+
+    UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?id=eq.' + estId, {
+      method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
+    });
+    report('   (테스트 레코드 정리 완료)');
+  }
+
+  report('');
+  report('=== surveys 테이블 진단 시작 ===');
+  var surveyPeekRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/surveys?select=*&limit=1', {
+    method: 'get',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
+    muteHttpExceptions: true
+  });
+  if (surveyPeekRes.getResponseCode() >= 300) {
+    report('❌ surveys 테이블 조회 실패 — HTTP ' + surveyPeekRes.getResponseCode() + ' ' + surveyPeekRes.getContentText());
+  } else {
+    var surveyPeekData = JSON.parse(surveyPeekRes.getContentText());
+    if (surveyPeekData.length === 0) {
+      report('⚠️ surveys 테이블에 기존 레코드가 하나도 없어서, 실제 컬럼 목록을 조회로는 못 봅니다');
+    } else {
+      report('✅ surveys 테이블의 실제 컬럼 목록: ' + Object.keys(surveyPeekData[0]).join(', '));
+    }
+  }
+  // 2026-09-30(선혜님 - "체크리스트 안 지켰잖아" 지적으로 긴급 추가): survey-app.js에 오늘
+  // client_idempotency_key 필드를 새로 추가해서 payload에 실어 보내기 시작했는데, 이 컬럼이
+  // surveys 테이블에 실제로 있는지 한 번도 확인 안 한 채 이미 배포함 - 만약 없으면 PostgREST가
+  // "그런 컬럼 없음" 오류로 모든 설문 제출을 거부하고 있을 수 있음(가장 긴급하게 확인해야 할 것).
+  var surveyTestName = '설문진단테스트_' + new Date().getTime();
+  var surveyRow = {
+    client_name: surveyTestName, phone: '010-0000-0000', addr: '테스트주소',
+    space: '거실, 안방',
+    answers: { pyeong: '30', homeDir: '남향', wallTone: '화이트', floorType: '원목마루', moods: ['모던'], functions: ['암막'], budget: '100만원대', sizeNote: '' },
+    memo: '진단테스트', status: '신규',
+    client_idempotency_key: 'schema-diag-' + new Date().getTime()
+  };
+  var surveyInsertRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/surveys', {
+    method: 'post',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    payload: JSON.stringify(surveyRow),
+    muteHttpExceptions: true
+  });
+  if (surveyInsertRes.getResponseCode() >= 300) {
+    report('❌❌❌ [긴급] surveys INSERT 실패 — HTTP ' + surveyInsertRes.getResponseCode());
+    report('   상세: ' + surveyInsertRes.getContentText());
+    report('   → 2026-09-30에 client_idempotency_key 필드를 새로 보내기 시작했는데, 이 컬럼이');
+    report('      surveys 테이블에 없으면 바로 이 오류가 남 - 지금 실제 설문 제출이 전부 막혀');
+    report('      있을 수 있습니다. 오류 메시지에 "client_idempotency_key"가 보이면 그 컬럼을');
+    report('      surveys 테이블에 추가해야 합니다(Supabase SQL: ALTER TABLE surveys ADD COLUMN');
+    report('      client_idempotency_key text;)');
+  } else {
+    report('✅ surveys INSERT 성공 — 설문 제출이 정상적으로 서버에 저장됩니다(client_idempotency_key 컬럼 존재 확인됨)');
+    var surveyId = JSON.parse(surveyInsertRes.getContentText())[0].id;
+    UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/surveys?id=eq.' + surveyId, {
+      method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
+    });
+    report('   (테스트 레코드 정리 완료)');
+  }
+
+  // 2026-09-30(선혜님 - "체크리스트 안 지켰잖아" 지적으로 긴급 추가): is_archived 필드를
+  // "아예 안 보내면" DB가 실제로 뭘 채우는지(NULL인지 false인지) - 지금까지는 이걸 한 번도
+  // 실제로 확인 안 하고 "NULL일 것"이라고 추측만 한 채로 코드를 고쳤음. INSERT 직후 다시
+  // 조회해서 실제 값을 눈으로 확인.
+  report('');
+  report('=== is_archived 필드 생략시 DB 기본값 실측 (추측이 아니라 실제 확인) ===');
+  [
+    { table: 'estimates', row: { customer_name: '기본값진단_' + new Date().getTime(), price: 0, performance_revenue: 0, staff_name: '마스터', estimate_status: 'ga', phone: '010-0000-0000', branch: '반포점' } },
+    { table: 'customers', row: { client_name: '기본값진단_' + new Date().getTime(), phone: '010-0000-0000', staff_name: '마스터', stage: '상담', branch: '반포점' } },
+    { table: 'as_records', row: { customer_name: '기본값진단_' + new Date().getTime(), receipt_date: '2026-01-01', symptom: '진단테스트', fee_type: '무상', staff_name: '마스터', status: '접수' } }
+  ].forEach(function (t) {
+    var insRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + t.table, {
+      method: 'post',
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      payload: JSON.stringify(t.row), // is_archived 필드 자체를 의도적으로 안 넣음
+      muteHttpExceptions: true
+    });
+    if (insRes.getResponseCode() >= 300) {
+      report('❌ ' + t.table + ' 기본값 진단용 INSERT 실패 — HTTP ' + insRes.getResponseCode() + ' ' + insRes.getContentText());
+      return;
+    }
+    var row = JSON.parse(insRes.getContentText())[0];
+    var actual = row.is_archived;
+    report((actual === false ? '✅' : '⚠️') + ' ' + t.table + '.is_archived 필드를 생략했을 때 DB 기본값 = ' + JSON.stringify(actual) +
+      (actual === false ? ' (false — 명시 안 해도 안전, 추측이 맞았음)' : ' (false가 아님! 명시적으로 안 보내면 목록 조회에서 조용히 빠질 수 있다는 그동안의 우려가 실제로 맞았음)'));
+    UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + t.table + '?id=eq.' + row.id, {
+      method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
+    });
+  });
+
+  // 2026-09-30: client_idempotency_key 유니크 제약이 2026-08-05에 도입됐다고 코드 주석에
+  // 기록은 돼 있지만, 그 이후 실제로 지금까지 살아있는지 재확인한 적이 없었음 - 같은 키로
+  // 두 번 INSERT를 시도해서 두 번째가 정말 막히는지(409) 직접 확인.
+  report('');
+  report('=== estimates의 idempotency 유니크 제약이 지금도 실제로 작동하는지 실측 ===');
+  var idemKey = 'schema-diag-uniq-' + new Date().getTime();
+  var idemRow = { customer_name: '중복키진단_' + new Date().getTime(), price: 0, performance_revenue: 0, staff_name: '마스터', estimate_status: 'ga', phone: '010-0000-0000', branch: '반포점', client_idempotency_key: idemKey, is_archived: false };
+  var firstIns = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates', { method: 'post', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, payload: JSON.stringify(idemRow), muteHttpExceptions: true });
+  if (firstIns.getResponseCode() >= 300) {
+    report('❌ 1차 INSERT 자체가 실패해서 유니크 제약 테스트를 못 함 — ' + firstIns.getContentText());
+  } else {
+    var firstId = JSON.parse(firstIns.getContentText())[0].id;
+    var secondIns = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates', { method: 'post', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, payload: JSON.stringify(idemRow), muteHttpExceptions: true });
+    if (secondIns.getResponseCode() === 409) {
+      report('✅ 같은 idempotency key로 두 번째 INSERT 시도 → 409로 정확히 거부됨(유니크 제약이 지금도 살아있음, 재시도 중복방지가 실제로 작동함)');
+    } else if (secondIns.getResponseCode() < 300) {
+      report('❌❌❌ [심각] 같은 idempotency key로 두 번째 INSERT가 성공해버림(HTTP ' + secondIns.getResponseCode() + ') - 유니크 제약이 없거나 깨져있음! 오늘 고친 중복방지 로직들이 전부 이 제약에 의존하고 있어서, 이게 없으면 재시도/동시클릭시 실제로 중복 견적서가 생길 수 있습니다. Supabase SQL로 확인: ALTER TABLE estimates ADD CONSTRAINT estimates_idempotency_key_uniq UNIQUE (client_idempotency_key);');
+      var secondId = JSON.parse(secondIns.getContentText())[0].id;
+      UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?id=eq.' + secondId, { method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true });
+    } else {
+      report('⚠️ 2차 INSERT가 409도 200대도 아닌 예상 밖 응답 — HTTP ' + secondIns.getResponseCode() + ' ' + secondIns.getContentText());
+    }
+    UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?id=eq.' + firstId, { method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }, payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true });
+  }
+
+  report('=== 진단 완료 — 위 결과를 그대로 복사해서 알려주세요 ===');
+}
+
+
+/**
+ * ══════════════════════════════════════════════════
+ * 테스트 데이터 청소 (dahCleanupTestData)
+ * ══════════════════════════════════════════════════
+ * 오늘 진단/드릴 테스트 도중, 일부 테스트 레코드의 자동삭제가 실패해서
+ * 실제 고객목록에 "복구드릴테스트_...", "스키마진단테스트_...",
+ * "설문진단테스트_..."가 남아있는 게 발견됨. 이 함수는 그 패턴에
+ * 정확히 일치하는 레코드만 찾아서 삭제함(실제 고객 데이터는 절대 안 건드림).
+ */
+// 2026-10-01(선혜님 - 최금희 고객 "컴퓨터에서는 결제완료, 아이패드에서는 미수금"
+// 신고 - "니가 해" 요청으로, SQL을 직접 짜서 달라고 하는 대신 이미 열려있는 이
+// 진단 도구에 전용 함수를 추가함. 대상 고객명만 아래에서 바꿔서 실행하면 됨 -
+// customers/estimates 원본 데이터를 그대로 보여주고, 클라이언트(dash-utils.js의
+// getReceivedAmount/getUnpaidAmount)와 똑같은 계산을 여기서도 재현해서 "왜
+// 미수금으로 뜨는지"를 바로 계산까지 해서 보여줌.
+function dahCheckCustomerPaymentMismatch() {
+  // 2026-10-04(선혜님 - "전수검사!!" 요청으로 ESLint 전체 검사하다 발견): report()가
+  // 선언 없이 호출되고 있었음(issues 변수 선언 누락과 같은 유형의 버그) - 이 함수를
+  // 실제로 실행하면 첫 report() 호출에서 바로 ReferenceError로 터졌을 것. 함수 설명
+  // 주석의 "실행 로그에서 확인"이라는 용도에 맞게 Logger.log로 연결하는 로컬 헬퍼로 수정.
+  var report = function (msg) { Logger.log(msg); };
+  var TARGET_NAME = '최금희'; // 다른 고객을 확인하려면 이 이름만 바꿔서 다시 실행
+  report('=== "' + TARGET_NAME + '" 결제상태 불일치 진단 ===');
+
+  var custRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?client_name=eq.' + encodeURIComponent(TARGET_NAME) + '&select=*', {
+    method: 'get',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
+    muteHttpExceptions: true
+  });
+  if (custRes.getResponseCode() >= 300) {
+    report('❌ customers 조회 실패 — HTTP ' + custRes.getResponseCode() + ' ' + custRes.getContentText());
+    report('=== 진단 완료 ===');
+    return;
+  }
+  var customers = JSON.parse(custRes.getContentText());
+  if (customers.length === 0) {
+    report('⚠️ customers 테이블에 "' + TARGET_NAME + '"이라는 이름의 고객이 없습니다(이름 오타 확인 필요).');
+    report('=== 진단 완료 ===');
+    return;
+  }
+  report('customers 테이블 레코드 ' + customers.length + '건 발견:');
+  customers.forEach(function (c) {
+    report('  id=' + c.id + ' price=' + c.price + ' deposit_amount=' + c.deposit_amount + ' balance_amount=' + c.balance_amount + ' stage=' + c.stage + ' updated_at=' + c.updated_at);
+  });
+  if (customers.length > 1) {
+    report('⚠️⚠️⚠️ [중요] 같은 이름의 고객이 ' + customers.length + '건 있습니다 - 혹시 실수로 중복 등록된 건 아닌지, 서로 다른 사람인지 확인이 필요합니다.');
+  }
+
+  var estRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimates?customer_name=eq.' + encodeURIComponent(TARGET_NAME) + '&select=id,client_id,customer_name,price,deposit_amount,balance_amount,is_archived,created_at,updated_at&order=created_at.asc', {
+    method: 'get',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
+    muteHttpExceptions: true
+  });
+  if (estRes.getResponseCode() >= 300) {
+    report('❌ estimates 조회 실패 — HTTP ' + estRes.getResponseCode() + ' ' + estRes.getContentText());
+    report('=== 진단 완료 ===');
+    return;
+  }
+  var estimates = JSON.parse(estRes.getContentText());
+  report('');
+  report('estimates 테이블 레코드 ' + estimates.length + '건 발견(오래된순):');
+  var estSum = 0;
+  estimates.forEach(function (e, idx) {
+    var paid = (Number(e.deposit_amount) || 0) + (Number(e.balance_amount) || 0);
+    estSum += paid;
+    report('  [' + (idx + 1) + '번째] id=' + e.id + ' client_id=' + e.client_id + ' price=' + e.price +
+      ' deposit=' + e.deposit_amount + ' balance=' + e.balance_amount + ' (입금합계=' + paid + ')' +
+      ' is_archived=' + e.is_archived + ' created_at=' + e.created_at);
+  });
+
+  report('');
+  report('=== 클라이언트 계산 로직(dash-utils.js getReceivedAmount/getUnpaidAmount) 재현 ===');
+  customers.forEach(function (c) {
+    var customerLevelSum = (Number(c.deposit_amount) || 0) + (Number(c.balance_amount) || 0);
+    var myEstSum = estimates.filter(function (e) { return e.client_id === c.id; })
+      .reduce(function (sum, e) { return sum + (Number(e.deposit_amount) || 0) + (Number(e.balance_amount) || 0); }, 0);
+    var received = Math.max(myEstSum, customerLevelSum);
+    var price = Number(c.price) || 0;
+    var unpaid = Math.max(0, price - received);
+    report('customers.id=' + c.id + ' 기준:');
+    report('  고객레벨 입금합계(customerLevelSum) = ' + customerLevelSum);
+    report('  이 고객(client_id=' + c.id + ')과 연결된 견적서들의 입금합계(myEstSum) = ' + myEstSum +
+      ' (전체 견적서 입금합계는 ' + estSum + ' - 다르면 client_id가 안 맞는 견적서가 있다는 뜻)');
+    report('  최종 받은금액(둘 중 큰값, received) = ' + received);
+    report('  기준금액(c.price) = ' + price);
+    report('  → 계산 결과 미수금 = ' + unpaid + (unpaid > 0 ? ' (홈화면에 "미수금"으로 뜨는 이유)' : ' (미수금 0 - 홈화면에 정상적으로 안 떠야 함)'));
+  });
+
+  report('');
+  report('=== 진단 완료 — 위 결과를 그대로 복사해서 알려주세요 ===');
+}
+
+function dahCleanupTestData() {
+  var log = [];
+  function report(msg) { log.push(msg); Logger.log(msg); }
+  var patterns = ['복구드릴테스트_', '스키마진단테스트_', '설문진단테스트_'];
+  var tables = [
+    { name: 'customers', nameCol: 'client_name' },
+    { name: 'estimates', nameCol: 'customer_name' },
+    { name: 'surveys', nameCol: 'client_name' }
+  ];
+  tables.forEach(function(t) {
+    patterns.forEach(function(p) {
+      var url = SUPABASE_URL + '/rest/v1/' + t.name + '?' + t.nameCol + '=like.' + encodeURIComponent(p + '*') + '&is_archived=eq.false&select=id,' + t.nameCol;
+      var res = UrlFetchApp.fetch(url, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
+      if (res.getResponseCode() !== 200) { report('❌ ' + t.name + ' 조회 실패: ' + res.getContentText()); return; }
+      var rows = JSON.parse(res.getContentText());
+      if (rows.length === 0) return;
+      rows.forEach(function(row) {
+        // ⚠️ 이 프로젝트는 DELETE가 RLS로 막혀있어(2026-07-17 확인) 실제 삭제 대신 보관처리(PATCH)를 씀
+        var patchRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/' + t.name + '?id=eq.' + row.id, {
+          method: 'patch', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          payload: JSON.stringify({ is_archived: true }), muteHttpExceptions: true
+        });
+        report((patchRes.getResponseCode() < 300 ? '✅ 보관처리됨: ' : '❌ 처리실패(HTTP ' + patchRes.getResponseCode() + '): ') + t.name + ' — ' + row[t.nameCol] + (patchRes.getResponseCode() >= 300 ? ' | 상세: ' + patchRes.getContentText() : ''));
+      });
+    });
+  });
+  report('=== 테스트 데이터 청소 완료 ===');
+}
+
+/**
+ * ══════════════════════════════════════════════════
+ * 원본 문자열 진단 (dahPeekRawName) — 읽기 전용, 안전
+ * ══════════════════════════════════════════════════
+ * 특정 전화번호로 고객을 조회해서, 저장된 이름(client_name)의
+ * 정확한 원본 값과 각 글자의 유니코드 코드까지 로그로 남김.
+ * "실제 데이터 자체가 이상한지" vs "화면에 보여줄 때만 깨지는지"를 구분하기 위함.
+ * 데이터를 전혀 바꾸지 않는 순수 조회 함수라 100% 안전함.
+ */
+function dahPeekRawName(phone) {
+  var log = [];
+  function report(msg) { log.push(msg); Logger.log(msg); }
+  var url = SUPABASE_URL + '/rest/v1/customers?phone=eq.' + encodeURIComponent(phone) + '&select=id,client_name,phone,addr,created_at';
+  var res = UrlFetchApp.fetch(url, { method: 'get', headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY }, muteHttpExceptions: true });
+  if (res.getResponseCode() !== 200) { report('❌ 조회 실패: ' + res.getContentText()); return; }
+  var rows = JSON.parse(res.getContentText());
+  report('전화번호 "' + phone + '"로 찾은 레코드 수: ' + rows.length);
+  rows.forEach(function(row, i) {
+    report('--- 레코드 ' + (i+1) + ' (id: ' + row.id + ') ---');
+    report('  client_name 원본값: "' + row.client_name + '"');
+    report('  client_name 길이: ' + row.client_name.length + '자');
+    var codes = [];
+    for (var j = 0; j < row.client_name.length; j++) codes.push(row.client_name.charCodeAt(j));
+    report('  각 글자 유니코드: ' + codes.join(', '));
+    report('  phone: "' + row.phone + '"');
+    report('  addr: "' + (row.addr || '') + '"');
+    report('  created_at: ' + row.created_at);
+  });
+}
+
+/**
+ * ══════════════════════════════════════════════════
+ * 웹 브릿지 (doGet) — Claude가 직접 실행할 수 있게 해주는 창구
+ * ══════════════════════════════════════════════════
+ * "배포 > 새 배포 > 웹 앱"으로 배포한 뒤 그 URL을 Claude에게 알려주면,
+ * 그 다음부터는 Claude가 이 URL을 직접 열어서(웹에서 접속하듯) 함수를
+ * 실행시키고 결과 로그까지 바로 받아볼 수 있음 — 매번 코드를 복사해서
+ * 붙여넣고 실행 버튼을 누르는 과정이 필요 없어짐.
+ *
+ * URL 예시: [배포후URL]?key=[Script Properties에 등록한 값]&action=diagnoseSchema
+ * key는 아무나 이 주소로 실행하지 못하게 막는 간단한 비밀번호.
+ */
+function doGet(e) {
+  // 2026-08-05: 이 시크릿 키가 코드에 그대로 하드코딩되어 있었음 — 이 저장소는
+  // 공개(public) 저장소라서, SUPABASE_SERVICE_ROLE_KEY와 똑같은 이유로 문제였음.
+  // 2026-08-19: 선혜님이 Script Properties에 DAH_BRIDGE_SECRET_KEY를 실제로
+  // 등록 완료함 — 이제 하드코딩된 기본값(dah-bridge-2026)을 완전히 제거함.
+  // 등록이 안 되어 있으면(getProperty가 null 리턴) 조용히 옛날 값으로 넘어가지
+  // 않고 명확하게 실행 자체를 거부하도록(fail-safe) 변경.
+  var SECRET_KEY = PropertiesService.getScriptProperties().getProperty('DAH_BRIDGE_SECRET_KEY');
+  if (!SECRET_KEY) {
+    return ContentService.createTextOutput('❌ 설정 오류 — Script Properties에 DAH_BRIDGE_SECRET_KEY가 등록되어 있지 않습니다').setMimeType(ContentService.MimeType.TEXT);
+  }
+  if (!e || !e.parameter || e.parameter.key !== SECRET_KEY) {
+    return ContentService.createTextOutput('❌ 인증 실패 — key 파라미터가 올바르지 않습니다').setMimeType(ContentService.MimeType.TEXT);
+  }
+  var action = e.parameter.action;
+  try {
+    if (action === 'dailyBackup') dahDailyBackup();
+    else if (action === 'diagnoseSchema') dahDiagnoseSchema();
+    else if (action === 'cleanupTestData') dahCleanupTestData();
+    else if (action === 'restoreDrill') dahRestoreDrill();
+    else if (action === 'peekRawName') dahPeekRawName(e.parameter.phone || '');
+    else if (action === 'duplicateScan') dahDuplicateScanOnly();
+    else if (action === 'integrityScan') dahDataIntegrityScanOnly();
+    else if (action === 'checkErrors') dahCheckClientErrors();
+    else return ContentService.createTextOutput('❌ 알 수 없는 action: "' + action + '"\n사용가능: dailyBackup, diagnoseSchema, cleanupTestData, restoreDrill, peekRawName, duplicateScan, integrityScan, checkErrors').setMimeType(ContentService.MimeType.TEXT);
+  } catch (err) {
+    return ContentService.createTextOutput('❌ 실행 중 오류 발생: ' + err.message + '\n' + err.stack).setMimeType(ContentService.MimeType.TEXT);
+  }
+  return ContentService.createTextOutput(Logger.getLog()).setMimeType(ContentService.MimeType.TEXT);
+}
