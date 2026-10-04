@@ -332,6 +332,29 @@ function dahScanForMissingTriggers() {
   } catch (e) {
     issues.push('[트리거 점검 실패] ' + e.message);
   }
+  // 2026-10-04(선혜님 - "survey-app.js 중복제출 위험 - 아직 미착수" 재점검 요청으로
+  // 추가): surveys.client_idempotency_key의 UNIQUE 제약(두 탭 동시 재시도시 중복
+  // 제출을 막는 핵심 안전장치)도 트리거와 같은 방식으로 매일 존재 여부 감시.
+  var EXPECTED_CONSTRAINTS = ['surveys_client_idempotency_key_unique'];
+  try {
+    var cRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/v_critical_constraints_status?select=constraint_name', {
+      headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
+      muteHttpExceptions: true
+    });
+    if (cRes.getResponseCode() !== 200) {
+      issues.push('[제약 점검 실패] v_critical_constraints_status 조회 자체가 실패함(상태코드 ' + cRes.getResponseCode() + ')');
+    } else {
+      var cRows = JSON.parse(cRes.getContentText());
+      var cFound = cRows.map(function(r) { return r.constraint_name; });
+      EXPECTED_CONSTRAINTS.forEach(function(name) {
+        if (cFound.indexOf(name) === -1) {
+          issues.push('[핵심 제약 누락] ' + name + '이 DB에서 사라짐 - 설문 중복제출 방지 안전장치가 꺼진 상태, 즉시 확인 필요');
+        }
+      });
+    }
+  } catch (e2) {
+    issues.push('[제약 점검 실패] ' + e2.message);
+  }
   return issues;
 }
 

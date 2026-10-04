@@ -205,6 +205,16 @@ var SURVEY_PENDING_KEY = 'dah_survey_pending_v1';
 // client_idempotency_key를 payload에 포함시켜 재시도마다 그대로 재사용되게 하고, 서버가
 // 중복을 거부(409)하면 "이미 저장됨"으로 정상 처리. 추가로 같은 탭 안에서 재시도 함수
 // 자체가 겹쳐 실행되지 않도록 진행중 플래그도 둠(est-sync-queue.js와 동일한 안전장치).
+//
+// 2026-10-04(선혜님 - "survey-app.js 중복제출 위험 - 아직 미착수" 재점검 요청으로
+// 발견): 위 클라이언트 코드는 처음부터 완성돼 있었지만, 이 코드가 "서버가 중복을
+// 거부(409)"한다고 전제하는 그 서버 쪽 제약(surveys.client_idempotency_key에 UNIQUE
+// 제약)이 실제로는 DB에 걸려있지 않았음 - 즉 지금까지 두 탭이 동시에 재시도하면
+// 409가 아니라 둘 다 201(성공)로 그대로 중복 저장됐을 것. 트랜잭션으로 직접 재현해
+// 확인(제약 추가 후 같은 키로 두 번 INSERT하니 정확히 유니크 제약 위반으로 막힘)한
+// 뒤 surveys_client_idempotency_key_unique 제약을 실제로 추가함. "클라이언트 코드가
+// 완성돼 보인다"와 "그 코드가 의존하는 서버쪽 전제조건이 실제로 갖춰져 있다"는
+// 별개로 확인해야 한다는 교훈.
 function retryPendingSurveys() {
   if (window._surveyRetryInProgress) return;
   var pending = [];

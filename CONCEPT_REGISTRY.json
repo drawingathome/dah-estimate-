@@ -355,5 +355,19 @@
     ],
     "참고": "13~16건(김현정·조정미·고근영·김다정·이지영·박미림·이정민·이정미·배수희·신안라·김작미·성지윤·안수정 등)이 이 경로로 과거에 깨진 것으로 추정 - 이미 저장된 데이터라 코드 수정으로 복구 불가, 선혜님이 직접 재입력하기로 함.",
     "금지패턴": "openKakaoAddr() 바깥에서 주소 입력칸(c-addr/add-addr)에 readOnly를 풀거나 onChange로 자유 타이핑을 허용하는 모든 코드 / data.roadAddress만 보고 autoRoadAddress를 빼먹는 모든 신규 주소검색 구현"
+  },
+  "설문_중복제출_방지": {
+    "의미": "설문 재시도(페이지 열 때마다 자동)가 두 탭에서 동시에 일어나도 같은 설문이 두 번 저장되지 않게 막는 안전장치. 클라이언트가 client_idempotency_key를 생성해서 재사용하는 것과, 서버(DB)가 그 키에 UNIQUE 제약을 걸어 실제로 거부하는 것, 두 축이 함께 있어야 완성됨 - 2026-10-04에 전자만 있고 후자가 없던 것을 발견해 추가.",
+    "single_source_of_truth": "surveys.client_idempotency_key 컬럼 + surveys_client_idempotency_key_unique UNIQUE 제약(DB) / survey-app.js의 submit()에서 crypto.randomUUID()로 1회 생성(클라이언트)",
+    "derived_fields": [],
+    "db_enforcement": "UNIQUE 제약(surveys_client_idempotency_key_unique) - 중복 INSERT는 DB가 직접 거부(23505 → PostgREST 409)",
+    "code_locations": [
+      "survey-app.js:submit() (키 생성), survey-app.js:retryPendingSurveys() (재사용)"
+    ],
+    "guard_tests": [
+      "apps-script-lint-check.js"
+    ],
+    "금지패턴": "surveys 테이블에 client_idempotency_key 없이 INSERT하는 모든 신규 코드 / 이 UNIQUE 제약을 제거하는 마이그레이션",
+    "참고": "매일 자동 백업 시점에 dahScanForMissingTriggers()가 v_critical_constraints_status 뷰를 조회해 제약 존재 여부를 감시(Apps Script 실행 중 동작이라 run-all.js 테스트 대상은 아님)"
   }
 }
