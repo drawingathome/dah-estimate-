@@ -178,6 +178,18 @@ function validateEstimate() {
   // 연락처도 필수로 만들어서 이 경로 자체를 막음.
   var phone = document.getElementById('c-phone')?.value?.trim();
   if (!phone) { showFieldError('c-phone', '연락처를 입력해주세요'); window._lastValidationFailReason = '연락처 없음'; return false; }
+  // 2026-10-05(선혜님 - 김유진 고객 주소 재발 신고): 기본주소는 비었는데 상세주소에만 글이 있으면
+  // 저장 코드가 ' ' + 상세주소로 합쳐 "맨 앞 공백 + 도로명 없는 주소"가 DB에 저장됨(배수희 9/19,
+  // 김유진 10/5). 주소를 아직 모르는 상태(둘 다 빔)는 정상이라 막지 않고, 이 모순된 조합만 차단.
+  var addrBaseEl = /** @type {HTMLInputElement|null} */ (document.getElementById('c-addr'));
+  var addrDetailEl = /** @type {HTMLInputElement|null} */ (document.getElementById('c-addr2'));
+  var addrBaseVal = addrBaseEl ? addrBaseEl.value.trim() : '';
+  var addrDetailVal = addrDetailEl ? addrDetailEl.value.trim() : '';
+  if (!addrBaseVal && addrDetailVal) {
+    showFieldError('c-addr2', '기본주소가 비어있어요 - [🔍 검색]으로 기본주소(시/구/도로명)를 먼저 선택해주세요. 검색에 안 나오는 신축이면 [직접입력]을 눌러 적어주세요.');
+    window._lastValidationFailReason = '기본주소 없음(상세주소만 입력됨)';
+    return false;
+  }
   var hasProduct = false;
   var missingPriceRows = []; // 가로/높이는 채웠는데 단가를 빼먹은 행 번호(사람이 세는 순서, 1부터)
 

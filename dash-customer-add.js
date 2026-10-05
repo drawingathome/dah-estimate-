@@ -88,6 +88,7 @@ function AddCustomerModal({ editName, registerApi }) {
   const [date, setDate] = React.useState(initial.date);
   const [addr, setAddr] = React.useState(initial.addr);
   const [addrDetail, setAddrDetail] = React.useState(initial.addrDetail);
+  const [addrManual, setAddrManual] = React.useState(false); // 2026-10-05: "직접입력" 탈출구(검색에 안 나오는 신축용)
   const [space, setSpace] = React.useState(initial.space);
   const [naverPaste, setNaverPaste] = React.useState('');
   const [staffName, setStaffName] = React.useState(initial.staffName);
@@ -95,7 +96,7 @@ function AddCustomerModal({ editName, registerApi }) {
   const [memo, setMemo] = React.useState(initial.memo);
   const [measureDate] = React.useState(initial.measureDate);
   const [installDate] = React.useState(initial.installDate);
-  const [fieldErrors, setFieldErrors] = React.useState({});
+  const [fieldErrors, setFieldErrors] = React.useState(/** @type {Record<string, string>} */ ({}));
   const [saving, setSaving] = React.useState(false);
 
   const isStaffUser = currentUser && currentUser.role === 'staff';
@@ -127,7 +128,7 @@ function AddCustomerModal({ editName, registerApi }) {
     if (registerApi) registerApi({ reset: function () { setSaving(false); } });
   }, [registerApi]);
 
-  function getCombinedAddr() { return addrDetail ? (addr.trim() + ' ' + addrDetail.trim()) : addr.trim(); }
+  function getCombinedAddr() { return (addr.trim() + (addrDetail.trim() ? ' ' + addrDetail.trim() : '')).trim(); }
 
   function handlePhoneInput(v) { setPhone(fmtPhone(v)); }
 
@@ -165,9 +166,12 @@ function AddCustomerModal({ editName, registerApi }) {
   function handleSave() {
     var nameResult = validateName(name);
     var phoneResult = validatePhone(phone);
-    var errs = {};
+    var errs = /** @type {Record<string, string>} */ ({});
     if (!nameResult.ok) errs.name = nameResult.msg;
     if (!phoneResult.ok) errs.phone = phoneResult.msg;
+    // 2026-10-05(선혜님 - 김유진 고객 주소 재발 신고): 기본주소는 비었는데 상세주소만 있으면 저장이
+    // 맨 앞 공백 + 도로명 없는 주소로 되던 것을 차단(est-save.js와 동일 규칙). 둘 다 빈 건 정상.
+    if (!addr.trim() && addrDetail.trim()) errs.addr = '기본주소가 비어있어요 - [주소 검색]으로 먼저 선택해주세요. 검색에 안 나오는 신축이면 [직접 입력]을 눌러 적어주세요.';
     var finalPhone = phone;
     if (phoneResult.ok) finalPhone = formatPhone(phone);
     if (date) {
@@ -298,10 +302,15 @@ function AddCustomerModal({ editName, registerApi }) {
           })
         ) : null,
         e('div', { style: { display: 'flex', gap: '6px', marginBottom: '6px' } },
-          e('input', { className: 'form-input', id: 'add-addr', 'aria-label': '주소', placeholder: '주소 검색을 눌러주세요', readOnly: true, value: addr, onChange: function (ev) { setAddr(ev.target.value); }, onClick: function () { openKakaoAddr('add-addr', 'add-addr-detail'); }, style: { flex: 1, background: 'var(--ivory1)', cursor: 'pointer' } }),
+          e('input', { className: 'form-input', id: 'add-addr', 'aria-label': '주소', placeholder: addrManual ? '시/구/도로명부터 입력 (예: 경기 안산시 단원구 ...)' : '주소 검색을 눌러주세요', readOnly: !addrManual, value: addr, onChange: function (ev) { setAddr(ev.target.value); }, onClick: addrManual ? undefined : function () { openKakaoAddr('add-addr', 'add-addr-detail'); }, style: { flex: 1, background: addrManual ? '#fff' : 'var(--ivory1)', cursor: addrManual ? 'text' : 'pointer' } }),
           e('button', { type: 'button', onClick: function () { openKakaoAddr('add-addr', 'add-addr-detail'); }, style: { flexShrink: 0, padding: '0 16px', background: 'var(--dark)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '11px', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' } }, '주소 검색')
         ),
-        e('input', { className: 'form-input', id: 'add-addr-detail', 'aria-label': '상세주소', placeholder: '상세주소 (동/호수 등)', value: addrDetail, onChange: function (ev) { setAddrDetail(ev.target.value); }, style: inputStyle })
+        // 2026-10-05: 같은 줄에 두면 모바일에서 기본주소 칸이 264px→188px로 줄어(긴 도로명주소가 더 잘림) 입력줄 밖으로 분리
+        e('div', { style: { textAlign: 'right', marginBottom: '6px' } },
+          e('button', { type: 'button', id: 'add-addr-manual-btn', onClick: function () { setAddrManual(true); }, style: { padding: '6px 10px', minHeight: '32px', background: '#fff', color: '#8E8078', border: '1px solid var(--border)', borderRadius: '10px', fontSize: '11px', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' } }, '검색에 안 나오면 직접 입력')
+        ),
+        e('input', { className: 'form-input', id: 'add-addr-detail', 'aria-label': '상세주소', placeholder: '상세주소 (동/호수 등)', value: addrDetail, onChange: function (ev) { setAddrDetail(ev.target.value); }, style: inputStyle }),
+        fieldErrors.addr ? e('div', { className: 'field-err', style: { fontSize: '11px', color: 'var(--danger)', marginTop: 'var(--sp-1)', fontWeight: 600 } }, fieldErrors.addr) : null
       ),
       e('div', { style: { marginBottom: '16px' } },
         e('label', { style: { fontSize: '11px', fontWeight: 700, color: 'var(--sub)', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: '8px' } }, '공간 (선택)'),

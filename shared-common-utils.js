@@ -54,40 +54,55 @@ function openKakaoAddr(targetId, detailTargetId) {
   // 있어 "반포자이 138동 1504호"처럼 도로명 없이 저장되는 정확한 메커니즘으로 보임. 이제
   // autoRoadAddress/autoJibunAddress까지 전부 순서대로 확인.
   function extractAddr(data) {
-    return data.roadAddress || data.autoRoadAddress || data.jibunAddress || data.autoJibunAddress || '';
+    // data.address: 다음 API가 문서화한 "기본 주소" 필드 - 위 4개가 전부 비었을 때의 마지막 안전망.
+    return data.roadAddress || data.autoRoadAddress || data.jibunAddress || data.autoJibunAddress || data.address || '';
   }
-  script.onload = function() {
-    new daum.Postcode({
-      oncomplete: function(data) {
-        var addr = extractAddr(data);
-        var el = document.getElementById(targetId);
-        if (el) {
-          el.value = addr;
-          el.dispatchEvent(new Event('input'));
-          el.dispatchEvent(new Event('change'));
-        }
-        focusDetailField();
-      }
-    }).open();
-  };
+  // 2026-10-05(선혜님 - "주소 해결됐다고하지만 주소 여전히 오류야 제대로 확인해" - 김유진 고객, 수정 배포
+  // 3일 뒤 등록분에서 재발): 저장된 값이 " 힐스테이트라군인테라스2차 201동 2602호"처럼 맨 앞에 공백이
+  // 있었고, 이는 저장 코드(기본주소 + ' ' + 상세주소)에서 "기본주소가 빈 문자열이었다"는 서명임 -
+  // 같은 서명이 배수희(9/19, 힐스테이트등촌역)에도 있었고 둘 다 입주 초기 신축 단지. 다음 우편번호 API는
+  // "도로명주소가 발급된 주소만 검색 가능"(공식 Q&A)이라 신축은 검색에 안 잡힐 수 있는데, 기본주소 칸을
+  // readOnly로 막아놔서 사용자가 상세주소 칸에 전부 적는 것 외엔 방법이 없는 막다른 길이었고, 저장 시
+  // 이를 막는 검증도 없었음. 그래서 (1) 검색 결과에서 주소를 못 가져오면 그 자리에서 알리고 칸을 비우지
+  // 않음, (2) enableManualBaseAddr()로 "직접입력" 탈출구 제공, (3) 각 저장 경로에서 "기본주소 없이 상세주소만"
+  // 저장을 차단(est-save.js, dash-customer-add.js).
+  function onPicked(data) {
+    var addr = extractAddr(data);
+    if (!addr) {
+      alert('선택한 항목에서 주소를 가져오지 못했어요.\n\n다른 항목을 선택하시거나, 목록에 없는 신축 건물이면 [직접입력]을 눌러 기본주소(시/구/도로명)를 적어주세요.');
+      return;
+    }
+    var el = document.getElementById(targetId);
+    if (el) {
+      el.value = addr;
+      el.dispatchEvent(new Event('input'));
+      el.dispatchEvent(new Event('change'));
+    }
+    focusDetailField();
+  }
+  // (이전엔 이 콜백이 script.onload용/이미 로드된 경우용 두 군데에 똑같이 복사돼 있었음 - 한 곳으로 통합)
+  function openPostcode() { new daum.Postcode({ oncomplete: onPicked }).open(); }
+  script.onload = openPostcode;
 
   if (window.daum && window.daum.Postcode) {
     script.onload = null;
-    new daum.Postcode({
-      oncomplete: function(data) {
-        var addr = extractAddr(data);
-        var el = document.getElementById(targetId);
-        if (el) {
-          el.value = addr;
-          el.dispatchEvent(new Event('input'));
-          el.dispatchEvent(new Event('change'));
-        }
-        focusDetailField();
-      }
-    }).open();
+    openPostcode();
   } else {
     document.head.appendChild(script);
   }
+}
+
+// "직접입력" 탈출구 - 검색에 안 나오는 신축 건물일 때 기본주소 칸을 직접 쓸 수 있게 풀어줌(기본은 readOnly).
+function enableManualBaseAddr(targetId) {
+  var el = /** @type {HTMLInputElement|null} */ (document.getElementById(targetId));
+  if (!el) return;
+  el.readOnly = false;
+  el.removeAttribute('onclick');
+  el.onclick = null;
+  el.style.cursor = 'text';
+  el.style.background = '#fff';
+  el.placeholder = '시/구/도로명부터 입력 (예: 경기 안산시 단원구 ...)';
+  el.focus();
 }
 
 function syncCustomerToSheet(customer) {

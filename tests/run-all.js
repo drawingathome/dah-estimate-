@@ -287,6 +287,9 @@ if (/dah-dashboard/.test(target)) {
   // 있었음)에서 issues/report 선언누락 같은 숨은 ReferenceError를 ESLint로 전수
   // 감시.
   scripts.push(['apps-script-lint-check.js', []]);
+  // 2026-10-05(선혜님 - "주소 해결됐다고하지만 주소 여전히 오류야 제대로 확인해", 김유진 고객 재발):
+  // 기본주소 없이 상세주소만 저장되는 사고(맨 앞 공백 서명)를 견적서 화면/고객추가 모달 양쪽에서 차단.
+  scripts.push(['addr-empty-base-guard-check.js', []]);
   // 2026-10-01(선혜님 - "전문가입장에서도 보라니깐 놔둬도 될 정도이니??" 지적으로 재점검):
   // 견적서 공개보기가 테이블 전체 직접조회 대신 좁은 rpc 함수만 쓰는지 회귀 감시.
   scripts.push(['public-estimate-view-narrowed-check.js', []]);
