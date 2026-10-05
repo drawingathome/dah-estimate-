@@ -72,11 +72,18 @@ function openKakaoAddr(targetId, detailTargetId) {
       alert('선택한 항목에서 주소를 가져오지 못했어요.\n\n다른 항목을 선택하시거나, 목록에 없는 신축 건물이면 [직접입력]을 눌러 기본주소(시/구/도로명)를 적어주세요.');
       return;
     }
-    var el = document.getElementById(targetId);
+    var el = /** @type {HTMLInputElement|null} */ (document.getElementById(targetId));
     if (el) {
-      el.value = addr;
-      el.dispatchEvent(new Event('input'));
-      el.dispatchEvent(new Event('change'));
+      // 2026-10-05(재현으로 확인한 진짜 결함 - 선혜님 "검색해서 선택하고 상세주소를 적었는데 주소가 이상하게 나온다"):
+      // 고객추가 모달은 9/29에 React로 재작성돼 기본주소 칸이 controlled input인데, 여기서 el.value = addr 로
+      // 칸만 바꾸고 버블링 안 되는 Event('input')을 보내면 React 내부 상태는 그대로 ''임. 그 결과 (1) 고른 직후엔
+      // 화면에 주소가 보이지만 (2) 상세주소를 타이핑해 다시 그려지는 순간 기본주소 칸이 ''로 지워지고 (3) 저장값엔
+      // 기본주소가 빠져 ' ' + 상세주소(앞 공백 서명)나 빈 주소로 저장됨(실제 모달을 그대로 구동해 재현). 외부에서
+      // React 입력칸 값을 바꾸는 표준 방식 = 프로토타입의 native value setter + 버블링 이벤트. 일반(바닐라) 칸에도 동일하게 동작.
+      var desc = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
+      if (desc && desc.set) desc.set.call(el, addr); else el.value = addr;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
     }
     focusDetailField();
   }

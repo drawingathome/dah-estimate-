@@ -174,6 +174,38 @@ async function newPage(browser, port, posts) {
     await browser.close(); server.kill();
   }
 
+  // ───────── C. 고객추가 모달: 실제 검색 함수(openKakaoAddr) 경로 그대로 ─────────
+  // 2026-10-05 재현으로 확인한 결함: 모달은 React라서 검색 함수가 칸 값만 바꾸면 React 상태가 안 바뀌어,
+  // 상세주소를 타이핑하는 순간 화면의 기본주소가 지워지고 저장값에서도 빠졌음(이전 테스트는 setNative로 직접 넣어서 못 잡았음).
+  {
+    const port = 38102;
+    const server = await startServer(root, port);
+    const browser = await launchBrowser();
+    const posts = [];
+    const { page, jsErrors } = await newPage(browser, port, posts);
+    await page.goto(`http://localhost:${port}/dah-dashboard.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await new Promise(r => setTimeout(r, 700));
+    await loginAs(page, 'master');
+    const setNative = (id, v) => page.evaluate((i, val) => { const el = document.getElementById(i); Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(el, val); el.dispatchEvent(new Event('input', { bubbles: true })); }, id, v);
+    await page.evaluate(() => openAdd());
+    await new Promise(r => setTimeout(r, 400));
+    await page.evaluate(() => { window.daum = { Postcode: function (o) { this.open = function () { o.oncomplete({ roadAddress: '서울 서초구 서초대로 50', buildingName: '디에이치방배' }); }; } }; });
+    await page.evaluate(() => document.getElementById('add-addr').click());   // 실제 검색 흐름
+    await new Promise(r => setTimeout(r, 300));
+    await setNative('add-addr-detail', '디에이치방배 123동 401호');
+    await new Promise(r => setTimeout(r, 300));
+    const stillThere = await page.evaluate(() => document.getElementById('add-addr').value);
+    ok('C1. [모달] 검색으로 고른 기본주소가, 상세주소를 타이핑한 뒤에도 화면에서 안 지워짐', stillThere === '서울 서초구 서초대로 50', JSON.stringify(stillThere));
+    await setNative('add-name', '재현테스트'); await setNative('add-phone', '01012345678');
+    await page.click('#add-save-btn');
+    await new Promise(r => setTimeout(r, 800));
+    const sv = posts.find(p => p.method === 'POST' && p.body);
+    const svAddr = sv && (Array.isArray(sv.body) ? sv.body[0] : sv.body).addr;
+    ok('C2. [모달] 검색으로 고른 기본주소 + 상세주소가 그대로 저장됨(앞 공백/누락 없이)', svAddr === '서울 서초구 서초대로 50 디에이치방배 123동 401호', JSON.stringify(svAddr));
+    ok('C3. [모달] JS 에러 없음', jsErrors.length === 0, jsErrors.join('; '));
+    await browser.close(); server.kill();
+  }
+
   console.log('\n' + (failed === 0 ? '✅ 전체 통과' : '❌ 실패 ' + failed + '건'));
   process.exit(failed === 0 ? 0 : 1);
 })().catch(e => { console.error(e); process.exit(1); });
