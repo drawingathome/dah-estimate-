@@ -43,8 +43,6 @@ function openKakaoAddr(targetId, detailTargetId) {
       if (detailEl) setTimeout(function(){ detailEl.focus(); }, 50);
     }
   }
-  var script = document.createElement('script');
-  script.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
   // 2026-10-02(선혜님 - "검색창 눌러서 쓰지, 최근주소는 쓰지도 않았다!!" 지적으로 재조사해
   // 발견): Daum 우편번호 서비스 공식 Q&A - "사용자가 지번-도로명 1:N 관계에서 메인 지번주소를
   // 선택할 경우, 도로명 주소는 roadAddress가 아니라 별도 필드인 autoRoadAddress에 들어간다."
@@ -69,6 +67,8 @@ function openKakaoAddr(targetId, detailTargetId) {
   function onPicked(data) {
     var addr = extractAddr(data);
     if (!addr) {
+      // 2026-10-05: 다음 검색이 비어서 돌아온 경우 "사용자가 뭘 검색했는지/어떤 건물이었는지"를 에러로그에 남겨, 다음엔 추측 대신 기록으로 원인을 알 수 있게 함
+      if (typeof reportClientError === 'function') reportClientError('주소검색-결과비어있음: query=' + (data.query || '') + ' building=' + (data.buildingName || '') + ' sido=' + (data.sido || '') + ' sigungu=' + (data.sigungu || ''));
       alert('선택한 항목에서 주소를 가져오지 못했어요.\n\n다른 항목을 선택하시거나, 목록에 없는 신축 건물이면 [직접입력]을 눌러 기본주소(시/구/도로명)를 적어주세요.');
       return;
     }
@@ -81,15 +81,39 @@ function openKakaoAddr(targetId, detailTargetId) {
     focusDetailField();
   }
   // (이전엔 이 콜백이 script.onload용/이미 로드된 경우용 두 군데에 똑같이 복사돼 있었음 - 한 곳으로 통합)
-  function openPostcode() { new daum.Postcode({ oncomplete: onPicked }).open(); }
-  script.onload = openPostcode;
-
-  if (window.daum && window.daum.Postcode) {
-    script.onload = null;
-    openPostcode();
-  } else {
-    document.head.appendChild(script);
+  function openPostcode() {
+    var w = /** @type {any} */ (window);
+    if (!(w.daum && w.daum.Postcode)) { failLoad(); return; }
+    new w.daum.Postcode({ oncomplete: onPicked }).open();
   }
+  function failLoad() {
+    if (typeof reportClientError === 'function') reportClientError('주소검색-스크립트로드실패');
+    alert('주소 검색 서비스를 불러오지 못했어요.\n\n인터넷 연결을 확인하고 다시 눌러보시거나, [직접입력]을 눌러 기본주소(시/구/도로명)를 적어주세요.');
+  }
+  loadDaumPostcode(openPostcode, failLoad);
+}
+
+// 2026-10-05(선혜님 - "카카오 API인데 문제가 생기는 게 더 이상한 거 아니야? 검색이 안 되는 것 자체가 말이 안 돼"):
+// 외부 서비스(다음 우편번호)는 "항상 성공한다"고 가정하면 안 되고, 실패해도 사용자가 막다른 길에 빠지지 않게
+// 설계해야 함. 코드로 확인한 구멍 2개 - (1) 스크립트 로드 실패 처리(onerror)가 없어 검색 버튼이 조용히 먹통,
+// (2) 페이지마다 첫 클릭이 "스크립트 다운로드 후 비동기로 팝업 열기"라 모바일 브라우저의 팝업 차단에 걸릴 수 있음
+// (같은 종류의 교훈: CONCEPT_REGISTRY iOS_사용자제스처_동기호출). 그래서 페이지 로드 때 미리 불러와 첫 클릭도
+// 클릭 안에서 바로 열리게 하고, 로드 실패는 알림 + 에러로그 + 직접입력 안내로 바꿈. (실제 아이패드에서 차단되는지는
+// 이 환경에서 재현 불가 - 원인으로 단정하지 않고 구조적으로 막은 것.)
+function loadDaumPostcode(onReady, onFail) {
+  var w = /** @type {any} */ (window);
+  if (w.daum && w.daum.Postcode) { if (onReady) onReady(); return; }
+  var s = /** @type {HTMLScriptElement|null} */ (document.getElementById('daum-postcode-script'));
+  if (!s) {
+    s = document.createElement('script');
+    s.id = 'daum-postcode-script';
+    s.src = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+    s.async = true;
+    document.head.appendChild(s);
+  }
+  var tag = s;
+  tag.addEventListener('load', function () { if (onReady) onReady(); });
+  tag.addEventListener('error', function () { tag.remove(); if (onFail) onFail(); }); // 실패한 태그는 지워서 다음 클릭에서 새로 시도
 }
 
 // "직접입력" 탈출구 - 검색에 안 나오는 신축 건물일 때 기본주소 칸을 직접 쓸 수 있게 풀어줌(기본은 readOnly).
@@ -104,6 +128,9 @@ function enableManualBaseAddr(targetId) {
   el.placeholder = '시/구/도로명부터 입력 (예: 경기 안산시 단원구 ...)';
   el.focus();
 }
+
+// 페이지가 열릴 때 미리 불러와서, 첫 [검색] 클릭도 클릭 안에서 바로 팝업이 열리게 함(실패해도 조용히 - 알림은 클릭했을 때만)
+try { loadDaumPostcode(); } catch (e) { /* 미리 불러오기 실패는 무시 */ }
 
 function syncCustomerToSheet(customer) {
   if (!DRIVE_WEBHOOK_URL) return;

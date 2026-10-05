@@ -30,12 +30,14 @@ function ok(label, cond, detail) {
 async function newPage(browser, port, posts) {
   const page = await browser.newPage();
   const dialogs = [];
+  page.daumRequests = 0; // 다음 우편번호 스크립트 요청 횟수(미리 불러오기 검증용)
   const jsErrors = [];
   page.on('pageerror', e => jsErrors.push(e.message));
   page.on('dialog', async d => { dialogs.push(d.message()); try { await d.accept(); } catch (e) {} });
   await page.setRequestInterception(true);
   page.on('request', (req) => {
     const url = req.url(); const method = req.method();
+    if (url.includes('daumcdn.net')) { page.daumRequests++; req.abort(); return; }
     if (!url.includes('supabase.co')) {
       if (url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) req.continue(); else req.abort();
       return;
@@ -97,12 +99,25 @@ async function newPage(browser, port, posts) {
     const typed = await page.evaluate(() => document.getElementById('c-addr').value);
     ok('A6. [견적서] 직접입력 모드에서 실제로 타이핑됨(검색 팝업이 다시 뜨지 않음)', typed === '경기 안산시 단원구 성곡동 843', typed);
 
+    // 미리 불러오기: 페이지를 연 것만으로(클릭 전) 다음 우편번호 스크립트를 이미 요청했는지
+    ok('A11. [견적서] 페이지 로드 때 우편번호 스크립트를 미리 요청함(첫 클릭이 비동기 팝업이 되지 않게)', page.daumRequests >= 1, 'daumRequests=' + page.daumRequests);
+    // 로드 실패: 스크립트를 못 받는 상황(테스트 하네스가 요청을 중단시킴)에서 [검색]을 누르면 조용히 먹통이 아니라 알림이 떠야 함
+    await page.evaluate(() => { window.__rce = []; window.reportClientError = function (m) { window.__rce.push(m); }; });
+    dialogs.length = 0;
+    await page.evaluate(() => { delete window.daum; openKakaoAddr('c-addr', 'c-addr2'); });
+    await new Promise(r => setTimeout(r, 800));
+    const rceLoad = await page.evaluate(() => window.__rce.slice());
+    ok('A12. [견적서] 검색 스크립트 로드 실패 시 알림이 뜸(조용한 먹통 방지) + 에러로그 기록', dialogs.some(m => /불러오지 못했어요/.test(m)) && rceLoad.some(m => /스크립트로드실패/.test(m)), JSON.stringify({ dialogs, rceLoad }));
+
     // 검색 결과가 전부 비었을 때
-    await page.evaluate(() => { document.getElementById('c-addr').value = ''; window.daum = { Postcode: function (o) { this.open = function () { o.oncomplete({ roadAddress: '', autoRoadAddress: '', jibunAddress: '', autoJibunAddress: '' }); }; } }; });
+    await page.evaluate(() => { document.getElementById('c-addr').value = ''; window.daum = { Postcode: function (o) { this.open = function () { o.oncomplete({ roadAddress: '', autoRoadAddress: '', jibunAddress: '', autoJibunAddress: '', query: '힐스테이트라군인테라스2차', buildingName: '' }); }; } }; window.__rce = []; });
     dialogs.length = 0;
     await page.evaluate(() => openKakaoAddr('c-addr', 'c-addr2'));
     const afterEmpty = await page.evaluate(() => document.getElementById('c-addr').value);
     ok('A7. [견적서] 검색 결과에서 주소를 못 가져오면 그 자리에서 알림 + 기본주소 칸은 그대로', dialogs.some(m => /주소를 가져오지 못했어요/.test(m)) && afterEmpty === '', JSON.stringify({ dialogs, afterEmpty }));
+
+    const rceEmpty = await page.evaluate(() => window.__rce.slice());
+    ok('A13. [견적서] 빈 결과일 때 사용자가 검색한 단어(query)가 에러로그에 남음(다음엔 추측 대신 기록으로 원인 확인)', rceEmpty.some(m => /결과비어있음/.test(m) && /힐스테이트라군인테라스2차/.test(m)), JSON.stringify(rceEmpty));
 
     // data.address 안전망
     await page.evaluate(() => { window.daum = { Postcode: function (o) { this.open = function () { o.oncomplete({ roadAddress: '', autoRoadAddress: '', jibunAddress: '', autoJibunAddress: '', address: '경기 안산시 단원구 성곡동 843' }); }; } }; });
