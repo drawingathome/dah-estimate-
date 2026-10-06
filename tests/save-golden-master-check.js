@@ -86,6 +86,10 @@ function normalize(v) {
     .replace(/\?v=[0-9a-f]{12}/g, '?v=HASH')
     // 2026-10-06: 저장 영수증(save_receipts)의 app_version은 스크립트 주소의 ?v=해시 값이라 파일 내용이 바뀔 때마다(정적 점검의 캐시버전 갱신 포함) 달라짐 - 감시 대상이 아님
     .replace(/"app_version":"[0-9a-f]{12}"/g, '"app_version":"HASH"')
+    // 2026-10-06: 영수증의 device(브라우저 종류·화면 크기)와 at_local(시간대 이름이 들어간 현지 시각)도 실행 환경(CI·다른 컴퓨터)마다 달라지는 값 - 감시 대상이 아님.
+    // (CI가 device 차이로 실패해서 발견: 환경에 따라 달라질 수 있는 영수증 값은 한 번에 전수 점검해서 제외한다 - 체크리스트 55번)
+    .replace(/"device":"[^"]*"/g, '"device":"DEVICE"')
+    .replace(/"at_local":"[^"]*"/g, '"at_local":"AT_LOCAL"')
     .replace(/\.js(\?v=HASH)?:\d+:\d+/g, '.js:L:C')));
 }
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
