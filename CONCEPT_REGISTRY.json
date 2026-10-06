@@ -230,17 +230,24 @@
     "금지패턴": "html2canvas/fetch 등 비동기 작업의 .then() 콜백 안에서 window.open/print를 직접 호출하는 것 - 체크리스트 30번, 최소 3번 재발한 계보"
   },
   "저장성공_실제확인": {
-    "의미": "서버 응답을 실제로 확인해서 성공/실패를 판정하는지, 아니면 요청만 보내고 무조건 성공으로 표시하는지",
+    "의미": "서버 응답을 실제로 확인해서 성공/실패를 판정하는지, 아니면 요청만 보내고 무조건 성공으로 표시하는지 [2026-10-06 확장] 화면의 \"저장됨\" 표시와 인쇄·PDF 진행 여부도 서버가 실제로 받았을 때만 켜/통과시킨다(김성은님 견적서 사고).",
     "single_source_of_truth": "sbXHR 공용함수 - HTTP 200이어도 0건 반영(zeroRows)이면 실패로 처리",
     "derived_fields": [],
     "db_enforcement": "없음(RLS가 조용히 0건 처리하는 것 자체는 DB 정상 동작 - 이걸 감지하는 게 앱 책임)",
     "code_locations": [
-      "dash-api.js:sbXHR"
+      "dash-api.js:sbXHR",
+      "est-save.js:ensureEstimateSavedThen",
+      "est-save.js:estimateNeedsSave",
+      "est-save-stages.js:_saveStage_estimatesActual",
+      "est-customer-load.js:openPdfModal",
+      "est-customer-load.js:shareEstimatePDF"
     ],
     "guard_tests": [
-      "unassigned_claim_check.js"
+      "unassigned_claim_check.js",
+      "estimate-save-integrity-check.js",
+      "auth-expiry-retry-check.js"
     ],
-    "금지패턴": "새 저장 경로에서 sbXHR 대신 직접 XHR을 짜면서 zeroRows 감지 없이 상태코드 200만 보고 성공 처리하는 것 - 최소 4번 재발한 계보(8/25 최초 발견)"
+    "금지패턴": "새 저장 경로에서 sbXHR 대신 직접 XHR을 짜면서 zeroRows 감지 없이 상태코드 200만 보고 성공 처리하는 것 - 최소 4번 재발한 계보(8/25 최초 발견) / 서버 저장 결과와 무관하게 \"저장됨\" 표시를 켜는 것 / 인쇄·PDF·서류 출력이 저장 여부를 확인하지 않고 진행되는 것"
   },
   "담당자별_성과_토글_상태유지": {
     "의미": "홈화면 아코디언(담당자별 성과)이 펼쳐진 상태에서 홈 전체가 재렌더링돼도(이번달/지난달 토글 등) 펼침 상태가 유지되는지",

@@ -12,6 +12,7 @@
 //  4) 검증에서 막힌 저장(이름 없음): 'invalid' 영수증
 //  5) 견적서를 열었을 때 저장된 금액과 화면 금액이 다르면 'mismatch' 영수증 + 경고(오늘 김성은님: 저장 7,968,000원 vs 열면 7,544,000원)
 //  6) 불러온 견적서가 없으면 열기 영수증은 없음(불필요한 기록 없음)
+//  7) 인쇄·PDF: 저장 필요 여부와 결과가 'print' 영수증으로 남음
 //
 // 사용법: node tests/save-receipt-check.js
 // ══════════════════════════════════════════════════
@@ -161,6 +162,18 @@ const kinds = (st, kind) => st.receipts.filter(r => r && r.kind === kind);
     ok('6-1. [새 견적서] 불러온 견적서가 없으면 열기 영수증은 없음', kinds(state, 'open').length === 0, JSON.stringify(state.receipts.map(r => r.kind)));
     await browser.close(); server.kill();
   }
+  // 7) 인쇄·PDF
+  {
+    const { server, browser, page, state } = await open(38506, {});
+    await page.evaluate(FILL);
+    await page.evaluate(() => openPdfModal()); await sleep(3200);
+    await page.evaluate(() => { const m = document.getElementById('pdf-size-modal'); if (m) m.classList.remove('open'); });
+    await page.evaluate(() => openPdfModal()); await sleep(1200);
+    const pr = kinds(state, 'print').map(r => r.outcome);
+    ok('7-1. [인쇄·PDF] 저장이 필요했던 첫 시도는 "saved-then-proceed", 이미 저장된 두 번째는 "direct"', pr.join(',') === 'saved-then-proceed,direct', JSON.stringify(pr));
+    await browser.close(); server.kill();
+  }
+
   console.log('\n' + (failed === 0 ? '✅ 전체 통과' : '❌ 실패 ' + failed + '건'));
   process.exit(failed === 0 ? 0 : 1);
 })().catch(e => { console.error(e); process.exit(1); });

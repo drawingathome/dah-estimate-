@@ -18,7 +18,8 @@ var _selectedPdfOpt = 'fit';
 // 먹통처럼 보였을 가능성이 높음. 카톡공유 버튼을 실제로 누른 시점에만 동적으로
 // 불러오도록 변경 — 이러면 카톡공유를 안 쓰는 대다수 상황에서는 이 무거운
 // 라이브러리를 아예 안 받아오니 다른 기능에 전혀 영향을 줄 수 없음.
-function shareEstimatePDF() {
+function shareEstimatePDF() { ensureEstimateSavedThen(_shareEstimatePDFNow); }
+function _shareEstimatePDFNow() {
   if (typeof html2pdf === 'undefined') {
     showToast('PDF 기능 불러오는 중...');
     var script = document.createElement('script');
@@ -115,7 +116,8 @@ function _doShareEstimatePDF() {
   });
 }
 
-function openPdfModal() {
+function openPdfModal() { ensureEstimateSavedThen(_openPdfModalNow); }
+function _openPdfModalNow() {
   _selectedPdfOpt = 'fit';
   document.getElementById('pdf-opt-fit')?.classList.add('selected');
   document.getElementById('pdf-opt-a4')?.classList.remove('selected');

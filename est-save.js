@@ -417,6 +417,10 @@ function saveEstimate() {
   logSaveAttempt();
   logSaveStage('시작');
   estSendReceipt('save', 'start', { phase: 'start', pending_queue: (typeof getEstPendingQueue === 'function') ? getEstPendingQueue().length : null });
+  // 2026-10-06(선혜님 - "저장 눌렀어"/"프린트까지 했는데" 김성은님 견적서가 서버에 없음): 인쇄·PDF 전에 저장을 먼저 하고, 그 결과를 받아 진행 여부를
+  // 정하기 위한 콜백(ensureEstimateSavedThen이 설정). 저장 흐름이 어디서 끝나든(검증 중단/확인창 취소/이미 진행 중/서버 성공/서버 실패) 정확히 한 번만 호출됨.
+  var _afterSave = window._estAfterSave || null; window._estAfterSave = null;
+  function _finishAfter(outcome) { var cb = _afterSave; _afterSave = null; if (cb) { try { cb(outcome); } catch (eCb) { console.error('저장 후 처리 오류:', eCb); } } }
   // 2026-09-08(선혜님 지적 - "저장 후 대시보드를 클릭하면 사이트에서
   // 나갈까요? 저장되지 않을 수 있습니다가 무조건 알림이 떠 저장이
   // 됐으면 안떠야지"): dah-estimate.html의 beforeunload 핸들러가
@@ -463,6 +467,7 @@ function saveEstimate() {
       // 사실 취소였다"는 상황이 재발할 수 있음. 눈에 띄는 안내를 남김.
       showToast('저장이 취소됐어요 — "저장" 버튼을 다시 눌러주세요');
       estSendReceipt('save', 'invalid', { phase: 'end', reason: '필수항목 확인창 취소' });
+      _finishAfter('invalid');
       return;
     }
   }
@@ -488,6 +493,7 @@ function saveEstimate() {
       logSaveStage('버튼-이미비활성-무시');
       showToast('⚠️ 저장이 이미 진행 중이에요 — 잠시 후 다시 시도해주세요');
       estSendReceipt('save', 'invalid', { phase: 'end', reason: '이미 저장 진행 중' });
+      _finishAfter('invalid');
       return;
     }
     btn.disabled = true;
@@ -497,8 +503,11 @@ function saveEstimate() {
   function reenable(outcome) {
     if (btn) { btn.disabled = false; btn.style.opacity = ''; }
     var nameEl = document.getElementById('c-name');
-    if (nameEl) nameEl.dataset.saved = '1'; // 2026-10-06: 기존 동작 유지(서버 결과와 무관하게 표시) - 서버 성공 때만 켜는 변경은 별도 배포(저장 신뢰성)
+    // 2026-10-06: 예전엔 서버 저장이 실패해도 항상 saved='1'로 표시해서(코드 주석에도 "성공/로컬저장/실패 무관") 페이지를 나갈 때 경고가 안 떴음 -
+    // 이제 서버가 실제로 받았을 때('server')만 저장됨으로 표시하고, 아니면 표시를 지워서 나갈 때 경고가 뜨게 함.
+    if (nameEl) { if (outcome === 'server') { nameEl.dataset.saved = '1'; window._estDirty = false; } else { delete nameEl.dataset.saved; } }
     estSendReceipt('save', outcome || 'failed', { phase: 'end', pending_queue: (typeof getEstPendingQueue === 'function') ? getEstPendingQueue().length : null });
+    _finishAfter(outcome || 'failed');
   }
   try {
     _saveEstimateInner(reenable);
@@ -509,7 +518,29 @@ function saveEstimate() {
   }
 }
 
-// ══ 저장·열기 영수증 (2026-10-06) ══
+// 2026-10-06(선혜님 - 김성은님 견적서: "저장 눌렀어, 프린트까지 했는데" 서버엔 없음): 인쇄·PDF가 저장 여부를 확인하지 않아서 서버에 없는 서류가
+// 종이로 나갔음. 저장이 필요한 상태(새 견적서이거나 수정 후 저장 안 함)면 먼저 저장하고, 서버가 받았을 때만 곧바로 진행. 서버에 못 올리면 물어봄.
+function estimateNeedsSave() {
+  var nameEl = /** @type {HTMLInputElement|null} */ (document.getElementById('c-name'));
+  var name = nameEl && nameEl.value && nameEl.value.trim();
+  if (!nameEl || !name) return false;
+  if (nameEl.dataset.saved === '1') return false;
+  var editing = window._estEditState && window._estEditState.editingEstDbId;
+  return editing ? window._estDirty === true : true;
+}
+function ensureEstimateSavedThen(proceed) {
+  if (!estimateNeedsSave()) { estSendReceipt('print', 'direct', {}); proceed(); return; }
+  if (typeof showToast === 'function') showToast('저장하고 진행할게요…');
+  window._estAfterSave = function (outcome) {
+    if (outcome === 'server') { estSendReceipt('print', 'saved-then-proceed', {}); proceed(); return; }
+    if (outcome === 'invalid') { estSendReceipt('print', 'blocked-invalid', {}); return; } // 이미 안내 메시지가 떴음 - 고치고 다시 누르면 됨
+    if (window.confirm('⚠️ 서버에 저장하지 못했어요.\n\n이 견적서는 이 기기에만 있어서 나중에 사라질 수 있어요.\n\n그래도 계속할까요?')) { estSendReceipt('print', 'confirm-yes', {}); proceed(); }
+    else { estSendReceipt('print', 'confirm-no', {}); }
+  };
+  saveEstimate();
+}
+
+// ══ 저장·열기·인쇄 영수증 (2026-10-06) ══
 // 선혜님 - "너 희안하게 원인을 찾을 생각을 안하는거 같다 / 어떻게 하면 니가 오류를 찾을 수 있을까 고민해봐": 서버에는 "저장 결과"만 남고 "그때 화면에서 일어난
 // 일"(화면에 보인 금액, 연 방법, 입력값, 기기, 로그인 상태)은 어디에도 없어서 9/23 김성은님 견적서나 08:59 할인 변화 같은 일을 매번 추측으로 풀어야 했음.
 // 저장 시작/끝, 견적서 열기(저장된 금액 vs 화면 금액), 인쇄·PDF 때마다 화면 상태를 save_receipts 표에 남긴다(직원은 쓰기만, 읽기는 서버 관리자만).
