@@ -84,6 +84,8 @@ function normalize(v) {
   return canon(JSON.parse(JSON.stringify(v)
     .replace(/localhost:\d+/g, 'localhost:PORT')
     .replace(/\?v=[0-9a-f]{12}/g, '?v=HASH')
+    // 2026-10-06: 저장 영수증(save_receipts)의 app_version은 스크립트 주소의 ?v=해시 값이라 파일 내용이 바뀔 때마다(정적 점검의 캐시버전 갱신 포함) 달라짐 - 감시 대상이 아님
+    .replace(/"app_version":"[0-9a-f]{12}"/g, '"app_version":"HASH"')
     .replace(/\.js(\?v=HASH)?:\d+:\d+/g, '.js:L:C')));
 }
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));

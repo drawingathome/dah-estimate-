@@ -261,10 +261,10 @@ function validateEstimate() {
 function _saveEstimateInner(_onDone) {
   var onDone = typeof _onDone === 'function' ? _onDone : function(){};
   clearDraft(); // 저장 완료 시 초안 삭제
-  if (!validateEstimate()) { logSaveStage('검증실패-중단', window._lastValidationFailReason); onDone(); return; }
+  if (!validateEstimate()) { logSaveStage('검증실패-중단', window._lastValidationFailReason); onDone('invalid'); return; }
   logSaveStage('검증통과');
   var name=document.getElementById('c-name').value.trim();
-  if(!name) { showToast('⚠️ 고객명을 입력하세요'); onDone(); return; }
+  if(!name) { showToast('⚠️ 고객명을 입력하세요'); onDone('invalid'); return; }
   var phone=document.getElementById('c-phone').value.trim();
   var addr=document.getElementById('c-addr').value.trim();
   var addr2=document.getElementById('c-addr2')?.value.trim()||'';
@@ -416,6 +416,7 @@ function logSaveStage(stage, detail) {
 function saveEstimate() {
   logSaveAttempt();
   logSaveStage('시작');
+  estSendReceipt('save', 'start', { phase: 'start', pending_queue: (typeof getEstPendingQueue === 'function') ? getEstPendingQueue().length : null });
   // 2026-09-08(선혜님 지적 - "저장 후 대시보드를 클릭하면 사이트에서
   // 나갈까요? 저장되지 않을 수 있습니다가 무조건 알림이 떠 저장이
   // 됐으면 안떠야지"): dah-estimate.html의 beforeunload 핸들러가
@@ -461,6 +462,7 @@ function saveEstimate() {
       // 아무 일도 안 일어났음 - 바빠서 놓치면 "저장했다고 생각했는데
       // 사실 취소였다"는 상황이 재발할 수 있음. 눈에 띄는 안내를 남김.
       showToast('저장이 취소됐어요 — "저장" 버튼을 다시 눌러주세요');
+      estSendReceipt('save', 'invalid', { phase: 'end', reason: '필수항목 확인창 취소' });
       return;
     }
   }
@@ -485,25 +487,108 @@ function saveEstimate() {
     if (btn.disabled) {
       logSaveStage('버튼-이미비활성-무시');
       showToast('⚠️ 저장이 이미 진행 중이에요 — 잠시 후 다시 시도해주세요');
+      estSendReceipt('save', 'invalid', { phase: 'end', reason: '이미 저장 진행 중' });
       return;
     }
     btn.disabled = true;
     btn.dataset.disabledAt = String(Date.now());
     btn.style.opacity = '0.6';
   }
-  function reenable() {
+  function reenable(outcome) {
     if (btn) { btn.disabled = false; btn.style.opacity = ''; }
     var nameEl = document.getElementById('c-name');
-    if (nameEl) nameEl.dataset.saved = '1';
+    if (nameEl) nameEl.dataset.saved = '1'; // 2026-10-06: 기존 동작 유지(서버 결과와 무관하게 표시) - 서버 성공 때만 켜는 변경은 별도 배포(저장 신뢰성)
+    estSendReceipt('save', outcome || 'failed', { phase: 'end', pending_queue: (typeof getEstPendingQueue === 'function') ? getEstPendingQueue().length : null });
   }
   try {
     _saveEstimateInner(reenable);
   } catch (err) {
     console.error('저장 중 예외 발생:', err);
     alert('⚠️ 저장 중 오류가 발생했어요\n\n' + (err && err.message ? err.message : err) + '\n\n이 화면을 캡처해서 보내주시면 원인을 찾을 수 있어요.');
-    reenable();
+    reenable('failed');
   }
 }
+
+// ══ 저장·열기 영수증 (2026-10-06) ══
+// 선혜님 - "너 희안하게 원인을 찾을 생각을 안하는거 같다 / 어떻게 하면 니가 오류를 찾을 수 있을까 고민해봐": 서버에는 "저장 결과"만 남고 "그때 화면에서 일어난
+// 일"(화면에 보인 금액, 연 방법, 입력값, 기기, 로그인 상태)은 어디에도 없어서 9/23 김성은님 견적서나 08:59 할인 변화 같은 일을 매번 추측으로 풀어야 했음.
+// 저장 시작/끝, 견적서 열기(저장된 금액 vs 화면 금액), 인쇄·PDF 때마다 화면 상태를 save_receipts 표에 남긴다(직원은 쓰기만, 읽기는 서버 관리자만).
+// 영수증 전송이 실패해도 저장·인쇄 흐름에는 절대 영향이 없고, 실패하면 이 기기에 30건까지 보관했다가 다시 보냄(오프라인이었던 때의 기록도 나중에 도착).
+var EST_RECEIPT_QUEUE_KEY = 'dah_receipt_queue';
+function estCollectFormSnapshot() {
+  var gv = function (id) { var el = /** @type {any} */ (document.getElementById(id)); return el ? el.value : null; };
+  var gc = function (id) { var el = /** @type {any} */ (document.getElementById(id)); return el ? !!el.checked : null; };
+  var gt = function (id) { var el = document.getElementById(id); return el ? String(el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 40) : null; };
+  var svc = Array.prototype.map.call(document.querySelectorAll('#svc-body tr'), function (r) {
+    return { t: r.getAttribute('data-svc-type') || null, k: (r.querySelector('.svc-kind') || {}).value || null, c: ((r.querySelector('.svc-content') || {}).value || '').slice(0, 40), p: (r.querySelector('.sprice') || {}).value || null, q: (r.querySelector('.sqty') || {}).value || null, m: r.dataset.manualOverride || null };
+  });
+  var st = document.getElementById('status-final');
+  return {
+    region: gv('c-region'), measure: gv('c-measure'), install: gv('c-install'), measure_tbd: gc('c-measure-tbd'), install_tbd: gc('c-install-tbd'),
+    total: gt('sum-total'), discount_amount: gt('sum-discount'), discount_type: gv('discount-type'), discount_value: gv('discount'),
+    curtain_rows: document.querySelectorAll('.row-curtain').length, blind_rows: document.querySelectorAll('#blind-body tr, .row-blind').length,
+    svc_rows: svc, final_status: !!(st && st.classList.contains('on')),
+    path: (window._estEditState && window._estEditState.editingEstDbId) ? 'edit' : 'new', url_params: String(location.search || '').slice(0, 90)
+  };
+}
+function _estPostReceipt(row, allowQueue) {
+  if (typeof SUPABASE_URL === 'undefined') return;
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', SUPABASE_URL + '/rest/v1/save_receipts', true);
+  xhr.setRequestHeader('apikey', SUPABASE_KEY);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+  xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.setRequestHeader('Prefer', 'return=minimal');
+  xhr.timeout = 10000;
+  var fail = function () { if (allowQueue) _estQueueReceipt(row); };
+  xhr.onload = function () { if (!(xhr.status >= 200 && xhr.status < 300)) fail(); };
+  xhr.onerror = fail; xhr.ontimeout = fail;
+  xhr.send(JSON.stringify(row));
+}
+function _estQueueReceipt(row) {
+  try {
+    var q = JSON.parse(localStorage.getItem(EST_RECEIPT_QUEUE_KEY) || '[]'); q.push(row);
+    if (q.length > 30) q = q.slice(-30);
+    localStorage.setItem(EST_RECEIPT_QUEUE_KEY, JSON.stringify(q));
+  } catch (e) { /* 보관 실패도 무시 */ }
+}
+function estFlushReceiptQueue() {
+  try {
+    var q = JSON.parse(localStorage.getItem(EST_RECEIPT_QUEUE_KEY) || '[]'); if (!q.length) return;
+    localStorage.setItem(EST_RECEIPT_QUEUE_KEY, '[]');
+    q.forEach(function (r) { r.detail = Object.assign({}, r.detail, { resent: true }); _estPostReceipt(r, true); });
+  } catch (e) { /* 무시 */ }
+}
+function estSendReceipt(kind, outcome, extra) {
+  try {
+    var s = null; try { s = JSON.parse(localStorage.getItem('dah_auth_session') || 'null'); } catch (e1) {}
+    var scr = /** @type {any} */ (document.querySelector('script[src*="est-save.js"]'));
+    var ver = scr && scr.src && scr.src.indexOf('?v=') !== -1 ? scr.src.split('?v=')[1] : null;
+    var nameEl = /** @type {any} */ (document.getElementById('c-name'));
+    var row = {
+      kind: kind, outcome: outcome || null,
+      customer_name: nameEl && nameEl.value ? String(nameEl.value).trim().slice(0, 60) : null,
+      estimate_id: (window._estEditState && window._estEditState.editingEstDbId) || null,
+      app_version: ver, user_email: (s && s.email) || null,
+      device: String(navigator.userAgent || '').slice(0, 120) + ' | ' + screen.width + 'x' + screen.height + ' | online=' + navigator.onLine,
+      detail: Object.assign({ at_local: String(new Date()).slice(0, 33), snapshot: estCollectFormSnapshot() }, extra || {})
+    };
+    _estPostReceipt(row, true);
+  } catch (e) { /* 영수증 실패는 절대 저장·인쇄 흐름에 영향을 주지 않음 */ }
+}
+// 견적서를 연 뒤 저장된 금액과 화면 금액이 다르면 기록하고 저장 전에 확인하라고 경고(예: 저장 7,968,000원인데 열면 7,544,000원).
+function estCheckOpenMismatch(source) {
+  try {
+    var row = window._estLoadedRow; if (!row) return;
+    var shown = parseInt(String((document.getElementById('sum-total') || {}).textContent || '').replace(/[^0-9]/g, ''), 10) || 0;
+    var stored = Number(row.price) || 0;
+    var mismatch = stored > 0 && shown > 0 && shown !== stored;
+    estSendReceipt('open', mismatch ? 'mismatch' : 'ok', { source: source, stored_price: stored, shown_total: shown, stored_final: row.price_breakdown && row.price_breakdown.finalTotal, stored_region: row.region || null, stored_install_tbd: row.install_date_tbd, stored_manual_discount: (row.applied_discounts && row.applied_discounts.manual) || null });
+    if (mismatch && typeof showToast === 'function') showToast('⚠️ 저장된 금액(' + stored.toLocaleString() + '원)과 화면 금액(' + shown.toLocaleString() + '원)이 달라요 — 저장하기 전에 확인해주세요');
+  } catch (e) { /* 무시 */ }
+}
+window.addEventListener('online', function () { estFlushReceiptQueue(); });
+document.addEventListener('DOMContentLoaded', function () { setTimeout(estFlushReceiptQueue, 4000); });
 
 // 2026-08-21(선혜님 요청 — "내가 어떻게 다 검토하니, 코드를 활용할 수 없니"):
 // 여러 핵심 항목을 자동으로 검사해서 한 화면에 초록/빨강으로 보여주는 자가진단

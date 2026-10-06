@@ -62,7 +62,7 @@
 | 12 | `est-calc-blind.js` | DAH 견적서 앱 — 블라인드 행 계산 (추가/최소면적/옵션 추가금/부자재 자동/복사) | 6 |
 | 13 | `est-calc-svc.js` | DAH 견적서 앱 — 기타품목 · 부자재/서비스(실측비·시공비·레일) 행 계산과 요약 | 12 |
 | 14 | `est-survey.js` | DAH 견적서 앱 — 설문지 연동 | 2 |
-| 15 | `est-save.js` | DAH 견적서 앱 — 저장/검증/토스트 | 9 |
+| 15 | `est-save.js` | DAH 견적서 앱 — 저장/검증/토스트 | 15 |
 | 16 | `est-save-stages.js` | DAH 견적서 앱 — 저장 단계 함수 4개 (고객 저장 → 견적서 저장 → 로컬 저장) | 4 |
 | 17 | `est-doc-customer.js` | DAH 견적서 앱 — 고객용 견적서 문서 생성 | 2 |
 | 18 | `est-doc-vendor.js` | DAH 견적서 앱 — 거래처별 발주서 문서 생성 | 5 |
@@ -96,6 +96,8 @@
 | `_copySelectValues` | `est-product-calc.js` |
 | `_doRetryEstPendingSync` | `est-sync-queue.js` |
 | `_doShareEstimatePDF` | `est-customer-load.js` |
+| `_estPostReceipt` | `est-save.js` |
+| `_estQueueReceipt` | `est-save.js` |
 | `_exportEstimatesExcelInner` | `dash-export.js` |
 | `_exportExcelInner` | `dash-export.js` |
 | `_findSameSpaceInsertPoint` | `est-product-calc.js` |
@@ -213,7 +215,11 @@
 | `el` | `dash-ui-helpers.js` |
 | `enableManualBaseAddr` | `shared-common-utils.js` |
 | `escHtml` | `shared-common-utils.js` |
+| `estCheckOpenMismatch` | `est-save.js` |
+| `estCollectFormSnapshot` | `est-save.js` |
+| `estFlushReceiptQueue` | `est-save.js` |
 | `estimateDbRowToLocal` | `dash-api-data.js` |
+| `estSendReceipt` | `est-save.js` |
 | `exportEstimatesExcel` | `dash-export.js` |
 | `exportExcel` | `dash-export.js` |
 | `fetchDiscountCouponsFromCloud` | `est-utils.js` |

@@ -32,6 +32,7 @@ interface Window {
   _custSaveQueue?: { [key: string]: any };
   _dahVendorListRaw?: any[];
   _estEditState?: any;
+  _estLoadedRow?: any; // 2026-10-06: 불러온 견적서 행(열기 영수증에서 저장 금액과 화면 금액 비교용)
   _estCurrentUser?: { name: string, role: 'master' | 'staff' } | null;
   // 2026-09-22(선혜님 - "오류를 모두 확인한거 맞니... 개선을 해야지" -
   // 검증실패 사유를 로그에 남기기 위해 신설): validateEstimate() 실패시

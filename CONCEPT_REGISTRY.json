@@ -380,5 +380,21 @@
     ],
     "금지패턴": "surveys 테이블에 client_idempotency_key 없이 INSERT하는 모든 신규 코드 / 이 UNIQUE 제약을 제거하는 마이그레이션",
     "참고": "매일 자동 백업 시점에 dahScanForMissingTriggers()가 v_critical_constraints_status 뷰를 조회해 제약 존재 여부를 감시(Apps Script 실행 중 동작이라 run-all.js 테스트 대상은 아님)"
+  },
+  "저장_영수증_기록": {
+    "의미": "견적서 화면에서 저장·열기 때 화면에 보인 상태(금액·지역·할인·일정·시공 자재·열기 경로·기기·로그인·앱 버전)를 서버 save_receipts 표에 남겨, 문제가 생겼을 때 '그때 화면에서 일어난 일'을 서버에서 볼 수 있게 하는 개념",
+    "single_source_of_truth": "est-save.js:estSendReceipt (영수증 만드는 유일한 함수), save_receipts 표",
+    "derived_fields": [],
+    "db_enforcement": "save_receipts: RLS 켜짐, 로그인 직원은 쓰기(insert)만 가능(읽기·수정·삭제 불가), 익명 불가, 읽기는 서버 관리자(service role)만",
+    "code_locations": [
+      "est-save.js:estSendReceipt",
+      "est-save.js:estCheckOpenMismatch",
+      "est-save.js:estFlushReceiptQueue",
+      "est-save.js:estCollectFormSnapshot"
+    ],
+    "guard_tests": [
+      "save-receipt-check.js"
+    ],
+    "금지패턴": "영수증 전송 실패가 저장 흐름을 막거나 예외를 밖으로 던지는 것 / 영수증을 서버 읽기 가능한 공개 권한으로 두는 것 / 증거 없이 '일어나지 않았다'고 결론내리는 것(영수증이 없으면 '기록이 없다'고만 말한다)"
   }
 }

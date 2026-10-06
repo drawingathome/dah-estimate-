@@ -915,8 +915,8 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
 <script src="/est-calc-blind.js?v=bb50880a48cb"></script>
 <script src="/est-calc-svc.js?v=9fc2319e2cdd"></script>
 <script src="/est-survey.js?v=0e4bacb22873"></script>
-<script src="/est-save.js?v=7d8f49c91d21"></script>
-<script src="/est-save-stages.js?v=4edd40c26e36"></script>
+<script src="/est-save.js?v=4782b577efc4"></script>
+<script src="/est-save-stages.js?v=0a8047152541"></script>
 <script src="/est-doc-customer.js?v=e8be36d530e2"></script>
 <script src="/est-doc-vendor.js?v=3b6860a47faf"></script>
 <script src="/est-doc-vendor-ui.js?v=485ee9acf535"></script>
@@ -1063,6 +1063,7 @@ var currentTab = 'ga';
             try {
               var erows = JSON.parse(exhr.responseText);
               var e = erows && erows[0];
+              window._estLoadedRow = e || null; setTimeout(function(){ estCheckOpenMismatch('customer'); }, 3500); // 2026-10-06: 열기 영수증
               var loadedItems = false;
               if (e && e.line_items && typeof restoreLineItemsToForm === 'function') {
                 // 2026-09-22(선혜님 - "안바뀌엇고 열면 자꾸 50%로 된다니깐"
@@ -1169,6 +1170,7 @@ var currentTab = 'ga';
         try {
           var erows = JSON.parse(eoxhr.responseText);
           var e = erows && erows[0];
+          window._estLoadedRow = e || null; setTimeout(function(){ estCheckOpenMismatch('estimate-id'); }, 3500); // 2026-10-06: 열기 영수증
           if (!e) { showToast('⚠️ 해당 견적서를 찾을 수 없어요'); return; }
           // 2026-08-25: loadCustId 경로와 동일한 이유 — 이 경로도 window._estEditState.estSaveCustomerId를
           // 여기서 세팅 안 하고 있었음. 이름을 바꿔서 저장해도 정확히 "그 고객"

@@ -161,6 +161,78 @@
    },
    {
     "body": {
+     "app_version": "HASH",
+     "customer_name": "골든고객",
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 0,
+      "phase": "end",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "edit",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": "srv-est-1",
+     "kind": "save",
+     "outcome": "server",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
+    "prefer": "return=minimal"
+   },
+   {
+    "body": {
+     "app_version": "HASH",
+     "customer_name": "골든고객",
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 0,
+      "phase": "start",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "new",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": null,
+     "kind": "save",
+     "outcome": "start",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
+    "prefer": "return=minimal"
+   },
+   {
+    "body": {
      "action": "syncCustomer",
      "addr": "서울 서초구",
      "clientName": "골든고객",
@@ -562,6 +634,150 @@
    },
    {
     "body": {
+     "app_version": "HASH",
+     "customer_name": "골든고객",
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 0,
+      "phase": "end",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "edit",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": "srv-est-1",
+     "kind": "save",
+     "outcome": "server",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
+    "prefer": "return=minimal"
+   },
+   {
+    "body": {
+     "app_version": "HASH",
+     "customer_name": "골든고객",
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 0,
+      "phase": "end",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "edit",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": "srv-est-1",
+     "kind": "save",
+     "outcome": "server",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
+    "prefer": "return=minimal"
+   },
+   {
+    "body": {
+     "app_version": "HASH",
+     "customer_name": "골든고객",
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 0,
+      "phase": "start",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "edit",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": "srv-est-1",
+     "kind": "save",
+     "outcome": "start",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
+    "prefer": "return=minimal"
+   },
+   {
+    "body": {
+     "app_version": "HASH",
+     "customer_name": "골든고객",
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 0,
+      "phase": "start",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "new",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": null,
+     "kind": "save",
+     "outcome": "start",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
+    "prefer": "return=minimal"
+   },
+   {
+    "body": {
      "action": "syncCustomer",
      "addr": "서울 서초구",
      "clientName": "골든고객",
@@ -930,6 +1146,78 @@
    },
    {
     "body": {
+     "app_version": "HASH",
+     "customer_name": "골든고객",
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 0,
+      "phase": "end",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "edit",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": "srv-est-EDIT",
+     "kind": "save",
+     "outcome": "server",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
+    "prefer": "return=minimal"
+   },
+   {
+    "body": {
+     "app_version": "HASH",
+     "customer_name": "골든고객",
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 0,
+      "phase": "start",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "edit",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": "srv-est-EDIT",
+     "kind": "save",
+     "outcome": "start",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
+    "prefer": "return=minimal"
+   },
+   {
+    "body": {
      "action": "syncCustomer",
      "addr": "서울 서초구",
      "clientName": "골든고객",
@@ -1123,6 +1411,78 @@
     "method": "POST",
     "path": "/rest/v1/client_error_logs",
     "prefer": "return=minimal"
+   },
+   {
+    "body": {
+     "app_version": "HASH",
+     "customer_name": null,
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 0,
+      "phase": "end",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "new",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": null,
+     "kind": "save",
+     "outcome": "invalid",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
+    "prefer": "return=minimal"
+   },
+   {
+    "body": {
+     "app_version": "HASH",
+     "customer_name": null,
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 0,
+      "phase": "start",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "new",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": null,
+     "kind": "save",
+     "outcome": "start",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
+    "prefer": "return=minimal"
    }
   ],
   "saveBtnDisabled": false,
@@ -1292,6 +1652,78 @@
     },
     "method": "POST",
     "path": "/rest/v1/client_error_logs",
+    "prefer": "return=minimal"
+   },
+   {
+    "body": {
+     "app_version": "HASH",
+     "customer_name": "골든고객",
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 0,
+      "phase": "end",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "edit",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": "srv-est-1",
+     "kind": "save",
+     "outcome": "server",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
+    "prefer": "return=minimal"
+   },
+   {
+    "body": {
+     "app_version": "HASH",
+     "customer_name": "골든고객",
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 0,
+      "phase": "start",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "new",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": null,
+     "kind": "save",
+     "outcome": "start",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
     "prefer": "return=minimal"
    },
    {
@@ -1655,6 +2087,78 @@
    },
    {
     "body": {
+     "app_version": "HASH",
+     "customer_name": "골든고객",
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 0,
+      "phase": "end",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "edit",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": "srv-est-EDIT",
+     "kind": "save",
+     "outcome": "failed",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
+    "prefer": "return=minimal"
+   },
+   {
+    "body": {
+     "app_version": "HASH",
+     "customer_name": "골든고객",
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 0,
+      "phase": "start",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "edit",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": "srv-est-EDIT",
+     "kind": "save",
+     "outcome": "start",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
+    "prefer": "return=minimal"
+   },
+   {
+    "body": {
      "action": "syncCustomer",
      "addr": "서울 서초구",
      "clientName": "골든고객",
@@ -1925,6 +2429,78 @@
    },
    {
     "body": {
+     "app_version": "HASH",
+     "customer_name": "골든고객",
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 1,
+      "phase": "end",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "new",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": null,
+     "kind": "save",
+     "outcome": "failed",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
+    "prefer": "return=minimal"
+   },
+   {
+    "body": {
+     "app_version": "HASH",
+     "customer_name": "골든고객",
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 0,
+      "phase": "start",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "new",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": null,
+     "kind": "save",
+     "outcome": "start",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
+    "prefer": "return=minimal"
+   },
+   {
+    "body": {
      "action": "syncCustomer",
      "addr": "서울 서초구",
      "clientName": "골든고객",
@@ -2191,6 +2767,78 @@
     },
     "method": "POST",
     "path": "/rest/v1/client_error_logs",
+    "prefer": "return=minimal"
+   },
+   {
+    "body": {
+     "app_version": "HASH",
+     "customer_name": "골든고객",
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 0,
+      "phase": "end",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "edit",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": "srv-est-1",
+     "kind": "save",
+     "outcome": "server",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
+    "prefer": "return=minimal"
+   },
+   {
+    "body": {
+     "app_version": "HASH",
+     "customer_name": "골든고객",
+     "detail": {
+      "at_local": "Mon Sep 28 2026 03:00:00 GMT+0000",
+      "pending_queue": 0,
+      "phase": "start",
+      "snapshot": {
+       "blind_rows": 0,
+       "curtain_rows": 1,
+       "discount_amount": "",
+       "discount_type": "won",
+       "discount_value": "0",
+       "final_status": false,
+       "install": "2026-10-05",
+       "install_tbd": false,
+       "measure": "2026-10-01",
+       "measure_tbd": false,
+       "path": "new",
+       "region": "",
+       "svc_rows": [],
+       "total": "225,000원",
+       "url_params": ""
+      }
+     },
+     "device": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.0.0 Safari/537.36 | 800x600 | online=true",
+     "estimate_id": null,
+     "kind": "save",
+     "outcome": "start",
+     "user_email": "test@drawingathome.co.kr"
+    },
+    "method": "POST",
+    "path": "/rest/v1/save_receipts",
     "prefer": "return=minimal"
    },
    {

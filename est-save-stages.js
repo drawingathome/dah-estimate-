@@ -374,7 +374,7 @@ function _saveStage_estimatesActual(ctx) {
       console.warn('Supabase 견적서 저장 타임아웃');
       showToast('⚠️ 서버 응답이 없어요(시간초과) — 저장이 안 됐을 수 있어요, 다시 저장해주세요');
       if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId);
-      onDone();
+      onDone('failed'); // 2026-10-06: 서버에 못 올라간 경우 - 바깥에서 "저장됨"으로 착각하지 않게 결과를 알림
     };
     // 2026-08-25(선혜님 발견 — "저장했는데 나중에 수정이 안 됨", 진짜
     // 원인): 수정(PATCH) 저장인데 updated_at 잠금값이 없는 경우엔
@@ -407,6 +407,7 @@ function _saveStage_estimatesActual(ctx) {
     // 의존하지 않음).
     xhr2.setRequestHeader('Prefer', 'return=representation');
     xhr2.onload=function(){
+      var _saveOutcome = 'failed'; // 2026-10-06(선혜님 - 저장했는데 서버에 없다): 서버가 실제로 받았을 때만 'server'로 바꿈
       logSaveStage('견적서저장-응답', { status: xhr2.status, isEditMode: isEditMode, bodyLen: (xhr2.responseText||'').length });
       if (xhr2.status >= 200 && xhr2.status < 300) {
         // 수정 저장인데 응답이 빈 배열이면 = 0건 매칭 = 실제로 아무것도
@@ -476,7 +477,7 @@ function _saveStage_estimatesActual(ctx) {
                   if (freshUpdatedAt) window._estEditState.editingEstUpdatedAt = freshUpdatedAt;
                 });
               }
-              onDone();
+              onDone('failed'); // 2026-10-06: 서버에 못 올라간 경우 - 바깥에서 "저장됨"으로 착각하지 않게 결과를 알림
               return;
             }
             // 성공 - 다음 저장을 위해 최신 updated_at 갱신
@@ -485,10 +486,11 @@ function _saveStage_estimatesActual(ctx) {
             // 응답 파싱 실패 = 실제로 뭐가 바뀌었는지 확인 불가 상태 —
             // 조용히 "성공"으로 넘어가지 않고 확인 필요하다고 알림
             showToast('⚠️ 저장 결과를 확인할 수 없어요 — 새로고침해서 반영됐는지 꼭 확인해주세요');
-            onDone();
+            onDone('failed'); // 2026-10-06: 서버에 못 올라간 경우 - 바깥에서 "저장됨"으로 착각하지 않게 결과를 알림
             return;
           }
         }
+        _saveOutcome = 'server';
         showToast('저장 완료! (DB+로컬)');
         if (!isEditMode) {
           try {
@@ -511,6 +513,7 @@ function _saveStage_estimatesActual(ctx) {
         // 2026-08-05: idempotency key 중복 = 이전 시도가 실제로는 이미 성공했었다는 뜻
         // (응답만 유실됐던 것) — 실패가 아니라 정상 처리
         console.log('견적서 이미 저장됨(idempotency key 중복, 정상):', xhr2.responseText);
+        _saveOutcome = 'server';
         showToast('저장 완료! (DB+로컬)');
       } else {
         console.warn('Supabase 견적서 저장 실패 (status='+xhr2.status+'):', xhr2.responseText);
@@ -519,14 +522,14 @@ function _saveStage_estimatesActual(ctx) {
         // 재시도 큐에 등록해서 네트워크 복구시 자동으로 다시 시도되도록 함
         if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId);
       }
-      onDone(); // 2026-08-24: 성공/409/실패 모든 경우에 버튼 다시 눌러도 되게 원상복구
+      onDone(_saveOutcome); // 2026-08-24: 성공/409/실패 모든 경우에 버튼 다시 눌러도 되게 원상복구 (2026-10-06: 서버가 받았을 때만 'server')
     };
     xhr2.onerror=function(){
       logSaveStage('견적서저장-네트워크오류', null);
       console.warn('Supabase 견적서 저장 실패 (localStorage는 완료)');
       showToast('⚠️ 서버 저장 실패 — 이 기기에만 임시 저장됐어요, 자동 재시도할게요');
       if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId);
-      onDone();
+      onDone('failed'); // 2026-10-06: 서버에 못 올라간 경우 - 바깥에서 "저장됨"으로 착각하지 않게 결과를 알림
     };
     xhr2.send(JSON.stringify(estPayloadForRetry));
   } catch(e) {
@@ -534,7 +537,7 @@ function _saveStage_estimatesActual(ctx) {
     console.warn('Supabase 연결 오류:', e);
     showToast('⚠️ 서버 저장 실패 — 이 기기에만 임시 저장됐어요, 자동 재시도할게요');
     if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId);
-    onDone();
+    onDone('failed'); // 2026-10-06: 서버에 못 올라간 경우 - 바깥에서 "저장됨"으로 착각하지 않게 결과를 알림
   }
 }
 function _saveStage_localStorage(ctx) {
