@@ -195,6 +195,7 @@
 | `dahPeekBackup` | `apps-script-daily-backup.js` |
 | `dahPeekRawName` | `apps-script-daily-backup.js` |
 | `dahRestoreDrill` | `apps-script-daily-backup.js` |
+| `dahSafeScan` | `apps-script-daily-backup.js` |
 | `dahScanForDataIntegrity` | `apps-script-daily-backup.js` |
 | `dahScanForDuplicates` | `apps-script-daily-backup.js` |
 | `dahScanForMissingTriggers` | `apps-script-daily-backup.js` |

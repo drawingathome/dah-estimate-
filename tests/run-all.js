@@ -287,6 +287,9 @@ if (/dah-dashboard/.test(target)) {
   // 있었음)에서 issues/report 선언누락 같은 숨은 ReferenceError를 ESLint로 전수
   // 감시.
   scripts.push(['apps-script-lint-check.js', []]);
+  // 2026-10-06(선혜님 - 매일 아침 issues is not defined 실패 메일, "해결해"): 정적 검사(린트)만으로는 부족해서, 구글 서비스를
+  // 가짜로 대체한 환경에서 dahDailyBackup()을 실제로 끝까지 실행(정상/이상 데이터/점검 하나가 죽는 날)해 검증.
+  scripts.push(['apps-script-run-check.js', []]);
   // 2026-10-05(선혜님 - "주소 해결됐다고하지만 주소 여전히 오류야 제대로 확인해", 김유진 고객 재발):
   // 기본주소 없이 상세주소만 저장되는 사고(맨 앞 공백 서명)를 견적서 화면/고객추가 모달 양쪽에서 차단.
   scripts.push(['addr-empty-base-guard-check.js', []]);

@@ -45,6 +45,24 @@ var SUPABASE_URL = 'https://sradnglutbzbyyunjyah.supabase.co';
 // Google Apps Script(UrlFetchApp)는 구조적으로 User-Agent를 커스텀 설정할 수 없어(항상 자체
 // 고정값 전송) 항상 401로 거부됩니다. 레거시 service_role 키는 이 검사 자체가 없어 정상 작동합니다.
 var SUPABASE_SERVICE_ROLE_KEY = PropertiesService.getScriptProperties().getProperty('SUPABASE_SERVICE_ROLE_KEY');
+
+// 2026-10-06(선혜님 - "해결해", 매일 아침 'issues is not defined' 실패 메일): 이 스크립트는 구글 Apps Script에 직접
+// 붙여넣어야만 운영에 반영되는데, 저장소에서 고친 버전이 실제로 반영됐는지 확인할 방법이 없어서 낡은 코드(9/23~10/1 버전)가
+// 며칠 동안 매일 실패하는 걸 늦게 알았음. 버전을 코드에 박아 매일 메일·로그에 함께 찍어서, 낡은 코드가 돌고 있으면 바로
+// 보이게 함. ※ 이 파일을 고칠 때마다 아래 값도 같이 올릴 것(날짜.순번).
+var DAH_SCRIPT_VERSION = '2026-10-06.1';
+
+// 점검 함수 하나가 오류로 죽어도 백업과 나머지 점검은 계속 돌게 감싸는 헬퍼. 죽은 점검은 failures에 모아서 메일로 알림.
+function dahSafeScan(name, fn, failures) {
+  try {
+    var r = fn();
+    return Array.isArray(r) ? r : [];
+  } catch (e) {
+    failures.push(name + ': ' + e.name + ' - ' + e.message);
+    Logger.log('❌ 점검 함수 실패 [' + name + ']: ' + e.message);
+    return [];
+  }
+}
 var BACKUP_FOLDER_NAME = 'DAH_자동백업';
 // 자동 삭제 없음(영구보관) — 이전엔 KEEP_DAYS로 30일 지나면 지웠으나
 // 10년 이상 보관해야 하는 요구사항이라 완전히 제거함
@@ -123,7 +141,9 @@ function dahDailyBackup() {
   // 8/26에 실제로 발견했던 패턴 그대로: 고객은 "전화번호가 같은데 둘 다
   // 안 지워진(is_archived=false) 레코드가 2건 이상", 견적은 "같은 고객명+
   // 같은 금액+같은 날짜에 생성된 게 2건 이상"인 경우를 의심 대상으로 봄.
-  var dupIssues = dahScanForDuplicates(backup);
+  var scanFailures = [];
+  Logger.log('스크립트 버전: ' + DAH_SCRIPT_VERSION);
+  var dupIssues = dahSafeScan('dahScanForDuplicates', function () { return dahScanForDuplicates(backup); }, scanFailures);
   if (dupIssues.length > 0) {
     Logger.log('⚠️ 중복 의심 ' + dupIssues.length + '건 발견:\n' + dupIssues.join('\n'));
     try {
@@ -133,7 +153,7 @@ function dahDailyBackup() {
         '오늘 백업 중 아래와 같은 중복 의심 건이 발견됐습니다. 실제 중복인지 확인 후 필요하면 정리해주세요.\n' +
         '(자동으로 지우지 않습니다 — 실제 다른 사람일 수도 있어서 반드시 직접 확인 후 처리)\n\n' +
         dupIssues.join('\n\n') +
-        '\n\n※ 이 알림은 apps-script-daily-backup.js의 dahScanForDuplicates()에서 매일 자동 발송됩니다.'
+        '\n\n※ 이 알림은 apps-script-daily-backup.js의 dahScanForDuplicates()에서 매일 자동 발송됩니다. (스크립트 버전 ' + DAH_SCRIPT_VERSION + ')'
       );
     } catch (e) { Logger.log('중복알림 이메일 발송 실패: ' + e.message); }
   } else {
@@ -146,10 +166,10 @@ function dahDailyBackup() {
   // 레벨, 단계/날짜필드)에 따로 저장돼 서로 어긋난다" — 을 사람이
   // 우연히 발견하기 전에 매일 자동으로 점검함. dahScanForDuplicates와
   // 같은 패턴: 아무것도 자동으로 고치지 않고, 발견만 해서 알림.
-  var integrityIssues = dahScanForDataIntegrity(backup);
+  var integrityIssues = dahSafeScan('dahScanForDataIntegrity', function () { return dahScanForDataIntegrity(backup); }, scanFailures);
   // 2026-09-22(선혜님 - "근본적으로 수정할 부분을 설계해봐"): 핵심 안전
   // 트리거가 살아있는지도 같은 알림에 합쳐서 확인
-  var triggerIssues = dahScanForMissingTriggers();
+  var triggerIssues = dahSafeScan('dahScanForMissingTriggers', function () { return dahScanForMissingTriggers(); }, scanFailures);
   integrityIssues = integrityIssues.concat(triggerIssues);
   if (integrityIssues.length > 0) {
     Logger.log('⚠️ 데이터 정합성 의심 ' + integrityIssues.length + '건 발견:\n' + integrityIssues.join('\n'));
@@ -160,7 +180,7 @@ function dahDailyBackup() {
         '오늘 백업 중 아래와 같은 정합성 의심 건이 발견됐습니다.\n' +
         '(자동으로 고치지 않습니다 — 실제로 문제인지 확인 후 필요하면 대시보드에서 직접 수정해주세요)\n\n' +
         integrityIssues.join('\n\n') +
-        '\n\n※ 이 알림은 apps-script-daily-backup.js의 dahScanForDataIntegrity()에서 매일 자동 발송됩니다.'
+        '\n\n※ 이 알림은 apps-script-daily-backup.js의 dahScanForDataIntegrity()에서 매일 자동 발송됩니다. (스크립트 버전 ' + DAH_SCRIPT_VERSION + ')'
       );
     } catch (e) { Logger.log('정합성알림 이메일 발송 실패: ' + e.message); }
   } else {
@@ -169,6 +189,19 @@ function dahDailyBackup() {
 
   // 2026-09-05: 클라이언트 에러 로그도 매일 백업할 때마다 함께 확인
   try { dahCheckClientErrors(); } catch (e) { Logger.log('클라이언트 에러 확인 실패: ' + e.message); }
+
+  // 2026-10-06: 위 점검 중 오류로 건너뛴 게 있으면 어떤 점검이 왜 죽었는지 바로 메일로 알림(백업과 나머지 점검은 정상 진행됨).
+  if (scanFailures.length > 0) {
+    try {
+      MailApp.sendEmail(
+        Session.getActiveUser().getEmail(),
+        'DAH 자동점검 실행 오류 ' + scanFailures.length + '건 (' + today + ') - 스크립트 버전 ' + DAH_SCRIPT_VERSION,
+        '오늘 자동점검 중 아래 항목이 오류로 실행되지 못했습니다. 백업 파일 저장과 나머지 점검은 정상 진행됐습니다.\n\n' +
+        scanFailures.join('\n') +
+        '\n\n※ 스크립트 버전이 저장소 최신과 다르면 구글 Apps Script에 최신 코드를 다시 붙여넣어야 합니다.'
+      );
+    } catch (e) { Logger.log('점검오류 이메일 발송 실패: ' + e.message); }
+  }
 
   // 실패한 테이블이 있으면 이메일로 알림 (선택사항 — 본인 이메일로 변경)
   if (errors.length > 0) {
@@ -674,7 +707,7 @@ function dahCheckClientErrors() {
       '(대부분은 자동으로 로컬/서버에 백업되어 데이터 유실은 없지만, 반복적으로 발생하면 실제 사용에 불편이 있을 수 있어 확인이 필요합니다.\n' +
       '"저장 실패(동시저장충돌)" 항목은 지금 실제 DB 값과 대조한 결과를 [ ] 안에 참고로 표시했습니다 - 다만 이 대조는 일부 값만 비교하는 거라 완전하지 않으니, "확인됨"이라고 나와도 한 번은 직접 봐주세요.)\n\n' +
       summary +
-      '\n\n※ 이 알림은 apps-script-daily-backup.js의 dahCheckClientErrors()에서 매일 자동 발송됩니다.'
+      '\n\n※ 이 알림은 apps-script-daily-backup.js의 dahCheckClientErrors()에서 매일 자동 발송됩니다. (스크립트 버전 ' + DAH_SCRIPT_VERSION + ')'
     );
     Logger.log('⚠️ 오류 ' + rows.length + '건 이메일 발송함');
   } catch (e) {
