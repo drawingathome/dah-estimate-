@@ -605,7 +605,10 @@ function loadCustByIdx(el) {
     // 도로명주소가 통째로 사라지고 동/호수만 남는 정보손실이 발생함. 추측해서
     // 쪼개려다 틀리는 것보다, 쪼개지 않고 전체를 그대로 보여주는 쪽이 항상 더
     // 안전함(정보 손실 없음) - 상세주소 칸은 비워서 사용자가 필요하면 직접 확인.
-    document.getElementById('c-addr').value = c.addr;
+    // 2026-10-06: addr_detail이 있으면(addr가 그 상세주소로 끝날 때만) 기본주소/상세주소로 정확히 나눠 채움(추측 없음)
+    var _sp = splitStoredAddr(c.addr, c.addrDetail || c.addr_detail);
+    document.getElementById('c-addr').value = _sp.base;
+    var _d2 = /** @type {HTMLInputElement|null} */ (document.getElementById('c-addr2')); if (_d2) _d2.value = _sp.detail;
   }
   // 2026-09-15(선혜님 - "고객 불러오기 해봤는데 기존 견적이 불러와지던데"
   // → "고객정보만 가져오고 품목은 항상 비워두게"로 확정): 예전엔(2026-08-05)

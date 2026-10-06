@@ -172,6 +172,7 @@ function proceed(otherEstGrand, otherEstPerf, sumFailed) {
     // (신규 고객이면 addr가 비어있어도 그냥 빈 값으로 시작하는 게 맞아서 그대로 포함)
     var addrCombined = (addr+(addr2?' '+addr2:'')).trim(); // 2026-10-05: 맨 앞/뒤 공백 제거(기본주소가 빈 채 저장되던 사고의 서명이 앞 공백이었음)
     if (addrCombined || !isUpdate) custPayload.addr = addrCombined;
+    if (addrCombined || !isUpdate) custPayload.addr_detail = addr2 || null; // 2026-10-06: 상세주소를 따로 저장해 불러올 때 다시 나눠 보여줌
     // 2026-09-08(선혜님 지시 - "날짜 단일화" 논의 중 "각자 다 다르잖아"로
     // 발견: 재구매 고객은 견적서마다 실측일/시공일이 다름(실제 사례:
     // 김명석 고객이 8/4·8/22에 서로 다른 프로젝트로 2건 견적) - 그래서

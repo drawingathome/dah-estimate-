@@ -904,7 +904,7 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
 <script src="/est-utils.js?v=a6fd71231888"></script>
-<script src="/shared-common-utils.js?v=ccccffcef5db"></script>
+<script src="/shared-common-utils.js?v=52008a85ef51"></script>
 <script src="/shared-optimistic-lock.js?v=db886eb6aa35"></script>
 <script src="/est-sync-queue.js?v=c357e0cec7fc"></script>
 <script src="/dash-supabase-auth.js?v=b3ea9d6b2fd5"></script>
@@ -916,12 +916,12 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
 <script src="/est-calc-svc.js?v=9fc2319e2cdd"></script>
 <script src="/est-survey.js?v=0e4bacb22873"></script>
 <script src="/est-save.js?v=7d8f49c91d21"></script>
-<script src="/est-save-stages.js?v=4448a22d38e1"></script>
+<script src="/est-save-stages.js?v=4edd40c26e36"></script>
 <script src="/est-doc-customer.js?v=e8be36d530e2"></script>
 <script src="/est-doc-vendor.js?v=3b6860a47faf"></script>
 <script src="/est-doc-vendor-ui.js?v=485ee9acf535"></script>
 <script src="/est-doc-request.js?v=65434c6947c8"></script>
-<script src="/est-customer-load.js?v=14f0dfe7298a"></script>
+<script src="/est-customer-load.js?v=d209610731cf"></script>
 <script src="/est-misc.js?v=fa08a6ff2482"></script>
 <script>
 var currentTab = 'ga';
@@ -1043,7 +1043,7 @@ var currentTab = 'ga';
             // 정규식 추측 쪼개기는 2026-09-22에 이미 "세 번 재발한 근본 원인"으로
             // 결론나서 다른 화면은 다 바꿨는데 여기 남아있었음 - 쪼개지 않고
             // 전체를 그대로 넣음(정보 손실 없음이 항상 더 안전).
-            document.getElementById('c-addr').value = c.addr;
+            var _sp1 = splitStoredAddr(c.addr, c.addr_detail); document.getElementById('c-addr').value = _sp1.base; var _d21 = document.getElementById('c-addr2'); if (_d21) _d21.value = _sp1.detail;
           }
           if (c.staff_name) document.getElementById('c-staff').value = c.staff_name;
           if (c.memo) document.getElementById('c-memo').value = c.memo;
@@ -1198,7 +1198,7 @@ var currentTab = 'ga';
                   // 정규식 추측 쪼개기는 2026-09-22에 이미 "세 번 재발한 근본 원인"
                   // 으로 결론나서 다른 화면은 다 바꿨는데 여기 남아있었음 - 쪼개지
                   // 않고 전체를 그대로 넣음(정보 손실 없음이 항상 더 안전).
-                  document.getElementById('c-addr').value = cRow.addr;
+                  var _sp2 = splitStoredAddr(cRow.addr, cRow.addr_detail); document.getElementById('c-addr').value = _sp2.base; var _d22 = document.getElementById('c-addr2'); if (_d22) _d22.value = _sp2.detail;
                 }
                 // 2026-08-28(선혜님 지적 — "실측일 넣고 선금을 넣어도
                 // 견적서에는 적용이 안돼!!", 유경진 사례): 대시보드↔견적서

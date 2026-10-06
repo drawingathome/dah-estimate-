@@ -268,7 +268,6 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['addr-input-readonly-check.js', []]);
   // 2026-10-02(선혜님 - "검색을 항상 눌러서 적은거야" 지적으로 발견한 진짜 전파 경로):
   // "최근 주소" 칩으로 과거의 깨진 주소가 재사용되는 걸 막는지 회귀 감시.
-  scripts.push(['recent-addr-chip-filter-check.js', []]);
   // 2026-10-02(선혜님 - "검색결과 선택하고~ 최근주소는 쓰지도 않았다" 지적으로 발견한 진짜
   // 원인): Daum 우편번호 API의 autoRoadAddress fallback 누락 - 정상 검색 흐름에서도 발생
   // 가능했던 버그. 재발 감시.
@@ -293,6 +292,9 @@ if (/dah-dashboard/.test(target)) {
   // 2026-10-05(선혜님 - "주소 해결됐다고하지만 주소 여전히 오류야 제대로 확인해", 김유진 고객 재발):
   // 기본주소 없이 상세주소만 저장되는 사고(맨 앞 공백 서명)를 견적서 화면/고객추가 모달 양쪽에서 차단.
   scripts.push(['addr-empty-base-guard-check.js', []]);
+  // 2026-10-06(선혜님 - "상세주소랑 따로 넣어도 왜 이렇게 뜨지?? 이 오류 여러번 말했지??", 9/15부터 반복): 상세주소를 따로 저장(addr_detail)하고
+  // 모달/견적서 화면이 정확히 다시 나눠 보여주는지 + 최근 주소 칩 제거 확인.
+  scripts.push(['addr-detail-roundtrip-check.js', []]);
   // 2026-10-01(선혜님 - "전문가입장에서도 보라니깐 놔둬도 될 정도이니??" 지적으로 재점검):
   // 견적서 공개보기가 테이블 전체 직접조회 대신 좁은 rpc 함수만 쓰는지 회귀 감시.
   scripts.push(['public-estimate-view-narrowed-check.js', []]);

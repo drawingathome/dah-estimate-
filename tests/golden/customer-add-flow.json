@@ -47,6 +47,7 @@
    {
     "body": {
      "addr": "",
+     "addr_detail": null,
      "balance_amount": 0,
      "balance_date": "",
      "balance_method": "",
@@ -206,6 +207,7 @@
    {
     "body": {
      "addr": "",
+     "addr_detail": null,
      "balance_amount": 0,
      "balance_date": "",
      "balance_method": "",

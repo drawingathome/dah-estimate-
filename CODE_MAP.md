@@ -15,7 +15,7 @@
 | 4 | `dash-api-settings.js` | DAH 대시보드 — 설정 접근자 (담당자/거래처/리드기준/지역비/쿠폰/담당자 이메일) | 13 |
 | 5 | `dash-api-data.js` | DAH 대시보드 — 데이터 변환·로딩 (DB행↔화면 객체, 고객/견적 불러오기) | 7 |
 | 6 | `dash-api-writes.js` | DAH 대시보드 — 고객 DB 쓰기 (저장/선점/보관/삭제/복구/리드보류) | 7 |
-| 7 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 8 |
+| 7 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 9 |
 | 8 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 2 |
 | 9 | `dash-sync-queue.js` | DAH — 오프라인/네트워크 실패 동기화 큐 (2026-08-05 신규) | 6 |
 | 10 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 15 |
@@ -51,7 +51,7 @@
 | 1 | `shared-staging-guard.js` | DAH 공용 — 스테이징 환경 쓰기 차단 안전장치 | 0 |
 | 2 | `est-public-view.js` | DAH 견적서 앱 — 고객용 공개보기 모드 | 5 |
 | 3 | `est-utils.js` | DAH 견적서 앱 — 유틸함수 + API 설정 | 21 |
-| 4 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 8 |
+| 4 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 9 |
 | 5 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 2 |
 | 6 | `est-sync-queue.js` | DAH 견적서 앱 — 오프라인/네트워크 실패 재시도 큐 (2026-08-05 신규) | 5 |
 | 7 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 15 |
@@ -458,6 +458,7 @@
 | `sortCustomers` | `dash-kanban.js` |
 | `span` | `dash-ui-helpers.js` |
 | `splitCustomerPayments` | `dash-chart.js` |
+| `splitStoredAddr` | `shared-common-utils.js` |
 | `stageColorFor` | `dash-customer-detail.js` |
 | `startAuthAutoRefresh` | `dash-supabase-auth.js` |
 | `startRealtimeSync` | `dash-realtime.js` |

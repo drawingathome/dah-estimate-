@@ -73,7 +73,7 @@ function AddCustomerModal({ editName, registerApi }) {
       if (c) editingCustomerId = c.id;
       return {
         name: c ? c.clientName : '', phone: c ? (c.phone || '') : '',
-        date: c ? (c.date || todayStr()) : todayStr(), addr: c ? (c.addr || '') : '', addrDetail: '', space: c ? (c.space || '') : '',
+        date: c ? (c.date || todayStr()) : todayStr(), addr: c ? splitStoredAddr(c.addr, c.addrDetail).base : '', addrDetail: c ? splitStoredAddr(c.addr, c.addrDetail).detail : '', space: c ? (c.space || '') : '',
         staffName: c ? (c.staffName || '마스터') : '마스터',
         stage: c ? (c.stage || '상담') : '상담', memo: c ? (c.memo || '') : '', measureDate: c ? (c.measureDate || '') : '', installDate: c ? (c.installDate || '') : ''
       };
@@ -102,27 +102,8 @@ function AddCustomerModal({ editName, registerApi }) {
   const isStaffUser = currentUser && currentUser.role === 'staff';
   const staffList = React.useMemo(function () { return ['마스터'].concat(getStaffList()).concat(['미배정']); }, []);
 
-  const recentAddrs = React.useMemo(function () {
-    // 2026-10-02(선혜님 - "검색을 항상 눌러서 적은거야" 지적으로 재조사해 발견): 직접
-    // 타이핑(readOnly로 이미 막음)뿐 아니라, 이 "최근 주소" 칩을 클릭해서 과거에 저장된
-    // 주소를 그대로 재사용하는 경로가 있었음 - 한 번 짧게(도로명주소 없이) 저장된 주소가
-    // 같은 단지의 다음 고객 등록시 칩으로 다시 뜨고, 그걸 클릭하면 그 짧은 값이 그대로
-    // 복제·전파됨(트리니원 단지에 사흘 연속 3명이 똑같이 깨진 패턴으로 등록된 것이 이
-    // 경로로 설명됨). 도로명주소의 필수요소(로/길, 또는 시/도 이름)가 전혀 없는 과거
-    // 주소는 애초에 칩 후보에서 제외해 재전파를 막음.
-    function looksLikeRealAddr(a) {
-      if (/(로|길)\s*[0-9]/.test(a)) return true;
-      if (/(서울|경기|인천|부산|대구|광주|대전|울산|세종|강원|충북|충남|전북|전남|경북|경남|제주)/.test(a)) return true;
-      return false;
-    }
-    var allC = loadCustomers();
-    var seen = {}; var out = [];
-    allC.slice().reverse().forEach(function (cust) {
-      var a = (cust.addr || '').trim();
-      if (a && !seen[a] && looksLikeRealAddr(a)) { seen[a] = true; out.push(a); }
-    });
-    return out.slice(0, 5);
-  }, []);
+  // 2026-10-06(선혜님 - "그거는 니가 만든거잖아 칩 없애"): "최근 주소" 칩 제거 - 실제로는 가장 오래된(8/4 이관) 고객 5명의 주소를
+  // 보여주고, 누르면 남의 동/호수까지 포함한 전체 주소가 읽기전용 기본주소 칸에 통째로 들어가 섞인 주소가 저장될 수 있었음.
 
   React.useEffect(function () {
     if (registerApi) registerApi({ reset: function () { setSaving(false); } });
@@ -200,7 +181,7 @@ function AddCustomerModal({ editName, registerApi }) {
         var isTarget = editingCustomerId ? (c.id === editingCustomerId) : (!matched && c.clientName === editingCustomerName);
         if (isTarget) {
           matched = true;
-          return Object.assign({}, c, { clientName: trimmedName, phone: finalPhone, addr: getCombinedAddr(), space: space.trim(), staffName: staffName, stage: stage, date: date, measureDate: measureDate, installDate: installDate, memo: memo.trim() });
+          return Object.assign({}, c, { clientName: trimmedName, phone: finalPhone, addr: getCombinedAddr(), addrDetail: addrDetail.trim(), space: space.trim(), staffName: staffName, stage: stage, date: date, measureDate: measureDate, installDate: installDate, memo: memo.trim() });
         }
         return c;
       });
@@ -237,7 +218,7 @@ function AddCustomerModal({ editName, registerApi }) {
     var existing = samePersonExisting;
     var visitCount = existing ? (existing.visitCount || 1) + 1 : 1;
     if (existing) arr = arr.filter(function (c) { return !(c.clientName === nm && (c.phone || '').replace(/\D/g, '') === (ph || '').replace(/\D/g, '')); });
-    var newCustomer = { clientName: nm, phone: ph, addr: getCombinedAddr(), space: space.trim(), price: 0, performanceRevenue: 0, staffName: staffName, stage: stage, date: date, measureDate: measureDate, installDate: installDate, memo: memo.trim(), visitCount: visitCount, createdAt: new Date().toISOString(), branch: '반포점' };
+    var newCustomer = { clientName: nm, phone: ph, addr: getCombinedAddr(), addrDetail: addrDetail.trim(), space: space.trim(), price: 0, performanceRevenue: 0, staffName: staffName, stage: stage, date: date, measureDate: measureDate, installDate: installDate, memo: memo.trim(), visitCount: visitCount, createdAt: new Date().toISOString(), branch: '반포점' };
     arr.unshift(newCustomer); saveCustomers(arr);
     saveCustomerToDb(newCustomer, function (err, data) { if (!err && data && data[0]) { newCustomer.id = data[0].id; saveCustomers(arr); } });
     closeAdd(); renderHome(true); openDetail(nm, newCustomer.id);
@@ -296,11 +277,6 @@ function AddCustomerModal({ editName, registerApi }) {
       ),
       e('div', { style: { marginBottom: '16px' } },
         e('label', { style: { fontSize: '11px', fontWeight: 700, color: 'var(--sub)', letterSpacing: '1px', textTransform: 'uppercase', display: 'block', marginBottom: '8px' } }, '주소 (선택)'),
-        recentAddrs.length > 0 ? e('div', { id: 'add-addr-recent', style: { display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' } },
-          recentAddrs.map(function (a) {
-            return e('button', { key: a, type: 'button', title: a, onClick: function () { setAddr(a); }, style: { fontSize: '11px', color: 'var(--dark)', background: 'var(--ivory1)', border: '1px solid var(--border)', borderRadius: 'var(--r-btn)', padding: '5px 10px', cursor: 'pointer' } }, a.length > 16 ? a.slice(0, 16) + '…' : a);
-          })
-        ) : null,
         e('div', { style: { display: 'flex', gap: '6px', marginBottom: '6px' } },
           e('input', { className: 'form-input', id: 'add-addr', 'aria-label': '주소', placeholder: addrManual ? '시/구/도로명부터 입력 (예: 경기 안산시 단원구 ...)' : '주소 검색을 눌러주세요', readOnly: !addrManual, value: addr, onChange: function (ev) { setAddr(ev.target.value); }, onClick: addrManual ? undefined : function () { openKakaoAddr('add-addr', 'add-addr-detail'); }, style: { flex: 1, background: addrManual ? '#fff' : 'var(--ivory1)', cursor: addrManual ? 'text' : 'pointer' } }),
           e('button', { type: 'button', onClick: function () { openKakaoAddr('add-addr', 'add-addr-detail'); }, style: { flexShrink: 0, padding: '0 16px', background: 'var(--dark)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '11px', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' } }, '주소 검색')

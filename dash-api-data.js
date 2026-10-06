@@ -13,6 +13,7 @@ function dbRowToCustomer(row) {
     clientName:         row.client_name||'',
     phone:              row.phone||'',
     addr:               row.addr||'',
+    addrDetail:         row.addr_detail||'',
     space:              row.space||'',
     price:              Number(row.price)||0,
     performanceRevenue: Number(row.performance_revenue)||0,
@@ -64,6 +65,7 @@ function customerToDbRow(c) {
     client_name:         c.clientName||'',
     phone:               c.phone||'',
     addr:                c.addr||'',
+    addr_detail:         (c.addrDetail === undefined ? undefined : (c.addrDetail || null)), // 2026-10-06: 앱 객체에 상세주소 정보가 없을 땐(옛 캐시) 키 자체를 안 보내 기존 값을 지우지 않음
     space:               c.space||'',
     price:               Number(c.price)||0,
     performance_revenue: Number(c.performanceRevenue)||0,

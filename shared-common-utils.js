@@ -123,6 +123,22 @@ function loadDaumPostcode(onReady, onFail) {
   tag.addEventListener('error', function () { tag.remove(); if (onFail) onFail(); }); // 실패한 태그는 지워서 다음 클릭에서 새로 시도
 }
 
+// 2026-10-06(선혜님 - "상세주소랑 따로 넣어도 왜 이렇게 뜨지?? 이 오류 여러번 말했지??", 9/15부터 반복 지적):
+// DB에는 기본주소+상세주소를 합친 addr 한 칸만 저장돼서, 불러올 때 어디까지가 상세주소인지 알 수 없었음. 9/15엔 글자
+// 모양(정규식)으로 추측해 쪼개다 세 번 틀렸고, 10/1엔 쪼개기를 아예 없애서 "전부 위 칸에 합쳐져 보이는" 상태가 됨 - 둘 다
+// 임시방편이었음. 이제 customers.addr_detail에 상세주소를 따로 저장하고, 불러올 때는 "addr가 상세주소로 끝날 때만"
+// 그만큼을 떼어 기본주소/상세주소로 나눈다(추측 없음). 옛 고객(addr_detail 없음)이나 addr가 나중에 다른 값으로 바뀐 경우는
+// 나누지 않고 전체를 기본주소 칸에 그대로 보여줌(정보 손실 없음).
+function splitStoredAddr(addr, addrDetail) {
+  var a = String(addr || '').trim();
+  var d = String(addrDetail || '').trim();
+  if (d && a.length > d.length && a.slice(a.length - d.length) === d) {
+    var b = a.slice(0, a.length - d.length).trim();
+    if (b) return { base: b, detail: d };
+  }
+  return { base: a, detail: '' };
+}
+
 // "직접입력" 탈출구 - 검색에 안 나오는 신축 건물일 때 기본주소 칸을 직접 쓸 수 있게 풀어줌(기본은 readOnly).
 function enableManualBaseAddr(targetId) {
   var el = /** @type {HTMLInputElement|null} */ (document.getElementById(targetId));
