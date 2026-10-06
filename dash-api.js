@@ -14,7 +14,16 @@ var DRIVE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyyNG-Y6sABngKq
 // shared-common-utils.js로 옮김(DRIVE_WEBHOOK_URL은 위에서 이미 정의됨,
 // shared-common-utils.js는 이 파일보다 항상 나중에 로드되도록 배치).
 
-function sbXHR(method, path, data, callback) {
+function sbXHR(method, path, data, callback, _retried) {
+  // 2026-10-06: 요청이 나가는 순간 토큰이 만료됐거나 30초 안에 만료되면 먼저 갱신한 뒤 보냄(탭을 오래 두고 돌아와 곧바로 저장하면
+  // 갱신이 끝나기 전에 옛 토큰으로 나가 401로 거절돼 입력이 서버에 안 닿던 문제 - 이민선님 잔금). _retried=true면 한 번 더 점검하지 않음(무한 루프 방지).
+  if (!_retried && typeof getAuthSession === 'function' && typeof refreshAuthSessionForce === 'function') {
+    var _s = getAuthSession();
+    if (_s && typeof _s.expires_at === 'number' && _s.expires_at - Date.now() < 30 * 1000) {
+      refreshAuthSessionForce(function () { sbXHR(method, path, data, callback, true); });
+      return;
+    }
+  }
   var xhr = new XMLHttpRequest();
   xhr.open(method, SUPABASE_URL + '/rest/v1/' + path, true);
   xhr.setRequestHeader('apikey', SUPABASE_KEY);
@@ -47,6 +56,13 @@ function sbXHR(method, path, data, callback) {
         return;
       }
       callback(null, result);
+    } else if (xhr.status === 401 && !_retried && typeof refreshAuthSessionForce === 'function' && typeof getAuthSession === 'function' && getAuthSession()) {
+      // 2026-10-06: 401은 서버가 "처리 전에" 인증 단계에서 거절한 것이라 같은 요청을 다시 보내도 중복 저장 위험이 없음 -
+      // 갱신 후 딱 1번만 재시도하고, 그래도 실패하면 호출한 쪽에 오류로 알림(예전엔 한 번 실패하면 끝이었음).
+      refreshAuthSessionForce(function (ok) {
+        if (ok) sbXHR(method, path, data, callback, true);
+        else callback({status: 401, text: xhr.responseText}, null);
+      });
     } else { callback({status: xhr.status, text: xhr.responseText}, null); }
   };
   xhr.onerror = function() { callback({status: 0, text: 'network error'}, null); };

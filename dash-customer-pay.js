@@ -97,6 +97,24 @@ function renderPaySection(c, payBody, est) {
       sbXHR('PATCH', 'estimates?id=eq.'+est.id, estPatchBody, function(err, data){
         if (err) {
           showToast('⚠️ 결제정보가 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요');
+          // 2026-10-06(선혜님 - 칸반엔 100만원만 받았다고 뜨는데 결제 탭엔 완납): 알림은 몇 초 뒤 사라지고 화면은 내 브라우저에 먼저 저장한
+          // 값을 "저장됨"처럼 보여줘서 서버에 안 갔다는 걸 알 수 없었음 - 화면에 남는 경고와 "다시 저장" 버튼을 둠.
+          try {
+            var oldBar = payBody.querySelector('.pay-unsynced'); if (oldBar) oldBar.remove();
+            var bar = document.createElement('div'); bar.className = 'pay-unsynced';
+            bar.style.cssText = 'margin:8px 0;padding:10px 12px;background:#FDECEA;border:1px solid #E5A19A;border-radius:10px;font-size:12px;color:#B3261E;font-weight:600;line-height:1.5';
+            bar.appendChild(document.createTextNode('⚠️ 방금 입력한 결제가 서버에 저장되지 않았어요. 다른 기기나 칸반에는 안 보일 수 있어요. '));
+            var retryBtn = document.createElement('button'); retryBtn.type = 'button'; retryBtn.textContent = '다시 저장';
+            retryBtn.style.cssText = 'margin-left:6px;padding:4px 10px;border:1px solid #B3261E;border-radius:8px;background:#fff;color:#B3261E;font-size:12px;font-weight:700;cursor:pointer';
+            retryBtn.onclick = function () {
+              sbXHR('PATCH', 'estimates?id=eq.' + est.id, estPatchBody, function (e2) {
+                if (e2) { showToast('⚠️ 아직 저장되지 않았어요 - 잠시 후 다시 눌러주세요'); }
+                else { bar.remove(); showToast('✅ 서버에 저장됐어요'); }
+              });
+            };
+            bar.appendChild(retryBtn);
+            payBody.insertBefore(bar, payBody.firstChild);
+          } catch (eBar) { /* 경고 표시 실패는 저장 흐름에 영향 없게 */ }
         }
         // 2026-10-02(선혜님 - "이민선/김현정 결제했는데 상담에 뜨니, 쌍둥이 함수도 찾고
         // 앞으로 이런 버그 안생기게 하는 방향도 찾아" 요청으로 구조 개선): customers의

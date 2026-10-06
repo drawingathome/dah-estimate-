@@ -193,30 +193,50 @@ function clearAuthSession() {
 }
 
 // 토큰 만료 임박시 refresh_token으로 재발급
-function refreshAuthSessionIfNeeded(callback) {
+// 2026-10-06(선혜님 - "100만원만 받았다고 뜨는데 실제로는 다 체크돼 있어, 여러 번 전달했었다"): 서버 로그에서 확인한 원인 -
+// 탭을 오래 두면(토큰 유효 약 1시간) 모바일/태블릿 브라우저가 갱신 타이머를 멈춰 토큰이 만료된 채로 남고, 돌아와서 곧바로 저장하면
+// 갱신이 끝나기 전에 요청이 옛 토큰으로 나가 401로 거절됨(이민선님 잔금 입력이 서버에 한 번도 도달 못 함). 갱신은 "미리" 하도록만
+// 돼 있었고 "요청이 나가는 순간"에 토큰이 신선한지는 확인하지 않았음. 갱신 토큰은 1회용이라 동시에 여러 번 갱신하면 서로 무효화되므로,
+// 진행 중인 갱신이 있으면 그 결과를 같이 기다리게 한다(_authRefreshWaiters).
+var _authRefreshWaiters = null;
+function refreshAuthSessionForce(callback) {
   var s = getAuthSession();
-  if (!s) { callback(false); return; }
-  // 만료 5분 이내면 갱신 시도
-  if (s.expires_at - Date.now() > 5 * 60 * 1000) { callback(true); return; }
-
+  if (!s || !s.refresh_token) { callback(false); return; }
+  if (_authRefreshWaiters) { _authRefreshWaiters.push(callback); return; }
+  _authRefreshWaiters = [callback];
+  function finish(ok) {
+    var w = _authRefreshWaiters; _authRefreshWaiters = null;
+    w.forEach(function (fn) { try { fn(ok); } catch (e) { /* 콜백 오류는 다른 대기자에 영향 없게 */ } });
+  }
   var xhr = new XMLHttpRequest();
   xhr.open('POST', SUPABASE_URL + '/auth/v1/token?grant_type=refresh_token', true);
   xhr.setRequestHeader('apikey', SUPABASE_KEY);
   xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 15000;
+  xhr.ontimeout = function () { finish(false); };
   xhr.onload = function () {
     try {
       var data = JSON.parse(xhr.responseText);
       if (xhr.status >= 200 && xhr.status < 300 && data.access_token) {
         saveAuthSession(data);
-        callback(true);
+        finish(true);
       } else {
         clearAuthSession();
-        callback(false);
+        finish(false);
       }
-    } catch (e) { clearAuthSession(); callback(false); }
+    } catch (e) { clearAuthSession(); finish(false); }
   };
-  xhr.onerror = function () { callback(false); };
+  xhr.onerror = function () { finish(false); };
   xhr.send(JSON.stringify({ refresh_token: s.refresh_token }));
+}
+
+// 토큰 만료 임박시 refresh_token으로 재발급
+function refreshAuthSessionIfNeeded(callback) {
+  var s = getAuthSession();
+  if (!s) { callback(false); return; }
+  // 만료 5분 이내면 갱신 시도
+  if (s.expires_at - Date.now() > 5 * 60 * 1000) { callback(true); return; }
+  refreshAuthSessionForce(callback);
 }
 
 // 백그라운드 자동 토큰 갱신 — 로그인 상태로 오래 작업해도(1시간 이상) 세션이 조용히

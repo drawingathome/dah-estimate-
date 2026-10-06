@@ -18,7 +18,7 @@
 | 7 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 9 |
 | 8 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 2 |
 | 9 | `dash-sync-queue.js` | DAH — 오프라인/네트워크 실패 동기화 큐 (2026-08-05 신규) | 6 |
-| 10 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 15 |
+| 10 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 16 |
 | 11 | `dash-realtime.js` | 실시간 동기화 (Supabase Realtime) | 9 |
 | 12 | `dash-ui-helpers.js` | DAH 대시보드 — UI 헬퍼 / 입력값 검증 함수 모음 | 15 |
 | 13 | `dash-core.js` | DAH 대시보드 — 앱 핵심 진입점 함수 | 1 |
@@ -54,7 +54,7 @@
 | 4 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 9 |
 | 5 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 2 |
 | 6 | `est-sync-queue.js` | DAH 견적서 앱 — 오프라인/네트워크 실패 재시도 큐 (2026-08-05 신규) | 5 |
-| 7 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 15 |
+| 7 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 16 |
 | 8 | `est-form-controls.js` | DAH 견적서 앱 — 폼 상태/타입 제어 | 13 |
 | 9 | `est-calc-rules.js` | DAH 견적서 앱 — 계산 규칙 (순수 함수: 화면/저장소를 전혀 안 만짐) | 23 |
 | 10 | `est-product-calc.js` | DAH 견적서 앱 — 공통 계산: 합계(calcTotal)/얼림 금액/행 삭제/드래그 정렬 | 10 |
@@ -350,6 +350,7 @@
 | `railMaterialSpec` | `est-calc-rules.js` |
 | `recalcBlindOptionExtras` | `est-calc-blind.js` |
 | `refreshAlimSentMapFromServer` | `dash-customer-alim.js` |
+| `refreshAuthSessionForce` | `dash-supabase-auth.js` |
 | `refreshAuthSessionIfNeeded` | `dash-supabase-auth.js` |
 | `refreshBlindVendorOptions` | `est-calc-blind.js` |
 | `regionFeeContent` | `est-calc-rules.js` |
