@@ -50,7 +50,7 @@ var SUPABASE_SERVICE_ROLE_KEY = PropertiesService.getScriptProperties().getPrope
 // 붙여넣어야만 운영에 반영되는데, 저장소에서 고친 버전이 실제로 반영됐는지 확인할 방법이 없어서 낡은 코드(9/23~10/1 버전)가
 // 며칠 동안 매일 실패하는 걸 늦게 알았음. 버전을 코드에 박아 매일 메일·로그에 함께 찍어서, 낡은 코드가 돌고 있으면 바로
 // 보이게 함. ※ 이 파일을 고칠 때마다 아래 값도 같이 올릴 것(날짜.순번).
-var DAH_SCRIPT_VERSION = '2026-10-06.1';
+var DAH_SCRIPT_VERSION = '2026-10-07.1';
 
 // 점검 함수 하나가 오류로 죽어도 백업과 나머지 점검은 계속 돌게 감싸는 헬퍼. 죽은 점검은 failures에 모아서 메일로 알림.
 function dahSafeScan(name, fn, failures) {
@@ -214,33 +214,9 @@ function dahDailyBackup() {
     } catch (e) { /* 이메일 발송 실패는 무시 */ }
   }
 
-  // 2026-08-27(선혜님 요청 - "에러 모니터링 도입하자"): 백업 때 이미 가져온
-  // client_error_logs 안에서, 최근 24시간 안에 새로 쌓인 에러가 있으면
-  // 이메일로 알림. (client_error_logs_insert RLS 정책도 오늘 함께 손봄 -
-  // 예전엔 로그인 세션 없을 때 조용히 실패하던 구멍이 있었음, 지금은
-  // 로그인 여부와 무관하게 항상 기록되도록 고쳐놓음)
-  if (Array.isArray(backup.client_error_logs)) {
-    var oneDayAgo = new Date(Date.now() - 24*60*60*1000);
-    var recentErrors = backup.client_error_logs.filter(function(e) {
-      return new Date(e.created_at) > oneDayAgo;
-    });
-    if (recentErrors.length > 0) {
-      Logger.log('⚠️ 최근 24시간 신규 에러 ' + recentErrors.length + '건 발견');
-      try {
-        var errorSummary = recentErrors.slice(0, 20).map(function(e) {
-          return '[' + e.app + '/' + (e.user_role||'?') + '] ' + e.message + ' (' + e.created_at + ')';
-        }).join('\n');
-        MailApp.sendEmail(
-          Session.getActiveUser().getEmail(),
-          'DAH 신규 에러 ' + recentErrors.length + '건 발견 (' + today + ')',
-          '최근 24시간 안에 화면에서 발생한 에러입니다:\n\n' + errorSummary +
-          (recentErrors.length > 20 ? '\n\n... 외 ' + (recentErrors.length-20) + '건 더' : '')
-        );
-      } catch (e) { Logger.log('에러알림 이메일 발송 실패: ' + e.message); }
-    } else {
-      Logger.log('✅ 최근 24시간 신규 에러 없음');
-    }
-  }
+  // 2026-10-07(선혜님 - "오류가 이렇게 많다, 모두 확인 제대로 하라고", 아침에 "DAH 신규 에러 139건"과 "확인 필요 58건"이 같은 기록으로 이중 발송): 여기 있던 옛 에러
+  // 알림(2026-08-27)은 정상 단계 기록·저장 성공 응답까지 전부 "에러"로 세서 메일을 보냈음. 9/21에 필터를 넣은 새 알림(dahCheckClientErrors, 아래에서 호출)을 만들 때
+  // 이 옛 알림을 지우지 않아서 같은 기록이 필터 없이 한 번 더 발송되고 있었음(어제는 issues 오류로 스크립트가 중단돼 가려져 있었음) - 옛 알림 제거.
 }
 
 /**
@@ -452,7 +428,11 @@ function dahScanForDataIntegrity(backup) {
       return !isNaN(t.getTime()) && t >= recentCutoff;
     }
 
-    var recent = isRecentlyUpdated(c);
+    // 2026-10-07(선혜님 - "오류가 이렇게 많다, 모두 확인 제대로 하라고"): 어제 결제 보정이 플러그 이관 고객 91명의 updated_at을 "방금"으로 바꿔서, 원래부터 입금날짜·주소가 비어 있던
+    // 오래된 이관 데이터 64~65명이 "최근 수정"으로 걸려 정합성 메일이 13건 → 87건으로 늘었음(DB로 확인: 입금날짜 누락 65건 중 58건, 주소 빈 69명 중 64명이 이관 공백).
+    // "최근 수정" 기준만으로는 이런 보정·이관 작업에 매번 속으므로, 이관 고객은 날짜·주소 공백 점검 대상에서 아예 제외한다(이관 공백은 원래 있던 것 - 실제 처리가 필요하면 별도 목록으로 관리).
+    var isLegacyImport = /플러그|Pluuug/i.test(String(c.memo || ''));
+    var recent = isRecentlyUpdated(c) && !isLegacyImport;
 
     // 3) 결제(선금 또는 잔금)는 있는데 아직 방문예약/상담/가견적 단계에 머물러
     // 있음 - 이민선/김현정 사례(estimates PATCH는 됐는데 customers 동기화가
@@ -607,7 +587,9 @@ function dahCheckClientErrors() {
       if (alwaysBenign.indexOf(r.message) !== -1) return true;
       if (r.message === '저장단계: 고객저장-응답' || r.message === '저장단계: 견적서저장-응답') {
         try {
-          var status = r.extra && r.extra.status;
+          // 2026-10-07: 실제 기록은 상태값이 extra.status가 아니라 extra.detail.status(한 단계 아래)에 들어있어서(DB로 확인: {"stage":"견적서저장-응답","detail":{"status":201,...}})
+          // 9/21 이후 이 필터가 저장 성공 응답을 한 번도 걸러내지 못했음 - 둘 다 읽는다.
+          var status = r.extra && (typeof r.extra.status === 'number' ? r.extra.status : (r.extra.detail && r.extra.detail.status));
           return typeof status === 'number' && status >= 200 && status < 300;
         } catch (e) { return false; } // 상태를 못 읽으면 안전하게 "문제일 수 있음"으로 남김
       }

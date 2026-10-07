@@ -46,7 +46,15 @@ async function launchBrowser() {
   return puppeteer.launch({
     headless: 'new',
     executablePath: CHROME_PATH,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args: [
+      '--no-sandbox', '--disable-setuid-sandbox',
+      // 2026-10-07(선혜님 - "오류가 이렇게 많다, 모두 확인 제대로 하라고"): 서버 로그의 401/400 26건은 사용자가 아니라 CI 테스트가 운영 Supabase에 접속한 것이었음
+      // (8개 묶음이 CI 시작 2~3분 뒤와 일치). blockRealNetwork는 "각 테스트가 직접 호출해야" 작동해서 브라우저를 쓰면서 호출하지 않은 테스트가 80개였음.
+      // 페이지 단위 요청 가로채기를 자동으로 걸어 보았더니, 자기만의 가로채기를 쓰는 기존 테스트와 같은 요청에 두 번 응답해("Request is already handled") 깨졌음 -
+      // 가로채기가 아니라 브라우저 프로세스 수준에서 운영 서버 주소를 해석 불가로 만든다. 가로채기는 이름 해석보다 먼저 일어나므로 기존 테스트(가짜 서버 응답)에는
+      // 영향이 없고, 가로채지 않고 통과시키는 요청만 실제 서버에 닿지 못한다(CI에서도 로컬과 같은 "접속 불가" 상태가 된다).
+      '--host-resolver-rules=MAP *.supabase.co ~NOTFOUND, MAP script.google.com ~NOTFOUND'
+    ]
   });
 }
 
