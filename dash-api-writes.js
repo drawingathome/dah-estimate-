@@ -164,6 +164,44 @@ function saveCustomerToDb(customer, callback) {
   });
 }
 
+// 2026-10-08(선혜님 - "완납되었는데 상담으로 뜬다", 조유정 사례 / client_error_logs 서버 기록으로 확정):
+// 계약금 저장 1초 뒤 단계 변경이 "동시저장충돌"로 실패. 9/6·9/8에 같은 이유로 고쳤지만 "락값을 맞추는" 증상 수정이었음.
+// 진짜 문제는 단계만 바꾸는데 saveCustomerToDb가 이 기기에 있던 고객 전체(낡은 계약금 0원 포함)를 통째로 PATCH한다는 점 -
+// 락이 맞아떨어지면 방금 저장된 계약금이 0원으로 되돌아가고, 락이 안 맞으면 단계 변경이 실패함(둘 다 사고).
+// 그래서 "바꾸려는 필드만" 보내는 저장을 따로 둠: 다른 필드를 건드릴 수 없으니 낡은 값으로 덮어쓰는 일이 구조적으로 불가능하고, 락도 필요 없음.
+// 성공하면 서버가 돌려준 최신 행을 로컬에 그대로 반영(낡은 값이 로컬에 남아 다음 저장에서 되살아나지 않게).
+function patchCustomerFieldsToDb(customer, fields, callback) {
+  if (!customer || !customer.id) { if (callback) callback({ noId: true }); return; }
+  window._lastSelfCustomerWriteId = customer.id;
+  window._lastSelfCustomerWriteTime = Date.now();
+  var path = 'customers?id=eq.' + customer.id;
+  var queueKey = customer.id + ':fields';
+  sbXHR('PATCH', path, fields, function(err, data) {
+    if (err) {
+      if (err.zeroRows) {
+        if (typeof showToast === 'function') showToast('⚠️ 서버에 반영되지 않았어요 (권한 문제일 수 있어요) — 마스터님께 알려주세요');
+        if (typeof reportClientError === 'function') reportClientError('고객 필드 저장 실패(0건 반영)', null, { customerId: customer.id, fields: fields });
+      } else {
+        console.error('고객 필드 저장 오류:', err.text);
+        if (typeof addToPendingSyncQueue === 'function') addToPendingSyncQueue(queueKey, 'PATCH', path, fields);
+      }
+      if (callback) callback(err, data);
+      return;
+    }
+    if (typeof removeFromPendingSyncQueue === 'function') removeFromPendingSyncQueue(queueKey);
+    if (data && data[0]) {
+      try {
+        var fresh = dbRowToCustomer(data[0]);
+        var arr = loadCustomers();
+        var idx = arr.findIndex(function(x){ return String(x.id) === String(customer.id); });
+        if (idx >= 0) { arr[idx] = Object.assign({}, arr[idx], fresh); saveCustomers(arr); }
+        Object.assign(customer, fresh);
+      } catch (eFresh) { if (data[0].updated_at) customer.updatedAt = data[0].updated_at; }
+    }
+    if (callback) callback(null, data);
+  });
+}
+
 // 견적서 삭제 — 2026-08-05: 예전엔 견적서를 삭제/숨길 방법이
 // 앱 어디에도 없었음(estimates.is_archived 컬럼은 있는데 쓰는 코드가 없었음)
 //

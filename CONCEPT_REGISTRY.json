@@ -419,5 +419,21 @@
       "obs-click-watch-check.js"
     ],
     "금지패턴": "관측 코드가 저장·클릭 동작을 바꾸거나 막는 것 / 입력칸의 값(비밀번호 포함)을 기록하는 것 / 서버로만 기록해서 서버에 못 가면 증거도 사라지는 것 / 기기 기록에 상한이 없는 것 / elementFromPoint로 중앙을 찍어 가림을 판정하는 것(버튼이 화면 밖이면 오판, 비활성은 click이 안 와서 놓침 - pointerdown을 캡처 단계에서 본다)"
+  },
+  "고객_단계_변경_저장": {
+    "의미": "고객의 진행 단계(상담/선금결제/...)를 바꾸는 저장. 단계 값(과 확정일)만 서버로 보내고, 계약금 입금 시 '계약 이전 단계 -> 선금결제'는 DB 트리거가 직접 처리한다",
+    "single_source_of_truth": "DB: 트리거 trg_customers_auto_stage(customers_auto_stage_on_deposit) / 앱: dash-api-writes.js patchCustomerFieldsToDb",
+    "derived_fields": [],
+    "db_enforcement": "trg_customers_auto_stage: deposit_amount가 바뀌어 0보다 크고 단계가 방문예약/상담/가견적이면 선금결제로 올림(그 외엔 불변)",
+    "code_locations": [
+      "dash-api-writes.js:patchCustomerFieldsToDb",
+      "dash-customer-detail-tabs.js:changeStage",
+      "dash-kanban.js:changeStageByName"
+    ],
+    "guard_tests": [
+      "stage-partial-patch-check.js",
+      "pay-changestage-lock-sync-check.js"
+    ],
+    "금지패턴": "단계만 바꾸면서 saveCustomerToDb로 고객 전체를 통째로 PATCH하는 것(낡은 계약금 등이 서버를 덮어쓰거나 동시저장충돌로 실패 - 9/6, 9/8, 10/8 세 번 재발) / 락값을 맞추는 증상 수정만 반복하는 것"
   }
 }

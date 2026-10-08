@@ -51,11 +51,12 @@ function changeStageByName(customerName, newStage, id) {
     }
     saveCustomers(customers);
 
-    if (customers[idx].id && typeof saveCustomerToDb === 'function') {
-      saveCustomerToDb(customers[idx], function(err) {
+    // 2026-10-08: 단계 변경은 단계(와 확정일)만 서버로 보냄 - 고객 전체를 통째로 보내면 낡은 값이 서버를 덮어쓰거나 "동시저장충돌"로 실패함(dash-api-writes.js patchCustomerFieldsToDb 참고).
+    if (customers[idx].id && typeof patchCustomerFieldsToDb === 'function') {
+      var kanbanFields = { stage: newStage };
+      if (newStage === '확정견적' && customers[idx].confirmDate) kanbanFields.confirm_date = customers[idx].confirmDate;
+      patchCustomerFieldsToDb(customers[idx], kanbanFields, function(err) {
         if (err) console.warn('스테이지 동기화 실패:', err);
-        // 실패시 사용자 안내(권한문제/동시저장충돌 구분 포함)는
-        // saveCustomerToDb 내부에서 이미 showToast로 처리됨.
       });
     }
     showToast(customerName + ' → ' + newStage);

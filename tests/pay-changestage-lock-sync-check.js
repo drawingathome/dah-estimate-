@@ -23,6 +23,7 @@ async function run() {
 
   let patchCount = 0;
   let secondPatchLockValue = null;
+  let secondPatchBody = null;
   await page.setRequestInterception(true);
   page.on('request', (req) => {
     const url = req.url();
@@ -30,6 +31,7 @@ async function run() {
       patchCount++;
       if (patchCount === 2) {
         secondPatchLockValue = url.includes('updated_at=eq.') ? decodeURIComponent(url.split('updated_at=eq.')[1]) : null;
+        try { secondPatchBody = JSON.parse(req.postData() || '{}'); } catch (e) { secondPatchBody = null; }
       }
     }
     if (url.includes('supabase.co')) {
@@ -89,9 +91,12 @@ async function run() {
   });
   await new Promise(r => setTimeout(r, 1000));
 
-  const ok = patchCount === 2 && secondPatchLockValue === '2026-09-08T12:00:00.000Z';
-  console.log(ok ? '✅' : '❌', 'savePayData 성공 후 로컬 락값이 갱신되어 changeStage가 최신 락값으로 저장 시도함',
-    JSON.stringify({ patchCount, secondPatchLockValue }));
+  // 2026-10-08(약속 변경 - 조유정 사례, tests/stage-partial-patch-check.js): 예전 약속은 "단계 변경도 최신 락값을 들고 고객 전체를 저장"이었는데,
+  // 그 방식 자체가 낡은 값 덮어쓰기/동시저장충돌의 뿌리였음(9/6, 9/8, 10/8 세 번 재발). 새 약속: 결제 저장 뒤 단계 변경은
+  // "단계만" 보내고 락 조건이 없으므로 낡은 락으로 실패할 수 없다. (결제 저장 -> 단계 변경 두 번 PATCH가 나가는 흐름 자체는 그대로 확인)
+  const ok = patchCount === 2 && secondPatchLockValue === null && secondPatchBody && Object.keys(secondPatchBody).join(',') === 'stage';
+  console.log(ok ? '✅' : '❌', '결제 저장 뒤 단계 변경은 락 없이 "단계만" 서버로 보냄(낡은 락/낡은 값 영향 없음)',
+    JSON.stringify({ patchCount, secondPatchLockValue, secondPatchBody }));
   if (!ok) anyFail = true;
 
   await browser.close();

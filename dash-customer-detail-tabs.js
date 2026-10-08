@@ -325,7 +325,10 @@ function changeStage(stage) {
   saveCustomers(arr);
   if (typeof logEvent === 'function') logEvent('stage_change', { from: fromStage, to: stage, customerId: target.id, customerName: target.clientName });
   renderHome(true); openDetail(currentDetailName, target.id);
-  saveCustomerToDb(target, function(err){
+  // 2026-10-08: 단계만 바뀌므로 단계(와 확정일)만 서버로 보냄 - 고객 전체를 통째로 보내면 낡은 값(계약금 등)이 서버를 덮어쓰거나 "동시저장충돌"로 실패함(patchCustomerFieldsToDb 설명 참고).
+  var stageFields = { stage: stage };
+  if (stage === '확정견적' && target.confirmDate) stageFields.confirm_date = target.confirmDate;
+  patchCustomerFieldsToDb(target, stageFields, function(err){
     showToast(err ? ('⚠️ "' + stage + '"으로 변경(로컬만) — 서버 재시도 대기중') : ('"' + stage + '"으로 변경됐습니다'));
   });
 }
