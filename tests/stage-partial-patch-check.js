@@ -18,6 +18,7 @@ async function run() {
     const page = await browser.newPage();
     page.on('dialog', async d => { try { await d.accept(''); } catch (e) {} });
     const patches = [];
+    const sheetSyncs = []; // 구글 시트(고객명단) 동기화 요청
     await page.setRequestInterception(true);
     page.on('request', (req) => {
       const url = req.url();
@@ -35,6 +36,7 @@ async function run() {
         req.respond({ status: 200, contentType: 'application/json', headers: H, body: '[]' });
         return;
       }
+      if (url.includes('script.google.com')) { sheetSyncs.push(req.postData() || ''); req.respond({ status: 200, contentType: 'text/plain', headers: H, body: 'ok' }); return; }
       if (url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) req.continue(); else req.abort();
     });
     await page.goto(`http://localhost:${port}/dah-dashboard.html`, { waitUntil: 'networkidle0', timeout: 20000 });
@@ -64,18 +66,23 @@ async function run() {
       return { stage: c && c.stage, dep: c && c.depositAmount, updatedAt: c && c.updatedAt, queue: q };
     });
     await page.close();
-    return { patches, state };
+    return { patches, state, sheetSyncs };
   }
 
   // 시험 유효성: PATCH가 실제로 1번 나가야 한다(없으면 "비어서 통과" 방지)
   for (const [label, mode] of [['상세화면 단계변경', 'detail'], ['칸반 드래그', 'kanban']]) {
-    const { patches, state } = await scenario(label, mode);
+    const { patches, state, sheetSyncs } = await scenario(label, mode);
     ok(label + ': 서버로 PATCH가 정확히 1번 나감(시험 유효성)', patches.length === 1, 'n=' + patches.length);
     if (patches.length !== 1) continue;
     const body = JSON.parse(patches[0].body || '{}');
     ok(label + ': 본문에 "stage"만 있음(계약금 등 다른 필드 없음)', Object.keys(body).join(',') === 'stage' && body.stage === '선금결제', JSON.stringify(body));
     ok(label + ': 락 조건(updated_at=eq) 없음 - 낡은 락으로 실패할 수 없음', !patches[0].url.includes('updated_at=eq'), patches[0].url.split('/rest/v1/')[1]);
     ok(label + ': 서버의 최신 계약금(308,000)이 로컬에 반영됨(낡은 0원이 남지 않음)', Number(state.dep) === 308000 && state.stage === '선금결제', JSON.stringify({ dep: state.dep, stage: state.stage }));
+    // 2026-10-08: 단계 변경이 구글 시트(고객명단)에도 반영되어야 함 - 예전 saveCustomerToDb는 syncCustomerToSheet를 같이 불렀는데
+    // 부분 저장으로 바꾸면서 이 호출이 빠졌었음(시험 없이 배포돼 23:15 이후 단계 변경이 시트에 안 갔음)
+    const syncs = sheetSyncs.map(b => { try { return JSON.parse(b); } catch (e) { return {}; } }).filter(b => b.action === 'syncCustomer');
+    ok(label + ': 구글 시트(고객명단) 동기화 요청이 나감', syncs.length >= 1, 'n=' + syncs.length);
+    ok(label + ': 시트로 새 단계(선금결제)와 서버 최신 계약금 기준 금액이 감', syncs.length >= 1 && syncs[syncs.length - 1].stage === '선금결제' && syncs[syncs.length - 1].clientName === '단계테스트', JSON.stringify(syncs[syncs.length - 1] || null).slice(0, 160));
   }
   {
     const { patches } = await scenario('확정견적', 'confirm');
@@ -86,7 +93,7 @@ async function run() {
     const { patches, state } = await scenario('네트워크 실패', 'neterr');
     ok('서버 오류 시 시험 유효성: PATCH 시도됨', patches.length === 1, 'n=' + patches.length);
     const q = state.queue || [];
-    const entry = q.find(x => String(x.customerKey) === '7:fields');
+    const entry = q.find(x => String(x.customerKey) === '7:fields:stage');
     ok('서버 오류 시 재시도 큐에 쌓임', !!entry, JSON.stringify(q).slice(0, 160));
     ok('재시도 큐에는 "단계만" 들어 있음(낡은 계약금 0원이 큐에 들어가지 않음)', !!entry && Object.keys(entry.payload || {}).join(',') === 'stage', entry ? JSON.stringify(entry.payload) : 'no entry');
   }

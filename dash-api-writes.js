@@ -1,7 +1,7 @@
 /* ══════════════════════════════════════════════════
    DAH 대시보드 — 고객 DB 쓰기 (저장/선점/보관/삭제/복구/리드보류)
    2026-09-24(선혜님 - "나눌수 있는건 다 나눠보자" - 큰 파일 쪼개기 4차): claimCustomer,
-   saveCustomerToDb, archiveEstimate, permanentlyDeleteCustomerFromDb, restoreCustomerFromDb,
+   saveCustomerToDb, patchCustomerFieldsToDb, saveCustomerFieldsToDb, archiveEstimate, permanentlyDeleteCustomerFromDb, restoreCustomerFromDb,
    parkLead, unparkLead 등 "쓰기" 함수들만 분리함. 코드 내용은 한 줄도 안 바꾸고 위치만 옮김.
    ══════════════════════════════════════════════════ */
 
@@ -175,7 +175,9 @@ function patchCustomerFieldsToDb(customer, fields, callback) {
   window._lastSelfCustomerWriteId = customer.id;
   window._lastSelfCustomerWriteTime = Date.now();
   var path = 'customers?id=eq.' + customer.id;
-  var queueKey = customer.id + ':fields';
+  // 2026-10-08: 큐 이름표를 "바꾼 필드 조합"별로 나눔 - 모두 같은 이름표(id:fields)면 오프라인에서 메모 저장이 실패한 뒤 결제 링크
+  // 저장도 실패할 때 먼저 실패한 메모가 큐에서 덮여 사라짐(같은 필드를 다시 저장하면 최신 값으로 대체되는 것은 의도).
+  var queueKey = customer.id + ':fields:' + Object.keys(fields || {}).sort().join(',');
   sbXHR('PATCH', path, fields, function(err, data) {
     if (err) {
       if (err.zeroRows) {
@@ -184,6 +186,8 @@ function patchCustomerFieldsToDb(customer, fields, callback) {
       } else {
         console.error('고객 필드 저장 오류:', err.text);
         if (typeof addToPendingSyncQueue === 'function') addToPendingSyncQueue(queueKey, 'PATCH', path, fields);
+        // 예전 saveCustomerToDb도 서버 결과와 무관하게 시트 동기화를 했음(시트는 DB의 사본일 뿐이라 로컬 값 기준으로도 보냄)
+        try { syncCustomerToSheet(customer); } catch (eSheet) { /* 시트 동기화 실패는 저장에 영향 없음 */ }
       }
       if (callback) callback(err, data);
       return;
@@ -198,8 +202,18 @@ function patchCustomerFieldsToDb(customer, fields, callback) {
         Object.assign(customer, fresh);
       } catch (eFresh) { if (data[0].updated_at) customer.updatedAt = data[0].updated_at; }
     }
+    // 2026-10-08: 예전 saveCustomerToDb가 저장하면서 같이 하던 구글 시트(고객명단) 동기화 - 부분 저장으로 바꾸면서 빠졌던 것을 복구.
+    // 서버가 돌려준 최신 값이 반영된 customer로 보냄.
+    try { syncCustomerToSheet(customer); } catch (eSheet) { /* 시트 동기화 실패는 저장에 영향 없음 */ }
     if (callback) callback(null, data);
   });
+}
+
+// 2026-10-08: 고객 정보 중 "필드 몇 개만" 바꾸는 저장(메모/결제링크/실측·시공일/발주체크)의 공용 입구.
+// 서버 id가 있으면 그 필드만 보내고(patchCustomerFieldsToDb), 아직 서버에 없는 고객(id 없음)이면 예전처럼 전체 저장(생성)으로 보냄.
+function saveCustomerFieldsToDb(customer, fields, callback) {
+  if (customer && customer.id) { patchCustomerFieldsToDb(customer, fields, callback); return; }
+  saveCustomerToDb(customer, callback);
 }
 
 // 견적서 삭제 — 2026-08-05: 예전엔 견적서를 삭제/숨길 방법이

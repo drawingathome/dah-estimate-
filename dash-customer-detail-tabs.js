@@ -116,7 +116,8 @@ function renderDetailInfoSection(c, body) {
         target.memo = newVal;
         saveCustomers(arr);
         clearMemoDraft();
-        saveCustomerToDb(target, function(err){
+        // 2026-10-08: 메모만 서버로 보냄(고객 전체를 보내면 낡은 계약금 등이 서버를 덮어쓰거나 동시저장충돌로 실패 - 오늘 조유정 사례와 같은 뿌리)
+        saveCustomerFieldsToDb(target, { memo: newVal }, function(err){
           showToast(err ? '⚠️ 메모: 로컬엔 저장됨(서버 재시도 대기)' : '메모가 저장됐습니다');
         });
       }
@@ -153,7 +154,8 @@ function renderDetailInfoSection(c, body) {
       if (target) {
         target.paymentLink = newVal;
         saveCustomers(arr);
-        saveCustomerToDb(target, function(err){
+        // 2026-10-08: 결제 링크만 서버로 보냄(위 메모와 같은 이유)
+        saveCustomerFieldsToDb(target, { payment_link: newVal }, function(err){
           showToast(err ? '⚠️ 결제링크: 로컬엔 저장됨(서버 재시도 대기)' : '결제 링크가 저장됐습니다');
         });
       }
@@ -195,7 +197,11 @@ function renderDetailInfoSection(c, body) {
               target[item.key === 'installDate' ? 'installDateTbd' : 'measureDateTbd'] = false;
             }
             saveCustomers(arr);
-            saveCustomerToDb(target, function(err){
+            // 2026-10-08: 바꾼 날짜(와 "미정" 해제 표시)만 서버로 보냄(위 메모와 같은 이유)
+            var dateFields = {};
+            dateFields[item.key === 'installDate' ? 'install_date' : 'measure_date'] = newVal || '';
+            if (newVal) dateFields[item.key === 'installDate' ? 'install_date_tbd' : 'measure_date_tbd'] = false;
+            saveCustomerFieldsToDb(target, dateFields, function(err){
               showToast(err ? '⚠️ ' + item.label + ': 로컬엔 저장됨(서버 재시도 대기)' : item.label + '이 저장됐습니다');
             });
             // 2026-09-11(선혜님 지적 - "고객이 확정된 뒤에 시공일자를

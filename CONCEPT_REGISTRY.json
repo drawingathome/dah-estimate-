@@ -421,20 +421,25 @@
     "금지패턴": "관측 코드가 저장·클릭 동작을 바꾸거나 막는 것 / 입력칸의 값(비밀번호 포함)을 기록하는 것 / 서버로만 기록해서 서버에 못 가면 증거도 사라지는 것 / 기기 기록에 상한이 없는 것 / elementFromPoint로 중앙을 찍어 가림을 판정하는 것(버튼이 화면 밖이면 오판, 비활성은 click이 안 와서 놓침 - pointerdown을 캡처 단계에서 본다)"
   },
   "고객_단계_변경_저장": {
-    "의미": "고객의 진행 단계(상담/선금결제/...)를 바꾸는 저장. 단계 값(과 확정일)만 서버로 보내고, 계약금 입금 시 '계약 이전 단계 -> 선금결제'는 DB 트리거가 직접 처리한다",
+    "의미": "고객 정보 중 일부 필드만 바꾸는 저장(단계/확정일, 메모, 결제 링크, 실측·시공일, 발주 현황). 바꾼 필드만 서버로 보내고(patchCustomerFieldsToDb), 계약 이전 단계 -> 선금결제는 DB 트리거가 직접 처리한다. 저장하면서 구글 시트(고객명단) 동기화도 함께 한다",
     "single_source_of_truth": "DB: 트리거 trg_customers_auto_stage(customers_auto_stage_on_deposit) / 앱: dash-api-writes.js patchCustomerFieldsToDb",
     "derived_fields": [],
     "db_enforcement": "trg_customers_auto_stage: deposit_amount가 바뀌어 0보다 크고 단계가 방문예약/상담/가견적이면 선금결제로 올림(그 외엔 불변)",
     "code_locations": [
+      "dash-api-data.js:loadCustomersAsync(대기 중 필드 얹기)",
       "dash-api-writes.js:patchCustomerFieldsToDb",
+      "dash-api-writes.js:saveCustomerFieldsToDb",
       "dash-customer-detail-tabs.js:changeStage",
+      "dash-customer-detail-tabs.js:메모/결제링크/날짜 편집",
+      "dash-customer-order.js:saveOrderState",
       "dash-kanban.js:changeStageByName"
     ],
     "guard_tests": [
-      "stage-partial-patch-check.js",
-      "pay-changestage-lock-sync-check.js"
+      "field-partial-patch-check.js",
+      "pay-changestage-lock-sync-check.js",
+      "stage-partial-patch-check.js"
     ],
-    "금지패턴": "단계만 바꾸면서 saveCustomerToDb로 고객 전체를 통째로 PATCH하는 것(낡은 계약금 등이 서버를 덮어쓰거나 동시저장충돌로 실패 - 9/6, 9/8, 10/8 세 번 재발) / 락값을 맞추는 증상 수정만 반복하는 것"
+    "금지패턴": "단계만 바꾸면서 saveCustomerToDb로 고객 전체를 통째로 PATCH하는 것(낡은 계약금 등이 서버를 덮어쓰거나 동시저장충돌로 실패 - 9/6, 9/8, 10/8 세 번 재발) / 락값을 맞추는 증상 수정만 반복하는 것 / 부분 저장 함수에서 구글 시트 동기화(syncCustomerToSheet)를 빼먹는 것(10/8 단계 변경 수정에서 한 번 빠져 시험 없이 배포됨) / 재시도 큐 이름표를 필드와 무관하게 같게 쓰는 것(먼저 실패한 저장이 덮여 사라짐)"
   },
   "시공행_저장_복원": {
     "의미": "견적서의 실측비·시공비·블라인드시공·레일 같은 시공(svc) 행. 자동으로 생기는 행도 line_items에 전부 저장하고(autoType+override), price_breakdown.svcRowsSaved 표식이 있는 견적은 열 때 재계산 없이 저장된 그대로 복원한다. 지역/제품을 사용자가 바꾸는 순간부터만 자동 재계산",

@@ -250,7 +250,22 @@ function loadCustomersAsync(callback, force) {
     hideLoading();
     if (err) { try { _customerCache = JSON.parse(localStorage.getItem('dah_customers') || '[]'); } catch(e) {} }
     else {
-      var fresh = (data || []).map(dbRowToCustomer);
+      // 2026-10-08: "필드별 저장"(메모/결제링크/단계/날짜/발주)이 서버에 못 가고 재시도 큐에 쌓여 있으면(이름표 '고객id:fields:...'),
+      // 서버에서 새로 받은 행 위에 그 대기 중인 필드만 얹어서 보여줌 - 화면이 서버의 옛 값으로 되돌아가 다시 입력하게 만들지 않고,
+      // 나머지 필드(계약금 등)는 서버 최신값을 그대로 씀(아래 통째 유지 방식은 낡은 값을 같이 붙들기 때문에 필드별 저장에는 쓰지 않음).
+      var queuedFieldOverlays = {};
+      try {
+        if (typeof getPendingSyncQueue === 'function') {
+          getPendingSyncQueue().forEach(function(p) {
+            var m = /^(\d+):fields:/.exec(String(p.customerKey));
+            if (m && p.payload && typeof p.payload === 'object') queuedFieldOverlays[m[1]] = Object.assign(queuedFieldOverlays[m[1]] || {}, p.payload);
+          });
+        }
+      } catch (eOverlay) { /* 얹기 실패는 무시 - 서버값 그대로 */ }
+      var fresh = (data || []).map(function(row) {
+        var o = row && queuedFieldOverlays[String(row.id)];
+        return dbRowToCustomer(o ? Object.assign({}, row, o) : row);
+      });
       // 2026-08-05: 오프라인 동기화 큐 — 서버 저장이 아직 안 된(대기중인) 고객은
       // 서버의 옛날 데이터로 덮어쓰지 않고 로컬 버전을 그대로 유지.
       // 이게 없으면 오프라인에서 바꾼 내용이 네트워크 복구 후 재조회 한 번에
