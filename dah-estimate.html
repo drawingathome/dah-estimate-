@@ -910,20 +910,20 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
 <script src="/dash-supabase-auth.js?v=21a67e59f4a9"></script>
 <script src="/est-form-controls.js?v=a737ee9e83f3"></script>
 <script src="/est-calc-rules.js?v=ee7750f2d8a4"></script>
-<script src="/est-product-calc.js?v=8dbf319239fc"></script>
-<script src="/est-calc-curtain.js?v=a14f71fbfaa1"></script>
-<script src="/est-calc-blind.js?v=bb50880a48cb"></script>
-<script src="/est-calc-svc.js?v=9fc2319e2cdd"></script>
+<script src="/est-product-calc.js?v=676a1e220f40"></script>
+<script src="/est-calc-curtain.js?v=08e83e697a3e"></script>
+<script src="/est-calc-blind.js?v=858fe93efa7d"></script>
+<script src="/est-calc-svc.js?v=6e331bbf6369"></script>
 <script src="/est-survey.js?v=0e4bacb22873"></script>
-<script src="/est-save.js?v=1ea197b714fd"></script>
+<script src="/est-save.js?v=5dbef662d583"></script>
 <script src="/est-click-watch.js?v=192cb15c7ec3"></script>
 <script src="/est-save-stages.js?v=0a8047152541"></script>
 <script src="/est-doc-customer.js?v=e8be36d530e2"></script>
 <script src="/est-doc-vendor.js?v=3b6860a47faf"></script>
 <script src="/est-doc-vendor-ui.js?v=485ee9acf535"></script>
 <script src="/est-doc-request.js?v=65434c6947c8"></script>
-<script src="/est-customer-load.js?v=0009ef5d7251"></script>
-<script src="/est-misc.js?v=fa08a6ff2482"></script>
+<script src="/est-customer-load.js?v=7289660ec513"></script>
+<script src="/est-misc.js?v=917b9e82d487"></script>
 <script>
 var currentTab = 'ga';
 
@@ -1077,6 +1077,10 @@ var currentTab = 'ga';
                 // - 품목을 화면에 복원하는 이 한 줄만 정확히 감싸서, 그
                 // 복원 루프 동안만 "이건 사용자 편집이 아니다"로 표시하고
                 // 끝나자마자(비동기 대기 없이 바로) 다시 풀어줌.
+                // 2026-10-08: 시공 행이 모두 저장된 견적(svcRowsSaved 표식)은 열 때 자동 시공 행을
+                // 재계산하지 않고 저장된 그대로 복원(아래 지역 복원 직후 해제). 표식 없는 예전 견적은 예전 방식.
+                window._estEditState.skipAutoSvc = !!(e.price_breakdown && e.price_breakdown.svcRowsSaved);
+                setTimeout(function(){ window._estEditState.skipAutoSvc = false; }, 4000); // 안전장치(혹시 해제가 누락돼도 자동계산이 영구히 멈추지 않게)
                 window._estEditState.isRestoringEstimate = true;
                 loadedItems = restoreLineItemsToForm(e.line_items, e.product);
                 window._estEditState.isRestoringEstimate = false;
@@ -1107,6 +1111,7 @@ var currentTab = 'ga';
                 document.getElementById('c-region').value = e.region;
                 document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
               }
+              window._estEditState.skipAutoSvc = false; // 열기 복원 끝 — 이후 사용자가 지역/제품을 바꾸면 다시 자동계산
               function afterDiscountRestoreCustPath() {
                 // 2026-08-24: 저장 당시 금액으로 고정 — 위에서 쿠폰/품목을 복원하면서
                 // calcTotal이 최신 설정으로 다시 계산해버린 걸, 저장된 스냅샷으로 덮어씀.
@@ -1221,6 +1226,9 @@ var currentTab = 'ga';
             // 2026-09-22(선혜님 - "안바뀌엇고 열면 자꾸 50%로 된다니깐" -
             // 최금희 실사례, loadCustId 경로와 동일한 이유): 이 복원 루프
             // 동안만 정확히 보호함(넓은 시간창 대신).
+            // 2026-10-08: 경로 A와 같은 이유(시공 행이 모두 저장된 견적은 재계산 없이 그대로 복원).
+            window._estEditState.skipAutoSvc = !!(e.price_breakdown && e.price_breakdown.svcRowsSaved);
+            setTimeout(function(){ window._estEditState.skipAutoSvc = false; }, 4000);
             window._estEditState.isRestoringEstimate = true;
             loadedItems = restoreLineItemsToForm(e.line_items, e.product);
             window._estEditState.isRestoringEstimate = false;
@@ -1253,6 +1261,7 @@ var currentTab = 'ga';
             document.getElementById('c-region').value = e.region;
             document.getElementById('c-region').dispatchEvent(new Event('change', {bubbles:true}));
           }
+          window._estEditState.skipAutoSvc = false; // 열기 복원 끝 — 이후 사용자가 바꾸면 다시 자동계산
           // 2026-09-01(선혜님 지시 - "니가 오늘 가장 크게 손댔 곳 버그를 한번
           // 더 파보자"로 발견, 실제 재현 성공): c-staff(담당자) 복원이
           // loadCustId 경로에만 있고 loadEstDbId 경로(대시보드 "다시보기"가

@@ -449,7 +449,9 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
         // 일치하는 커튼 행을 찾아 그 rowUid를 그대로 가져다 씀(같은
         // 폴백 방식을 getRailLengthText()에서도 이미 쓰고 있음).
         if (it.autoType) {
-          str.dataset.manualOverride = '1';
+          // 2026-10-08: 새 저장 형식은 override 필드로 "사용자가 고친 값"만 표시함. 필드가 없는
+          // 예전 저장분은 autoType이 있으면 곧 사용자가 고친 값이었으므로 예전처럼 취급.
+          if (it.override !== false) str.dataset.manualOverride = '1';
           if (it.autoType === 'rail' || it.autoType === 'railcost') {
             var matchedCurtainTr = Array.from(document.querySelectorAll('#curtain-body tr')).find(function(ctr) {
               return (ctr.querySelector('.space-inp')?.value || '') === (it.space || '') && it.space;

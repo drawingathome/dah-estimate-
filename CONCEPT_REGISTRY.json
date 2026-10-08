@@ -435,5 +435,27 @@
       "pay-changestage-lock-sync-check.js"
     ],
     "금지패턴": "단계만 바꾸면서 saveCustomerToDb로 고객 전체를 통째로 PATCH하는 것(낡은 계약금 등이 서버를 덮어쓰거나 동시저장충돌로 실패 - 9/6, 9/8, 10/8 세 번 재발) / 락값을 맞추는 증상 수정만 반복하는 것"
+  },
+  "시공행_저장_복원": {
+    "의미": "견적서의 실측비·시공비·블라인드시공·레일 같은 시공(svc) 행. 자동으로 생기는 행도 line_items에 전부 저장하고(autoType+override), price_breakdown.svcRowsSaved 표식이 있는 견적은 열 때 재계산 없이 저장된 그대로 복원한다. 지역/제품을 사용자가 바꾸는 순간부터만 자동 재계산",
+    "single_source_of_truth": "DB estimates.line_items(svc 행) + estimates.price_breakdown.svcRowsSaved / 앱: est-misc.js collectLineItems",
+    "derived_fields": [],
+    "db_enforcement": "없음(앱 규칙) - 저장 전 검사(estMissingInstallRows)와 관측 기록(영수증 svc 요약)이 보조 안전장치",
+    "code_locations": [
+      "est-misc.js:collectLineItems",
+      "est-misc.js:loadDraft",
+      "est-customer-load.js:restoreLineItemsToForm",
+      "dah-estimate.html:loadCustId/loadEstDbId 열기 경로(skipAutoSvc)",
+      "est-calc-svc.js:autoAddSvcFee",
+      "est-calc-blind.js:autoAddBlindSvc",
+      "est-calc-curtain.js:autoUpdateRail",
+      "est-save.js:estSvcState/estMissingInstallRows"
+    ],
+    "guard_tests": [
+      "svc-rows-persist-check.js",
+      "svc-manual-override-check.js",
+      "rail-save-restore-check.js"
+    ],
+    "금지패턴": "자동 생성 행을 \"다시 열 때 재계산으로 만들어지니까\" 하며 저장에서 빼는 것(합계엔 있고 행은 DB에 없어 중복/빠짐 - 조유정 308,000->398,000, 저장된 견적 62건) / 표식 있는 견적을 열 때 자동 시공 행을 또 만드는 것 / skipAutoSvc 해제를 빠뜨려 사용자가 지역을 바꿔도 재계산이 영구히 멈추는 것 / 성과매출에 시공비 행을 섞는 것(성과매출=제품비-할인)"
   }
 }

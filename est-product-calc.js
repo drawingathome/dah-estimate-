@@ -244,7 +244,10 @@ function calcTotal() {
   window._estEditState.lastCalcBreakdown = {
     productSubtotal: curtainTotal, discount: discount, installSubtotal: svcTotal,
     finalTotal: grand, deposit: deposit, balance: balance, performanceRevenue: perf,
-    discountDetail: discountBreakdown
+    discountDetail: discountBreakdown,
+    // 2026-10-08: 자동 시공 행(실측/시공/레일/블라인드시공)이 line_items에 모두 저장된 견적이라는 표식.
+    // 이 표식이 있으면 다시 열 때 재계산 없이 저장된 행 그대로 복원(est-customer-load / dah-estimate.html).
+    svcRowsSaved: true
   };
 }
 

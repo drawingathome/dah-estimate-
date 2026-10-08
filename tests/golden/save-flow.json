@@ -20,9 +20,11 @@
     "finalTotal": 225000,
     "installSubtotal": 0,
     "performanceRevenue": 225000,
-    "productSubtotal": 225000
+    "productSubtotal": 225000,
+    "svcRowsSaved": true
    },
    "lastDiscountBreakdown": [],
+   "skipAutoSvc": false,
    "viewingFrozenEstimate": false
   },
   "jsErrors": [],
@@ -30,7 +32,7 @@
    "dah_build_seen": "202608252600",
    "dah_customers": "[{\"id\":901,\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"addr\":\"서울 서초구\",\"space\":\"거실\",\"price\":225000,\"performanceRevenue\":225000,\"staffName\":\"\",\"stage\":\"가견적\",\"date\":\"2026-10-01\",\"measureDate\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"memo\":\"\",\"visitCount\":1,\"estimateNo\":\"DAH-20260928-01\",\"estimateStatus\":\"ga\",\"createdAt\":\"2026-09-28T03:00:00.000Z\"}]",
    "dah_save_attempts": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"phone\":\"01012345678\"}]",
-   "dah_save_diagnostics": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"검증통과\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"세션확인-정상\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"고객저장-응답\",\"detail\":{\"status\":201,\"isUpdate\":false,\"bodyLen\":256}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"견적서저장-응답\",\"detail\":{\"status\":201,\"isEditMode\":false,\"bodyLen\":981}}]",
+   "dah_save_diagnostics": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true,\"svc\":{\"region\":\"\",\"count\":0,\"has_fee_row\":false,\"sum\":0,\"types\":[]}}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"검증통과\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"세션확인-정상\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"고객저장-응답\",\"detail\":{\"status\":201,\"isUpdate\":false,\"bodyLen\":256}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"견적서저장-응답\",\"detail\":{\"status\":201,\"isEditMode\":false,\"bodyLen\":1001}}]",
    "dah_saved": "[{\"id\":\"srv-est-1\",\"no\":\"DAH-20260928-01\",\"dbId\":\"srv-est-1\",\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"addr\":\"서울 서초구\",\"space\":\"거실\",\"fabric\":\"\",\"itemCount\":1,\"curtainCount\":1,\"blindCount\":0,\"curtainVendors\":[],\"blindVendors\":[],\"price\":225000,\"performanceRevenue\":225000,\"staffName\":\"\",\"status\":\"ga\",\"contractStatus\":\"pending\",\"savedAt\":\"2026-09-28T03:00:00.000Z\",\"expiryAt\":\"2026-10-05T03:00:00.000Z\",\"date\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"memo\":\"\",\"confirmedAt\":null,\"branch\":\"반포점\",\"lineItems\":[{\"type\":\"curtain\",\"space\":\"거실\",\"displayName\":\"\",\"fabric\":\"\",\"vendor\":\"\",\"color\":\"\",\"railVendor\":\"\",\"pleatType\":\"나비주름형\",\"openType\":\"양개형\",\"heightAdjust\":\"-3\",\"hemType\":\"리드\",\"mw\":\"300\",\"mh\":\"240\",\"pnum\":\"5\",\"yardage\":\"\",\"shapeProcess\":true,\"fabricUnitPrice\":\"\",\"price\":45000,\"amt\":\"225,000원\"}],\"custType\":\"new\",\"region\":\"\",\"appliedDiscounts\":{\"coupons\":[],\"manual\":null},\"clientId\":901}]"
   },
   "others": [
@@ -60,7 +62,7 @@
      "extra": {
       "customerName": "골든고객",
       "detail": {
-       "bodyLen": 981,
+       "bodyLen": 1001,
        "isEditMode": false,
        "status": 201
       },
@@ -145,7 +147,14 @@
       "customerName": "골든고객",
       "detail": {
        "hasCurtainOrBlind": true,
-       "missing": []
+       "missing": [],
+       "svc": {
+        "count": 0,
+        "has_fee_row": false,
+        "region": "",
+        "sum": 0,
+        "types": []
+       }
       },
       "stage": "필수항목검증완료"
      },
@@ -219,6 +228,13 @@
        "svc_rows": [],
        "total": "225,000원",
        "url_params": ""
+      },
+      "svc": {
+       "count": 0,
+       "has_fee_row": false,
+       "region": "",
+       "sum": 0,
+       "types": []
       }
      },
      "device": "DEVICE",
@@ -324,7 +340,8 @@
       "finalTotal": 225000,
       "installSubtotal": 0,
       "performanceRevenue": 225000,
-      "productSubtotal": 225000
+      "productSubtotal": 225000,
+      "svcRowsSaved": true
      },
      "product": "",
      "region": "",
@@ -358,9 +375,11 @@
     "finalTotal": 225000,
     "installSubtotal": 0,
     "performanceRevenue": 225000,
-    "productSubtotal": 225000
+    "productSubtotal": 225000,
+    "svcRowsSaved": true
    },
    "lastDiscountBreakdown": [],
+   "skipAutoSvc": false,
    "viewingFrozenEstimate": false
   },
   "jsErrors": [],
@@ -368,7 +387,7 @@
    "dah_build_seen": "202608252600",
    "dah_customers": "[{\"id\":221,\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"stage\":\"상담\",\"price\":225000,\"addr\":\"서울 서초구\",\"space\":\"거실\",\"performanceRevenue\":225000,\"staffName\":\"\",\"date\":\"2026-10-01\",\"measureDate\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"visitCount\":1,\"estimateNo\":\"DAH-20260928-01\",\"estimateStatus\":\"ga\",\"createdAt\":\"2026-09-28T03:00:00.000Z\"}]",
    "dah_save_attempts": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"phone\":\"01012345678\"},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"phone\":\"01012345678\"}]",
-   "dah_save_diagnostics": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"검증통과\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"세션확인-정상\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"고객저장-응답\",\"detail\":{\"status\":200,\"isUpdate\":true,\"bodyLen\":240}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"견적서저장-응답\",\"detail\":{\"status\":201,\"isEditMode\":false,\"bodyLen\":981}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"검증통과\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"세션확인-정상\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"고객저장-응답\",\"detail\":{\"status\":200,\"isUpdate\":true,\"bodyLen\":240}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"견적서저장-응답\",\"detail\":{\"status\":200,\"isEditMode\":true,\"bodyLen\":964}}]",
+   "dah_save_diagnostics": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true,\"svc\":{\"region\":\"\",\"count\":0,\"has_fee_row\":false,\"sum\":0,\"types\":[]}}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"검증통과\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"세션확인-정상\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"고객저장-응답\",\"detail\":{\"status\":200,\"isUpdate\":true,\"bodyLen\":240}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"견적서저장-응답\",\"detail\":{\"status\":201,\"isEditMode\":false,\"bodyLen\":1001}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true,\"svc\":{\"region\":\"\",\"count\":0,\"has_fee_row\":false,\"sum\":0,\"types\":[]}}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"검증통과\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"세션확인-정상\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"고객저장-응답\",\"detail\":{\"status\":200,\"isUpdate\":true,\"bodyLen\":240}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"견적서저장-응답\",\"detail\":{\"status\":200,\"isEditMode\":true,\"bodyLen\":984}}]",
    "dah_saved": "[{\"id\":\"srv-est-1\",\"no\":\"DAH-20260928-01\",\"dbId\":\"srv-est-1\",\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"addr\":\"서울 서초구\",\"space\":\"거실\",\"fabric\":\"\",\"itemCount\":1,\"curtainCount\":1,\"blindCount\":0,\"curtainVendors\":[],\"blindVendors\":[],\"price\":225000,\"performanceRevenue\":225000,\"staffName\":\"\",\"status\":\"ga\",\"contractStatus\":\"pending\",\"savedAt\":\"2026-09-28T03:00:00.000Z\",\"expiryAt\":\"2026-10-05T03:00:00.000Z\",\"date\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"memo\":\"\",\"confirmedAt\":null,\"branch\":\"반포점\",\"lineItems\":[{\"type\":\"curtain\",\"space\":\"거실\",\"displayName\":\"\",\"fabric\":\"\",\"vendor\":\"\",\"color\":\"\",\"railVendor\":\"\",\"pleatType\":\"나비주름형\",\"openType\":\"양개형\",\"heightAdjust\":\"-3\",\"hemType\":\"리드\",\"mw\":\"300\",\"mh\":\"240\",\"pnum\":\"5\",\"yardage\":\"\",\"shapeProcess\":true,\"fabricUnitPrice\":\"\",\"price\":45000,\"amt\":\"225,000원\"}],\"custType\":\"new\",\"region\":\"\",\"appliedDiscounts\":{\"coupons\":[],\"manual\":null},\"clientId\":221}]"
   },
   "others": [
@@ -427,7 +446,7 @@
      "extra": {
       "customerName": "골든고객",
       "detail": {
-       "bodyLen": 964,
+       "bodyLen": 984,
        "isEditMode": true,
        "status": 200
       },
@@ -450,7 +469,7 @@
      "extra": {
       "customerName": "골든고객",
       "detail": {
-       "bodyLen": 981,
+       "bodyLen": 1001,
        "isEditMode": false,
        "status": 201
       },
@@ -596,7 +615,14 @@
       "customerName": "골든고객",
       "detail": {
        "hasCurtainOrBlind": true,
-       "missing": []
+       "missing": [],
+       "svc": {
+        "count": 0,
+        "has_fee_row": false,
+        "region": "",
+        "sum": 0,
+        "types": []
+       }
       },
       "stage": "필수항목검증완료"
      },
@@ -618,7 +644,14 @@
       "customerName": "골든고객",
       "detail": {
        "hasCurtainOrBlind": true,
-       "missing": []
+       "missing": [],
+       "svc": {
+        "count": 0,
+        "has_fee_row": false,
+        "region": "",
+        "sum": 0,
+        "types": []
+       }
       },
       "stage": "필수항목검증완료"
      },
@@ -728,6 +761,13 @@
        "svc_rows": [],
        "total": "225,000원",
        "url_params": ""
+      },
+      "svc": {
+       "count": 0,
+       "has_fee_row": false,
+       "region": "",
+       "sum": 0,
+       "types": []
       }
      },
      "device": "DEVICE",
@@ -764,6 +804,13 @@
        "svc_rows": [],
        "total": "225,000원",
        "url_params": ""
+      },
+      "svc": {
+       "count": 0,
+       "has_fee_row": false,
+       "region": "",
+       "sum": 0,
+       "types": []
       }
      },
      "device": "DEVICE",
@@ -886,7 +933,8 @@
       "finalTotal": 225000,
       "installSubtotal": 0,
       "performanceRevenue": 225000,
-      "productSubtotal": 225000
+      "productSubtotal": 225000,
+      "svcRowsSaved": true
      },
      "product": "",
      "region": "",
@@ -966,7 +1014,8 @@
       "finalTotal": 225000,
       "installSubtotal": 0,
       "performanceRevenue": 225000,
-      "productSubtotal": 225000
+      "productSubtotal": 225000,
+      "svcRowsSaved": true
      },
      "product": "",
      "region": "",
@@ -1000,9 +1049,11 @@
     "finalTotal": 225000,
     "installSubtotal": 0,
     "performanceRevenue": 225000,
-    "productSubtotal": 225000
+    "productSubtotal": 225000,
+    "svcRowsSaved": true
    },
    "lastDiscountBreakdown": [],
+   "skipAutoSvc": false,
    "viewingFrozenEstimate": false
   },
   "jsErrors": [],
@@ -1010,7 +1061,7 @@
    "dah_build_seen": "202608252600",
    "dah_customers": "[{\"id\":221,\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"stage\":\"상담\",\"price\":225000,\"addr\":\"서울 서초구\",\"space\":\"거실\",\"performanceRevenue\":225000,\"staffName\":\"\",\"date\":\"2026-10-01\",\"measureDate\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"visitCount\":1,\"estimateNo\":\"DAH-20260928-01\",\"estimateStatus\":\"ga\",\"createdAt\":\"2026-09-28T03:00:00.000Z\"}]",
    "dah_save_attempts": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"phone\":\"01012345678\"}]",
-   "dah_save_diagnostics": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"검증통과\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"세션확인-정상\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"고객저장-응답\",\"detail\":{\"status\":200,\"isUpdate\":true,\"bodyLen\":240}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"견적서저장-응답\",\"detail\":{\"status\":200,\"isEditMode\":true,\"bodyLen\":964}}]",
+   "dah_save_diagnostics": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true,\"svc\":{\"region\":\"\",\"count\":0,\"has_fee_row\":false,\"sum\":0,\"types\":[]}}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"검증통과\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"세션확인-정상\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"고객저장-응답\",\"detail\":{\"status\":200,\"isUpdate\":true,\"bodyLen\":240}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"견적서저장-응답\",\"detail\":{\"status\":200,\"isEditMode\":true,\"bodyLen\":984}}]",
    "dah_saved": "[{\"id\":\"srv-est-EDIT\",\"no\":\"DAH-20260928-01\",\"dbId\":\"srv-est-EDIT\",\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"addr\":\"서울 서초구\",\"space\":\"거실\",\"fabric\":\"\",\"itemCount\":1,\"curtainCount\":1,\"blindCount\":0,\"curtainVendors\":[],\"blindVendors\":[],\"price\":225000,\"performanceRevenue\":225000,\"staffName\":\"\",\"status\":\"ga\",\"contractStatus\":\"pending\",\"savedAt\":\"2026-09-28T03:00:00.000Z\",\"expiryAt\":\"2026-10-05T03:00:00.000Z\",\"date\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"memo\":\"\",\"confirmedAt\":null,\"branch\":\"반포점\",\"lineItems\":[{\"type\":\"curtain\",\"space\":\"거실\",\"displayName\":\"\",\"fabric\":\"\",\"vendor\":\"\",\"color\":\"\",\"railVendor\":\"\",\"pleatType\":\"나비주름형\",\"openType\":\"양개형\",\"heightAdjust\":\"-3\",\"hemType\":\"리드\",\"mw\":\"300\",\"mh\":\"240\",\"pnum\":\"5\",\"yardage\":\"\",\"shapeProcess\":true,\"fabricUnitPrice\":\"\",\"price\":45000,\"amt\":\"225,000원\"}],\"custType\":\"new\",\"region\":\"\",\"appliedDiscounts\":{\"coupons\":[],\"manual\":null},\"clientId\":221}]"
   },
   "others": [
@@ -1045,7 +1096,7 @@
      "extra": {
       "customerName": "골든고객",
       "detail": {
-       "bodyLen": 964,
+       "bodyLen": 984,
        "isEditMode": true,
        "status": 200
       },
@@ -1130,7 +1181,14 @@
       "customerName": "골든고객",
       "detail": {
        "hasCurtainOrBlind": true,
-       "missing": []
+       "missing": [],
+       "svc": {
+        "count": 0,
+        "has_fee_row": false,
+        "region": "",
+        "sum": 0,
+        "types": []
+       }
       },
       "stage": "필수항목검증완료"
      },
@@ -1204,6 +1262,13 @@
        "svc_rows": [],
        "total": "225,000원",
        "url_params": ""
+      },
+      "svc": {
+       "count": 0,
+       "has_fee_row": false,
+       "region": "",
+       "sum": 0,
+       "types": []
       }
      },
      "device": "DEVICE",
@@ -1307,7 +1372,8 @@
       "finalTotal": 225000,
       "installSubtotal": 0,
       "performanceRevenue": 225000,
-      "productSubtotal": 225000
+      "productSubtotal": 225000,
+      "svcRowsSaved": true
      },
      "product": "",
      "region": "",
@@ -1340,16 +1406,18 @@
     "finalTotal": 225000,
     "installSubtotal": 0,
     "performanceRevenue": 225000,
-    "productSubtotal": 225000
+    "productSubtotal": 225000,
+    "svcRowsSaved": true
    },
    "lastDiscountBreakdown": [],
+   "skipAutoSvc": false,
    "viewingFrozenEstimate": false
   },
   "jsErrors": [],
   "localStorage": {
    "dah_build_seen": "202608252600",
    "dah_save_attempts": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"\",\"phone\":\"01012345678\"}]",
-   "dah_save_diagnostics": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"\",\"stage\":\"검증실패-중단\",\"detail\":\"고객명 없음\"}]"
+   "dah_save_diagnostics": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true,\"svc\":{\"region\":\"\",\"count\":0,\"has_fee_row\":false,\"sum\":0,\"types\":[]}}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"\",\"stage\":\"검증실패-중단\",\"detail\":\"고객명 없음\"}]"
   },
   "others": [
    {
@@ -1398,7 +1466,14 @@
       "customerName": "",
       "detail": {
        "hasCurtainOrBlind": true,
-       "missing": []
+       "missing": [],
+       "svc": {
+        "count": 0,
+        "has_fee_row": false,
+        "region": "",
+        "sum": 0,
+        "types": []
+       }
       },
       "stage": "필수항목검증완료"
      },
@@ -1472,6 +1547,13 @@
        "svc_rows": [],
        "total": "225,000원",
        "url_params": ""
+      },
+      "svc": {
+       "count": 0,
+       "has_fee_row": false,
+       "region": "",
+       "sum": 0,
+       "types": []
       }
      },
      "device": "DEVICE",
@@ -1510,9 +1592,11 @@
     "finalTotal": 225000,
     "installSubtotal": 0,
     "performanceRevenue": 225000,
-    "productSubtotal": 225000
+    "productSubtotal": 225000,
+    "svcRowsSaved": true
    },
    "lastDiscountBreakdown": [],
+   "skipAutoSvc": false,
    "viewingFrozenEstimate": false
   },
   "jsErrors": [],
@@ -1520,7 +1604,7 @@
    "dah_build_seen": "202608252600",
    "dah_customers": "[{\"id\":221,\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"stage\":\"상담\",\"price\":225000,\"addr\":\"서울 서초구\",\"space\":\"거실\",\"performanceRevenue\":225000,\"staffName\":\"\",\"date\":\"2026-10-01\",\"measureDate\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"visitCount\":1,\"estimateNo\":\"DAH-20260928-01\",\"estimateStatus\":\"final\",\"createdAt\":\"2026-09-28T03:00:00.000Z\"}]",
    "dah_save_attempts": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"phone\":\"01012345678\"}]",
-   "dah_save_diagnostics": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"검증통과\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"세션확인-정상\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"고객저장-응답\",\"detail\":{\"status\":200,\"isUpdate\":true,\"bodyLen\":240}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"견적서저장-응답\",\"detail\":{\"status\":201,\"isEditMode\":false,\"bodyLen\":1006}}]",
+   "dah_save_diagnostics": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true,\"svc\":{\"region\":\"\",\"count\":0,\"has_fee_row\":false,\"sum\":0,\"types\":[]}}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"검증통과\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"세션확인-정상\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"고객저장-응답\",\"detail\":{\"status\":200,\"isUpdate\":true,\"bodyLen\":240}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"견적서저장-응답\",\"detail\":{\"status\":201,\"isEditMode\":false,\"bodyLen\":1026}}]",
    "dah_saved": "[{\"id\":\"srv-est-1\",\"no\":\"DAH-20260928-01\",\"dbId\":\"srv-est-1\",\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"addr\":\"서울 서초구\",\"space\":\"거실\",\"fabric\":\"\",\"itemCount\":1,\"curtainCount\":1,\"blindCount\":0,\"curtainVendors\":[],\"blindVendors\":[],\"price\":225000,\"performanceRevenue\":225000,\"staffName\":\"\",\"status\":\"final\",\"contractStatus\":\"contracted\",\"savedAt\":\"2026-09-28T03:00:00.000Z\",\"expiryAt\":\"2026-10-05T03:00:00.000Z\",\"date\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"memo\":\"\",\"confirmedAt\":\"2026-09-28T00:00:00.000Z\",\"branch\":\"반포점\",\"lineItems\":[{\"type\":\"curtain\",\"space\":\"거실\",\"displayName\":\"\",\"fabric\":\"\",\"vendor\":\"\",\"color\":\"\",\"railVendor\":\"\",\"pleatType\":\"나비주름형\",\"openType\":\"양개형\",\"heightAdjust\":\"-3\",\"hemType\":\"리드\",\"mw\":\"300\",\"mh\":\"240\",\"pnum\":\"5\",\"yardage\":\"\",\"shapeProcess\":true,\"fabricUnitPrice\":\"\",\"price\":45000,\"amt\":\"225,000원\"}],\"custType\":\"new\",\"region\":\"\",\"appliedDiscounts\":{\"coupons\":[],\"manual\":null},\"clientId\":221}]"
   },
   "others": [
@@ -1555,7 +1639,7 @@
      "extra": {
       "customerName": "골든고객",
       "detail": {
-       "bodyLen": 1006,
+       "bodyLen": 1026,
        "isEditMode": false,
        "status": 201
       },
@@ -1640,7 +1724,14 @@
       "customerName": "골든고객",
       "detail": {
        "hasCurtainOrBlind": true,
-       "missing": []
+       "missing": [],
+       "svc": {
+        "count": 0,
+        "has_fee_row": false,
+        "region": "",
+        "sum": 0,
+        "types": []
+       }
       },
       "stage": "필수항목검증완료"
      },
@@ -1714,6 +1805,13 @@
        "svc_rows": [],
        "total": "225,000원",
        "url_params": ""
+      },
+      "svc": {
+       "count": 0,
+       "has_fee_row": false,
+       "region": "",
+       "sum": 0,
+       "types": []
       }
      },
      "device": "DEVICE",
@@ -1831,7 +1929,8 @@
       "finalTotal": 225000,
       "installSubtotal": 0,
       "performanceRevenue": 225000,
-      "productSubtotal": 225000
+      "productSubtotal": 225000,
+      "svcRowsSaved": true
      },
      "product": "",
      "region": "",
@@ -1865,18 +1964,20 @@
     "finalTotal": 225000,
     "installSubtotal": 0,
     "performanceRevenue": 225000,
-    "productSubtotal": 225000
+    "productSubtotal": 225000,
+    "svcRowsSaved": true
    },
    "lastDiscountBreakdown": [],
+   "skipAutoSvc": false,
    "viewingFrozenEstimate": false
   },
   "jsErrors": [],
   "localStorage": {
    "dah_build_seen": "202608252600",
    "dah_customers": "[{\"id\":221,\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"stage\":\"상담\",\"price\":225000,\"addr\":\"서울 서초구\",\"space\":\"거실\",\"performanceRevenue\":225000,\"staffName\":\"\",\"date\":\"2026-10-01\",\"measureDate\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"visitCount\":1,\"estimateNo\":\"DAH-20260928-01\",\"estimateStatus\":\"ga\",\"createdAt\":\"2026-09-28T03:00:00.000Z\"}]",
-   "dah_failed_saves": "[{\"savedAt\":\"2026-09-28T03:00:00.000Z\",\"reason\":\"권한문제(담당자불일치 추정)\",\"editingEstDbId\":\"srv-est-EDIT\",\"payload\":{\"client_idempotency_key\":\"00000000-0000-4000-8000-000000000001\",\"customer_name\":\"골든고객\",\"price\":225000,\"performance_revenue\":225000,\"staff_name\":\"\",\"estimate_status\":\"ga\",\"phone\":\"01012345678\",\"space\":\"거실\",\"product\":\"\",\"date\":\"2026-10-01\",\"install_date\":\"2026-10-05\",\"measure_date_tbd\":false,\"install_date_tbd\":false,\"memo\":\"\",\"confirmed_at\":null,\"branch\":\"반포점\",\"client_id\":221,\"line_items\":[{\"type\":\"curtain\",\"space\":\"거실\",\"displayName\":\"\",\"fabric\":\"\",\"vendor\":\"\",\"color\":\"\",\"railVendor\":\"\",\"pleatType\":\"나비주름형\",\"openType\":\"양개형\",\"heightAdjust\":\"-3\",\"hemType\":\"리드\",\"mw\":\"300\",\"mh\":\"240\",\"pnum\":\"5\",\"yardage\":\"\",\"shapeProcess\":true,\"fabricUnitPrice\":\"\",\"price\":45000,\"amt\":\"225,000원\"}],\"cust_type\":\"new\",\"region\":\"\",\"applied_discounts\":{\"coupons\":[],\"manual\":null},\"price_breakdown\":{\"productSubtotal\":225000,\"discount\":0,\"installSubtotal\":0,\"finalTotal\":225000,\"deposit\":112500,\"balance\":112500,\"performanceRevenue\":225000,\"discountDetail\":[]}}}]",
+   "dah_failed_saves": "[{\"savedAt\":\"2026-09-28T03:00:00.000Z\",\"reason\":\"권한문제(담당자불일치 추정)\",\"editingEstDbId\":\"srv-est-EDIT\",\"payload\":{\"client_idempotency_key\":\"00000000-0000-4000-8000-000000000001\",\"customer_name\":\"골든고객\",\"price\":225000,\"performance_revenue\":225000,\"staff_name\":\"\",\"estimate_status\":\"ga\",\"phone\":\"01012345678\",\"space\":\"거실\",\"product\":\"\",\"date\":\"2026-10-01\",\"install_date\":\"2026-10-05\",\"measure_date_tbd\":false,\"install_date_tbd\":false,\"memo\":\"\",\"confirmed_at\":null,\"branch\":\"반포점\",\"client_id\":221,\"line_items\":[{\"type\":\"curtain\",\"space\":\"거실\",\"displayName\":\"\",\"fabric\":\"\",\"vendor\":\"\",\"color\":\"\",\"railVendor\":\"\",\"pleatType\":\"나비주름형\",\"openType\":\"양개형\",\"heightAdjust\":\"-3\",\"hemType\":\"리드\",\"mw\":\"300\",\"mh\":\"240\",\"pnum\":\"5\",\"yardage\":\"\",\"shapeProcess\":true,\"fabricUnitPrice\":\"\",\"price\":45000,\"amt\":\"225,000원\"}],\"cust_type\":\"new\",\"region\":\"\",\"applied_discounts\":{\"coupons\":[],\"manual\":null},\"price_breakdown\":{\"productSubtotal\":225000,\"discount\":0,\"installSubtotal\":0,\"finalTotal\":225000,\"deposit\":112500,\"balance\":112500,\"performanceRevenue\":225000,\"discountDetail\":[],\"svcRowsSaved\":true}}}]",
    "dah_save_attempts": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"phone\":\"01012345678\"}]",
-   "dah_save_diagnostics": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"검증통과\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"세션확인-정상\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"고객저장-응답\",\"detail\":{\"status\":200,\"isUpdate\":true,\"bodyLen\":240}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"견적서저장-응답\",\"detail\":{\"status\":200,\"isEditMode\":true,\"bodyLen\":2}}]",
+   "dah_save_diagnostics": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true,\"svc\":{\"region\":\"\",\"count\":0,\"has_fee_row\":false,\"sum\":0,\"types\":[]}}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"검증통과\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"세션확인-정상\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"고객저장-응답\",\"detail\":{\"status\":200,\"isUpdate\":true,\"bodyLen\":240}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"견적서저장-응답\",\"detail\":{\"status\":200,\"isEditMode\":true,\"bodyLen\":2}}]",
    "dah_saved": "[{\"id\":\"srv-est-EDIT\",\"no\":\"DAH-20260928-01\",\"dbId\":\"srv-est-EDIT\",\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"addr\":\"서울 서초구\",\"space\":\"거실\",\"fabric\":\"\",\"itemCount\":1,\"curtainCount\":1,\"blindCount\":0,\"curtainVendors\":[],\"blindVendors\":[],\"price\":225000,\"performanceRevenue\":225000,\"staffName\":\"\",\"status\":\"ga\",\"contractStatus\":\"pending\",\"savedAt\":\"2026-09-28T03:00:00.000Z\",\"expiryAt\":\"2026-10-05T03:00:00.000Z\",\"date\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"memo\":\"\",\"confirmedAt\":null,\"branch\":\"반포점\",\"lineItems\":[{\"type\":\"curtain\",\"space\":\"거실\",\"displayName\":\"\",\"fabric\":\"\",\"vendor\":\"\",\"color\":\"\",\"railVendor\":\"\",\"pleatType\":\"나비주름형\",\"openType\":\"양개형\",\"heightAdjust\":\"-3\",\"hemType\":\"리드\",\"mw\":\"300\",\"mh\":\"240\",\"pnum\":\"5\",\"yardage\":\"\",\"shapeProcess\":true,\"fabricUnitPrice\":\"\",\"price\":45000,\"amt\":\"225,000원\"}],\"custType\":\"new\",\"region\":\"\",\"appliedDiscounts\":{\"coupons\":[],\"manual\":null},\"clientId\":221}]"
   },
   "others": [
@@ -1941,7 +2042,8 @@
         "finalTotal": 225000,
         "installSubtotal": 0,
         "performanceRevenue": 225000,
-        "productSubtotal": 225000
+        "productSubtotal": 225000,
+        "svcRowsSaved": true
        },
        "product": "",
        "region": "",
@@ -2071,7 +2173,14 @@
       "customerName": "골든고객",
       "detail": {
        "hasCurtainOrBlind": true,
-       "missing": []
+       "missing": [],
+       "svc": {
+        "count": 0,
+        "has_fee_row": false,
+        "region": "",
+        "sum": 0,
+        "types": []
+       }
       },
       "stage": "필수항목검증완료"
      },
@@ -2145,6 +2254,13 @@
        "svc_rows": [],
        "total": "225,000원",
        "url_params": ""
+      },
+      "svc": {
+       "count": 0,
+       "has_fee_row": false,
+       "region": "",
+       "sum": 0,
+       "types": []
       }
      },
      "device": "DEVICE",
@@ -2248,7 +2364,8 @@
       "finalTotal": 225000,
       "installSubtotal": 0,
       "performanceRevenue": 225000,
-      "productSubtotal": 225000
+      "productSubtotal": 225000,
+      "svcRowsSaved": true
      },
      "product": "",
      "region": "",
@@ -2282,18 +2399,20 @@
     "finalTotal": 225000,
     "installSubtotal": 0,
     "performanceRevenue": 225000,
-    "productSubtotal": 225000
+    "productSubtotal": 225000,
+    "svcRowsSaved": true
    },
    "lastDiscountBreakdown": [],
+   "skipAutoSvc": false,
    "viewingFrozenEstimate": false
   },
   "jsErrors": [],
   "localStorage": {
    "dah_build_seen": "202608252600",
    "dah_customers": "[{\"id\":221,\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"stage\":\"상담\",\"price\":225000,\"addr\":\"서울 서초구\",\"space\":\"거실\",\"performanceRevenue\":225000,\"staffName\":\"\",\"date\":\"2026-10-01\",\"measureDate\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"visitCount\":1,\"estimateNo\":\"DAH-20260928-01\",\"estimateStatus\":\"ga\",\"createdAt\":\"2026-09-28T03:00:00.000Z\"}]",
-   "dah_pending_estimate_sync": "[{\"payload\":{\"client_idempotency_key\":\"00000000-0000-4000-8000-000000000001\",\"customer_name\":\"골든고객\",\"price\":225000,\"performance_revenue\":225000,\"staff_name\":\"\",\"estimate_status\":\"ga\",\"phone\":\"01012345678\",\"space\":\"거실\",\"product\":\"\",\"date\":\"2026-10-01\",\"install_date\":\"2026-10-05\",\"measure_date_tbd\":false,\"install_date_tbd\":false,\"memo\":\"\",\"confirmed_at\":null,\"branch\":\"반포점\",\"client_id\":221,\"line_items\":[{\"type\":\"curtain\",\"space\":\"거실\",\"displayName\":\"\",\"fabric\":\"\",\"vendor\":\"\",\"color\":\"\",\"railVendor\":\"\",\"pleatType\":\"나비주름형\",\"openType\":\"양개형\",\"heightAdjust\":\"-3\",\"hemType\":\"리드\",\"mw\":\"300\",\"mh\":\"240\",\"pnum\":\"5\",\"yardage\":\"\",\"shapeProcess\":true,\"fabricUnitPrice\":\"\",\"price\":45000,\"amt\":\"225,000원\"}],\"cust_type\":\"new\",\"is_archived\":false,\"region\":\"\",\"applied_discounts\":{\"coupons\":[],\"manual\":null},\"price_breakdown\":{\"productSubtotal\":225000,\"discount\":0,\"installSubtotal\":0,\"finalTotal\":225000,\"deposit\":112500,\"balance\":112500,\"performanceRevenue\":225000,\"discountDetail\":[]}},\"addedAt\":\"2026-09-28T03:00:00.000Z\",\"isEditMode\":false,\"dbId\":null}]",
+   "dah_pending_estimate_sync": "[{\"payload\":{\"client_idempotency_key\":\"00000000-0000-4000-8000-000000000001\",\"customer_name\":\"골든고객\",\"price\":225000,\"performance_revenue\":225000,\"staff_name\":\"\",\"estimate_status\":\"ga\",\"phone\":\"01012345678\",\"space\":\"거실\",\"product\":\"\",\"date\":\"2026-10-01\",\"install_date\":\"2026-10-05\",\"measure_date_tbd\":false,\"install_date_tbd\":false,\"memo\":\"\",\"confirmed_at\":null,\"branch\":\"반포점\",\"client_id\":221,\"line_items\":[{\"type\":\"curtain\",\"space\":\"거실\",\"displayName\":\"\",\"fabric\":\"\",\"vendor\":\"\",\"color\":\"\",\"railVendor\":\"\",\"pleatType\":\"나비주름형\",\"openType\":\"양개형\",\"heightAdjust\":\"-3\",\"hemType\":\"리드\",\"mw\":\"300\",\"mh\":\"240\",\"pnum\":\"5\",\"yardage\":\"\",\"shapeProcess\":true,\"fabricUnitPrice\":\"\",\"price\":45000,\"amt\":\"225,000원\"}],\"cust_type\":\"new\",\"is_archived\":false,\"region\":\"\",\"applied_discounts\":{\"coupons\":[],\"manual\":null},\"price_breakdown\":{\"productSubtotal\":225000,\"discount\":0,\"installSubtotal\":0,\"finalTotal\":225000,\"deposit\":112500,\"balance\":112500,\"performanceRevenue\":225000,\"discountDetail\":[],\"svcRowsSaved\":true}},\"addedAt\":\"2026-09-28T03:00:00.000Z\",\"isEditMode\":false,\"dbId\":null}]",
    "dah_save_attempts": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"phone\":\"01012345678\"}]",
-   "dah_save_diagnostics": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"검증통과\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"세션확인-정상\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"고객저장-응답\",\"detail\":{\"status\":200,\"isUpdate\":true,\"bodyLen\":240}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"견적서저장-응답\",\"detail\":{\"status\":500,\"isEditMode\":false,\"bodyLen\":18}}]",
+   "dah_save_diagnostics": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true,\"svc\":{\"region\":\"\",\"count\":0,\"has_fee_row\":false,\"sum\":0,\"types\":[]}}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"검증통과\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"세션확인-정상\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"고객저장-응답\",\"detail\":{\"status\":200,\"isUpdate\":true,\"bodyLen\":240}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"견적서저장-응답\",\"detail\":{\"status\":500,\"isEditMode\":false,\"bodyLen\":18}}]",
    "dah_saved": "[{\"id\":\"DAH-20260928-01\",\"no\":\"DAH-20260928-01\",\"dbId\":null,\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"addr\":\"서울 서초구\",\"space\":\"거실\",\"fabric\":\"\",\"itemCount\":1,\"curtainCount\":1,\"blindCount\":0,\"curtainVendors\":[],\"blindVendors\":[],\"price\":225000,\"performanceRevenue\":225000,\"staffName\":\"\",\"status\":\"ga\",\"contractStatus\":\"pending\",\"savedAt\":\"2026-09-28T03:00:00.000Z\",\"expiryAt\":\"2026-10-05T03:00:00.000Z\",\"date\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"memo\":\"\",\"confirmedAt\":null,\"branch\":\"반포점\",\"lineItems\":[{\"type\":\"curtain\",\"space\":\"거실\",\"displayName\":\"\",\"fabric\":\"\",\"vendor\":\"\",\"color\":\"\",\"railVendor\":\"\",\"pleatType\":\"나비주름형\",\"openType\":\"양개형\",\"heightAdjust\":\"-3\",\"hemType\":\"리드\",\"mw\":\"300\",\"mh\":\"240\",\"pnum\":\"5\",\"yardage\":\"\",\"shapeProcess\":true,\"fabricUnitPrice\":\"\",\"price\":45000,\"amt\":\"225,000원\"}],\"custType\":\"new\",\"region\":\"\",\"appliedDiscounts\":{\"coupons\":[],\"manual\":null},\"clientId\":221}]"
   },
   "others": [
@@ -2413,7 +2532,14 @@
       "customerName": "골든고객",
       "detail": {
        "hasCurtainOrBlind": true,
-       "missing": []
+       "missing": [],
+       "svc": {
+        "count": 0,
+        "has_fee_row": false,
+        "region": "",
+        "sum": 0,
+        "types": []
+       }
       },
       "stage": "필수항목검증완료"
      },
@@ -2487,6 +2613,13 @@
        "svc_rows": [],
        "total": "225,000원",
        "url_params": ""
+      },
+      "svc": {
+       "count": 0,
+       "has_fee_row": false,
+       "region": "",
+       "sum": 0,
+       "types": []
       }
      },
      "device": "DEVICE",
@@ -2591,7 +2724,8 @@
       "finalTotal": 225000,
       "installSubtotal": 0,
       "performanceRevenue": 225000,
-      "productSubtotal": 225000
+      "productSubtotal": 225000,
+      "svcRowsSaved": true
      },
      "product": "",
      "region": "",
@@ -2625,9 +2759,11 @@
     "finalTotal": 225000,
     "installSubtotal": 0,
     "performanceRevenue": 225000,
-    "productSubtotal": 225000
+    "productSubtotal": 225000,
+    "svcRowsSaved": true
    },
    "lastDiscountBreakdown": [],
+   "skipAutoSvc": false,
    "viewingFrozenEstimate": false
   },
   "jsErrors": [],
@@ -2635,7 +2771,7 @@
    "dah_build_seen": "202608252600",
    "dah_customers": "[{\"id\":221,\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"stage\":\"상담\",\"price\":225000,\"addr\":\"서울 서초구\",\"space\":\"거실\",\"performanceRevenue\":225000,\"staffName\":\"\",\"date\":\"2026-10-01\",\"measureDate\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"visitCount\":1,\"estimateNo\":\"DAH-20260928-01\",\"estimateStatus\":\"ga\",\"createdAt\":\"2026-09-28T03:00:00.000Z\"}]",
    "dah_save_attempts": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"phone\":\"01012345678\"}]",
-   "dah_save_diagnostics": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"검증통과\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"세션확인-정상\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"고객저장-응답\",\"detail\":{\"status\":500,\"isUpdate\":true,\"bodyLen\":18}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"견적서저장-응답\",\"detail\":{\"status\":201,\"isEditMode\":false,\"bodyLen\":981}}]",
+   "dah_save_diagnostics": "[{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"시작\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"필수항목검증완료\",\"detail\":{\"missing\":[],\"hasCurtainOrBlind\":true,\"svc\":{\"region\":\"\",\"count\":0,\"has_fee_row\":false,\"sum\":0,\"types\":[]}}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"검증통과\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"세션확인-정상\",\"detail\":null},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"고객저장-응답\",\"detail\":{\"status\":500,\"isUpdate\":true,\"bodyLen\":18}},{\"at\":\"2026-09-28T03:00:00.000Z\",\"customerName\":\"골든고객\",\"stage\":\"견적서저장-응답\",\"detail\":{\"status\":201,\"isEditMode\":false,\"bodyLen\":1001}}]",
    "dah_saved": "[{\"id\":\"srv-est-1\",\"no\":\"DAH-20260928-01\",\"dbId\":\"srv-est-1\",\"clientName\":\"골든고객\",\"phone\":\"01012345678\",\"addr\":\"서울 서초구\",\"space\":\"거실\",\"fabric\":\"\",\"itemCount\":1,\"curtainCount\":1,\"blindCount\":0,\"curtainVendors\":[],\"blindVendors\":[],\"price\":225000,\"performanceRevenue\":225000,\"staffName\":\"\",\"status\":\"ga\",\"contractStatus\":\"pending\",\"savedAt\":\"2026-09-28T03:00:00.000Z\",\"expiryAt\":\"2026-10-05T03:00:00.000Z\",\"date\":\"2026-10-01\",\"installDate\":\"2026-10-05\",\"memo\":\"\",\"confirmedAt\":null,\"branch\":\"반포점\",\"lineItems\":[{\"type\":\"curtain\",\"space\":\"거실\",\"displayName\":\"\",\"fabric\":\"\",\"vendor\":\"\",\"color\":\"\",\"railVendor\":\"\",\"pleatType\":\"나비주름형\",\"openType\":\"양개형\",\"heightAdjust\":\"-3\",\"hemType\":\"리드\",\"mw\":\"300\",\"mh\":\"240\",\"pnum\":\"5\",\"yardage\":\"\",\"shapeProcess\":true,\"fabricUnitPrice\":\"\",\"price\":45000,\"amt\":\"225,000원\"}],\"custType\":\"new\",\"region\":\"\",\"appliedDiscounts\":{\"coupons\":[],\"manual\":null},\"clientId\":221}]"
   },
   "others": [
@@ -2670,7 +2806,7 @@
      "extra": {
       "customerName": "골든고객",
       "detail": {
-       "bodyLen": 981,
+       "bodyLen": 1001,
        "isEditMode": false,
        "status": 201
       },
@@ -2755,7 +2891,14 @@
       "customerName": "골든고객",
       "detail": {
        "hasCurtainOrBlind": true,
-       "missing": []
+       "missing": [],
+       "svc": {
+        "count": 0,
+        "has_fee_row": false,
+        "region": "",
+        "sum": 0,
+        "types": []
+       }
       },
       "stage": "필수항목검증완료"
      },
@@ -2829,6 +2972,13 @@
        "svc_rows": [],
        "total": "225,000원",
        "url_params": ""
+      },
+      "svc": {
+       "count": 0,
+       "has_fee_row": false,
+       "region": "",
+       "sum": 0,
+       "types": []
       }
      },
      "device": "DEVICE",
@@ -2933,7 +3083,8 @@
       "finalTotal": 225000,
       "installSubtotal": 0,
       "performanceRevenue": 225000,
-      "productSubtotal": 225000
+      "productSubtotal": 225000,
+      "svcRowsSaved": true
      },
      "product": "",
      "region": "",

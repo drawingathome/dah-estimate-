@@ -157,6 +157,12 @@ function autoAddSvcFee() {
   var regionFees = (typeof getRegionFees === 'function') ? getRegionFees() : {};
   var prices = resolveRegionPrices(region, regionFees, customBase, DEFAULT_REGION_FEES);
   if(!svcBody) return;
+  // 2026-10-08: 시공 행이 모두 저장된 견적을 여는 동안은 재계산하지 않음(저장된 행이 정답).
+  // 안내 문구만 갱신하고 끝냄. 사용자가 직접 지역/제품을 바꿀 때는 이 값이 false라 정상 동작.
+  if (window._estEditState && window._estEditState.skipAutoSvc) {
+    if (hint) hint.textContent = isNoInstallFee(prices) ? NO_INSTALL_HINT : regionFeeHint(prices);
+    return;
+  }
   var rows = svcBody.querySelectorAll('[data-svc-type="실측비"],[data-svc-type="시공비"]');
   // 2026-09-19(선혜님 - "다시 열어보니 실측+레일비가... 이게 말이
   // 되니?????????"): 실측비/시공비는 레일과 달리 "기존 행을 찾아

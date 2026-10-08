@@ -168,6 +168,7 @@ function calcCurtainRow(el, skipPnumReset) {
   calcTotal();
 }
 function autoUpdateRail(curtainTr) {
+  if (window._estEditState && window._estEditState.skipAutoSvc) return; // 2026-10-08: 저장된 시공 행을 여는 중
   var mw = Math.max(0, parseFloat(curtainTr.querySelector('.mw')?.value)||0);
   if(!mw) return;
   // 2026-08-14: rowIndex(테이블 전체 기준 위치)로 레일을 매칭하던 것을

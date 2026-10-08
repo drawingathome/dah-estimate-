@@ -52,7 +52,9 @@ var EST_SESSION_RESET_VALUES = {
   // 덮어씀. "지금 불러오는 중"임을 나타내는 이 플래그가 켜져있는 동안은
   // unfreezeEstimateIfEditing()이 아무것도 안 하도록 함(진짜 사용자
   // 편집과, 프로그램이 데이터를 복원하는 것을 구분).
-  isRestoringEstimate: false
+  isRestoringEstimate: false,
+  // 2026-10-08: 시공 행이 모두 저장된 견적을 여는 동안만 true — 자동 시공 행 재계산을 건너뜀
+  skipAutoSvc: false
 };
 
 // 2026-09-15: 위 레지스트리를 실제로 담는 상자. 103곳에 흩어져있던
@@ -413,10 +415,49 @@ function logSaveStage(stage, detail) {
   } catch (e2) { /* 서버 기록 실패해도 저장 흐름엔 영향 안 줌 */ }
 }
 
+// 2026-10-08(조유정 "처음부터 실측시공비가 빠져있었어 서울 지역 체크했는데도…" — 원인 재현 불가):
+// 원인이 뭐든 "시공이 있는 지역인데 실측비·시공비 행이 하나도 없는" 견적이 조용히 저장되는 것을 막는
+// 최후 안전장치 + 그 순간의 화면 상태를 관측 기록(영수증)에 남겨 다음 발생 때 원인을 증거로 찾기 위한 요약.
+function estSvcState() {
+  var region = '';
+  var types = [], count = 0, hasFeeRow = false, sum = 0;
+  try {
+    var regionEl = /** @type {any} */ (document.getElementById('c-region'));
+    region = (regionEl && regionEl.value) || '';
+    document.querySelectorAll('#svc-body tr').forEach(function(tr) {
+      count++;
+      var kindEl = /** @type {any} */ (tr.querySelector('.svc-kind'));
+      var contentEl = /** @type {any} */ (tr.querySelector('.svc-content'));
+      var qtyEl = /** @type {any} */ (tr.querySelector('.sqty'));
+      var kind = (kindEl && kindEl.value) || '';
+      var content = (contentEl && contentEl.value) || '';
+      var t = tr.getAttribute('data-svc-type') || (tr.hasAttribute('data-rail-src') ? '레일' : (tr.hasAttribute('data-railcost-src') ? '레일시공' : '수동'));
+      types.push(t + ':' + kind);
+      if (kind === '실측비' || kind === '시공비' || /실측|시공/.test(content)) hasFeeRow = true;
+      sum += (getPriceVal(tr.querySelector('.sprice')) || 0) * (parseFloat((qtyEl && qtyEl.value) || '') || 1);
+    });
+  } catch (e) { /* 요약 실패는 저장에 영향 없음 */ }
+  return { region: region, count: count, has_fee_row: hasFeeRow, sum: sum, types: types.slice(0, 12) };
+}
+// 지역이 시공 있는 지역(요금 0원이 아님)인데 실측비·시공비 행이 없으면 true — 커튼/블라인드가 있을 때만 의미 있음
+function estMissingInstallRows() {
+  try {
+    var regionEl = /** @type {any} */ (document.getElementById('c-region'));
+    var region = (regionEl && regionEl.value) || '';
+    if (!region || !hasCurtainOrBlindItem()) return false;
+    var priceEl = /** @type {any} */ (document.getElementById('c-region-price'));
+    var customBase = parseFloat((priceEl && priceEl.value) || '') || 0;
+    var fees = (typeof getRegionFees === 'function') ? getRegionFees() : {};
+    var prices = resolveRegionPrices(region, fees, customBase, DEFAULT_REGION_FEES);
+    if (isNoInstallFee(prices)) return false;
+    return !estSvcState().has_fee_row;
+  } catch (e) { return false; }
+}
+
 function saveEstimate() {
   logSaveAttempt();
   logSaveStage('시작');
-  estSendReceipt('save', 'start', { phase: 'start', pending_queue: (typeof getEstPendingQueue === 'function') ? getEstPendingQueue().length : null });
+  estSendReceipt('save', 'start', { phase: 'start', pending_queue: (typeof getEstPendingQueue === 'function') ? getEstPendingQueue().length : null, svc: estSvcState() });
   // 2026-10-06(선혜님 - "저장 눌렀어"/"프린트까지 했는데" 김성은님 견적서가 서버에 없음): 인쇄·PDF 전에 저장을 먼저 하고, 그 결과를 받아 진행 여부를
   // 정하기 위한 콜백(ensureEstimateSavedThen이 설정). 저장 흐름이 어디서 끝나든(검증 중단/확인창 취소/이미 진행 중/서버 성공/서버 실패) 정확히 한 번만 호출됨.
   var _afterSave = window._estAfterSave || null; window._estAfterSave = null;
@@ -456,7 +497,9 @@ function saveEstimate() {
     if (!document.getElementById('c-measure-tbd')?.checked && !(document.getElementById('c-measure')?.value || '')) missing.push('실측 예정일');
     if (!document.getElementById('c-install-tbd')?.checked && !(document.getElementById('c-install')?.value || '')) missing.push('시공 예정일');
   }
-  logSaveStage('필수항목검증완료', { missing: missing, hasCurtainOrBlind: hasCurtainOrBlind });
+  // 2026-10-08: 시공이 있는 지역인데 실측비·시공비 행이 하나도 없으면 같은 확인창에 함께 안내(막지는 않음 — 레일만 시공 등 정당한 경우 있음)
+  if (estMissingInstallRows()) missing.push('실측비·시공비 행(지역은 ' + ((/** @type {any} */ (document.getElementById('c-region')) || {}).value || '') + '인데 시공 항목이 없어요 — 금액에 시공비가 빠질 수 있어요)');
+  logSaveStage('필수항목검증완료', { missing: missing, hasCurtainOrBlind: hasCurtainOrBlind, svc: estSvcState() });
   if (missing.length > 0) {
     var okToProceed = window.confirm('다음 항목이 비어있어요: ' + missing.join(', ') + '\n\n그래도 저장하시겠어요?');
     logSaveStage(okToProceed ? '확인창-진행' : '확인창-취소', { missing: missing });

@@ -126,6 +126,7 @@ function calcBlindRow(el) {
 }
 
 function recalcBlindOptionExtras() {
+  if (window._estEditState && window._estEditState.skipAutoSvc) return; // 2026-10-08: 저장된 시공 행을 여는 중
   var blindBody = document.getElementById('blind-body');
   var svcBody = document.getElementById('svc-body');
   if (!blindBody || !svcBody) return;
@@ -160,6 +161,7 @@ function recalcBlindOptionExtras() {
 }
 
 function autoAddBlindSvc() {
+  if (window._estEditState && window._estEditState.skipAutoSvc) return; // 2026-10-08: 저장된 시공 행을 여는 중
   var svcBody = document.getElementById('svc-body');
   var blindBody = document.getElementById('blind-body');
   if(!svcBody || !blindBody) return;
