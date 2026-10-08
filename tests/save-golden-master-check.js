@@ -180,7 +180,8 @@ async function runScenario(dir, sc, idx) {
   }
   const st = await page.evaluate((rev) => {
     const ls = {}; const idxs = []; for (let i = 0; i < localStorage.length; i++) idxs.push(i); if (rev) idxs.reverse();
-    idxs.forEach(i => { const k = localStorage.key(i); if (!/session|auth|token/i.test(k)) ls[k] = localStorage.getItem(k); });
+    // 2026-10-07: dah_obs_*(저장 눌림 관측 장치의 기기 번호·순환 기록·번호)는 시각·임의 번호·로그인 남은 시간이 들어 있어 저장 흐름과 무관 - 접두사로 한 번에 제외
+    idxs.forEach(i => { const k = localStorage.key(i); if (!/session|auth|token/i.test(k) && !/^dah_obs_/.test(k)) ls[k] = localStorage.getItem(k); });
     const toast = document.getElementById('toast');
     return {
       localStorage: ls,

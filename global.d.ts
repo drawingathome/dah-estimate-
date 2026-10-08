@@ -36,6 +36,9 @@ interface Window {
   _estAfterSave?: ((outcome: 'server' | 'failed' | 'invalid') => void) | null;
   _estDirty?: boolean;
   _estLoadedRow?: any;
+  // 2026-10-07(선혜님 - 저장 눌림 관측): est-click-watch.js가 붙이는 전역 이름들
+  estObsRecord?: (k: string, d?: any) => void;
+  estObsFlush?: (force?: boolean) => void;
   _estCurrentUser?: { name: string, role: 'master' | 'staff' } | null;
   // 2026-09-22(선혜님 - "오류를 모두 확인한거 맞니... 개선을 해야지" -
   // 검증실패 사유를 로그에 남기기 위해 신설): validateEstimate() 실패시
@@ -66,3 +69,6 @@ declare var html2pdf: any;
 declare function sbSyncSetting(key: string, value: any): void;
 declare function startRealtimeSync(): void;
 declare function stopRealtimeSync(): void;
+
+// Chrome/Edge 전용: 이 문서가 브라우저에 의해 폐기됐다가 다시 불러온 것인지(est-click-watch.js)
+interface Document { wasDiscarded?: boolean; }

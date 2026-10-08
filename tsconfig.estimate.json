@@ -4,7 +4,10 @@
     "checkJs": true,
     "noEmit": true,
     "target": "ES2019",
-    "lib": ["ES2019", "DOM"],
+    "lib": [
+      "ES2019",
+      "DOM"
+    ],
     "strict": false,
     "noImplicitAny": false,
     "skipLibCheck": true,
@@ -30,6 +33,7 @@
     "est-calc-svc.js",
     "est-public-view.js",
     "est-save.js",
+    "est-click-watch.js",
     "est-save-stages.js",
     "est-survey.js",
     "est-sync-queue.js",

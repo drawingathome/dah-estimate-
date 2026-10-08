@@ -69,7 +69,8 @@ async function run() {
   });
 
   await page.goto(`http://localhost:${port}/dah-estimate.html?view=test-est-001`, { waitUntil: 'domcontentloaded', timeout: 15000 });
-  await new Promise(r => setTimeout(r, 1500));
+  // 2026-10-08: 고정 1.5초 대기는 전체 회귀(부하)에서 화면이 그려지기 전에 검사해 간헐 실패 -> 문서가 그려질 때까지 기다린다(최대 15초)
+  await page.waitForFunction(() => { var c = document.getElementById('public-view-container'); return c && /견적서/.test(c.textContent || ''); }, { timeout: 15000 }).catch(() => {});
 
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
@@ -118,10 +119,10 @@ async function run() {
     req.continue();
   });
   await page2.goto(`http://localhost:${port}/dah-estimate.html?view=test-est-002`, { waitUntil: 'domcontentloaded', timeout: 15000 });
-  await new Promise(r2 => setTimeout(r2, 1500));
+  await page2.waitForFunction(() => { var c = document.getElementById('public-view-container'); return c && /견적서/.test(c.textContent || ''); }, { timeout: 15000 }).catch(() => {});
   const r2 = await page2.evaluate(() => document.getElementById('public-view-container').textContent);
   ok('7. 확정견적(estimate_status=final)이면 "최종 견적서"로 표시됨', r2.indexOf('최종 견적서') !== -1, r2.slice(0, 100));
-  ok('8. 확정견적일 때 "가견적서" 텍스트는 안 뜸', r2.indexOf('가견적서') === -1, r2.slice(0, 100));
+  ok('8. 확정견적일 때 "가견적서" 텍스트는 안 뜸(문서가 비어 있으면 통과로 치지 않음)', r2.length > 0 && r2.indexOf('가견적서') === -1, r2.slice(0, 100));
 
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));

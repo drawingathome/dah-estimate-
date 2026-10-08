@@ -403,5 +403,21 @@
       "save-receipt-check.js"
     ],
     "금지패턴": "영수증 전송 실패가 저장 흐름을 막거나 예외를 밖으로 던지는 것 / 영수증을 서버 읽기 가능한 공개 권한으로 두는 것 / 증거 없이 '일어나지 않았다'고 결론내리는 것(영수증이 없으면 '기록이 없다'고만 말한다)"
+  },
+  "저장_눌림_관측": {
+    "의미": "사용자가 저장 버튼을 눌렀을 때 그 눌림이 실제 저장 버튼에 닿았는지(정상/비활성/다른 요소가 덮음), 저장이 시작됐는지, 로그인 덮개·탭 상태가 어땠는지를 앱이 스스로 기기와 서버에 남겨, 서버에 요청이 없는 사고의 원인을 가를 수 있게 하는 개념",
+    "single_source_of_truth": "est-click-watch.js(눌림 관측 전체), save_receipts 표(kind=obs), app_settings.feature_flags(켜기/끄기)",
+    "derived_fields": [],
+    "db_enforcement": "save_receipts: 로그인 직원은 쓰기만 가능(읽기·수정·삭제 불가), 정책은 (select auth.uid()) 형태. feature_flags는 쓰기 마스터만(app_settings 기존 규칙)",
+    "code_locations": [
+      "est-click-watch.js:onPointerDown",
+      "est-click-watch.js:checkNoStart",
+      "est-click-watch.js:flush",
+      "est-click-watch.js:loadFlags"
+    ],
+    "guard_tests": [
+      "obs-click-watch-check.js"
+    ],
+    "금지패턴": "관측 코드가 저장·클릭 동작을 바꾸거나 막는 것 / 입력칸의 값(비밀번호 포함)을 기록하는 것 / 서버로만 기록해서 서버에 못 가면 증거도 사라지는 것 / 기기 기록에 상한이 없는 것 / elementFromPoint로 중앙을 찍어 가림을 판정하는 것(버튼이 화면 밖이면 오판, 비활성은 click이 안 와서 놓침 - pointerdown을 캡처 단계에서 본다)"
   }
 }

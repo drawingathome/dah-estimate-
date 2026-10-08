@@ -298,6 +298,27 @@ async function loginAs(page, role, masterPw, staffName) {
 // 생긴 이 검사에 막혀 저장 자체가 시도조차 안 되고 있었음. 실제 로그인
 // 플로우를 안 거치고도, 이미 유효한 세션이 있는 것처럼 바로 세팅해주는
 // 헬퍼. 각 테스트가 saveEstimate()류를 호출하기 직전에 불러 쓰면 됨.
+// 2026-10-07(선혜님 - "저장을 눌렀는데 서버에 아무 기록이 없다"): 기존 시험들은 dah_auth_session만 넣어서(dah_session 없이) 견적서 화면의 로그인 덮개(est-auth-gate)가
+// 항상 떠 있는 상태로 돌았고, 덮개가 클릭을 가로채는데도 "saveEstimate()를 코드로 직접 호출"해서 통과했다 - 사람이 실제로 저장 버튼을 누르는 경로는 한 번도 검증되지 않았다.
+// 앱이 말하는 "유효한 로그인"은 dah_session(loginAt)과 dah_auth_session(access_token) 둘 다 있는 상태(hasValidDashboardSession). 이 함수는 둘 다, 페이지가 열리기 전에 넣는다.
+async function setupRealisticLogin(page, opts) {
+  opts = opts || {};
+  await page.evaluateOnNewDocument((o) => {
+    try {
+      localStorage.setItem('dah_session', JSON.stringify({ name: o.name || '마스터', role: o.role || 'master', loginAt: Date.now() }));
+      localStorage.setItem('dah_auth_session', JSON.stringify({ access_token: 'test-fake-token', refresh_token: 'test-fake-refresh', expires_at: Date.now() + (o.ttlMs || 3600 * 1000), user_id: 'test-fake-uuid', email: o.email || 'test@drawingathome.co.kr' }));
+    } catch (e) {}
+  }, opts);
+}
+// 시험이 유효한지 먼저 검사: 로그인 덮개가 숨겨져 있고 저장 버튼이 있어야 한다(아니면 "없음=없음"으로 통과하지 않도록 시험을 중단).
+async function assertEstimatePageUsable(page) {
+  const st = await page.evaluate(() => {
+    const g = document.getElementById('est-auth-gate'); const b = document.getElementById('btn-save-estimate');
+    return { gateHidden: !g || getComputedStyle(g).display === 'none', hasBtn: !!b, saveFn: typeof saveEstimate === 'function' };
+  });
+  if (!st.gateHidden || !st.hasBtn || !st.saveFn) throw new Error('시험 무효: 견적서 화면이 사용 가능한 상태가 아님 ' + JSON.stringify(st));
+  return st;
+}
 async function setupValidSession(page) {
   await page.evaluate(() => {
     try {
@@ -336,5 +357,4 @@ module.exports = {
   setReactInputValue,
   SKIP_TAGS,
   ALLOWED_FONT_SIZES,
-  MIN_TOUCH_TARGET
-};
+  MIN_TOUCH_TARGET, setupRealisticLogin, assertEstimatePageUsable };
