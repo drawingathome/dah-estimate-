@@ -72,7 +72,7 @@ const runSb = (page, label) => page.evaluate((lb) => new Promise((resolve) => {
 }), label);
 
 (async () => {
-  const port = 38300;
+  const port = 18300;
   const server = await startServer(root, port);
 
   // 1) 401을 받으면 갱신 후 재시도

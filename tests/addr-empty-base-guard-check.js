@@ -59,7 +59,7 @@ async function newPage(browser, port, posts) {
 (async () => {
   // ───────── A. 견적서 화면 ─────────
   {
-    const port = 38100;
+    const port = 18100;
     const server = await startServer(root, port);
     const browser = await launchBrowser();
     const posts = [];
@@ -134,7 +134,7 @@ async function newPage(browser, port, posts) {
 
   // ───────── B. 고객추가 모달 ─────────
   {
-    const port = 38101;
+    const port = 18101;
     const server = await startServer(root, port);
     const browser = await launchBrowser();
     const posts = [];
@@ -178,7 +178,7 @@ async function newPage(browser, port, posts) {
   // 2026-10-05 재현으로 확인한 결함: 모달은 React라서 검색 함수가 칸 값만 바꾸면 React 상태가 안 바뀌어,
   // 상세주소를 타이핑하는 순간 화면의 기본주소가 지워지고 저장값에서도 빠졌음(이전 테스트는 setNative로 직접 넣어서 못 잡았음).
   {
-    const port = 38102;
+    const port = 18102;
     const server = await startServer(root, port);
     const browser = await launchBrowser();
     const posts = [];

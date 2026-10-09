@@ -24,7 +24,7 @@ const CORS = { 'Access-Control-Allow-Origin': '*' };
 
 async function run() {
   const dir = path.resolve(__dirname, '..');
-  const port = 33100;
+  const port = 13100;
   const server = await startServer(dir, port);
   const browser = await launchBrowser();
   const page = await browser.newPage();

@@ -68,6 +68,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['lead-followup-check.js', [target]]);
   scripts.push(['customer-list-check.js', [target]]);
   scripts.push(['revenue-consistency-check.js', [target]]);
+  scripts.push(['test-port-range-check.js', []]);
   scripts.push(['perf-revenue-cap-check.js', []]);
   scripts.push(['detail-structure-check.js', [target]]);
   scripts.push(['responsive-layout-check.js', [target]]);
