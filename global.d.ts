@@ -35,6 +35,7 @@ interface Window {
   _estOpenMismatch?: any;
   _estMismatchAck?: boolean;
   _estMmRowId?: any;
+  _estAutoFreezeDone?: any;
   // 2026-10-06(선혜님 - 김성은님 견적서 "저장 눌렀어, 프린트까지 했는데" 서버엔 없음): 인쇄·PDF 전 저장 결과를 받는 콜백과, 수정 후 저장 안 한 상태 표시
   _estAfterSave?: ((outcome: 'server' | 'failed' | 'invalid') => void) | null;
   _estDirty?: boolean;

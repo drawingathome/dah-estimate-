@@ -713,8 +713,48 @@ function estCheckOpenMismatch(source) {
     window._estOpenMismatch = mismatch ? { stored: stored, shown: shown } : null;
     window._estMismatchAck = false;
     estRenderMismatchBanner();
+    estAutoFreezeOnOpen(row, mismatch, stored, shown);
     if (mismatch && typeof showToast === 'function') showToast('⚠️ 저장된 금액(' + stored.toLocaleString() + '원)과 화면 금액(' + shown.toLocaleString() + '원)이 달라요 — 저장하기 전에 확인해주세요');
   } catch (e) { /* 무시 */ }
+}
+// 2026-10-09 고정 자동화(선혜님 - "고정자동화해줘"): 예전 형식(시공 행 표식 없음) 견적서 중 계약금이 들어왔거나 확정된 것은,
+// 열었을 때 저장 금액과 화면 금액이 정확히 같으면 지금 화면의 행들을 그대로 저장해 "고정"함(표식 svcRowsSaved). 이후 열 때 금액이 바뀌지 않음.
+// 금액이 다르면(박윤아·우사랑 같은 경우) 절대 건드리지 않고 경고만 유지. 금액·계약금·잔금·성과매출은 건드리지 않고 행과 표식만 저장.
+// 동시 수정 방지로 열었을 때의 updated_at이 그대로일 때만 저장하며, 실패해도 조용히 넘어감(다음에 열 때 다시 시도).
+function estAutoFreezeOnOpen(row, mismatch, stored, shown) {
+  try {
+    if (mismatch || !row || !row.id || window._estAutoFreezeDone === row.id) return;
+    if (!(stored > 0) || shown !== stored) return;
+    if (row.price_breakdown && row.price_breakdown.svcRowsSaved) return;
+    if (row.is_archived || row.cust_type === 'as') return;
+    if (!(Number(row.deposit_amount) > 0) && row.estimate_status !== 'final') return;
+    var st = window._estEditState || {};
+    if (st.editingEstDbId !== row.id) return;
+    var lockAt = st.editingEstUpdatedAt || row.updated_at;
+    if (!lockAt) return;
+    var items = collectLineItems();
+    if (!Array.isArray(items) || !items.length) return;
+    var pb = Object.assign({}, row.price_breakdown || {}, { svcRowsSaved: true });
+    window._estAutoFreezeDone = row.id;
+    var x = new XMLHttpRequest();
+    x.open('PATCH', SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(row.id) + '&updated_at=eq.' + encodeURIComponent(lockAt), true);
+    x.setRequestHeader('apikey', SUPABASE_KEY);
+    x.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.setRequestHeader('Prefer', 'return=representation');
+    x.timeout = 15000;
+    x.onload = function () {
+      try {
+        var out = JSON.parse(x.responseText);
+        if (x.status >= 200 && x.status < 300 && Array.isArray(out) && out.length === 1) {
+          if (out[0].updated_at) window._estEditState.editingEstUpdatedAt = out[0].updated_at;
+          row.price_breakdown = pb;
+          estSendReceipt('open', 'auto_freeze', { stored_price: stored, rows: items.length });
+        }
+      } catch (e) { /* 무시 */ }
+    };
+    x.send(JSON.stringify({ line_items: items, price_breakdown: pb }));
+  } catch (e) { /* 자동 고정 실패는 열기 흐름에 영향 없음 */ }
 }
 window.addEventListener('online', function () { estFlushReceiptQueue(); });
 document.addEventListener('DOMContentLoaded', function () { setTimeout(estFlushReceiptQueue, 4000); });
