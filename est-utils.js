@@ -125,6 +125,8 @@ function applyRealDepositToForm(depositAmount) {
   if (depDispEl) depDispEl.textContent = Number(depositAmount).toLocaleString()+'원';
   var balDispEl = document.getElementById('sum-balance-disp');
   if (balDispEl) balDispEl.textContent = Math.max(0, grand-Number(depositAmount)).toLocaleString()+'원';
+  var balEl2 = document.getElementById('sum-balance');
+  if (balEl2) balEl2.textContent = Math.max(0, grand-Number(depositAmount)).toLocaleString()+'원';
 }
 
 function formatKoreanDate(d) {
