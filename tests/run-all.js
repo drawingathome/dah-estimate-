@@ -333,6 +333,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['est-load-deposit-restore-check.js', []]);
   scripts.push(['print-deposit-balance-real-check.js', []]);
   scripts.push(['restore-option-row-dup-check.js', []]);
+  scripts.push(['open-mismatch-banner-check.js', []]);
   // 2026-09-22(선혜님 - "저거까지 봐야 하는거 아니야?? 관련된 경로 모두
   // 확인해"로 전 경로 재점검 - loadEstDbId 안에 비동기로 별도 실행되는
   // 고객레벨 계약금 복원 콜백이 먼저 채워진 값을 나중에 작은/오래된

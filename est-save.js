@@ -515,6 +515,24 @@ function saveEstimate() {
     }
   }
 
+  // 2026-10-09: 열었을 때 저장 금액과 화면 금액이 달랐고 아직 "확인했어요"를 안 눌렀다면, 저장 직전에 한 번 더 확인(조용히 금액이 바뀌는 사고 방지).
+  if (window._estOpenMismatch && !window._estMismatchAck) {
+    var mm = window._estOpenMismatch;
+    var nowShown = parseInt(String((document.getElementById('sum-total') || {}).textContent || '').replace(/[^0-9]/g, ''), 10) || 0;
+    if (nowShown > 0 && nowShown !== mm.stored) {
+      var okMm = window.confirm('저장된 금액은 ' + mm.stored.toLocaleString() + '원인데 지금 화면 금액은 ' + nowShown.toLocaleString() + '원이에요.\n\n이 금액으로 저장하면 고객 금액도 바뀝니다. 그래도 저장하시겠어요?');
+      logSaveStage(okMm ? '금액불일치-진행' : '금액불일치-취소', { stored: mm.stored, shown: nowShown });
+      if (!okMm) {
+        showToast('저장이 취소됐어요 — 금액을 확인해주세요');
+        estSendReceipt('save', 'invalid', { phase: 'end', reason: '금액 불일치 확인창 취소' });
+        _finishAfter('invalid');
+        return;
+      }
+      window._estMismatchAck = true;
+      estRenderMismatchBanner();
+    }
+  }
+
   var btn = /** @type {HTMLButtonElement} */ (document.getElementById('btn-save-estimate'));
   if (btn) {
     // 2026-09-21(선혜님 지적 - "전문업체는 원인을 어떻게 찾을까, 이게
@@ -650,14 +668,51 @@ function estSendReceipt(kind, outcome, extra) {
     _estPostReceipt(row, true);
   } catch (e) { /* 영수증 실패는 절대 저장·인쇄 흐름에 영향을 주지 않음 */ }
 }
+// 열었을 때 저장 금액과 화면 금액이 다르면 화면 맨 위에 계속 남는 안내를 띄움(인쇄에는 안 나옴). "확인했어요"를 누르면 닫힘.
+function estRenderMismatchBanner() {
+  try {
+    var old = document.getElementById('est-open-mismatch-banner'); if (old) old.remove();
+    var m = window._estOpenMismatch; if (!m || window._estMismatchAck) return;
+    var b = document.createElement('div');
+    b.id = 'est-open-mismatch-banner'; b.className = 'print-hide';
+    b.setAttribute('style', 'position:sticky;top:0;z-index:9999;background:#FFF3E0;border-bottom:2px solid #F06E2D;color:#5A3A12;padding:10px 16px;font-size:13px;line-height:1.5;display:flex;gap:12px;align-items:center;justify-content:space-between');
+    var t = document.createElement('div');
+    t.textContent = '⚠️ 저장된 금액(' + m.stored.toLocaleString() + '원)과 지금 화면 금액(' + m.shown.toLocaleString() + '원)이 달라요. 항목을 확인하고, 맞는 금액일 때만 저장하세요. 그대로 저장하면 고객 금액도 바뀌어요.';
+    var btn = document.createElement('button');
+    btn.type = 'button'; btn.textContent = '확인했어요';
+    btn.setAttribute('style', 'min-height:32px;padding:0 12px;border:1px solid #F06E2D;background:#fff;color:#F06E2D;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap');
+    btn.onclick = function () { window._estMismatchAck = true; b.remove(); };
+    b.appendChild(t); b.appendChild(btn);
+    document.body.insertBefore(b, document.body.firstChild);
+  } catch (e) { /* 안내 실패는 저장 흐름에 영향 없음 */ }
+}
 // 견적서를 연 뒤 저장된 금액과 화면 금액이 다르면 기록하고 저장 전에 확인하라고 경고(예: 저장 7,968,000원인데 열면 7,544,000원).
+var _estMmState = { tries: 0, last: -1, stable: 0 };
 function estCheckOpenMismatch(source) {
   try {
     var row = window._estLoadedRow; if (!row) return;
     var shown = parseInt(String((document.getElementById('sum-total') || {}).textContent || '').replace(/[^0-9]/g, ''), 10) || 0;
+    // 2026-10-09: 열고 3.5초 시점엔 쿠폰·시공 행 복원이 아직 끝나기 전이라 금액이 중간값일 수 있음(실제로 박윤아 1,503,000원/유경진 3,542,000원처럼
+    // 잘못된 값으로 거짓 경고가 뜸). 복원이 끝나(저장 버튼이 다시 켜지고) 금액이 2번 연속 같을 때까지 기다렸다가 판단함(최대 약 20초).
+    var saveBtnEl = /** @type {HTMLButtonElement|null} */ (document.getElementById('btn-save-estimate'));
+    var restoring = !!(saveBtnEl && saveBtnEl.disabled);
+    if (_estMmState.tries === 0 || window._estMmRowId !== row.id) { _estMmState = { tries: 0, last: -1, stable: 0 }; window._estMmRowId = row.id; }
+    _estMmState.stable = (shown === _estMmState.last) ? _estMmState.stable + 1 : 0;
+    _estMmState.last = shown;
+    _estMmState.tries++;
+    if ((restoring || _estMmState.stable < 2) && _estMmState.tries < 20) {
+      setTimeout(function () { estCheckOpenMismatch(source); }, 1000);
+      return;
+    }
+    _estMmState = { tries: 0, last: -1, stable: 0 };
     var stored = Number(row.price) || 0;
     var mismatch = stored > 0 && shown > 0 && shown !== stored;
     estSendReceipt('open', mismatch ? 'mismatch' : 'ok', { source: source, stored_price: stored, shown_total: shown, stored_final: row.price_breakdown && row.price_breakdown.finalTotal, stored_region: row.region || null, stored_install_tbd: row.install_date_tbd, stored_manual_discount: (row.applied_discounts && row.applied_discounts.manual) || null });
+    // 2026-10-09(선혜님 - 박윤아: 예전 형식 견적서를 열면 저장 1,361,000원이 1,411,000원으로 바뀌는데 알림이 3.5초 뒤 잠깐 떴다 사라져 놓치기 쉬움):
+    // 잠깐 뜨는 알림 대신 화면에 계속 남는 안내를 띄우고, 저장 직전에도 한 번 더 확인함(saveEstimate).
+    window._estOpenMismatch = mismatch ? { stored: stored, shown: shown } : null;
+    window._estMismatchAck = false;
+    estRenderMismatchBanner();
     if (mismatch && typeof showToast === 'function') showToast('⚠️ 저장된 금액(' + stored.toLocaleString() + '원)과 화면 금액(' + shown.toLocaleString() + '원)이 달라요 — 저장하기 전에 확인해주세요');
   } catch (e) { /* 무시 */ }
 }
