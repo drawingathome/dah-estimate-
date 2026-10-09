@@ -56,8 +56,13 @@ function splitCustomerPayments(c) {
     // 금액(estPay.price)을 분모로 써야 "계약금 비율만큼만" 정확히 배분됨.
     var totalPrice = estPay.price || totalPaid || 1;
     var perf = perfOverride || totalPrice;
-    if (dep > 0 && depDate) parts.push({ date: depDate, revenue: dep, perf: perf * (dep / totalPrice) });
-    if (bal > 0 && balDate) parts.push({ date: balDate, revenue: bal, perf: perf * (bal / totalPrice) });
+    // 2026-10-09(선혜님 - 이영욱: 제품 변경으로 총액 982,000원인데 선금 1,200,000원이 먼저 들어와
+    // 환불 예정인 사례): 받은 돈이 총액을 넘어도 성과매출은 총액(perf)을 절대 넘지 않게 상한을 둠.
+    // 입금(revenue)은 실제 들어온 현금이라 그대로 두고, 성과매출 배분 비율만 100%로 제한.
+    var depShare = Math.min(dep, totalPrice);
+    var balShare = Math.min(bal, Math.max(0, totalPrice - depShare));
+    if (dep > 0 && depDate) parts.push({ date: depDate, revenue: dep, perf: perf * (depShare / totalPrice) });
+    if (bal > 0 && balDate) parts.push({ date: balDate, revenue: bal, perf: perf * (balShare / totalPrice) });
   });
   if (!anyPaid && c.date && isLegacyNoPaymentRecord(c)) {
     // 입금 기록이 아직 없는 "예전 방식 고객"만 계약일 기준 전체금액으로 폴백
