@@ -27,7 +27,7 @@
 | 16 | `dash-render-est.js` | 견적서 탭(가견적/확정견적 목록) 렌더링 | 2 |
 | 17 | `dash-render-search.js` | 고객목록(검색) 탭 렌더링 | 1 |
 | 18 | `dash-memo.js` | DAH 대시보드 — 빠른 메모 문구 기능 | 2 |
-| 19 | `dash-chart.js` | DAH 대시보드 — 매출 차트 기능 | 8 |
+| 19 | `dash-chart.js` | DAH 대시보드 — 매출 차트 기능 | 9 |
 | 20 | `dash-calendar.js` | DAH 대시보드 — 일정(캘린더) 기능 | 5 |
 | 21 | `dash-kanban.js` | DAH 대시보드 — 진행현황(칸반) 기능 | 9 |
 | 22 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 1 |
@@ -290,6 +290,7 @@
 | `getRelevantOrderItems` | `dash-customer-order.js` |
 | `getSettings` | `dash-settings.js` |
 | `getStaffBadgeColor` | `dash-utils.js` |
+| `getStaffComparison` | `dash-chart.js` |
 | `getStaffEmail` | `dash-api-settings.js` |
 | `getStaffEmailMap` | `dash-api-settings.js` |
 | `getStaffList` | `dash-api-settings.js` |

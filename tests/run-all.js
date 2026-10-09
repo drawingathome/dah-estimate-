@@ -70,6 +70,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['revenue-consistency-check.js', [target]]);
   scripts.push(['test-port-range-check.js', []]);
   scripts.push(['perf-revenue-cap-check.js', []]);
+  scripts.push(['staff-comparison-check.js', []]);
   scripts.push(['detail-structure-check.js', [target]]);
   scripts.push(['responsive-layout-check.js', [target]]);
   scripts.push(['alim_excel_calendar_check.js', []]);
