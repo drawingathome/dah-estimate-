@@ -896,7 +896,7 @@ function dahDiagnoseSchema() {
     var patchRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?id=eq.' + createdId, {
       method: 'patch',
       headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
-      payload: JSON.stringify({ stage: '계약금', deposit_amount: 60000 }),
+      payload: JSON.stringify({ stage: '선금결제', deposit_amount: 60000 }),
       muteHttpExceptions: true
     });
     if (patchRes.getResponseCode() >= 300) {
