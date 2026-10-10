@@ -80,8 +80,108 @@ function splitCustomerPayments(c) {
   return parts;
 }
 
+/* ══════════════════════════════════════════════════
+   월 마감 (2026-10-10, 선혜님 - "성과매출은 지난달 숫자가 안 바뀌어야 한다")
+   매출은 저장된 값이 아니라 고객 데이터로 매번 다시 계산돼서, 지난 달 고객을 고치면 마감한 실적도 같이 바뀌고
+   "등록 후 7일 지난 고객" 같은 오늘 날짜 기준 규칙 때문에 시간이 지나도 숫자가 달라질 수 있었음.
+   마스터가 "마감"을 누르면 그 달의 입금/성과매출/담당자별 값을 monthly_close 표에 저장하고, 이후에는 그 값을 씀.
+   마스터만 읽고 쓸 수 있음(RLS). 직원 화면은 마감값이 없어 예전처럼 본인 담당 고객으로 계산.
+   ══════════════════════════════════════════════════ */
+window._monthClose = window._monthClose || {};
+function curMonthKeyLocal() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
+// 이번 달(진행 중)은 마감 대상이 아님 - 지난 달 이전만 저장값을 돌려줌
+function getClosedMonth(monthKey) {
+  var cl = window._monthClose && window._monthClose[monthKey];
+  if (!cl) return null;
+  if (String(monthKey) >= curMonthKeyLocal()) return null;
+  return cl;
+}
+function loadMonthClose(callback) {
+  if (!(currentUser && currentUser.role === 'master') || typeof sbXHR !== 'function') { if (callback) callback(); return; }
+  sbXHR('GET', 'monthly_close?select=*', null, function(err, rows) {
+    if (!err && Array.isArray(rows)) {
+      var map = {};
+      rows.forEach(function(r) { map[r.month] = r; });
+      window._monthClose = map;
+    }
+    if (callback) callback();
+  });
+}
+// 지금 데이터로 그 달을 다시 계산한 값(마감값을 무시) - 마감할 때 저장하고, 마감 뒤 차이를 보여주는 데 씀
+function computeMonthSnapshot(customers, monthKey) {
+  var live = customers.filter(function(c){ return !isSoftDeleted(c); });
+  var byStaff = getMonthStaffPerformance(live, monthKey, true);
+  var contracts = 0; Object.keys(byStaff).forEach(function(k){ contracts += byStaff[k].count || 0; });
+  return {
+    month: monthKey,
+    revenue: getMonthRevenue(live, monthKey, true),
+    perf_revenue: getMonthPerformanceRevenue(live, monthKey, true),
+    contract_count: contracts,
+    by_staff: byStaff
+  };
+}
+function closeMonthNow(monthKey, callback) {
+  if (!(currentUser && currentUser.role === 'master')) return;
+  var snap = computeMonthSnapshot(loadCustomers(), monthKey);
+  var existing = window._monthClose[monthKey];
+  var msg = monthKey + ' 마감값을 저장할까요?\n\n성과매출 ' + Math.round(snap.perf_revenue).toLocaleString() + '원\n입금 합계 ' + Math.round(snap.revenue).toLocaleString() + '원\n\n저장하면 이후 고객 정보를 고쳐도 이 달 숫자는 바뀌지 않습니다.' + (existing ? '\n(이미 마감된 달입니다. 지금 계산값으로 다시 저장합니다.)' : '');
+  if (!confirm(msg)) return;
+  var body = { month: monthKey, revenue: snap.revenue, perf_revenue: snap.perf_revenue, contract_count: snap.contract_count, by_staff: snap.by_staff };
+  var done = function(err, rows) {
+    if (err || !rows || !rows[0]) { showToast('마감 저장에 실패했어요. 잠시 후 다시 시도해 주세요.'); if (callback) callback(false); return; }
+    window._monthClose[monthKey] = rows[0];
+    showToast(monthKey + ' 마감이 저장됐어요');
+    if (typeof renderChart === 'function') renderChart();
+    renderMonthClosePanel();
+    if (callback) callback(true);
+  };
+  if (existing) sbXHR('PATCH', 'monthly_close?month=eq.' + encodeURIComponent(monthKey), Object.assign({ closed_at: new Date().toISOString() }, body), done);
+  else sbXHR('POST', 'monthly_close', body, done);
+}
+// 매출 탭 맨 아래 "월 마감" 카드(마스터 전용): 최근 6개월(이번 달 제외)의 마감 여부와 현재 계산값
+function renderMonthClosePanel() {
+  var host = document.getElementById('chart-card-monthclose');
+  if (!host) return;
+  if (!(currentUser && currentUser.role === 'master')) { host.style.display = 'none'; return; }
+  host.style.display = '';
+  var list = document.getElementById('chart-monthclose'); if (!list) return;
+  list.innerHTML = '';
+  var customers = loadCustomers();
+  var d = new Date();
+  for (var i = 1; i <= 6; i++) {
+    var md = new Date(d.getFullYear(), d.getMonth() - i, 1);
+    var key = md.getFullYear() + '-' + String(md.getMonth() + 1).padStart(2, '0');
+    (function(key) {
+      var live = computeMonthSnapshot(customers, key);
+      var cl = window._monthClose[key];
+      var row = document.createElement('div'); row.className = 'month-close-row';
+      row.setAttribute('style', 'display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px');
+      var left = document.createElement('div');
+      var title = document.createElement('div'); title.style.fontWeight = '700';
+      title.textContent = key + (cl ? '  🔒 마감됨' : '  미마감');
+      var sub = document.createElement('div'); sub.style.cssText = 'font-size:11px;color:var(--sub);margin-top:2px';
+      if (cl) {
+        var diff = Math.round(live.perf_revenue - Number(cl.perf_revenue));
+        sub.textContent = '성과매출 ' + Math.round(Number(cl.perf_revenue)).toLocaleString() + '원' + (Math.abs(diff) >= 1 ? ' · 마감 뒤 데이터 변화로 현재 계산은 ' + (diff > 0 ? '+' : '') + diff.toLocaleString() + '원 차이' : ' · 현재 계산과 일치');
+        if (Math.abs(diff) >= 1) sub.style.color = '#B3261E';
+      } else {
+        sub.textContent = '현재 계산 성과매출 ' + Math.round(live.perf_revenue).toLocaleString() + '원';
+      }
+      left.appendChild(title); left.appendChild(sub);
+      var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'month-close-btn'; btn.setAttribute('data-month', key);
+      btn.textContent = cl ? '다시 마감' : '마감하기';
+      btn.setAttribute('style', 'min-height:36px;padding:0 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:' + (cl ? '#fff;color:var(--dark)' : 'var(--dark);color:#fff'));
+      btn.onclick = function() { closeMonthNow(key); };
+      row.appendChild(left); row.appendChild(btn); list.appendChild(row);
+    })(key);
+  }
+}
+
 // 특정 월(monthKey='YYYY-MM')의 실제 매출(입금액) 합계
-function getMonthRevenue(customers, monthKey) {
+function getMonthRevenue(customers, monthKey, ignoreClosed) {
+  // 2026-10-10(선혜님 - 지난달 매출이 나중에 고객 수정으로 바뀌면 안 됨): 마감된 달은 저장된 값을 그대로 씀.
+  var _cl = ignoreClosed ? null : getClosedMonth(monthKey);
+  if (_cl) return Number(_cl.revenue) || 0;
   var total = 0;
   customers.forEach(function(c) {
     if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return;
@@ -93,7 +193,9 @@ function getMonthRevenue(customers, monthKey) {
 }
 
 // 특정 월의 성과매출(인센티브 기준) 합계 — 선금:잔금 비율로 분배됨
-function getMonthPerformanceRevenue(customers, monthKey) {
+function getMonthPerformanceRevenue(customers, monthKey, ignoreClosed) {
+  var _cl = ignoreClosed ? null : getClosedMonth(monthKey);
+  if (_cl) return Number(_cl.perf_revenue) || 0;
   var total = 0;
   customers.forEach(function(c) {
     if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return;
@@ -105,7 +207,9 @@ function getMonthPerformanceRevenue(customers, monthKey) {
 }
 
 // 특정 월의 담당자별 성과매출 — {담당자명: {count, rev}}
-function getMonthStaffPerformance(customers, monthKey) {
+function getMonthStaffPerformance(customers, monthKey, ignoreClosed) {
+  var _cl = ignoreClosed ? null : getClosedMonth(monthKey);
+  if (_cl && _cl.by_staff && typeof _cl.by_staff === 'object') return JSON.parse(JSON.stringify(_cl.by_staff));
   var byStaff = {};
   customers.forEach(function(c) {
     if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return;
@@ -347,6 +451,7 @@ function renderChart(period) {
   // 2026-08-06 신규: PC에서 매출 탭 오른쪽 여백을 채우기 위해 담당자별 매출
   // 순위 카드 추가 (디자인 개선 1단계 — 화면 재사용성 목적)
   if (typeof renderChartStaffRank === 'function') renderChartStaffRank(customers, dateFilterRange);
+  if (typeof renderMonthClosePanel === 'function') renderMonthClosePanel();
 }
 
 // 2026-10-09(선혜님 요청 - "담당자별 실적 비교 화면"): 담당자를 나란히 비교하는 숫자 계산(화면과 분리한 순수 함수).

@@ -30,7 +30,8 @@ function loginAs(who) {
   // 지금까진 엄격비교(=== true)로 오작동은 막았지만, 내부에서 loadCustomersAsync를
   // 한 번 더 호출하는 redundant 구조였음. 여기서 이미 최신 데이터를 받았으니
   // skipServerFetch=true로 명시 호출해 재요청 없이 바로 렌더링.
-  loadCustomersAsync(function(){ renderHome(true); });
+  // 2026-10-10: 마스터는 월 마감값(monthly_close)을 먼저 불러온 뒤 홈을 그려서, 지난달 매출이 마감값으로 보이게 함(직원은 즉시 통과).
+  loadCustomersAsync(function(){ loadMonthClose(function(){ renderHome(true); }); });
 }
 
 function applyPermissions() {

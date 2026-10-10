@@ -27,7 +27,7 @@
 | 16 | `dash-render-est.js` | 견적서 탭(가견적/확정견적 목록) 렌더링 | 2 |
 | 17 | `dash-render-search.js` | 고객목록(검색) 탭 렌더링 | 1 |
 | 18 | `dash-memo.js` | DAH 대시보드 — 빠른 메모 문구 기능 | 2 |
-| 19 | `dash-chart.js` | DAH 대시보드 — 매출 차트 기능 | 9 |
+| 19 | `dash-chart.js` | DAH 대시보드 — 매출 차트 기능 | 15 |
 | 20 | `dash-calendar.js` | DAH 대시보드 — 일정(캘린더) 기능 | 5 |
 | 21 | `dash-kanban.js` | DAH 대시보드 — 진행현황(칸반) 기능 | 9 |
 | 22 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 1 |
@@ -176,11 +176,13 @@
 | `closeAdd` | `dash-customer-add.js` |
 | `closeCustLoad` | `est-customer-load.js` |
 | `closeDetail` | `dash-customer-detail-tabs.js` |
+| `closeMonthNow` | `dash-chart.js` |
 | `closePdfModal` | `est-customer-load.js` |
 | `closeSpacePicker` | `est-form-controls.js` |
 | `collectFormData` | `est-misc.js` |
 | `collectLineItems` | `est-misc.js` |
 | `collectVendorGroups` | `est-doc-vendor.js` |
+| `computeMonthSnapshot` | `dash-chart.js` |
 | `confirmPdfPrint` | `est-customer-load.js` |
 | `confirmPdfPrint_fitAsCanvas` | `est-customer-load.js` |
 | `copyBlindRow` | `est-calc-blind.js` |
@@ -188,6 +190,7 @@
 | `copyOtherItemRow` | `est-calc-svc.js` |
 | `copySvcRow` | `est-calc-svc.js` |
 | `csvSafeCell` | `dash-export.js` |
+| `curMonthKeyLocal` | `dash-chart.js` |
 | `curtainHeightFeeWarning` | `est-calc-rules.js` |
 | `customerToDbRow` | `dash-api-data.js` |
 | `dahCheckClientErrors` | `apps-script-daily-backup.js` |
@@ -265,6 +268,7 @@
 | `getBlindMinSqm` | `est-calc-rules.js` |
 | `getCalEvents` | `dash-calendar.js` |
 | `getChosung` | `dash-search.js` |
+| `getClosedMonth` | `dash-chart.js` |
 | `getCustomerCurrentStage` | `dash-customer-detail.js` |
 | `getCustomerOrderStatus` | `est-utils.js` |
 | `getDateFilterRange` | `dash-search.js` |
@@ -325,6 +329,7 @@
 | `loadDraft` | `est-misc.js` |
 | `loadEstimateForPublicView` | `est-public-view.js` |
 | `loadEstimatesAsync` | `dash-api-data.js` |
+| `loadMonthClose` | `dash-chart.js` |
 | `loadSettings` | `dash-settings.js` |
 | `loadSurveyFromSheet` | `est-survey.js` |
 | `lockEstimateForm` | `est-form-controls.js` |
@@ -401,6 +406,7 @@
 | `renderHome` | `dash-render.js` |
 | `renderKakaoLog` | `dash-customer-alim.js` |
 | `renderKanbanCols` | `dash-kanban.js` |
+| `renderMonthClosePanel` | `dash-chart.js` |
 | `renderOrderSection` | `dash-customer-order.js` |
 | `renderPaySection` | `dash-customer-pay.js` |
 | `renderPipe` | `dash-kanban.js` |

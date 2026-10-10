@@ -423,6 +423,8 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['paid-badge-check.js', []]);
   // 2026-10-10(선혜님 - 잔금 남음/딱 맞음을 칸반·목록에서도 눈으로 확인): getPayStatus 공용 판정 + 칸반/목록 표시.
   scripts.push(['pay-status-chip-check.js', []]);
+  // 2026-10-10(선혜님 - 성과매출은 지난달 숫자가 안 바뀌어야 한다): 월 마감 저장·고정·마스터 전용.
+  scripts.push(['month-close-check.js', []]);
   // 2026-09-19(선혜님 - "2건에 대한 건 없고 이거뿐이야" → "그래야지"):
   // "진행중인 견적" 요약이 최신 견적서 하나가 아니라 전체 합계로
   // 표시되는지 검증.
