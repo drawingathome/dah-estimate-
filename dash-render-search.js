@@ -112,11 +112,20 @@ function renderSearch() {
     // 2026-08-28(선혜님 요청 - "미수금 현황판"): 칸반카드의 "받은 X원"과
     // 짝을 이루는 표시 - 전체금액 아래에 미수금(아직 못 받은 금액)을
     // 주황색으로 별도 표시. 완납이면 표시 안 함(불필요한 정보 추가 방지).
+    // 2026-10-10(선혜님 - "잔금이 얼마 남았는지/딱 맞는지 눈으로 확인"): 같은 기준(getPayStatus)으로
+    // 잔금 남음 / 완납 / 초과 입금을 한 줄로 보여줌. 받은 돈이 아직 0이면 예전처럼 "미수금".
     var unpaidAmt = getUnpaidAmount(c);
+    var payStat = getPayStatus(c);
     var unpaidEl = null;
-    if (unpaidAmt > 0 && Number(c.price) > 0) {
-      unpaidEl = el('div', {style:'font-size:11px;color:var(--terra);font-weight:700;margin-top:2px'});
-      unpaidEl.textContent = '미수금 ' + unpaidAmt.toLocaleString() + '원';
+    if (payStat.state === 'full') {
+      unpaidEl = el('div', {'class':'pay-status-chip', style:'font-size:11px;color:#2E7D32;font-weight:700;margin-top:2px'});
+      unpaidEl.textContent = '✓ 완납';
+    } else if (payStat.state === 'over') {
+      unpaidEl = el('div', {'class':'pay-status-chip', style:'font-size:11px;color:#B3261E;font-weight:700;margin-top:2px'});
+      unpaidEl.textContent = '⚠ ' + Math.abs(payStat.diff).toLocaleString() + '원 초과 입금';
+    } else if (unpaidAmt > 0 && Number(c.price) > 0) {
+      unpaidEl = el('div', {'class':'pay-status-chip', style:'font-size:11px;color:var(--terra);font-weight:700;margin-top:2px'});
+      unpaidEl.textContent = (payStat.state === 'partial' ? '잔금 ' : '미수금 ') + unpaidAmt.toLocaleString() + '원' + (payStat.state === 'partial' ? ' 남음' : '');
     }
 
     // 단계 뱃지 + 날짜

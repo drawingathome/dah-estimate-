@@ -82,6 +82,19 @@ function getUnpaidAmount(c) {
   return Math.max(0, price - received);
 }
 
+// 2026-10-10(선혜님 - "선금을 보내면 잔금이 얼마 남았는지 뜨고 금액이 같으면 매칭되는지 눈으로 확인돼야 한다.
+// 그런 게 안 보이면 허술해 보인다"): 결제 탭에만 있던 표시를 칸반·고객목록에서도 같은 기준으로 보여주기 위한
+// 공용 함수. state: 'full'(딱 맞음=완납) / 'partial'(잔금 남음) / 'over'(초과 입금) / 'none'(표시할 것 없음).
+// 계약 이후 단계이고 총액이 있고 받은 돈이 있을 때만 판단(견적 단계는 아직 청구 전이라 'none').
+function getPayStatus(c) {
+  var price = Number(c && c.price) || 0;
+  if (!c || price <= 0 || DAH_POST_CONTRACT_STAGES.indexOf(c.stage) < 0) return { state: 'none', price: price, received: 0, diff: 0 };
+  var received = getReceivedAmount(c);
+  if (received <= 0) return { state: 'none', price: price, received: 0, diff: price };
+  var diff = price - received;
+  return { state: diff === 0 ? 'full' : (diff > 0 ? 'partial' : 'over'), price: price, received: received, diff: diff };
+}
+
 // 2026-09-21: 알림톡의 "계약금 결제 안내"/"잔금 결제 안내"처럼 개별
 // 선금/잔금 "금액 하나"가 필요한 곳을 위한 헬퍼 - 이 고객의 견적서가
 // 있으면 최신 것의 결제 정보, 없으면 예전처럼 고객 레벨 필드로 폴백.

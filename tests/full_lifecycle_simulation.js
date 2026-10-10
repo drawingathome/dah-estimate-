@@ -88,7 +88,7 @@ async function run() {
     c.stage = '확정견적'; saveCustomers(arr);
     openDetail('생애주기A', 5000);
     await new Promise(res => setTimeout(res, 400));
-    var amt = document.querySelector('input[placeholder="잔금 금액"]');
+    var amt = document.querySelector('input[placeholder^="잔금 금액"]');
     var btn = Array.from(document.querySelectorAll('#detail-pay-body button, #detail-pay-body span')).find(b => b.textContent.trim() === '잔금 저장');
     amt.value = '';
     btn.click();
@@ -123,7 +123,7 @@ async function run() {
   r = await page.evaluate(async () => {
     openDetail('생애주기A', 5000);
     await new Promise(res => setTimeout(res, 400));
-    var amt = document.querySelector('input[placeholder="잔금 금액"]');
+    var amt = document.querySelector('input[placeholder^="잔금 금액"]');
     var date = document.querySelectorAll('#detail-pay-body input[type="date"]')[1];
     var btn = Array.from(document.querySelectorAll('#detail-pay-body button, #detail-pay-body span')).find(b => b.textContent.trim() === '잔금 저장');
     amt.value = '1500000'; if (date) date.value = todayStr();

@@ -264,8 +264,14 @@ function renderKanbanCols(customers, kanbanWrap) {
             var totalLine = '<div class="kanban-item-price">' + price.toLocaleString() + '원</div>';
             if (received > 0 && received < price) {
               // 일부만 받은 상태 - "받은 X원" 을 전체금액 위에 작게 별도 표시
-              return '<div style="font-size:11px;color:#2F6690;font-weight:700;margin-top:2px">받은 ' + received.toLocaleString() + '원</div>' + totalLine;
+              // 2026-10-10(선혜님 - "잔금이 얼마 남았는지 눈으로 확인"): 남은 잔금도 함께 표시(계약 이후 단계만)
+              var ps = (typeof getPayStatus === 'function') ? getPayStatus(c) : { state: 'none' };
+              var remainLine = ps.state === 'partial' ? '<div class="pay-status-chip" style="font-size:11px;color:#8A5A00;font-weight:700;margin-top:2px">잔금 ' + ps.diff.toLocaleString() + '원 남음</div>' : '';
+              return '<div style="font-size:11px;color:#2F6690;font-weight:700;margin-top:2px">받은 ' + received.toLocaleString() + '원</div>' + totalLine + remainLine;
             }
+            var ps2 = (typeof getPayStatus === 'function') ? getPayStatus(c) : { state: 'none' };
+            if (ps2.state === 'full') return totalLine + '<div class="pay-status-chip" style="font-size:11px;color:#2E7D32;font-weight:700;margin-top:2px">✓ 완납</div>';
+            if (ps2.state === 'over') return totalLine + '<div class="pay-status-chip" style="font-size:11px;color:#B3261E;font-weight:700;margin-top:2px">⚠ ' + Math.abs(ps2.diff).toLocaleString() + '원 초과 입금</div>';
             return totalLine;
           })();
         item.addEventListener('click', function() { openDetail(c.clientName, c.id); });

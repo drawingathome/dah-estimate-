@@ -110,7 +110,7 @@ async function run() {
   await new Promise(r => setTimeout(r, 600));
 
   await page.evaluate(() => {
-    const forms = document.querySelectorAll('input[placeholder="잔금 금액"]');
+    const forms = document.querySelectorAll('input[placeholder^="잔금 금액"]');
     const firstForm = forms[0];
     firstForm.value = '2235000';
     firstForm.dispatchEvent(new Event('input', { bubbles: true }));

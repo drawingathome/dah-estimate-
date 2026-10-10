@@ -77,7 +77,7 @@ async function run() {
   await new Promise(r => setTimeout(r, 300));
 
   await page.evaluate(() => {
-    var amtInput = document.querySelector('input[placeholder="잔금 금액"]');
+    var amtInput = document.querySelector('input[placeholder^="잔금 금액"]');
     amtInput.value = '500000';
     amtInput.dispatchEvent(new Event('input'));
     var dateInput = amtInput.parentElement.querySelector('input[type="date"]');
