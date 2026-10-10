@@ -69,6 +69,41 @@ async function run() {
   const noPriceState = await page.evaluate(() => document.body.textContent.indexOf('완납') !== -1);
   ok('4. 총액이 아직 없으면 "완납" 배지가 안 뜸', !noPriceState);
 
+  // 5) 선금만 냈음(모자람) → "잔금 N원 남음" 표시 + 잔금 입력칸에 예상 금액 안내
+  await page.evaluate(() => {
+    saveCustomers([{ id: 9305, clientName: '잔금남음테스트고객', phone: '01099990001', stage: '선금결제', staffName: '마스터',
+      price: 1000000, depositAmount: 300000, balanceAmount: 0, depositDate: '2026-10-01' }]);
+    openDetail('잔금남음테스트고객', 9305);
+  });
+  await new Promise(r => setTimeout(r, 500));
+  const remain = await page.evaluate(() => {
+    var chip = document.querySelector('.pay-remain-chip');
+    var inp = Array.prototype.slice.call(document.querySelectorAll('input')).find(i => (i.placeholder||'').indexOf('잔금 금액') === 0);
+    return { chip: chip ? chip.textContent : '', ph: inp ? inp.placeholder : '' };
+  });
+  ok('5. 선금만 냈으면 "잔금 700,000원 남음" 표시', remain.chip === '잔금 700,000원 남음', remain.chip);
+  ok('5-1. 잔금 입력칸에 예상 잔금(700,000원) 안내', remain.ph.indexOf('700,000') !== -1, remain.ph);
+
+  // 6) 총액보다 많이 받음 → "초과 입금" 경고 표시
+  await page.evaluate(() => {
+    saveCustomers([{ id: 9306, clientName: '초과입금테스트고객', phone: '01099990002', stage: '시공준비중', staffName: '마스터',
+      price: 1000000, depositAmount: 600000, balanceAmount: 500000 }]);
+    openDetail('초과입금테스트고객', 9306);
+  });
+  await new Promise(r => setTimeout(r, 500));
+  const over = await page.evaluate(() => { var c = document.querySelector('.pay-remain-chip'); return c ? c.textContent : ''; });
+  ok('6. 100,000원 더 받았으면 "초과 입금" 경고 표시', over.indexOf('100,000원 초과') !== -1, over);
+
+  // 7) 딱 맞음 → 남음/초과 표시는 안 뜨고 완납만
+  await page.evaluate(() => {
+    saveCustomers([{ id: 9301, clientName: '완납테스트고객', phone: '01011112222', stage: '시공완료', staffName: '마스터',
+      price: 1000000, depositAmount: 500000, balanceAmount: 500000 }]);
+    openDetail('완납테스트고객', 9301);
+  });
+  await new Promise(r => setTimeout(r, 500));
+  const exact = await page.evaluate(() => !!document.querySelector('.pay-remain-chip'));
+  const exactTxt = await page.evaluate(() => { var c=document.querySelector('.pay-remain-chip'); return c ? c.textContent : ''; }); ok('7. 딱 맞으면 "남음/초과" 표시가 안 뜸(완납만)', !exact, exactTxt);
+
   console.log(log.join('\n'));
   console.log(jsErrors.length ? 'JS 에러: ' + jsErrors.join('\n') : 'JS 에러 없음');
   const allPass = log.every(l => l.startsWith('✅'));

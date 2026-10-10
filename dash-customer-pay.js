@@ -65,6 +65,16 @@ function renderPaySection(c, payBody, est) {
       style: 'font-size:11px;font-weight:700;color:#2E7D32;background:#E8F5E9;padding:3px 10px;border-radius:10px',
       text: '✓ 완납'
     }));
+  } else if (payBasisPrice > 0 && payTotalForBadge > 0) {
+    // 2026-10-10(선혜님 - "선금을 보내면 잔금이 얼마 남았는지 뜨고, 금액이 같으면 매칭되는지
+    // 눈으로 확인돼야 한다"): 완납 배지는 딱 맞을 때만 떴기 때문에, 모자라거나 넘칠 때는
+    // 아무 표시가 없어 "잔금이 딱 맞는지" 확인이 안 됐음. 남은 금액/초과 금액을 항상 보여줌.
+    var payDiff = payBasisPrice - payTotalForBadge;
+    paySecTitleRow.appendChild(el('span', {
+      'class': 'pay-remain-chip',
+      style: 'font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;' + (payDiff > 0 ? 'color:#8A5A00;background:#FFF3D6' : 'color:#B3261E;background:#FDE7E5'),
+      text: payDiff > 0 ? ('잔금 ' + payDiff.toLocaleString() + '원 남음') : ('⚠ ' + Math.abs(payDiff).toLocaleString() + '원 초과 입금')
+    }));
   }
   paySec.appendChild(paySecTitleRow);
 
@@ -405,7 +415,7 @@ function renderPaySection(c, payBody, est) {
     ['카드','현금'].forEach(function(m){ var o=el('option',{}); o.value=m; o.textContent=m; balMethod.appendChild(o); });
     if (payData.balanceMethod) balMethod.value = payData.balanceMethod;
     else if (balDraft.method) balMethod.value = balDraft.method;
-    var balAmt = el('input', {type:'text', placeholder:'잔금 금액', style:'flex:2;min-width:90px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit'});
+    var balAmt = el('input', {type:'text', placeholder: (payBasisPrice > 0 && payBasisPrice - (Number(payData.depositAmount)||0) > 0) ? ('잔금 금액 (예상 ' + (payBasisPrice - (Number(payData.depositAmount)||0)).toLocaleString() + '원)') : '잔금 금액', style:'flex:2;min-width:90px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit'});
     if (payData.balanceAmount) balAmt.value = Number(payData.balanceAmount).toLocaleString();
     else if (balDraft.amount) balAmt.value = balDraft.amount;
     var balDate = el('input', {type:'date', style:'flex:2;min-width:110px;padding:6px;border:1px solid var(--border);border-radius:12px;font-size:11px;font-family:inherit'});
