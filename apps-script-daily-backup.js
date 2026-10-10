@@ -50,7 +50,7 @@ var SUPABASE_SERVICE_ROLE_KEY = PropertiesService.getScriptProperties().getPrope
 // 붙여넣어야만 운영에 반영되는데, 저장소에서 고친 버전이 실제로 반영됐는지 확인할 방법이 없어서 낡은 코드(9/23~10/1 버전)가
 // 며칠 동안 매일 실패하는 걸 늦게 알았음. 버전을 코드에 박아 매일 메일·로그에 함께 찍어서, 낡은 코드가 돌고 있으면 바로
 // 보이게 함. ※ 이 파일을 고칠 때마다 아래 값도 같이 올릴 것(날짜.순번).
-var DAH_SCRIPT_VERSION = '2026-10-07.1';
+var DAH_SCRIPT_VERSION = '2026-10-10.1';
 
 // 점검 함수 하나가 오류로 죽어도 백업과 나머지 점검은 계속 돌게 감싸는 헬퍼. 죽은 점검은 failures에 모아서 메일로 알림.
 function dahSafeScan(name, fn, failures) {
@@ -460,6 +460,16 @@ function dahScanForDataIntegrity(backup) {
       issues.push('[매출 미인식] ' + c.client_name + '(id:' + c.id + ') — "시공완료"인데 매출이 0으로 집계됨(제품가격 ' + Number(c.price).toLocaleString() + '원)');
     }
 
+    // 2026-10-10(선혜님 - "전문업체 기준 다음 단계", 오늘 전수 점검에서 찾은 유형 추가): 최근 변경분만(위 3~5번과 같은 소음 방지 원칙).
+    // 7) 받은 돈(선금+잔금)이 총액보다 큼 - 환불·제품 변경 후 정리 안 된 신호(이영욱·신화경 사례).
+    if (recent && Number(c.price) > 0 && (custDep + custBal) > Number(c.price)) {
+      issues.push('[입금 초과] ' + c.client_name + '(id:' + c.id + ') — 받은 돈 ' + (custDep + custBal).toLocaleString() + '원이 총액 ' + Number(c.price).toLocaleString() + '원보다 큼(환불/조정 정리 필요)');
+    }
+    // 8) 성과매출이 총액보다 큼 - 통계가 부풀 수 있음(김명석·서지원 사례: 고객 금액이 견적 합계와 달라진 신호).
+    if (recent && Number(c.price) > 0 && Number(c.performance_revenue) > Number(c.price)) {
+      issues.push('[성과매출 초과] ' + c.client_name + '(id:' + c.id + ') — 성과매출 ' + Number(c.performance_revenue).toLocaleString() + '원이 총액 ' + Number(c.price).toLocaleString() + '원보다 큼(견적 합계와 고객 금액 확인)');
+    }
+
     // 6) 주소에 도로명주소 요소(로/길+숫자, 또는 시/도 이름)가 전혀 없음 -
     // Daum API의 autoRoadAddress 누락으로 생기던 패턴(16건 발견 사례). 최근
     // 변경분만 - 이미 아는 과거 16건은 선혜님이 별도로 정리 중이므로 매일
@@ -469,6 +479,24 @@ function dahScanForDataIntegrity(backup) {
       if (!hasRoadMarker) {
         issues.push('[주소 확인 필요] ' + c.client_name + '(id:' + c.id + ') — 주소 "' + c.addr + '"에 도로명/시도 표기가 없어 보임(확인 필요)');
       }
+    }
+  });
+
+  // 2026-10-10: 견적서 단위 점검(해당 건이 없으면 조용함 - 평소엔 0건).
+  backup.estimates.forEach(function(e) {
+    if (e.is_archived) return;
+    // 9) 확정 상태 불일치: 확정(final)인데 확정일이 없거나, 가견적(ga)인데 확정일이 있음.
+    if ((e.estimate_status === 'final' && !e.confirmed_at) || (e.estimate_status === 'ga' && e.confirmed_at)) {
+      issues.push('[확정 상태 불일치] ' + e.customer_name + ' 견적서(id:' + e.id + ') — 상태 "' + e.estimate_status + '"인데 확정일 ' + (e.confirmed_at ? '있음' : '없음'));
+    }
+    // 10) 시험 데이터 잔존: 진단/복구 시험용 이름이 운영 데이터에 남아 있음.
+    if (/^(스키마진단테스트_|복구드릴테스트_|설문진단테스트_)/.test(String(e.customer_name || ''))) {
+      issues.push('[시험 데이터 잔존] 견적서 "' + e.customer_name + '"(id:' + e.id + ') — dahCleanupTestData()를 실행해 정리');
+    }
+  });
+  backup.customers.forEach(function(c) {
+    if (/^(스키마진단테스트_|복구드릴테스트_|설문진단테스트_)/.test(String(c.client_name || ''))) {
+      issues.push('[시험 데이터 잔존] 고객 "' + c.client_name + '"(id:' + c.id + ') — dahCleanupTestData()를 실행해 정리');
     }
   });
 

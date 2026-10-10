@@ -28,7 +28,7 @@ function buildContext(opts) {
     console, Date, JSON, Math, Array, Object, String, Number, RegExp, parseInt, parseFloat, isNaN, encodeURIComponent, decodeURIComponent, Error, Set, Map,
     PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => (k === 'LAST_ERROR_CHECK_TIME' ? null : 'fake-secret'), setProperty: () => {}, getProperties: () => ({}) }) },
     UrlFetchApp: { fetch: (url, o) => {
-      if (url.includes('rpc/dah_backup_export')) { const t = JSON.parse(o.payload).table_name; return respond(t === 'customers' ? customers : []); }
+      if (url.includes('rpc/dah_backup_export')) { const t = JSON.parse(o.payload).table_name; return respond(t === 'customers' ? customers : t === 'estimates' ? (opts.estimates || []) : []); }
       if (url.includes('client_error_logs?')) return respond(opts.errorLogs || []);
       if (url.includes('v_critical_triggers_status')) return respond(['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment'].map(n => ({ trigger_name: n })));
       if (url.includes('v_critical_constraints_status')) return respond([{ constraint_name: 'surveys_client_idempotency_key_unique' }]);
@@ -110,6 +110,20 @@ ok('6. [이관 고객] 입금날짜·주소가 비어 있어도 정합성 경고
 const fresh = run({ customers: [Object.assign({}, base, { id: 12, client_name: '신규고객', memo: '', addr: '래미안 퍼스티지' })] });
 const freshMail = fresh.mails.find(m => /데이터 정합성/.test(m.subject));
 ok('6-1. [신규 고객] 같은 종류의 공백은 계속 경고로 잡힘(진짜 문제를 놓치지 않음: 입금날짜 누락 + 주소 확인 필요)', !!freshMail && /입금날짜 누락/.test(freshMail.body) && /주소 확인 필요/.test(freshMail.body) && /신규고객/.test(freshMail.body), JSON.stringify(fresh.mails.map(m => m.subject)));
+
+// ── 2026-10-10: 오늘 전수 점검에서 찾은 유형 추가 검증 ──
+const over = run({ customers: [Object.assign({}, base, { id: 21, client_name: '초과고객', memo: '', addr: '', price: 1000000, performance_revenue: 800000, deposit_amount: '1200000', balance_amount: '0', deposit_date: '2026-10-01', balance_date: null })] });
+const overMail = over.mails.find(m => /데이터 정합성/.test(m.subject));
+ok('7. [받은 돈 > 총액] 최근 변경된 고객이 경고로 잡힘', over.error === null && !!overMail && /입금 초과/.test(overMail.body) && /초과고객/.test(overMail.body), JSON.stringify(over.mails.map(m => m.subject)));
+const perfOver = run({ customers: [Object.assign({}, base, { id: 22, client_name: '성과초과고객', memo: '', addr: '', price: 80000, performance_revenue: 6380000, deposit_amount: '80000', balance_amount: '0', deposit_date: '2026-10-01', balance_date: null })] });
+const perfMail = perfOver.mails.find(m => /데이터 정합성/.test(m.subject));
+ok('7-1. [성과매출 > 총액] 경고로 잡힘', !!perfMail && /성과매출 초과/.test(perfMail.body), JSON.stringify(perfOver.mails.map(m => m.subject)));
+const okCust = run({ customers: [Object.assign({}, base, { id: 23, client_name: '정상고객', memo: '', addr: '', price: 1000000, performance_revenue: 900000, deposit_amount: '500000', balance_amount: '500000', deposit_date: '2026-10-01', balance_date: '2026-10-05' })] });
+ok('7-2. [정상 고객] 새 점검에서 경고 메일이 없음(소음 없음)', okCust.error === null && !okCust.mails.some(m => /데이터 정합성/.test(m.subject)), JSON.stringify(okCust.mails.map(m => m.subject)));
+const estBad = run({ customers: [], estimates: [{ id: 'e1', customer_name: '확정이상', estimate_status: 'final', confirmed_at: null, is_archived: false }, { id: 'e2', customer_name: '스키마진단테스트_1', estimate_status: 'ga', confirmed_at: null, is_archived: false }, { id: 'e3', customer_name: '정상견적', estimate_status: 'final', confirmed_at: '2026-10-01T00:00:00Z', is_archived: false }] });
+const estMail = estBad.mails.find(m => /데이터 정합성/.test(m.subject));
+ok('8. [확정 상태 불일치] 확정인데 확정일 없는 견적이 잡힘, 정상 견적은 안 잡힘', !!estMail && /확정 상태 불일치/.test(estMail.body) && /확정이상/.test(estMail.body) && !/정상견적/.test(estMail.body), JSON.stringify(estBad.mails.map(m => m.subject)));
+ok('8-1. [시험 데이터 잔존] 시험용 이름의 견적이 잡힘', !!estMail && /시험 데이터 잔존/.test(estMail.body), estMail ? estMail.body.slice(0, 160) : '메일 없음');
 const legacy2 = run({ customers: [Object.assign({}, base, { id: 13, client_name: '이관건물명', memo: '플러그(Pluuug)에서 이관', addr: '래미안 퍼스티지' })] });
 ok('6-2. [이관 고객] 건물명만 있는 주소도 경고에 안 잡힘', legacy2.error === null && !legacy2.mails.some(m => /데이터 정합성/.test(m.subject) && /이관건물명/.test(m.body)), JSON.stringify(legacy2.mails.map(m => m.subject)));
 
