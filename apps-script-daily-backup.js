@@ -50,7 +50,7 @@ var SUPABASE_SERVICE_ROLE_KEY = PropertiesService.getScriptProperties().getPrope
 // 붙여넣어야만 운영에 반영되는데, 저장소에서 고친 버전이 실제로 반영됐는지 확인할 방법이 없어서 낡은 코드(9/23~10/1 버전)가
 // 며칠 동안 매일 실패하는 걸 늦게 알았음. 버전을 코드에 박아 매일 메일·로그에 함께 찍어서, 낡은 코드가 돌고 있으면 바로
 // 보이게 함. ※ 이 파일을 고칠 때마다 아래 값도 같이 올릴 것(날짜.순번).
-var DAH_SCRIPT_VERSION = '2026-10-10.1';
+var DAH_SCRIPT_VERSION = '2026-10-10.2';
 
 // 점검 함수 하나가 오류로 죽어도 백업과 나머지 점검은 계속 돌게 감싸는 헬퍼. 죽은 점검은 failures에 모아서 메일로 알림.
 function dahSafeScan(name, fn, failures) {
@@ -75,7 +75,8 @@ function dahDailyBackup() {
   // analytics_events는 단순 사용로그라 우선순위 낮지만 비용 거의 안 드니 같이 포함.
   // 2026-08-27(선혜님 요청 - "에러 모니터링 도입하자"): client_error_logs도
   // 백업 대상에 포함 + 아래에서 새로 쌓인 에러가 있으면 이메일로 알림.
-  var tables = ['customers', 'estimates', 'surveys', 'app_settings', 'as_records', 'staff_profiles', 'analytics_events', 'client_error_logs'];
+  // 2026-10-10: 월 마감(monthly_close)과 입금 장부(payment_ledger)도 백업 대상 - 둘 다 새로 생긴 "숫자의 근거"라 날아가면 복구 불가.
+  var tables = ['customers', 'estimates', 'surveys', 'app_settings', 'as_records', 'staff_profiles', 'analytics_events', 'client_error_logs', 'monthly_close', 'payment_ledger'];
   var backup = { exportedAt: new Date().toISOString(), version: '1.0' };
   var errors = [];
 
@@ -499,6 +500,23 @@ function dahScanForDataIntegrity(backup) {
       issues.push('[시험 데이터 잔존] 고객 "' + c.client_name + '"(id:' + c.id + ') — dahCleanupTestData()를 실행해 정리');
     }
   });
+
+  // 11) 월 마감 미실시: 매달 3일이 지났는데 지난달이 마감(monthly_close)에 없으면 알림.
+  // 마감하지 않으면 지난달 성과매출이 고객 수정에 따라 계속 바뀔 수 있음. monthly_close를 못 가져온 경우(수동 스캔 등)는 조용히 건너뜀.
+  try {
+    if (Array.isArray(backup.monthly_close)) {
+      var nowKst = Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd');
+      var ny = Number(nowKst.slice(0, 4)), nm = Number(nowKst.slice(5, 7)), nd = Number(nowKst.slice(8, 10));
+      if (nd >= 3) {
+        var py = nm === 1 ? ny - 1 : ny, pm = nm === 1 ? 12 : nm - 1;
+        var pk = py + '-' + (pm < 10 ? '0' : '') + pm;
+        var closedAlready = backup.monthly_close.some(function(r) { return r && r.month === pk; });
+        if (!closedAlready) {
+          issues.push('[월 마감 미실시] ' + pk + ' 매출이 아직 마감되지 않았습니다 — 대시보드 매출 탭 맨 아래 "월 마감"에서 [마감하기]를 눌러 주세요(마감 전에는 고객 수정에 따라 지난달 숫자가 바뀔 수 있어요)');
+        }
+      }
+    }
+  } catch (eClose) {}
 
   return issues;
 }

@@ -20,7 +20,10 @@ let failed = 0;
 function ok(label, cond, detail) { console.log((cond ? '✅ ' : '❌ ') + label + (cond ? '' : ' — ' + (detail || ''))); if (!cond) failed++; }
 
 function buildContext(opts) {
-  const mails = [], created = [], logs = [];
+  const mails = [], created = [], logs = [], fetchedTables = [];
+  // 2026-10-10: 월 마감 점검용 - 기본값은 "지난달이 이미 마감됨"이라 기존 케이스들은 조용함.
+  const _d = new Date(); const _p = new Date(_d.getFullYear(), _d.getMonth() - 1, 1);
+  const prevMonthKey = _p.getFullYear() + '-' + String(_p.getMonth() + 1).padStart(2, '0');
   const now = new Date().toISOString();
   const customers = opts.customers ? opts.customers : opts.anomalies ? [{ id: 1, client_name: '테스트고객', phone: '010-1111-2222', stage: '시공완료', performance_revenue: 0, price: 1000000, deposit_amount: '0', balance_amount: '0', deposit_date: null, balance_date: null, addr: '트리니원 111동 2304호', updated_at: now, created_at: now, is_archived: false }] : [];
   const respond = (body, c = 200) => ({ getResponseCode: () => c, getContentText: () => JSON.stringify(body), getHeaders: () => ({}) });
@@ -28,7 +31,7 @@ function buildContext(opts) {
     console, Date, JSON, Math, Array, Object, String, Number, RegExp, parseInt, parseFloat, isNaN, encodeURIComponent, decodeURIComponent, Error, Set, Map,
     PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => (k === 'LAST_ERROR_CHECK_TIME' ? null : 'fake-secret'), setProperty: () => {}, getProperties: () => ({}) }) },
     UrlFetchApp: { fetch: (url, o) => {
-      if (url.includes('rpc/dah_backup_export')) { const t = JSON.parse(o.payload).table_name; return respond(t === 'customers' ? customers : t === 'estimates' ? (opts.estimates || []) : []); }
+      if (url.includes('rpc/dah_backup_export')) { const t = JSON.parse(o.payload).table_name; fetchedTables.push(t); if (t === 'monthly_close') return respond(opts.monthlyClose === 'error' ? { error: 'x' } : (opts.monthlyClose || [{ month: prevMonthKey }])); return respond(t === 'customers' ? customers : t === 'estimates' ? (opts.estimates || []) : []); }
       if (url.includes('client_error_logs?')) return respond(opts.errorLogs || []);
       if (url.includes('v_critical_triggers_status')) return respond(['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment'].map(n => ({ trigger_name: n })));
       if (url.includes('v_critical_constraints_status')) return respond([{ constraint_name: 'surveys_client_idempotency_key_unique' }]);
@@ -42,7 +45,7 @@ function buildContext(opts) {
     MimeType: { PLAIN_TEXT: 'text/plain' },
     ScriptApp: { getProjectTriggers: () => [] },
   };
-  return { ctx, mails, created, logs };
+  return { ctx, mails, created, logs, fetchedTables };
 }
 
 function run(opts, tweak) {
@@ -126,6 +129,22 @@ ok('8. [확정 상태 불일치] 확정인데 확정일 없는 견적이 잡힘,
 ok('8-1. [시험 데이터 잔존] 시험용 이름의 견적이 잡힘', !!estMail && /시험 데이터 잔존/.test(estMail.body), estMail ? estMail.body.slice(0, 160) : '메일 없음');
 const legacy2 = run({ customers: [Object.assign({}, base, { id: 13, client_name: '이관건물명', memo: '플러그(Pluuug)에서 이관', addr: '래미안 퍼스티지' })] });
 ok('6-2. [이관 고객] 건물명만 있는 주소도 경고에 안 잡힘', legacy2.error === null && !legacy2.mails.some(m => /데이터 정합성/.test(m.subject) && /이관건물명/.test(m.body)), JSON.stringify(legacy2.mails.map(m => m.subject)));
+
+// 9) 월 마감 미실시 점검(매달 3일 이후, 지난달이 monthly_close에 없으면 알림)
+const _today = new Date();
+if (_today.getDate() >= 3) {
+  const unclosed = run({ customers: [], monthlyClose: [] });
+  const ucMail = unclosed.mails.find(m => /데이터 정합성/.test(m.subject));
+  ok('9. [월 마감 미실시] 지난달이 마감되지 않았으면 알림이 옴', unclosed.error === null && !!ucMail && /월 마감 미실시/.test(ucMail.body), JSON.stringify(unclosed.mails.map(m => m.subject)));
+  const closedOk = run({ customers: [] });
+  ok('9-1. [월 마감 완료] 지난달이 마감돼 있으면 조용함', closedOk.error === null && !closedOk.mails.some(m => /월 마감 미실시/.test(m.body)), JSON.stringify(closedOk.mails.map(m => m.subject)));
+  const noTable = run({ customers: [], monthlyClose: 'error' });
+  ok('9-2. [표를 못 읽은 날] 월 마감 점검은 조용히 건너뜀(다른 점검·백업은 정상)', noTable.error === null && !noTable.mails.some(m => /월 마감 미실시/.test(m.body)), JSON.stringify(noTable.mails.map(m => m.subject)));
+} else {
+  console.log('(오늘이 3일 이전이라 월 마감 미실시 점검 케이스는 건너뜀)');
+}
+const bk = run({ customers: [] });
+ok('9-3. 매일 백업이 월 마감(monthly_close)·입금 장부(payment_ledger)도 가져옴', bk.fetchedTables.indexOf('monthly_close') !== -1 && bk.fetchedTables.indexOf('payment_ledger') !== -1, JSON.stringify(bk.fetchedTables));
 
 console.log('\n' + (failed === 0 ? '✅ 전체 통과(' + path.basename(FILE) + ' 매일백업 실행 검증)' : '❌ 실패 ' + failed + '건'));
 process.exit(failed === 0 ? 0 : 1);
