@@ -1,0 +1,32 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 의존성 설치 (Puppeteer + TypeScript)
+        run: npm install
+
+      - name: 캐시버전 정합성 확인
+        run: node scripts/bump-cache-versions.js --check
+
+      - name: 타입체크 (신규 오류 없는지)
+        run: node tests/typecheck-check.js
+
+      - name: 대시보드 회귀 테스트
+        run: node tests/run-all.js dah-dashboard.html
+
+      - name: 견적서 앱 회귀 테스트
+        run: node tests/run-all.js dah-estimate.html

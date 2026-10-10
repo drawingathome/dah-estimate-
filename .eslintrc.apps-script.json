@@ -1,0 +1,27 @@
+{
+  "env": { "es2021": true },
+  "parserOptions": { "ecmaVersion": 2021, "sourceType": "script" },
+  "globals": {
+    "SpreadsheetApp": "readonly", "DriveApp": "readonly", "MailApp": "readonly",
+    "GmailApp": "readonly", "Session": "readonly", "Utilities": "readonly",
+    "Logger": "readonly", "UrlFetchApp": "readonly", "ContentService": "readonly",
+    "HtmlService": "readonly", "PropertiesService": "readonly", "LockService": "readonly",
+    "ScriptApp": "readonly", "CacheService": "readonly", "MimeType": "readonly",
+    "Browser": "readonly", "Calendar": "readonly", "Charts": "readonly",
+    "console": "readonly", "Blob": "readonly", "Maps": "readonly",
+    "FormApp": "readonly", "DocumentApp": "readonly", "SlidesApp": "readonly"
+  },
+  "rules": {
+    "no-undef": "error",
+    "no-redeclare": "error",
+    "no-dupe-keys": "error",
+    "no-unreachable": "error",
+    "no-const-assign": "error",
+    "no-dupe-args": "error",
+    "no-func-assign": "error",
+    "no-unsafe-negation": "error",
+    "no-fallthrough": "error",
+    "no-case-declarations": "error",
+    "valid-typeof": "error"
+  }
+}

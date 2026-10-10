@@ -1,0 +1,32 @@
+name: Post-deploy verify (production)
+
+# 2026-10-05: 배포(Deploy to Vercel)가 끝나면 "운영에 실제로 올라간 화면"을 자동으로 열어 검증한다.
+# 운영 데이터는 건드리지 않음(백엔드는 가짜로 대체). 실패하면 이 워크플로우가 빨간불이 됨.
+on:
+  workflow_run:
+    workflows: ["Deploy to Vercel"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Playwright 설치(크롬 + 사파리 엔진)
+        run: |
+          npm install --no-save playwright@latest
+          npx playwright install --with-deps chromium webkit
+      - name: 운영 배포 검증
+        run: node scripts/post-deploy-verify.js
+        env:
+          BASE_URLS: https://dah-dashboard.vercel.app,https://dah-estimate.vercel.app
+          VERIFY_WAIT_MIN: "8"

@@ -1,0 +1,106 @@
+// savePayData → changeStage 연쇄 호출시 락값(updatedAt) 동기화 검증
+// 2026-09-08(선혜님 지적 - "너가 이런데이터를 만들기만 하고 방치한게
+// 꽤 되는걸로 아는데!??"로 실제 client_error_logs를 확인하다 발견):
+// 9/6에 "savePayData의 PATCH가 끝난 뒤에만 changeStage가 실행되도록
+// 순서 보장"으로 고쳤다고 배포했는데, savePayData의 PATCH 성공 후
+// 로컬스토리지 락값(updatedAt) 갱신을 빠뜨려서, 순서는 보장돼도
+// changeStage가 여전히 낡은 락값으로 시도해 "동시저장충돌"로 실패하는
+// 사고가 실제로 재발함(오늘, 손현영 고객, client_error_logs id 20).
+// 순서 보장 테스트(9/6에 이미 있음)만으로는 이 버그를 못 잡았음 -
+// "락값이 실제로 최신으로 전달되는지"까지 확인하는 이 테스트를 추가.
+const path = require('path');
+const { launchBrowser, startServer, loginAs } = require('./_helpers');
+
+async function run() {
+  const dir = path.resolve(__dirname, '..');
+  const port = 9870;
+  const server = await startServer(dir, port);
+  const browser = await launchBrowser();
+  let anyFail = false;
+
+  const page = await browser.newPage();
+  page.on('dialog', async d => { try { await d.accept(''); } catch (e) {} });
+
+  let patchCount = 0;
+  let secondPatchLockValue = null;
+  let secondPatchBody = null;
+  await page.setRequestInterception(true);
+  page.on('request', (req) => {
+    const url = req.url();
+    if (url.includes('/customers') && req.method() === 'PATCH') {
+      patchCount++;
+      if (patchCount === 2) {
+        secondPatchLockValue = url.includes('updated_at=eq.') ? decodeURIComponent(url.split('updated_at=eq.')[1]) : null;
+        try { secondPatchBody = JSON.parse(req.postData() || '{}'); } catch (e) { secondPatchBody = null; }
+      }
+    }
+    if (url.includes('supabase.co')) {
+      if (req.method() === 'OPTIONS') { req.respond({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Allow-Headers': '*' } }); return; }
+      const body = req.postData() || '';
+      if (req.method() === 'PATCH' && body.includes('deposit_amount')) {
+        // 첫 PATCH(선금저장)는 서버가 새 updated_at을 응답 - 이게 로컬에
+        // 반영돼야 두번째 PATCH(changeStage)가 이 값을 쓸 수 있음.
+        req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify([{ id: 1, updated_at: '2026-09-08T12:00:00.000Z' }]) });
+        return;
+      }
+      // 2026-09-21(견적서 앱 CI 실패 원인 조사 중 발견): 결제탭이 열릴 때
+      // "로컬 캐시가 견적서 없음으로 판단하면 서버로 재확인"하는 GET
+      // 요청(estimates?client_id=eq...)이 새로 생겼는데, 이 테스트는
+      // GET/PATCH 구분 없이 모든 요청에 { id: 1, updated_at: ... }를
+      // 반환하고 있었음 - 이게 배열 하나짜리 응답이라 "서버에 진짜
+      // 견적서가 있다"로 잘못 해석되어, 결제탭이 이 고객 레벨 폴백 폼을
+      // (사용자가 입력하는 도중에) 견적서 카드 화면으로 다시 그려버려
+      // 입력값이 날아가는 부작용이 있었음. 이 테스트가 검증하려는 건
+      // "customers PATCH 락값 동기화"이지 "서버 재확인" 기능이 아니므로,
+      // 그 GET 요청에는 실제 프로덕션처럼 빈 배열(견적서 없음)을 반환.
+      if (req.method() === 'GET' && url.includes('/rest/v1/estimates')) {
+        req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[]' });
+        return;
+      }
+      req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify([{ id: 1, updated_at: '2026-09-08T12:00:01.000Z' }]) });
+      return;
+    }
+    if (url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) { req.continue(); } else { req.abort(); }
+  });
+
+  await page.goto(`http://localhost:${port}/dah-dashboard.html`, { waitUntil: 'networkidle0', timeout: 20000 });
+  await new Promise(r => setTimeout(r, 700));
+  await loginAs(page, 'master');
+  await new Promise(r => setTimeout(r, 800));
+
+  await page.evaluate(() => {
+    saveCustomers([{ id: 1, clientName: '락값테스트', staffName: '마스터', stage: '확정견적', price: 1000000, updatedAt: '2026-09-08T11:00:00.000Z', is_archived: false }]);
+    openDetail('락값테스트', 1);
+  });
+  await new Promise(r => setTimeout(r, 500));
+  await page.evaluate(() => { switchDetailTab('pay'); });
+  await new Promise(r => setTimeout(r, 300));
+
+  await page.evaluate(() => {
+    var amtInput = document.querySelector('input[placeholder="잔금 금액"]');
+    amtInput.value = '500000';
+    amtInput.dispatchEvent(new Event('input'));
+    var dateInput = amtInput.parentElement.querySelector('input[type="date"]');
+    if (dateInput) { dateInput.value = '2026-09-08'; dateInput.dispatchEvent(new Event('change')); }
+  });
+  await new Promise(r => setTimeout(r, 200));
+  await page.evaluate(() => {
+    var btns = Array.from(document.querySelectorAll('button'));
+    var saveBtn = btns.find(b => b.textContent.includes('잔금 저장'));
+    if (saveBtn) saveBtn.click();
+  });
+  await new Promise(r => setTimeout(r, 1000));
+
+  // 2026-10-08(약속 변경 - 조유정 사례, tests/stage-partial-patch-check.js): 예전 약속은 "단계 변경도 최신 락값을 들고 고객 전체를 저장"이었는데,
+  // 그 방식 자체가 낡은 값 덮어쓰기/동시저장충돌의 뿌리였음(9/6, 9/8, 10/8 세 번 재발). 새 약속: 결제 저장 뒤 단계 변경은
+  // "단계만" 보내고 락 조건이 없으므로 낡은 락으로 실패할 수 없다. (결제 저장 -> 단계 변경 두 번 PATCH가 나가는 흐름 자체는 그대로 확인)
+  const ok = patchCount === 2 && secondPatchLockValue === null && secondPatchBody && Object.keys(secondPatchBody).join(',') === 'stage';
+  console.log(ok ? '✅' : '❌', '결제 저장 뒤 단계 변경은 락 없이 "단계만" 서버로 보냄(낡은 락/낡은 값 영향 없음)',
+    JSON.stringify({ patchCount, secondPatchLockValue, secondPatchBody }));
+  if (!ok) anyFail = true;
+
+  await browser.close();
+  process.exit(anyFail ? 1 : 0);
+}
+run().catch(e => { console.error(e); process.exit(1); });
+setTimeout(() => process.exit(1), 25000);

@@ -1,0 +1,186 @@
+{
+ "S1_목록없음": {
+  "afterAction": {
+   "form": {
+    "addButtonText": "접수 등록",
+    "feeAmountVisible": false,
+    "feeOptions": [
+     "무상",
+     "유상"
+    ],
+    "hasSymptomBox": true,
+    "hasVisitDateBox": true
+   },
+   "listText": "📋 AS 접수무상유상접수 등록등록된 AS 이력이 없어요",
+   "nextStepButtons": []
+  },
+  "dialogs": [],
+  "initial": {
+   "form": {
+    "addButtonText": "접수 등록",
+    "feeAmountVisible": false,
+    "feeOptions": [
+     "무상",
+     "유상"
+    ],
+    "hasSymptomBox": true,
+    "hasVisitDateBox": true
+   },
+   "listText": "📋 AS 접수무상유상접수 등록등록된 AS 이력이 없어요",
+   "nextStepButtons": []
+  },
+  "jsErrors": [],
+  "requests": [
+   {
+    "method": "GET",
+    "path": "/rest/v1/as_records?customer_id=eq.ID&is_archived=eq.false&order=created_at.desc"
+   },
+   {
+    "body": {
+     "customer_id": 501,
+     "customer_name": "AS테스트고객",
+     "fee_amount": 20000,
+     "fee_type": "유상",
+     "install_date": "2026-08-01",
+     "is_archived": false,
+     "receipt_date": "2026-09-28",
+     "staff_name": "마스터",
+     "status": "접수",
+     "symptom": "새 접수 테스트",
+     "visit_date": "2026-10-01"
+    },
+    "method": "POST",
+    "path": "/rest/v1/as_records"
+   },
+   {
+    "method": "GET",
+    "path": "/rest/v1/as_records?customer_id=eq.ID&is_archived=eq.false&order=created_at.desc"
+   }
+  ]
+ },
+ "S2_접수_한건": {
+  "afterAction": null,
+  "dialogs": [],
+  "initial": {
+   "form": {
+    "addButtonText": "접수 등록",
+    "feeAmountVisible": false,
+    "feeOptions": [
+     "무상",
+     "유상"
+    ],
+    "hasSymptomBox": true,
+    "hasVisitDateBox": true
+   },
+   "listText": "📋 AS 접수무상유상접수 등록2026-09-20접수블라인드 줄 끊어짐무상방문예정로 변경",
+   "nextStepButtons": []
+  },
+  "jsErrors": [],
+  "requests": [
+   {
+    "method": "GET",
+    "path": "/rest/v1/as_records?customer_id=eq.ID&is_archived=eq.false&order=created_at.desc"
+   }
+  ]
+ },
+ "S3_방문예정_유상": {
+  "afterAction": null,
+  "dialogs": [],
+  "initial": {
+   "form": {
+    "addButtonText": "접수 등록",
+    "feeAmountVisible": false,
+    "feeOptions": [
+     "무상",
+     "유상"
+    ],
+    "hasSymptomBox": true,
+    "hasVisitDateBox": true
+   },
+   "listText": "📋 AS 접수무상유상접수 등록2026-09-18방문예정커튼 레일 처짐유상 · 30,000원 · 방문예정: 2026-09-25완료로 변경",
+   "nextStepButtons": []
+  },
+  "jsErrors": [],
+  "requests": [
+   {
+    "method": "GET",
+    "path": "/rest/v1/as_records?customer_id=eq.ID&is_archived=eq.false&order=created_at.desc"
+   }
+  ]
+ },
+ "S4_완료건": {
+  "afterAction": null,
+  "dialogs": [],
+  "initial": {
+   "form": {
+    "addButtonText": "접수 등록",
+    "feeAmountVisible": false,
+    "feeOptions": [
+     "무상",
+     "유상"
+    ],
+    "hasSymptomBox": true,
+    "hasVisitDateBox": true
+   },
+   "listText": "📋 AS 접수무상유상접수 등록2026-09-01완료블라인드 각도조절 안됨무상 · 방문예정: 2026-09-05",
+   "nextStepButtons": []
+  },
+  "jsErrors": [],
+  "requests": [
+   {
+    "method": "GET",
+    "path": "/rest/v1/as_records?customer_id=eq.ID&is_archived=eq.false&order=created_at.desc"
+   }
+  ]
+ },
+ "S5_여러건_최신순": {
+  "afterAction": null,
+  "dialogs": [],
+  "initial": {
+   "form": {
+    "addButtonText": "접수 등록",
+    "feeAmountVisible": false,
+    "feeOptions": [
+     "무상",
+     "유상"
+    ],
+    "hasSymptomBox": true,
+    "hasVisitDateBox": true
+   },
+   "listText": "📋 AS 접수무상유상접수 등록2026-09-22접수최신 접수건무상방문예정로 변경2026-09-15방문예정중간 접수건유상 · 15,000원 · 방문예정: 2026-09-28완료로 변경2026-09-01완료오래된 접수건무상 · 방문예정: 2026-09-05",
+   "nextStepButtons": []
+  },
+  "jsErrors": [],
+  "requests": [
+   {
+    "method": "GET",
+    "path": "/rest/v1/as_records?customer_id=eq.ID&is_archived=eq.false&order=created_at.desc"
+   }
+  ]
+ },
+ "S6_서버오류": {
+  "afterAction": null,
+  "dialogs": [],
+  "initial": {
+   "form": {
+    "addButtonText": "접수 등록",
+    "feeAmountVisible": false,
+    "feeOptions": [
+     "무상",
+     "유상"
+    ],
+    "hasSymptomBox": true,
+    "hasVisitDateBox": true
+   },
+   "listText": "📋 AS 접수무상유상접수 등록AS 이력을 불러오지 못했어요",
+   "nextStepButtons": []
+  },
+  "jsErrors": [],
+  "requests": [
+   {
+    "method": "GET",
+    "path": "/rest/v1/as_records?customer_id=eq.ID&is_archived=eq.false&order=created_at.desc"
+   }
+  ]
+ }
+}

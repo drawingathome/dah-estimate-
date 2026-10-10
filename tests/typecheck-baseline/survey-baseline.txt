@@ -1,0 +1,48 @@
+shared-common-utils.js(54,14): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+shared-common-utils.js(70,14): error TS2339: 'HTMLElement' 형식에 'value' 속성이 없습니다.
+shared-common-utils.js(83,8): error TS2304: 'DRIVE_WEBHOOK_URL' 이름을 찾을 수 없습니다.
+shared-common-utils.js(85,5): error TS2304: 'fetchWithRetry' 이름을 찾을 수 없습니다.
+shared-common-utils.js(85,20): error TS2304: 'DRIVE_WEBHOOK_URL' 이름을 찾을 수 없습니다.
+survey-app.js(209,14): error TS2339: 'Window & typeof globalThis' 형식에 '_surveyRetryInProgress' 속성이 없습니다.
+survey-app.js(213,10): error TS2339: 'Window & typeof globalThis' 형식에 '_surveyRetryInProgress' 속성이 없습니다.
+survey-app.js(235,12): error TS2339: 'Window & typeof globalThis' 형식에 '_surveyRetryInProgress' 속성이 없습니다.
+survey-app.js(527,44): error TS2769: 이 호출과 일치하는 오버로드가 없습니다.
+  마지막 오버로드에서 다음 오류가 발생했습니다.
+    '{ label: string; value: string; placeholder: string; onChange: (e: any) => void; }' 형식의 인수는 'Attributes & { label: any; required: any; value: any; onChange: any; placeholder: any; type?: string; }' 형식의 매개 변수에 할당될 수 없습니다.
+      'required' 속성이 '{ label: string; value: string; placeholder: string; onChange: (e: any) => void; }' 형식에 없지만 '{ label: any; required: any; value: any; onChange: any; placeholder: any; type?: string; }' 형식에서 필수입니다.
+survey-app.js(555,47): error TS2769: 이 호출과 일치하는 오버로드가 없습니다.
+  마지막 오버로드에서 다음 오류가 발생했습니다.
+    '{ text: string; }' 형식의 인수는 'Attributes & { text: any; required: any; }' 형식의 매개 변수에 할당될 수 없습니다.
+      'required' 속성이 '{ text: string; }' 형식에 없지만 '{ text: any; required: any; }' 형식에서 필수입니다.
+survey-app.js(574,47): error TS2769: 이 호출과 일치하는 오버로드가 없습니다.
+  마지막 오버로드에서 다음 오류가 발생했습니다.
+    '{ text: string; }' 형식의 인수는 'Attributes & { text: any; required: any; }' 형식의 매개 변수에 할당될 수 없습니다.
+      'required' 속성이 '{ text: string; }' 형식에 없지만 '{ text: any; required: any; }' 형식에서 필수입니다.
+survey-app.js(587,49): error TS2769: 이 호출과 일치하는 오버로드가 없습니다.
+  마지막 오버로드에서 다음 오류가 발생했습니다.
+    '{ text: string; }' 형식의 인수는 'Attributes & { text: any; required: any; }' 형식의 매개 변수에 할당될 수 없습니다.
+      'required' 속성이 '{ text: string; }' 형식에 없지만 '{ text: any; required: any; }' 형식에서 필수입니다.
+survey-app.js(602,49): error TS2769: 이 호출과 일치하는 오버로드가 없습니다.
+  마지막 오버로드에서 다음 오류가 발생했습니다.
+    '{ text: string; }' 형식의 인수는 'Attributes & { text: any; required: any; }' 형식의 매개 변수에 할당될 수 없습니다.
+      'required' 속성이 '{ text: string; }' 형식에 없지만 '{ text: any; required: any; }' 형식에서 필수입니다.
+survey-app.js(626,47): error TS2769: 이 호출과 일치하는 오버로드가 없습니다.
+  마지막 오버로드에서 다음 오류가 발생했습니다.
+    '{ text: string; }' 형식의 인수는 'Attributes & { text: any; required: any; }' 형식의 매개 변수에 할당될 수 없습니다.
+      'required' 속성이 '{ text: string; }' 형식에 없지만 '{ text: any; required: any; }' 형식에서 필수입니다.
+survey-app.js(642,47): error TS2769: 이 호출과 일치하는 오버로드가 없습니다.
+  마지막 오버로드에서 다음 오류가 발생했습니다.
+    '{ text: string; }' 형식의 인수는 'Attributes & { text: any; required: any; }' 형식의 매개 변수에 할당될 수 없습니다.
+      'required' 속성이 '{ text: string; }' 형식에 없지만 '{ text: any; required: any; }' 형식에서 필수입니다.
+survey-app.js(658,47): error TS2769: 이 호출과 일치하는 오버로드가 없습니다.
+  마지막 오버로드에서 다음 오류가 발생했습니다.
+    '{ text: string; }' 형식의 인수는 'Attributes & { text: any; required: any; }' 형식의 매개 변수에 할당될 수 없습니다.
+      'required' 속성이 '{ text: string; }' 형식에 없지만 '{ text: any; required: any; }' 형식에서 필수입니다.
+survey-app.js(675,47): error TS2769: 이 호출과 일치하는 오버로드가 없습니다.
+  마지막 오버로드에서 다음 오류가 발생했습니다.
+    '{ text: string; }' 형식의 인수는 'Attributes & { text: any; required: any; }' 형식의 매개 변수에 할당될 수 없습니다.
+      'required' 속성이 '{ text: string; }' 형식에 없지만 '{ text: any; required: any; }' 형식에서 필수입니다.
+survey-app.js(687,47): error TS2769: 이 호출과 일치하는 오버로드가 없습니다.
+  마지막 오버로드에서 다음 오류가 발생했습니다.
+    '{ text: string; }' 형식의 인수는 'Attributes & { text: any; required: any; }' 형식의 매개 변수에 할당될 수 없습니다.
+      'required' 속성이 '{ text: string; }' 형식에 없지만 '{ text: any; required: any; }' 형식에서 필수입니다.
