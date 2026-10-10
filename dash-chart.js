@@ -362,22 +362,24 @@ function getStaffComparison(customers, range) {
     var o = slot(c);
     if (c.date) {
       var cd = new Date(c.date);
-      if (cd >= start && cd <= end) {
-        o.consults++;
-        if (PRE_CONTRACT_STAGES.indexOf(c.stage) < 0) o.contracts++;
-      }
+      if (cd >= start && cd <= end) o.consults++;
     }
     if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return;
+    // 2026-10-10(선혜님 - "전환율 기준은 무조건 입금 금액 기준, 계약금 받은 달로"): 계약 건수는 상담 등록일이 아니라
+    // 첫 입금(계약금)을 받은 날이 기간 안에 있는 고객 수로 센다.
+    var firstPay = null;
     splitCustomerPayments(c).forEach(function(p) {
       if (!p.date) return;
       var pd = new Date(p.date);
+      if (!firstPay || pd < firstPay) firstPay = pd;
       if (pd >= start && pd <= end) { o.rev += p.revenue; o.perf += p.perf; }
     });
+    if (firstPay && firstPay >= start && firstPay <= end) o.contracts++;
     if (typeof getUnpaidAmount === 'function') o.unpaid += getUnpaidAmount(c);
   });
   Object.keys(by).forEach(function(k) {
     var o = by[k];
-    o.conv = o.consults > 0 ? Math.round(o.contracts / o.consults * 100) : null;
+    o.conv = o.consults > 0 ? Math.round(o.contracts / o.consults * 100) : null; // 계약=계약금 받은 달 기준, 상담=상담 등록한 달 기준
     // 아무 활동도 없는 담당자(전부 0)는 비교표에서 뺌
     if (!o.perf && !o.rev && !o.consults && !o.contracts && !o.unpaid) delete by[k];
   });
@@ -402,7 +404,7 @@ function renderChartStaffRank(customers, range) {
   var rows = [
     { label: '성과매출', get: function(o){ return o.perf; }, show: won, best: 'max' },
     { label: '입금액', get: function(o){ return o.rev; }, show: won, best: 'max' },
-    { label: '상담→계약', get: function(o){ return o.conv === null ? -1 : o.conv; }, show: function(o){ return o.consults + '건 → ' + o.contracts + '건' + (o.conv === null ? '' : ' (' + o.conv + '%)'); }, best: 'max', whole: true },
+    { label: '상담→계약(입금 기준)', get: function(o){ return o.conv === null ? -1 : o.conv; }, show: function(o){ return o.consults + '건 → ' + o.contracts + '건' + (o.conv === null ? '' : ' (' + o.conv + '%)'); }, best: 'max', whole: true },
     { label: '현재 미수금', get: function(o){ return o.unpaid; }, show: won, best: 'min' }
   ];
   var cols = 'grid-template-columns:72px repeat(' + names.length + ',1fr)';

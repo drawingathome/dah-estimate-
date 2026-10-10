@@ -34,6 +34,14 @@ ok('6. 전환율 50% / 33%', by['장선혜'].conv === 50 && by['오지은'].conv
 ok('7. 미수금은 오지은만 1,200,000원(2,000,000-800,000), 가견적은 제외', by['오지은'].unpaid === 1200000 && by['장선혜'].unpaid === 0);
 ok('8. 상담이 0건이면 전환율은 null(0%로 속이지 않음)', ctx.getStaffComparison([cust('A', '선금결제', '2026-08-01', 100, 100, '2026-10-02', 0, '', 100)], range)['A'].conv === null);
 ok('9. 활동이 전혀 없는 담당자는 표에서 빠짐', !ctx.getStaffComparison([cust('B', '상담예약', '2026-01-01', 0, 0, '', 0, '', 0)], range)['B']);
+// 2026-10-10: 계약 건수는 "계약금 받은 달" 기준(상담 등록한 달이 아님)
+const byPay = ctx.getStaffComparison([
+  cust('C', '선금결제', '2026-09-10', 1000000, 500000, '2026-10-05', 0, '', 900000), // 9월 상담, 10월 계약금
+  cust('C', '선금결제', '2026-10-02', 1000000, 500000, '2026-11-03', 0, '', 900000), // 10월 상담, 11월 계약금
+  cust('C', '상담예약', '2026-10-03', 0, 0, '', 0, '', 0)
+], range)['C'];
+ok('13. 9월 상담·10월 계약금 고객은 10월 계약으로 셈', byPay.contracts === 1, JSON.stringify(byPay));
+ok('14. 10월 상담·11월 계약금 고객은 10월 계약으로 안 셈(상담은 2건)', byPay.consults === 2 && byPay.contracts === 1 && byPay.conv === 50, JSON.stringify(byPay));
 ctx.renderChartStaffRank(list, range);
 ok('10. 화면에 두 담당자와 4개 항목이 모두 나옴', ['장선혜', '오지은', '성과매출', '입금액', '상담→계약', '현재 미수금'].every(t => wrap.innerHTML.includes(t)));
 ok('11. 제목이 기간에 맞게 바뀜', /담당자별 실적 비교/.test(titleEl.textContent), titleEl.textContent);
