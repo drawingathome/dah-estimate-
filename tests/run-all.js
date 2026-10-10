@@ -353,6 +353,8 @@ if (/dah-dashboard/.test(target)) {
   // 풀려있어" - 최금희 실사례): estimate_status가 확정 버튼(estimateConfirmedAt)
   // 과 무관하게 "가견적서/최종견적서" 탭 상태만 보고 저장되던 문제
   scripts.push(['estimate-status-confirm-sync-check.js', []]);
+  // 2026-10-10(선혜님 - 확정이 누가/왜 풀렸는지 알 수 없었음): 확정 취소 시 사유 선택 필수 + 입금 경고 + 영수증 기록.
+  scripts.push(['unconfirm-reason-check.js', []]);
   // 2026-09-22(선혜님 - "비슷하게 예상되는 다른 오류들에 대해 찾아봐"로
   // 발견 - 정확히 같은 계열): 구글시트 동기화/로컬캐시 저장에도 확정
   // 버튼이 아니라 탭 상태만 보고 확정여부를 정하던 문제가 2곳 더 있었음

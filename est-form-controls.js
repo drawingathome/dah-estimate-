@@ -221,12 +221,70 @@ function lockEstimateForm(locked) {
   }
 }
 
+// 2026-10-10(선혜님 - "수정 중 확정이 풀렸는데 누가/왜 풀었는지 알 수 없다"): 확정을 풀 때 사유를 반드시 고르게 하고,
+// 누가·언제·왜를 서버 영수증(estSendReceipt)에 남김. 이미 입금이 있으면 "금액을 바꾸면 총액과 입금이 안 맞을 수 있다"고 경고만 함
+// (정당한 수정은 막지 않음 - 이영욱·윤정자 같은 경우). 사유 목록은 설계 문서(입금원장 범위조정) 기준.
+var EST_UNCONFIRM_REASONS = ['고객 요청(제품·수량 변경)', '금액 오류 수정', '일정·시공 조건 변경', '실수로 확정함', '기타'];
+function estAskUnconfirmReason(paidAmount, onDone) {
+  var old = document.getElementById('est-unconfirm-modal'); if (old) old.remove();
+  var wrap = document.createElement('div');
+  wrap.id = 'est-unconfirm-modal'; wrap.className = 'print-hide';
+  wrap.setAttribute('style', 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px');
+  var box = document.createElement('div');
+  box.setAttribute('style', 'background:#fff;border-radius:12px;max-width:380px;width:100%;padding:18px;font-size:14px;line-height:1.5;color:#222');
+  var h = document.createElement('div'); h.textContent = '확정을 취소할까요?'; h.setAttribute('style', 'font-weight:700;font-size:16px;margin-bottom:6px');
+  box.appendChild(h);
+  var sub = document.createElement('div'); sub.textContent = '다시 수정할 수 있는 상태로 돌아갑니다. 취소하는 이유를 선택해 주세요.'; sub.setAttribute('style', 'color:#555;margin-bottom:10px');
+  box.appendChild(sub);
+  if (paidAmount > 0) {
+    var warn = document.createElement('div');
+    warn.id = 'est-unconfirm-paid-warn';
+    warn.textContent = '⚠ 이미 ' + paidAmount.toLocaleString() + '원이 입금됐어요. 금액을 바꾸면 총액과 입금이 안 맞을 수 있으니, 수정 후 결제 내용도 꼭 확인해 주세요.';
+    warn.setAttribute('style', 'background:#FFF3D6;color:#8A5A00;border-radius:8px;padding:8px 10px;margin-bottom:10px;font-size:13px');
+    box.appendChild(warn);
+  }
+  var picked = '';
+  var radios = document.createElement('div');
+  EST_UNCONFIRM_REASONS.forEach(function (r) {
+    var lab = document.createElement('label'); lab.setAttribute('style', 'display:flex;gap:8px;align-items:center;min-height:36px;cursor:pointer');
+    var inp = document.createElement('input'); inp.type = 'radio'; inp.name = 'est-unconfirm-reason'; inp.value = r;
+    inp.addEventListener('change', function () { picked = r; err.textContent = ''; memo.style.display = (r === '기타') ? 'block' : 'none'; });
+    lab.appendChild(inp); lab.appendChild(document.createTextNode(r)); radios.appendChild(lab);
+  });
+  box.appendChild(radios);
+  var memo = document.createElement('textarea'); memo.id = 'est-unconfirm-memo'; memo.placeholder = '기타 사유를 적어 주세요(필수)'; memo.rows = 2;
+  memo.setAttribute('style', 'display:none;width:100%;box-sizing:border-box;margin-top:6px;padding:8px;border:1px solid #ccc;border-radius:8px;font-family:inherit;font-size:13px');
+  box.appendChild(memo);
+  var err = document.createElement('div'); err.id = 'est-unconfirm-err'; err.setAttribute('style', 'color:#B3261E;font-size:12px;min-height:16px;margin-top:6px');
+  box.appendChild(err);
+  var row = document.createElement('div'); row.setAttribute('style', 'display:flex;gap:8px;justify-content:flex-end;margin-top:8px');
+  var cancel = document.createElement('button'); cancel.type = 'button'; cancel.textContent = '그대로 두기'; cancel.id = 'est-unconfirm-cancel';
+  cancel.setAttribute('style', 'min-height:40px;padding:0 14px;border:1px solid #ccc;background:#fff;border-radius:8px;font-size:14px;cursor:pointer');
+  cancel.onclick = function () { wrap.remove(); };
+  var ok = document.createElement('button'); ok.type = 'button'; ok.textContent = '확정 취소'; ok.id = 'est-unconfirm-ok';
+  ok.setAttribute('style', 'min-height:40px;padding:0 14px;border:none;background:#222;color:#fff;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer');
+  ok.onclick = function () {
+    if (!picked) { err.textContent = '이유를 선택해 주세요.'; return; }
+    var m = String(memo.value || '').trim();
+    if (picked === '기타' && !m) { err.textContent = '기타를 고르면 사유를 적어야 해요.'; memo.focus(); return; }
+    wrap.remove(); onDone(picked, m);
+  };
+  row.appendChild(cancel); row.appendChild(ok); box.appendChild(row);
+  wrap.appendChild(box); document.body.appendChild(wrap);
+}
 function toggleConfirmEstimate() {
   if (window._estEditState.estimateConfirmedAt) {
-    if (!confirm('확정을 취소할까요? (다시 수정 가능한 상태로 돌아갑니다)')) return;
-    window._estEditState.estimateConfirmedAt = null;
-    lockEstimateForm(false);
-    showToast('견적 확정이 취소됐습니다 — 다시 수정 가능합니다');
+    var lr = /** @type {any} */ (window._estLoadedRow) || {};
+    var paid = (Number(lr.deposit_amount) || 0) + (Number(lr.balance_amount) || 0);
+    estAskUnconfirmReason(paid, function (reason, memoTxt) {
+      window._estEditState.estimateConfirmedAt = null;
+      lockEstimateForm(false);
+      try { if (typeof estSendReceipt === 'function') estSendReceipt('unconfirm', reason, { reason: reason, memo: memoTxt || null, paid_amount: paid, stored_price: Number(lr.price) || null }); } catch (e) {}
+      showToast('견적 확정이 취소됐습니다 — 다시 수정 가능합니다');
+      renderConfirmBadge();
+      if (typeof calcTotal === 'function') calcTotal();
+    });
+    return;
   } else {
     if (!confirm('이 견적 내용(사이즈·금액)을 확정할까요?\n확정하면 수정할 수 없게 잠깁니다. 다시 수정하려면 확정을 한번 더 눌러 해제하세요.')) return;
     window._estEditState.estimateConfirmedAt = new Date().toISOString();
