@@ -129,7 +129,7 @@ async function clickSave(page) {
 }
 
 (async () => {
-  const port = 43000;
+  const port = 23000;
   const server = await startServer(require('path').resolve(__dirname, '..'), port);
   let allOk = true;
   const sharedBrowser = await launchBrowser(); // localStorage가 유지되는 하나의 브라우저 - 실제 "같은 컴퓨터, 새 탭"을 정확히 흉내

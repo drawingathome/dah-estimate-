@@ -56,8 +56,17 @@ function splitCustomerPayments(c) {
     // 금액(estPay.price)을 분모로 써야 "계약금 비율만큼만" 정확히 배분됨.
     var totalPrice = estPay.price || totalPaid || 1;
     var perf = perfOverride || totalPrice;
-    if (dep > 0 && depDate) parts.push({ date: depDate, revenue: dep, perf: perf * (dep / totalPrice) });
-    if (bal > 0 && balDate) parts.push({ date: balDate, revenue: bal, perf: perf * (bal / totalPrice) });
+    // 2026-10-09(선혜님 - 이영욱: 제품 변경으로 총액 982,000원인데 선금 1,200,000원이 먼저 들어와
+    // 환불 예정인 사례): 받은 돈이 총액을 넘어도 성과매출은 총액(perf)을 절대 넘지 않게 상한을 둠.
+    // 입금(revenue)은 실제 들어온 현금이라 그대로 두고, 성과매출 배분 비율만 100%로 제한.
+    var depShare = Math.min(dep, totalPrice);
+    var balShare = Math.min(bal, Math.max(0, totalPrice - depShare));
+    // 2026-10-10(선혜님 - 입금일이 비어 있는 이관 고객 64명: "등록일 달로 잡기"): 받은 금액은 있는데 입금일이 없으면
+    // 예전엔 어느 달 매출에도 안 잡혔음(약 1.36억). 입금일이 없을 때만 고객 등록일(c.date)로 대신 배정함.
+    if (!depDate && dep > 0 && c.date) depDate = c.date;
+    if (!balDate && bal > 0 && c.date) balDate = c.date;
+    if (dep > 0 && depDate) parts.push({ date: depDate, revenue: dep, perf: perf * (depShare / totalPrice) });
+    if (bal > 0 && balDate) parts.push({ date: balDate, revenue: bal, perf: perf * (balShare / totalPrice) });
   });
   if (!anyPaid && c.date && isLegacyNoPaymentRecord(c)) {
     // 입금 기록이 아직 없는 "예전 방식 고객"만 계약일 기준 전체금액으로 폴백
@@ -337,27 +346,90 @@ function renderChart(period) {
 
   // 2026-08-06 신규: PC에서 매출 탭 오른쪽 여백을 채우기 위해 담당자별 매출
   // 순위 카드 추가 (디자인 개선 1단계 — 화면 재사용성 목적)
-  if (typeof renderChartStaffRank === 'function') renderChartStaffRank(customers);
+  if (typeof renderChartStaffRank === 'function') renderChartStaffRank(customers, dateFilterRange);
 }
 
-function renderChartStaffRank(customers) {
+// 2026-10-09(선혜님 요청 - "담당자별 실적 비교 화면"): 담당자를 나란히 비교하는 숫자 계산(화면과 분리한 순수 함수).
+// 매출 기준은 위 splitCustomerPayments 한 곳만 씀(제품비용만, 실제 결제비율만큼만 인식) - 홈 화면 "담당자별 성과"와 같은 숫자.
+// range = {start:Date, end:Date}(기간 버튼), 없으면 이번달 1일~오늘. 미수금은 기간과 무관한 "현재" 값.
+function getStaffComparison(customers, range) {
+  var now = new Date();
+  var start = range ? range.start : new Date(now.getFullYear(), now.getMonth(), 1);
+  var end = range ? range.end : now;
+  var by = {};
+  function slot(c) {
+    var s = c.staffName || '미지정';
+    if (!by[s]) by[s] = { perf: 0, rev: 0, consults: 0, contracts: 0, unpaid: 0 };
+    return by[s];
+  }
+  customers.forEach(function(c) {
+    var o = slot(c);
+    if (c.date) {
+      var cd = new Date(c.date);
+      if (cd >= start && cd <= end) o.consults++;
+    }
+    if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return;
+    // 2026-10-10(선혜님 - "전환율 기준은 무조건 입금 금액 기준, 계약금 받은 달로"): 계약 건수는 상담 등록일이 아니라
+    // 첫 입금(계약금)을 받은 날이 기간 안에 있는 고객 수로 센다.
+    var firstPay = null;
+    splitCustomerPayments(c).forEach(function(p) {
+      if (!p.date) return;
+      var pd = new Date(p.date);
+      if (!firstPay || pd < firstPay) firstPay = pd;
+      if (pd >= start && pd <= end) { o.rev += p.revenue; o.perf += p.perf; }
+    });
+    if (firstPay && firstPay >= start && firstPay <= end) o.contracts++;
+    if (typeof getUnpaidAmount === 'function') o.unpaid += getUnpaidAmount(c);
+  });
+  Object.keys(by).forEach(function(k) {
+    var o = by[k];
+    o.conv = o.consults > 0 ? Math.round(o.contracts / o.consults * 100) : null; // 계약=계약금 받은 달 기준, 상담=상담 등록한 달 기준
+    // 아무 활동도 없는 담당자(전부 0)는 비교표에서 뺌
+    if (!o.perf && !o.rev && !o.consults && !o.contracts && !o.unpaid) delete by[k];
+  });
+  return by;
+}
+
+function renderChartStaffRank(customers, range) {
   var wrap = document.getElementById('chart-staffrank');
   if (!wrap) return;
   wrap.innerHTML = '';
-  if (typeof getMonthStaffPerformance !== 'function') return;
-  var byStaff = getMonthStaffPerformance(customers, thisMonthStr().slice(0,7));
-  var names = Object.keys(byStaff).sort(function(a,b){ return byStaff[b].rev - byStaff[a].rev; });
+  var titleEl = document.getElementById('chart-staffrank-title');
+  var labels = {this_month:'이번달', last_month:'지난달', '3months':'최근 3개월', '6months':'최근 6개월'};
+  var periodName = (range && typeof _currentDateFilter !== 'undefined' && labels[_currentDateFilter]) ? labels[_currentDateFilter] : '이번달';
+  if (titleEl) titleEl.textContent = periodName + ' 담당자별 실적 비교';
+  var by = getStaffComparison(customers, range);
+  var names = Object.keys(by).sort(function(a, b) { return by[b].perf - by[a].perf; });
   if (names.length === 0) {
-    wrap.appendChild(div('font-size:11px;color:var(--sub);text-align:center;padding:16px 0', ['이번달 매출 데이터가 없습니다']));
+    wrap.innerHTML = '<div style="font-size:11px;color:var(--sub);text-align:center;padding:16px 0">' + escHtml(periodName) + ' 실적 데이터가 없습니다</div>';
     return;
   }
-  names.forEach(function(name, i) {
-    var row = div('display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)', [
-      span('font-size:12px;font-weight:700;color:var(--dark)', (i+1)+'. '+name),
-      span('font-size:12px;font-weight:700;color:var(--terra)', fmt(byStaff[name].rev) + ' (' + byStaff[name].count + '건)')
-    ]);
-    wrap.appendChild(row);
+  var won = function(n) { return Math.round(n).toLocaleString() + '원'; };
+  var rows = [
+    { label: '성과매출', get: function(o){ return o.perf; }, show: won, best: 'max' },
+    { label: '입금액', get: function(o){ return o.rev; }, show: won, best: 'max' },
+    { label: '상담→계약(입금 기준)', get: function(o){ return o.conv === null ? -1 : o.conv; }, show: function(o){ return o.consults + '건 → ' + o.contracts + '건' + (o.conv === null ? '' : ' (' + o.conv + '%)'); }, best: 'max', whole: true },
+    { label: '현재 미수금', get: function(o){ return o.unpaid; }, show: won, best: 'min' }
+  ];
+  var cols = 'grid-template-columns:72px repeat(' + names.length + ',1fr)';
+  var html = '<div style="display:grid;' + cols + ';gap:0;align-items:center;font-size:11px">';
+  html += '<div></div>' + names.map(function(n) {
+    return '<div style="text-align:center;padding:6px 2px;border-bottom:1px solid var(--border)">' +
+      (typeof renderStaffBadge === 'function' ? renderStaffBadge(n, 24) : '') +
+      '<div style="font-weight:700;color:var(--dark);margin-top:3px">' + escHtml(n) + '</div></div>';
+  }).join('');
+  rows.forEach(function(r) {
+    var vals = names.map(function(n) { return r.get(by[n]); });
+    var bestVal = r.best === 'max' ? Math.max.apply(null, vals) : Math.min.apply(null, vals);
+    var allSame = vals.every(function(v) { return v === vals[0]; });
+    html += '<div style="padding:9px 0;border-bottom:1px solid var(--border);color:var(--sub)">' + r.label + '</div>';
+    names.forEach(function(n, i) {
+      var isBest = names.length > 1 && !allSame && vals[i] === bestVal && (r.best === 'min' || bestVal > 0);
+      html += '<div style="padding:9px 2px;border-bottom:1px solid var(--border);text-align:center;font-weight:700;color:' + (isBest ? 'var(--terra)' : 'var(--dark)') + '">' + escHtml(r.whole ? r.show(by[n]) : r.show(vals[i])) + '</div>';
+    });
   });
+  html += '</div><div style="font-size:10px;color:var(--light);margin-top:8px;line-height:1.5">성과매출은 제품비용만, 실제 결제한 비율만큼만 반영해요. 미수금은 기간과 상관없이 지금 기준이에요. 주황색은 해당 항목에서 가장 좋은 쪽이에요.</div>';
+  wrap.innerHTML = html;
 }
 
 

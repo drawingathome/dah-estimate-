@@ -27,7 +27,7 @@
 | 16 | `dash-render-est.js` | 견적서 탭(가견적/확정견적 목록) 렌더링 | 2 |
 | 17 | `dash-render-search.js` | 고객목록(검색) 탭 렌더링 | 1 |
 | 18 | `dash-memo.js` | DAH 대시보드 — 빠른 메모 문구 기능 | 2 |
-| 19 | `dash-chart.js` | DAH 대시보드 — 매출 차트 기능 | 8 |
+| 19 | `dash-chart.js` | DAH 대시보드 — 매출 차트 기능 | 9 |
 | 20 | `dash-calendar.js` | DAH 대시보드 — 일정(캘린더) 기능 | 5 |
 | 21 | `dash-kanban.js` | DAH 대시보드 — 진행현황(칸반) 기능 | 9 |
 | 22 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 1 |
@@ -62,7 +62,7 @@
 | 12 | `est-calc-blind.js` | DAH 견적서 앱 — 블라인드 행 계산 (추가/최소면적/옵션 추가금/부자재 자동/복사) | 6 |
 | 13 | `est-calc-svc.js` | DAH 견적서 앱 — 기타품목 · 부자재/서비스(실측비·시공비·레일) 행 계산과 요약 | 12 |
 | 14 | `est-survey.js` | DAH 견적서 앱 — 설문지 연동 | 2 |
-| 15 | `est-save.js` | DAH 견적서 앱 — 저장/검증/토스트 | 19 |
+| 15 | `est-save.js` | DAH 견적서 앱 — 저장/검증/토스트 | 21 |
 | 16 | `est-click-watch.js` | est-click-watch.js — 견적서 앱: 저장 버튼 "눌림 관측" (2026-10-07 신규) | 0 |
 | 17 | `est-save-stages.js` | DAH 견적서 앱 — 저장 단계 함수 4개 (고객 저장 → 견적서 저장 → 로컬 저장) | 4 |
 | 18 | `est-doc-customer.js` | DAH 견적서 앱 — 고객용 견적서 문서 생성 | 2 |
@@ -219,12 +219,14 @@
 | `enableManualBaseAddr` | `shared-common-utils.js` |
 | `ensureEstimateSavedThen` | `est-save.js` |
 | `escHtml` | `shared-common-utils.js` |
+| `estAutoFreezeOnOpen` | `est-save.js` |
 | `estCheckOpenMismatch` | `est-save.js` |
 | `estCollectFormSnapshot` | `est-save.js` |
 | `estFlushReceiptQueue` | `est-save.js` |
 | `estimateDbRowToLocal` | `dash-api-data.js` |
 | `estimateNeedsSave` | `est-save.js` |
 | `estMissingInstallRows` | `est-save.js` |
+| `estRenderMismatchBanner` | `est-save.js` |
 | `estSendReceipt` | `est-save.js` |
 | `estSvcState` | `est-save.js` |
 | `exportEstimatesExcel` | `dash-export.js` |
@@ -289,6 +291,7 @@
 | `getRelevantOrderItems` | `dash-customer-order.js` |
 | `getSettings` | `dash-settings.js` |
 | `getStaffBadgeColor` | `dash-utils.js` |
+| `getStaffComparison` | `dash-chart.js` |
 | `getStaffEmail` | `dash-api-settings.js` |
 | `getStaffEmailMap` | `dash-api-settings.js` |
 | `getStaffList` | `dash-api-settings.js` |

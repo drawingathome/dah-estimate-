@@ -34,6 +34,18 @@ function buildCustomerHTML() {
     sumDeposit = depRaw ? parseInt(depRaw).toLocaleString()+'원' : '—';
   }
   var sumBalance = document.getElementById('sum-balance')?.textContent||'—';
+  // 2026-10-09(선혜님 - 최금희: 선금 75만원인데 인쇄 화면 잔금이 자동 50%로 남음, 직접 재현 확인):
+  // 계약금은 입력창 값을 쓰면서 잔금은 별도 표시(sum-balance)를 읽어 서로 어긋날 수 있었음.
+  // 인쇄 화면은 항상 "총액 - 계약금"으로 직접 계산해 둘이 반드시 맞게 함.
+  if (_grandNum > 0 && sumDeposit !== '—') {
+    var _depNum = parseInt(sumDeposit.replace(/[^0-9]/g,''))||0;
+    if (_depNum > 0) sumBalance = Math.max(0, _grandNum - _depNum).toLocaleString()+'원';
+  }
+  // 2026-10-09: "50%" 라벨은 실제 계약금이 총액의 50%일 때만 표시(75만원 선금인데 50%로 찍히던 문제).
+  var _depN = parseInt((sumDeposit||'').replace(/[^0-9]/g,''))||0;
+  var _isHalf = _grandNum > 0 && _depN > 0 && Math.abs(_depN - _grandNum*0.5) <= 1000;
+  var _depPctLabel = _isHalf ? ' 50%' : '';
+  var _balPctLabel = _isHalf ? ' 50%' : '';
   var curTab     = currentTab||'ga';
   var isFinal    = curTab==='final';
   var docLabel   = isFinal ? '최종 견적서' : '가견적서';
@@ -403,11 +415,11 @@ function buildCustomerHTML() {
   
   out += '<div class="pv-payment-split" style="border-top:none">'
       +'<div class="pv-payment-item">'
-      +'<div class="pv-payment-label">계약금 50% <span class="pv-payment-sub">· 계약 시 납부</span></div>'
+      +'<div class="pv-payment-label">계약금'+_depPctLabel+' <span class="pv-payment-sub">· 계약 시 납부</span></div>'
       +'<div class="pv-payment-amount">'+sumDeposit+'</div>'
       +'</div>'
       +'<div class="pv-payment-item">'
-      +'<div class="pv-payment-label">잔금 50% <span class="pv-payment-sub">· 실측 후 납부</span></div>'
+      +'<div class="pv-payment-label">잔금'+_balPctLabel+' <span class="pv-payment-sub">· 실측 후 납부</span></div>'
       +'<div class="pv-payment-amount">'+sumBalance+'</div>'
       +'</div>'
       +'</div>';

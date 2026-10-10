@@ -85,7 +85,7 @@ const closeModal = (page) => page.evaluate(() => { const m = document.getElement
 (async () => {
   // 1-A) 서버가 받음 → saved 켜짐
   {
-    const { server, browser, page, rec } = await open(38400, {});
+    const { server, browser, page, rec } = await open(18400, {});
     await page.evaluate(FILL);
     await page.evaluate(() => saveEstimate());
     await sleep(2500);
@@ -95,7 +95,7 @@ const closeModal = (page) => page.evaluate(() => { const m = document.getElement
   }
   // 1-B) 서버 500 → saved 안 켜짐
   {
-    const { server, browser, page, rec } = await open(38401, { estimate500: true });
+    const { server, browser, page, rec } = await open(18401, { estimate500: true });
     await page.evaluate(FILL);
     await page.evaluate(() => saveEstimate());
     await sleep(2500);
@@ -105,7 +105,7 @@ const closeModal = (page) => page.evaluate(() => { const m = document.getElement
 
   // 2) 저장 안 된 새 견적서 → PDF 창 열기: 저장 먼저, 서버가 받은 뒤 창 열림
   {
-    const { server, browser, page, rec } = await open(38402, {});
+    const { server, browser, page, rec } = await open(18402, {});
     await page.evaluate(FILL);
     const before = rec.writes.length;
     await page.evaluate(() => openPdfModal());
@@ -125,7 +125,7 @@ const closeModal = (page) => page.evaluate(() => { const m = document.getElement
 
   // 3) 서버가 못 받음 → 묻고, 거절하면 안 열림
   {
-    const { server, browser, page, rec } = await open(38403, { estimate500: true, confirmContinue: false });
+    const { server, browser, page, rec } = await open(18403, { estimate500: true, confirmContinue: false });
     await page.evaluate(FILL);
     await page.evaluate(() => openPdfModal());
     await sleep(3000);
@@ -134,7 +134,7 @@ const closeModal = (page) => page.evaluate(() => { const m = document.getElement
     await browser.close(); server.kill();
   }
   {
-    const { server, browser, page, rec } = await open(38404, { estimate500: true, confirmContinue: true });
+    const { server, browser, page, rec } = await open(18404, { estimate500: true, confirmContinue: true });
     await page.evaluate(FILL);
     await page.evaluate(() => openPdfModal());
     await sleep(3000);
@@ -144,7 +144,7 @@ const closeModal = (page) => page.evaluate(() => { const m = document.getElement
 
   // 5) 필수항목 확인창에서 취소 → 안 열림
   {
-    const { server, browser, page, rec } = await open(38405, { missingConfirm: 'cancel' });
+    const { server, browser, page, rec } = await open(18405, { missingConfirm: 'cancel' });
     await page.evaluate(FILL + `document.getElementById('c-install').value = '';`);
     await page.evaluate(() => openPdfModal());
     await sleep(2200);
@@ -154,7 +154,7 @@ const closeModal = (page) => page.evaluate(() => { const m = document.getElement
 
   // 6) 빈 견적서 → 저장 없이 바로 열림
   {
-    const { server, browser, page, rec } = await open(38406, {});
+    const { server, browser, page, rec } = await open(18406, {});
     await page.evaluate(() => openPdfModal());
     await sleep(700);
     ok('6-1. [빈 견적서] 불필요한 저장 없이 바로 열림', rec.writes.length === 0 && (await modalOpen(page)) === true, JSON.stringify(rec.writes));

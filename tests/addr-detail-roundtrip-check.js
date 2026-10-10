@@ -55,7 +55,7 @@ async function newPage(browser, port, store) {
 (async () => {
   // ───────── 1. 헬퍼 단위 검증 + 견적서 화면 ─────────
   {
-    const port = 38200;
+    const port = 18200;
     const server = await startServer(root, port);
     const browser = await launchBrowser();
     const store = { posts: [], estPosts: [] };
@@ -100,7 +100,7 @@ async function newPage(browser, port, store) {
 
   // ───────── 2·3·5. 고객추가창 ─────────
   {
-    const port = 38201;
+    const port = 18201;
     const server = await startServer(root, port);
     const browser = await launchBrowser();
     const store = { posts: [], estPosts: [] };
@@ -150,9 +150,9 @@ async function newPage(browser, port, store) {
     await browser.close(); server.kill();
     return { v, errors };
   }
-  const e1 = await openEdit(38202, { id: 501, clientName: '새고객', phone: '010-1111-1111', addr: '서울 서대문구 통일로 339 110동 901호', addrDetail: '110동 901호', stage: '상담', date: '2026-10-06' }, '새고객');
+  const e1 = await openEdit(18202, { id: 501, clientName: '새고객', phone: '010-1111-1111', addr: '서울 서대문구 통일로 339 110동 901호', addrDetail: '110동 901호', stage: '상담', date: '2026-10-06' }, '새고객');
   ok('3-1. [고객추가 수정창] 상세주소가 저장된 고객은 기본주소/상세주소 칸이 정확히 나뉘어 채워짐', e1.v.b === '서울 서대문구 통일로 339' && e1.v.d === '110동 901호', JSON.stringify(e1.v));
-  const e2 = await openEdit(38203, { id: 502, clientName: '옛고객', phone: '010-2222-2222', addr: '서초구 반포대로 275 래미안 퍼스티지 110동 702호', addrDetail: '', stage: '상담', date: '2026-08-04' }, '옛고객');
+  const e2 = await openEdit(18203, { id: 502, clientName: '옛고객', phone: '010-2222-2222', addr: '서초구 반포대로 275 래미안 퍼스티지 110동 702호', addrDetail: '', stage: '상담', date: '2026-08-04' }, '옛고객');
   ok('3-2. [고객추가 수정창] 옛 고객(상세주소 정보 없음)은 정보 손실 없이 통째로 기본주소 칸', e2.v.b === '서초구 반포대로 275 래미안 퍼스티지 110동 702호' && e2.v.d === '', JSON.stringify(e2.v));
   ok('3-4. [고객추가 수정창] JS 에러 없음', e1.errors.length === 0 && e2.errors.length === 0, e1.errors.concat(e2.errors).join('; '));
 

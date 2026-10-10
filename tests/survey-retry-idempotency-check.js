@@ -24,7 +24,7 @@ const { launchBrowser, startServer } = require('./_helpers');
 const CORS = { 'Access-Control-Allow-Origin': '*' };
 
 (async () => {
-  const port = 46000;
+  const port = 26000;
   const server = await startServer(path.resolve(__dirname, '..'), port);
   const browser = await launchBrowser();
   let postedKeys = [];

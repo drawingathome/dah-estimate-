@@ -428,8 +428,13 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       // 기본값이 시공서비스 항목에도 붙어 보였음). 'service'도 같이 인식하도록.
       // ('bedding'/'item'은 실제 제품 항목이라 원래대로 커튼 표로 가야 정상 —
       // 처음에 이것도 같이 옮기려 했다가 되돌림.
-      addSvcRow();
-      var str = document.getElementById('svc-body').lastElementChild;
+      // 2026-10-09(선혜님 - 선금 있는 견적서 전수 검사 중 박윤아 사례로 발견: 저장 1,361,000원이
+      // 열면 1,577,000원): 블라인드 행을 복원하는 도중 옵션추가금 자동 행이 이미 만들어지는데,
+      // 저장돼 있던 옵션추가금 행을 또 새 행으로 추가해서 같은 항목이 2번 들어갔음.
+      // 이미 있는 옵션추가금 자동 행이 있으면 새로 만들지 않고 그 행에 저장값을 덮어씀.
+      var existingOptionRow = (it.autoType === 'option') ? document.querySelector('#svc-body [data-svc-type="옵션추가금"]') : null;
+      if (!existingOptionRow) addSvcRow();
+      var str = existingOptionRow || document.getElementById('svc-body').lastElementChild;
       if (str) {
         var svcKindEl = str.querySelector('.svc-kind'); if (svcKindEl) svcKindEl.value = it.kind || '기타';
         // 2026-09-18(선혜님 - "코드정리하고 버그 없는지 확인해"로 직접
@@ -438,7 +443,7 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
         // 추가 - 안 그러면 저장은 돼도 다시 열 때 위치가 사라짐.
         var svcSpaceEl = str.querySelector('.svc-space'); if (svcSpaceEl) svcSpaceEl.value = it.space || '';
         var svcContentEl = str.querySelector('.svc-content'); if (svcContentEl) svcContentEl.value = it.content || it.displayName || it.space || '';
-        var svcPriceEl = str.querySelector('.sprice'); if (svcPriceEl && it.price) { svcPriceEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(svcPriceEl); }
+        var svcPriceEl = str.querySelector('.sprice'); if (svcPriceEl && it.price) { svcPriceEl.setAttribute('data-raw', String(it.price)); svcPriceEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(svcPriceEl); }
         var svcQtyEl = str.querySelector('.sqty'); if (svcQtyEl) svcQtyEl.value = it.qty || it.pnum || '1';
         // 2026-09-19(선혜님 - "다시 열어보니 실측+레일비가... 이게 말이
         // 되니?????????"): 실측비/시공비/레일 등 자동계산 항목의 단가를

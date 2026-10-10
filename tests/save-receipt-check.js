@@ -99,7 +99,7 @@ const kinds = (st, kind) => st.receipts.filter(r => r && r.kind === kind);
 (async () => {
   // 1) 저장 성공
   {
-    const { server, browser, page, state } = await open(38500, {});
+    const { server, browser, page, state } = await open(18500, {});
     await page.evaluate(FILL); await page.evaluate(() => saveEstimate()); await sleep(3000);
     const saves = kinds(state, 'save');
     ok('1-1. [저장 성공] 시작 → 성공 영수증이 순서대로 남음', saves.map(r => r.outcome).join(',') === 'start,server', JSON.stringify(saves.map(r => r.outcome)));
@@ -115,14 +115,14 @@ const kinds = (st, kind) => st.receipts.filter(r => r && r.kind === kind);
   }
   // 2) 서버 저장 실패
   {
-    const { server, browser, page, state } = await open(38501, { estimate500: true });
+    const { server, browser, page, state } = await open(18501, { estimate500: true });
     await page.evaluate(FILL); await page.evaluate(() => saveEstimate()); await sleep(3000);
     ok('2-1. [서버 저장 실패] "failed" 영수증이 남음', kinds(state, 'save').some(r => r.outcome === 'failed'), JSON.stringify(kinds(state, 'save').map(r => r.outcome)));
     await browser.close(); server.kill();
   }
   // 3) 영수증 서버가 죽어도 저장은 성공 + 기기에 보관 + 다시 전송
   {
-    const { server, browser, page, state } = await open(38502, { receiptsFail: true });
+    const { server, browser, page, state } = await open(18502, { receiptsFail: true });
     await page.evaluate(FILL); await page.evaluate(() => saveEstimate()); await sleep(3200);
     const saved = await page.evaluate(() => document.getElementById('c-name').dataset.saved || null);
     ok('3-1. [영수증 서버 장애] 그래도 저장은 정상 성공(저장됨 표시)', saved === '1', 'saved=' + saved);
@@ -136,14 +136,14 @@ const kinds = (st, kind) => st.receipts.filter(r => r && r.kind === kind);
   }
   // 4) 검증에서 막힘
   {
-    const { server, browser, page, state } = await open(38503, {});
+    const { server, browser, page, state } = await open(18503, {});
     await page.evaluate(FILL + `document.getElementById('c-name').value = '';`); await page.evaluate(() => saveEstimate()); await sleep(2500);
     ok('4-1. [검증에서 막힘] "invalid" 영수증이 남음(저장 시도가 있었다는 증거)', kinds(state, 'save').some(r => r.outcome === 'invalid'), JSON.stringify(kinds(state, 'save').map(r => r.outcome)));
     await browser.close(); server.kill();
   }
   // 5) 열었을 때 금액 불일치(오늘 김성은님 사례)
   {
-    const { server, browser, page, state } = await open(38504, { reopen: true }, '?loadEstDbId=939ce05f-78a0-43b8-848e-d0386534cccc');
+    const { server, browser, page, state } = await open(18504, { reopen: true }, '?loadEstDbId=939ce05f-78a0-43b8-848e-d0386534cccc');
     await page.evaluate(() => { const o = window.showToast; window.__toasts = []; window.showToast = function (m) { window.__toasts.push(String(m)); return o.apply(this, arguments); }; });
     await sleep(6500);
     const opens = kinds(state, 'open');
@@ -157,14 +157,14 @@ const kinds = (st, kind) => st.receipts.filter(r => r && r.kind === kind);
   }
   // 6) 불러온 견적서 없음 → 열기 영수증 없음
   {
-    const { server, browser, page, state } = await open(38505, {});
+    const { server, browser, page, state } = await open(18505, {});
     await sleep(5000);
     ok('6-1. [새 견적서] 불러온 견적서가 없으면 열기 영수증은 없음', kinds(state, 'open').length === 0, JSON.stringify(state.receipts.map(r => r.kind)));
     await browser.close(); server.kill();
   }
   // 7) 인쇄·PDF
   {
-    const { server, browser, page, state } = await open(38506, {});
+    const { server, browser, page, state } = await open(18506, {});
     await page.evaluate(FILL);
     await page.evaluate(() => openPdfModal()); await sleep(3200);
     await page.evaluate(() => { const m = document.getElementById('pdf-size-modal'); if (m) m.classList.remove('open'); });

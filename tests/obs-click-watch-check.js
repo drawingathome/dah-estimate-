@@ -93,7 +93,7 @@ const kinds = (r) => (r || []).map(e => e.k);
 (async () => {
   // 1) 정상 클릭
   {
-    const { server, browser, page, rec } = await open(38600, {});
+    const { server, browser, page, rec } = await open(18600, {});
     await page.evaluate(FILL); await humanPressSave(page); await sleep(3200);
     const r = await ring(page);
     const press = (r || []).find(e => e.k === 'save-press') || {};
@@ -106,7 +106,7 @@ const kinds = (r) => (r || []).map(e => e.k);
   }
   // 2) 다른 요소가 덮음
   {
-    const { server, browser, page, rec } = await open(38601, {});
+    const { server, browser, page, rec } = await open(18601, {});
     await page.evaluate(FILL);
     await page.evaluate(() => { const o = document.createElement('div'); o.id = 'probe-overlay'; o.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.2)'; document.body.appendChild(o); });
     await humanPressSave(page); await sleep(2600);
@@ -118,7 +118,7 @@ const kinds = (r) => (r || []).map(e => e.k);
   }
   // 3) 버튼 비활성
   {
-    const { server, browser, page, rec } = await open(38602, {});
+    const { server, browser, page, rec } = await open(18602, {});
     await page.evaluate(FILL); await page.evaluate(() => { const b = document.getElementById('btn-save-estimate'); b.disabled = true; b.title = '담당자 확인 중...'; });
     await humanPressSave(page); await sleep(2600);
     const r = await ring(page); const press = (r || []).find(e => e.k === 'save-press') || {};
@@ -128,7 +128,7 @@ const kinds = (r) => (r || []).map(e => e.k);
   }
   // 4) 로그인 덮개
   {
-    const { server, browser, page } = await open(38603, {});
+    const { server, browser, page } = await open(18603, {});
     await page.evaluate(() => { try { showReloginPrompt(function () {}); } catch (e) { window.__e = String(e); } }); await sleep(600);
     const r = await ring(page);
     ok('4-1. [로그인 덮개] 덮개가 뜨면 auth-gate-shown이 기록됨', kinds(r).includes('auth-gate-shown'), JSON.stringify(kinds(r)));
@@ -138,7 +138,7 @@ const kinds = (r) => (r || []).map(e => e.k);
   }
   // 5) 서버 장애 → 기기 기록 유지 → 복구 후 한 번만 전송
   {
-    const { server, browser, page, rec, state } = await open(38604, {});
+    const { server, browser, page, rec, state } = await open(18604, {});
     state.obsFail = true;
     await page.evaluate(FILL); await humanPressSave(page); await sleep(3000);
     await page.evaluate(() => { try { estObsFlush(true); } catch (e) { window.__e = String(e); } }); await sleep(1500);
@@ -156,14 +156,14 @@ const kinds = (r) => (r || []).map(e => e.k);
   }
   // 6) 안전장치: 기기 저장공간 쓰기 실패
   {
-    const { server, browser, page, rec } = await open(38605, { beforeLoad: () => { const orig = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (String(k) === 'dah_obs_ring') throw new Error('QuotaExceededError(시뮬레이션)'); return orig.apply(this, arguments); }; } });
+    const { server, browser, page, rec } = await open(18605, { beforeLoad: () => { const orig = Storage.prototype.setItem; Storage.prototype.setItem = function (k, v) { if (String(k) === 'dah_obs_ring') throw new Error('QuotaExceededError(시뮬레이션)'); return orig.apply(this, arguments); }; } });
     await page.evaluate(FILL); await humanPressSave(page); await sleep(3200);
     ok('6-1. [저장공간 쓰기 실패] 화면 오류가 없고 저장은 정상(서버에 저장 요청이 나감)', rec.jsErrors.length === 0 && rec.writes.includes('estimates'), JSON.stringify({ e: rec.jsErrors, w: rec.writes }));
     await browser.close(); server.kill();
   }
   // 7) 끄기 스위치
   {
-    const { server, browser, page, rec } = await open(38606, { flags: { obs_record: { enabled: false } } });
+    const { server, browser, page, rec } = await open(18606, { flags: { obs_record: { enabled: false } } });
     await page.evaluate(FILL); await humanPressSave(page); await sleep(3000);
     const r = await ring(page);
     ok('7-1. [끄기 스위치] 꺼져 있으면 기기 기록 0건', (r || []).length === 0, JSON.stringify(kinds(r)));
@@ -172,13 +172,13 @@ const kinds = (r) => (r || []).map(e => e.k);
   }
   // 8) 배너: 기본 꺼짐 / 켜면 표시
   {
-    const a = await open(38607, {});
+    const a = await open(18607, {});
     await a.page.evaluate(FILL); await a.page.evaluate(() => { const o = document.createElement('div'); o.style.cssText = 'position:fixed;inset:0;z-index:99999'; document.body.appendChild(o); });
     await humanPressSave(a.page); await sleep(2800);
     const bannerOff = await a.page.evaluate(() => !!document.getElementById('obs-no-start-banner'));
     ok('8-1. [배너 기본 꺼짐] 눌렀는데 저장이 시작되지 않아도 화면 배너는 안 뜸(조용히 기록만)', bannerOff === false, 'banner=' + bannerOff);
     await a.browser.close(); a.server.kill();
-    const b = await open(38608, { flags: { obs_banner: { enabled: true } } });
+    const b = await open(18608, { flags: { obs_banner: { enabled: true } } });
     await b.page.evaluate(FILL); await b.page.evaluate(() => { const o = document.createElement('div'); o.style.cssText = 'position:fixed;inset:0;z-index:99999'; document.body.appendChild(o); });
     await humanPressSave(b.page); await sleep(2800);
     const bannerOn = await b.page.evaluate(() => { const e = document.getElementById('obs-no-start-banner'); return e ? e.textContent.slice(0, 60) : null; });
@@ -187,7 +187,7 @@ const kinds = (r) => (r || []).map(e => e.k);
   }
   // 9) 개인정보
   {
-    const { server, browser, page } = await open(38609, {});
+    const { server, browser, page } = await open(18609, {});
     await page.evaluate(() => { try { showReloginPrompt(function () {}); } catch (e) {} }); await sleep(400);
     await page.evaluate(() => { const i = document.getElementById('est-auth-pw'); i.focus(); }); await page.keyboard.type('SECRET-PW-12345', { delay: 20 }); await sleep(300);
     const raw = await page.evaluate(() => localStorage.getItem('dah_obs_ring') || '');
@@ -196,7 +196,7 @@ const kinds = (r) => (r || []).map(e => e.k);
   }
   // 10) 폭주 방지
   {
-    const { server, browser, page } = await open(38610, {});
+    const { server, browser, page } = await open(18610, {});
     await page.evaluate(() => { for (let i = 0; i < 100; i++) { Object.defineProperty(document, 'visibilityState', { value: i % 2 ? 'hidden' : 'visible', configurable: true }); document.dispatchEvent(new Event('visibilitychange')); } });
     await sleep(500);
     const r = await ring(page); const tabN = (r || []).filter(e => /^tab-/.test(e.k)).length;
