@@ -42,6 +42,11 @@ const byPay = ctx.getStaffComparison([
 ], range)['C'];
 ok('13. 9월 상담·10월 계약금 고객은 10월 계약으로 셈', byPay.contracts === 1, JSON.stringify(byPay));
 ok('14. 10월 상담·11월 계약금 고객은 10월 계약으로 안 셈(상담은 2건)', byPay.consults === 2 && byPay.contracts === 1 && byPay.conv === 50, JSON.stringify(byPay));
+// 2026-10-10: 입금일이 비어 있으면 고객 등록일 달로 배정(이관 고객)
+const undated = ctx.getStaffComparison([cust('D', '시공완료', '2026-10-04', 1000000, 0, '', 1000000, '', 1000000)], range)['D'];
+ok('15. 입금일 없는 입금은 등록일 달 매출로 잡힘', undated && undated.rev === 1000000 && Math.round(undated.perf) === 1000000, JSON.stringify(undated));
+const undatedOut = ctx.getStaffComparison([cust('D', '시공완료', '2026-08-04', 1000000, 0, '', 1000000, '', 1000000)], range)['D'];
+ok('16. 등록일이 기간 밖이면 이번 기간 매출에 안 잡힘', !undatedOut || undatedOut.rev === 0, JSON.stringify(undatedOut));
 ctx.renderChartStaffRank(list, range);
 ok('10. 화면에 두 담당자와 4개 항목이 모두 나옴', ['장선혜', '오지은', '성과매출', '입금액', '상담→계약', '현재 미수금'].every(t => wrap.innerHTML.includes(t)));
 ok('11. 제목이 기간에 맞게 바뀜', /담당자별 실적 비교/.test(titleEl.textContent), titleEl.textContent);

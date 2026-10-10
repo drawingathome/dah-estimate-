@@ -61,6 +61,10 @@ function splitCustomerPayments(c) {
     // 입금(revenue)은 실제 들어온 현금이라 그대로 두고, 성과매출 배분 비율만 100%로 제한.
     var depShare = Math.min(dep, totalPrice);
     var balShare = Math.min(bal, Math.max(0, totalPrice - depShare));
+    // 2026-10-10(선혜님 - 입금일이 비어 있는 이관 고객 64명: "등록일 달로 잡기"): 받은 금액은 있는데 입금일이 없으면
+    // 예전엔 어느 달 매출에도 안 잡혔음(약 1.36억). 입금일이 없을 때만 고객 등록일(c.date)로 대신 배정함.
+    if (!depDate && dep > 0 && c.date) depDate = c.date;
+    if (!balDate && bal > 0 && c.date) balDate = c.date;
     if (dep > 0 && depDate) parts.push({ date: depDate, revenue: dep, perf: perf * (depShare / totalPrice) });
     if (bal > 0 && balDate) parts.push({ date: balDate, revenue: bal, perf: perf * (balShare / totalPrice) });
   });
