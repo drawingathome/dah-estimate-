@@ -65,3 +65,52 @@ function fetchWithRetry(url, options, retriesLeft) {
     throw e;
   });
 }
+
+// ══════════════════════════════════════════════════════════
+// 2026-10-11(선혜님 - "시간차가 나도 자꾸 충돌한다"): 같은 브라우저에서 견적서 앱이 고객 행을 갱신하면 DB가 고객 수정 시각(잠금값)을
+// 새로 찍는데, 열려 있는 대시보드 화면은 예전 시각을 들고 있어 가짜 충돌이 났음. "내가 이 브라우저에서 직접 한 갱신"을 공용 장부에
+// 적어두고, 대시보드가 저장 직전에 그 장부를 보고(잠금값이 장부의 '시작 시각'과 정확히 같을 때만) 이어받음.
+// 다른 기기가 끼어들었으면 장부와 안 맞아 이어받지 않고 서버 잠금이 진짜 충돌로 막음.
+// 장부는 별도 키(dah_self_lock_ledger)라 고객 목록 캐시가 통째로 다시 저장돼도 지워지지 않음. 두 앱이 이 파일을 같이 쓰므로 한 곳에만 정의.
+// ══════════════════════════════════════════════════════════
+var SELF_LOCK_LEDGER_KEY = 'dah_self_lock_ledger';
+
+function _readSelfLockLedger() {
+  try { return JSON.parse(localStorage.getItem(SELF_LOCK_LEDGER_KEY) || '{}') || {}; } catch (e) { return {}; }
+}
+
+// fromLock = 이 갱신을 하기 직전 서버 시각, toLock = 갱신 후 서버가 돌려준 새 시각, fields = 이 갱신이 함께 바꾼 견적 소유 필드(price/performanceRevenue)
+function recordSelfLockAdvance(customerId, fromLock, toLock, fields) {
+  if (!customerId || !toLock) return;
+  try {
+    var ledger = _readSelfLockLedger();
+    var key = String(customerId);
+    var prev = ledger[key];
+    // 연달아 내가 갱신한 경우(직전 장부의 끝 시각 = 이번 시작 시각)엔 처음 시작 시각을 유지
+    var start = (prev && prev.to === fromLock) ? prev.from : fromLock;
+    if (!start) return;
+    var entry = { from: start, to: toLock, at: Date.now() };
+    var f = fields || (prev && prev.to === fromLock ? prev.fields : null);
+    if (f) entry.fields = f;
+    ledger[key] = entry;
+    // 장부가 무한정 커지지 않게 오래된(1일 이상) 항목 정리
+    Object.keys(ledger).forEach(function (k) { if (!ledger[k] || Date.now() - (ledger[k].at || 0) > 86400000) delete ledger[k]; });
+    localStorage.setItem(SELF_LOCK_LEDGER_KEY, JSON.stringify(ledger));
+  } catch (e) { /* 장부 실패는 저장 흐름에 영향 없게 */ }
+}
+
+// 고객 객체의 잠금값이 장부의 시작 시각과 정확히 같으면 최신 시각(과 견적 소유 필드)을 이어받음. 이어받았으면 true.
+function adoptSelfLock(customer) {
+  try {
+    if (!customer || !customer.id || !customer.updatedAt) return false;
+    var entry = _readSelfLockLedger()[String(customer.id)];
+    if (!entry || entry.from !== customer.updatedAt) return false;
+    if (!(Date.parse(entry.to) > Date.parse(customer.updatedAt))) return false;
+    customer.updatedAt = entry.to;
+    if (entry.fields) {
+      if (entry.fields.price !== undefined) customer.price = entry.fields.price;
+      if (entry.fields.performanceRevenue !== undefined) customer.performanceRevenue = entry.fields.performanceRevenue;
+    }
+    return true;
+  } catch (e) { return false; }
+}

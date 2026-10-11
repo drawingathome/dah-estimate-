@@ -13,10 +13,10 @@
 | 2 | `dash-utils.js` | DAH 대시보드 — 순수 유틸리티 함수 모음 | 18 |
 | 3 | `dash-api.js` | DAH 대시보드 — 데이터 접근 계층 (Supabase / localStorage) | 5 |
 | 4 | `dash-api-settings.js` | DAH 대시보드 — 설정 접근자 (담당자/거래처/리드기준/지역비/쿠폰/담당자 이메일) | 13 |
-| 5 | `dash-api-data.js` | DAH 대시보드 — 데이터 변환·로딩 (DB행↔화면 객체, 고객/견적 불러오기) | 7 |
+| 5 | `dash-api-data.js` | DAH 대시보드 — 데이터 변환·로딩 (DB행↔화면 객체, 고객/견적 불러오기) | 8 |
 | 6 | `dash-api-writes.js` | DAH 대시보드 — 고객 DB 쓰기 (저장/선점/보관/삭제/복구/리드보류) | 9 |
 | 7 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 9 |
-| 8 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 2 |
+| 8 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 5 |
 | 9 | `dash-sync-queue.js` | DAH — 오프라인/네트워크 실패 동기화 큐 (2026-08-05 신규) | 6 |
 | 10 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 16 |
 | 11 | `dash-realtime.js` | 실시간 동기화 (Supabase Realtime) | 9 |
@@ -53,7 +53,7 @@
 | 2 | `est-public-view.js` | DAH 견적서 앱 — 고객용 공개보기 모드 | 5 |
 | 3 | `est-utils.js` | DAH 견적서 앱 — 유틸함수 + API 설정 | 21 |
 | 4 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 9 |
-| 5 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 2 |
+| 5 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 5 |
 | 6 | `est-sync-queue.js` | DAH 견적서 앱 — 오프라인/네트워크 실패 재시도 큐 (2026-08-05 신규) | 5 |
 | 7 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 16 |
 | 8 | `est-form-controls.js` | DAH 견적서 앱 — 폼 상태/타입 제어 | 14 |
@@ -109,6 +109,7 @@
 | `_handleRealtimeCustomerChange` | `dash-realtime.js` |
 | `_openAlimtalkPreview` | `dash-customer-alim.js` |
 | `_openPdfModalNow` | `est-customer-load.js` |
+| `_readSelfLockLedger` | `shared-optimistic-lock.js` |
 | `_reRenderVisibleListScreen` | `dash-realtime.js` |
 | `_saveEstimateInner` | `est-save.js` |
 | `_savePendingSyncQueue` | `dash-sync-queue.js` |
@@ -127,6 +128,7 @@
 | `addSvcRow` | `est-calc-svc.js` |
 | `addToEstPendingQueue` | `est-sync-queue.js` |
 | `addToPendingSyncQueue` | `dash-sync-queue.js` |
+| `adoptSelfLock` | `shared-optimistic-lock.js` |
 | `App` | `survey-app.js` |
 | `appendPasswordResetFlow` | `dash-settings.js` |
 | `appendPayHistory` | `dash-pay-history.js` |
@@ -382,6 +384,7 @@
 | `railInstallSpec` | `est-calc-rules.js` |
 | `railMaterialSpec` | `est-calc-rules.js` |
 | `recalcBlindOptionExtras` | `est-calc-blind.js` |
+| `recordSelfLockAdvance` | `shared-optimistic-lock.js` |
 | `refreshAlimSentMapFromServer` | `dash-customer-alim.js` |
 | `refreshAuthSessionForce` | `dash-supabase-auth.js` |
 | `refreshAuthSessionIfNeeded` | `dash-supabase-auth.js` |
@@ -505,6 +508,7 @@
 | `summarizeSvcGroups` | `est-calc-rules.js` |
 | `supabaseAuthLogin` | `dash-supabase-auth.js` |
 | `switchDetailTab` | `dash-customer-detail.js` |
+| `syncCustomerLocksFromRows` | `dash-api-data.js` |
 | `syncCustomerRow` | `apps-script-automation-hub.js` |
 | `syncCustomerToSheet` | `shared-common-utils.js` |
 | `syncStaffGoalsToCloud` | `dash-api.js` |

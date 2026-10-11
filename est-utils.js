@@ -520,7 +520,7 @@ function getCustomerOrderStatus(callback) {
   if (!window._estEditState.estSaveCustomerId || typeof SUPABASE_URL === 'undefined') { callback({}); return; }
   try {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estEditState.estSaveCustomerId) + '&select=order_status', true);
+    xhr.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estEditState.estSaveCustomerId) + '&select=order_status,updated_at', true);
     xhr.setRequestHeader('apikey', SUPABASE_KEY);
     xhr.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
     xhr.onload = function() {
@@ -544,9 +544,11 @@ function updateOrderStatus(updates) {
     xhrGet.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
     xhrGet.onload = function() {
       var current = {};
+      var lockBefore = null;
       try {
         var rows = JSON.parse(xhrGet.responseText);
         if (rows[0] && rows[0].order_status) current = rows[0].order_status;
+        if (rows[0] && rows[0].updated_at) lockBefore = rows[0].updated_at;
       } catch (e) {}
       Object.keys(updates).forEach(function(cat){
         if (current[cat] && typeof current[cat] === 'object' && current[cat].dueDate) {
@@ -560,7 +562,15 @@ function updateOrderStatus(updates) {
         xhrPatch.setRequestHeader('apikey', SUPABASE_KEY);
         xhrPatch.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
         xhrPatch.setRequestHeader('Content-Type', 'application/json');
+        xhrPatch.setRequestHeader('Prefer', 'return=representation');
         xhrPatch.onload = function() {
+          // 이 갱신도 고객 수정 시각(잠금값)을 바꾸므로 공용 장부에 기록(shared-optimistic-lock.js) - 안 하면 열려 있는 대시보드가 가짜 충돌을 냄
+          try {
+            var patched = JSON.parse(xhrPatch.responseText);
+            if (xhrPatch.status < 300 && patched && patched[0] && patched[0].updated_at && typeof recordSelfLockAdvance === 'function') {
+              recordSelfLockAdvance(window._estEditState.estSaveCustomerId, lockBefore, patched[0].updated_at, null);
+            }
+          } catch (eLedger) { /* 기록 실패는 흐름에 영향 없게 */ }
           if (xhrPatch.status < 300 && typeof showToast === 'function') {
             showToast('📋 업무 현황판에도 자동으로 기록됐어요');
           }

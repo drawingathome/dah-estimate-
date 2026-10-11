@@ -55,6 +55,9 @@ function sbXHR(method, path, data, callback, _retried) {
         callback({status: xhr.status, text: '0건 반영됨(권한 문제일 수 있음)', zeroRows: true}, null);
         return;
       }
+      // 고객 행을 바꾼 요청이면 DB가 새로 찍은 수정 시각(잠금값)을 고객 목록 캐시에 바로 반영(담당변경·리드보관·복구·일괄이관 등 모든 쓰기 공통 -
+      // 개별 함수마다 따로 챙기면 빠뜨리는 쌍둥이가 생겨 가짜 충돌이 났음)
+      if (method === 'PATCH' && path.indexOf('customers?') === 0 && typeof syncCustomerLocksFromRows === 'function') syncCustomerLocksFromRows(result);
       callback(null, result);
     } else if (xhr.status === 401 && !_retried && typeof refreshAuthSessionForce === 'function' && typeof getAuthSession === 'function' && getAuthSession()) {
       // 2026-10-06: 401은 서버가 "처리 전에" 인증 단계에서 거절한 것이라 같은 요청을 다시 보내도 중복 저장 위험이 없음 -

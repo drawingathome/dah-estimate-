@@ -137,12 +137,13 @@ function proceed(otherEstGrand, otherEstPerf, sumFailed) {
             var lockIdx = arrLockSync.findIndex(function (c) { return String(c.id) === String(existingCustId); });
             if (lockIdx >= 0) {
               var cacheRow = arrLockSync[lockIdx];
-              // 표식: "이 수정 시각은 견적서 앱이 이 브라우저에서 직접 만든 것이고, 그 직전 시각은 estLockPrev였다".
-              // 대시보드는 자기 잠금값이 정확히 estLockPrev일 때(=그 사이 견적서 앱 말고는 아무도 안 바꿨을 때)만 이어받음.
-              // 견적서 앱이 연달아 저장해도 처음의 직전 시각을 유지함. 다른 기기/서버 동기화가 시각을 바꾸면 표식이 안 맞아 이어받지 않음(진짜 충돌은 그대로 막힘).
-              if (!(cacheRow.estLockSyncedAt && cacheRow.estLockSyncedAt === cacheRow.updatedAt)) cacheRow.estLockPrev = cacheRow.updatedAt || null;
+              // 공용 장부(shared-optimistic-lock.js)에 "내가 이 시각에서 이 시각으로 직접 갱신했다"를 기록 - 대시보드가 저장 직전에 보고 이어받음.
+              var fromLockSelf = cacheRow.updatedAt || null;
+              if (typeof recordSelfLockAdvance === 'function') {
+                recordSelfLockAdvance(existingCustId, fromLockSelf, resData[0].updated_at,
+                  (resData[0].price !== undefined) ? { price: Number(resData[0].price) || 0, performanceRevenue: Number(resData[0].performance_revenue) || 0 } : null);
+              }
               cacheRow.updatedAt = resData[0].updated_at;
-              cacheRow.estLockSyncedAt = resData[0].updated_at;
               localStorage.setItem('dah_customers', JSON.stringify(arrLockSync));
             }
           } catch (eLockSync) { /* 캐시 갱신 실패는 저장 흐름에 영향 없게 */ }

@@ -289,3 +289,18 @@ function loadCustomersAsync(callback, force) {
 }
 
 function saveCustomers(arr) { _customerCache = arr; try { localStorage.setItem('dah_customers', JSON.stringify(arr)); } catch(e) {} }
+
+// 서버가 방금 돌려준 고객 행들의 수정 시각(updated_at)을 고객 목록 캐시에 반영 (sbXHR이 고객 PATCH 성공 때마다 호출)
+function syncCustomerLocksFromRows(rows) {
+  try {
+    if (!Array.isArray(rows) || !rows.length) return;
+    var arr = loadCustomers();
+    var changed = false;
+    rows.forEach(function (r) {
+      if (!r || !r.id || !r.updated_at) return;
+      var t = arr.find(function (c) { return String(c.id) === String(r.id); });
+      if (t && t.updatedAt !== r.updated_at) { t.updatedAt = r.updated_at; changed = true; }
+    });
+    if (changed) saveCustomers(arr);
+  } catch (e) { /* 캐시 갱신 실패는 저장 흐름에 영향 없게 */ }
+}

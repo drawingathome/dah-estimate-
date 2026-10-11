@@ -76,23 +76,10 @@ function saveCustomerToDb(customer, callback) {
     window._lastSelfCustomerWriteId = customer.id;
     window._lastSelfCustomerWriteTime = Date.now();
   }
-  // 2026-10-11(선혜님 - "시간차가 나도 자꾸 충돌한다"): 같은 브라우저의 견적서 앱이 이 고객을 먼저 갱신해 캐시(dah_customers)의
-  // 잠금값/견적서 소유 필드(견적 금액·성과매출)가 더 최신이면, 이 화면이 들고 있던 낡은 객체 대신 그 값을 이어받아 저장함
-  // (낡은 금액으로 되돌려 덮어쓰지도 않고, 가짜 충돌도 나지 않음). 다른 기기가 바꾼 경우는 서버 잠금이 그대로 막아줌.
-  try {
-    if (customer && customer.id && typeof loadCustomers === 'function') {
-      var cachedSame = loadCustomers().find(function (c) { return String(c.id) === String(customer.id); });
-      // 견적서 앱 표식(estLockSyncedAt/estLockPrev)이 맞을 때만: 내 잠금값이 견적서 앱이 갱신하기 직전 시각 그대로이고, 최신 시각도 견적서 앱이 만든 것일 때.
-      // 다른 기기/서버 동기화가 끼어들었으면 표식이 안 맞아 이어받지 않고, 서버 잠금이 진짜 충돌로 막음.
-      if (cachedSame && cachedSame !== customer && cachedSame.updatedAt && customer.updatedAt &&
-          cachedSame.estLockSyncedAt === cachedSame.updatedAt && cachedSame.estLockPrev === customer.updatedAt &&
-          Date.parse(cachedSame.updatedAt) > Date.parse(customer.updatedAt)) {
-        customer.updatedAt = cachedSame.updatedAt;
-        if (cachedSame.price !== undefined) customer.price = cachedSame.price;
-        if (cachedSame.performanceRevenue !== undefined) customer.performanceRevenue = cachedSame.performanceRevenue;
-      }
-    }
-  } catch (eCacheAdopt) { /* 실패해도 기존 동작 그대로 */ }
+  // 2026-10-11(선혜님 - "시간차가 나도 자꾸 충돌한다"): 같은 브라우저의 견적서 앱이 이 고객을 먼저 갱신했으면(공용 장부 dah_self_lock_ledger),
+  // 낡은 잠금값 대신 그 최신 값을 이어받음(견적 금액·성과매출도 낡은 값으로 되돌려 덮어쓰지 않음). 장부는 열려 있는 화면의 메모리 캐시와 무관하게
+  // localStorage에서 직접 읽음. 다른 기기가 끼어들었으면 장부와 안 맞아 이어받지 않고, 서버 잠금이 진짜 충돌로 막아줌.
+  try { if (typeof adoptSelfLock === 'function') adoptSelfLock(customer); } catch (eCacheAdopt) { /* 실패해도 기존 동작 그대로 */ }
   var row = customerToDbRow(customer);
   syncCustomerToSheet(customer);
   var key = customer.id || customer.clientName;
