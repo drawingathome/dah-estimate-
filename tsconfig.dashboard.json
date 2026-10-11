@@ -34,6 +34,7 @@
     "dash-customer-pay.js",
     "dash-export.js",
     "dash-failed-saves.js",
+    "dash-integrity-watch.js",
     "dash-kanban.js",
     "dash-memo.js",
     "dash-realtime.js",

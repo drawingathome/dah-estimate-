@@ -24,26 +24,27 @@
 | 13 | `dash-core.js` | DAH 대시보드 — 앱 핵심 진입점 함수 | 1 |
 | 14 | `dash-render.js` | DAH 대시보드 — 홈/견적목록/고객검색 화면 렌더링 | 5 |
 | 15 | `dash-failed-saves.js` | DAH 대시보드 — 저장 실패 백업 확인/복구 화면 | 6 |
-| 16 | `dash-render-est.js` | 견적서 탭(가견적/확정견적 목록) 렌더링 | 2 |
-| 17 | `dash-render-search.js` | 고객목록(검색) 탭 렌더링 | 1 |
-| 18 | `dash-memo.js` | DAH 대시보드 — 빠른 메모 문구 기능 | 2 |
-| 19 | `dash-chart.js` | DAH 대시보드 — 매출 차트 기능 | 15 |
-| 20 | `dash-calendar.js` | DAH 대시보드 — 일정(캘린더) 기능 | 5 |
-| 21 | `dash-kanban.js` | DAH 대시보드 — 진행현황(칸반) 기능 | 9 |
-| 22 | `dash-pay-history.js` | 고객상세 - 결제 탭의 "입금 내역 보기" (읽기 전용) | 3 |
-| 23 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 1 |
-| 24 | `dash-customer-alim.js` | 고객상세 - 소통(알림톡) 탭 렌더링 | 11 |
-| 25 | `dash-customer-order.js` | 고객상세 - 발주 탭 렌더링 | 5 |
-| 26 | `dash-customer-as.js` | 고객상세 - AS 탭 렌더링 (React 전환 1호) | 2 |
-| 27 | `dash-customer-detail.js` | DAH 대시보드 — 고객상세 모달 기능 | 8 |
-| 28 | `dash-customer-detail-tabs.js` | DAH 대시보드 — 고객상세 모달: 정보탭/할일 + 하단 버튼·단계변경·삭제·복구 | 8 |
-| 29 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 8 |
-| 30 | `dash-customer-add.js` | 고객 추가/수정 모달 (React 전환 2호) | 3 |
-| 31 | `dash-auth.js` | DAH 대시보드 — 로그인/세션/권한 기능 | 5 |
-| 32 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 8 |
-| 33 | `dash-settings-sections.js` | DAH 대시보드 — 설정 화면 구역별 렌더링 (거래처/메모/지역비/쿠폰/연동/데이터) | 6 |
-| 34 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
-| 35 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
+| 16 | `dash-integrity-watch.js` | 데이터 점검 카드 (2026-10-11, 선혜님 "전문업체 기준 보완" 요청) | 4 |
+| 17 | `dash-render-est.js` | 견적서 탭(가견적/확정견적 목록) 렌더링 | 2 |
+| 18 | `dash-render-search.js` | 고객목록(검색) 탭 렌더링 | 1 |
+| 19 | `dash-memo.js` | DAH 대시보드 — 빠른 메모 문구 기능 | 2 |
+| 20 | `dash-chart.js` | DAH 대시보드 — 매출 차트 기능 | 15 |
+| 21 | `dash-calendar.js` | DAH 대시보드 — 일정(캘린더) 기능 | 5 |
+| 22 | `dash-kanban.js` | DAH 대시보드 — 진행현황(칸반) 기능 | 9 |
+| 23 | `dash-pay-history.js` | 고객상세 - 결제 탭의 "입금 내역 보기" (읽기 전용) | 3 |
+| 24 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 1 |
+| 25 | `dash-customer-alim.js` | 고객상세 - 소통(알림톡) 탭 렌더링 | 11 |
+| 26 | `dash-customer-order.js` | 고객상세 - 발주 탭 렌더링 | 5 |
+| 27 | `dash-customer-as.js` | 고객상세 - AS 탭 렌더링 (React 전환 1호) | 2 |
+| 28 | `dash-customer-detail.js` | DAH 대시보드 — 고객상세 모달 기능 | 8 |
+| 29 | `dash-customer-detail-tabs.js` | DAH 대시보드 — 고객상세 모달: 정보탭/할일 + 하단 버튼·단계변경·삭제·복구 | 8 |
+| 30 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 8 |
+| 31 | `dash-customer-add.js` | 고객 추가/수정 모달 (React 전환 2호) | 3 |
+| 32 | `dash-auth.js` | DAH 대시보드 — 로그인/세션/권한 기능 | 5 |
+| 33 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 8 |
+| 34 | `dash-settings-sections.js` | DAH 대시보드 — 설정 화면 구역별 렌더링 (거래처/메모/지역비/쿠폰/연동/데이터) | 6 |
+| 35 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
+| 36 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
 
 ## 견적서 앱 (dah-estimate.html) — 브라우저가 불러오는 순서대로
 
@@ -107,6 +108,9 @@
 | `_getDragAfterRow` | `est-product-calc.js` |
 | `_getSupabaseRealtimeClient` | `dash-realtime.js` |
 | `_handleRealtimeCustomerChange` | `dash-realtime.js` |
+| `_integrityDismissed` | `dash-integrity-watch.js` |
+| `_integrityEsc` | `dash-integrity-watch.js` |
+| `_integrityKey` | `dash-integrity-watch.js` |
 | `_openAlimtalkPreview` | `dash-customer-alim.js` |
 | `_openPdfModalNow` | `est-customer-load.js` |
 | `_readSelfLockLedger` | `shared-optimistic-lock.js` |
@@ -416,6 +420,7 @@
 | `renderFailedSavesBanner` | `dash-failed-saves.js` |
 | `renderGoalProgress` | `dash-render.js` |
 | `renderHome` | `dash-render.js` |
+| `renderIntegrityBanner` | `dash-integrity-watch.js` |
 | `renderKakaoLog` | `dash-customer-alim.js` |
 | `renderKanbanCols` | `dash-kanban.js` |
 | `renderMonthClosePanel` | `dash-chart.js` |

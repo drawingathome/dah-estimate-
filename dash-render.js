@@ -498,6 +498,7 @@ function renderHome(skipServerFetch) {
     // 저장 실패 백업이 조용히 쌓이기만 하고 아무도 확인할 방법이 없던
     // 문제 - 홈 화면 열릴 때마다 확인해서, 남아있으면 눈에 띄게 배너로 알림.
     if (typeof renderFailedSavesBanner === 'function') renderFailedSavesBanner();
+    if (typeof renderIntegrityBanner === 'function') renderIntegrityBanner();
 
     // 빠른이동 내비게이션 (PC 전용)
     if (typeof renderQuickNav === 'function') {

@@ -445,6 +445,8 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['pay-est-customer-lock-refresh-check.js', []]);
   scripts.push(['stale-watch-check.js', []]);
   scripts.push(['cust-lock-adopt-cache-check.js', []]);
+  // 2026-10-11: 홈 "데이터 점검" 카드(DB 이상 데이터 뷰를 읽어 이상 있을 때만 표시) 검증
+  scripts.push(['integrity-banner-check.js', []]);
   scripts.push(['unpaid-per-estimate-check.js', []]);
   // 2026-09-21(선혜님 - 전보현/민소아 고객 실제 발생 확인): 실측/시공
   // 예정일 수정시 예전 "미정" 플래그가 안 지워지던 버그 검증.
