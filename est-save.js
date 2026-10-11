@@ -32,6 +32,8 @@
 var EST_SESSION_RESET_VALUES = {
   editingEstDbId: null,
   editingEstUpdatedAt: null,
+  lockSource: null, // 잠금값을 마지막에 세운 경로(loaded/draft/save/create/freeze/installer/overwrite) - 충돌 원인 추적용
+  lockSetAt: 0,
   viewingFrozenEstimate: false,
   estSaveCustomerId: null,
   estimateConfirmedAt: null, // 9/15: 확정 상태 - 안 넣었다가 "허서진 데이터 실종" 사건 발생
@@ -747,7 +749,7 @@ function estAutoFreezeOnOpen(row, mismatch, stored, shown) {
       try {
         var out = JSON.parse(x.responseText);
         if (x.status >= 200 && x.status < 300 && Array.isArray(out) && out.length === 1) {
-          if (out[0].updated_at) window._estEditState.editingEstUpdatedAt = out[0].updated_at;
+          if (out[0].updated_at) { window._estEditState.editingEstUpdatedAt = out[0].updated_at; window._estEditState.lockSource = 'freeze'; window._estEditState.lockSetAt = Date.now(); }
           row.price_breakdown = pb;
           estSendReceipt('open', 'auto_freeze', { stored_price: stored, rows: items.length });
         }

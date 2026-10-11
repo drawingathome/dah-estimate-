@@ -289,7 +289,8 @@ function loadDraft() {
       // 레코드로 중복 생성됨(위 collectFormData 주석 참고).
       if (d.editingEstDbId) {
         window._estEditState.editingEstDbId = d.editingEstDbId;
-        window._estEditState.editingEstUpdatedAt = d.editingEstUpdatedAt || null;
+        window._estEditState.editingEstUpdatedAt = d.editingEstUpdatedAt || null; window._estEditState.lockSource = 'draft'; window._estEditState.lockSetAt = Date.now();
+        if (typeof estCheckStale === 'function') setTimeout(function () { estCheckStale(true); }, 1500); // 임시 초안의 낡은 잠금값이면 바로 안내
       }
 
       // 2026-08-10: 커튼/블라인드 행 복원 — 예전엔 고객정보만 복원되고

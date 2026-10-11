@@ -486,8 +486,18 @@ function _saveStage_estimatesActual(ctx) {
                 reportClientError(
                   '견적서 저장 실패(권한문제 또는 동시저장충돌) - 내용 백업됨',
                   null,
-                  { estPayload: estPayloadForRetry, reason: lockUpdatedAt ? '동시저장충돌' : '권한문제' }
+                  { estPayload: estPayloadForRetry, reason: lockUpdatedAt ? '동시저장충돌' : '권한문제',
+                    myLock: lockUpdatedAt, lockSource: window._estEditState.lockSource || null,
+                    lockAgeSec: window._estEditState.lockSetAt ? Math.round((Date.now() - window._estEditState.lockSetAt) / 1000) : null }
                 );
+                // 2026-10-11: 충돌이 "진짜 다른 곳의 저장" 때문인지 "낡은 잠금값" 때문인지 나중에 구분할 수 있게, 서버의 현재 시각도 함께 기록
+                if (lockUpdatedAt && typeof fetchLatestUpdatedAt === 'function' && typeof estSendReceipt === 'function') {
+                  var detailEstId = window._estEditState.editingEstDbId;
+                  fetchLatestUpdatedAt('estimates', detailEstId, function (srv) {
+                    estSendReceipt('save', 'conflict_detail', { my_lock: lockUpdatedAt, server_updated_at: srv, lock_source: window._estEditState.lockSource || null,
+                      lock_age_sec: window._estEditState.lockSetAt ? Math.round((Date.now() - window._estEditState.lockSetAt) / 1000) : null });
+                  });
+                }
               }
               // 2026-09-05(선혜님 지시 - "더 파자"로 발견, 실제 DB
               // 로그로 재현 확인): 동시저장충돌 감지 후에도 window.
@@ -521,7 +531,7 @@ function _saveStage_estimatesActual(ctx) {
                     if (typeof fetchLatestUpdatedAt !== 'function') { showToast('⚠️ 최신 정보를 확인하지 못했어요. 새로고침 후 다시 시도해주세요'); return; }
                     fetchLatestUpdatedAt('estimates', conflictEstId, function(freshUpdatedAt) {
                       if (!freshUpdatedAt) { showToast('⚠️ 최신 정보를 확인하지 못했어요. 잠시 후 다시 시도해주세요'); return; }
-                      window._estEditState.editingEstUpdatedAt = freshUpdatedAt;
+                      window._estEditState.editingEstUpdatedAt = freshUpdatedAt; window._estEditState.lockSource = 'overwrite'; window._estEditState.lockSetAt = Date.now();
                       if (typeof estSendReceipt === 'function') estSendReceipt('save', 'overwrite_after_conflict', { my_lock: lockUpdatedAt, server_updated_at: freshUpdatedAt });
                       var saveBtnAgain = document.getElementById('btn-save-estimate');
                       if (saveBtnAgain) saveBtnAgain.click();
@@ -534,7 +544,7 @@ function _saveStage_estimatesActual(ctx) {
               return;
             }
             // 성공 - 다음 저장을 위해 최신 updated_at 갱신
-            if (lockCheckRows[0] && lockCheckRows[0].updated_at) window._estEditState.editingEstUpdatedAt = lockCheckRows[0].updated_at;
+            if (lockCheckRows[0] && lockCheckRows[0].updated_at) { window._estEditState.editingEstUpdatedAt = lockCheckRows[0].updated_at; window._estEditState.lockSource = 'save'; window._estEditState.lockSetAt = Date.now(); }
           } catch(eLock) {
             // 응답 파싱 실패 = 실제로 뭐가 바뀌었는지 확인 불가 상태 —
             // 조용히 "성공"으로 넘어가지 않고 확인 필요하다고 알림
@@ -551,7 +561,7 @@ function _saveStage_estimatesActual(ctx) {
             var newDbId = createdRows && createdRows[0] && createdRows[0].id;
             if (newDbId) {
               window._estEditState.editingEstDbId = newDbId; // 이후 같은 화면에서 재저장하면 이제부터 수정모드
-              window._estEditState.editingEstUpdatedAt = createdRows[0].updated_at || null;
+              window._estEditState.editingEstUpdatedAt = createdRows[0].updated_at || null; window._estEditState.lockSource = 'create'; window._estEditState.lockSetAt = Date.now();
               var localArr = JSON.parse(localStorage.getItem('dah_saved')||'[]');
               var lastIdx = localArr.length - 1;
               // 2026-08-24: 여기서도 .dbId만 갱신하고 .id는 그대로 둬서, 첫 저장

@@ -61,7 +61,8 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 60000);
     ok(r.modal && r.hasBtns, '선택창(최신 내용 불러오기/덮어쓰기)이 뜸');
     ok(r.lockAfterConflict === '2026-10-10T08:00:00+00:00', '선택 전에는 락값을 자동으로 바꾸지 않음(그대로 유지)');
     const getsBefore = reqs.filter(x => x.startsWith('GET') && x.includes('select=updated_at')).length;
-    ok(getsBefore === 1, '덮어쓰기를 고른 뒤에야 최신 정보를 조회함(조회 ' + getsBefore + '회)');
+    // 충돌 시점의 원인 기록용 조회 1회(conflict_detail) + 덮어쓰기를 고른 뒤 잠금값 맞춤용 조회 1회 = 2회. 락값 자체는 선택 전엔 안 바뀜(위에서 확인)
+    ok(getsBefore === 2, '원인 기록용 1회 + 덮어쓰기 선택 후 1회만 조회함(조회 ' + getsBefore + '회)');
     ok(r.modalGone && r.lockAfterOverwrite === '2026-10-10T09:00:00.123456+00:00', '덮어쓰기 선택 후 락값이 최신으로 맞춰짐');
     ok(!r.hasSaveBtn || r.clicks === 1, '덮어쓰기 선택 후 저장 버튼을 다시 눌러 저장을 이어감');
     ok(errs.length === 0, '자바스크립트 오류 없음' + (errs.length ? ': ' + errs[0] : ''));
