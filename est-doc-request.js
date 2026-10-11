@@ -596,6 +596,9 @@ function _showRequestPreview(kind, label, extraNote) {
           xhrInstaller.setRequestHeader('apikey', SUPABASE_KEY);
           xhrInstaller.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
           xhrInstaller.setRequestHeader('Content-Type', 'application/json');
+          xhrInstaller.setRequestHeader('Prefer', 'return=representation');
+          // 2026-10-11: 이 저장도 견적서의 updated_at을 바꾸므로, 안 맞추면 바로 다음 저장이 "다른 곳에서 수정됨"으로 오인 충돌했음 - 내 쓰기 결과로 잠금값을 맞춤
+          xhrInstaller.onload = function() { try { var ir = JSON.parse(xhrInstaller.responseText); if (xhrInstaller.status >= 200 && xhrInstaller.status < 300 && Array.isArray(ir) && ir[0] && ir[0].updated_at) window._estEditState.editingEstUpdatedAt = ir[0].updated_at; } catch (eIr) { /* 무시 */ } };
           xhrInstaller.onerror = function() { console.warn('설치기사 정보 저장 실패'); typeof reportClientError==='function' && reportClientError('설치기사 정보 저장 실패'); };
           xhrInstaller.send(JSON.stringify({ installer_name: installerNameForStatus, installer_phone: installerPhoneForSave }));
         } catch (eInstaller) { console.warn('설치기사 정보 저장 실패:', eInstaller); typeof reportClientError==='function' && reportClientError('설치기사 정보 저장 실패: ' + (eInstaller && eInstaller.message || eInstaller), eInstaller && eInstaller.stack); }
