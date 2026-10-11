@@ -252,6 +252,42 @@ function _saveStage_estimates(ctx) {
   // 합쳐 데이터를 잃는 것보다 훨씬 안전함.
   _saveStage_estimatesActual(ctx);
 }
+// 2026-10-11: 같은 견적서가 다른 기기/창에서 먼저 저장돼 저장이 거절됐을 때 띄우는 선택창.
+// 자동으로 덮어쓰지 않고, 최신 내용을 불러올지(내 변경은 이미 백업됨) 내 내용으로 덮어쓸지 직접 고르게 함.
+function estShowSaveConflictModal(opts) {
+  try {
+    var old = document.getElementById('est-save-conflict-modal'); if (old) old.remove();
+    var wrap = document.createElement('div');
+    wrap.id = 'est-save-conflict-modal';
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:99999999;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+    var box = document.createElement('div');
+    box.style.cssText = 'background:#fff;border-radius:14px;padding:20px 18px;max-width:380px;width:100%;font-size:14px;line-height:1.6;color:#282828;box-shadow:0 8px 30px rgba(0,0,0,0.25)';
+    var title = document.createElement('div');
+    title.style.cssText = 'font-size:16px;font-weight:800;margin-bottom:8px';
+    title.textContent = '다른 곳에서 먼저 저장된 견적서예요';
+    var msg = document.createElement('div');
+    msg.style.cssText = 'margin-bottom:14px;color:#555';
+    msg.textContent = '같은 견적서를 다른 기기나 창에서 방금 저장했어요. 지금 내용으로 저장하면 그쪽 내용이 사라질 수 있어요. 내가 입력한 내용은 이미 안전하게 백업됐어요.';
+    var btnLoad = document.createElement('button');
+    btnLoad.type = 'button'; btnLoad.id = 'est-conflict-load-latest';
+    btnLoad.textContent = '최신 내용 불러오기 (권장)';
+    btnLoad.style.cssText = 'display:block;width:100%;padding:12px;margin-bottom:8px;border:none;border-radius:10px;background:#282828;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer';
+    var btnOver = document.createElement('button');
+    btnOver.type = 'button'; btnOver.id = 'est-conflict-overwrite';
+    btnOver.textContent = '내 내용으로 덮어쓰기';
+    btnOver.style.cssText = 'display:block;width:100%;padding:12px;margin-bottom:8px;border:1px solid #B3261E;border-radius:10px;background:#fff;color:#B3261E;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer';
+    var btnCancel = document.createElement('button');
+    btnCancel.type = 'button'; btnCancel.id = 'est-conflict-cancel';
+    btnCancel.textContent = '닫기';
+    btnCancel.style.cssText = 'display:block;width:100%;padding:10px;border:none;background:none;color:#888;font-size:13px;font-family:inherit;cursor:pointer';
+    btnLoad.onclick = function () { wrap.remove(); location.href = location.pathname + '?loadEstDbId=' + encodeURIComponent(opts.estId) + '&mode=edit'; };
+    btnOver.onclick = function () { wrap.remove(); if (opts.onOverwrite) opts.onOverwrite(); };
+    btnCancel.onclick = function () { wrap.remove(); };
+    box.appendChild(title); box.appendChild(msg); box.appendChild(btnLoad); box.appendChild(btnOver); box.appendChild(btnCancel);
+    wrap.appendChild(box); document.body.appendChild(wrap);
+  } catch (e) { /* 선택창이 안 떠도 저장 흐름은 그대로(거절 토스트는 이미 표시됨) */ }
+}
+
 function _saveStage_estimatesActual(ctx) {
   // ctx에서 꺼낸 값들 - 예전엔 바깥 함수(_saveEstimateInner)의 변수를 몰래 같이 쓰던 것들
   var onDone = ctx.onDone, name = ctx.name, phone = ctx.phone, staffName = ctx.staffName, custMemo = ctx.custMemo, grand = ctx.grand, perf = ctx.perf, spaceStr = ctx.spaceStr, fabricStr = ctx.fabricStr, lineItems = ctx.lineItems;
@@ -472,9 +508,26 @@ function _saveStage_estimatesActual(ctx) {
               // 공용 함수로 뽑아냄 - 조회 로직 자체의 버그는 이제 고칠
               // 곳이 한 곳뿐이라, 한쪽만 고치고 깜빡하는 실수가 구조적
               // 으로 불가능해짐.
-              if (lockUpdatedAt && window._estEditState.editingEstDbId && typeof fetchLatestUpdatedAt === 'function') {
-                fetchLatestUpdatedAt('estimates', window._estEditState.editingEstDbId, function(freshUpdatedAt) {
-                  if (freshUpdatedAt) window._estEditState.editingEstUpdatedAt = freshUpdatedAt;
+              // 2026-10-11(선혜님 - 오지은 실장님이 같은 견적서를 두 기기에서 열어두고 저장하다 한국화님 건에서 발견):
+              // 위처럼 거절 직후 락값을 "자동으로" 새로 맞추면, 실장님이 저장을 한 번 더 누르는 순간 아무 확인 없이
+              // 다른 기기에서 먼저 저장한 내용을 덮어쓰게 됨. 동시저장충돌일 때는 자동 갱신을 하지 않고, 최신 내용을
+              // 먼저 볼지 / 내 내용으로 덮어쓸지를 직접 고르게 함(덮어쓰기를 고르면 그때서야 락값을 맞추고 서버에 기록).
+              // 권한 문제(락값 없음)일 때는 예전처럼 아무것도 안 함.
+              if (lockUpdatedAt && window._estEditState.editingEstDbId && typeof estShowSaveConflictModal === 'function') {
+                var conflictEstId = window._estEditState.editingEstDbId;
+                estShowSaveConflictModal({
+                  estId: conflictEstId,
+                  onOverwrite: function() {
+                    if (typeof fetchLatestUpdatedAt !== 'function') { showToast('⚠️ 최신 정보를 확인하지 못했어요. 새로고침 후 다시 시도해주세요'); return; }
+                    fetchLatestUpdatedAt('estimates', conflictEstId, function(freshUpdatedAt) {
+                      if (!freshUpdatedAt) { showToast('⚠️ 최신 정보를 확인하지 못했어요. 잠시 후 다시 시도해주세요'); return; }
+                      window._estEditState.editingEstUpdatedAt = freshUpdatedAt;
+                      if (typeof estSendReceipt === 'function') estSendReceipt('save', 'overwrite_after_conflict', { my_lock: lockUpdatedAt, server_updated_at: freshUpdatedAt });
+                      var saveBtnAgain = document.getElementById('btn-save-estimate');
+                      if (saveBtnAgain) saveBtnAgain.click();
+                      else showToast('저장 버튼을 한 번 더 눌러주세요');
+                    });
+                  }
                 });
               }
               onDone('failed'); // 2026-10-06: 서버에 못 올라간 경우 - 바깥에서 "저장됨"으로 착각하지 않게 결과를 알림

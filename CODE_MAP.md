@@ -65,7 +65,7 @@
 | 14 | `est-survey.js` | DAH 견적서 앱 — 설문지 연동 | 2 |
 | 15 | `est-save.js` | DAH 견적서 앱 — 저장/검증/토스트 | 21 |
 | 16 | `est-click-watch.js` | est-click-watch.js — 견적서 앱: 저장 버튼 "눌림 관측" (2026-10-07 신규) | 0 |
-| 17 | `est-save-stages.js` | DAH 견적서 앱 — 저장 단계 함수 4개 (고객 저장 → 견적서 저장 → 로컬 저장) | 4 |
+| 17 | `est-save-stages.js` | DAH 견적서 앱 — 저장 단계 함수 4개 (고객 저장 → 견적서 저장 → 로컬 저장) | 5 |
 | 18 | `est-doc-customer.js` | DAH 견적서 앱 — 고객용 견적서 문서 생성 | 2 |
 | 19 | `est-doc-vendor.js` | DAH 견적서 앱 — 거래처별 발주서 문서 생성 | 5 |
 | 20 | `est-doc-vendor-ui.js` | DAH 견적서 앱 — 발주서: 거래처 정보 입력 모달 + 발주서 선택/인쇄 | 4 |
@@ -235,6 +235,7 @@
 | `estMissingInstallRows` | `est-save.js` |
 | `estRenderMismatchBanner` | `est-save.js` |
 | `estSendReceipt` | `est-save.js` |
+| `estShowSaveConflictModal` | `est-save-stages.js` |
 | `estSvcState` | `est-save.js` |
 | `exportEstimatesExcel` | `dash-export.js` |
 | `exportExcel` | `dash-export.js` |

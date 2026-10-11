@@ -427,6 +427,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['month-close-check.js', []]);
   scripts.push(['pay-history-check.js', []]);
   scripts.push(['pay-history-ui-check.js', []]);
+  scripts.push(['save-conflict-modal-check.js', []]);
   // 2026-09-19(선혜님 - "2건에 대한 건 없고 이거뿐이야" → "그래야지"):
   // "진행중인 견적" 요약이 최신 견적서 하나가 아니라 전체 합계로
   // 표시되는지 검증.
