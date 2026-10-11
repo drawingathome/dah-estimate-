@@ -52,3 +52,11 @@ function estCheckStale(force) {
 document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') estCheckStale(false); });
 window.addEventListener('focus', function () { estCheckStale(false); });
 window.addEventListener('pageshow', function () { estCheckStale(false); });
+
+// 화면을 계속 켜 둔 채(탭 전환 없이) 다른 기기에서 먼저 저장하는 경우도 있어서, 보이는 동안 45초마다 한 번 가볍게 확인함.
+// 기존 견적서를 열어 둔 때만 동작(새 견적서/안 보일 땐 조회 안 함). 한 번 안내가 뜨면 같은 안내를 또 만들지 않음.
+var _estStaleTimer = setInterval(function () {
+  if (document.visibilityState !== 'visible') return;
+  if (document.getElementById('est-stale-banner')) return;
+  estCheckStale(true);
+}, 45000);

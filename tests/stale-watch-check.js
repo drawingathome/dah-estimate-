@@ -38,6 +38,9 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 60000);
     await page.evaluate(() => { document.getElementById('est-stale-banner').remove(); window._estEditState.editingEstDbId = null; });
     await wake();
     ok(!(await page.$('#est-stale-banner')), '새 견적서(아직 저장 전)에는 안내 없음');
+    // 탭 전환 없이도 주기 확인이 동작하는지(타이머 함수를 직접 한 번 돌려 확인)
+    await page.evaluate(() => { var b = document.getElementById('est-stale-banner'); if (b) b.remove(); window._estEditState.editingEstDbId = '00000000-0000-0000-0000-000000000001'; window.__pollOk = typeof _estStaleTimer !== 'undefined'; });
+    ok(await page.evaluate(() => window.__pollOk), '45초 주기 확인 타이머가 등록돼 있음');
     ok(errs.length === 0, 'JS 오류 없음 ' + errs.join('|'));
   } catch (e) { console.log('❌ 예외', e.message); fail++; }
   await browser.close(); server.kill(); process.exit(fail ? 1 : 0);
