@@ -30,19 +30,20 @@
 | 19 | `dash-chart.js` | DAH 대시보드 — 매출 차트 기능 | 15 |
 | 20 | `dash-calendar.js` | DAH 대시보드 — 일정(캘린더) 기능 | 5 |
 | 21 | `dash-kanban.js` | DAH 대시보드 — 진행현황(칸반) 기능 | 9 |
-| 22 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 1 |
-| 23 | `dash-customer-alim.js` | 고객상세 - 소통(알림톡) 탭 렌더링 | 11 |
-| 24 | `dash-customer-order.js` | 고객상세 - 발주 탭 렌더링 | 5 |
-| 25 | `dash-customer-as.js` | 고객상세 - AS 탭 렌더링 (React 전환 1호) | 2 |
-| 26 | `dash-customer-detail.js` | DAH 대시보드 — 고객상세 모달 기능 | 8 |
-| 27 | `dash-customer-detail-tabs.js` | DAH 대시보드 — 고객상세 모달: 정보탭/할일 + 하단 버튼·단계변경·삭제·복구 | 8 |
-| 28 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 8 |
-| 29 | `dash-customer-add.js` | 고객 추가/수정 모달 (React 전환 2호) | 3 |
-| 30 | `dash-auth.js` | DAH 대시보드 — 로그인/세션/권한 기능 | 5 |
-| 31 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 8 |
-| 32 | `dash-settings-sections.js` | DAH 대시보드 — 설정 화면 구역별 렌더링 (거래처/메모/지역비/쿠폰/연동/데이터) | 6 |
-| 33 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
-| 34 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
+| 22 | `dash-pay-history.js` | 고객상세 - 결제 탭의 "입금 내역 보기" (읽기 전용) | 3 |
+| 23 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 1 |
+| 24 | `dash-customer-alim.js` | 고객상세 - 소통(알림톡) 탭 렌더링 | 11 |
+| 25 | `dash-customer-order.js` | 고객상세 - 발주 탭 렌더링 | 5 |
+| 26 | `dash-customer-as.js` | 고객상세 - AS 탭 렌더링 (React 전환 1호) | 2 |
+| 27 | `dash-customer-detail.js` | DAH 대시보드 — 고객상세 모달 기능 | 8 |
+| 28 | `dash-customer-detail-tabs.js` | DAH 대시보드 — 고객상세 모달: 정보탭/할일 + 하단 버튼·단계변경·삭제·복구 | 8 |
+| 29 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 8 |
+| 30 | `dash-customer-add.js` | 고객 추가/수정 모달 (React 전환 2호) | 3 |
+| 31 | `dash-auth.js` | DAH 대시보드 — 로그인/세션/권한 기능 | 5 |
+| 32 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 8 |
+| 33 | `dash-settings-sections.js` | DAH 대시보드 — 설정 화면 구역별 렌더링 (거래처/메모/지역비/쿠폰/연동/데이터) | 6 |
+| 34 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
+| 35 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
 
 ## 견적서 앱 (dah-estimate.html) — 브라우저가 불러오는 순서대로
 
@@ -127,6 +128,7 @@
 | `addToPendingSyncQueue` | `dash-sync-queue.js` |
 | `App` | `survey-app.js` |
 | `appendPasswordResetFlow` | `dash-settings.js` |
+| `appendPayHistory` | `dash-pay-history.js` |
 | `applyDiscountItems` | `est-calc-rules.js` |
 | `applyFrozenBreakdown` | `est-product-calc.js` |
 | `applyPermissions` | `dash-auth.js` |
@@ -142,6 +144,7 @@
 | `blindInstallSpec` | `est-calc-rules.js` |
 | `btn` | `dash-ui-helpers.js` |
 | `buildCustomerHTML` | `est-doc-customer.js` |
+| `buildPayHistoryEntries` | `dash-pay-history.js` |
 | `buildRequestHTML` | `est-doc-request.js` |
 | `buildVendorDocForOne` | `est-doc-vendor.js` |
 | `buildVendorHTML` | `est-doc-vendor.js` |
@@ -257,6 +260,7 @@
 | `formatAuditEvent` | `dash-settings.js` |
 | `formatDate` | `apps-script-survey-to-customer.js` |
 | `formatKoreanDate` | `est-utils.js` |
+| `formatPayHistoryLine` | `dash-pay-history.js` |
 | `formatPhone` | `dash-ui-helpers.js` |
 | `formatPhoneDigits` | `shared-common-utils.js` |
 | `getAlimSentMap` | `dash-customer-alim.js` |

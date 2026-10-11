@@ -500,5 +500,7 @@ function renderPaySection(c, payBody, est) {
     balSec.appendChild(balForm); balSec.appendChild(balExtraWrap); balSec.appendChild(balAddBtn); balSec.appendChild(balSave);
   }
   paySec.appendChild(balSec);
+  // 2026-10-11: 견적서별 "입금 내역 보기"(읽기 전용, 이력에서 읽음) - dash-pay-history.js
+  if (est && typeof appendPayHistory === 'function') appendPayHistory(paySec, est);
   if (payBody) payBody.appendChild(paySec);
 }
