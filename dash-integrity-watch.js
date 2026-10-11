@@ -13,6 +13,13 @@ function _integrityEsc(s) {
   });
 }
 
+// 금액이 들어간 항목만 천 단위 쉼표로 보기 좋게(견적서 번호 같은 다른 숫자는 건드리지 않음)
+function _integrityDetail(r) {
+  var d = String(r.detail == null ? '' : r.detail);
+  if (r.code === 'OVERPAID' || r.code === 'PRICE_DIFF') d = d.replace(/\d{4,}/g, function (n) { return Number(n).toLocaleString(); });
+  return d;
+}
+
 function _integrityKey(r) { return [r.code, r.customer_id || '', r.client_name || '', r.detail || ''].join('|'); }
 
 function _integrityDismissed() {
@@ -41,7 +48,7 @@ function renderIntegrityBanner(forceFetch) {
     var head = '<div id="integrity-head" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer"><span style="font-size:13px;font-weight:700;color:' + color + '">🔎 데이터 점검: 확인할 항목 ' + shown.length + '건' + (warnCount ? ' (중요 ' + warnCount + ')' : '') + '</span><span style="font-size:12px;font-weight:700;color:' + color + '">펼치기 ▾</span></div>';
     var list = shown.map(function (r, i) {
       return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid rgba(0,0,0,0.08);font-size:12px;color:#333">' +
-        '<span><b>' + _integrityEsc(r.client_name || '(이름 없음)') + '</b> · ' + _integrityEsc(INTEGRITY_LABELS[r.code] || r.code) + ' — ' + _integrityEsc(r.detail) + '</span>' +
+        '<span><b>' + _integrityEsc(r.client_name || '(이름 없음)') + '</b> · ' + _integrityEsc(INTEGRITY_LABELS[r.code] || r.code) + ' — ' + _integrityEsc(_integrityDetail(r)) + '</span>' +
         '<button data-i="' + i + '" class="integrity-ok" style="flex:none;background:#fff;border:1px solid #bbb;border-radius:8px;padding:3px 8px;font-size:11px;cursor:pointer;font-family:inherit">확인함</button></div>';
     }).join('');
     box.innerHTML = head + '<div id="integrity-list" style="display:none;margin-top:8px">' + list + '</div>';

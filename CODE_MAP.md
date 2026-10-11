@@ -24,7 +24,7 @@
 | 13 | `dash-core.js` | DAH 대시보드 — 앱 핵심 진입점 함수 | 1 |
 | 14 | `dash-render.js` | DAH 대시보드 — 홈/견적목록/고객검색 화면 렌더링 | 5 |
 | 15 | `dash-failed-saves.js` | DAH 대시보드 — 저장 실패 백업 확인/복구 화면 | 6 |
-| 16 | `dash-integrity-watch.js` | 데이터 점검 카드 (2026-10-11, 선혜님 "전문업체 기준 보완" 요청) | 4 |
+| 16 | `dash-integrity-watch.js` | 데이터 점검 카드 (2026-10-11, 선혜님 "전문업체 기준 보완" 요청) | 5 |
 | 17 | `dash-render-est.js` | 견적서 탭(가견적/확정견적 목록) 렌더링 | 2 |
 | 18 | `dash-render-search.js` | 고객목록(검색) 탭 렌더링 | 1 |
 | 19 | `dash-memo.js` | DAH 대시보드 — 빠른 메모 문구 기능 | 2 |
@@ -108,6 +108,7 @@
 | `_getDragAfterRow` | `est-product-calc.js` |
 | `_getSupabaseRealtimeClient` | `dash-realtime.js` |
 | `_handleRealtimeCustomerChange` | `dash-realtime.js` |
+| `_integrityDetail` | `dash-integrity-watch.js` |
 | `_integrityDismissed` | `dash-integrity-watch.js` |
 | `_integrityEsc` | `dash-integrity-watch.js` |
 | `_integrityKey` | `dash-integrity-watch.js` |

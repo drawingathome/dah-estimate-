@@ -17,7 +17,7 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 50000);
     const r = await page.evaluate(async () => {
       const out = {};
       const rows = [
-        { code: 'OVERPAID', severity: 'warn', customer_id: 1, client_name: '<b>홍길동</b>', detail: '입금합계 큼' },
+        { code: 'OVERPAID', severity: 'warn', customer_id: 1, client_name: '<b>홍길동</b>', detail: '입금합계 1200000원이 금액 1027000원보다 큼' },
         { code: 'PRICE_DIFF', severity: 'info', customer_id: 2, client_name: '김철수', detail: '금액 다름' }
       ];
       window.sbXHR = function (m, p, d, cb) { out.path = p; cb(null, rows); };
@@ -25,6 +25,7 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 50000);
       renderIntegrityBanner(true);
       out.shown = !!document.getElementById('integrity-banner');
       out.text = document.getElementById('integrity-banner').innerText;
+      out.comma = document.getElementById('integrity-banner').textContent.indexOf('1,200,000원') >= 0;
       out.escaped = document.getElementById('integrity-banner').innerHTML.indexOf('<b>홍길동</b>') < 0;
       document.querySelectorAll('.integrity-ok')[0].click();
       out.afterOne = document.querySelectorAll('.integrity-ok').length;
@@ -41,6 +42,7 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 50000);
     });
     ok(/data_integrity_issues/.test(r.path), '점검 뷰를 조회함: ' + r.path);
     ok(r.shown && /2건/.test(r.text) && /중요 1/.test(r.text), '이상이 있으면 건수와 중요 건수가 표시됨: ' + r.text.slice(0, 40));
+    ok(r.comma, '금액이 천 단위 쉼표로 표시됨');
     ok(r.escaped, '고객 이름의 HTML이 그대로 실행되지 않음(이스케이프)');
     ok(r.afterOne === 1, '"확인함"을 누르면 그 항목만 숨겨짐');
     ok(r.afterAll === false, '전부 확인하면 카드가 사라짐');
