@@ -144,6 +144,7 @@ if (_today.getDate() >= 3) {
   console.log('(오늘이 3일 이전이라 월 마감 미실시 점검 케이스는 건너뜀)');
 }
 const bk = run({ customers: [] });
+ok('9-4. 매일 백업이 변경 이력·저장 기록·점검 확인 기록도 가져옴', ['customer_history','estimate_history','save_receipts','integrity_acks'].every(function(t){ return bk.fetchedTables.indexOf(t) !== -1; }), JSON.stringify(bk.fetchedTables));
 ok('9-3. 매일 백업이 월 마감(monthly_close)·입금 장부(payment_ledger)도 가져옴', bk.fetchedTables.indexOf('monthly_close') !== -1 && bk.fetchedTables.indexOf('payment_ledger') !== -1, JSON.stringify(bk.fetchedTables));
 
 console.log('\n' + (failed === 0 ? '✅ 전체 통과(' + path.basename(FILE) + ' 매일백업 실행 검증)' : '❌ 실패 ' + failed + '건'));

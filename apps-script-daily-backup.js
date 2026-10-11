@@ -50,7 +50,7 @@ var SUPABASE_SERVICE_ROLE_KEY = PropertiesService.getScriptProperties().getPrope
 // 붙여넣어야만 운영에 반영되는데, 저장소에서 고친 버전이 실제로 반영됐는지 확인할 방법이 없어서 낡은 코드(9/23~10/1 버전)가
 // 며칠 동안 매일 실패하는 걸 늦게 알았음. 버전을 코드에 박아 매일 메일·로그에 함께 찍어서, 낡은 코드가 돌고 있으면 바로
 // 보이게 함. ※ 이 파일을 고칠 때마다 아래 값도 같이 올릴 것(날짜.순번).
-var DAH_SCRIPT_VERSION = '2026-10-10.2';
+var DAH_SCRIPT_VERSION = '2026-10-12.1';
 
 // 점검 함수 하나가 오류로 죽어도 백업과 나머지 점검은 계속 돌게 감싸는 헬퍼. 죽은 점검은 failures에 모아서 메일로 알림.
 function dahSafeScan(name, fn, failures) {
@@ -75,8 +75,10 @@ function dahDailyBackup() {
   // analytics_events는 단순 사용로그라 우선순위 낮지만 비용 거의 안 드니 같이 포함.
   // 2026-08-27(선혜님 요청 - "에러 모니터링 도입하자"): client_error_logs도
   // 백업 대상에 포함 + 아래에서 새로 쌓인 에러가 있으면 이메일로 알림.
+  // 2026-10-12: 변경 이력(customer_history/estimate_history), 저장 기록(save_receipts), 점검 확인 기록(integrity_acks)도 백업 대상 -
+  //   "누가 언제 뭘 바꿨는지"의 유일한 근거라 날아가면 복구 불가(합쳐서 수 MB라 용량 부담 없음).
   // 2026-10-10: 월 마감(monthly_close)과 입금 장부(payment_ledger)도 백업 대상 - 둘 다 새로 생긴 "숫자의 근거"라 날아가면 복구 불가.
-  var tables = ['customers', 'estimates', 'surveys', 'app_settings', 'as_records', 'staff_profiles', 'analytics_events', 'client_error_logs', 'monthly_close', 'payment_ledger'];
+  var tables = ['customers', 'estimates', 'surveys', 'app_settings', 'as_records', 'staff_profiles', 'analytics_events', 'client_error_logs', 'monthly_close', 'payment_ledger', 'customer_history', 'estimate_history', 'save_receipts', 'integrity_acks'];
   var backup = { exportedAt: new Date().toISOString(), version: '1.0' };
   var errors = [];
 
