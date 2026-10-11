@@ -109,9 +109,9 @@
 | `_getSupabaseRealtimeClient` | `dash-realtime.js` |
 | `_handleRealtimeCustomerChange` | `dash-realtime.js` |
 | `_integrityDetail` | `dash-integrity-watch.js` |
-| `_integrityDismissed` | `dash-integrity-watch.js` |
 | `_integrityEsc` | `dash-integrity-watch.js` |
 | `_integrityKey` | `dash-integrity-watch.js` |
+| `_integrityTime` | `dash-integrity-watch.js` |
 | `_openAlimtalkPreview` | `dash-customer-alim.js` |
 | `_openPdfModalNow` | `est-customer-load.js` |
 | `_readSelfLockLedger` | `shared-optimistic-lock.js` |
