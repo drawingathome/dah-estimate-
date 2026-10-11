@@ -165,6 +165,26 @@ function renderPaySection(c, payBody, est) {
             findEstXhr.send();
           } catch (eEstOuter) {}
         }
+        // 2026-10-11(선혜님 - "저장 충돌이 계속 난다", 김현정·이민선·조유정 사례를 DB 이력 시각 대조로 확정):
+        // 위 estimates 저장 때문에 DB 트리거가 이 고객 행을 바로 갱신해서 고객의 updated_at(낙관적 잠금값)이 바뀜.
+        // 이 화면이 들고 있던 예전 잠금값 그대로 곧바로 이어지는 고객 저장(단계 변경 등)은 스스로와 충돌했음.
+        // 결제 저장이 성공하면 고객의 최신 잠금값을 다시 받아 로컬에 반영한 "다음에" 콜백을 실행함.
+        if (!err && c && c.id && typeof fetchLatestUpdatedAt === 'function') {
+          fetchLatestUpdatedAt('customers', c.id, function (freshUpdatedAt) {
+            try {
+              if (freshUpdatedAt) {
+                c.updatedAt = freshUpdatedAt;
+                if (typeof loadCustomers === 'function' && typeof saveCustomers === 'function') {
+                  var arrLock = loadCustomers();
+                  var tgtLock = arrLock.find(function (x) { return x.id === c.id; });
+                  if (tgtLock) { tgtLock.updatedAt = freshUpdatedAt; saveCustomers(arrLock); }
+                }
+              }
+            } catch (eLockRefresh) { /* 잠금값 갱신 실패는 저장 흐름에 영향 없게 */ }
+            if (callback) callback();
+          });
+          return;
+        }
         if (callback) callback();
       });
       return;
