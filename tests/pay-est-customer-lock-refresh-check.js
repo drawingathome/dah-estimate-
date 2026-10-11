@@ -67,7 +67,7 @@ async function run() {
   console.log(allPass && jsErrors.length === 0 ? '\n✅ 전체 통과' : '\n❌ 일부 실패');
   await browser.close();
   server.kill();
-  if (!allPass || jsErrors.length > 0) process.exit(1);
+  process.exit(!allPass || jsErrors.length > 0 ? 1 : 0); // 통과해도 명시적으로 종료(안 하면 서버 프로세스 때문에 대기하다 자체 시간초과로 실패 처리됨)
 }
 run().catch(e => { console.error(e); process.exit(1); });
 setTimeout(() => process.exit(1), 40000);
