@@ -24,6 +24,8 @@
     "svcRowsSaved": true
    },
    "lastDiscountBreakdown": [],
+   "lockSetAt": 1790564400000,
+   "lockSource": "create",
    "skipAutoSvc": false,
    "viewingFrozenEstimate": false
   },
@@ -379,6 +381,8 @@
     "svcRowsSaved": true
    },
    "lastDiscountBreakdown": [],
+   "lockSetAt": 1790564400000,
+   "lockSource": "create",
    "skipAutoSvc": false,
    "viewingFrozenEstimate": false
   },
@@ -1053,6 +1057,8 @@
     "svcRowsSaved": true
    },
    "lastDiscountBreakdown": [],
+   "lockSetAt": 0,
+   "lockSource": null,
    "skipAutoSvc": false,
    "viewingFrozenEstimate": false
   },
@@ -1410,6 +1416,8 @@
     "svcRowsSaved": true
    },
    "lastDiscountBreakdown": [],
+   "lockSetAt": 0,
+   "lockSource": null,
    "skipAutoSvc": false,
    "viewingFrozenEstimate": false
   },
@@ -1596,6 +1604,8 @@
     "svcRowsSaved": true
    },
    "lastDiscountBreakdown": [],
+   "lockSetAt": 1790564400000,
+   "lockSource": "create",
    "skipAutoSvc": false,
    "viewingFrozenEstimate": false
   },
@@ -1968,6 +1978,8 @@
     "svcRowsSaved": true
    },
    "lastDiscountBreakdown": [],
+   "lockSetAt": 0,
+   "lockSource": null,
    "skipAutoSvc": false,
    "viewingFrozenEstimate": false
   },
@@ -2050,6 +2062,9 @@
        "space": "거실",
        "staff_name": ""
       },
+      "lockAgeSec": null,
+      "lockSource": null,
+      "myLock": null,
       "reason": "권한문제"
      },
      "message": "견적서 저장 실패(권한문제 또는 동시저장충돌) - 내용 백업됨",
@@ -2403,6 +2418,8 @@
     "svcRowsSaved": true
    },
    "lastDiscountBreakdown": [],
+   "lockSetAt": 0,
+   "lockSource": null,
    "skipAutoSvc": false,
    "viewingFrozenEstimate": false
   },
@@ -2763,6 +2780,8 @@
     "svcRowsSaved": true
    },
    "lastDiscountBreakdown": [],
+   "lockSetAt": 1790564400000,
+   "lockSource": "create",
    "skipAutoSvc": false,
    "viewingFrozenEstimate": false
   },

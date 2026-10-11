@@ -23,7 +23,7 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 50000);
       // 대시보드 화면이 들고 있던 낡은 객체(고객 목록 캐시와 별개의 참조)
       var stale = { id: 9601, clientName: '캐시이어받기', staffName: '마스터', stage: '가견적', price: 1000000, performanceRevenue: 900000, memo: '새 메모', updatedAt: '2026-10-11T01:00:00.000Z' };
       // 그 사이 같은 브라우저의 견적서 앱이 고객을 갱신: 캐시의 잠금값/견적금액이 최신
-      var arr = loadCustomers(); arr[0].updatedAt = '2026-10-11T02:00:00.000Z'; arr[0].price = 1500000; arr[0].performanceRevenue = 1200000; saveCustomers(arr);
+      var arr = loadCustomers(); arr[0].updatedAt = '2026-10-11T02:00:00.000Z'; arr[0].estLockSyncedAt = '2026-10-11T02:00:00.000Z'; arr[0].estLockPrev = '2026-10-11T01:00:00.000Z'; arr[0].price = 1500000; arr[0].performanceRevenue = 1200000; saveCustomers(arr);
       var captured = null;
       window.sbXHR = function (method, p, data, cb) { captured = { method: method, path: p, data: data }; cb(null, [{ id: 9601, updated_at: '2026-10-11T02:00:05.000Z' }]); };
       await new Promise(function (res) { saveCustomerToDb(stale, function () { res(); }); });
@@ -32,10 +32,19 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 50000);
     ok(r && r.path.indexOf('updated_at=eq.' + encodeURIComponent('2026-10-11T02:00:00.000Z')) >= 0, '저장이 캐시의 최신 잠금값으로 나감: ' + (r && r.path));
     ok(r && Number(r.data.price) === 1500000, '견적서 앱이 갱신한 견적 금액을 낡은 값으로 되돌려 덮어쓰지 않음: ' + (r && r.data.price));
     ok(r && r.data.memo === '새 메모', '내가 방금 고친 내용(메모)은 그대로 저장됨');
+    // 음성 시험: 표식이 없으면(다른 기기/서버 동기화가 시각을 바꾼 경우) 이어받지 않고 낡은 잠금값 그대로 보내 서버가 충돌로 막게 함
+    const r2 = await page.evaluate(async () => {
+      saveCustomers([{ id: 9602, clientName: '표식없음', staffName: '마스터', stage: '가견적', price: 1000000, updatedAt: '2026-10-11T02:00:00.000Z' }]);
+      var stale2 = { id: 9602, clientName: '표식없음', staffName: '마스터', stage: '가견적', price: 1000000, memo: 'x', updatedAt: '2026-10-11T01:00:00.000Z' };
+      var cap = null; window.sbXHR = function (m, p, d, cb) { cap = { path: p, data: d }; cb(null, [{ id: 9602, updated_at: 'z' }]); };
+      await new Promise(function (res) { saveCustomerToDb(stale2, function () { res(); }); });
+      return cap;
+    });
+    ok(r2 && r2.path.indexOf(encodeURIComponent('2026-10-11T01:00:00.000Z')) >= 0, '표식 없는 최신 캐시(다른 기기 변경 가능성)는 이어받지 않음: ' + (r2 && r2.path));
     ok(errs.length === 0, 'JS 오류 없음 ' + errs.join('|'));
   } catch (e) { console.log('❌ 예외', e.message); fail++; }
   // 견적서 앱 쪽: 고객 저장 성공 응답의 새 updated_at을 공용 캐시에 반영하는 코드가 있는지(소스 확인)
   const src = fs.readFileSync(path.join(__dirname, '..', 'est-save-stages.js'), 'utf8');
-  ok(/arrLockSync\[lockIdx\]\.updatedAt\s*=\s*resData\[0\]\.updated_at/.test(src), '견적서 앱: 고객 저장 응답의 새 수정 시각을 dah_customers 캐시에 반영');
+  ok(/cacheRow\.updatedAt\s*=\s*resData\[0\]\.updated_at/.test(src), '견적서 앱: 고객 저장 응답의 새 수정 시각을 dah_customers 캐시에 반영');
   await browser.close(); server.kill(); process.exit(fail ? 1 : 0);
 })();

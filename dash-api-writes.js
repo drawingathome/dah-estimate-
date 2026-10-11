@@ -82,7 +82,10 @@ function saveCustomerToDb(customer, callback) {
   try {
     if (customer && customer.id && typeof loadCustomers === 'function') {
       var cachedSame = loadCustomers().find(function (c) { return String(c.id) === String(customer.id); });
+      // 견적서 앱 표식(estLockSyncedAt/estLockPrev)이 맞을 때만: 내 잠금값이 견적서 앱이 갱신하기 직전 시각 그대로이고, 최신 시각도 견적서 앱이 만든 것일 때.
+      // 다른 기기/서버 동기화가 끼어들었으면 표식이 안 맞아 이어받지 않고, 서버 잠금이 진짜 충돌로 막음.
       if (cachedSame && cachedSame !== customer && cachedSame.updatedAt && customer.updatedAt &&
+          cachedSame.estLockSyncedAt === cachedSame.updatedAt && cachedSame.estLockPrev === customer.updatedAt &&
           Date.parse(cachedSame.updatedAt) > Date.parse(customer.updatedAt)) {
         customer.updatedAt = cachedSame.updatedAt;
         if (cachedSame.price !== undefined) customer.price = cachedSame.price;

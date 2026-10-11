@@ -135,7 +135,16 @@ function proceed(otherEstGrand, otherEstPerf, sumFailed) {
           try {
             var arrLockSync = JSON.parse(localStorage.getItem('dah_customers') || '[]');
             var lockIdx = arrLockSync.findIndex(function (c) { return String(c.id) === String(existingCustId); });
-            if (lockIdx >= 0) { arrLockSync[lockIdx].updatedAt = resData[0].updated_at; localStorage.setItem('dah_customers', JSON.stringify(arrLockSync)); }
+            if (lockIdx >= 0) {
+              var cacheRow = arrLockSync[lockIdx];
+              // 표식: "이 수정 시각은 견적서 앱이 이 브라우저에서 직접 만든 것이고, 그 직전 시각은 estLockPrev였다".
+              // 대시보드는 자기 잠금값이 정확히 estLockPrev일 때(=그 사이 견적서 앱 말고는 아무도 안 바꿨을 때)만 이어받음.
+              // 견적서 앱이 연달아 저장해도 처음의 직전 시각을 유지함. 다른 기기/서버 동기화가 시각을 바꾸면 표식이 안 맞아 이어받지 않음(진짜 충돌은 그대로 막힘).
+              if (!(cacheRow.estLockSyncedAt && cacheRow.estLockSyncedAt === cacheRow.updatedAt)) cacheRow.estLockPrev = cacheRow.updatedAt || null;
+              cacheRow.updatedAt = resData[0].updated_at;
+              cacheRow.estLockSyncedAt = resData[0].updated_at;
+              localStorage.setItem('dah_customers', JSON.stringify(arrLockSync));
+            }
           } catch (eLockSync) { /* 캐시 갱신 실패는 저장 흐름에 영향 없게 */ }
         }
         if (isUpdate && Array.isArray(resData) && resData.length === 0) {
