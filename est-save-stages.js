@@ -127,6 +127,17 @@ function proceed(otherEstGrand, otherEstPerf, sumFailed) {
       } else {
         var resData = null;
         try { resData = xhr.responseText ? JSON.parse(xhr.responseText) : []; } catch(eP) { resData = null; }
+        // 2026-10-11(선혜님 - "시간차가 나도 자꾸 충돌한다", 마스터 PC 한 대에서도 발생 - 김현정/이민선/조유정 이력 시각 대조로 확정):
+        // 견적서 앱의 이 고객 저장은 잠금 없이 고객 행을 갱신하는데, 그때마다 DB가 고객의 updated_at(잠금값)을 새로 찍음.
+        // 같은 브라우저를 쓰는 대시보드는 이 고객 목록 캐시(dah_customers)의 예전 updated_at을 그대로 들고 있어서,
+        // 몇 분~몇 시간 뒤 대시보드에서 그 고객을 저장하면 "다른 곳에서 먼저 저장"으로 오판해 충돌했음. 서버가 준 새 시각을 캐시에 바로 반영.
+        if (isUpdate && Array.isArray(resData) && resData[0] && resData[0].updated_at) {
+          try {
+            var arrLockSync = JSON.parse(localStorage.getItem('dah_customers') || '[]');
+            var lockIdx = arrLockSync.findIndex(function (c) { return String(c.id) === String(existingCustId); });
+            if (lockIdx >= 0) { arrLockSync[lockIdx].updatedAt = resData[0].updated_at; localStorage.setItem('dah_customers', JSON.stringify(arrLockSync)); }
+          } catch (eLockSync) { /* 캐시 갱신 실패는 저장 흐름에 영향 없게 */ }
+        }
         if (isUpdate && Array.isArray(resData) && resData.length === 0) {
           // 0건 반영 = 권한(RLS) 문제 등으로 서버에 실제로는 아무것도 안 바뀐 것
           showToast('⚠️ 고객정보 수정이 서버에 반영되지 않았어요(권한 문제일 수 있어요) — 새로고침해서 확인해주세요');

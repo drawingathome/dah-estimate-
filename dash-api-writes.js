@@ -76,6 +76,20 @@ function saveCustomerToDb(customer, callback) {
     window._lastSelfCustomerWriteId = customer.id;
     window._lastSelfCustomerWriteTime = Date.now();
   }
+  // 2026-10-11(선혜님 - "시간차가 나도 자꾸 충돌한다"): 같은 브라우저의 견적서 앱이 이 고객을 먼저 갱신해 캐시(dah_customers)의
+  // 잠금값/견적서 소유 필드(견적 금액·성과매출)가 더 최신이면, 이 화면이 들고 있던 낡은 객체 대신 그 값을 이어받아 저장함
+  // (낡은 금액으로 되돌려 덮어쓰지도 않고, 가짜 충돌도 나지 않음). 다른 기기가 바꾼 경우는 서버 잠금이 그대로 막아줌.
+  try {
+    if (customer && customer.id && typeof loadCustomers === 'function') {
+      var cachedSame = loadCustomers().find(function (c) { return String(c.id) === String(customer.id); });
+      if (cachedSame && cachedSame !== customer && cachedSame.updatedAt && customer.updatedAt &&
+          Date.parse(cachedSame.updatedAt) > Date.parse(customer.updatedAt)) {
+        customer.updatedAt = cachedSame.updatedAt;
+        if (cachedSame.price !== undefined) customer.price = cachedSame.price;
+        if (cachedSame.performanceRevenue !== undefined) customer.performanceRevenue = cachedSame.performanceRevenue;
+      }
+    }
+  } catch (eCacheAdopt) { /* 실패해도 기존 동작 그대로 */ }
   var row = customerToDbRow(customer);
   syncCustomerToSheet(customer);
   var key = customer.id || customer.clientName;
