@@ -245,7 +245,28 @@ function archiveEstimate(est, callback) {
   if (idx >= 0) all.splice(idx, 1); // 완전삭제 - 로컬 캐시에서도 그냥 제거(보관 플래그 대신)
   localStorage.setItem('dah_saved', JSON.stringify(all));
   if (typeof est.id === 'string' && est.id.length > 20) { // UUID면 서버(client_id 있는 정식 견적서)에도 반영
-    sbXHR('DELETE', 'estimates?id=eq.' + est.id, null, function(err){ if(callback) callback(err); });
+    sbXHR('DELETE', 'estimates?id=eq.' + est.id, null, function(err){
+      if (err) { if (callback) callback(err); return; }
+      // 2026-10-13(김성은 사례): 견적서를 지우면 DB가 고객의 매출기준금액·성과매출에서 그 몫을 빼고 수정 시각(잠금값)도 바꿈 -
+      // 화면의 고객 캐시도 서버 값으로 맞춰야 낡은 금액이 남거나 다음 저장이 가짜 충돌을 내지 않음. 이 조회가 실패해도 삭제 자체는 성공이므로 그대로 진행.
+      var cid = est.clientId || est.client_id;
+      if (!cid || typeof loadCustomers !== 'function') { if (callback) callback(null); return; }
+      sbXHR('GET', 'customers?id=eq.' + encodeURIComponent(cid) + '&select=id,price,performance_revenue,updated_at', null, function(e2, rows) {
+        try {
+          if (!e2 && Array.isArray(rows) && rows[0]) {
+            var arr = loadCustomers();
+            var t = arr.find(function (c) { return String(c.id) === String(cid); });
+            if (t) {
+              t.price = Number(rows[0].price) || 0;
+              t.performanceRevenue = Number(rows[0].performance_revenue) || 0;
+              if (rows[0].updated_at) t.updatedAt = rows[0].updated_at;
+              saveCustomers(arr);
+            }
+          }
+        } catch (eSync) { /* 캐시 갱신 실패는 삭제 흐름에 영향 없게 */ }
+        if (callback) callback(null);
+      });
+    });
   } else if (callback) callback(null);
 }
 

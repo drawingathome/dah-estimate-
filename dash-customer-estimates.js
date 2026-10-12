@@ -543,7 +543,7 @@ function renderEstimateHistory(container, clientName, clientId) {
           if (!confirm(label + '\n\n⚠️ 이 견적서를 완전히 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) return;
           // archiveEstimate()는 est.id(서버 UUID)를 기준으로 판단하는데,
           // 이 카드 객체는 서버ID가 e.dbId에 들어있어서 명시적으로 매핑.
-          archiveEstimate({ id: estObj.dbId, no: estObj.no, clientName: estObj.clientName, price: estObj.price }, function(err){
+          archiveEstimate({ id: estObj.dbId, no: estObj.no, clientName: estObj.clientName, price: estObj.price, clientId: estObj.clientId || currentDetailId }, function(err){
             if (err) { if (typeof showToast === 'function') showToast('⚠️ 삭제가 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요'); return; }
             if (typeof showToast === 'function') showToast('완전히 삭제했어요');
             openDetail(currentDetailName, currentDetailId); // 목록 새로고침

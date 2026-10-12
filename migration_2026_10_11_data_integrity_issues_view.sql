@@ -36,7 +36,11 @@ union all
 select 'STALE_SCHEDULE','warn', c.id, c.client_name, c.staff_name,
        ('실측일 '||c.measure_date||'이(가) 지났는데 아직 "'||c.stage||'" 단계이고 입금이 없음 - 계약 보류/취소인지, 입금 기록 누락인지 확인')
   from c where c.stage in ('방문예약','상담','가견적') and coalesce(c.deposit_amount,0)=0 and coalesce(c.balance_amount,0)=0
-   and c.measure_date ~ '^\d{4}-\d{2}-\d{2}$' and c.measure_date::date < current_date;
+   and c.measure_date ~ '^\d{4}-\d{2}-\d{2}$' and c.measure_date::date < current_date
+union all
+select 'HIDDEN_ESTIMATE','warn', c.id, c.client_name, c.staff_name,
+       ('숨김(보관) 상태 견적서가 있음('||h.price::bigint||'원) - 견적서 목록에 안 보임. 살릴지 정리할지 확인')
+  from public.estimates h join c on c.id=h.client_id where coalesce(h.is_archived,false);
 revoke all on public.data_integrity_issues from anon;
 revoke insert, update, delete, truncate, references, trigger on public.data_integrity_issues from authenticated;
 grant select on public.data_integrity_issues to authenticated;
