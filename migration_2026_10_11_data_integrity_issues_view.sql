@@ -31,7 +31,12 @@ union all
 select 'PRICE_DIFF','info', c.id, c.client_name, c.staff_name,
        ('진행 중인데 고객 매출기준금액('||c.price||')이 견적서 금액('||l.price::bigint||')과 다름 - 직접 고친 값이면 무시')
   from c join latest l on l.client_id=c.id
-  where c.stage in ('가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중') and c.price<>l.price;
+  where c.stage in ('가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중') and c.price<>l.price
+union all
+select 'STALE_SCHEDULE','warn', c.id, c.client_name, c.staff_name,
+       ('실측일 '||c.measure_date||'이(가) 지났는데 아직 "'||c.stage||'" 단계이고 입금이 없음 - 계약 보류/취소인지, 입금 기록 누락인지 확인')
+  from c where c.stage in ('방문예약','상담','가견적') and coalesce(c.deposit_amount,0)=0 and coalesce(c.balance_amount,0)=0
+   and c.measure_date ~ '^\d{4}-\d{2}-\d{2}$' and c.measure_date::date < current_date;
 revoke all on public.data_integrity_issues from anon;
 revoke insert, update, delete, truncate, references, trigger on public.data_integrity_issues from authenticated;
 grant select on public.data_integrity_issues to authenticated;
