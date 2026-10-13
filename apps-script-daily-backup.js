@@ -50,7 +50,7 @@ var SUPABASE_SERVICE_ROLE_KEY = PropertiesService.getScriptProperties().getPrope
 // 붙여넣어야만 운영에 반영되는데, 저장소에서 고친 버전이 실제로 반영됐는지 확인할 방법이 없어서 낡은 코드(9/23~10/1 버전)가
 // 며칠 동안 매일 실패하는 걸 늦게 알았음. 버전을 코드에 박아 매일 메일·로그에 함께 찍어서, 낡은 코드가 돌고 있으면 바로
 // 보이게 함. ※ 이 파일을 고칠 때마다 아래 값도 같이 올릴 것(날짜.순번).
-var DAH_SCRIPT_VERSION = '2026-10-12.1';
+var DAH_SCRIPT_VERSION = '2026-10-13.1';
 
 // 점검 함수 하나가 오류로 죽어도 백업과 나머지 점검은 계속 돌게 감싸는 헬퍼. 죽은 점검은 failures에 모아서 메일로 알림.
 function dahSafeScan(name, fn, failures) {
@@ -400,18 +400,9 @@ function dahScanForDataIntegrity(backup) {
         ') vs 견적서합계(선금' + estDepSum.toLocaleString() + '/잔금' + estBalSum.toLocaleString() + ')가 서로 다름');
     }
 
-    // 2) 미확정 일정 참고 알림: 아직 결제 전(상담/가견적 단계)인데
-    // 실측·시공 예정일이 이미 잡혀있는 경우 - 오늘 최선미 고객 사례로
-    // 발견함. 이건 "틀렸다"는 게 아니라(계획상 미리 적어두는 건 정상)
-    // 참고용으로만 매일 한 번 모아서 보여줌 - 캘린더 화면 자체엔 이미
-    // "미확정(결제 전)" 표시를 붙여둠(dash-calendar.js).
+    // (선금 전 실측일/시공일 입력은 정상 업무라 알림 대상 아님 - 2026-10-13 규칙 제거)
     var isPrePayment = ['방문예약', '상담', '가견적'].indexOf(c.stage) !== -1;
     var hasNoPayment = custDep === 0 && custBal === 0 && estDepSum === 0 && estBalSum === 0;
-    if (isPrePayment && hasNoPayment && (c.measure_date || c.install_date)) {
-      issues.push('[참고: 미확정 일정] ' + c.client_name + '(id:' + c.id + ') — "' + c.stage + '" 단계(결제 전)인데 ' +
-        (c.measure_date ? '실측예정 ' + c.measure_date : '') + (c.measure_date && c.install_date ? ', ' : '') +
-        (c.install_date ? '시공예정 ' + c.install_date : '') + '가 이미 입력돼 있음(캘린더엔 미확정으로 표시됨)');
-    }
 
     // 2026-10-02(선혜님 - "이민선/김현정 결제했는데 상담에 뜨니 ... 전체 확인해" /
     // "전문업체 기준으로 확인해" 요청으로 추가한 자동 감시 3종): 전부 오늘 실제로

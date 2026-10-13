@@ -1,3 +1,4 @@
+-- (2026-10-13: 실측일/시공일은 선금 전에도 입력하는 정상 값이라 STALE_SCHEDULE 규칙 제거)
 -- 2026-10-11: 이상 데이터 자동 점검 뷰 (홈 화면 "데이터 점검" 카드가 읽음). 읽기 전용 / security_invoker=true라 로그인한 사람의 RLS 권한대로만 보임.
 -- 이미 운영 DB에 적용됨(apply_migration data_integrity_issues_view_price_diff + data_integrity_issues_lock_grants). 재적용해도 안전(create or replace).
 create or replace view public.data_integrity_issues with (security_invoker = true) as
@@ -32,11 +33,6 @@ select 'PRICE_DIFF','info', c.id, c.client_name, c.staff_name,
        ('진행 중인데 고객 매출기준금액('||c.price||')이 견적서 금액('||l.price::bigint||')과 다름 - 직접 고친 값이면 무시')
   from c join latest l on l.client_id=c.id
   where c.stage in ('가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중') and c.price<>l.price
-union all
-select 'STALE_SCHEDULE','warn', c.id, c.client_name, c.staff_name,
-       ('실측일 '||c.measure_date||'이(가) 지났는데 아직 "'||c.stage||'" 단계이고 입금이 없음 - 계약 보류/취소인지, 입금 기록 누락인지 확인')
-  from c where c.stage in ('방문예약','상담','가견적') and coalesce(c.deposit_amount,0)=0 and coalesce(c.balance_amount,0)=0
-   and c.measure_date ~ '^\d{4}-\d{2}-\d{2}$' and c.measure_date::date < current_date
 union all
 select 'HIDDEN_ESTIMATE','warn', c.id, c.client_name, c.staff_name,
        ('숨김(보관) 상태 견적서가 있음('||h.price::bigint||'원) - 견적서 목록에 안 보임. 살릴지 정리할지 확인')

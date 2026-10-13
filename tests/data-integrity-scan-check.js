@@ -24,13 +24,6 @@ function dahScanForDataIntegrity(backup) {
         ') vs 견적서합계(선금' + estDepSum.toLocaleString() + '/잔금' + estBalSum.toLocaleString() + ')가 서로 다름');
     }
 
-    var isPrePayment = ['방문예약', '상담', '가견적'].indexOf(c.stage) !== -1;
-    var hasNoPayment = custDep === 0 && custBal === 0 && estDepSum === 0 && estBalSum === 0;
-    if (isPrePayment && hasNoPayment && (c.measure_date || c.install_date)) {
-      issues.push('[참고: 미확정 일정] ' + c.client_name + '(id:' + c.id + ') — "' + c.stage + '" 단계(결제 전)인데 ' +
-        (c.measure_date ? '실측예정 ' + c.measure_date : '') + (c.measure_date && c.install_date ? ', ' : '') +
-        (c.install_date ? '시공예정 ' + c.install_date : '') + '가 이미 입력돼 있음(캘린더엔 미확정으로 표시됨)');
-    }
   });
 
   return issues;
@@ -66,7 +59,7 @@ const 최선미사례 = {
   estimates: []
 };
 const 결과3 = dahScanForDataIntegrity(최선미사례);
-ok('3. 최선미 사례(상담단계, 결제0원, 실측예정일 있음)가 "참고: 미확정 일정"으로 정확히 잡힘', 결과3.some(i => i.indexOf('참고: 미확정 일정') !== -1 && i.indexOf('최선미') !== -1), 결과3);
+ok('3. 선금 전(상담단계, 결제0원)에 실측예정일이 있어도 알림 대상 아님(계약 전 일정 입력은 정상)', 결과3.length === 0, 결과3);
 
 // 4) 정상 케이스: 결제도 됐고 단계도 진행됐으면 아무 문제 없어야 함(회귀 없음)
 const 정상사례 = {

@@ -45,18 +45,9 @@ function dahScanForDataIntegrity(backup) {
         ') vs 견적서합계(선금' + estDepSum.toLocaleString() + '/잔금' + estBalSum.toLocaleString() + ')가 서로 다름');
     }
 
-    // 2) 미확정 일정 참고 알림: 아직 결제 전(상담/가견적 단계)인데
-    // 실측·시공 예정일이 이미 잡혀있는 경우 - 오늘 최선미 고객 사례로
-    // 발견함. 이건 "틀렸다"는 게 아니라(계획상 미리 적어두는 건 정상)
-    // 참고용으로만 매일 한 번 모아서 보여줌 - 캘린더 화면 자체엔 이미
-    // "미확정(결제 전)" 표시를 붙여둠(dash-calendar.js).
+
     var isPrePayment = ['방문예약', '상담', '가견적'].indexOf(c.stage) !== -1;
     var hasNoPayment = custDep === 0 && custBal === 0 && estDepSum === 0 && estBalSum === 0;
-    if (isPrePayment && hasNoPayment && (c.measure_date || c.install_date)) {
-      issues.push('[참고: 미확정 일정] ' + c.client_name + '(id:' + c.id + ') — "' + c.stage + '" 단계(결제 전)인데 ' +
-        (c.measure_date ? '실측예정 ' + c.measure_date : '') + (c.measure_date && c.install_date ? ', ' : '') +
-        (c.install_date ? '시공예정 ' + c.install_date : '') + '가 이미 입력돼 있음(캘린더엔 미확정으로 표시됨)');
-    }
 
     // 2026-10-02(선혜님 - "이민선/김현정 결제했는데 상담에 뜨니 ... 전체 확인해" /
     // "전문업체 기준으로 확인해" 요청으로 추가한 자동 감시 3종): 전부 오늘 실제로
