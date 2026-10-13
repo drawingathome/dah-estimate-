@@ -1,0 +1,7 @@
+-- 2026-10-14 B6: sync_customer_payment_from_estimates — 견적서 입금/잔금 금액을 직접 수정(취소·정정·재결제)하면 고객 칸도 그 합계에 정확히 맞춘다.
+-- 금액이 안 바뀐 저장(가격 수정 등)·INSERT·고객 이동은 기존대로 GREATEST 보호(옛 이관 고객 값 보존).
+-- 운영 DB에 apply_migration(payment_trigger_honor_edits_refund)로 적용됨. 검증: 롤백되는 DO 블록으로 이영욱 시뮬레이션
+--  취소(0) → 고객 칸 0 / 재결제(1,027,000, 10-20) → 고객 칸 1,027,000 · 날짜 2026-10-20 / 가격만 수정 → 입금 그대로.
+-- 전체 함수 본문은 운영 DB의 pg_get_functiondef('public.sync_customer_payment_from_estimates'::regproc) 참조.
+-- 핵심 변경: pay_edited := (OLD.deposit_amount IS DISTINCT FROM NEW.deposit_amount) OR (OLD.balance_amount IS DISTINCT FROM NEW.balance_amount);
+--   deposit_amount = CASE WHEN pay_edited THEN new_dep ELSE GREATEST(new_dep, COALESCE(deposit_amount,0)) END (balance_amount도 동일)
