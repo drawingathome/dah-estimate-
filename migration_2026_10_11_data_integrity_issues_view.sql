@@ -1,3 +1,4 @@
+-- (2026-10-14: PRICE_DIFF는 계약 이후 단계만 비교 - 가견적은 여러 건이 정상이고 합산하지 않으므로 오탐이었음(임민희).)
 -- (2026-10-13: 입금 0원 점검은 금액이 0원(무료 협찬 등)인 고객 제외. PRICE_DIFF는 고객의 모든 견적서 합계와 비교(계약 여러 건 고객 오탐 수정). 실측일/시공일은 선금 전에도 입력하는 정상 값이라 STALE_SCHEDULE 규칙 제거)
 -- 2026-10-11: 이상 데이터 자동 점검 뷰 (홈 화면 "데이터 점검" 카드가 읽음). 읽기 전용 / security_invoker=true라 로그인한 사람의 RLS 권한대로만 보임.
 -- 이미 운영 DB에 적용됨(apply_migration data_integrity_issues_view_price_diff + data_integrity_issues_lock_grants). 재적용해도 안전(create or replace).
@@ -32,7 +33,7 @@ union all
 select 'PRICE_DIFF','info', c.id, c.client_name, c.staff_name,
        ('진행 중인데 고객 매출기준금액('||c.price||')이 견적서 금액('||l.price::bigint||')과 다름 - 직접 고친 값이면 무시')
   from c join latest l on l.client_id=c.id
-  where c.stage in ('가견적','선금결제','실측준비중','확정견적','잔금결제','시공준비중') and c.price<>l.price
+  where c.stage in ('선금결제','실측준비중','확정견적','잔금결제','시공준비중') and c.price<>l.price
 union all
 select 'HIDDEN_ESTIMATE','warn', c.id, c.client_name, c.staff_name,
        ('숨김(보관) 상태 견적서가 있음('||h.price::bigint||'원) - 견적서 목록에 안 보임. 살릴지 정리할지 확인')
