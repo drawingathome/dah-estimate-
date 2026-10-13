@@ -55,7 +55,10 @@ function splitCustomerPayments(c) {
     // 잔금도 안 들어왔는데 성과매출 전액이 잡히는 문제). 이 견적서 자체의
     // 금액(estPay.price)을 분모로 써야 "계약금 비율만큼만" 정확히 배분됨.
     var totalPrice = estPay.price || totalPaid || 1;
-    var perf = perfOverride || totalPrice;
+    // 2026-10-13(선혜님 - 노지경 9월 성과매출이 약 609만 원 과다 등): 견적서가 있는 고객은 "그 견적서 자신의"
+    // 성과매출(없으면 그 견적서 총액)을 쓴다. 예전엔 고객 칸 합계(perfOverride)를 견적서 한 건마다 똑같이 적용해서
+    // 견적서가 여러 건인 고객의 매출이 과다 계산됐음. 고객 칸 값(perfOverride)은 견적서 자체가 없는 옛 이관 고객에만 사용.
+    var perf = estPay.fromEstimate ? (estPay.performanceRevenue > 0 ? estPay.performanceRevenue : totalPrice) : (perfOverride || totalPrice);
     // 2026-10-09(선혜님 - 이영욱: 제품 변경으로 총액 982,000원인데 선금 1,200,000원이 먼저 들어와
     // 환불 예정인 사례): 받은 돈이 총액을 넘어도 성과매출은 총액(perf)을 절대 넘지 않게 상한을 둠.
     // 입금(revenue)은 실제 들어온 현금이라 그대로 두고, 성과매출 배분 비율만 100%로 제한.

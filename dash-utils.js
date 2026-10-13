@@ -156,6 +156,10 @@ function getAllEstPays(c) {
       estList = myEsts.map(function(e){
         return {
           price: Number(e.price)||0,
+          // 2026-10-13: 견적서마다 자기 성과매출을 매출 계산(splitCustomerPayments)에 넘김. 예전엔 이 값을 안 넘겨서
+          // 매출 계산이 고객 칸의 합계를 견적서 한 건마다 똑같이 써서, 견적서가 여러 건인 고객 매출이 과다/오계산됐음.
+          performanceRevenue: Number(e.performanceRevenue)||0,
+          fromEstimate: true,
           depositAmount: Number(e.depositAmount)||0, depositDate: e.depositDate||'',
           balanceAmount: Number(e.balanceAmount)||0, balanceDate: e.balanceDate||''
         };
