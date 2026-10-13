@@ -14,6 +14,8 @@ async function run() {
   page.on('pageerror', e => jsErrors.push(e.message));
   page.on('dialog', async d => { try { await d.accept(); } catch (e) {} });
   const reqs = { getClose: 0, post: [], patch: [] };
+  // 2026-10-14: 마감 전 검문(독립 검산 + 데이터 점검)을 흉내냄. mode: match(화면과 같은 값) / diff(차이) / fail(통신 실패)
+  const mock = { mode: 'match', snap: { revenue: 0, perf_revenue: 0 }, issues: [], rpcCalls: 0 };
   const H = { 'Access-Control-Allow-Origin': '*' };
   await page.setRequestInterception(true);
   page.on('request', (req) => {
@@ -27,6 +29,13 @@ async function run() {
         if (b.password === 'TEST_OK_PW') { req.respond({ status: 200, contentType: 'application/json', headers: H, body: JSON.stringify({ access_token: 'test-fake-token', refresh_token: 'test-fake-refresh', expires_in: 3600, user: { id: 'test-fake-uuid', email: b.email } }) }); return; }
         req.respond({ status: 400, contentType: 'application/json', headers: H, body: JSON.stringify({ error_description: 'Invalid login credentials' }) }); return;
       }
+      if (url.includes('/rpc/independent_month_check')) {
+        mock.rpcCalls++;
+        if (mock.mode === 'fail') { req.respond({ status: 500, contentType: 'application/json', headers: H, body: '{}' }); return; }
+        const d = mock.mode === 'diff' ? 777 : 0;
+        req.respond({ status: 200, contentType: 'application/json', headers: H, body: JSON.stringify([{ revenue: String(mock.snap.revenue), perf_revenue: String(mock.snap.perf_revenue + d) }]) }); return;
+      }
+      if (url.includes('/data_integrity_issues')) { req.respond({ status: 200, contentType: 'application/json', headers: H, body: JSON.stringify(mock.issues) }); return; }
       if (url.includes('/monthly_close')) {
         if (method === 'GET') { reqs.getClose++; req.respond({ status: 200, contentType: 'application/json', headers: H, body: '[]' }); return; }
         let body = {}; try { body = JSON.parse(req.postData()); } catch (e) {}
@@ -45,6 +54,15 @@ async function run() {
   await new Promise(r => setTimeout(r, 600));
 
   const log = [];
+  const alerts = [];
+  page.removeAllListeners('dialog');
+  page.on('dialog', async d => { if (d.type() === 'alert') alerts.push(d.message()); try { await d.accept(); } catch (e) {} });
+  async function tryClose(k, mode, issues) {
+    mock.mode = mode; mock.issues = issues || [];
+    mock.snap = await page.evaluate((key) => { var s = computeMonthSnapshot(loadCustomers(), key); return { revenue: s.revenue, perf_revenue: s.perf_revenue }; }, k);
+    await page.evaluate((key) => { closeMonthNow(key); }, k.last ? k.last : k);
+    await new Promise(r => setTimeout(r, 600));
+  }
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
   ok('0. 마스터 로그인 시 마감값(monthly_close)을 서버에서 불러옴', reqs.getClose >= 1, 'GET ' + reqs.getClose + '회');
 
@@ -63,8 +81,7 @@ async function run() {
   ok('1. 마감 전에는 지금 데이터로 계산(성과매출 1,000,000)', Math.round(live1) === 1000000, String(live1));
 
   // 2) 마감하기 → POST 저장 + 메모리 반영
-  await page.evaluate((k) => { closeMonthNow(k.last); }, keys);
-  await new Promise(r => setTimeout(r, 600));
+  await tryClose(keys.last, 'match');
   const post = reqs.post[0];
   ok('2. 마감하면 서버에 해당 월·성과매출 1,000,000이 저장됨', !!post && post.month === keys.last && Math.round(post.perf_revenue) === 1000000 && Math.round(post.revenue) === 1000000, JSON.stringify(post && { m: post.month, p: post.perf_revenue }));
   ok('2-1. 담당자별 값도 함께 저장됨', !!post && post.by_staff && post.by_staff['마스터'] && Math.round(post.by_staff['마스터'].rev) === 1000000, JSON.stringify(post && post.by_staff));
@@ -95,9 +112,17 @@ async function run() {
   ok('4-1. 마감된 달은 "🔒 마감됨"과 현재 계산과의 차이(+1,500,000원)가 보임', panel.text.indexOf('마감됨') !== -1 && panel.text.indexOf('1,500,000') !== -1, panel.text);
 
   // 5) 다시 마감 → PATCH
-  await page.evaluate((k) => { closeMonthNow(k.last); }, keys);
-  await new Promise(r => setTimeout(r, 600));
+  await tryClose(keys.last, 'match');
   ok('5. 이미 마감된 달을 다시 마감하면 PATCH로 갱신(현재 계산 2,500,000 저장)', reqs.patch.length === 1 && Math.round(reqs.patch[0].perf_revenue) === 2500000, JSON.stringify(reqs.patch[0] && reqs.patch[0].perf_revenue));
+
+  // 5-1) 마감 전 검문(2026-10-14): 독립 검산 불일치 / 확인 안 한 점검 경고 / 검문 통신 실패 → 마감하지 않음
+  const patchesBefore = reqs.patch.length, postsBefore = reqs.post.length;
+  await tryClose(keys.last, 'diff');
+  ok('5-1. [검문] 화면과 DB 독립 계산이 다르면 마감하지 않고 차이를 알려줌', reqs.patch.length === patchesBefore && reqs.post.length === postsBefore && alerts.some(a => a.indexOf('독립 계산이 달라서') !== -1 && a.indexOf('777') !== -1), alerts[alerts.length - 1]);
+  await tryClose(keys.last, 'match', [{ code: 'OVERPAID', customer_id: 'x1', client_name: '점검고객', detail: 'd' }]);
+  ok('5-2. [검문] 확인 안 한 데이터 점검 경고가 있으면 마감하지 않음', reqs.patch.length === patchesBefore && alerts.some(a => a.indexOf('점검 경고가 1건') !== -1), alerts[alerts.length - 1]);
+  await tryClose(keys.last, 'fail');
+  ok('5-3. [검문] 독립 검산이 통신 실패하면 마감하지 않음(안전하게 실패)', reqs.patch.length === patchesBefore && alerts.some(a => a.indexOf('독립 검산을 불러오지 못해') !== -1), alerts[alerts.length - 1]);
 
   // 6) 이번 달은 마감값이 있어도 무시(진행 중인 달은 항상 실시간)
   const curIgnored = await page.evaluate((k) => {

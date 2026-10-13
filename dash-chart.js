@@ -123,8 +123,41 @@ function computeMonthSnapshot(customers, monthKey) {
     by_staff: byStaff
   };
 }
+// 2026-10-14(D1·D2, 선혜님 - "금액은 틀리면 안 된다"): 마감 전 검문. 화면 계산과 DB의 독립 계산(independent_month_check)이 같고,
+// 확인 안 한 데이터 점검 경고가 0건일 때만 마감 가능. 검문 자체가 실패(통신 오류 등)해도 마감하지 않음(안전하게 실패).
+function verifyBeforeClose(monthKey, snap, cb) {
+  var fail = function(msg) { cb(false, msg); };
+  sbXHR('POST', 'rpc/independent_month_check', { p_month: monthKey }, function(err, rows) {
+    if (err || !Array.isArray(rows) || !rows[0]) return fail('독립 검산을 불러오지 못해 마감하지 않았어요. 잠시 후 다시 시도해 주세요.');
+    var dbRev = Number(rows[0].revenue), dbPerf = Number(rows[0].perf_revenue);
+    if (!isFinite(dbRev) || !isFinite(dbPerf)) return fail('독립 검산 결과가 올바르지 않아 마감하지 않았어요.');
+    var dRev = Math.round(snap.revenue - dbRev), dPerf = Math.round(snap.perf_revenue - dbPerf);
+    if (Math.abs(dRev) > 1 || Math.abs(dPerf) > 1) {
+      return fail('화면 계산과 DB 독립 계산이 달라서 마감하지 않았어요.\n\n성과매출: 화면 ' + Math.round(snap.perf_revenue).toLocaleString() + '원 / DB ' + Math.round(dbPerf).toLocaleString() + '원 (차이 ' + dPerf.toLocaleString() + ')\n입금: 화면 ' + Math.round(snap.revenue).toLocaleString() + '원 / DB ' + Math.round(dbRev).toLocaleString() + '원 (차이 ' + dRev.toLocaleString() + ')\n\n원인을 먼저 확인해야 합니다.');
+    }
+    sbXHR('GET', 'data_integrity_issues?select=code,customer_id,client_name,detail&limit=200', null, function(err2, issues) {
+      if (err2 || !Array.isArray(issues)) return fail('데이터 점검을 불러오지 못해 마감하지 않았어요. 잠시 후 다시 시도해 주세요.');
+      sbXHR('GET', 'integrity_acks?select=ack_key&limit=1000', null, function(err3, ackRows) {
+        if (err3 || !Array.isArray(ackRows)) return fail('데이터 점검 확인 기록을 불러오지 못해 마감하지 않았어요.');
+        var acks = {}; ackRows.forEach(function(a) { acks[a.ack_key] = true; });
+        var open = issues.filter(function(r) { return !acks[[r.code, r.customer_id || '', r.detail || ''].join('|')]; });
+        if (open.length) {
+          return fail('확인하지 않은 데이터 점검 경고가 ' + open.length + '건 있어서 마감하지 않았어요.\n(' + open.slice(0, 5).map(function(r){ return (r.client_name || '이름없음'); }).join(', ') + (open.length > 5 ? ' 외' : '') + ')\n\n홈 화면의 점검 카드에서 처리하거나 "확인함"을 눌러 주세요.');
+        }
+        cb(true, '');
+      });
+    });
+  });
+}
 function closeMonthNow(monthKey, callback) {
   if (!(currentUser && currentUser.role === 'master')) return;
+  var snap0 = computeMonthSnapshot(loadCustomers(), monthKey);
+  verifyBeforeClose(monthKey, snap0, function(okToClose, why) {
+    if (!okToClose) { alert(why); if (callback) callback(false); return; }
+    closeMonthAfterCheck(monthKey, callback);
+  });
+}
+function closeMonthAfterCheck(monthKey, callback) {
   var snap = computeMonthSnapshot(loadCustomers(), monthKey);
   var existing = window._monthClose[monthKey];
   var msg = monthKey + ' 마감값을 저장할까요?\n\n성과매출 ' + Math.round(snap.perf_revenue).toLocaleString() + '원\n입금 합계 ' + Math.round(snap.revenue).toLocaleString() + '원\n\n저장하면 이후 고객 정보를 고쳐도 이 달 숫자는 바뀌지 않습니다.' + (existing ? '\n(이미 마감된 달입니다. 지금 계산값으로 다시 저장합니다.)' : '');
