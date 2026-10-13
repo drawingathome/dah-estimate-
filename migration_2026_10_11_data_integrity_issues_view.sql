@@ -1,4 +1,4 @@
--- (2026-10-13: PRICE_DIFF는 고객의 모든 견적서 합계와 비교(계약 여러 건 고객 오탐 수정). 실측일/시공일은 선금 전에도 입력하는 정상 값이라 STALE_SCHEDULE 규칙 제거)
+-- (2026-10-13: 입금 0원 점검은 금액이 0원(무료 협찬 등)인 고객 제외. PRICE_DIFF는 고객의 모든 견적서 합계와 비교(계약 여러 건 고객 오탐 수정). 실측일/시공일은 선금 전에도 입력하는 정상 값이라 STALE_SCHEDULE 규칙 제거)
 -- 2026-10-11: 이상 데이터 자동 점검 뷰 (홈 화면 "데이터 점검" 카드가 읽음). 읽기 전용 / security_invoker=true라 로그인한 사람의 RLS 권한대로만 보임.
 -- 이미 운영 DB에 적용됨(apply_migration data_integrity_issues_view_price_diff + data_integrity_issues_lock_grants). 재적용해도 안전(create or replace).
 create or replace view public.data_integrity_issues with (security_invoker = true) as
@@ -11,7 +11,7 @@ select 'NO_ESTIMATE'::text as code, 'warn'::text as severity, c.id as customer_i
 union all
 select 'PAID_STAGE_NO_DEPOSIT','info', c.id, c.client_name, c.staff_name, (c.stage||' 단계인데 입금 기록이 0원')
   from c where c.stage in ('선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료')
-   and coalesce(c.deposit_amount,0)=0 and coalesce(c.balance_amount,0)=0
+   and coalesce(c.price,0)>0 and coalesce(c.deposit_amount,0)=0 and coalesce(c.balance_amount,0)=0
 union all
 select 'DONE_NO_INSTALL_DATE','info', c.id, c.client_name, c.staff_name, '시공완료인데 시공일이 비어 있음'
   from c where c.stage='시공완료' and c.install_date is null
