@@ -398,12 +398,12 @@
    {
     "body": null,
     "method": "GET",
-    "path": "/rest/v1/estimates?client_id=eq.221&select=id,price,performance_revenue"
+    "path": "/rest/v1/estimates?client_id=eq.221&select=id,price,performance_revenue,deposit_amount,balance_amount"
    },
    {
     "body": null,
     "method": "GET",
-    "path": "/rest/v1/estimates?client_id=eq.221&select=id,price,performance_revenue"
+    "path": "/rest/v1/estimates?client_id=eq.221&select=id,price,performance_revenue,deposit_amount,balance_amount"
    },
    {
     "body": {
@@ -1074,7 +1074,7 @@
    {
     "body": null,
     "method": "GET",
-    "path": "/rest/v1/estimates?client_id=eq.221&select=id,price,performance_revenue"
+    "path": "/rest/v1/estimates?client_id=eq.221&select=id,price,performance_revenue,deposit_amount,balance_amount"
    },
    {
     "body": {
@@ -1621,7 +1621,7 @@
    {
     "body": null,
     "method": "GET",
-    "path": "/rest/v1/estimates?client_id=eq.221&select=id,price,performance_revenue"
+    "path": "/rest/v1/estimates?client_id=eq.221&select=id,price,performance_revenue,deposit_amount,balance_amount"
    },
    {
     "body": {
@@ -1996,7 +1996,7 @@
    {
     "body": null,
     "method": "GET",
-    "path": "/rest/v1/estimates?client_id=eq.221&select=id,price,performance_revenue"
+    "path": "/rest/v1/estimates?client_id=eq.221&select=id,price,performance_revenue,deposit_amount,balance_amount"
    },
    {
     "body": {
@@ -2436,7 +2436,7 @@
    {
     "body": null,
     "method": "GET",
-    "path": "/rest/v1/estimates?client_id=eq.221&select=id,price,performance_revenue"
+    "path": "/rest/v1/estimates?client_id=eq.221&select=id,price,performance_revenue,deposit_amount,balance_amount"
    },
    {
     "body": {
@@ -2797,7 +2797,7 @@
    {
     "body": null,
     "method": "GET",
-    "path": "/rest/v1/estimates?client_id=eq.221&select=id,price,performance_revenue"
+    "path": "/rest/v1/estimates?client_id=eq.221&select=id,price,performance_revenue,deposit_amount,balance_amount"
    },
    {
     "body": {

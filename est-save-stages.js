@@ -27,16 +27,21 @@ function _saveStage_customers(ctx) {
   var excludeEstIdForSum = window._estEditState.editingEstDbId;
   if (existingCustIdForSum && typeof SUPABASE_URL !== 'undefined') {
     var sumXhr = new XMLHttpRequest();
-    sumXhr.open('GET', SUPABASE_URL+'/rest/v1/estimates?client_id=eq.'+existingCustIdForSum+'&select=id,price,performance_revenue', true);
+    sumXhr.open('GET', SUPABASE_URL+'/rest/v1/estimates?client_id=eq.'+existingCustIdForSum+'&select=id,price,performance_revenue,deposit_amount,balance_amount', true);
     sumXhr.setRequestHeader('apikey', SUPABASE_KEY);
     sumXhr.setRequestHeader('Authorization', 'Bearer '+(typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
     sumXhr.onload = function() {
-      var otherGrand = 0, otherPerf = 0, sumFailed = false;
+      // 2026-10-14(선혜님 규칙 - "입금을 적은 견적만 계약 건으로 잡는다, 가견적은 여러 개 낼 수 있다"): 고객 칸 금액은
+      // ①입금이 기록된 견적서(계약 건)들의 합계, ②입금된 견적서가 하나도 없으면 "지금 저장하는 견적서 금액"(예상 금액, 합산 안 함).
+      var otherGrand = 0, otherPerf = 0, sumFailed = false, thisPaid = false, otherPaidCount = 0;
       try {
         if (sumXhr.status >= 200 && sumXhr.status < 300) {
           var rows = JSON.parse(sumXhr.responseText || '[]');
           rows.forEach(function(r) {
-            if (excludeEstIdForSum && String(r.id) === String(excludeEstIdForSum)) return;
+            var rPaid = (Number(r.deposit_amount) || 0) + (Number(r.balance_amount) || 0) > 0;
+            if (excludeEstIdForSum && String(r.id) === String(excludeEstIdForSum)) { thisPaid = rPaid; return; }
+            if (!rPaid) return;
+            otherPaidCount++;
             otherGrand += Number(r.price) || 0;
             otherPerf += Number(r.performance_revenue) || 0;
           });
@@ -47,7 +52,7 @@ function _saveStage_customers(ctx) {
           console.warn('다른 견적서 합계 조회 실패(HTTP ' + sumXhr.status + ') - price/performance_revenue는 이번엔 안 건드림(기존 서버값 보존)');
         }
       } catch (eSum) { sumFailed = true; console.warn('다른 견적서 합계 조회 파싱 실패:', eSum); }
-      proceed(otherGrand, otherPerf, sumFailed);
+      proceed(otherGrand, otherPerf, sumFailed, thisPaid, otherPaidCount);
     };
     // 2026-10-01(선혜님 - "최금희 외 다른 고객이 문제있는건 확인 가능하니?? 쌍둥이 함수
     // 모두 확인해" 요청으로 발견): 조회가 네트워크 오류로 실패하면 "다른 견적서 금액=0"으로
@@ -62,7 +67,7 @@ function _saveStage_customers(ctx) {
   } else {
     proceed(0, 0);
   }
-function proceed(otherEstGrand, otherEstPerf, sumFailed) {
+function proceed(otherEstGrand, otherEstPerf, sumFailed, thisEstPaid, otherPaidCount) {
   
   _saveStage_localStorage(ctx);
 
@@ -246,8 +251,10 @@ function proceed(otherEstGrand, otherEstPerf, sumFailed) {
     // 2026-10-01: 다른 견적서 합계 조회가 실패(sumFailed)했으면 이 두 필드 자체를
     // payload에서 뺌(JSON.stringify는 undefined 값을 가진 키를 자동으로 제외함) - "합계를
     // 몰라서 0으로 간주해 덮어쓰기"보다 "합계를 몰라서 이번엔 안 건드리기"가 항상 안전함.
-    custPayload.price = sumFailed ? undefined : (grand + otherEstGrand);
-    custPayload.performance_revenue = sumFailed ? undefined : (perf + otherEstPerf);
+    // 2026-10-14: 계약 건(입금 있는 견적서)이 있으면 그 합계, 없으면 이번 견적서 금액(가견적 여러 개를 더하지 않음).
+    var _hasContract = !!thisEstPaid || (otherPaidCount > 0);
+    custPayload.price = sumFailed ? undefined : (_hasContract ? ((thisEstPaid ? grand : 0) + otherEstGrand) : grand);
+    custPayload.performance_revenue = sumFailed ? undefined : (_hasContract ? ((thisEstPaid ? perf : 0) + otherEstPerf) : perf);
     xhr.send(JSON.stringify(custPayload));
   } catch(e) { logSaveStage('고객저장-예외', { message: e && e.message, stack: e && e.stack }); console.warn('Supabase 연결 오류:', e); _saveStage_estimates(ctx); }
 }

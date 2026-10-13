@@ -22,6 +22,7 @@ async function run() {
   page.on('dialog', async d => { try { await d.accept(); } catch (e) {} });
 
   let capturedCustPatchBody = null;
+  let mockPaid = true; // 기존 견적서 A에 입금이 기록돼 있는지(계약 건인지)
   const sumGetRequests = [];
   await page.setRequestInterception(true);
   page.on('request', (req) => {
@@ -33,7 +34,7 @@ async function run() {
       // 이 고객(client_id=900)의 기존 견적서 1건(100만원) - "다른 견적서 합계 조회" 응답
       if (url.includes('/estimates') && url.includes('client_id=eq.900') && url.includes('select=id,price') && method === 'GET') {
         req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify([
-          { id: 'existing-est-A', price: 1000000, performance_revenue: 900000 }
+          Object.assign({ id: 'existing-est-A', price: 1000000, performance_revenue: 900000 }, mockPaid ? { deposit_amount: 500000, balance_amount: 0 } : { deposit_amount: 0, balance_amount: 0 })
         ]) });
         return;
       }
@@ -91,8 +92,19 @@ async function run() {
       parsedPerf = parsed.performance_revenue;
     } catch (e) {}
   }
-  ok('2. customers.price에 기존 견적서(100만원) 금액이 합산됨(80만원짜리가 아니라 100만원보다 큼)', parsedPrice > 1000000, 'price=' + parsedPrice);
-  ok('3. customers.performance_revenue에도 기존 견적서(90만원) 금액이 합산됨', parsedPerf > 900000, 'performance_revenue=' + parsedPerf);
+  const thisAmt = await page.evaluate(() => ({ grand: parseInt(document.getElementById('sum-total').textContent.replace(/[^0-9]/g,''))||0, perf: parseInt(document.getElementById('sum-perf').textContent.replace(/[^0-9]/g,''))||0 }));
+  ok('2. [계약 건 합산] 기존 견적서 A가 입금된 계약 건이면 customers.price = A(1,000,000) + 이번 견적서(미입금이라 제외) → 정확히 1,000,000', parsedPrice === 1000000, 'price=' + parsedPrice + ' (이번 견적서 ' + thisAmt.grand + ')');
+  ok('3. [계약 건 합산] performance_revenue도 A의 900,000만 반영', parsedPerf === 900000, 'performance_revenue=' + parsedPerf);
+
+  // ── 2026-10-14 규칙: 입금된 견적서가 하나도 없으면(가견적 여러 개) 합산하지 않고 "이번 견적서 금액"만(예상 금액) ──
+  mockPaid = false; capturedCustPatchBody = null;
+  await page.evaluate(() => { saveEstimate(); });
+  await new Promise(r => setTimeout(r, 1500));
+  let unpaidPrice = null, unpaidPerf = null;
+  if (capturedCustPatchBody) { try { const pp = JSON.parse(capturedCustPatchBody); unpaidPrice = pp.price; unpaidPerf = pp.performance_revenue; } catch (e) {} }
+  ok('3-1. [가견적은 합산 안 함] 기존 견적서가 입금 없는 가견적이면 customers.price = 이번 견적서 금액만(가견적 1,000,000을 더하지 않음)', unpaidPrice === thisAmt.grand && unpaidPrice > 0, 'price=' + unpaidPrice + ' / 이번 견적서 ' + thisAmt.grand);
+  ok('3-2. [가견적은 합산 안 함] performance_revenue도 이번 견적서 값만', unpaidPerf === thisAmt.perf, 'performance_revenue=' + unpaidPerf + ' / 이번 ' + thisAmt.perf);
+  mockPaid = true;
 
   // ── 회귀방지: 신규 고객(다른 견적서 없음)은 여전히 이번 견적서 금액 그대로 반영되는지 ──
   await page.goto(`http://localhost:${port}/dah-estimate.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });
@@ -121,7 +133,7 @@ async function run() {
     try { regressionPrice = JSON.parse(capturedCustPatchBody).price; } catch (e) {}
   }
   ok('4. [회귀방지] 신규 고객도 저장 요청이 정상적으로 나감', regressionPrice > 0, 'price=' + regressionPrice);
-  ok('5. [회귀방지] 신규 고객(다른 견적서 없음)이면 "다른 견적서 조회" GET 자체가 신규고객 단계에서 안 나감', sumGetRequests.length === 1, JSON.stringify(sumGetRequests));
+  ok('5. [회귀방지] 신규 고객(다른 견적서 없음)이면 "다른 견적서 조회" GET 자체가 신규고객 단계에서 안 나감', sumGetRequests.length === 2, JSON.stringify(sumGetRequests) /* 기존 고객 저장 2번(계약 건 케이스 + 가견적 케이스)에서만 조회 */);
 
   console.log(log.join('\n'));
   console.log(jsErrors.length ? 'JS 에러: ' + jsErrors.join('\n') : 'JS 에러 없음');
