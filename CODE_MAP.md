@@ -28,7 +28,7 @@
 | 17 | `dash-render-est.js` | 견적서 탭(가견적/확정견적 목록) 렌더링 | 2 |
 | 18 | `dash-render-search.js` | 고객목록(검색) 탭 렌더링 | 1 |
 | 19 | `dash-memo.js` | DAH 대시보드 — 빠른 메모 문구 기능 | 2 |
-| 20 | `dash-chart.js` | DAH 대시보드 — 매출 차트 기능 | 15 |
+| 20 | `dash-chart.js` | DAH 대시보드 — 매출 차트 기능 | 17 |
 | 21 | `dash-calendar.js` | DAH 대시보드 — 일정(캘린더) 기능 | 5 |
 | 22 | `dash-kanban.js` | DAH 대시보드 — 진행현황(칸반) 기능 | 9 |
 | 23 | `dash-pay-history.js` | 고객상세 - 결제 탭의 "입금 내역 보기" (읽기 전용) | 3 |
@@ -187,6 +187,7 @@
 | `closeAdd` | `dash-customer-add.js` |
 | `closeCustLoad` | `est-customer-load.js` |
 | `closeDetail` | `dash-customer-detail-tabs.js` |
+| `closeMonthAfterCheck` | `dash-chart.js` |
 | `closeMonthNow` | `dash-chart.js` |
 | `closePdfModal` | `est-customer-load.js` |
 | `closeSpacePicker` | `est-form-controls.js` |
@@ -546,5 +547,6 @@
 | `validateName` | `dash-ui-helpers.js` |
 | `validatePhone` | `dash-ui-helpers.js` |
 | `vendorCategory` | `est-utils.js` |
+| `verifyBeforeClose` | `dash-chart.js` |
 | `verifyRecoveryCode` | `dash-supabase-auth.js` |
 | `wireVendorNameEdit` | `est-doc-vendor-ui.js` |
