@@ -268,7 +268,8 @@ function renderCalList(customers, selectedDate) {
         if (dep > 0) payWrap.appendChild((function(){ var s=document.createElement('span'); s.style.cssText='color:#2F6690'; s.innerHTML='선금' + checkSvg; return s; })());
         if (bal > 0) payWrap.appendChild((function(){ var s=document.createElement('span'); s.style.cssText='color:#2F6690'; s.innerHTML='잔금' + checkSvg; return s; })());
         right.appendChild(payWrap);
-      } else {
+      } else if (typeof isContractedCustomer !== 'function' || !isContractedCustomer(ev.cust)) {
+        // 2026-10-13: 결제 여부 판정을 isContractedCustomer 한 곳으로 통일(예전엔 "가장 최근 견적서"의 입금만 봐서 입금한 견적서가 옛 것이면 계약 고객이 미확정으로 표시될 수 있었음).
         // 2026-09-21(선혜님 지적 - "아직 상담만 한 사람인데 실측/시공
         // 예정이 떠서 자동으로 일정에 올라가 있었어, 결제가 돼야 넘어가는
         // 거 아니야??": 전문업체 CRM은 "확정" vs "미확정(잠정)" 일정을

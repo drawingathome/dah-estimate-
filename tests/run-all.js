@@ -144,6 +144,7 @@ if (/dah-dashboard/.test(target)) {
   // 입력된 실측예정일이 캘린더에서 확정된 일정과 똑같이 보이던 문제 -
   // "미확정(결제 전)" 표시로 구분되는지 검증
   scripts.push(['cal-unconfirmed-schedule-check.js', []]);
+  scripts.push(['contract-rule-single-source-check.js', []]);
   // 2026-09-22("다 해야지"로 전 영역 재검사 - 결제탭 서버재확인과 같은
   // 계열): 발주탭도 로컬캐시만 보고 있어서 다른 기기 견적서의 발주
   // 품목을 놓칠 위험 발견 + 두 안전장치(결제탭/발주탭)끼리 캐시를 두고

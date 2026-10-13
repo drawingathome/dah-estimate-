@@ -74,6 +74,14 @@ function getReceivedAmount(c) {
   var customerLevelSum = (Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0);
   return Math.max(estSum, customerLevelSum);
 }
+// 2026-10-13(선혜님 - "선금을 안 한 고객은 계약이 안 된 건데 왜 자꾸 실측일 적은 모든 고객을 챙기니? 내가 여러 번 말했잖아"):
+// "계약 됐나?"의 유일한 판정. 선금(입금)이 한 건이라도 기록돼 있으면 계약 건, 없으면 계약 전.
+// 계약 전 고객의 실측일·시공일 입력은 정상 업무라 "챙길 대상"이 아니고 "미확정"으로만 표시함.
+// 홈 일정·캘린더 등 모든 화면은 이 함수만 쓰고, 각자 결제 여부를 따로 계산하지 말 것
+// (tests/contract-rule-single-source-check.js가 막음). 받은 금액은 getReceivedAmount(견적서 합계와 고객칸 중 큰 값)를 그대로 사용.
+function isContractedCustomer(c) {
+  return !!c && getReceivedAmount(c) > 0;
+}
 function getUnpaidAmount(c) {
   if (DAH_POST_CONTRACT_STAGES.indexOf(c.stage) < 0) return 0;
   var price = Number(c.price) || 0;

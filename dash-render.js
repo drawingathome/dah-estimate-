@@ -219,6 +219,12 @@ function renderHome(skipServerFetch) {
     var tomorrow = new Date(_today); tomorrow.setDate(_today.getDate()+1);
     var fmt = function(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
     var todayStr = fmt(_today), tomorrowStr = fmt(tomorrow);
+    // 2026-10-13: 선금 전(계약 전) 고객의 실측·시공 일정은 "미확정"으로 표시(판정은 isContractedCustomer 한 곳). 캘린더와 같은 기준.
+    var _unconfirmedTag = function(c, type) {
+      if (type !== '실측' && type !== '시공') return '';
+      if (typeof isContractedCustomer === 'function' && isContractedCustomer(c)) return '';
+      return ' · <span class="sched-unconfirmed" style="font-weight:700;color:#B0A99F">미확정(결제 전)</span>';
+    };
     var todaySchedule = customers.filter(function(c) {
       return c.measureDate === todayStr || c.installDate === todayStr || c.date === todayStr;
     });
@@ -409,7 +415,7 @@ function renderHome(skipServerFetch) {
                   '</div>' +
                   '<div style="flex:1">' +
                     '<div style="font-size:12px;font-weight:700;color:var(--dark)">' + escHtml(c.clientName||'') + '</div>' +
-                    '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(type) + ' · ' + escHtml(c.addr||'주소 미입력') + '</div>' +
+                    '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(type) + ' · ' + escHtml(c.addr||'주소 미입력') + _unconfirmedTag(c, type) + '</div>' +
                   '</div>' +
                 '</div>';
               }),
@@ -423,7 +429,7 @@ function renderHome(skipServerFetch) {
                   '</div>' +
                   '<div style="flex:1">' +
                     '<div style="font-size:12px;font-weight:700;color:var(--dark)">' + escHtml(c.clientName||'') + '</div>' +
-                    '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(type) + ' · ' + escHtml(c.addr||'주소 미입력') + '</div>' +
+                    '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(type) + ' · ' + escHtml(c.addr||'주소 미입력') + _unconfirmedTag(c, type) + '</div>' +
                   '</div>' +
                 '</div>';
               })
