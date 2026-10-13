@@ -330,13 +330,13 @@ function openCustomDatePicker(anchorEl, initialValue, onConfirm) {
     header.appendChild(prevBtn); header.appendChild(label); header.appendChild(nextBtn);
     popup.appendChild(header);
 
-    var weekRow = div('display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px', []);
+    var weekRow = div('display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;margin-bottom:4px', []);
     ['일','월','화','수','목','금','토'].forEach(function(w, i){
       weekRow.appendChild(el('div', {style:'text-align:center;font-size:10px;color:'+(i===0?'#C0392B':i===6?'#2F6690':'var(--sub)'), text:w}));
     });
     popup.appendChild(weekRow);
 
-    var grid = div('display:grid;grid-template-columns:repeat(7,1fr);gap:2px', []);
+    var grid = div('display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px', []);
     var firstDay = new Date(viewYear, viewMonth, 1).getDay();
     var daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
     var todayStr2 = toDateStr(today.getFullYear(), today.getMonth(), today.getDate());
