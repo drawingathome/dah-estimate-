@@ -27,7 +27,7 @@ function _integrityKey(r) { return [r.code, r.customer_id || '', r.detail || '']
 var INTEGRITY_LABELS = {
   NO_ESTIMATE: '견적서 없음', PAID_STAGE_NO_DEPOSIT: '입금 기록 없음', DONE_NO_INSTALL_DATE: '시공일 없음',
   OVERPAID: '입금 초과', NO_STAFF: '담당자 없음', MULTI_FINAL: '확정견적 중복', ORPHAN_ESTIMATE: '고객 없는 견적서', PRICE_DIFF: '금액 다름', HIDDEN_ESTIMATE: '숨김 견적서',
-  PERF_ZERO_WITH_PAYMENT: '성과매출 0', PERF_OVER_PRICE: '성과매출 > 총액', PAY_SUM_MISMATCH: '입금합계 불일치', ORPHAN_STAFF: '담당자 연결 끊김'
+  PERF_ZERO_WITH_PAYMENT: '성과매출 0', PERF_OVER_PRICE: '성과매출 > 총액', PAY_SUM_MISMATCH: '입금합계 불일치', ORPHAN_STAFF: '담당자 연결 끊김', PAID_NO_ESTIMATE: '입금 있는데 견적서 없음'
 };
 
 function _integrityTime(ts) {
