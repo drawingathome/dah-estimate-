@@ -50,7 +50,7 @@ var SUPABASE_SERVICE_ROLE_KEY = PropertiesService.getScriptProperties().getPrope
 // 붙여넣어야만 운영에 반영되는데, 저장소에서 고친 버전이 실제로 반영됐는지 확인할 방법이 없어서 낡은 코드(9/23~10/1 버전)가
 // 며칠 동안 매일 실패하는 걸 늦게 알았음. 버전을 코드에 박아 매일 메일·로그에 함께 찍어서, 낡은 코드가 돌고 있으면 바로
 // 보이게 함. ※ 이 파일을 고칠 때마다 아래 값도 같이 올릴 것(날짜.순번).
-var DAH_SCRIPT_VERSION = '2026-10-13.1';
+var DAH_SCRIPT_VERSION = '2026-10-14.1';
 
 // 점검 함수 하나가 오류로 죽어도 백업과 나머지 점검은 계속 돌게 감싸는 헬퍼. 죽은 점검은 failures에 모아서 메일로 알림.
 function dahSafeScan(name, fn, failures) {
@@ -78,7 +78,8 @@ function dahDailyBackup() {
   // 2026-10-12: 변경 이력(customer_history/estimate_history), 저장 기록(save_receipts), 점검 확인 기록(integrity_acks)도 백업 대상 -
   //   "누가 언제 뭘 바꿨는지"의 유일한 근거라 날아가면 복구 불가(합쳐서 수 MB라 용량 부담 없음).
   // 2026-10-10: 월 마감(monthly_close)과 입금 장부(payment_ledger)도 백업 대상 - 둘 다 새로 생긴 "숫자의 근거"라 날아가면 복구 불가.
-  var tables = ['customers', 'estimates', 'surveys', 'app_settings', 'as_records', 'staff_profiles', 'analytics_events', 'client_error_logs', 'monthly_close', 'payment_ledger', 'customer_history', 'estimate_history', 'save_receipts', 'integrity_acks'];
+  var tables = ['customers', 'estimates', 'surveys', 'app_settings', 'as_records', 'staff_profiles', 'analytics_events', 'client_error_logs', 'monthly_close', 'payment_ledger', 'customer_history', 'estimate_history', 'save_receipts', 'integrity_acks', 'payment_refunds', 'integrity_daily_log'];
+  // 2026-10-14: 환불 기록(payment_refunds)은 "돈이 빠져나간 근거"라 날아가면 복구 불가 → 백업 대상에 추가. 자동 점검 기록(integrity_daily_log)도 함께.
   var backup = { exportedAt: new Date().toISOString(), version: '1.0' };
   var errors = [];
 
@@ -174,6 +175,8 @@ function dahDailyBackup() {
   // 트리거가 살아있는지도 같은 알림에 합쳐서 확인
   var triggerIssues = dahSafeScan('dahScanForMissingTriggers', function () { return dahScanForMissingTriggers(); }, scanFailures);
   integrityIssues = integrityIssues.concat(triggerIssues);
+  // 2026-10-14: DB가 매일 스스로 돌리는 점검 결과(확인함 처리 안 된 이상)와 그 점검이 살아 있는지도 같은 메일에 합침
+  integrityIssues = integrityIssues.concat(dahSafeScan('dahScanDbIntegrityView', function () { return dahScanDbIntegrityView(); }, scanFailures));
   if (integrityIssues.length > 0) {
     Logger.log('⚠️ 데이터 정합성 의심 ' + integrityIssues.length + '건 발견:\n' + integrityIssues.join('\n'));
     try {
@@ -318,13 +321,55 @@ function dahScanForDuplicates(backup) {
 // 앱 코드 문제가 아니라 DB 스키마 문제라 여기(서버 쪽 정기점검)에서만
 // 잡을 수 있음. v_critical_triggers_status 뷰(PostgREST로 조회 가능하게
 // 만들어둔 것)를 조회해서 3개 트리거가 전부 살아있는지 확인.
+/**
+ * 2026-10-14(전문업체 점검 - 매일 자동 점검 + 이상 시 알림): DB가 매일 아침 스스로 돌리는 점검(integrity_daily_log)이 살아 있는지,
+ * 그리고 DB 점검 뷰(data_integrity_issues)에 "아직 확인함 처리 안 된" 이상이 있는지 확인해서 메일에 합침.
+ * - "확인함"(integrity_acks)을 누른 항목은 제외 → 이미 알고 있는 건이 매일 메일로 오지 않음.
+ * - 점검 기록이 36시간 넘게 없으면 "DB 자동 점검이 멈췄어요"를 알림(조용히 멈추는 것이 가장 위험).
+ */
+function dahScanDbIntegrityView() {
+  var issues = [];
+  var H = { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY };
+  try {
+    var logRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/integrity_daily_log?select=run_at,total_count&order=run_at.desc&limit=1', { headers: H, muteHttpExceptions: true });
+    if (logRes.getResponseCode() !== 200) {
+      issues.push('[DB 자동 점검 확인 실패] integrity_daily_log 조회 실패(상태코드 ' + logRes.getResponseCode() + ')');
+    } else {
+      var logRows = JSON.parse(logRes.getContentText());
+      var lastRun = logRows && logRows[0] ? new Date(logRows[0].run_at).getTime() : 0;
+      if (!lastRun || Date.now() - lastRun > 36 * 3600 * 1000) {
+        issues.push('[DB 자동 점검 멈춤] 매일 아침 7시에 도는 DB 점검 기록이 36시간 넘게 없음' + (lastRun ? ' (마지막 ' + new Date(lastRun).toISOString().slice(0, 16).replace('T', ' ') + ' UTC)' : ' (기록 없음)') + ' - Supabase pg_cron 작업(integrity-daily-check) 확인 필요');
+      }
+    }
+  } catch (e) { issues.push('[DB 자동 점검 확인 실패] ' + e.message); }
+  try {
+    var vRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/data_integrity_issues?select=code,severity,customer_id,client_name,staff_name,detail&limit=500', { headers: H, muteHttpExceptions: true });
+    var aRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/integrity_acks?select=ack_key&limit=2000', { headers: H, muteHttpExceptions: true });
+    if (vRes.getResponseCode() !== 200 || aRes.getResponseCode() !== 200) {
+      issues.push('[DB 점검 뷰 조회 실패] data_integrity_issues(' + vRes.getResponseCode() + ') / integrity_acks(' + aRes.getResponseCode() + ')');
+    } else {
+      var acked = {};
+      JSON.parse(aRes.getContentText()).forEach(function (a) { acked[a.ack_key] = true; });
+      JSON.parse(vRes.getContentText()).forEach(function (r) {
+        var key = [r.code, r.customer_id || '', r.detail || ''].join('|'); // 대시보드 점검 카드와 같은 키(dash-integrity-watch.js)
+        if (acked[key]) return;
+        issues.push('[DB 점검 ' + (r.severity === 'warn' ? '중요' : '참고') + '] ' + r.code + ' - ' + (r.client_name || '(고객 없음)') + (r.staff_name ? ' (' + r.staff_name + ')' : '') + ': ' + (r.detail || ''));
+      });
+    }
+  } catch (e2) { issues.push('[DB 점검 뷰 조회 실패] ' + e2.message); }
+  return issues;
+}
+
 function dahScanForMissingTriggers() {
   var issues = [];
   // 2026-10-02(선혜님 - "1-4까지 확실하게 된건지 직접 확인했니? 누락된건 없니??"
   // 재확인 요청으로 발견): 오늘 만든 결제동기화 트리거(trg_sync_customer_payment)가
   // 이 핵심 트리거 감시 목록에 빠져 있었음 - 이게 삭제되거나 깨져도 아무도 알아채지
   // 못하는 사각지대였음. v_critical_triggers_status 뷰도 함께 확장해 추가.
-  var EXPECTED = ['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment'];
+  var EXPECTED = ['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment',
+    // 2026-10-14: 오늘 추가한 보호 장치(담당자 변경 차단·입금 감액 차단·입금일 보호·보관 견적서 입금 차단·환불 기록 보호)도 감시. 꺼지거나 사라지면 알림.
+    'trg_guard_staff_name_customers', 'trg_guard_staff_name_estimates', 'trg_guard_payment_reduction_customers', 'trg_guard_payment_reduction_estimates',
+    'trg_guard_payment_date', 'trg_guard_archived_estimate_payment', 'trg_payment_refunds_append_only'];
   try {
     var res = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/v_critical_triggers_status?select=trigger_name', {
       headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },

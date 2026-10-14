@@ -33,7 +33,10 @@ function buildContext(opts) {
     UrlFetchApp: { fetch: (url, o) => {
       if (url.includes('rpc/dah_backup_export')) { const t = JSON.parse(o.payload).table_name; fetchedTables.push(t); if (t === 'monthly_close') return respond(opts.monthlyClose === 'error' ? { error: 'x' } : (opts.monthlyClose || [{ month: prevMonthKey }])); return respond(t === 'customers' ? customers : t === 'estimates' ? (opts.estimates || []) : []); }
       if (url.includes('client_error_logs?')) return respond(opts.errorLogs || []);
-      if (url.includes('v_critical_triggers_status')) return respond(['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment'].map(n => ({ trigger_name: n })));
+      if (url.includes('v_critical_triggers_status')) return respond((opts.triggers || ['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment', 'trg_guard_staff_name_customers', 'trg_guard_staff_name_estimates', 'trg_guard_payment_reduction_customers', 'trg_guard_payment_reduction_estimates', 'trg_guard_payment_date', 'trg_guard_archived_estimate_payment', 'trg_payment_refunds_append_only']).map(n => ({ trigger_name: n })));
+      if (url.includes('integrity_daily_log')) return respond(opts.dbLog || [{ run_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString(), total_count: 0 }]);
+      if (url.includes('data_integrity_issues')) return respond(opts.dbIssues || []);
+      if (url.includes('integrity_acks')) return respond(opts.dbAcks || []);
       if (url.includes('v_critical_constraints_status')) return respond([{ constraint_name: 'surveys_client_idempotency_key_unique' }]);
       return respond([]);
     } },
@@ -146,6 +149,25 @@ if (_today.getDate() >= 3) {
 const bk = run({ customers: [] });
 ok('9-4. 매일 백업이 변경 이력·저장 기록·점검 확인 기록도 가져옴', ['customer_history','estimate_history','save_receipts','integrity_acks'].every(function(t){ return bk.fetchedTables.indexOf(t) !== -1; }), JSON.stringify(bk.fetchedTables));
 ok('9-3. 매일 백업이 월 마감(monthly_close)·입금 장부(payment_ledger)도 가져옴', bk.fetchedTables.indexOf('monthly_close') !== -1 && bk.fetchedTables.indexOf('payment_ledger') !== -1, JSON.stringify(bk.fetchedTables));
+
+// ── 2026-10-14: DB 자동 점검 연동 검증 ──
+const dbIssue = { code: 'OVERPAID', severity: 'warn', customer_id: 248, client_name: '이영욱', staff_name: '오지은 실장', detail: '입금합계 1200000원이 금액 1027000원보다 큼' };
+const dbBad = run({ customers: [], dbIssues: [dbIssue] });
+const dbBadMail = dbBad.mails.find(m => /데이터 정합성/.test(m.subject));
+ok('10. [DB 점검에 확인 안 한 이상] 메일에 고객·내용이 포함됨', dbBad.error === null && !!dbBadMail && /OVERPAID/.test(dbBadMail.body) && /이영욱/.test(dbBadMail.body), JSON.stringify(dbBad.mails.map(m => m.subject)));
+const dbAcked = run({ customers: [], dbIssues: [dbIssue], dbAcks: [{ ack_key: 'OVERPAID|248|' + dbIssue.detail }] });
+ok('10-1. [확인함 처리한 이상] 매일 메일로 반복되지 않음', dbAcked.error === null && !dbAcked.mails.some(m => /데이터 정합성/.test(m.subject)), JSON.stringify(dbAcked.mails.map(m => m.subject)));
+const dbStale = run({ customers: [], dbLog: [{ run_at: new Date(Date.now() - 50 * 3600 * 1000).toISOString(), total_count: 0 }] });
+const dbStaleMail = dbStale.mails.find(m => /데이터 정합성/.test(m.subject));
+ok('10-2. [DB 자동 점검이 36시간 넘게 멈춤] "멈춤" 알림 메일이 옴', !!dbStaleMail && /DB 자동 점검 멈춤/.test(dbStaleMail.body), JSON.stringify(dbStale.mails.map(m => m.subject)));
+const dbNoLog = run({ customers: [], dbLog: [] });
+ok('10-3. [점검 기록이 하나도 없음] 알림이 옴', dbNoLog.mails.some(m => /DB 자동 점검 멈춤/.test(m.body)), JSON.stringify(dbNoLog.mails.map(m => m.subject)));
+const noGuard = run({ customers: [], triggers: ['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment'] });
+const noGuardMail = noGuard.mails.find(m => /데이터 정합성/.test(m.subject));
+ok('10-4. [보호 트리거가 사라짐] 담당자·감액 보호 트리거 누락이 알림으로 옴', !!noGuardMail && /trg_guard_staff_name_customers/.test(noGuardMail.body) && /trg_guard_payment_reduction_estimates/.test(noGuardMail.body), JSON.stringify(noGuard.mails.map(m => m.subject)));
+
+const bkNew = run({ customers: [] });
+ok('11. 매일 백업이 환불 기록(payment_refunds)·자동 점검 기록도 가져옴(돈이 빠져나간 근거가 백업에서 빠지지 않게)', bkNew.fetchedTables.indexOf("payment_refunds") >= 0 && bkNew.fetchedTables.indexOf("integrity_daily_log") >= 0, JSON.stringify(bkNew.fetchedTables));
 
 console.log('\n' + (failed === 0 ? '✅ 전체 통과(' + path.basename(FILE) + ' 매일백업 실행 검증)' : '❌ 실패 ' + failed + '건'));
 process.exit(failed === 0 ? 0 : 1);
