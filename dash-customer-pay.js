@@ -29,7 +29,9 @@ function renderPaySection(c, payBody, est) {
       return {};
     } catch(e) { return {}; }
   }
-  var _localPay = getLocalPay();
+  // 2026-10-14(환불 기능과 함께): 견적서가 있으면 결제의 기준은 서버 값뿐임. 이 기기에 남은 예전 임시저장(dah_pay_est_...)을 폴백으로 쓰면,
+  // 환불·취소로 0이 된 칸이 옛 금액으로 되살아나 보이고 그대로 저장하면 환불이 무효가 되는 위험이 있어 견적서가 있을 땐 쓰지 않음.
+  var _localPay = est ? {} : getLocalPay();
   // 결제 관리 섹션 - payTarget(견적서 또는 고객) 직접 사용 (localStorage 병행)
   var payData = {
     depositAmount:  payTarget.depositAmount  || payTarget.deposit_amount  || _localPay.depositAmount  || 0,
@@ -105,6 +107,13 @@ function renderPaySection(c, payBody, est) {
         balance_amount:  newBal, balance_date: pd.balanceDate||'', balance_method: pd.balanceMethod||'', balance_receipt: pd.balanceReceipt||false
       };
       sbXHR('PATCH', 'estimates?id=eq.'+est.id, estPatchBody, function(err, data){
+        // 2026-10-14: 실장이 기록된 입금액을 줄이거나 입금일을 바꾸려 하면 DB가 거부함(마스터에게 환불·정정 요청). 그 이유를 그대로 알리고,
+        // 이 기기에 먼저 반영해 둔 화면 값은 서버 값으로 되돌리기 위해 상세를 다시 엶(다시 저장 버튼은 의미 없음).
+        if (err && err.text && /마스터/.test(String(err.text)) && typeof parseRefundError === 'function') {
+          alert(parseRefundError(err));
+          closeDetail(); openDetail(c.clientName, c.id);
+          return;
+        }
         if (err) {
           showToast('⚠️ 결제정보가 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요');
           // 2026-10-06(선혜님 - 칸반엔 100만원만 받았다고 뜨는데 결제 탭엔 완납): 알림은 몇 초 뒤 사라지고 화면은 내 브라우저에 먼저 저장한
@@ -522,5 +531,7 @@ function renderPaySection(c, payBody, est) {
   paySec.appendChild(balSec);
   // 2026-10-11: 견적서별 "입금 내역 보기"(읽기 전용, 이력에서 읽음) - dash-pay-history.js
   if (est && typeof appendPayHistory === 'function') appendPayHistory(paySec, est);
+  // 2026-10-14: 환불 영역(마스터 환불 등록·취소, 실장은 읽기 전용) - dash-refund.js
+  if (est && typeof appendRefundSection === 'function') appendRefundSection(paySec, est, c);
   if (payBody) payBody.appendChild(paySec);
 }

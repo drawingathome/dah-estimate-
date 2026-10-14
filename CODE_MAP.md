@@ -32,19 +32,20 @@
 | 21 | `dash-calendar.js` | DAH 대시보드 — 일정(캘린더) 기능 | 5 |
 | 22 | `dash-kanban.js` | DAH 대시보드 — 진행현황(칸반) 기능 | 9 |
 | 23 | `dash-pay-history.js` | 고객상세 - 결제 탭의 "입금 내역 보기" (읽기 전용) | 3 |
-| 24 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 1 |
-| 25 | `dash-customer-alim.js` | 고객상세 - 소통(알림톡) 탭 렌더링 | 11 |
-| 26 | `dash-customer-order.js` | 고객상세 - 발주 탭 렌더링 | 5 |
-| 27 | `dash-customer-as.js` | 고객상세 - AS 탭 렌더링 (React 전환 1호) | 2 |
-| 28 | `dash-customer-detail.js` | DAH 대시보드 — 고객상세 모달 기능 | 8 |
-| 29 | `dash-customer-detail-tabs.js` | DAH 대시보드 — 고객상세 모달: 정보탭/할일 + 하단 버튼·단계변경·삭제·복구 | 8 |
-| 30 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 8 |
-| 31 | `dash-customer-add.js` | 고객 추가/수정 모달 (React 전환 2호) | 3 |
-| 32 | `dash-auth.js` | DAH 대시보드 — 로그인/세션/권한 기능 | 5 |
-| 33 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 8 |
-| 34 | `dash-settings-sections.js` | DAH 대시보드 — 설정 화면 구역별 렌더링 (거래처/메모/지역비/쿠폰/연동/데이터) | 6 |
-| 35 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
-| 36 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
+| 24 | `dash-refund.js` | 고객상세 - 결제 탭의 "환불" 영역 (2026-10-14) | 4 |
+| 25 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 1 |
+| 26 | `dash-customer-alim.js` | 고객상세 - 소통(알림톡) 탭 렌더링 | 11 |
+| 27 | `dash-customer-order.js` | 고객상세 - 발주 탭 렌더링 | 5 |
+| 28 | `dash-customer-as.js` | 고객상세 - AS 탭 렌더링 (React 전환 1호) | 2 |
+| 29 | `dash-customer-detail.js` | DAH 대시보드 — 고객상세 모달 기능 | 8 |
+| 30 | `dash-customer-detail-tabs.js` | DAH 대시보드 — 고객상세 모달: 정보탭/할일 + 하단 버튼·단계변경·삭제·복구 | 8 |
+| 31 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 8 |
+| 32 | `dash-customer-add.js` | 고객 추가/수정 모달 (React 전환 2호) | 3 |
+| 33 | `dash-auth.js` | DAH 대시보드 — 로그인/세션/권한 기능 | 5 |
+| 34 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 8 |
+| 35 | `dash-settings-sections.js` | DAH 대시보드 — 설정 화면 구역별 렌더링 (거래처/메모/지역비/쿠폰/연동/데이터) | 6 |
+| 36 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
+| 37 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
 
 ## 견적서 앱 (dah-estimate.html) — 브라우저가 불러오는 순서대로
 
@@ -137,6 +138,7 @@
 | `App` | `survey-app.js` |
 | `appendPasswordResetFlow` | `dash-settings.js` |
 | `appendPayHistory` | `dash-pay-history.js` |
+| `appendRefundSection` | `dash-refund.js` |
 | `applyDiscountItems` | `est-calc-rules.js` |
 | `applyFrozenBreakdown` | `est-product-calc.js` |
 | `applyPermissions` | `dash-auth.js` |
@@ -361,6 +363,7 @@
 | `markSurveyProcessed` | `apps-script-survey-to-customer.js` |
 | `markSvcManualOverride` | `est-calc-svc.js` |
 | `newEstimate` | `est-save.js` |
+| `newRefundRequestId` | `dash-refund.js` |
 | `openAdd` | `dash-customer-add.js` |
 | `openCustomDatePicker` | `dash-calendar.js` |
 | `openCustomerLoad` | `est-customer-load.js` |
@@ -379,6 +382,7 @@
 | `parkLeadFromHome` | `dash-render.js` |
 | `parseProductString` | `est-customer-load.js` |
 | `parseRecoveryTokenFromUrl` | `dash-supabase-auth.js` |
+| `parseRefundError` | `dash-refund.js` |
 | `patchCustomerFieldsToDb` | `dash-api-writes.js` |
 | `permanentlyDeleteCustomer` | `dash-customer-detail-tabs.js` |
 | `permanentlyDeleteCustomerFromDb` | `dash-api-writes.js` |
@@ -447,6 +451,7 @@
 | `renderStaffLoginList` | `dash-auth.js` |
 | `renderSvcSummary` | `est-calc-svc.js` |
 | `renderWorkStatusCards` | `est-utils.js` |
+| `reopenAfterRefund` | `dash-refund.js` |
 | `resetEstEditingState` | `est-save.js` |
 | `resolveRegionPrices` | `est-calc-rules.js` |
 | `restoreAppliedDiscounts` | `est-utils.js` |
