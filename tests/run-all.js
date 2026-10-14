@@ -147,6 +147,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['cal-unconfirmed-schedule-check.js', []]);
   scripts.push(['contract-rule-single-source-check.js', []]);
   scripts.push(['received-amount-single-source-check.js', []]);
+  scripts.push(['refund-revenue-check.js', []]);
   // 2026-09-22("다 해야지"로 전 영역 재검사 - 결제탭 서버재확인과 같은
   // 계열): 발주탭도 로컬캐시만 보고 있어서 다른 기기 견적서의 발주
   // 품목을 놓칠 위험 발견 + 두 안전장치(결제탭/발주탭)끼리 캐시를 두고

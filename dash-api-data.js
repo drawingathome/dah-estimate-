@@ -208,7 +208,13 @@ function loadEstimatesAsync(callback, force) {
     var local = [];
     try { local = JSON.parse(localStorage.getItem('dah_saved') || '[]'); } catch(e) {}
     if (err) { if (callback) callback(local); return; }
+    // 2026-10-14(환불 기록): 견적서마다 환불 기록(payment_refunds)을 붙여서 매출 계산이 "원래 입금 달 +, 환불한 달 -"로 나눌 수 있게 함.
+    // 환불 기록을 못 받아와도 입금칸 자체가 환불 후 금액(순수령)이라 받은 돈은 맞고, 달 배분만 단순 계산으로 돌아감.
+    sbXHR('GET', 'payment_refunds?select=*&order=created_at.asc', null, function(errR, refRows) {
+    var refByEst = {};
+    if (!errR && Array.isArray(refRows)) refRows.forEach(function(r) { (refByEst[r.estimate_id] = refByEst[r.estimate_id] || []).push(r); });
     var cloudLocalFormat = (data || []).map(estimateDbRowToLocal);
+    cloudLocalFormat.forEach(function(e) { if (refByEst[e.id]) e.refundRows = refByEst[e.id]; });
     var cloudIds = cloudLocalFormat.map(function(e){ return e.id; });
     // 클라우드에서 온 항목은 매번 최신값으로 덮어씀(예전엔 이미 로컬에 캐시된
     // id가 있으면 무시해서, 클라우드에서 나중에 수정해도 브라우저엔 예전 캐시가
@@ -232,6 +238,7 @@ function loadEstimatesAsync(callback, force) {
     _estimateCacheTime = Date.now();
     try { localStorage.setItem('dah_saved', JSON.stringify(merged)); } catch(e) {}
     if (callback) callback(merged);
+    });
   });
 }
 

@@ -47,7 +47,8 @@ function splitCustomerPayments(c) {
     var bal = estPay.balanceAmount;
     var balDate = estPay.balanceDate;
     var totalPaid = dep + bal;
-    if (totalPaid <= 0) return;
+    var refundsForEst = (estPay.refunds || []).filter(function(r){ return r.amount > 0 && r.refundDate; });
+    if (totalPaid <= 0 && refundsForEst.length === 0) return;
     anyPaid = true;
     // 2026-08-04: 성과매출 배분 비율의 분모가 잘못됐던 버그 수정 — 예전엔
     // totalPaid(지금까지 실제 입금된 금액)로 나눠서, 계약금만 들어온 시점엔
@@ -68,9 +69,38 @@ function splitCustomerPayments(c) {
     // 예전엔 어느 달 매출에도 안 잡혔음(약 1.36억). 입금일이 없을 때만 고객 등록일(c.date)로 대신 배정함.
     if (!depDate && dep > 0 && c.date) depDate = c.date;
     if (!balDate && bal > 0 && c.date) balDate = c.date;
+    if (refundsForEst.length > 0) {
+      // 2026-10-14(환불 기록): 이 견적서에 유효한 환불이 있으면 날짜 순서대로 "입금 +, 환불 -"를 쌓아가며 계산함.
+      // 받은 돈 누계(R)가 올라가면 그만큼, 내려가면 그만큼 성과매출(상한: 견적 총액)이 늘고 줄어 "입금한 달 +, 환불한 달 -"가 됨.
+      // 총액을 넘겨 입금했다가 초과분만 환불하면 누계가 총액 아래로 안 내려가서 성과매출은 그대로(이영욱 초과입금 같은 경우).
+      // 환불 행에는 환불된 입금의 원래 입금일이 있어서, 환불로 비워진 칸의 옛 입금도 입금일 달에 그대로 잡힘.
+      var evs = [];
+      if (dep > 0 && depDate) evs.push({ date: depDate, amt: dep, ord: 0 });
+      if (bal > 0 && balDate) evs.push({ date: balDate, amt: bal, ord: 1 });
+      refundsForEst.forEach(function(r){
+        if (r.paidDate) evs.push({ date: r.paidDate, amt: r.amount, ord: 2 });
+        evs.push({ date: r.refundDate, amt: -r.amount, ord: 3 });
+      });
+      evs.sort(function(a, b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : a.ord - b.ord; });
+      var runNet = 0;
+      evs.forEach(function(ev){
+        var before = Math.min(Math.max(runNet, 0), totalPrice);
+        runNet += ev.amt;
+        var after = Math.min(Math.max(runNet, 0), totalPrice);
+        parts.push({ date: ev.date, revenue: ev.amt, perf: perf * (after - before) / totalPrice, isRefund: ev.amt < 0 });
+      });
+      return;
+    }
     if (dep > 0 && depDate) parts.push({ date: depDate, revenue: dep, perf: perf * (depShare / totalPrice) });
     if (bal > 0 && balDate) parts.push({ date: balDate, revenue: bal, perf: perf * (balShare / totalPrice) });
   });
+  // 2026-10-14(선혜님 확정 - 계약이 취소되면 취소한 달에 계약 -1): 환불로 이 고객의 받은 돈이 0이 되면, 마지막 환불일 달에 "취소" 표시 1건을 넣음.
+  // 계약 건수를 세는 곳은 이 표시를 -1로 처리하고, 환불만 있는 달을 새 계약으로 세지 않음.
+  var anyRefund = parts.some(function(p){ return p.isRefund; });
+  if (anyRefund && getReceivedAmount(c) <= 0) {
+    var lastRefundDate = parts.filter(function(p){ return p.isRefund; }).map(function(p){ return p.date; }).sort().pop();
+    parts.push({ date: lastRefundDate, revenue: 0, perf: 0, cancel: true });
+  }
   if (!anyPaid && c.date && isLegacyNoPaymentRecord(c)) {
     // 입금 기록이 아직 없는 "예전 방식 고객"만 계약일 기준 전체금액으로 폴백
     // (2026-08-04 조건 추가) — 예전엔 이 폴백이 모든 고객에게 걸려서, 신규로
@@ -255,7 +285,8 @@ function getMonthStaffPerformance(customers, monthKey, ignoreClosed) {
       if ((p.date || '').slice(0, 7) === monthKey) {
         if (!byStaff[s]) byStaff[s] = { count: 0, rev: 0 };
         byStaff[s].rev += p.perf;
-        if (!counted) { byStaff[s].count++; counted = true; }
+        if (p.cancel) { byStaff[s].count--; }
+        else if (!p.isRefund && !counted) { byStaff[s].count++; counted = true; }
       }
     });
   });
@@ -517,7 +548,7 @@ function getStaffComparison(customers, range) {
       if (!p.date) return;
       var pd = new Date(p.date);
       if (!firstPay || pd < firstPay) firstPay = pd;
-      if (pd >= start && pd <= end) { o.rev += p.revenue; o.perf += p.perf; }
+      if (pd >= start && pd <= end) { o.rev += p.revenue; o.perf += p.perf; if (p.cancel) o.contracts--; }
     });
     if (firstPay && firstPay >= start && firstPay <= end) o.contracts++;
     if (typeof getUnpaidAmount === 'function') o.unpaid += getUnpaidAmount(c);

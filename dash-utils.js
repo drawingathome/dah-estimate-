@@ -137,6 +137,18 @@ function getLatestEstPay(c) {
   return custTotal > estTotal ? { price: estResult.price || custResult.price, depositAmount: custResult.depositAmount, balanceAmount: custResult.balanceAmount } : estResult;
 }
 
+// 2026-10-14(환불 기록): 견적서에 붙은 환불 기록 중 "아직 유효한" 것만 골라냄(환불 취소 기록이 붙은 환불은 제외).
+// 입금칸(depositAmount/balanceAmount)은 이미 환불을 뺀 순수령액이고, 환불 행에는 "원래 입금일"과 "환불일"이 남아 있어서
+// 매출 계산이 입금한 달에는 +, 환불한 달에는 -로 나눠 잡을 수 있음.
+function getEffectiveRefunds(e) {
+  var rows = (e && e.refundRows) || [];
+  if (!rows.length) return [];
+  var reversed = {};
+  rows.forEach(function(r){ if (r.entry_type === 'reversal' && r.reverses_id) reversed[r.reverses_id] = true; });
+  return rows.filter(function(r){ return r.entry_type === 'refund' && !reversed[r.id]; })
+    .map(function(r){ return { id: r.id, slot: r.slot, amount: Number(r.amount)||0, paidDate: r.paid_date||'', refundDate: r.refund_date||'' }; });
+}
+
 // 2026-09-21(선혜님 - "위 내용 코드 정리해줘 버그가 많을꺼 같은데" 요청으로
 // 전수 점검 중 발견): 결제를 견적서 단위로 전환(e2c5e63)하면서, 이 고객의
 // "모든" 견적서 각각의 결제 내역이 필요한 곳(매출 차트의 월별 배분, 엑셀
@@ -158,6 +170,7 @@ function getAllEstPays(c) {
           // 매출 계산이 고객 칸의 합계를 견적서 한 건마다 똑같이 써서, 견적서가 여러 건인 고객 매출이 과다/오계산됐음.
           performanceRevenue: Number(e.performanceRevenue)||0,
           fromEstimate: true,
+          refunds: getEffectiveRefunds(e),
           depositAmount: Number(e.depositAmount)||0, depositDate: e.depositDate||'',
           balanceAmount: Number(e.balanceAmount)||0, balanceDate: e.balanceDate||''
         };
