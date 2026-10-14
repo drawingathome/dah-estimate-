@@ -403,8 +403,12 @@ function renderPaySection(c, payBody, est) {
         depDate.focus();
         return;
       }
+      // 2026-10-15: 입금 합계가 견적금액을 넘으면 저장 전에 분명히 경고(이영욱·신화경 사례 - 환불/재결제는 "환불 등록"으로 처리해야 기록이 남음)
+      var depTotalAfter = inputAmt + (Number(payData.balanceAmount) || 0);
+      var depOver = payBasisPrice > 0 && depTotalAfter > payBasisPrice;
+      if (depOver && !confirm('⚠️ 입금 합계(' + depTotalAfter.toLocaleString() + '원)가 견적금액(' + payBasisPrice.toLocaleString() + '원)보다 ' + (depTotalAfter - payBasisPrice).toLocaleString() + '원 많아요.\n카드 취소 후 재결제나 환불이 있었다면 입금칸을 고치지 말고 마스터가 "환불 등록"을 먼저 해야 기록이 남아요.\n그래도 이대로 저장할까요?')) return;
       var expectedHalf = Math.round((payBasisPrice || 0) * 0.5);
-      if (payBasisPrice > 0 && inputAmt > 0 && inputAmt !== expectedHalf) {
+      if (!depOver && payBasisPrice > 0 && inputAmt > 0 && inputAmt !== expectedHalf) {
         var proceed = confirm(
           '입력하신 선금(' + inputAmt.toLocaleString() + '원)이 견적금액의 50%(' + expectedHalf.toLocaleString() + '원)와 달라요.\n'
           + '이대로 저장할까요?'
@@ -522,8 +526,11 @@ function renderPaySection(c, payBody, est) {
         balDate.focus();
         return;
       }
+      var balTotalAfter = (Number(payData.depositAmount) || 0) + inputAmt;
+      var balOver = payBasisPrice > 0 && balTotalAfter > payBasisPrice;
+      if (balOver && !confirm('⚠️ 입금 합계(' + balTotalAfter.toLocaleString() + '원)가 견적금액(' + payBasisPrice.toLocaleString() + '원)보다 ' + (balTotalAfter - payBasisPrice).toLocaleString() + '원 많아요.\n카드 취소 후 재결제나 환불이 있었다면 입금칸을 고치지 말고 마스터가 "환불 등록"을 먼저 해야 기록이 남아요.\n그래도 이대로 저장할까요?')) return;
       var expectedBalance = Math.max(0, (payBasisPrice || 0) - (Number(payData.depositAmount) || 0));
-      if (payBasisPrice > 0 && inputAmt > 0 && inputAmt !== expectedBalance) {
+      if (!balOver && payBasisPrice > 0 && inputAmt > 0 && inputAmt !== expectedBalance) {
         var proceed = confirm(
           '입력하신 잔금(' + inputAmt.toLocaleString() + '원)이 예상 잔금(견적금액-선금, ' + expectedBalance.toLocaleString() + '원)과 달라요.\n'
           + '이대로 저장할까요?'

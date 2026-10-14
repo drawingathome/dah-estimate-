@@ -85,6 +85,17 @@ async function run() {
   await setup(0); await stub('perm'); await saveDeposit(500000);
   ok('3. 0건 매칭 + 서버 값이 같으면 "충돌" 대화상자는 안 뜸(권한 경고)', !dialogs.some(m => /그 사이에/.test(m)), JSON.stringify(dialogs));
 
+
+  // 5) 입금 합계가 견적금액을 넘으면 저장 전에 분명한 경고(환불 등록 안내)가 뜸 / 정상 금액에서는 안 뜸
+  dialogs.length = 0;
+  await page.evaluate(() => { closeDetail(); });
+  await setup(0); await stub('ok'); await saveDeposit(1200000);
+  ok('5. 선금이 견적금액(100만)을 넘으면 "합계가 … 많아요 / 환불 등록" 경고', dialogs.some(m => /원 많아요/.test(m) && /환불 등록/.test(m)), JSON.stringify(dialogs));
+  dialogs.length = 0;
+  await page.evaluate(() => { closeDetail(); });
+  await setup(0); await stub('ok'); await saveDeposit(500000);
+  ok('5-1. 정상 금액(50만)에서는 초과 경고가 뜨지 않음', !dialogs.some(m => /원 많아요/.test(m)), JSON.stringify(dialogs));
+
   console.log(log.join('\n'));
   console.log(jsErrors.length ? 'JS 에러: ' + jsErrors.join('\n') : 'JS 에러 없음');
   const allPass = log.every(l => l.startsWith('✅'));
