@@ -161,9 +161,11 @@ function reconDayDiff(a, b) {
  * @param {Array<{date: string, amount: number, text: string, line: number}>} bank
  * @param {Array<{customer: string, staff: string, slot: string, amount: number, date: string, note: string}>} app
  * @param {number} windowDays
+ * @param {number} [feePct] 카드 수수료 허용(%). 0이면 금액이 정확히 같아야 일치. 예) 3.5 → 통장 입금액이 앱 금액의 96.5%~100%여도 "수수료 차감"으로 일치 처리(정확히 같은 금액이 있으면 그쪽을 먼저 맞춤).
  */
-function reconMatch(bank, app, windowDays) {
+function reconMatch(bank, app, windowDays, feePct) {
   var w = Math.max(0, Number(windowDays) || 0);
+  var fee = Math.max(0, Math.min(10, Number(feePct) || 0));
   var used = {};
   var matched = [], bankOnly = [];
   var sorted = bank.slice().sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
@@ -173,15 +175,17 @@ function reconMatch(bank, app, windowDays) {
     for (var i = 0; i < app.length; i++) {
       if (used[i]) continue;
       var a = app[i];
-      if (a.amount !== b.amount) continue;
+      var exact = a.amount === b.amount;
+      var feeHit = !exact && fee > 0 && b.amount < a.amount && b.amount >= Math.floor(a.amount * (1 - fee / 100));
+      if (!exact && !feeHit) continue;
       var dd = reconDayDiff(a.date, b.date);
       if (dd > w) continue;
       var nm = String(a.customer || '').replace(/\s+/g, '');
       var nameHit = nm.length >= 2 && compact.indexOf(nm) >= 0;
-      var score = (nameHit ? 0 : 10) + dd;
+      var score = (exact ? 0 : 20) + (nameHit ? 0 : 10) + dd;
       if (score < bestScore) { bestScore = score; best = i; }
     }
-    if (best >= 0) { used[best] = true; matched.push({ bank: b, app: app[best], dayDiff: reconDayDiff(app[best].date, b.date) }); }
+    if (best >= 0) { used[best] = true; matched.push({ bank: b, app: app[best], dayDiff: reconDayDiff(app[best].date, b.date), feeDiff: app[best].amount - b.amount }); }
     else bankOnly.push(b);
   });
   var appOnly = [];
@@ -207,7 +211,7 @@ function _reconWon(n) { return Number(n).toLocaleString() + '원'; }
 function renderSettingsReconcileGroup(wrap, makeGroup) {
   var card = div('padding-top:4px', []);
   card.appendChild(span('font-size:11px;color:var(--sub);display:block;line-height:1.6;margin-bottom:10px',
-    '통장(또는 결제 내역)에 실제로 들어온 돈과 앱에 기록된 입금이 맞는지 확인해요. ① 은행/카드사 사이트에서 내역을 엑셀로 열고, 날짜·입금액이 있는 부분을 복사해서 아래 칸에 붙여넣거나 CSV 파일을 올려주세요. ② "대조하기"를 누르면 결과가 나와요. 올린 내용은 서버로 보내지 않고 이 화면에서만 계산해요. ※ 카드 정산(수수료 차감·합산 입금)은 안 맞을 수 있어서 계좌 입금 내역에 쓰는 것이 정확해요.'));
+    '통장(또는 결제 내역)에 실제로 들어온 돈과 앱에 기록된 입금이 맞는지 확인해요. ① 은행/카드사 사이트에서 내역을 엑셀로 열고, 날짜·입금액이 있는 부분을 복사해서 아래 칸에 붙여넣거나 CSV 파일을 올려주세요. ② "대조하기"를 누르면 결과가 나와요. 올린 내용은 서버로 보내지 않고 이 화면에서만 계산해요. ※ 카드 결제는 수수료가 빠지고 며칠 모아서 들어와서 통장과 1:1로 안 맞아요. 가장 정확한 방법은 ⓐ 계좌이체·현금은 통장 내역으로, ⓑ 카드는 결제선생/토스/카드사의 "승인 내역"(승인금액 기준, 수수료 허용 0%)으로 따로 대조하는 거예요. 정산 입금(수수료 차감 후 건별 입금)을 올릴 때는 "카드 수수료 허용"에 수수료율(예: 3.5)을 넣으면 수수료만큼 적은 금액도 일치로 봐요. 여러 건을 합쳐 한 번에 들어오는 정산은 이 방법으로 안 맞아요.'));
   var ta = el('textarea', { id: 'recon-text', placeholder: '여기에 붙여넣기 (엑셀에서 복사)', style: 'width:100%;height:110px;border:1px solid var(--border);border-radius:10px;padding:8px;font-size:11px;font-family:inherit;box-sizing:border-box' });
   card.appendChild(ta);
   var fileRow = div('display:flex;gap:8px;align-items:center;margin:8px 0', []);
@@ -225,6 +229,10 @@ function renderSettingsReconcileGroup(wrap, makeGroup) {
   colRow.appendChild(span('', '날짜 허용 오차'));
   colRow.appendChild(winInput);
   colRow.appendChild(span('', '일'));
+  var feeInput = el('input', { type: 'number', id: 'recon-fee', value: '0', min: '0', max: '10', step: '0.1', style: 'width:52px;padding:5px;border:1px solid var(--border);border-radius:8px;font-size:11px' });
+  colRow.appendChild(span('', '카드 수수료 허용'));
+  colRow.appendChild(feeInput);
+  colRow.appendChild(span('', '%'));
   card.appendChild(colRow);
   var result = div('margin-top:10px', []);
   result.id = 'recon-result';
@@ -272,7 +280,7 @@ function renderSettingsReconcileGroup(wrap, makeGroup) {
     if (!bank.length) { result.appendChild(span('font-size:12px;color:#B3261E', '입금 내역(날짜와 0보다 큰 금액)을 찾지 못했어요. 열 선택을 확인해주세요.')); return; }
     var go = function (customers) {
       var app = reconCollectAppPayments(customers);
-      var res = reconMatch(bank, app, Number(winInput.value) || 0);
+      var res = reconMatch(bank, app, Number(winInput.value) || 0, Number(feeInput.value) || 0);
       renderReconResult(result, bank, app, res);
     };
     result.appendChild(span('font-size:12px;color:var(--sub)', '최신 데이터를 불러오는 중…'));
@@ -315,7 +323,7 @@ function renderReconResult(box, bank, app, res) {
     res.bankOnly.map(function (b) { return [escHtml(b.date), _reconWon(b.amount), escHtml(String(b.text).slice(0, 40)), b.line + '행']; }), ['날짜', '금액', '통장 내용', '위치']);
   html += table('⚠️ 앱에만 있음', '앱에는 입금으로 기록됐는데 통장 내역(같은 기간)에서 같은 금액을 찾지 못했어요. 입력 오류·날짜 오류이거나 카드/현금 결제일 수 있어요.',
     res.appOnly.map(function (a) { return [escHtml(a.date), _reconWon(a.amount), escHtml(a.customer) + (a.staff ? ' <span style="color:var(--sub)">(' + escHtml(a.staff) + ')</span>' : ''), escHtml(a.slot) + (a.note ? ' · ' + escHtml(a.note) : '')]; }), ['날짜', '금액', '고객', '구분']);
-  html += table('✅ 일치', '금액이 같고 날짜가 허용 오차 안이에요.',
-    res.matched.map(function (m) { return [escHtml(m.bank.date), _reconWon(m.bank.amount), escHtml(m.app.customer), escHtml(m.app.slot) + (m.dayDiff ? ' · 날짜 ' + m.dayDiff + '일 차이' : '')]; }), ['날짜', '금액', '고객', '구분']);
+  html += table('✅ 일치', '금액이 같고(또는 수수료 허용 범위 안이고) 날짜가 허용 오차 안이에요.',
+    res.matched.map(function (m) { return [escHtml(m.bank.date), _reconWon(m.bank.amount), escHtml(m.app.customer), escHtml(m.app.slot) + (m.dayDiff ? ' · 날짜 ' + m.dayDiff + '일 차이' : '') + (m.feeDiff > 0 ? ' · 수수료 추정 ' + _reconWon(m.feeDiff) : '')]; }), ['날짜', '금액', '고객', '구분']);
   box.innerHTML = html;
 }

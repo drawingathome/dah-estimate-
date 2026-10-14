@@ -68,6 +68,26 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 70000);
     ok(JSON.stringify(r.bankOnly) === '[1111000]', '통장에만 있음: 111.1만(홍길동)', r.bankOnly);
     ok(JSON.stringify(r.appOnly) === '["박민수:300000"]', '앱에만 있음: 박민수 30만. 통장 기간 밖(8월) 입금은 비교 불가라 제외', r.appOnly);
 
+
+    // ── 2-2) 카드 수수료 허용 ──
+    const fee = await page.evaluate(() => {
+      const app = [
+        { customer: '카드고객', staff: '', slot: '선금', amount: 1000000, date: '2026-10-05', note: '' },
+        { customer: '이체고객', staff: '', slot: '선금', amount: 500000, date: '2026-10-05', note: '' }
+      ];
+      const bank = [
+        { date: '2026-10-07', amount: 965000, text: '카드정산 카드고객', line: 1 },
+        { date: '2026-10-05', amount: 500000, text: '이체고객', line: 2 }
+      ];
+      const off = reconMatch(bank, app, 3, 0);
+      const on = reconMatch(bank, app, 3, 3.5);
+      const tooMuch = reconMatch([{ date: '2026-10-07', amount: 900000, text: 'x', line: 1 }], app, 3, 3.5);
+      return { offM: off.matched.length, offBankOnly: off.bankOnly.length, onM: on.matched.length, onFee: on.matched.map(m => m.app.customer + ':' + m.feeDiff), tooM: tooMuch.matched.length };
+    });
+    ok(fee.offM === 1 && fee.offBankOnly === 1, '수수료 허용 0%: 수수료 빠진 카드 정산은 "통장에만 있음"으로 남음', fee);
+    ok(fee.onM === 2 && fee.onFee.indexOf('카드고객:35000') >= 0 && fee.onFee.indexOf('이체고객:0') >= 0, '수수료 3.5% 허용: 96.5만 입금이 100만 카드 결제와 일치(수수료 3.5만 추정), 이체는 그대로', fee);
+    ok(fee.tooM === 0, '수수료율을 넘게 적은 금액(90만)은 일치로 보지 않음', fee);
+
     // ── 3) 설정 화면 연동(붙여넣기 → 대조하기 → 결과) ──
     const ui = await page.evaluate(async (bankText) => {
       saveCustomers([1, 2, 3, 4, 5].map(i => ({ id: i, clientName: ['김철수', '이영희', '이영욱', '박민수', '범위밖'][i - 1], staffName: '마스터', stage: '선금결제', price: 1000000, depositAmount: 0, balanceAmount: 0 })));
