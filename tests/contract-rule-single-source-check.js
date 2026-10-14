@@ -83,6 +83,11 @@ async function run() {
     .filter(f => /function\s+isContractedCustomer\s*\(/.test(fs.readFileSync(path.join(dir, f), 'utf8')));
   ok('4-3. 판정 함수가 화면 파일에 따로 또 정의돼 있지 않음(dash-utils.js 한 곳)', defs.length === 0, defs.join(','));
 
+  // 4-4) 받은 돈이 0보다 큰지를 화면 파일이 직접 계산하지 않음(판정은 isContractedCustomer 한 곳)
+  const offenders = fs.readdirSync(dir).filter(f => /^dash-.*\.js$/.test(f) && f !== 'dash-utils.js')
+    .filter(f => /getReceivedAmount\s*\([^)]*\)\s*(>|<=)\s*0/.test(fs.readFileSync(path.join(dir, f), 'utf8')));
+  ok('4-4. 화면 파일이 "받은 돈 > 0"으로 계약 여부를 따로 판정하지 않음', offenders.length === 0, offenders.join(','));
+
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));
   const failed = log.filter(l => l.startsWith('❌'));

@@ -182,8 +182,8 @@ function renderHome(skipServerFetch) {
       // 여기서 계속 "결제처리 필요"로 잘못 뜨는 회귀가 될 뻔했음(바로
       // 위 2026-08-06 코멘트에서 고쳤던 것과 똑같은 유형의 버그가 오늘
       // 구조 전환으로 재발할 뻔함) - 견적서 합산 기준 getReceivedAmount로 교체.
-      if (c.stage === '선금결제' && !(getReceivedAmount(c) > 0)) reasons.push('선금결제 처리');
-      if (c.stage === '잔금결제' && !(getReceivedAmount(c) > 0)) reasons.push('잔금결제 처리');
+      if (c.stage === '선금결제' && !isContractedCustomer(c)) reasons.push('선금결제 처리');
+      if (c.stage === '잔금결제' && !isContractedCustomer(c)) reasons.push('잔금결제 처리');
       // 2026-08-28(선혜님 요청 - "잔금 리마인더", "다음단계 하자"): 위
       // 두 줄은 딱 그 단계에 있을 때만 걸림 - 그 단계를 지나쳐서
       // 실측준비중/확정견적/시공준비중/시공완료까지 진행됐는데도 여전히

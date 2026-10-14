@@ -97,7 +97,7 @@ function splitCustomerPayments(c) {
   // 2026-10-14(선혜님 확정 - 계약이 취소되면 취소한 달에 계약 -1): 환불로 이 고객의 받은 돈이 0이 되면, 마지막 환불일 달에 "취소" 표시 1건을 넣음.
   // 계약 건수를 세는 곳은 이 표시를 -1로 처리하고, 환불만 있는 달을 새 계약으로 세지 않음.
   var anyRefund = parts.some(function(p){ return p.isRefund; });
-  if (anyRefund && getReceivedAmount(c) <= 0) {
+  if (anyRefund && !isContractedCustomer(c)) {
     var lastRefundDate = parts.filter(function(p){ return p.isRefund; }).map(function(p){ return p.date; }).sort().pop();
     parts.push({ date: lastRefundDate, revenue: 0, perf: 0, cancel: true });
   }
