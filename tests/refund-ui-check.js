@@ -87,6 +87,30 @@ function ok(c, m) { console.log((c ? '✅ ' : '❌ ') + m); if (!c) fail++; }
     const h = await page2.evaluate(() => { var s = document.createElement('div'); appendRefundSection(s, { id: 'e', depositAmount: 100000, refundRows: [] }, { id: 1 }); var s2 = document.createElement('div'); appendRefundSection(s2, { id: 'e', depositAmount: 0, balanceAmount: 0 }, { id: 1 }); return [s.textContent, s2.textContent]; });
     ok(/마스터에게 요청/.test(h[0]), '실장: 환불 없고 입금이 있으면 "마스터에게 요청" 안내');
     ok(h[1] === '', '실장: 입금이 없으면 아무것도 안 보임');
+    // 통합: 실제 고객 상세 결제 탭이 견적서의 환불 기록을 화면까지 전달하는지(예전엔 견적서 객체를 새로 만들면서 환불 기록이 빠졌음)
+    for (const role of ['master', 'staff']) {
+      const pg = await browser.newPage();
+      await blockRealNetwork(pg);
+      await pg.goto(`http://localhost:${port}/dah-dashboard.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+      await new Promise(r => setTimeout(r, 600));
+      await loginAs(pg, role);
+      await new Promise(r => setTimeout(r, 500));
+      const sn = role === 'master' ? '마스터' : '_테스트실장';
+      const t = await pg.evaluate(async (sn) => {
+        localStorage.setItem('dah_saved', JSON.stringify([{ id: 'est-1', clientId: 11, clientName: '통합', staffName: sn, price: 1000000, depositAmount: 500000, depositDate: '2026-10-12', balanceAmount: 0, savedAt: '2026-10-12',
+          refundRows: [{ id: 'r1', entry_type: 'refund', slot: 'deposit', amount: 300000, paid_date: '2026-10-05', refund_date: '2026-10-10', reason: '통합확인' }] }]));
+        saveCustomers([{ id: 11, clientName: '통합', staffName: sn, stage: '잔금결제', price: 1000000, depositAmount: 500000, depositDate: '2026-10-12', updatedAt: '2026-10-12T00:00:00Z', is_archived: false }]);
+        openDetail('통합', 11);
+        await new Promise(r => setTimeout(r, 500));
+        switchDetailTab('pay');
+        await new Promise(r => setTimeout(r, 400));
+        var sec = document.querySelector('.refund-section');
+        return { txt: sec ? sec.textContent : '', btn: !!Array.from(document.querySelectorAll('button')).find(b => b.textContent === '환불 등록') };
+      }, sn);
+      ok(/통합확인/.test(t.txt) && /-300,000원/.test(t.txt), role + ': 실제 결제 탭에 환불 기록이 표시됨');
+      ok(t.btn === (role === 'master'), role + ': 환불 등록 버튼은 마스터에게만');
+      await pg.close();
+    }
   } finally { await browser.close(); server.kill(); }
   console.log(fail ? '\n❌ 실패 ' + fail + '건' : '\n✅ 전체 통과(환불 화면 검증)');
   process.exit(fail ? 1 : 0);
