@@ -35,6 +35,25 @@ function _integrityTime(ts) {
   return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
 }
 
+// 2026-10-14(전문업체 점검 - 매일 자동 점검): DB가 매일 아침 스스로 점검한 마지막 기록을 점검 카드 아래에 작게 보여줌(마스터만).
+// 기록이 36시간 넘게 없으면 "자동 점검이 멈췄을 수 있어요"를 빨간 글씨로 알림(조용히 멈추는 것이 가장 위험하므로).
+function _integrityAutoNote() {
+  try {
+    var box = document.getElementById('integrity-banner');
+    if (!box || !_integrityCache || _integrityCache.autoRun === undefined) return;
+    var old = box.querySelector('.integrity-auto'); if (old) old.remove();
+    var n = document.createElement('div');
+    n.className = 'integrity-auto';
+    var at = _integrityCache.autoRun;
+    var stale = !at || (Date.now() - new Date(at).getTime() > 36 * 3600 * 1000);
+    n.style.cssText = 'margin-top:4px;font-size:10px;' + (stale ? 'color:#B3261E;font-weight:700' : 'color:#888');
+    n.textContent = stale
+      ? '⚠️ 매일 자동 점검이 멈췄을 수 있어요' + (at ? ' (마지막 ' + (new Date(at).getMonth() + 1) + '/' + new Date(at).getDate() + ' ' + _integrityTime(new Date(at).getTime()) + ')' : ' (기록 없음)')
+      : '🕖 자동 점검 ' + _integrityTime(new Date(at).getTime()) + ' · ' + _integrityCache.autoTotal + '건';
+    box.appendChild(n);
+  } catch (e) { /* 표시 실패는 점검 카드 자체에 영향 없게 */ }
+}
+
 function renderIntegrityBanner(forceFetch) {
   var wrap = document.getElementById('home');
   if (!wrap || typeof sbXHR !== 'function') return;
@@ -95,7 +114,7 @@ function renderIntegrityBanner(forceFetch) {
     });
   };
   // 5분 안에 이미 조회했으면 다시 조회하지 않고 그 결과로 그림(홈이 자주 다시 그려져도 서버 부담 없게)
-  if (!forceFetch && _integrityCache.rows && Date.now() - _integrityCache.at < 300000) { draw(_integrityCache.rows, _integrityCache.acks || {}, _integrityCache.at, false); return; }
+  if (!forceFetch && _integrityCache.rows && Date.now() - _integrityCache.at < 300000) { draw(_integrityCache.rows, _integrityCache.acks || {}, _integrityCache.at, false); _integrityAutoNote(); return; }
   sbXHR('GET', 'data_integrity_issues?select=code,severity,customer_id,client_name,staff_name,detail&limit=200', null, function (err, rows) {
     if (err || !Array.isArray(rows)) { draw(null, {}, Date.now(), true); return; }
     sbXHR('GET', 'integrity_acks?select=ack_key&limit=1000', null, function (err2, ackRows) {
@@ -104,6 +123,14 @@ function renderIntegrityBanner(forceFetch) {
       ackRows.forEach(function (a) { acks[a.ack_key] = true; });
       _integrityCache = { at: Date.now(), rows: rows, acks: acks };
       draw(rows, acks, _integrityCache.at, false);
+      if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'master') {
+        sbXHR('GET', 'integrity_daily_log?select=run_at,total_count&order=run_at.desc&limit=1', null, function (err3, logRows) {
+          if (err3 || !Array.isArray(logRows)) return; // 조회 실패는 알림 없이 넘어감(점검 카드 자체는 이미 표시됨)
+          _integrityCache.autoRun = logRows[0] ? logRows[0].run_at : null;
+          _integrityCache.autoTotal = logRows[0] ? logRows[0].total_count : 0;
+          _integrityAutoNote();
+        });
+      }
     });
   });
 }

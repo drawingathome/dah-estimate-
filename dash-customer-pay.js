@@ -106,12 +106,35 @@ function renderPaySection(c, payBody, est) {
         deposit_amount:  newDep, deposit_date: pd.depositDate||'', deposit_method: pd.depositMethod||'', deposit_receipt: pd.depositReceipt||false,
         balance_amount:  newBal, balance_date: pd.balanceDate||'', balance_method: pd.balanceMethod||'', balance_receipt: pd.balanceReceipt||false
       };
-      sbXHR('PATCH', 'estimates?id=eq.'+est.id, estPatchBody, function(err, data){
+      // 2026-10-14(전문업체 점검 - 동시 수정): "내가 화면에서 본 선금/잔금 값이 지금도 서버 값과 같을 때만" 저장함(비교 후 교체).
+      // 다른 사람(또는 다른 기기)이 그 사이에 입금을 고쳤다면 0건 매칭으로 거부되고, 낡은 화면이 남의 수정을 덮어쓰지 못함.
+      // 견적서의 다른 필드(금액 등)가 바뀐 것은 충돌로 보지 않음(입금 칸만 비교).
+      function payCasClause(col, v) {
+        var n = Number(v) || 0;
+        return n === 0 ? ('or(' + col + '.is.null,' + col + '.eq.0)') : (col + '.eq.' + n);
+      }
+      var estPatchPath = 'estimates?id=eq.' + est.id +
+        '&and=(' + payCasClause('deposit_amount', est.depositAmount) + ',' + payCasClause('balance_amount', est.balanceAmount) + ')';
+      sbXHR('PATCH', estPatchPath, estPatchBody, function(err, data){
         // 2026-10-14: 실장이 기록된 입금액을 줄이거나 입금일을 바꾸려 하면 DB가 거부함(마스터에게 환불·정정 요청). 그 이유를 그대로 알리고,
         // 이 기기에 먼저 반영해 둔 화면 값은 서버 값으로 되돌리기 위해 상세를 다시 엶(다시 저장 버튼은 의미 없음).
         if (err && err.text && /마스터/.test(String(err.text)) && typeof parseRefundError === 'function') {
           alert(parseRefundError(err));
           closeDetail(); openDetail(c.clientName, c.id);
+          return;
+        }
+        if (err && err.zeroRows) {
+          // 0건 매칭 = (a) 그 사이 누군가 입금을 바꿈(충돌) 또는 (b) 권한 문제. 서버 값을 다시 읽어 구분함.
+          sbXHR('GET', 'estimates?id=eq.' + est.id + '&select=deposit_amount,balance_amount', null, function (eChk, rows) {
+            var r0 = rows && rows[0];
+            if (!eChk && r0 && ((Number(r0.deposit_amount) || 0) !== (Number(est.depositAmount) || 0) || (Number(r0.balance_amount) || 0) !== (Number(est.balanceAmount) || 0))) {
+              alert('다른 사람(또는 다른 기기)이 그 사이에 이 견적서의 입금 내용을 바꿨어요.\n덮어쓰지 않도록 저장을 멈췄어요. 화면을 최신으로 불러올게요. 바뀐 내용을 확인한 뒤 다시 입력해 주세요.');
+              if (typeof loadEstimatesAsync === 'function') { loadEstimatesAsync(function () { closeDetail(); openDetail(c.clientName, c.id); }, true); }
+              else { closeDetail(); openDetail(c.clientName, c.id); }
+            } else {
+              showToast('⚠️ 결제정보가 서버에 반영되지 않았어요(권한 문제일 수 있어요) — 새로고침해서 확인해주세요');
+            }
+          });
           return;
         }
         if (err) {
@@ -126,7 +149,7 @@ function renderPaySection(c, payBody, est) {
             var retryBtn = document.createElement('button'); retryBtn.type = 'button'; retryBtn.textContent = '다시 저장';
             retryBtn.style.cssText = 'margin-left:6px;padding:4px 10px;border:1px solid #B3261E;border-radius:8px;background:#fff;color:#B3261E;font-size:12px;font-weight:700;cursor:pointer';
             retryBtn.onclick = function () {
-              sbXHR('PATCH', 'estimates?id=eq.' + est.id, estPatchBody, function (e2) {
+              sbXHR('PATCH', estPatchPath, estPatchBody, function (e2) {
                 if (e2) { showToast('⚠️ 아직 저장되지 않았어요 - 잠시 후 다시 눌러주세요'); }
                 else { bar.remove(); showToast('✅ 서버에 저장됐어요'); }
               });
@@ -178,6 +201,7 @@ function renderPaySection(c, payBody, est) {
         // 위 estimates 저장 때문에 DB 트리거가 이 고객 행을 바로 갱신해서 고객의 updated_at(낙관적 잠금값)이 바뀜.
         // 이 화면이 들고 있던 예전 잠금값 그대로 곧바로 이어지는 고객 저장(단계 변경 등)은 스스로와 충돌했음.
         // 결제 저장이 성공하면 고객의 최신 잠금값을 다시 받아 로컬에 반영한 "다음에" 콜백을 실행함.
+        if (!err) { est.depositAmount = newDep; est.balanceAmount = newBal; } // 같은 화면에서 이어 저장해도 가짜 충돌이 나지 않게 기준값 갱신
         if (!err && c && c.id && typeof fetchLatestUpdatedAt === 'function') {
           fetchLatestUpdatedAt('customers', c.id, function (freshUpdatedAt) {
             try {
