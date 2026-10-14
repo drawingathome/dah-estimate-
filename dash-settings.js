@@ -379,6 +379,8 @@ function renderSettings() {
   
   renderSettingsIntegrationGroup(wrap, makeGroup, s); // → dash-settings-sections.js
 
+  if (typeof renderSettingsReconcileGroup === 'function') renderSettingsReconcileGroup(wrap, makeGroup); // → dash-reconcile.js (마스터 전용: 위에서 실장은 이미 return됨)
+
   
   renderSettingsDataGroup(wrap, makeGroup); // → dash-settings-sections.js
 
@@ -398,6 +400,7 @@ function renderSettings() {
       {id:'sec-set-goal', label:'매출목표'},
       {id:'sec-set-account', label:'계정보안'},
       {id:'sec-set-integration', label:'계좌연동'},
+      {id:'sec-set-reconcile', label:'입금대조'},
       {id:'sec-set-data', label:'데이터관리'}
     ]);
   }

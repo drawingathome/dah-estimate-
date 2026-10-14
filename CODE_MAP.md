@@ -44,8 +44,9 @@
 | 33 | `dash-auth.js` | DAH 대시보드 — 로그인/세션/권한 기능 | 5 |
 | 34 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 8 |
 | 35 | `dash-settings-sections.js` | DAH 대시보드 — 설정 화면 구역별 렌더링 (거래처/메모/지역비/쿠폰/연동/데이터) | 6 |
-| 36 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
-| 37 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
+| 36 | `dash-reconcile.js` | dash-reconcile.js | 11 |
+| 37 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
+| 38 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
 
 ## 견적서 앱 (dah-estimate.html) — 브라우저가 불러오는 순서대로
 
@@ -117,6 +118,7 @@
 | `_openAlimtalkPreview` | `dash-customer-alim.js` |
 | `_openPdfModalNow` | `est-customer-load.js` |
 | `_readSelfLockLedger` | `shared-optimistic-lock.js` |
+| `_reconWon` | `dash-reconcile.js` |
 | `_reRenderVisibleListScreen` | `dash-realtime.js` |
 | `_saveEstimateInner` | `est-save.js` |
 | `_savePendingSyncQueue` | `dash-sync-queue.js` |
@@ -398,6 +400,14 @@
 | `railInstallSpec` | `est-calc-rules.js` |
 | `railMaterialSpec` | `est-calc-rules.js` |
 | `recalcBlindOptionExtras` | `est-calc-blind.js` |
+| `reconBuildBankRows` | `dash-reconcile.js` |
+| `reconCollectAppPayments` | `dash-reconcile.js` |
+| `reconDayDiff` | `dash-reconcile.js` |
+| `reconDetectColumns` | `dash-reconcile.js` |
+| `reconMatch` | `dash-reconcile.js` |
+| `reconParseAmount` | `dash-reconcile.js` |
+| `reconParseDate` | `dash-reconcile.js` |
+| `reconParseTable` | `dash-reconcile.js` |
 | `recordSelfLockAdvance` | `shared-optimistic-lock.js` |
 | `refreshAlimSentMapFromServer` | `dash-customer-alim.js` |
 | `refreshAuthSessionForce` | `dash-supabase-auth.js` |
@@ -441,12 +451,14 @@
 | `renderPresenceBanner` | `dash-realtime.js` |
 | `renderPublicViewFromRow` | `est-public-view.js` |
 | `renderQuickNav` | `dash-ui-helpers.js` |
+| `renderReconResult` | `dash-reconcile.js` |
 | `renderSearch` | `dash-render-search.js` |
 | `renderSettings` | `dash-settings.js` |
 | `renderSettingsCouponGroup` | `dash-settings-sections.js` |
 | `renderSettingsDataGroup` | `dash-settings-sections.js` |
 | `renderSettingsIntegrationGroup` | `dash-settings-sections.js` |
 | `renderSettingsMemoLeadGroup` | `dash-settings-sections.js` |
+| `renderSettingsReconcileGroup` | `dash-reconcile.js` |
 | `renderSettingsRegionFeesGroup` | `dash-settings-sections.js` |
 | `renderSettingsVendorGroup` | `dash-settings-sections.js` |
 | `renderStaffBadge` | `dash-utils.js` |

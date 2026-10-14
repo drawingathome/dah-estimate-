@@ -152,6 +152,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['integrity-auto-note-check.js', []]);
   scripts.push(['scenario-customers-money-check.js', []]);
   scripts.push(['integrity-rule-labels-check.js', []]);
+  scripts.push(['reconcile-check.js', []]);
   scripts.push(['refund-revenue-check.js', []]);
   scripts.push(['refund-ui-check.js', []]);
   // 2026-09-22("다 해야지"로 전 영역 재검사 - 결제탭 서버재확인과 같은
