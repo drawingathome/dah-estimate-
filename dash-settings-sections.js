@@ -424,6 +424,7 @@ function renderSettingsDataGroup(wrap, makeGroup) {
   var dataCard = div('padding-top:4px', []);
   dataCard.appendChild(btn('width:100%;padding:11px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:var(--sp-2)', '고객목록 엑셀 내보내기', exportExcel));
   dataCard.appendChild(btn('width:100%;padding:11px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:var(--sp-2)', '견적서목록 엑셀 내보내기', exportEstimatesExcel));
+  dataCard.appendChild(btn('width:100%;padding:11px;background:var(--dark);color:#fff;border:none;border-radius:10px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:var(--sp-2)', '세무용 월별 입금·환불 내보내기', function(){ exportTaxMonth(); }));
   dataCard.appendChild(btn('width:100%;padding:11px;background:var(--ivory1);border:none;border-radius:10px;font-size:11px;font-family:inherit;cursor:pointer;margin-bottom:var(--sp-2);color:var(--dark)', '백업 (JSON 다운로드)', backupData));
   var lastBackupIso = null;
   try { lastBackupIso = localStorage.getItem('dah_last_backup'); } catch(e){}

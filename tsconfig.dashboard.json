@@ -33,6 +33,7 @@
     "dash-pay-history.js",
     "dash-refund.js",
     "dash-reconcile.js",
+    "dash-tax-export.js",
     "dash-customer-pay.js",
     "dash-export.js",
     "dash-failed-saves.js",

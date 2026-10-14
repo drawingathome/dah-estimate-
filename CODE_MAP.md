@@ -45,8 +45,9 @@
 | 34 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 8 |
 | 35 | `dash-settings-sections.js` | DAH 대시보드 — 설정 화면 구역별 렌더링 (거래처/메모/지역비/쿠폰/연동/데이터) | 6 |
 | 36 | `dash-reconcile.js` | dash-reconcile.js | 11 |
-| 37 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
-| 38 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
+| 37 | `dash-tax-export.js` | dash-tax-export.js | 3 |
+| 38 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
+| 39 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
 
 ## 견적서 앱 (dah-estimate.html) — 브라우저가 불러오는 순서대로
 
@@ -257,6 +258,7 @@
 | `estSvcState` | `est-save.js` |
 | `exportEstimatesExcel` | `dash-export.js` |
 | `exportExcel` | `dash-export.js` |
+| `exportTaxMonth` | `dash-tax-export.js` |
 | `fetchDiscountCouponsFromCloud` | `est-utils.js` |
 | `fetchLatestUpdatedAt` | `shared-optimistic-lock.js` |
 | `fetchNewSurveys` | `apps-script-survey-to-customer.js` |
@@ -540,6 +542,8 @@
 | `syncCustomerRow` | `apps-script-automation-hub.js` |
 | `syncCustomerToSheet` | `shared-common-utils.js` |
 | `syncStaffGoalsToCloud` | `dash-api.js` |
+| `taxBuildMonthRows` | `dash-tax-export.js` |
+| `taxRowsToCsv` | `dash-tax-export.js` |
 | `testInsert` | `apps-script-survey-to-customer.js` |
 | `testProcessSurveys` | `apps-script-survey-to-customer.js` |
 | `testSaveDocument` | `apps-script-automation-hub.js` |
