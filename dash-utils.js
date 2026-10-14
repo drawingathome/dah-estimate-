@@ -65,14 +65,12 @@ function renderStaffBadge(staffName, sizePx) {
 // customer-pay.js가 견적서 단위 저장으로 전환되기 전까지는, 두 소스
 // 중 더 큰 쪽(실제로 기록된 쪽)을 받은 금액으로 인정해야 안전함.
 function getReceivedAmount(c) {
-  var estSum = 0;
-  try {
-    var allEsts = JSON.parse(localStorage.getItem('dah_saved')||'[]');
-    var myEsts = allEsts.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
-    myEsts.forEach(function(e){ estSum += (Number(e.depositAmount)||0) + (Number(e.balanceAmount)||0); });
-  } catch(e) {}
-  var customerLevelSum = (Number(c.depositAmount)||0) + (Number(c.balanceAmount)||0);
-  return Math.max(estSum, customerLevelSum);
+  // 2026-10-14(받은 돈 계산 한 곳으로): 예전엔 "견적서 합계"와 "고객칸" 중 큰 값을 따로 계산해서, 매출 계산(getAllEstPays)과
+  // 서로 다른 답이 나올 수 있었음(환불로 견적서 금액을 줄이면 고객칸의 낡은 큰 값이 남는 문제 포함).
+  // 이제 매출 계산과 똑같이 getAllEstPays(견적서별 결제, 견적서에 기록이 전혀 없을 때만 고객칸)의 합계를 씀.
+  var sum = 0;
+  getAllEstPays(c).forEach(function(p){ sum += (Number(p.depositAmount)||0) + (Number(p.balanceAmount)||0); });
+  return sum;
 }
 // 2026-10-13(선혜님 - "선금을 안 한 고객은 계약이 안 된 건데 왜 자꾸 실측일 적은 모든 고객을 챙기니? 내가 여러 번 말했잖아"):
 // "계약 됐나?"의 유일한 판정. 선금(입금)이 한 건이라도 기록돼 있으면 계약 건, 없으면 계약 전.
