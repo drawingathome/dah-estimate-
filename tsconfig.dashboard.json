@@ -31,6 +31,7 @@
     "dash-customer-estimates.js",
     "dash-customer-order.js",
     "dash-pay-history.js",
+    "dash-refund.js",
     "dash-customer-pay.js",
     "dash-export.js",
     "dash-failed-saves.js",

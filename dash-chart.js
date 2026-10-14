@@ -39,7 +39,7 @@ function splitCustomerPayments(c) {
   // 예전 방식 고객)는 기존처럼 그 값을 그대로 존중.
   var perfOverride = Number(c.performanceRevenue) || 0;
   var allPays = getAllEstPays(c);
-  var parts = [];
+  var parts = /** @type {Array<{date: string, revenue: number, perf: number, isRefund?: boolean, cancel?: boolean}>} */ ([]);
   var anyPaid = false;
   allPays.forEach(function(estPay){
     var dep = estPay.depositAmount;
