@@ -14,7 +14,8 @@ async function run() {
       { id: 1, clientName: '정상고객', staffName: '마스터' },
       { id: 2, clientName: '=수식고객', staffName: '마스터' },
       { id: 3, clientName: '예전고객', staffName: '마스터', depositAmount: 300000, depositDate: '2026-09-10', depositMethod: '계좌이체', balanceAmount: 0 },
-      { id: 4, clientName: '환불고객', staffName: '마스터' }
+      { id: 4, clientName: '환불고객', staffName: '마스터' },
+      { id: 5, clientName: '입금일없음', staffName: '마스터', date: '2026-09-20', depositAmount: 0, balanceAmount: 700000, balanceMethod: '계좌이체' }
     ];
     const ests = [
       { clientId: 1, clientName: '정상고객', price: 1000000, depositAmount: 500000, depositDate: '2026-08-31', depositMethod: '카드', depositReceipt: false, balanceAmount: 500000, balanceDate: '2026-09-01', balanceMethod: '계좌이체', balanceReceipt: true },
@@ -27,11 +28,12 @@ async function run() {
     const csv = taxRowsToCsv(sep, '2026-09');
     return { sep, oct, csv };
   });
-  ok('1. 9월: 8/31 선금은 제외, 9/1 잔금·9/10 예전고객·9/15 수식고객 = 3건', r.sep.length === 3, r.sep);
+  ok('1. 9월: 8/31 선금은 제외, 9/1 잔금·9/10 예전고객·9/15 수식고객·입금일없음(추정) = 4건', r.sep.length === 4, r.sep);
+  ok('1-1. 입금일 없는 이관 잔금은 등록일 달(9월)에 추정 표시로 포함, 10월엔 없음', r.sep.some(x => x.customer === '입금일없음' && x.estimated && x.date === '2026-09-20') && !r.oct.some(x => x.customer === '입금일없음'), r.sep);
   ok('2. 9월 정상고객 잔금에 결제방법·영수증 표시', r.sep.some(x => x.customer === '정상고객' && x.kind === '잔금' && x.method === '계좌이체' && x.receipt === '발행/요청'), r.sep);
   ok('3. 예전 고객(견적서 없음)은 고객 칸 입금을 사용', r.sep.some(x => x.customer === '예전고객' && x.amount === 300000 && x.method === '계좌이체'), r.sep);
   ok('4. 10월: 환불은 환불일 달에 마이너스로 1건', r.oct.length === 1 && r.oct[0].kind === '환불' && r.oct[0].amount === -400000, r.oct);
-  ok('5. CSV 합계 = 500000+300000+100000 = 900,000', /합계\(입금-환불\),,,,900000/.test(r.csv), r.csv.slice(-200));
+  ok('5. CSV 합계 = 500000+300000+100000+700000 = 1,600,000, 추정 구역 700,000 따로 표시', /합계\(입금-환불\),,,,1600000/.test(r.csv) && /등록일로 추정\) 1건,,,,700000/.test(r.csv), r.csv.slice(-300));
   ok('6. 수식으로 시작하는 고객명은 작은따옴표로 방어', r.csv.indexOf("'=수식고객") !== -1, r.csv);
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));

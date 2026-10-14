@@ -4,6 +4,7 @@
 // - 입금: 선금/잔금 입금일이 그 달인 건(견적서별). 환불: 환불일이 그 달인 건을 마이너스 금액으로.
 // - 칸: 날짜, 고객명, 담당자, 구분, 금액, 결제방법, 현금영수증/세금계산서 발행 표시, 비고. 맨 아래에 합계·결제방법별 합계.
 // - 견적서에 입금 기록이 전혀 없는 예전 고객은 고객 칸의 입금을 사용(getAllEstPays와 같은 규칙).
+// - 2026-10-15: 입금일이 비어 있는 이관 입금은 고객 등록일 달로 추정해 포함(비고에 "등록일로 추정" 표시, 합계 아래에 따로 소계).
 // - 앱 안의 기록 기준이라 통장·카드사와 일치하는지는 "설정 > 입금 대조"로 따로 확인. 세무 신고 자체를 대신하지 않음.
 // ══════════════════════════════════════════════════
 
@@ -26,6 +27,9 @@ function taxBuildMonthRows(customers, estimates, month) {
     sources.forEach(function (e) {
       var base = { customer: c.clientName || '', staff: c.staffName || '' };
       var dep = Number(e.depositAmount) || 0, bal = Number(e.balanceAmount) || 0;
+      // 2026-10-15: 입금일이 비어 있는 이관 입금은 앱 매출 계산과 같이 고객 등록일(c.date) 달로 잡되, 날짜를 '추정'으로 표시해 별도 구역에 모음.
+      if (dep > 0 && !e.depositDate && inMonth(c.date)) rows.push({ date: String(c.date).slice(0, 10), customer: base.customer, staff: base.staff, kind: '선금', amount: dep, method: e.depositMethod || '', receipt: receiptLabel(e.depositReceipt), note: '입금일 없음(등록일로 추정)', estimated: true });
+      if (bal > 0 && !e.balanceDate && inMonth(c.date)) rows.push({ date: String(c.date).slice(0, 10), customer: base.customer, staff: base.staff, kind: '잔금', amount: bal, method: e.balanceMethod || '', receipt: receiptLabel(e.balanceReceipt), note: '입금일 없음(등록일로 추정)', estimated: true });
       if (dep > 0 && inMonth(e.depositDate)) rows.push({ date: String(e.depositDate).slice(0, 10), customer: base.customer, staff: base.staff, kind: '선금', amount: dep, method: e.depositMethod || '', receipt: receiptLabel(e.depositReceipt), note: '' });
       if (bal > 0 && inMonth(e.balanceDate)) rows.push({ date: String(e.balanceDate).slice(0, 10), customer: base.customer, staff: base.staff, kind: '잔금', amount: bal, method: e.balanceMethod || '', receipt: receiptLabel(e.balanceReceipt), note: '' });
       var refunds = (typeof getEffectiveRefunds === 'function') ? getEffectiveRefunds(e) : [];
@@ -48,8 +52,9 @@ function taxBuildMonthRows(customers, estimates, month) {
 function taxRowsToCsv(rows, month) {
   var safe = (typeof csvSafeCell === 'function') ? csvSafeCell : function (x) { return String(x); };
   var out = [['날짜', '고객명', '담당자', '구분', '금액', '결제방법', '영수증/세금계산서', '비고'].map(safe).join(',')];
-  var total = 0, byMethod = {};
+  var total = 0, byMethod = {}, estTotal = 0, estCount = 0;
   (rows || []).forEach(function (r) {
+    if (r.estimated) { estTotal += r.amount; estCount++; }
     total += r.amount;
     var m = r.kind === '환불' ? '(환불)' : (r.method || '(방법 미입력)');
     byMethod[m] = (byMethod[m] || 0) + r.amount;
@@ -57,6 +62,7 @@ function taxRowsToCsv(rows, month) {
   });
   out.push('');
   out.push([month + ' 합계(입금-환불)', '', '', '', total].map(safe).join(','));
+  if (estCount > 0) out.push([' 이 중 입금일 없는 이관 입금(등록일로 추정) ' + estCount + '건', '', '', '', estTotal].map(safe).join(','));
   Object.keys(byMethod).sort().forEach(function (k) { out.push(['  ' + k, '', '', '', byMethod[k]].map(safe).join(',')); });
   return out.join('\n');
 }
