@@ -154,6 +154,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['integrity-rule-labels-check.js', []]);
   scripts.push(['reconcile-check.js', []]);
   scripts.push(['tax-export-check.js', []]);
+  scripts.push(['view-security-invoker-check.js', []]);
   scripts.push(['refund-revenue-check.js', []]);
   scripts.push(['refund-ui-check.js', []]);
   // 2026-09-22("다 해야지"로 전 영역 재검사 - 결제탭 서버재확인과 같은

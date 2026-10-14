@@ -16,4 +16,5 @@ begin
   if position('PAID_NO_ESTIMATE' in d) > 0 then return; end if;
   d2 := d || add_;
   execute 'create or replace view public.data_integrity_issues as ' || d2;
+  execute 'alter view public.data_integrity_issues set (security_invoker = true)'; -- create or replace가 옵션을 초기화하므로 반드시 다시 설정
 end $m$;

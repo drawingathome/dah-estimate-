@@ -13,4 +13,5 @@ begin
   d2 := replace(replace(d, o1, n1), o2, n2);
   if position(n1 in d2) = 0 or position(n2 in d2) = 0 then raise exception '치환 실패'; end if;
   execute 'create or replace view public.data_integrity_issues as ' || d2;
+  execute 'alter view public.data_integrity_issues set (security_invoker = true)'; -- create or replace가 옵션을 초기화하므로 반드시 다시 설정
 end $m$;

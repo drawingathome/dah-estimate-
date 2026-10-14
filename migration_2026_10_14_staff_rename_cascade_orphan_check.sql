@@ -28,4 +28,5 @@ begin
          '담당자 이름이 직원 목록에 없음 - 그 직원이 이 고객을 못 볼 수 있음'::text AS detail
        FROM c WHERE c.staff_name IS NOT NULL AND c.staff_name <> ALL (ARRAY['마스터'::text, '미배정'::text, ''::text])
          AND NOT EXISTS (SELECT 1 FROM public.staff_profiles p WHERE p.display_name = c.staff_name)$q$;
+  execute 'alter view public.data_integrity_issues set (security_invoker = true)'; -- create or replace가 옵션을 초기화하므로 반드시 다시 설정(2026-10-15 사고 수정)
 end $mig$;
