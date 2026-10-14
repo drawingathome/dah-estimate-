@@ -261,7 +261,9 @@ function renderKanbanCols(customers, kanbanWrap) {
             var price = Number(c.price) || 0;
             var received = (typeof getReceivedAmount === 'function') ? getReceivedAmount(c) : ((Number(c.depositAmount) || 0) + (Number(c.balanceAmount) || 0));
             if (!price) return '';
-            var totalLine = '<div class="kanban-item-price">' + price.toLocaleString() + '원</div>';
+            // 2026-10-14(선혜님 확정 - 계약 전 고객은 "예상 금액"으로 표시, 가견적은 여러 건이라 합산하지 않고 가장 최근 1건): 받은 돈이 아직 없으면 "예상"을 붙여
+            // 확정된 계약 금액과 구분함(매출·계약 건수에는 이 금액이 잡히지 않음).
+            var totalLine = '<div class="kanban-item-price">' + (received <= 0 ? '<span class="kanban-expected" style="font-size:10px;font-weight:700;color:var(--sub);margin-right:4px">예상</span>' : '') + price.toLocaleString() + '원</div>';
             if (received > 0 && received < price) {
               // 일부만 받은 상태 - "받은 X원" 을 전체금액 위에 작게 별도 표시
               // 2026-10-10(선혜님 - "잔금이 얼마 남았는지 눈으로 확인"): 남은 잔금도 함께 표시(계약 이후 단계만)

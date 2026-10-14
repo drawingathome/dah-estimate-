@@ -228,8 +228,12 @@ function renderMonthClosePanel() {
       var sub = document.createElement('div'); sub.style.cssText = 'font-size:11px;color:var(--sub);margin-top:2px';
       if (cl) {
         var diff = Math.round(live.perf_revenue - Number(cl.perf_revenue));
-        sub.textContent = '성과매출 ' + Math.round(Number(cl.perf_revenue)).toLocaleString() + '원' + (Math.abs(diff) >= 1 ? ' · 마감 뒤 데이터 변화로 현재 계산은 ' + (diff > 0 ? '+' : '') + diff.toLocaleString() + '원 차이' : ' · 현재 계산과 일치');
-        if (Math.abs(diff) >= 1) sub.style.color = '#B3261E';
+        // 2026-10-14: 입금 합계 차이도 함께 보여줌(성과매출만 보면 입금만 바뀐 경우를 놓침). 마감한 달의 숫자는 고정이고,
+        // 마감 뒤에 생긴 환불은 환불한 달에 -로 잡히므로 이 차이는 "마감한 달의 입금·견적을 나중에 고친 경우"만 나타남.
+        var revDiff = Math.round((Number(live.revenue) || 0) - (Number(cl.revenue) || 0));
+        var hasDiff = Math.abs(diff) >= 1 || Math.abs(revDiff) >= 1;
+        sub.textContent = '성과매출 ' + Math.round(Number(cl.perf_revenue)).toLocaleString() + '원' + (hasDiff ? ' · 마감 뒤 데이터 변화로 현재 계산은 성과매출 ' + (diff > 0 ? '+' : '') + diff.toLocaleString() + '원 / 입금 ' + (revDiff > 0 ? '+' : '') + revDiff.toLocaleString() + '원 차이' : ' · 현재 계산과 일치');
+        if (hasDiff) sub.style.color = '#B3261E';
       } else {
         sub.textContent = '현재 계산 성과매출 ' + Math.round(live.perf_revenue).toLocaleString() + '원';
       }

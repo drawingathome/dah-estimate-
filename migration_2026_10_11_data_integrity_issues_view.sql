@@ -37,7 +37,23 @@ select 'PRICE_DIFF','info', c.id, c.client_name, c.staff_name,
 union all
 select 'HIDDEN_ESTIMATE','warn', c.id, c.client_name, c.staff_name,
        ('숨김(보관) 상태 견적서가 있음('||h.price::bigint||'원) - 견적서 목록에 안 보임. 살릴지 정리할지 확인')
-  from public.estimates h join c on c.id=h.client_id where coalesce(h.is_archived,false);
+  from public.estimates h join c on c.id=h.client_id where coalesce(h.is_archived,false)
+union all
+-- 2026-10-14(입력 경고 1-9): 입금이 있는데 성과매출이 0이면 화면은 견적서 총액 전체를 성과매출로 계산함(레일·시공비까지 포함될 수 있음)
+select 'PERF_ZERO_WITH_PAYMENT','info', e.client_id, e.customer_name, e.staff_name,
+       ('입금이 있는데 성과매출이 0 - 견적서 총액 '||e.price::bigint||'원 전체가 성과매출로 계산됨. 제품비용만이 맞는지 확인')
+  from e where coalesce(e.price,0)>0 and coalesce(e.performance_revenue,0)=0 and coalesce(e.deposit_amount,0)+coalesce(e.balance_amount,0)>0
+    and not exists (select 1 from c where c.id=e.client_id and c.memo ~ '플러그|Pluuug') -- 옛 플러그 이관 고객 8명은 성과매출 값이 원래 없어 제외(이미 알려진 이관 데이터)
+union all
+select 'PERF_OVER_PRICE','warn', e.client_id, e.customer_name, e.staff_name,
+       ('성과매출('||e.performance_revenue::bigint||')이 견적서 총액('||coalesce(e.price,0)::bigint||')보다 큼')
+  from e where coalesce(e.performance_revenue,0)>coalesce(e.price,0) and coalesce(e.performance_revenue,0)>0
+union all
+-- 고객 칸 입금합계는 DB가 견적서에서 자동으로 맞추므로 어긋나면 직접 고친 것(또는 동기화 오류)
+select 'PAY_SUM_MISMATCH','warn', c.id, c.client_name, c.staff_name,
+       ('고객 칸 입금합계 '||(coalesce(c.deposit_amount,0)+coalesce(c.balance_amount,0))::bigint||'원이 견적서 입금합계 '||s.paid::bigint||'원과 다름')
+  from c join (select client_id, sum(coalesce(deposit_amount,0)+coalesce(balance_amount,0)) as paid from e where client_id is not null group by client_id) s on s.client_id=c.id
+  where coalesce(c.deposit_amount,0)+coalesce(c.balance_amount,0) <> s.paid;
 revoke all on public.data_integrity_issues from anon;
 revoke insert, update, delete, truncate, references, trigger on public.data_integrity_issues from authenticated;
 grant select on public.data_integrity_issues to authenticated;

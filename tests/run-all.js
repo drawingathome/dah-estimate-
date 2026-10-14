@@ -147,6 +147,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['cal-unconfirmed-schedule-check.js', []]);
   scripts.push(['contract-rule-single-source-check.js', []]);
   scripts.push(['received-amount-single-source-check.js', []]);
+  scripts.push(['kanban-expected-amount-check.js', []]);
   scripts.push(['refund-revenue-check.js', []]);
   scripts.push(['refund-ui-check.js', []]);
   // 2026-09-22("다 해야지"로 전 영역 재검사 - 결제탭 서버재확인과 같은
