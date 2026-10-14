@@ -51,6 +51,15 @@ function _integrityAutoNote() {
       ? '⚠️ 매일 자동 점검이 멈췄을 수 있어요' + (at ? ' (마지막 ' + (new Date(at).getMonth() + 1) + '/' + new Date(at).getDate() + ' ' + _integrityTime(new Date(at).getTime()) + ')' : ' (기록 없음)')
       : '🕖 자동 점검 ' + _integrityTime(new Date(at).getTime()) + ' · ' + _integrityCache.autoTotal + '건';
     box.appendChild(n);
+    // 2026-10-15: 매일 실행되는 "실장 권한 자동 시험"이 실패했으면 눈에 띄게 경고(실장이 남의 고객을 볼 수 있는 상태일 수 있음)
+    var oldSelf = box.querySelector('.integrity-selftest'); if (oldSelf) oldSelf.remove();
+    if (_integrityCache.autoSelfFail) {
+      var sf = document.createElement('div');
+      sf.className = 'integrity-selftest';
+      sf.style.cssText = 'margin-top:4px;font-size:11px;color:#B3261E;font-weight:700';
+      sf.textContent = '🚨 실장 권한 자동 시험이 실패했어요 — 실장 계정이 남의 고객 정보를 볼 수 있는 상태일 수 있어요. 바로 확인이 필요해요.';
+      box.appendChild(sf);
+    }
   } catch (e) { /* 표시 실패는 점검 카드 자체에 영향 없게 */ }
 }
 
@@ -124,10 +133,11 @@ function renderIntegrityBanner(forceFetch) {
       _integrityCache = { at: Date.now(), rows: rows, acks: acks };
       draw(rows, acks, _integrityCache.at, false);
       if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'master') {
-        sbXHR('GET', 'integrity_daily_log?select=run_at,total_count&order=run_at.desc&limit=1', null, function (err3, logRows) {
+        sbXHR('GET', 'integrity_daily_log?select=run_at,total_count,by_code&order=run_at.desc&limit=1', null, function (err3, logRows) {
           if (err3 || !Array.isArray(logRows)) return; // 조회 실패는 알림 없이 넘어감(점검 카드 자체는 이미 표시됨)
           _integrityCache.autoRun = logRows[0] ? logRows[0].run_at : null;
           _integrityCache.autoTotal = logRows[0] ? logRows[0].total_count : 0;
+          _integrityCache.autoSelfFail = !!(logRows[0] && logRows[0].by_code && logRows[0].by_code.SELFTEST_FAIL);
           _integrityAutoNote();
         });
       }

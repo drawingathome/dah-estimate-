@@ -38,6 +38,12 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 50000);
       // 3) 기록 없음 → 경고
       logRows = [];
       renderIntegrityBanner(true); out.none = note();
+      // 3-2) 권한 시험 실패가 기록돼 있으면 빨간 경고, 정상이면 경고 없음
+      const selfNote = () => { const n = document.querySelector('#integrity-banner .integrity-selftest'); return n ? n.textContent : ''; };
+      logRows = [{ run_at: new Date(Date.now() - 3 * 3600 * 1000).toISOString(), total_count: 3, by_code: { SELFTEST_FAIL: 1 } }];
+      renderIntegrityBanner(true); out.selfFail = selfNote();
+      logRows = [{ run_at: new Date(Date.now() - 3 * 3600 * 1000).toISOString(), total_count: 2, by_code: { OVERPAID: 1 } }];
+      renderIntegrityBanner(true); out.selfOk = selfNote();
       // 4) 기록 조회 실패 → 점검 카드는 그대로, 자동 점검 줄만 없음
       logFail = true;
       renderIntegrityBanner(true); out.failNote = note(); out.bannerStill = !!document.getElementById('integrity-banner');
@@ -51,6 +57,8 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 50000);
     ok(/자동 점검 \d\d:\d\d · 2건/.test(r.fresh) && !/멈췄/.test(r.fresh), '최근 기록이면 "자동 점검 시각 · 건수"만 작게 표시: ' + r.fresh);
     ok(/멈췄을 수 있어요/.test(r.stale), '36시간 넘게 기록이 없으면 멈춤 경고: ' + r.stale);
     ok(/멈췄을 수 있어요/.test(r.none) && /기록 없음/.test(r.none), '기록이 하나도 없어도 경고: ' + r.none);
+    ok(/권한 자동 시험이 실패/.test(r.selfFail), '권한 시험 실패가 기록돼 있으면 빨간 경고: ' + r.selfFail);
+    ok(r.selfOk === '', '권한 시험이 정상이면 경고 없음');
     ok(r.failNote === '' && r.bannerStill, '기록 조회 실패 시 점검 카드는 유지되고 자동 점검 줄만 생략');
     ok(r.staffNote === '' && !r.staffQueried, '실장 화면에는 자동 점검 기록을 조회하지도 표시하지도 않음');
     ok(errs.length === 0, 'JS 오류 없음 ' + errs.join('|'));
