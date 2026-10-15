@@ -253,6 +253,15 @@ function memoSaveWithConflictGuard(customer, oldMemo, newMemo, callback) {
   });
 }
 
+// 2026-10-15 동시편집: 매출 계산 기준금액(price/performance_revenue) 수동 확정 - 서버 price가 "내가 보고 고친 값(oldPrice)"일 때만 반영.
+// 그 사이 견적서 저장 등으로 서버 금액이 바뀌었으면 0건 반영 → 호출한 쪽이 안내(새로고침 요청).
+function savePriceOverrideToDb(customerId, oldPrice, newPrice, callback) {
+  var n = Number(oldPrice) || 0;
+  var cas = n === 0 ? '&or=(price.is.null,price.eq.0)' : '&price=eq.' + n;
+  window._lastSelfCustomerWriteId = customerId; window._lastSelfCustomerWriteTime = Date.now();
+  sbXHR('PATCH', 'customers?id=eq.' + customerId + cas, { price: newPrice, performance_revenue: newPrice }, callback);
+}
+
 // 견적서 삭제 — 2026-08-05: 예전엔 견적서를 삭제/숨길 방법이
 // 앱 어디에도 없었음(estimates.is_archived 컬럼은 있는데 쓰는 코드가 없었음)
 //

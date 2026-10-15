@@ -529,6 +529,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['est-retry-queue-golden-master-check.js', []]);
   scripts.push(['est-retry-queue-lock-check.js', []]); // 2026-10-15 재시도 큐 동시편집 잠금
   scripts.push(['memo-concurrent-edit-check.js', []]); // 2026-10-15 메모 동시편집 충돌방지
+  scripts.push(['price-override-concurrent-check.js', []]); // 2026-10-16 금액 수동확정 동시편집
   // 2026-09-30(선혜님 - "전문업체 기준으로 봤을때 맞아?" 지적으로 발견): idempotency key
   // 자기치유 로직이 모든 진입경로(빈화면/edit/copy)에서 실제로 작동하는지 회귀 감시.
   scripts.push(['idempotency-key-self-heal-check.js', []]);

@@ -500,12 +500,13 @@ function renderDetailHeader(c) {
           var v = Math.max(0, Number(input.value) || 0);
           var arr = loadCustomers();
           var target = arr.find(function(x){ return String(x.id) === String(c.id); });
+          var oldPriceSeen = Number(c.price) || 0; // 2026-10-15 동시편집: 내가 보고 고친 기준값(서버 값이 그대로일 때만 반영)
           if (target) { target.price = v; target.performanceRevenue = v; }
           saveCustomers(arr);
-          sbXHR('PATCH', 'customers?id=eq.' + c.id, { price: v, performance_revenue: v }, function(err, rowsPrice){
+          savePriceOverrideToDb(c.id, oldPriceSeen, v, function(err, rowsPrice){
             // 이 저장이 고객 수정 시각(잠금값)을 바꾸므로 열려 있는 상세 객체도 새 시각으로 갱신(안 하면 다음 저장이 가짜 충돌)
             if (!err && rowsPrice && rowsPrice[0] && rowsPrice[0].updated_at) c.updatedAt = rowsPrice[0].updated_at;
-            if (err) showToast('⚠️ 매출 기준금액이 서버에 반영되지 않았어요' + (err.zeroRows ? '(권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요');
+            if (err) showToast('⚠️ 매출 기준금액이 서버에 반영되지 않았어요' + (err.zeroRows ? '(그 사이 다른 곳에서 금액이 바뀌었거나 권한 문제일 수 있어요)' : '') + ' — 새로고침해서 확인해주세요');
           });
           c.price = v; c.performanceRevenue = v;
           renderPriceRow();
