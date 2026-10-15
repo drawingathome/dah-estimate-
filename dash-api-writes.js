@@ -174,16 +174,18 @@ function saveCustomerToDb(customer, callback) {
 // 락이 맞아떨어지면 방금 저장된 계약금이 0원으로 되돌아가고, 락이 안 맞으면 단계 변경이 실패함(둘 다 사고).
 // 그래서 "바꾸려는 필드만" 보내는 저장을 따로 둠: 다른 필드를 건드릴 수 없으니 낡은 값으로 덮어쓰는 일이 구조적으로 불가능하고, 락도 필요 없음.
 // 성공하면 서버가 돌려준 최신 행을 로컬에 그대로 반영(낡은 값이 로컬에 남아 다음 저장에서 되살아나지 않게).
-function patchCustomerFieldsToDb(customer, fields, callback) {
+// opts(선택, 2026-10-15): { query: 'PATCH 조건 추가분(예: &memo=eq.값)', onZeroRows: function(err) — 0건 반영 때 기본 경고 대신 이 함수가 처리 }
+function patchCustomerFieldsToDb(customer, fields, callback, opts) {
   if (!customer || !customer.id) { if (callback) callback({ noId: true }); return; }
   window._lastSelfCustomerWriteId = customer.id;
   window._lastSelfCustomerWriteTime = Date.now();
-  var path = 'customers?id=eq.' + customer.id;
+  var path = 'customers?id=eq.' + customer.id + ((opts && opts.query) || '');
   // 2026-10-08: 큐 이름표를 "바꾼 필드 조합"별로 나눔 - 모두 같은 이름표(id:fields)면 오프라인에서 메모 저장이 실패한 뒤 결제 링크
   // 저장도 실패할 때 먼저 실패한 메모가 큐에서 덮여 사라짐(같은 필드를 다시 저장하면 최신 값으로 대체되는 것은 의도).
   var queueKey = customer.id + ':fields:' + Object.keys(fields || {}).sort().join(',');
   sbXHR('PATCH', path, fields, function(err, data) {
     if (err) {
+      if (err.zeroRows && opts && opts.onZeroRows) { opts.onZeroRows(err); return; }
       if (err.zeroRows) {
         if (typeof showToast === 'function') showToast('⚠️ 서버에 반영되지 않았어요 (권한 문제일 수 있어요) — 마스터님께 알려주세요');
         if (typeof reportClientError === 'function') reportClientError('고객 필드 저장 실패(0건 반영)', null, { customerId: customer.id, fields: fields });
@@ -218,6 +220,37 @@ function patchCustomerFieldsToDb(customer, fields, callback) {
 function saveCustomerFieldsToDb(customer, fields, callback) {
   if (customer && customer.id) { patchCustomerFieldsToDb(customer, fields, callback); return; }
   saveCustomerToDb(customer, callback);
+}
+
+// 2026-10-15 동시편집: 메모 저장 전용 충돌 방지. 서버 메모가 "내가 편집 시작할 때 본 값(oldMemo)"일 때만 새 메모를 반영.
+// 그 사이 다른 사람이 메모를 고쳤으면(0건 반영) 서버 메모를 읽어, 앞사람 메모 뒤에 내 메모를 이어 붙여 둘 다 남김(한 번만 재시도).
+// callback(err, 최종 저장된 메모). id 없는 신규 고객은 기존 방식(전체 저장).
+function memoSaveWithConflictGuard(customer, oldMemo, newMemo, callback) {
+  if (!customer || !customer.id) { saveCustomerFieldsToDb(customer, { memo: newMemo }, function(err){ if (callback) callback(err, newMemo); }); return; }
+  function casQuery(prev) { return prev ? '&memo=eq.' + encodeURIComponent(prev) : '&or=(memo.is.null,memo.eq.)'; }
+  // 기존 부분저장(patchCustomerFieldsToDb)을 그대로 재사용 - 서버 최신 행 반영·시트 동기화·재시도 큐가 그대로 유지됨
+  function sendWith(prev, memoVal, done, onZero) {
+    patchCustomerFieldsToDb(customer, { memo: memoVal }, function(err, data){ done(err, data); }, { query: casQuery(prev), onZeroRows: onZero });
+  }
+  sendWith(oldMemo, newMemo, function(err) {
+    if (callback) callback(err, newMemo);
+  }, function(zeroErr) {
+    // 0건: 서버 메모를 읽어 진짜 충돌인지 확인
+    sbXHR('GET', 'customers?id=eq.' + customer.id + '&select=memo', null, function(gErr, rows) {
+      if (gErr || !Array.isArray(rows) || !rows[0]) { if (callback) callback(zeroErr, newMemo); return; }
+      var srv = rows[0].memo || '';
+      var merged;
+      if (srv.trim() === (newMemo || '').trim()) { if (callback) callback(null, newMemo); return; }       // 이미 같은 내용
+      if (srv.trim() === (oldMemo || '').trim()) merged = newMemo;                                       // 표기(공백)만 달랐던 가짜 충돌
+      else if (!srv.trim()) merged = newMemo;
+      else if ((newMemo || '').indexOf(srv.trim()) !== -1) merged = newMemo;                             // 내 메모가 서버 메모를 이미 포함
+      else merged = srv.trim() + ' / ' + (newMemo || '');                                                // 진짜 충돌: 둘 다 보존
+      sendWith(srv, merged, function(err3) {
+        if (err3) { try { reportClientError('메모 저장 충돌 후 재시도 실패', null, { customerId: customer.id, mine: newMemo, server: srv }); } catch (e) {} }
+        if (callback) callback(err3, merged);
+      }, function(zero2) { try { reportClientError('메모 저장 충돌 후 재시도 0건', null, { customerId: customer.id, mine: newMemo, server: srv }); } catch (e) {} if (callback) callback(zero2, newMemo); });
+    });
+  });
 }
 
 // 견적서 삭제 — 2026-08-05: 예전엔 견적서를 삭제/숨길 방법이

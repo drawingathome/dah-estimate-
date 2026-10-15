@@ -113,11 +113,15 @@ function renderDetailInfoSection(c, body) {
       var arr = loadCustomers();
       var target = findCurrentDetailCustomer(arr);
       if (target) {
+        var oldMemo = target.memo || '';
         target.memo = newVal;
         saveCustomers(arr);
         clearMemoDraft();
         // 2026-10-08: 메모만 서버로 보냄(고객 전체를 보내면 낡은 계약금 등이 서버를 덮어쓰거나 동시저장충돌로 실패 - 오늘 조유정 사례와 같은 뿌리)
-        saveCustomerFieldsToDb(target, { memo: newVal }, function(err){
+        // 2026-10-15 동시편집: 메모는 글이라 "나중에 저장한 사람이 앞사람 메모를 통째로 지우는" 위험이 있어, 내가 편집을 시작할 때 본 메모(oldMemo)와
+        // 서버 메모가 같을 때만 반영. 다르면(그 사이 다른 사람이 고침) 두 메모를 이어 붙여 둘 다 보존(memoSaveWithConflictGuard).
+        memoSaveWithConflictGuard(target, oldMemo, newVal, function(err, finalMemo){
+          if (!err && finalMemo !== newVal) { renderMemoDisplay(memoBlock, finalMemo); showToast('⚠️ 다른 곳에서 메모가 먼저 바뀌어서, 두 메모를 이어 붙여 저장했어요'); return; }
           showToast(err ? '⚠️ 메모: 로컬엔 저장됨(서버 재시도 대기)' : '메모가 저장됐습니다');
         });
       }
