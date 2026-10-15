@@ -69,3 +69,31 @@
 - 이 규칙이 깨지지 않았는지 매일 06:55 `staff_permission_selftest()`가 실장 계정으로 직접 시도해 본다(실데이터는 바뀌지 않음). 실패하면 대시보드 점검 카드에 빨간 경고.
 - 점검 뷰(`data_integrity_issues`)를 `create or replace` 하면 `security_invoker` 옵션이 초기화된다 → 반드시 `alter view ... set (security_invoker = true)`를 같이 실행(정적 검사 `view-security-invoker-check.js`, 매일 시험 둘 다 감시).
 - 입금이 기록된 고객이 삭제되면 30일 동안 점검 카드에 "입금 있던 고객 삭제됨"으로 뜬다(이력에서 복구 가능).
+
+
+## 점검·알림 규칙 한 곳 목록 (2026-10-15, 계획 2-8)
+**정의는 DB 뷰 `data_integrity_issues` 한 곳**이고, 화면 이름은 `dash-integrity-watch.js`의 `INTEGRITY_LABELS` 한 곳이다. 코드와 이름이 하나라도 어긋나면 `integrity-rule-labels-check.js`가 실패한다. 규칙을 새로 만들 때는 ① 뷰에 추가 ② 이름표 추가 ③ 이 목록에 추가, 이 세 가지를 같이 한다.
+
+| 코드 | 화면 이름 | 뜻 |
+|---|---|---|
+| NO_ESTIMATE | 견적서 없음 | 계약 이후 단계인데 연결된 견적서가 없음 |
+| PAID_STAGE_NO_DEPOSIT | 입금 기록 없음 | 선금결제 이후 단계인데 받은 돈이 0 (판정은 DB 함수 `dah_received_amount`) |
+| DONE_NO_INSTALL_DATE | 시공일 없음 | 시공완료인데 시공일이 비어 있음 |
+| OVERPAID | 입금 초과 | 받은 돈이 견적금액보다 많음(환불 등록 필요 여부 확인) |
+| NO_STAFF | 담당자 없음 | 담당자가 비어 있음 |
+| ORPHAN_STAFF | 담당자 연결 끊김 | 담당자 이름이 직원 목록에 없음 |
+| MULTI_FINAL | 확정견적 중복 | 한 고객에 확정 견적서가 둘 이상 |
+| ORPHAN_ESTIMATE | 고객 없는 견적서 | 견적서의 고객이 없음 |
+| HIDDEN_ESTIMATE | 숨김 견적서 | 보관(숨김)된 견적서가 살아 있는 고객 금액에 영향 |
+| PRICE_DIFF | 금액 다름 | 고객 금액과 확정 견적서 금액이 다름(계약 이후 단계만) |
+| PERF_ZERO_WITH_PAYMENT | 성과매출 0 | 입금이 있는데 성과매출이 0 |
+| PERF_OVER_PRICE | 성과매출 > 총액 | 성과매출이 견적 총액보다 큼 |
+| PAY_SUM_MISMATCH | 입금합계 불일치 | 고객 칸 입금과 견적서 입금 합계가 다름 |
+| PAID_NO_ESTIMATE | 입금 있는데 견적서 없음 | 입금은 있는데 살아 있는 견적서가 없음 |
+| PAID_CUSTOMER_DELETED | 입금 있던 고객 삭제됨 | 입금이 있던 고객이 삭제됨(30일간 표시) |
+
+나머지 알림의 정의 위치(모두 한 함수가 정의하고 화면은 그 함수만 호출):
+- 미수금·잔금: `getUnpaidAmount` (고객 목록 칩, 미수금 필터, 홈 처리필요, 성과 비교 모두 이 함수)
+- 계약 여부: `isContractedCustomer` / DB `dah_is_contracted`
+- 마스터 여부: `isMasterUser()` (화면 숨김용, 진짜 차단은 DB 권한)
+- 자동 점검 멈춤(36시간)·권한 자동 시험 실패: `dash-integrity-watch.js`의 `_integrityAutoNote`
