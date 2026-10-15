@@ -363,10 +363,10 @@ function deleteCustomer() {
 // 마스터는 항상 가능, 실장은 본인 담당 고객만 가능(일관성 우선으로 선혜님
 // 확인) - DB RLS(customers_delete)도 함께 확장해뒀음.
 function permanentlyDeleteCustomer(c) {
-  var isMasterUser = isMasterUser();
+  var isMasterHere = isMasterUser(); // 주의: 지역변수 이름을 isMasterUser로 쓰면 같은 이름의 함수를 가려서 TypeError(2026-10-15 사고)
   var isOwnStaffCustomer = typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'staff' &&
     c && (c.staffName || '마스터') === currentUser.name;
-  if (!isMasterUser && !isOwnStaffCustomer) {
+  if (!isMasterHere && !isOwnStaffCustomer) {
     if (typeof showToast === 'function') showToast('본인 담당 고객만 삭제할 수 있어요');
     return;
   }

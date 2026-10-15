@@ -92,6 +92,10 @@ async function run() {
   const roleOffenders = fs.readdirSync(dir).filter(f => /^dash-.*\.js$/.test(f) && f !== 'dash-utils.js')
     .filter(f => fs.readFileSync(path.join(dir, f), 'utf8').split('\n').some(line => /role\s*[!=]==\s*'master'/.test(line) && !(f === 'dash-auth.js' && /classList\.add/.test(line))));
   ok('4-5. 화면 파일이 role === "master" 를 직접 비교하지 않음(isMasterUser 한 곳)', roleOffenders.length === 0, roleOffenders.join(','));
+  // 4-5b) 2026-10-15 사고: 지역변수 이름을 isMasterUser로 쓰면(var isMasterUser = isMasterUser()) 함수가 가려져 TypeError → 운영 삭제 기능 중단. 이름 겹침 금지.
+  const shadowOffenders = fs.readdirSync(dir).filter(f => /\.js$/.test(f) && f !== 'dash-utils.js')
+    .filter(f => /\b(var|let|const)\s+isMasterUser\b/.test(fs.readFileSync(path.join(dir, f), 'utf8')));
+  ok('4-5b. isMasterUser라는 이름의 지역변수가 함수를 가리지 않음', shadowOffenders.length === 0, shadowOffenders.join(','));
   const mu = await page.evaluate(() => { const saved = currentUser; const r = {}; r.master = isMasterUser(); currentUser = null; r.none = isMasterUser(); currentUser = { name: 'x', role: 'staff' }; r.staff = isMasterUser(); currentUser = { name: 'x' }; r.norole = isMasterUser(); currentUser = saved; return r; });
   ok('4-6. isMasterUser: 마스터만 true, 로그인 없음·실장·역할 없음은 false(fail-closed)', mu.master === true && mu.none === false && mu.staff === false && mu.norole === false, JSON.stringify(mu));
 
