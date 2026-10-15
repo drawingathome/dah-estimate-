@@ -211,6 +211,19 @@ async function dashboardFieldScenario(base) {
     if (memoPatches.length >= 1) {
       ok(`[${base}] 대시보드: 메모 저장은 "메모만" 전송 + 낡은 락 조건 없음`, memoPatches.every(p => Object.keys(p.body).join(',') === 'memo' && !p.url.includes('updated_at=eq')), JSON.stringify(memoPatches[0].body).slice(0, 140));
     }
+    // (4) 2026-10-15: 돈 규칙 한 곳 함수들이 운영에 실제로 올라가 있고 맞게 계산하는지(계약 판정·미수금·마스터 판정 fail-closed)
+    const rules = await page.evaluate(() => {
+      try {
+        const paid = { id: 99991, clientName: '규칙검증', stage: '선금결제', price: 1000000, depositAmount: 500000 };
+        const none = { id: 99992, clientName: '규칙검증2', stage: '선금결제', price: 1000000, depositAmount: 0 };
+        const saved = currentUser; const r = { master: isMasterUser() };
+        currentUser = null; r.noUser = isMasterUser(); currentUser = { name: 'x', role: 'staff' }; r.staff = isMasterUser(); currentUser = saved;
+        r.contracted = isContractedCustomer(paid); r.notContracted = isContractedCustomer(none);
+        r.unpaid = getUnpaidAmount(paid); r.fns = typeof taxBuildMonthRows === 'function' && typeof getEffectiveRefunds === 'function';
+        return r;
+      } catch (e) { return { err: String(e.message || e) }; }
+    });
+    ok(`[${base}] 대시보드: 돈 규칙 함수(계약 판정·미수금·마스터 판정)가 운영에서 맞게 계산`, !rules.err && rules.master === true && rules.noUser === false && rules.staff === false && rules.contracted === true && rules.notContracted === false && rules.unpaid === 500000 && rules.fns === true, JSON.stringify(rules));
     if (sink.errors.length) console.log('   (참고) JS 에러:', sink.errors.join(' | ').slice(0, 200));
   } finally { await browser.close(); }
 }
