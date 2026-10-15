@@ -224,6 +224,21 @@ async function dashboardFieldScenario(base) {
       } catch (e) { return { err: String(e.message || e) }; }
     });
     ok(`[${base}] 대시보드: 돈 규칙 함수(계약 판정·미수금·마스터 판정)가 운영에서 맞게 계산`, !rules.err && rules.master === true && rules.noUser === false && rules.staff === false && rules.contracted === true && rules.notContracted === false && rules.unpaid === 500000 && rules.fns === true, JSON.stringify(rules));
+    // (5) 2026-10-16: 환불 기능이 운영에 실제로 올라가 있는지 - 마스터에겐 환불 구역이 보이고, 실장에겐 안 보이며(안내 문구만), 취소된 환불은 합계에서 빠지는지
+    const refundCheck = await page.evaluate(() => {
+      try {
+        const est = { id: 'e-verify', depositAmount: 500000, balanceAmount: 0, refundRows: [
+          { id: 'r1', entry_type: 'refund', slot: 'deposit', amount: 100000 },
+          { id: 'r2', entry_type: 'refund', slot: 'deposit', amount: 50000 },
+          { id: 'r3', entry_type: 'reversal', reverses_id: 'r2' } ] };
+        const out = {}; out.effective = getEffectiveRefunds(est).map(r => r.amount).join(',');
+        const saved = currentUser;
+        currentUser = { name: 'm', role: 'master' }; let box = document.createElement('div'); appendRefundSection(box, est, { id: 1, clientName: 'x' }); out.masterSection = !!box.querySelector('.refund-section');
+        currentUser = { name: 's', role: 'staff' }; box = document.createElement('div'); appendRefundSection(box, { id: 'e2', depositAmount: 500000, balanceAmount: 0, refundRows: [] }, { id: 1, clientName: 'x' }); out.staffSection = !!box.querySelector('.refund-section'); out.staffHint = /마스터에게 요청/.test(box.textContent);
+        currentUser = saved; return out;
+      } catch (e) { return { err: String(e.message || e) }; }
+    });
+    ok(`[${base}] 대시보드: 환불(마스터만 보임·실장 숨김·취소분 제외)이 운영에서 맞게 동작`, !refundCheck.err && refundCheck.effective === '100000' && refundCheck.masterSection === true && refundCheck.staffSection === false && refundCheck.staffHint === true, JSON.stringify(refundCheck));
     if (sink.errors.length) console.log('   (참고) JS 에러:', sink.errors.join(' | ').slice(0, 200));
   } finally { await browser.close(); }
 }
