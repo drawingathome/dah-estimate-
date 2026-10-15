@@ -130,7 +130,7 @@ function getClosedMonth(monthKey) {
   return cl;
 }
 function loadMonthClose(callback) {
-  if (!(currentUser && currentUser.role === 'master') || typeof sbXHR !== 'function') { if (callback) callback(); return; }
+  if (!(isMasterUser()) || typeof sbXHR !== 'function') { if (callback) callback(); return; }
   sbXHR('GET', 'monthly_close?select=*', null, function(err, rows) {
     if (!err && Array.isArray(rows)) {
       var map = {};
@@ -180,7 +180,7 @@ function verifyBeforeClose(monthKey, snap, cb) {
   });
 }
 function closeMonthNow(monthKey, callback) {
-  if (!(currentUser && currentUser.role === 'master')) return;
+  if (!(isMasterUser())) return;
   var snap0 = computeMonthSnapshot(loadCustomers(), monthKey);
   verifyBeforeClose(monthKey, snap0, function(okToClose, why) {
     if (!okToClose) { alert(why); if (callback) callback(false); return; }
@@ -208,7 +208,7 @@ function closeMonthAfterCheck(monthKey, callback) {
 function renderMonthClosePanel() {
   var host = document.getElementById('chart-card-monthclose');
   if (!host) return;
-  if (!(currentUser && currentUser.role === 'master')) { host.style.display = 'none'; return; }
+  if (!(isMasterUser())) { host.style.display = 'none'; return; }
   host.style.display = '';
   var list = document.getElementById('chart-monthclose'); if (!list) return;
   list.innerHTML = '';

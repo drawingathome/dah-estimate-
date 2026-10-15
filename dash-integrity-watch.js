@@ -132,7 +132,7 @@ function renderIntegrityBanner(forceFetch) {
       ackRows.forEach(function (a) { acks[a.ack_key] = true; });
       _integrityCache = { at: Date.now(), rows: rows, acks: acks };
       draw(rows, acks, _integrityCache.at, false);
-      if (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'master') {
+      if (isMasterUser()) {
         sbXHR('GET', 'integrity_daily_log?select=run_at,total_count,by_code&order=run_at.desc&limit=1', null, function (err3, logRows) {
           if (err3 || !Array.isArray(logRows)) return; // 조회 실패는 알림 없이 넘어감(점검 카드 자체는 이미 표시됨)
           _integrityCache.autoRun = logRows[0] ? logRows[0].run_at : null;

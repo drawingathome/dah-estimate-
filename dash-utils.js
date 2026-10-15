@@ -277,3 +277,12 @@ function fmtPhone(v) {
   return formatPhoneDigits(v.replace(/[^0-9]/g, ''));
 }
 
+/**
+ * 2026-10-15(2-7 권한 판정 한 곳으로): 지금 로그인한 사람이 마스터인지. 이 함수만 "마스터 여부"를 판단함.
+ * 로그인 정보가 없거나 확인이 안 되면 항상 false(권한을 낮추는 쪽으로만 실패 — 2026-08-28 fail-open 사고 재발 방지).
+ * 화면 숨김용일 뿐이고, 진짜 차단은 DB 권한(RLS)이 함. 이 함수 밖에서 role === 'master' 를 직접 비교하지 말 것(테스트가 막음).
+ * @returns {boolean}
+ */
+function isMasterUser() {
+  return typeof currentUser !== 'undefined' && !!currentUser && currentUser.role === 'master';
+}

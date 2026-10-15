@@ -227,7 +227,7 @@ function openDetailInner(name, id, forceTab) {
     joinCustomerPresence(c.id, renderPresenceBanner);
   }
   if (typeof logEvent === 'function') logEvent('detail_open', { stage: c.stage, tab: forceTab || 'info' });
-  var isMaster = currentUser && currentUser.role === 'master';
+  var isMaster = isMasterUser();
 
   renderDetailHeader(c);
 

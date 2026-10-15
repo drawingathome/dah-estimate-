@@ -68,7 +68,7 @@ function taxRowsToCsv(rows, month) {
 }
 
 function exportTaxMonth(month) {
-  if (!(typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'master')) { if (typeof showToast === 'function') showToast('세무용 자료는 마스터만 내보낼 수 있어요'); return; }
+  if (!(isMasterUser())) { if (typeof showToast === 'function') showToast('세무용 자료는 마스터만 내보낼 수 있어요'); return; }
   var def = new Date(); def.setMonth(def.getMonth() - 1);
   var m = month || prompt('내보낼 달을 입력하세요 (예: 2026-09)', def.getFullYear() + '-' + String(def.getMonth() + 1).padStart(2, '0'));
   if (!m) return;

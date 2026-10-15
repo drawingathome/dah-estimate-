@@ -445,7 +445,7 @@ function renderHome(skipServerFetch) {
       // 보이고 정작 인센티브 정산에 필요한 "방금 마감된 지난달" 실적은
       // 볼 방법이 아예 없었음 - "이번달/지난달" 토글 추가.
       (function() {
-        if (!currentUser || currentUser.role !== 'master') return '';
+        if (!isMasterUser()) return '';
         var staffPerfMonthKey = (window._staffPerfViewMode === 'prev') ? _prevMonthKey : _thisMonthKey;
         var byStaff = typeof getMonthStaffPerformance === 'function'
           ? getMonthStaffPerformance(customers, staffPerfMonthKey)
@@ -513,7 +513,7 @@ function renderHome(skipServerFetch) {
         {id:'sec-stage', label:'진행현황'},
         {id:'sec-todo', label:'지금챙길것'}
       ];
-      if (currentUser && currentUser.role === 'master' && document.getElementById('sec-staff-perf')) {
+      if (isMasterUser() && document.getElementById('sec-staff-perf')) {
         homeNavItems.push({id:'sec-staff-perf', label:'담당자성과'});
       }
       renderQuickNav(homeNavItems);

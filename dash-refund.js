@@ -30,7 +30,7 @@ function reopenAfterRefund(c) {
 
 function appendRefundSection(paySec, est, c) {
   if (!est || !est.id || typeof sbXHR !== 'function') return;
-  var isMaster = typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'master';
+  var isMaster = isMasterUser();
   var rows = est.refundRows || [];
   var reversed = {};
   rows.forEach(function (r) { if (r.entry_type === 'reversal' && r.reverses_id) reversed[r.reverses_id] = true; });

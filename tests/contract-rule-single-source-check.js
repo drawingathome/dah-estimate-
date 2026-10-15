@@ -88,6 +88,13 @@ async function run() {
     .filter(f => /getReceivedAmount\s*\([^)]*\)\s*(>|<=)\s*0/.test(fs.readFileSync(path.join(dir, f), 'utf8')));
   ok('4-4. 화면 파일이 "받은 돈 > 0"으로 계약 여부를 따로 판정하지 않음', offenders.length === 0, offenders.join(','));
 
+  // 4-5) 2-7: "마스터인가" 판정은 isMasterUser() 한 곳. 화면 파일이 role === 'master' 를 직접 비교하지 않음(dash-auth.js의 body 클래스 설정만 예외)
+  const roleOffenders = fs.readdirSync(dir).filter(f => /^dash-.*\.js$/.test(f) && f !== 'dash-utils.js')
+    .filter(f => fs.readFileSync(path.join(dir, f), 'utf8').split('\n').some(line => /role\s*[!=]==\s*'master'/.test(line) && !(f === 'dash-auth.js' && /classList\.add/.test(line))));
+  ok('4-5. 화면 파일이 role === "master" 를 직접 비교하지 않음(isMasterUser 한 곳)', roleOffenders.length === 0, roleOffenders.join(','));
+  const mu = await page.evaluate(() => { const saved = currentUser; const r = {}; r.master = isMasterUser(); currentUser = null; r.none = isMasterUser(); currentUser = { name: 'x', role: 'staff' }; r.staff = isMasterUser(); currentUser = { name: 'x' }; r.norole = isMasterUser(); currentUser = saved; return r; });
+  ok('4-6. isMasterUser: 마스터만 true, 로그인 없음·실장·역할 없음은 false(fail-closed)', mu.master === true && mu.none === false && mu.staff === false && mu.norole === false, JSON.stringify(mu));
+
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));
   const failed = log.filter(l => l.startsWith('❌'));

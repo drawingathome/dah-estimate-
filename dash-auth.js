@@ -35,7 +35,7 @@ function loginAs(who) {
 }
 
 function applyPermissions() {
-  var isMaster = currentUser && currentUser.role === 'master';
+  var isMaster = isMasterUser();
   
   setTimeout(function(){
     // 2026-08-05: 매출 탭의 실제 data-tab/data-mob-tab 값은 'chart'뿐이라

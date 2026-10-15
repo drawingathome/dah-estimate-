@@ -121,7 +121,7 @@ var _openSettingsGroupId = null;
 function renderSettings() {
   var wrap = document.getElementById('settings');
   wrap.innerHTML = '';
-  var isMaster = currentUser && currentUser.role === 'master';
+  var isMaster = isMasterUser();
   if (!isMaster) {
     // 2026-08-01: 예전엔 스태프가 설정탭에 아예 접근 못 해서, 비밀번호를
     // 바꾸고 싶어도 방법이 전혀 없었음(로그아웃밖에 못 함). 사업설정

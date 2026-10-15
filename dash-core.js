@@ -13,7 +13,7 @@ function goTab(t) {
   // 개발자도구나 코드로 goTab('settings')를 직접 호출하면 들어가지므로,
   // 진입점 자체에서 차단. 거래처목록/지역출장비 등 가게 전체 설정 보호 +
   // 마스터 비밀번호 재설정 메일 오발송 방지.
-  if (t === 'settings' && !(typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'master')) {
+  if (t === 'settings' && !(isMasterUser())) {
     if (typeof showToast === 'function') showToast('설정은 마스터만 접근할 수 있어요');
     return;
   }
