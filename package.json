@@ -7,7 +7,8 @@
     "typecheck": "npm run typecheck:dashboard && npm run typecheck:estimate",
     "typecheck:dashboard": "tsc --noEmit --locale ko -p tsconfig.dashboard.json",
     "typecheck:estimate": "tsc --noEmit --locale ko -p tsconfig.estimate.json",
-    "bump-versions": "node scripts/bump-cache-versions.js"
+    "bump-versions": "node scripts/bump-cache-versions.js",
+    "verify": "node scripts/bump-cache-versions.js --check && node tests/typecheck-check.js && node tests/run-all.js dah-dashboard.html && node tests/run-all.js dah-estimate.html"
   },
   "devDependencies": {
     "@types/react": "^18.3.31",
