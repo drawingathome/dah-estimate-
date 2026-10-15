@@ -437,7 +437,7 @@ function _saveStage_estimatesActual(ctx) {
       logSaveStage('견적서저장-타임아웃', null);
       console.warn('Supabase 견적서 저장 타임아웃');
       showToast('⚠️ 서버 응답이 없어요(시간초과) — 저장이 안 됐을 수 있어요, 다시 저장해주세요');
-      if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId);
+      if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId, (typeof lockUpdatedAt !== 'undefined' ? lockUpdatedAt : null));
       onDone('failed'); // 2026-10-06: 서버에 못 올라간 경우 - 바깥에서 "저장됨"으로 착각하지 않게 결과를 알림
     };
     // 2026-08-25(선혜님 발견 — "저장했는데 나중에 수정이 안 됨", 진짜
@@ -611,7 +611,7 @@ function _saveStage_estimatesActual(ctx) {
         showToast('⚠️ 서버 저장 실패 — 이 기기에만 임시 저장됐어요, 자동 재시도할게요');
         // 2026-08-05: 실패하면 그걸로 끝이라 나중에 수동으로 다시 저장해야 했음 —
         // 재시도 큐에 등록해서 네트워크 복구시 자동으로 다시 시도되도록 함
-        if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId);
+        if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId, (typeof lockUpdatedAt !== 'undefined' ? lockUpdatedAt : null));
       }
       onDone(_saveOutcome); // 2026-08-24: 성공/409/실패 모든 경우에 버튼 다시 눌러도 되게 원상복구 (2026-10-06: 서버가 받았을 때만 'server')
     };
@@ -619,7 +619,7 @@ function _saveStage_estimatesActual(ctx) {
       logSaveStage('견적서저장-네트워크오류', null);
       console.warn('Supabase 견적서 저장 실패 (localStorage는 완료)');
       showToast('⚠️ 서버 저장 실패 — 이 기기에만 임시 저장됐어요, 자동 재시도할게요');
-      if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId);
+      if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId, (typeof lockUpdatedAt !== 'undefined' ? lockUpdatedAt : null));
       onDone('failed'); // 2026-10-06: 서버에 못 올라간 경우 - 바깥에서 "저장됨"으로 착각하지 않게 결과를 알림
     };
     xhr2.send(JSON.stringify(estPayloadForRetry));
@@ -627,7 +627,7 @@ function _saveStage_estimatesActual(ctx) {
     logSaveStage('견적서저장-예외', { message: e && e.message, stack: e && e.stack });
     console.warn('Supabase 연결 오류:', e);
     showToast('⚠️ 서버 저장 실패 — 이 기기에만 임시 저장됐어요, 자동 재시도할게요');
-    if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId);
+    if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId, (typeof lockUpdatedAt !== 'undefined' ? lockUpdatedAt : null));
     onDone('failed'); // 2026-10-06: 서버에 못 올라간 경우 - 바깥에서 "저장됨"으로 착각하지 않게 결과를 알림
   }
 }

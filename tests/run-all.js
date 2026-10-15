@@ -527,6 +527,7 @@ if (/dah-dashboard/.test(target)) {
   // 2026-09-30(선혜님 - "지금 고쳐야지" - 노지경 견적서 사례로 발견한 근본원인): 재시도 큐가
   // 0건 반영(권한문제/동시저장충돌)을 성공으로 착각하고 조용히 삭제하던 버그를 고침 - 회귀 감시.
   scripts.push(['est-retry-queue-golden-master-check.js', []]);
+  scripts.push(['est-retry-queue-lock-check.js', []]); // 2026-10-15 재시도 큐 동시편집 잠금
   // 2026-09-30(선혜님 - "전문업체 기준으로 봤을때 맞아?" 지적으로 발견): idempotency key
   // 자기치유 로직이 모든 진입경로(빈화면/edit/copy)에서 실제로 작동하는지 회귀 감시.
   scripts.push(['idempotency-key-self-heal-check.js', []]);

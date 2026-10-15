@@ -216,6 +216,11 @@ function showEstimateHistoryModal(dbId, clientName) {
   document.body.appendChild(overlay);
   document.getElementById('est-history-close-btn').addEventListener('click', function(){ overlay.remove(); });
 
+  // 2026-10-15 동시편집 잠금: 이력을 연 시점의 견적서 수정시각을 기억해뒀다가, 복원할 때 "그 사이 다른 사람이 고치지 않았을 때만" 반영
+  var _histLockUpdatedAt = null;
+  sbXHR('GET', 'estimates?id=eq.' + encodeURIComponent(dbId) + '&select=updated_at', null, function(e0, r0) {
+    if (!e0 && Array.isArray(r0) && r0[0]) _histLockUpdatedAt = r0[0].updated_at || null;
+  });
   sbXHR('GET', 'estimate_history?estimate_id=eq.' + encodeURIComponent(dbId) + '&order=changed_at.desc&limit=20', null, function(err, rows) {
     var listEl = document.getElementById('est-history-list');
     if (!listEl) return; // 로딩 중 모달 닫힘
@@ -237,10 +242,11 @@ function showEstimateHistoryModal(dbId, clientName) {
       restoreBtn.style.cssText = 'flex-shrink:0;font-size:11px;font-weight:700;padding:7px 10px;border-radius:8px;border:1px solid var(--dark);background:#fff;color:var(--dark);cursor:pointer;font-family:inherit';
       restoreBtn.addEventListener('click', function(){
         if (!confirm(dateStr + ' 버전(' + priceStr + ')으로 되돌릴까요?\n\n지금 저장된 최신 내용은 사라지고 이 버전으로 바뀝니다.')) return;
-        sbXHR('PATCH', 'estimates?id=eq.' + encodeURIComponent(dbId), {
+        sbXHR('PATCH', 'estimates?id=eq.' + encodeURIComponent(dbId) + (_histLockUpdatedAt ? '&updated_at=eq.' + encodeURIComponent(_histLockUpdatedAt) : ''), {
           price: snap.price, line_items: snap.line_items, memo: snap.memo,
           estimate_status: snap.estimate_status, contract_status: snap.contract_status
         }, function(perr){
+          if (perr && perr.zeroRows && _histLockUpdatedAt) { showToast('⚠️ 그 사이 다른 분이 이 견적서를 수정했어요 — 이력 창을 닫고 다시 열어 확인해주세요'); return; }
           if (perr) { showToast('⚠️ 복원이 서버에 반영되지 않았어요 — 다시 시도해주세요'); return; }
           showToast('✅ ' + dateStr + ' 버전으로 복원됐어요');
           overlay.remove();

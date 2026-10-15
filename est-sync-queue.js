@@ -19,13 +19,14 @@ function getEstPendingQueue() {
   try { return JSON.parse(localStorage.getItem(EST_PENDING_KEY) || '[]'); } catch(e) { return []; }
 }
 
-function addToEstPendingQueue(payload, isEditMode, dbId) {
+// 2026-10-15 동시편집 잠금: lockUpdatedAt = 이 내용을 만들 때 내가 본 견적서 수정시각(재시도 때 그 사이 다른 사람이 고쳤으면 덮어쓰지 않기 위함)
+function addToEstPendingQueue(payload, isEditMode, dbId, lockUpdatedAt) {
   var q = getEstPendingQueue();
   // 2026-08-12: 재시도 큐가 항상 POST로만 재시도해서, "열어서 수정" 중
   // 네트워크가 끊긴 경우 재시도 시 PATCH(기존 견적서 갱신)가 아니라
   // POST(신규생성)가 나가 중복 견적서가 생기던 버그. isEditMode/dbId를
   // 큐 항목에 같이 저장해서 재시도시 정확한 method를 쓰도록 함.
-  q.push({ payload: payload, addedAt: new Date().toISOString(), isEditMode: !!isEditMode, dbId: dbId || null });
+  q.push({ payload: payload, addedAt: new Date().toISOString(), isEditMode: !!isEditMode, dbId: dbId || null, lockUpdatedAt: lockUpdatedAt || null });
   if (q.length > 200) q = q.slice(-200); // 무한정 쌓이는 것 방지
   try { localStorage.setItem(EST_PENDING_KEY, JSON.stringify(q)); } catch(e) {}
   updateEstSyncBanner();
@@ -103,7 +104,7 @@ function _doRetryEstPendingSync(q) {
     var xhr = new XMLHttpRequest();
     var isEdit = item.isEditMode && item.dbId;
     if (isEdit) {
-      xhr.open('PATCH', SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(item.dbId), true);
+      xhr.open('PATCH', SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(item.dbId) + (item.lockUpdatedAt ? '&updated_at=eq.' + encodeURIComponent(item.lockUpdatedAt) : ''), true);
     } else {
       xhr.open('POST', SUPABASE_URL + '/rest/v1/estimates', true);
     }

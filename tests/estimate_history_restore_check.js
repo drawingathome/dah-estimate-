@@ -71,6 +71,36 @@ async function run() {
   });
   ok('3. 복원 버튼 클릭시 실제로 그 버전 값으로 PATCH 요청이 나감', r2.length === 1 && r2[0].price === '5000000', JSON.stringify(r2));
 
+  // 4~6. 동시편집 잠금(2026-10-15): 이력을 연 뒤 다른 사람이 먼저 수정했으면 복원이 덮어쓰지 않아야 함
+  const r3 = await page.evaluate(() => {
+    return new Promise(function(resolve) {
+      var out = { patchPath: null, toast: '', openDetailCalled: false };
+      window.showToast = function(m){ out.toast = String(m); };
+      window.openDetail = function(){ out.openDetailCalled = true; };
+      window.sbXHR = function(method, path, data, cb) {
+        if (method === 'GET' && path.indexOf('estimate_history?') === 0) {
+          cb(null, [{ estimate_id: 'est-123', changed_at: '2026-09-15T03:00:00Z', change_type: 'before_update', snapshot: { price: '5000000', line_items: [], memo: 'm' } }]); return;
+        }
+        if (method === 'GET' && path.indexOf('estimates?id=eq.est-123&select=updated_at') === 0) { cb(null, [{ updated_at: '2026-10-15T01:00:00+00:00' }]); return; }
+        if (method === 'PATCH' && path.indexOf('estimates?id=eq.est-123') === 0) {
+          out.patchPath = path;
+          // 다른 사람이 먼저 저장해 updated_at이 달라진 상황 → 0건 반영
+          cb({ status: 200, text: '0건 반영됨', zeroRows: true }, null); return;
+        }
+        cb(null, []);
+      };
+      window.confirm = function(){ return true; };
+      showEstimateHistoryModal('est-123', '테스트고객');
+      setTimeout(function() {
+        var btn = Array.from(document.querySelectorAll('#est-history-list button')).find(function(b){ return b.textContent.indexOf('복원') !== -1; });
+        btn.click();
+        setTimeout(function(){ resolve(out); }, 200);
+      }, 300);
+    });
+  });
+  ok('4. 복원 PATCH에 "내가 본 수정시각" 조건(updated_at=eq.)이 붙음', !!r3.patchPath && r3.patchPath.indexOf('updated_at=eq.') !== -1, r3.patchPath);
+  ok('5. 그 사이 다른 사람이 수정했으면(0건 반영) 성공 안내/새로고침 없이 충돌 안내가 뜸', r3.toast.indexOf('다른 분이') !== -1 && !r3.openDetailCalled, r3.toast);
+
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));
   const failed = log.filter(l => l.startsWith('❌'));
