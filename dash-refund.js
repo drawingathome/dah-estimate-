@@ -20,9 +20,8 @@ function newRefundRequestId() {
 
 function reopenAfterRefund(c) {
   // 환불 때문에 DB가 고객 칸(합계)·견적서 칸을 바꿨으니, 기기에 남은 결제 임시저장은 지우고 서버 최신값으로 다시 연다.
-  try {
-    (loadCustomers() || []).forEach(function () {});
-  } catch (e) {}
+  // 2026-10-16(이영욱 재결제 사례): 예전엔 여기가 비어 있어서, 환불 뒤 선금 칸이 환불 전에 쓰던 임시저장(옛 입금일 10-05 등)으로 다시 채워졌음 → 임시저장을 실제로 지움
+  try { localStorage.removeItem('dah_pay_draft_' + c.id); } catch (e) {}
   if (typeof loadCustomersAsync === 'function') {
     loadCustomersAsync(function () { closeDetail(); openDetail(c.clientName, c.id); }, true);
   } else { closeDetail(); openDetail(c.clientName, c.id); }

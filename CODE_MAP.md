@@ -10,7 +10,7 @@
 | # | 파일 | 역할 | 함수 수 |
 |---|---|---|---|
 | 1 | `shared-staging-guard.js` | DAH 공용 — 스테이징 환경 쓰기 차단 안전장치 | 0 |
-| 2 | `dash-utils.js` | DAH 대시보드 — 순수 유틸리티 함수 모음 | 21 |
+| 2 | `dash-utils.js` | DAH 대시보드 — 순수 유틸리티 함수 모음 | 22 |
 | 3 | `dash-api.js` | DAH 대시보드 — 데이터 접근 계층 (Supabase / localStorage) | 5 |
 | 4 | `dash-api-settings.js` | DAH 대시보드 — 설정 접근자 (담당자/거래처/리드기준/지역비/쿠폰/담당자 이메일) | 13 |
 | 5 | `dash-api-data.js` | DAH 대시보드 — 데이터 변환·로딩 (DB행↔화면 객체, 고객/견적 불러오기) | 8 |
@@ -232,6 +232,7 @@
 | `deleteCustomer` | `dash-customer-detail-tabs.js` |
 | `delRow` | `est-product-calc.js` |
 | `delSvcRow` | `est-calc-svc.js` |
+| `depositRatioNeedsConfirm` | `dash-utils.js` |
 | `dismissFailedSave` | `dash-failed-saves.js` |
 | `displaySurvey` | `est-survey.js` |
 | `div` | `dash-ui-helpers.js` |

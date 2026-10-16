@@ -408,7 +408,7 @@ function renderPaySection(c, payBody, est) {
       var depOver = payBasisPrice > 0 && depTotalAfter > payBasisPrice;
       if (depOver && !confirm('⚠️ 입금 합계(' + depTotalAfter.toLocaleString() + '원)가 견적금액(' + payBasisPrice.toLocaleString() + '원)보다 ' + (depTotalAfter - payBasisPrice).toLocaleString() + '원 많아요.\n카드 취소 후 재결제나 환불이 있었다면 입금칸을 고치지 말고 마스터가 "환불 등록"을 먼저 해야 기록이 남아요.\n그래도 이대로 저장할까요?')) return;
       var expectedHalf = Math.round((payBasisPrice || 0) * 0.5);
-      if (!depOver && payBasisPrice > 0 && inputAmt > 0 && inputAmt !== expectedHalf) {
+      if (depositRatioNeedsConfirm(inputAmt, payBasisPrice, depOver)) {
         var proceed = confirm(
           '입력하신 선금(' + inputAmt.toLocaleString() + '원)이 견적금액의 50%(' + expectedHalf.toLocaleString() + '원)와 달라요.\n'
           + '이대로 저장할까요?'

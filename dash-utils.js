@@ -286,3 +286,12 @@ function fmtPhone(v) {
 function isMasterUser() {
   return typeof currentUser !== 'undefined' && !!currentUser && currentUser.role === 'master';
 }
+
+// 2026-10-16(이영욱 재결제 사례): 선금이 견적금액의 50%가 아니면 "이대로 저장할까요?" 확인을 띄우되, 견적금액 전액(완납 한 번에)은 정상 입력이라 묻지 않음.
+// 입금 합계가 견적금액을 넘는 경우는 별도 초과 경고가 처리하므로 여기선 제외(depOver).
+function depositRatioNeedsConfirm(inputAmt, basisPrice, depOver) {
+  var amt = Number(inputAmt) || 0, base = Number(basisPrice) || 0;
+  if (depOver || base <= 0 || amt <= 0) return false;
+  if (amt === base) return false;
+  return amt !== Math.round(base * 0.5);
+}
