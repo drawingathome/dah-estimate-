@@ -459,7 +459,7 @@ function estMissingInstallRows() {
 function saveEstimate() {
   logSaveAttempt();
   logSaveStage('시작');
-  estSendReceipt('save', 'start', { phase: 'start', pending_queue: (typeof getEstPendingQueue === 'function') ? getEstPendingQueue().length : null, svc: estSvcState() });
+  estSendReceipt('save', 'start', { phase: 'start', confirm_state: { mem: !!window._estEditState.estimateConfirmedAt, loaded: !!(window._estLoadedRow && window._estLoadedRow.confirmed_at), edit_id: !!window._estEditState.editingEstDbId }, pending_queue: (typeof getEstPendingQueue === 'function') ? getEstPendingQueue().length : null, svc: estSvcState() });
   // 2026-10-06(선혜님 - "저장 눌렀어"/"프린트까지 했는데" 김성은님 견적서가 서버에 없음): 인쇄·PDF 전에 저장을 먼저 하고, 그 결과를 받아 진행 여부를
   // 정하기 위한 콜백(ensureEstimateSavedThen이 설정). 저장 흐름이 어디서 끝나든(검증 중단/확인창 취소/이미 진행 중/서버 성공/서버 실패) 정확히 한 번만 호출됨.
   var _afterSave = window._estAfterSave || null; window._estAfterSave = null;

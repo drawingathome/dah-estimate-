@@ -45,7 +45,7 @@ forbiddenPatterns.forEach(function(fp) {
 // (이 검사 자체가 무력화되지 않았는지 - 위 forbidden 패턴이 그냥
 // 통째로 사라져서 통과한 게 아니라 올바른 방식으로 대체됐는지 확인)
 const requiredUsages = [
-  'estimate_status: window._estEditState.estimateConfirmedAt',
+  "(window._estEditState.estimateConfirmedAt ? 'final' : 'ga')",
   'isFinalForDrive = !!window._estEditState.estimateConfirmedAt',
   'isFinal = !!window._estEditState.estimateConfirmedAt'
 ];

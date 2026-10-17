@@ -337,6 +337,8 @@ function _saveStage_estimatesActual(ctx) {
   if (!window._estEditState.currentEstIdempotencyKey) {
     window._estEditState.currentEstIdempotencyKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('est-' + Date.now() + '-' + Math.random().toString(36).slice(2));
   }
+  var _estLr = /** @type {any} */ (window._estLoadedRow);
+  var _estKeepServerConfirm = !!(window._estEditState.editingEstDbId && _estLr && _estLr.confirmed_at && !window._estEditState.estimateConfirmedAt);
   var estPayloadForRetry = Object.assign({
     client_idempotency_key: window._estEditState.currentEstIdempotencyKey,
     customer_name:name, price:grand,
@@ -353,7 +355,11 @@ function _saveStage_estimatesActual(ctx) {
     // "확정"이라는 하나의 진짜 기준(확정 버튼)에서만 파생되게 통일 -
     // 탭 선택은 순전히 화면에 어떤 스타일로 보여줄지 정하는 것일 뿐,
     // 저장되는 확정 여부와는 무관해야 함.
-    estimate_status: window._estEditState.estimateConfirmedAt ? 'final' : 'ga',
+    // 2026-10-17: 확정 칸은 "확정/해제 버튼"만 바꾸는 값. 이미 DB에 있는 견적서를 열 때 서버가 확정 상태였는데
+    // 화면 메모리가 비어 있으면(확정 복원 실패·오래된 화면 등) 그대로 저장하다가 DB의 확정을 null로 덮어쓰던 것이
+    // "조용히 풀리는" 경로였음 → 그 경우엔 확정 관련 칸을 아예 보내지 않아 서버 값을 건드리지 않음.
+    // (사유와 함께 해제하면 estPersistConfirmState가 _estLoadedRow.confirmed_at도 null로 맞추므로 정상 해제는 영향 없음)
+    estimate_status: _estKeepServerConfirm ? undefined : (window._estEditState.estimateConfirmedAt ? 'final' : 'ga'),
     phone:phone, space:spaceStr, product:fabricStr,
     date: document.getElementById('c-measure')?.value || '',
     // 2026-08-28(선혜님 지적 — "견적서에 시공일을 적어놔도 없어져"):
@@ -368,7 +374,7 @@ function _saveStage_estimatesActual(ctx) {
     measure_date_tbd: document.getElementById('c-measure-tbd')?.checked || false,
     install_date_tbd: document.getElementById('c-install-tbd')?.checked || false,
     memo: custMemo,
-    confirmed_at: window._estEditState.estimateConfirmedAt || null,
+    confirmed_at: _estKeepServerConfirm ? undefined : (window._estEditState.estimateConfirmedAt || null),
     branch: '반포점',
     client_id: window._estEditState.estSaveCustomerId || null,
     line_items: lineItems,

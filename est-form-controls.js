@@ -272,24 +272,89 @@ function estAskUnconfirmReason(paidAmount, onDone) {
   row.appendChild(cancel); row.appendChild(ok); box.appendChild(row);
   wrap.appendChild(box); document.body.appendChild(wrap);
 }
+// 2026-10-17(선혜님 - "확정견적서를 눌러도 자꾸 가견적서로 바뀐다", 김유진 사례. DB 이력 조사 결과 그 견적서는 한 번도 확정으로
+// 저장된 적이 없었고, 다른 견적서들은 사유 기록 없이 확정이 풀린 흔적이 3건 있었음): 확정 버튼은 지금까지 "화면 메모리"만 바꾸고
+// 저장 버튼을 따로 눌러야 DB에 들어갔는데 안내는 "확정됐습니다"라서 저장된 것처럼 보였음.
+// → 이미 DB에 있는 견적서는 확정/해제를 누르는 순간 확정 칸만 바로 서버에 저장하고(내가 본 updated_at일 때만 = 동시수정 보호),
+//   실패하면 화면도 원래대로 되돌려 "확정된 것처럼 보이는데 실제론 아닌" 상태를 만들지 않음.
+// 반환: 'ok'(저장됨) | 'unsaved'(아직 DB에 없는 새 견적서 - 저장 때 함께 들어감) | 'conflict'(그 사이 다른 곳에서 먼저 수정됨) | 'error'
+function estPersistConfirmState(newConfirmedAt, onDone) {
+  var st = window._estEditState;
+  var id = st.editingEstDbId;
+  if (!id) { onDone('unsaved'); return; }
+  var lock = st.editingEstUpdatedAt || null;
+  var url = SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(id) + (lock ? '&updated_at=eq.' + encodeURIComponent(lock) : '') + '&select=updated_at,confirmed_at';
+  var finished = false;
+  function done(res) { if (finished) return; finished = true; onDone(res); }
+  try {
+    var x = new XMLHttpRequest();
+    x.open('PATCH', url, true);
+    x.setRequestHeader('apikey', SUPABASE_KEY);
+    x.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.setRequestHeader('Prefer', 'return=representation');
+    x.timeout = 15000;
+    x.onload = function () {
+      if (!(x.status >= 200 && x.status < 300)) { done('error'); return; }
+      var rows = null; try { rows = JSON.parse(x.responseText); } catch (e) { rows = null; }
+      if (!Array.isArray(rows)) { done('error'); return; }
+      if (rows.length === 0) { done('conflict'); return; }
+      if (rows[0].updated_at) { st.editingEstUpdatedAt = rows[0].updated_at; st.lockSource = 'confirm'; st.lockSetAt = Date.now(); }
+      try { var lr0 = /** @type {any} */ (window._estLoadedRow); if (lr0) lr0.confirmed_at = newConfirmedAt || null; } catch (e2) {}
+      done('ok');
+    };
+    x.onerror = function () { done('error'); };
+    x.ontimeout = function () { done('error'); };
+    x.send(JSON.stringify({ confirmed_at: newConfirmedAt || null, estimate_status: newConfirmedAt ? 'final' : 'ga' }));
+  } catch (e) { done('error'); }
+}
 function toggleConfirmEstimate() {
   if (window._estEditState.estimateConfirmedAt) {
     var lr = /** @type {any} */ (window._estLoadedRow) || {};
     var paid = (Number(lr.deposit_amount) || 0) + (Number(lr.balance_amount) || 0);
     estAskUnconfirmReason(paid, function (reason, memoTxt) {
+      var prevConfirmedAt = window._estEditState.estimateConfirmedAt;
       window._estEditState.estimateConfirmedAt = null;
       lockEstimateForm(false);
-      try { if (typeof estSendReceipt === 'function') estSendReceipt('unconfirm', reason, { reason: reason, memo: memoTxt || null, paid_amount: paid, stored_price: Number(lr.price) || null }); } catch (e) {}
-      showToast('견적 확정이 취소됐습니다 — 다시 수정 가능합니다');
       renderConfirmBadge();
       if (typeof calcTotal === 'function') calcTotal();
+      estPersistConfirmState(null, function (res) {
+        if (res === 'ok' || res === 'unsaved') {
+          try { if (typeof estSendReceipt === 'function') estSendReceipt('unconfirm', reason, { reason: reason, memo: memoTxt || null, paid_amount: paid, stored_price: Number(lr.price) || null, persisted: res }); } catch (e) {}
+          showToast(res === 'ok' ? '견적 확정이 취소됐습니다(저장됨) — 다시 수정 가능합니다' : '견적 확정이 취소됐습니다 — 다시 수정 가능합니다');
+        } else {
+          // 서버에 못 올렸으면 화면도 확정 상태로 되돌림(화면과 DB가 다르게 남지 않게)
+          window._estEditState.estimateConfirmedAt = prevConfirmedAt;
+          lockEstimateForm(true);
+          renderConfirmBadge();
+          if (typeof calcTotal === 'function') calcTotal();
+          showToast(res === 'conflict'
+            ? '⚠️ 그 사이 다른 곳에서 이 견적서가 먼저 수정됐어요 — 새로고침해서 최신 상태를 확인한 뒤 다시 시도해주세요(확정은 그대로 유지)'
+            : '⚠️ 확정 취소를 서버에 저장하지 못했어요 — 네트워크를 확인하고 다시 시도해주세요(확정은 그대로 유지)');
+        }
+      });
     });
     return;
   } else {
     if (!confirm('이 견적 내용(사이즈·금액)을 확정할까요?\n확정하면 수정할 수 없게 잠깁니다. 다시 수정하려면 확정을 한번 더 눌러 해제하세요.')) return;
-    window._estEditState.estimateConfirmedAt = new Date().toISOString();
+    var newAt = new Date().toISOString();
+    window._estEditState.estimateConfirmedAt = newAt;
     lockEstimateForm(true);
-    showToast('견적이 확정됐습니다 — 수정하려면 확정을 다시 눌러 해제하세요');
+    estPersistConfirmState(newAt, function (res) {
+      if (res === 'ok') {
+        showToast('견적이 확정·저장됐습니다 — 수정하려면 확정을 다시 눌러 해제하세요');
+      } else if (res === 'unsaved') {
+        showToast('⚠️ 아직 저장 전이에요 — 아래 저장 버튼을 눌러야 확정이 반영됩니다');
+      } else {
+        window._estEditState.estimateConfirmedAt = null;
+        lockEstimateForm(false);
+        renderConfirmBadge();
+        if (typeof calcTotal === 'function') calcTotal();
+        showToast(res === 'conflict'
+          ? '⚠️ 그 사이 다른 곳에서 이 견적서가 먼저 수정됐어요 — 새로고침해서 최신 상태를 확인한 뒤 다시 확정해주세요'
+          : '⚠️ 확정을 서버에 저장하지 못했어요 — 네트워크를 확인하고 다시 시도해주세요(확정되지 않았습니다)');
+      }
+    });
   }
   renderConfirmBadge();
   if (typeof calcTotal === 'function') calcTotal(); // 저장 전이라도 상태를 즉시 반영
