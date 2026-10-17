@@ -33,10 +33,11 @@ async function run() {
       const u = new URL(url); const p = u.pathname + u.search;
       if (p.includes('/save_receipts') && method === 'POST') { ctl.receipts.push(Array.isArray(body) ? body[0] : body); req.respond({ status: 201, contentType: 'application/json', headers: H, body: '[]' }); return; }
       if (method === 'PATCH' && p.includes('/rest/v1/estimates')) {
-        const isConfirmPatch = body && Object.keys(body).every(k => k === 'confirmed_at' || k === 'estimate_status');
+        const isConfirmPatch = body && Object.keys(body).every(k => k === 'confirmed_at' || k === 'estimate_status' || k === 'unconfirm_reason');
         if (isConfirmPatch) {
           ctl.patches.push({ path: p, body });
           if (ctl.mode === 'conflict') { req.respond({ status: 200, contentType: 'application/json', headers: H, body: '[]' }); return; }
+          if (ctl.mode === 'nocolumn' && body && 'unconfirm_reason' in body) { req.respond({ status: 400, contentType: 'application/json', headers: H, body: '{"code":"PGRST204","message":"Could not find the \'unconfirm_reason\' column of \'estimates\' in the schema cache"}' }); return; }
           if (ctl.mode === 'error') { req.respond({ status: 500, contentType: 'application/json', headers: H, body: '{"message":"boom"}' }); return; }
           req.respond({ status: 200, contentType: 'application/json', headers: H, body: JSON.stringify([{ updated_at: '2026-10-17T05:00:00Z', confirmed_at: body.confirmed_at }]) });
           return;
@@ -118,6 +119,7 @@ async function run() {
   await reasonUnconfirm();
   s = await st();
   ok('4. 사유를 고르고 확정을 취소하면 서버에 confirmed_at=null, 상태=ga로 즉시 저장', ctl.patches.length === 1 && ctl.patches[0].body.confirmed_at === null && ctl.patches[0].body.estimate_status === 'ga', JSON.stringify(ctl.patches[0]));
+  ok('4-0. 해제 요청에 사유(unconfirm_reason)가 함께 전송됨', ctl.patches.length === 1 && ctl.patches[0].body.unconfirm_reason === '금액 오류 수정', JSON.stringify(ctl.patches[0] && ctl.patches[0].body));
   ok('4-1. 성공하면 화면도 해제 + 불러온 행도 해제로 맞춤', s.conf === null && s.loadedConf === null, JSON.stringify(s));
   const rc = ctl.receipts.find(r => r && r.kind === 'unconfirm');
   ok('4-2. 영수증에 사유와 persisted=ok가 남음', !!rc && rc.outcome === '금액 오류 수정' && rc.detail && rc.detail.persisted === 'ok', JSON.stringify(rc && { o: rc.outcome, p: rc.detail && rc.detail.persisted }));
@@ -130,6 +132,14 @@ async function run() {
   s = await st();
   ok('4-3. 해제 저장이 실패(충돌)하면 확정이 그대로 유지됨', s.conf === '2026-10-10T00:00:00Z', JSON.stringify(s));
   ok('4-4. 실패한 해제는 영수증(unconfirm 성공 기록)을 남기지 않음', !ctl.receipts.some(r => r && r.kind === 'unconfirm'));
+
+  // 4-5) DB에 사유 칸이 아직 없는 시기: 400(칸 없음)이면 사유 없이 한 번 더 보내서 정상 해제
+  ctl.mode = 'nocolumn'; ctl.patches.length = 0; ctl.receipts.length = 0;
+  await reset({ id: 'est-X', lock: '2026-10-17T04:00:00Z', loaded: { confirmed_at: '2026-10-10T00:00:00Z', deposit_amount: 0, balance_amount: 0, price: 1 } });
+  await page.evaluate(() => { window._estEditState.estimateConfirmedAt = '2026-10-10T00:00:00Z'; });
+  await reasonUnconfirm();
+  s = await st();
+  ok('4-5. 사유 칸이 없다는 오류(400)면 사유 없이 재전송해 해제됨', s.conf === null && ctl.patches.length === 2 && 'unconfirm_reason' in ctl.patches[0].body && !('unconfirm_reason' in ctl.patches[1].body), JSON.stringify({ n: ctl.patches.length, conf: s.conf }));
 
   // 5) 서버는 확정인데 화면 메모리가 비어 있는 채로 저장 → 확정 칸을 보내지 않음
   ctl.mode = 'ok'; ctl.estPatchBodies.length = 0;

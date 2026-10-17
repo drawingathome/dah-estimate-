@@ -278,7 +278,7 @@ function estAskUnconfirmReason(paidAmount, onDone) {
 // → 이미 DB에 있는 견적서는 확정/해제를 누르는 순간 확정 칸만 바로 서버에 저장하고(내가 본 updated_at일 때만 = 동시수정 보호),
 //   실패하면 화면도 원래대로 되돌려 "확정된 것처럼 보이는데 실제론 아닌" 상태를 만들지 않음.
 // 반환: 'ok'(저장됨) | 'unsaved'(아직 DB에 없는 새 견적서 - 저장 때 함께 들어감) | 'conflict'(그 사이 다른 곳에서 먼저 수정됨) | 'error'
-function estPersistConfirmState(newConfirmedAt, onDone) {
+function estPersistConfirmState(newConfirmedAt, onDone, unconfirmReason) {
   var st = window._estEditState;
   var id = st.editingEstDbId;
   if (!id) { onDone('unsaved'); return; }
@@ -286,27 +286,36 @@ function estPersistConfirmState(newConfirmedAt, onDone) {
   var url = SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(id) + (lock ? '&updated_at=eq.' + encodeURIComponent(lock) : '') + '&select=updated_at,confirmed_at';
   var finished = false;
   function done(res) { if (finished) return; finished = true; onDone(res); }
-  try {
-    var x = new XMLHttpRequest();
-    x.open('PATCH', url, true);
-    x.setRequestHeader('apikey', SUPABASE_KEY);
-    x.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
-    x.setRequestHeader('Content-Type', 'application/json');
-    x.setRequestHeader('Prefer', 'return=representation');
-    x.timeout = 15000;
-    x.onload = function () {
-      if (!(x.status >= 200 && x.status < 300)) { done('error'); return; }
-      var rows = null; try { rows = JSON.parse(x.responseText); } catch (e) { rows = null; }
-      if (!Array.isArray(rows)) { done('error'); return; }
-      if (rows.length === 0) { done('conflict'); return; }
-      if (rows[0].updated_at) { st.editingEstUpdatedAt = rows[0].updated_at; st.lockSource = 'confirm'; st.lockSetAt = Date.now(); }
-      try { var lr0 = /** @type {any} */ (window._estLoadedRow); if (lr0) lr0.confirmed_at = newConfirmedAt || null; } catch (e2) {}
-      done('ok');
-    };
-    x.onerror = function () { done('error'); };
-    x.ontimeout = function () { done('error'); };
-    x.send(JSON.stringify({ confirmed_at: newConfirmedAt || null, estimate_status: newConfirmedAt ? 'final' : 'ga' }));
-  } catch (e) { done('error'); }
+  // 2026-10-17: 확정을 "풀 때"는 사유도 함께 보냄 - DB의 확정 보호(estimates_confirm_guard)가 사유 없는 해제를 거부하고,
+  // 확정/해제 기록(estimate_confirm_log)에 사유를 남김. 아직 그 DB 칸(unconfirm_reason)이 없던 시기에도 동작하도록,
+  // "칸이 없다"는 오류(400)면 사유 없이 한 번 더 보냄.
+  function send(withReason) {
+    try {
+      var x = new XMLHttpRequest();
+      x.open('PATCH', url, true);
+      x.setRequestHeader('apikey', SUPABASE_KEY);
+      x.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+      x.setRequestHeader('Content-Type', 'application/json');
+      x.setRequestHeader('Prefer', 'return=representation');
+      x.timeout = 15000;
+      x.onload = function () {
+        if (withReason && x.status === 400 && String(x.responseText || '').indexOf('unconfirm_reason') !== -1) { send(false); return; }
+        if (!(x.status >= 200 && x.status < 300)) { done('error'); return; }
+        var rows = null; try { rows = JSON.parse(x.responseText); } catch (e) { rows = null; }
+        if (!Array.isArray(rows)) { done('error'); return; }
+        if (rows.length === 0) { done('conflict'); return; }
+        if (rows[0].updated_at) { st.editingEstUpdatedAt = rows[0].updated_at; st.lockSource = 'confirm'; st.lockSetAt = Date.now(); }
+        try { var lr0 = /** @type {any} */ (window._estLoadedRow); if (lr0) lr0.confirmed_at = newConfirmedAt || null; } catch (e2) {}
+        done('ok');
+      };
+      x.onerror = function () { done('error'); };
+      x.ontimeout = function () { done('error'); };
+      var body = { confirmed_at: newConfirmedAt || null, estimate_status: newConfirmedAt ? 'final' : 'ga' };
+      if (!newConfirmedAt && withReason && unconfirmReason) body.unconfirm_reason = String(unconfirmReason).slice(0, 300);
+      x.send(JSON.stringify(body));
+    } catch (e) { done('error'); }
+  }
+  send(true);
 }
 function toggleConfirmEstimate() {
   if (window._estEditState.estimateConfirmedAt) {
@@ -332,7 +341,7 @@ function toggleConfirmEstimate() {
             ? '⚠️ 그 사이 다른 곳에서 이 견적서가 먼저 수정됐어요 — 새로고침해서 최신 상태를 확인한 뒤 다시 시도해주세요(확정은 그대로 유지)'
             : '⚠️ 확정 취소를 서버에 저장하지 못했어요 — 네트워크를 확인하고 다시 시도해주세요(확정은 그대로 유지)');
         }
-      });
+      }, reason + (memoTxt ? ': ' + memoTxt : ''));
     });
     return;
   } else {
