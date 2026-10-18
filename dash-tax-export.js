@@ -21,7 +21,7 @@ function taxBuildMonthRows(customers, estimates, month) {
   function receiptLabel(v) { return v ? '발행/요청' : ''; }
   (customers || []).forEach(function (c) {
     var mine = (estimates || []).filter(function (e) { return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
-    var estPaid = mine.reduce(function (s, e) { return s + (Number(e.depositAmount) || 0) + (Number(e.balanceAmount) || 0); }, 0);
+    var estPaid = mine.reduce(function (s, e) { return s + (Number(e.depositAmount) || 0) + (Number(e.balanceAmount) || 0) + ((typeof getEstExtraRows === 'function') ? getEstExtraRows(e).reduce(function (t, x) { return t + x.amount; }, 0) : 0); }, 0);
     var custPaid = (Number(c.depositAmount) || 0) + (Number(c.balanceAmount) || 0);
     var sources = (mine.length && !(estPaid === 0 && custPaid > 0)) ? mine : [c];
     sources.forEach(function (e) {
@@ -32,6 +32,10 @@ function taxBuildMonthRows(customers, estimates, month) {
       if (bal > 0 && !e.balanceDate && inMonth(c.date)) rows.push({ date: String(c.date).slice(0, 10), customer: base.customer, staff: base.staff, kind: '잔금', amount: bal, method: e.balanceMethod || '', receipt: receiptLabel(e.balanceReceipt), note: '입금일 없음(등록일로 추정)', estimated: true });
       if (dep > 0 && inMonth(e.depositDate)) rows.push({ date: String(e.depositDate).slice(0, 10), customer: base.customer, staff: base.staff, kind: '선금', amount: dep, method: e.depositMethod || '', receipt: receiptLabel(e.depositReceipt), note: '' });
       if (bal > 0 && inMonth(e.balanceDate)) rows.push({ date: String(e.balanceDate).slice(0, 10), customer: base.customer, staff: base.staff, kind: '잔금', amount: bal, method: e.balanceMethod || '', receipt: receiptLabel(e.balanceReceipt), note: '' });
+      // 2026-10-19(추가 결제): 완납 뒤 증액 등으로 받은 추가 결제도 입금 내역에 한 줄씩 넣음(고객 칸 폴백 대상엔 없음).
+      if (typeof getEstExtraRows === 'function') getEstExtraRows(e).forEach(function (x) {
+        if (inMonth(x.date)) rows.push({ date: String(x.date).slice(0, 10), customer: base.customer, staff: base.staff, kind: '추가결제', amount: x.amount, method: x.method || '', receipt: receiptLabel(x.receipt), note: x.memo || '' });
+      });
       var refunds = (typeof getEffectiveRefunds === 'function') ? getEffectiveRefunds(e) : [];
       refunds.forEach(function (r) {
         var amt = Number(r.amount) || 0;

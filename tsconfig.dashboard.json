@@ -32,6 +32,7 @@
     "dash-customer-order.js",
     "dash-pay-history.js",
     "dash-refund.js",
+    "dash-extra-pay.js",
     "dash-reconcile.js",
     "dash-tax-export.js",
     "dash-customer-pay.js",

@@ -69,7 +69,7 @@ function getReceivedAmount(c) {
   // 서로 다른 답이 나올 수 있었음(환불로 견적서 금액을 줄이면 고객칸의 낡은 큰 값이 남는 문제 포함).
   // 이제 매출 계산과 똑같이 getAllEstPays(견적서별 결제, 견적서에 기록이 전혀 없을 때만 고객칸)의 합계를 씀.
   var sum = 0;
-  getAllEstPays(c).forEach(function(p){ sum += (Number(p.depositAmount)||0) + (Number(p.balanceAmount)||0); });
+  getAllEstPays(c).forEach(function(p){ sum += (Number(p.depositAmount)||0) + (Number(p.balanceAmount)||0) + (Number(p.extraAmount)||0); });
   return sum;
 }
 // 2026-10-13(선혜님 - "선금을 안 한 고객은 계약이 안 된 건데 왜 자꾸 실측일 적은 모든 고객을 챙기니? 내가 여러 번 말했잖아"):
@@ -157,6 +157,15 @@ function getEffectiveRefunds(e) {
 // 이런 곳들을 위해, 이 고객의 견적서마다 결제 내역을 각각 담은 배열을
 // 반환. 견적서가 없으면(신규 고객) customers 레벨 폴백 하나만 담긴
 // 배열을 반환해 호출부가 항상 배열을 순회하기만 하면 되게 함.
+// 2026-10-19(추가 결제): 견적서 하나의 추가 결제 줄(estimate_extra_payments)을 {id, amount, date, method, receipt, memo, createdAt} 배열로 정리(날짜순).
+function getEstExtraRows(e) {
+  var rows = (e && e.extraPayRows) || [];
+  return rows.map(function(x){
+    return { id: x.id, amount: Number(x.amount) || 0, date: x.paid_date || '', method: x.method || '', receipt: !!x.receipt, memo: x.memo || '', createdAt: x.created_at || '' };
+  }).filter(function(x){ return x.amount > 0; }).sort(function(a, b){
+    return a.date < b.date ? -1 : a.date > b.date ? 1 : (a.createdAt < b.createdAt ? -1 : a.createdAt > b.createdAt ? 1 : 0);
+  });
+}
 function getAllEstPays(c) {
   var estList = null;
   try {
@@ -172,7 +181,10 @@ function getAllEstPays(c) {
           fromEstimate: true,
           refunds: getEffectiveRefunds(e),
           depositAmount: Number(e.depositAmount)||0, depositDate: e.depositDate||'',
-          balanceAmount: Number(e.balanceAmount)||0, balanceDate: e.balanceDate||''
+          balanceAmount: Number(e.balanceAmount)||0, balanceDate: e.balanceDate||'',
+          // 2026-10-19(추가 결제): 완납 뒤 증액 등 선금·잔금 밖의 입금. 받은 돈·매출·미수금 계산이 모두 이 값을 같이 씀.
+          extraRows: getEstExtraRows(e),
+          extraAmount: getEstExtraRows(e).reduce(function(s, x){ return s + x.amount; }, 0)
         };
       });
     }
@@ -187,7 +199,7 @@ function getAllEstPays(c) {
   // 결제기록이 전혀 없는데(전부 0) 고객 레벨엔 실제 입금이 있으면,
   // 그 견적서 배열 그대로 반환하는 건 "완납인데 0으로 보이는" 회귀가
   // 됨 - 이럴 때만 고객 레벨 결제를 대표 항목 하나로 대신 반환.
-  var estTotalSum = estList.reduce(function(s, e){ return s + e.depositAmount + e.balanceAmount; }, 0);
+  var estTotalSum = estList.reduce(function(s, e){ return s + e.depositAmount + e.balanceAmount + (e.extraAmount || 0); }, 0);
   var custTotal = custEntry.depositAmount + custEntry.balanceAmount;
   if (estTotalSum === 0 && custTotal > 0) {
     var latestPrice = estList.length > 0 ? estList[estList.length - 1].price : custEntry.price;

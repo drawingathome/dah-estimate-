@@ -61,7 +61,9 @@ function renderPaySection(c, payBody, est) {
   // 없네"): 선금+잔금 합계가 총액(payBasisPrice)과 정확히 일치하면
   // "완납" 배지를 보여주는 기능 - 이제 여러 견적서 합계가 아니라 이
   // 견적서 하나의 금액 기준.
-  var payTotalForBadge = Number(payData.depositAmount || 0) + Number(payData.balanceAmount || 0);
+  // 2026-10-19(추가 결제): 완납 뒤 증액으로 받은 추가 결제 줄도 합산(견적서가 있을 때만 있음)
+  var extraPaidTotal = est ? getEstExtraRows(est).reduce(function(s, x){ return s + x.amount; }, 0) : 0;
+  var payTotalForBadge = Number(payData.depositAmount || 0) + Number(payData.balanceAmount || 0) + extraPaidTotal;
   if (payBasisPrice > 0 && payTotalForBadge > 0 && payTotalForBadge === payBasisPrice) {
     paySecTitleRow.appendChild(el('span', {
       style: 'font-size:11px;font-weight:700;color:#2E7D32;background:#E8F5E9;padding:3px 10px;border-radius:10px',
@@ -404,7 +406,7 @@ function renderPaySection(c, payBody, est) {
         return;
       }
       // 2026-10-15: 입금 합계가 견적금액을 넘으면 저장 전에 분명히 경고(이영욱·신화경 사례 - 환불/재결제는 "환불 등록"으로 처리해야 기록이 남음)
-      var depTotalAfter = inputAmt + (Number(payData.balanceAmount) || 0);
+      var depTotalAfter = inputAmt + (Number(payData.balanceAmount) || 0) + extraPaidTotal;
       var depOver = payBasisPrice > 0 && depTotalAfter > payBasisPrice;
       if (depOver && !confirm('⚠️ 입금 합계(' + depTotalAfter.toLocaleString() + '원)가 견적금액(' + payBasisPrice.toLocaleString() + '원)보다 ' + (depTotalAfter - payBasisPrice).toLocaleString() + '원 많아요.\n카드 취소 후 재결제나 환불이 있었다면 입금칸을 고치지 말고 마스터가 "환불 등록"을 먼저 해야 기록이 남아요.\n그래도 이대로 저장할까요?')) return;
       var expectedHalf = Math.round((payBasisPrice || 0) * 0.5);
@@ -526,7 +528,7 @@ function renderPaySection(c, payBody, est) {
         balDate.focus();
         return;
       }
-      var balTotalAfter = (Number(payData.depositAmount) || 0) + inputAmt;
+      var balTotalAfter = (Number(payData.depositAmount) || 0) + inputAmt + extraPaidTotal;
       var balOver = payBasisPrice > 0 && balTotalAfter > payBasisPrice;
       if (balOver && !confirm('⚠️ 입금 합계(' + balTotalAfter.toLocaleString() + '원)가 견적금액(' + payBasisPrice.toLocaleString() + '원)보다 ' + (balTotalAfter - payBasisPrice).toLocaleString() + '원 많아요.\n카드 취소 후 재결제나 환불이 있었다면 입금칸을 고치지 말고 마스터가 "환불 등록"을 먼저 해야 기록이 남아요.\n그래도 이대로 저장할까요?')) return;
       var expectedBalance = Math.max(0, (payBasisPrice || 0) - (Number(payData.depositAmount) || 0));
@@ -560,6 +562,8 @@ function renderPaySection(c, payBody, est) {
     balSec.appendChild(balForm); balSec.appendChild(balExtraWrap); balSec.appendChild(balAddBtn); balSec.appendChild(balSave);
   }
   paySec.appendChild(balSec);
+  // 2026-10-19: 추가 결제(완납 뒤 증액 등) - dash-extra-pay.js
+  if (est && typeof appendExtraPaySection === 'function') appendExtraPaySection(paySec, est, c);
   // 2026-10-11: 견적서별 "입금 내역 보기"(읽기 전용, 이력에서 읽음) - dash-pay-history.js
   if (est && typeof appendPayHistory === 'function') appendPayHistory(paySec, est);
   // 2026-10-14: 환불 영역(마스터 환불 등록·취소, 실장은 읽기 전용) - dash-refund.js

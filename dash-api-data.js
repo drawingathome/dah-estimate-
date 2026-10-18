@@ -213,8 +213,13 @@ function loadEstimatesAsync(callback, force) {
     sbXHR('GET', 'payment_refunds?select=*&order=created_at.asc', null, function(errR, refRows) {
     var refByEst = {};
     if (!errR && Array.isArray(refRows)) refRows.forEach(function(r) { (refByEst[r.estimate_id] = refByEst[r.estimate_id] || []).push(r); });
+    // 2026-10-19(추가 결제): 완납 뒤 증액 등으로 받는 "추가 결제"(estimate_extra_payments)를 견적서마다 붙임.
+    // 못 받아와도(표가 없거나 네트워크 오류) 선금·잔금 계산은 그대로 동작하고, 그때만 추가 결제가 화면 계산에서 빠짐.
+    sbXHR('GET', 'estimate_extra_payments?select=*&order=paid_date.asc,created_at.asc', null, function(errX, xRows) {
+    var xByEst = {};
+    if (!errX && Array.isArray(xRows)) xRows.forEach(function(x) { (xByEst[x.estimate_id] = xByEst[x.estimate_id] || []).push(x); });
     var cloudLocalFormat = (data || []).map(estimateDbRowToLocal);
-    cloudLocalFormat.forEach(function(e) { if (refByEst[e.id]) e.refundRows = refByEst[e.id]; });
+    cloudLocalFormat.forEach(function(e) { if (refByEst[e.id]) e.refundRows = refByEst[e.id]; if (xByEst[e.id]) e.extraPayRows = xByEst[e.id]; });
     var cloudIds = cloudLocalFormat.map(function(e){ return e.id; });
     // 클라우드에서 온 항목은 매번 최신값으로 덮어씀(예전엔 이미 로컬에 캐시된
     // id가 있으면 무시해서, 클라우드에서 나중에 수정해도 브라우저엔 예전 캐시가
@@ -238,6 +243,7 @@ function loadEstimatesAsync(callback, force) {
     _estimateCacheTime = Date.now();
     try { localStorage.setItem('dah_saved', JSON.stringify(merged)); } catch(e) {}
     if (callback) callback(merged);
+    });
     });
   });
 }

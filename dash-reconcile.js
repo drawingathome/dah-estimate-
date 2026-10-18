@@ -140,6 +140,9 @@ function reconCollectAppPayments(customers) {
       var dep = Number(p.depositAmount) || 0, bal = Number(p.balanceAmount) || 0;
       if (dep > 0 && p.depositDate) out.push({ customer: c.clientName || '', staff: c.staffName || '', slot: '선금', amount: dep, date: String(p.depositDate).slice(0, 10), note: '' });
       if (bal > 0 && p.balanceDate) out.push({ customer: c.clientName || '', staff: c.staffName || '', slot: '잔금', amount: bal, date: String(p.balanceDate).slice(0, 10), note: '' });
+      (p.extraRows || []).forEach(function (x) {
+        if (x.amount > 0 && x.date) out.push({ customer: c.clientName || '', staff: c.staffName || '', slot: '추가 결제', amount: x.amount, date: String(x.date).slice(0, 10), note: x.memo || '' });
+      });
       (p.refunds || []).forEach(function (rf) {
         var amt = Number(rf.amount) || 0;
         if (amt > 0 && rf.paidDate) out.push({ customer: c.clientName || '', staff: c.staffName || '', slot: rf.slot === 'balance' ? '잔금' : '선금', amount: amt, date: String(rf.paidDate).slice(0, 10), note: '환불된 입금(' + (rf.refundDate || '') + ' 환불)' });

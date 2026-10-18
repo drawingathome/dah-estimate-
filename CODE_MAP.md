@@ -10,7 +10,7 @@
 | # | 파일 | 역할 | 함수 수 |
 |---|---|---|---|
 | 1 | `shared-staging-guard.js` | DAH 공용 — 스테이징 환경 쓰기 차단 안전장치 | 0 |
-| 2 | `dash-utils.js` | DAH 대시보드 — 순수 유틸리티 함수 모음 | 22 |
+| 2 | `dash-utils.js` | DAH 대시보드 — 순수 유틸리티 함수 모음 | 23 |
 | 3 | `dash-api.js` | DAH 대시보드 — 데이터 접근 계층 (Supabase / localStorage) | 5 |
 | 4 | `dash-api-settings.js` | DAH 대시보드 — 설정 접근자 (담당자/거래처/리드기준/지역비/쿠폰/담당자 이메일) | 13 |
 | 5 | `dash-api-data.js` | DAH 대시보드 — 데이터 변환·로딩 (DB행↔화면 객체, 고객/견적 불러오기) | 8 |
@@ -33,22 +33,23 @@
 | 22 | `dash-kanban.js` | DAH 대시보드 — 진행현황(칸반) 기능 | 9 |
 | 23 | `dash-pay-history.js` | 고객상세 - 결제 탭의 "입금 내역 보기" (읽기 전용) | 3 |
 | 24 | `dash-refund.js` | 고객상세 - 결제 탭의 "환불" 영역 (2026-10-14) | 4 |
-| 25 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 1 |
-| 26 | `dash-customer-alim.js` | 고객상세 - 소통(알림톡) 탭 렌더링 | 11 |
-| 27 | `dash-customer-order.js` | 고객상세 - 발주 탭 렌더링 | 5 |
-| 28 | `dash-customer-as.js` | 고객상세 - AS 탭 렌더링 (React 전환 1호) | 2 |
-| 29 | `dash-customer-detail.js` | DAH 대시보드 — 고객상세 모달 기능 | 8 |
-| 30 | `dash-customer-detail-tabs.js` | DAH 대시보드 — 고객상세 모달: 정보탭/할일 + 하단 버튼·단계변경·삭제·복구 | 8 |
-| 31 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 8 |
-| 32 | `dash-customer-add.js` | 고객 추가/수정 모달 (React 전환 2호) | 3 |
-| 33 | `dash-auth.js` | DAH 대시보드 — 로그인/세션/권한 기능 | 5 |
-| 34 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 8 |
-| 35 | `dash-settings-sections.js` | DAH 대시보드 — 설정 화면 구역별 렌더링 (거래처/메모/지역비/쿠폰/연동/데이터) | 6 |
-| 36 | `dash-reconcile.js` | dash-reconcile.js | 11 |
-| 37 | `dash-tax-export.js` | dash-tax-export.js | 3 |
-| 38 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
-| 39 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
-| 40 | `dash-stale-code.js` | dash-stale-code.js — 대시보드: "열어 둔 화면의 프로그램(코드)이 옛 버전인지" 알려줌 (2026-10-18 신규) | 5 |
+| 25 | `dash-extra-pay.js` | 고객상세 - 결제 탭의 "추가 결제" 영역 (2026-10-19) | 3 |
+| 26 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 1 |
+| 27 | `dash-customer-alim.js` | 고객상세 - 소통(알림톡) 탭 렌더링 | 11 |
+| 28 | `dash-customer-order.js` | 고객상세 - 발주 탭 렌더링 | 5 |
+| 29 | `dash-customer-as.js` | 고객상세 - AS 탭 렌더링 (React 전환 1호) | 2 |
+| 30 | `dash-customer-detail.js` | DAH 대시보드 — 고객상세 모달 기능 | 8 |
+| 31 | `dash-customer-detail-tabs.js` | DAH 대시보드 — 고객상세 모달: 정보탭/할일 + 하단 버튼·단계변경·삭제·복구 | 8 |
+| 32 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 8 |
+| 33 | `dash-customer-add.js` | 고객 추가/수정 모달 (React 전환 2호) | 3 |
+| 34 | `dash-auth.js` | DAH 대시보드 — 로그인/세션/권한 기능 | 5 |
+| 35 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 8 |
+| 36 | `dash-settings-sections.js` | DAH 대시보드 — 설정 화면 구역별 렌더링 (거래처/메모/지역비/쿠폰/연동/데이터) | 6 |
+| 37 | `dash-reconcile.js` | dash-reconcile.js | 11 |
+| 38 | `dash-tax-export.js` | dash-tax-export.js | 3 |
+| 39 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
+| 40 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
+| 41 | `dash-stale-code.js` | dash-stale-code.js — 대시보드: "열어 둔 화면의 프로그램(코드)이 옛 버전인지" 알려줌 (2026-10-18 신규) | 5 |
 
 ## 견적서 앱 (dah-estimate.html) — 브라우저가 불러오는 순서대로
 
@@ -141,6 +142,7 @@
 | `addToPendingSyncQueue` | `dash-sync-queue.js` |
 | `adoptSelfLock` | `shared-optimistic-lock.js` |
 | `App` | `survey-app.js` |
+| `appendExtraPaySection` | `dash-extra-pay.js` |
 | `appendPasswordResetFlow` | `dash-settings.js` |
 | `appendPayHistory` | `dash-pay-history.js` |
 | `appendRefundSection` | `dash-refund.js` |
@@ -314,6 +316,7 @@
 | `getDisplayStageLabel` | `dash-utils.js` |
 | `getDueAlimKeys` | `dash-customer-alim.js` |
 | `getEffectiveRefunds` | `dash-utils.js` |
+| `getEstExtraRows` | `dash-utils.js` |
 | `getEstPendingQueue` | `est-sync-queue.js` |
 | `getFailedSaveEntries` | `dash-failed-saves.js` |
 | `getLatestEstPay` | `dash-utils.js` |
@@ -383,6 +386,7 @@
 | `markSvcManualOverride` | `est-calc-svc.js` |
 | `memoSaveWithConflictGuard` | `dash-api-writes.js` |
 | `newEstimate` | `est-save.js` |
+| `newExtraPayRequestId` | `dash-extra-pay.js` |
 | `newRefundRequestId` | `dash-refund.js` |
 | `openAdd` | `dash-customer-add.js` |
 | `openCustomDatePicker` | `dash-calendar.js` |
@@ -481,6 +485,7 @@
 | `renderStaffLoginList` | `dash-auth.js` |
 | `renderSvcSummary` | `est-calc-svc.js` |
 | `renderWorkStatusCards` | `est-utils.js` |
+| `reopenAfterExtraPay` | `dash-extra-pay.js` |
 | `reopenAfterRefund` | `dash-refund.js` |
 | `resetEstEditingState` | `est-save.js` |
 | `resolveRegionPrices` | `est-calc-rules.js` |

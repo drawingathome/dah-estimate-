@@ -304,6 +304,7 @@ function openDetailInner(name, id, forceTab) {
           depositAmount: e.depositAmount, depositDate: e.depositDate, depositMethod: e.depositMethod, depositReceipt: e.depositReceipt,
           balanceAmount: e.balanceAmount, balanceDate: e.balanceDate, balanceMethod: e.balanceMethod, balanceReceipt: e.balanceReceipt,
           refundRows: e.refundRows, // 2026-10-14: 결제 탭 "환불" 영역이 이 견적서의 환불 기록을 읽음
+          extraPayRows: e.extraPayRows, // 2026-10-19: 결제 탭 "추가 결제" 영역이 이 견적서의 추가 결제 줄을 읽음
           estimateLabel: label
         });
       });

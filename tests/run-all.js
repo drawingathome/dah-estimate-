@@ -156,6 +156,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['tax-export-check.js', []]);
   scripts.push(['view-security-invoker-check.js', []]);
   scripts.push(['refund-revenue-check.js', []]);
+  scripts.push(['extra-pay-check.js', []]);
   scripts.push(['refund-ui-check.js', []]);
   // 2026-09-22("다 해야지"로 전 영역 재검사 - 결제탭 서버재확인과 같은
   // 계열): 발주탭도 로컬캐시만 보고 있어서 다른 기기 견적서의 발주

@@ -46,7 +46,9 @@ function splitCustomerPayments(c) {
     var depDate = estPay.depositDate;
     var bal = estPay.balanceAmount;
     var balDate = estPay.balanceDate;
-    var totalPaid = dep + bal;
+    var extraRows = estPay.extraRows || [];
+    var extraAmount = estPay.extraAmount || 0;
+    var totalPaid = dep + bal + extraAmount;
     var refundsForEst = (estPay.refunds || []).filter(function(r){ return r.amount > 0 && r.refundDate; });
     if (totalPaid <= 0 && refundsForEst.length === 0) return;
     anyPaid = true;
@@ -77,6 +79,7 @@ function splitCustomerPayments(c) {
       var evs = [];
       if (dep > 0 && depDate) evs.push({ date: depDate, amt: dep, ord: 0 });
       if (bal > 0 && balDate) evs.push({ date: balDate, amt: bal, ord: 1 });
+      extraRows.forEach(function(x){ if (x.date) evs.push({ date: x.date, amt: x.amount, ord: 1 }); });
       refundsForEst.forEach(function(r){
         if (r.paidDate) evs.push({ date: r.paidDate, amt: r.amount, ord: 2 });
         evs.push({ date: r.refundDate, amt: -r.amount, ord: 3 });
@@ -93,6 +96,15 @@ function splitCustomerPayments(c) {
     }
     if (dep > 0 && depDate) parts.push({ date: depDate, revenue: dep, perf: perf * (depShare / totalPrice) });
     if (bal > 0 && balDate) parts.push({ date: balDate, revenue: bal, perf: perf * (balShare / totalPrice) });
+    // 2026-10-19(추가 결제): 선금·잔금으로 이미 채워진 만큼을 뺀 나머지 한도 안에서만 성과매출을 인정함(총액 초과분은 입금에만 잡힘).
+    // DB의 independent_month_check 와 같은 규칙(입금일·등록순으로 앞선 추가 결제 누계를 먼저 차감).
+    var priorExtra = 0;
+    extraRows.forEach(function(x){
+      if (!x.date) return;
+      var room = Math.max(0, totalPrice - depShare - balShare - priorExtra);
+      parts.push({ date: x.date, revenue: x.amount, perf: perf * Math.min(x.amount, room) / totalPrice });
+      priorExtra += x.amount;
+    });
   });
   // 2026-10-14(선혜님 확정 - 계약이 취소되면 취소한 달에 계약 -1): 환불로 이 고객의 받은 돈이 0이 되면, 마지막 환불일 달에 "취소" 표시 1건을 넣음.
   // 계약 건수를 세는 곳은 이 표시를 -1로 처리하고, 환불만 있는 달을 새 계약으로 세지 않음.
@@ -515,7 +527,7 @@ function renderChart(period) {
   }
   var conv = curCons > 0 ? Math.round(curCon/curCons*100) : 0;
 
-  [['전체 매출',fmt(curRev),'var(--dark)'],['성과매출',fmt(curPerf),'var(--dark)'],['상담 건수',curCons+'건','var(--dark)'],['계약 건수',curCon+'건','var(--dark)'],['전환율',conv+'%','var(--dark)']].forEach(function(row) {
+  [['전체 매출',fmt(curRev),'var(--dark)'],['성과매출',fmt(Math.round(curPerf)),'var(--dark)'],['상담 건수',curCons+'건','var(--dark)'],['계약 건수',curCon+'건','var(--dark)'],['전환율',conv+'%','var(--dark)']].forEach(function(row) {
     sumEl.appendChild(div('display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)', [span('font-size:11px;color:var(--dark)', row[0]), span('font-size:12px;font-weight:700;color:'+row[2], row[1])]));
   });
 
