@@ -45,6 +45,7 @@
     "dash-render-search.js",
     "dash-render.js",
     "dash-search.js",
+    "dash-stale-code.js",
     "dash-settings.js",
     "dash-settings-sections.js",
     "dash-supabase-auth.js",

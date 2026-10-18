@@ -48,6 +48,7 @@
 | 37 | `dash-tax-export.js` | dash-tax-export.js | 3 |
 | 38 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
 | 39 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
+| 40 | `dash-stale-code.js` | dash-stale-code.js — 대시보드: "열어 둔 화면의 프로그램(코드)이 옛 버전인지" 알려줌 (2026-10-18 신규) | 5 |
 
 ## 견적서 앱 (dah-estimate.html) — 브라우저가 불러오는 순서대로
 
@@ -226,6 +227,11 @@
 | `dahScanForDataIntegrity` | `apps-script-daily-backup.js` |
 | `dahScanForDuplicates` | `apps-script-daily-backup.js` |
 | `dahScanForMissingTriggers` | `apps-script-daily-backup.js` |
+| `dashCheckCodeStale` | `dash-stale-code.js` |
+| `dashCollectScriptVersions` | `dash-stale-code.js` |
+| `dashFindStaleScripts` | `dash-stale-code.js` |
+| `dashReadRunningVersions` | `dash-stale-code.js` |
+| `dashShowCodeStaleBanner` | `dash-stale-code.js` |
 | `daysBetween` | `dash-customer-alim.js` |
 | `daysDiff` | `dash-utils.js` |
 | `dbRowToCustomer` | `dash-api-data.js` |
