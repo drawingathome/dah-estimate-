@@ -370,6 +370,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['unconfirm-reason-check.js', []]);
   // 2026-10-17(선혜님 - 김유진 "확정을 눌러도 가견적으로 바뀜"): 확정/해제 즉시 서버 저장 + 서버 확정을 화면이 덮어 지우지 않음
   scripts.push(['confirm-persist-check.js', []]);
+  scripts.push(['code-stale-check.js', []]);
   // 2026-09-22(선혜님 - "비슷하게 예상되는 다른 오류들에 대해 찾아봐"로
   // 발견 - 정확히 같은 계열): 구글시트 동기화/로컬캐시 저장에도 확정
   // 버튼이 아니라 탭 상태만 보고 확정여부를 정하던 문제가 2곳 더 있었음
