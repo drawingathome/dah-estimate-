@@ -18,6 +18,20 @@ async function run() {
   await new Promise(r => setTimeout(r, 700));
   await loginAs(page, 'master');
   const log = [];
+  // 견적서 2개 고객의 결제 탭 맨 위 합계 안내(노지경형 중복 입금 방지용)
+  const multi = await page.evaluate(async () => {
+    const cust = { id: 21, clientName: 'M1', date: '2026-09-15', stage: '시공준비중', price: 7001000, depositAmount: 3200000, balanceAmount: 0, staffName: '마스터' };
+    localStorage.setItem('dah_customers', JSON.stringify([cust]));
+    if (typeof _customerCache !== 'undefined') { _customerCache.length = 0; _customerCache.push(cust); }
+    localStorage.setItem('dah_saved', JSON.stringify([
+      { id: 'm1', clientId: 21, clientName: 'M1', price: 6381000, depositAmount: 2580000, depositDate: '2026-09-15', balanceAmount: 0, savedAt: '2026-09-15T01:00:00Z' },
+      { id: 'm2', clientId: 21, clientName: 'M1', price: 620000, depositAmount: 620000, depositDate: '2026-09-16', balanceAmount: 0, savedAt: '2026-09-21T01:00:00Z' }
+    ]));
+    openDetail('M1', 21);
+    await new Promise(r => setTimeout(r, 800));
+    const el = document.querySelector('.multi-est-pay-summary');
+    return { has: !!el, text: el ? el.textContent : '' };
+  });
   const ok = (l, c, d) => log.push((c ? '✅' : '❌') + ' ' + l + (!c && d !== undefined ? ' — ' + JSON.stringify(d) : ''));
 
   const r = await page.evaluate(() => {
@@ -95,6 +109,7 @@ async function run() {
   ok('X5 총액을 넘긴 추가 결제: 입금 10만은 잡히고 성과매출은 0', r.x5.oct.rev === 100000 && r.x5.oct.perf === 0 && r.x5.received === 1100000, r.x5);
   ok('X6 금액 0 줄은 무시', r.rows6 === 0 && r.x6.received === 1000000 && r.x6.oct.rev === 0, [r.rows6, r.x6]);
   ok('추가 결제 영역: 합계·메모가 보이고 저장 버튼이 있음', /합계 300,000원/.test(r.uiMaster.text) && /블라인드 추가/.test(r.uiMaster.text) && r.uiMaster.save === 1, r.uiMaster);
+  ok('견적서 2개 고객: 결제 탭 위에 앱 받은 돈 합계(3,200,000원)와 안내가 보임', multi.has && /3,200,000원/.test(multi.text) && /2,580,000 \+ 620,000|620,000 \+ 2,580,000/.test(multi.text) && /중복/.test(multi.text), multi);
   ok('나눠 받은 잔금(남은 금액 이하)은 확인창 없이 저장 진행', r.warnSplit.length === 0, r.warnSplit);
   ok('잔금 칸이 빈 상태의 추가 결제는 잔금 칸 안내 경고', r.warnNoBal.length === 1 && /잔금 칸에 입력/.test(r.warnNoBal[0]), r.warnNoBal);
   ok('남은 금액보다 많으면 초과 경고', r.warnOver.length === 1 && /많아져요/.test(r.warnOver[0]), r.warnOver);

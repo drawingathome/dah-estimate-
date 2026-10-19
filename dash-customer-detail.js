@@ -294,6 +294,25 @@ function openDetailInner(name, id, forceTab) {
     if (sorted.length === 0) {
       renderPaySection(c, payBody);
     } else {
+      // 2026-10-19(노지경 사례 - 한 번에 받은 3,200,000원에 침구 620,000원이 들어 있는데 침구 견적서에도 따로 620,000원을 적어 중복): 견적서가 2개 이상이면
+      // 결제 탭 맨 위에 "이 고객의 앱 받은 돈 합계"를 크게 보여 줘서 통장 입금액과 바로 비교되게 함(입금은 견적서 안에 갇혀 있어 앱이 중복을 스스로 알 수 없음).
+      if (sorted.length >= 2) {
+        var perEst = sorted.map(function(e){
+          var ex = (typeof getEstExtraRows === 'function') ? getEstExtraRows(e).reduce(function(t, x){ return t + x.amount; }, 0) : 0;
+          return (Number(e.depositAmount) || 0) + (Number(e.balanceAmount) || 0) + ex;
+        });
+        var sumAll = perEst.reduce(function(t, v){ return t + v; }, 0);
+        var sumBox = document.createElement('div');
+        sumBox.className = 'multi-est-pay-summary';
+        sumBox.style.cssText = 'margin-bottom:12px;padding:12px;background:#FFF8E6;border:1px solid #F0D58A;border-radius:12px;font-size:12px;color:#5A4500;line-height:1.6';
+        var sumTitle = document.createElement('div');
+        sumTitle.style.cssText = 'font-weight:800;font-size:13px;margin-bottom:2px';
+        sumTitle.textContent = '이 고객 앱 받은 돈 합계 ' + sumAll.toLocaleString() + '원 (견적서 ' + sorted.length + '개: ' + perEst.map(function(v){ return v.toLocaleString(); }).join(' + ') + ')';
+        var sumNote = document.createElement('div');
+        sumNote.textContent = '한 번에 받은 돈이 여러 견적서에 걸쳤다면 견적서별로 나눠 적고, 이 합계가 실제 통장 입금액과 같은지 확인해 주세요. 같은 돈을 두 견적서에 모두 적으면 중복이에요.';
+        sumBox.appendChild(sumTitle); sumBox.appendChild(sumNote);
+        payBody.appendChild(sumBox);
+      }
       sorted.forEach(function(e, idx) {
         var dt = e.savedAt ? new Date(e.savedAt) : (e.date ? new Date(e.date) : null);
         var dateStr = dt ? ((dt.getMonth()+1) + '/' + dt.getDate() + ' 작성') : '';
