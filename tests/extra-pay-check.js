@@ -47,6 +47,47 @@ async function run() {
     return { withExtra, noExtra };
   });
   ok('알림톡 잔금 안내: 추가 결제 30만을 뺀 20만 / 추가 없으면 50만', alim.withExtra === 200000 && alim.noExtra === 500000, alim);
+  // 실제 운영 데이터 모양 그대로: 노지경형(견적서 2개, 고객 총액=합계, 완납) / 박소진형(가견적 옛 견적서+실제 견적서)
+  const alim2 = await page.evaluate(() => {
+    const out = {};
+    const run = (cust, ests) => {
+      localStorage.setItem('dah_customers', JSON.stringify([cust]));
+      if (typeof _customerCache !== 'undefined') { _customerCache.length = 0; _customerCache.push(cust); }
+      localStorage.setItem('dah_saved', JSON.stringify(ests));
+      return guessContextVars(cust).amount;
+    };
+    out.njk = run({ id: 41, clientName: 'N1', date: '2026-09-15', stage: '시공준비중', price: 7001000, depositAmount: 3820000, balanceAmount: 3181000, staffName: '마스터' },
+      [{ id: 'n1', clientId: 41, clientName: 'N1', price: 6381000, depositAmount: 3200000, balanceAmount: 3181000, savedAt: '2026-09-15T01:00:00Z' },
+       { id: 'n2', clientId: 41, clientName: 'N1', price: 620000, depositAmount: 620000, balanceAmount: 0, savedAt: '2026-09-21T01:00:00Z' }]);
+    out.psj = run({ id: 42, clientName: 'P1', date: '2026-09-15', stage: '잔금결제', price: 1468000, depositAmount: 0, balanceAmount: 1468000, staffName: '마스터' },
+      [{ id: 'p1', clientId: 42, clientName: 'P1', price: 522000, depositAmount: 0, balanceAmount: 0, savedAt: '2026-09-10T01:00:00Z' },
+       { id: 'p2', clientId: 42, clientName: 'P1', price: 1468000, depositAmount: 0, balanceAmount: 1468000, savedAt: '2026-09-15T01:00:00Z' }]);
+    out.half = run({ id: 43, clientName: 'H1', date: '2026-09-15', stage: '확정견적', price: 1000000, depositAmount: 400000, balanceAmount: 0, staffName: '마스터' },
+      [{ id: 'h1', clientId: 43, clientName: 'H1', price: 1000000, depositAmount: 400000, balanceAmount: 0, savedAt: '2026-09-15T01:00:00Z' }]);
+    return out;
+  });
+  ok('알림톡 잔금: 노지경형(견적서 2개·완납)은 0원', alim2.njk === 0, alim2);
+  ok('알림톡 잔금: 박소진형(옛 가견적+실제 견적서, 잔금 완납)은 0원', alim2.psj === 0, alim2);
+  ok('알림톡 잔금: 선금 40만만 받은 100만 건은 60만원', alim2.half === 600000, alim2);
+  // 고객 엑셀: 실제로 만들어지는 파일 내용을 가로채서 추가결제액 열과 열 개수를 확인
+  const csv = await page.evaluate(async () => {
+    const cust = { id: 51, clientName: 'E1', date: '2026-09-15', stage: '잔금결제', price: 1500000, depositAmount: 500000, balanceAmount: 500000, staffName: '마스터' };
+    localStorage.setItem('dah_customers', JSON.stringify([cust]));
+    if (typeof _customerCache !== 'undefined') { _customerCache.length = 0; _customerCache.push(cust); }
+    localStorage.setItem('dah_saved', JSON.stringify([{ id: 'e1', clientId: 51, clientName: 'E1', price: 1500000, depositAmount: 500000, balanceAmount: 500000, savedAt: '2026-09-15T01:00:00Z',
+      extraPayRows: [{ id: 'z1', estimate_id: 'e1', amount: 300000, paid_date: '2026-10-05', method: '카드', receipt: false, memo: '', created_at: '2026-10-05T01:00:00Z' }] }]));
+    let captured = null;
+    const origCreate = URL.createObjectURL;
+    URL.createObjectURL = (b) => { captured = b; return 'blob:test'; };
+    const origClick = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function () {};
+    try { _exportExcelInner(); } finally { URL.createObjectURL = origCreate; HTMLAnchorElement.prototype.click = origClick; }
+    return captured ? await captured.text() : null;
+  });
+  const lines = csv ? csv.replace(/^\uFEFF/, '').split('\r\n') : [];
+  const hdr = (lines[0] || '').split(','), row = (lines[1] || '').split(',');
+  const ix = hdr.indexOf('추가결제액');
+  ok('엑셀: 추가결제액 열이 있고 값이 300000, 제목·내용 열 개수가 같음', ix >= 0 && row[ix] === '300000' && hdr.length === row.length, { ix, v: row[ix], h: hdr.length, r: row.length });
   const r = await page.evaluate(() => {
     const xr = (id, estId, amount, date, extra) => Object.assign({ id, estimate_id: estId, amount, paid_date: date, method: '카드', receipt: false, memo: '', created_at: date + 'T01:00:00Z' }, extra || {});
     localStorage.setItem('dah_saved', JSON.stringify([
