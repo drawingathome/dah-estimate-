@@ -297,7 +297,8 @@ function openDetailInner(name, id, forceTab) {
       sorted.forEach(function(e, idx) {
         var dt = e.savedAt ? new Date(e.savedAt) : (e.date ? new Date(e.date) : null);
         var dateStr = dt ? ((dt.getMonth()+1) + '/' + dt.getDate() + ' 작성') : '';
-        var statusStr = e.contractStatus === 'contracted' ? '확정견적' : '가견적';
+        // 2026-10-19: 확정 여부의 기준은 confirmedAt(확정 시각). contract_status 는 확정해도 'pending'으로 남는 경우가 많아 그것만 보면 확정견적이 가견적으로 표시됐음.
+        var statusStr = (e.contractStatus === 'contracted' || e.confirmedAt) ? '확정견적' : '가견적';
         var label = '견적서 ' + (sorted.length - idx) + (sorted.length > 1 ? ('/' + sorted.length) : '') + (dateStr ? (' · ' + dateStr) : '') + ' · ' + statusStr;
         renderPaySection(c, payBody, {
           id: e.id, price: e.price,

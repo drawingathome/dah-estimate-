@@ -103,10 +103,17 @@ function appendExtraPaySection(paySec, est, c) {
     var amount = Number(String(amtIn.value).replace(/[^0-9]/g, '')) || 0;
     if (amount <= 0) { alert('추가 결제 금액을 입력해 주세요.'); amtIn.focus(); return; }
     if (!dateIn.value) { alert('입금 날짜를 입력해 주세요.'); dateIn.focus(); return; }
-    if (price > 0 && basePaid < price) {
-      if (!confirm('⚠️ 이 견적서는 아직 선금·잔금이 ' + (price - basePaid).toLocaleString() + '원 덜 들어왔어요.\n남은 잔금을 받은 거라면 "추가 결제"가 아니라 위 잔금 칸에 입력해야 해요.\n그래도 추가 결제로 저장할까요?')) return;
-    } else if (price > 0 && basePaid + extraTotal + amount > price) {
-      if (!confirm('⚠️ 추가 결제까지 합치면 받은 돈(' + (basePaid + extraTotal + amount).toLocaleString() + '원)이 견적금액(' + price.toLocaleString() + '원)보다 ' + (basePaid + extraTotal + amount - price).toLocaleString() + '원 많아져요.\n증액했다면 견적서 금액을 먼저 올렸는지 확인해 주세요. 그래도 저장할까요?')) return;
+    if (price > 0) {
+      var remain = price - basePaid - extraTotal; // 아직 더 받아야 할 금액(0 이하면 이미 채워진 상태)
+      if (remain > 0 && !(Number(est.balanceAmount) > 0)) {
+        // 잔금 칸이 비어 있음 = 아직 잔금을 안 받은 상태 → 잔금 칸으로 입력해야 단계 자동 이동·캘린더·알림톡이 따라옴
+        if (!confirm('⚠️ 이 견적서는 아직 잔금을 받은 기록이 없어요(남은 금액 ' + remain.toLocaleString() + '원).\n잔금을 받은 거라면 "추가 결제"가 아니라 위 잔금 칸에 입력해야 해요(단계 자동 이동·캘린더 표시가 잔금 칸을 기준으로 해요).\n그래도 추가 결제로 저장할까요?')) return;
+      } else if (amount > Math.max(remain, 0)) {
+        // 남은 금액보다 많이 입력함(증액이거나 입력 실수)
+        var over = amount - Math.max(remain, 0);
+        if (!confirm('⚠️ 추가 결제까지 합치면 받은 돈(' + (basePaid + extraTotal + amount).toLocaleString() + '원)이 견적금액(' + price.toLocaleString() + '원)보다 ' + (basePaid + extraTotal + amount - price).toLocaleString() + '원 많아져요.\n증액했다면 견적서 금액을 먼저 올렸는지 확인해 주세요. 그래도 저장할까요?')) return;
+      }
+      // 잔금이 이미 들어와 있고 남은 금액 이하면(나눠 받은 잔금) 확인 없이 저장 - 기존 입금 기록은 바꾸지 않고 한 줄 더 쌓는 처리
     }
     saving = true; save.disabled = true; save.textContent = '저장 중...';
     var body = {

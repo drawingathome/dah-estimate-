@@ -60,6 +60,27 @@ async function run() {
       appendExtraPaySection(box, { id: 'x1', price: 1300000, depositAmount: 500000, balanceAmount: 500000, extraPayRows: [xr('p1', 'x1', 300000, '2026-10-05', { memo: '블라인드 추가' })] }, { id: 11, clientName: 'X1' });
       return { text: box.textContent, del: Array.from(box.querySelectorAll('button')).filter(b => b.textContent === '삭제').length, save: Array.from(box.querySelectorAll('button')).filter(b => b.textContent === '추가 결제 저장').length };
     };
+    // 저장 버튼 경고: 금액을 넣고 저장을 눌렀을 때 confirm 이 뜨는지/어떤 문구인지(confirm 은 false 로 막아 서버 전송 없음)
+    const tryTo = (est, amount) => {
+      window.isMasterUser = () => true;
+      const box = document.createElement('div');
+      appendExtraPaySection(box, est, { id: 11, clientName: 'X1' });
+      const msgs = [];
+      const orig = window.confirm; window.confirm = (m) => { msgs.push(m); return false; };
+      const inp = Array.from(box.querySelectorAll('input')).find(i => i.placeholder === '추가 결제 금액');
+      inp.value = String(amount);
+      Array.from(box.querySelectorAll('button')).find(b => b.textContent === '추가 결제 저장').click();
+      window.confirm = orig;
+      return msgs;
+    };
+    // 잔금 일부를 받은 뒤 남은 금액(45,000) 이하 → 확인창 없음(서버 전송 시도)
+    out.warnSplit = tryTo({ id: 'w1', price: 1225000, depositAmount: 499000, balanceAmount: 681000, extraPayRows: [] }, 45000);
+    // 잔금을 아직 못 받은 상태에서 추가 결제로 넣으려 함 → 잔금 칸 안내 경고
+    out.warnNoBal = tryTo({ id: 'w2', price: 1225000, depositAmount: 499000, balanceAmount: 0, extraPayRows: [] }, 45000);
+    // 남은 금액보다 많이 → 초과 경고
+    out.warnOver = tryTo({ id: 'w3', price: 1225000, depositAmount: 499000, balanceAmount: 681000, extraPayRows: [] }, 100000);
+    // 이미 채워진 상태(완납)에서 추가 → 초과 경고(증액 확인)
+    out.warnFull = tryTo({ id: 'w4', price: 1180000, depositAmount: 499000, balanceAmount: 681000, extraPayRows: [] }, 50000);
     out.uiMaster = mk(true);
     out.uiStaff = mk(false);
     return out;
@@ -74,6 +95,10 @@ async function run() {
   ok('X5 총액을 넘긴 추가 결제: 입금 10만은 잡히고 성과매출은 0', r.x5.oct.rev === 100000 && r.x5.oct.perf === 0 && r.x5.received === 1100000, r.x5);
   ok('X6 금액 0 줄은 무시', r.rows6 === 0 && r.x6.received === 1000000 && r.x6.oct.rev === 0, [r.rows6, r.x6]);
   ok('추가 결제 영역: 합계·메모가 보이고 저장 버튼이 있음', /합계 300,000원/.test(r.uiMaster.text) && /블라인드 추가/.test(r.uiMaster.text) && r.uiMaster.save === 1, r.uiMaster);
+  ok('나눠 받은 잔금(남은 금액 이하)은 확인창 없이 저장 진행', r.warnSplit.length === 0, r.warnSplit);
+  ok('잔금 칸이 빈 상태의 추가 결제는 잔금 칸 안내 경고', r.warnNoBal.length === 1 && /잔금 칸에 입력/.test(r.warnNoBal[0]), r.warnNoBal);
+  ok('남은 금액보다 많으면 초과 경고', r.warnOver.length === 1 && /많아져요/.test(r.warnOver[0]), r.warnOver);
+  ok('이미 완납인데 추가하면 증액 확인 경고', r.warnFull.length === 1 && /많아져요/.test(r.warnFull[0]), r.warnFull);
   ok('삭제 버튼은 마스터에게만 보임', r.uiMaster.del === 1 && r.uiStaff.del === 0, [r.uiMaster.del, r.uiStaff.del]);
   ok('자바스크립트 오류 없음', jsErrors.length === 0, jsErrors);
 
