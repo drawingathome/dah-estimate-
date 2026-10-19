@@ -44,7 +44,7 @@ function _exportExcelInner() {
     var customers = loadCustomers().filter(function(c){ return !isSoftDeleted(c); });
     if (!customers || customers.length === 0) { showToast('내보낼 고객 데이터가 없습니다'); return; }
 
-    var headers = ['고객명','연락처','주소','공간','단계','금액','성과매출','담당자','계약일','실측일','시공일','확정일','선금액','선금일','잔금액','잔금일','방문횟수','대기리드','발주현황','메모'];
+    var headers = ['고객명','연락처','주소','공간','단계','금액','성과매출','담당자','계약일','실측일','시공일','확정일','선금액','선금일','잔금액','잔금일','추가결제액','방문횟수','대기리드','발주현황','메모'];
 
     var ORDER_KEYS = ['fabric','production','blind','material','install'];
     function orderStatusSummary(c) {
@@ -61,6 +61,9 @@ function _exportExcelInner() {
       // 여러 건인 고객은 실제 결제가 있어도 선금/잔금이 0으로 나오는
       // 회귀가 될 뻔했음 - 견적서별 합계(getReceivedSummary)로 교체.
       var recv = getReceivedSummary(c);
+      // 2026-10-20: 완납 후 증액으로 받은 '추가 결제'는 선금/잔금 칸에 안 들어가므로 별도 열로 내보냄
+      var extraSum = 0;
+      getAllEstPays(c).forEach(function(p){ extraSum += Number(p.extraAmount) || 0; });
       return [
         c.clientName   || '',
         c.phone        || '',
@@ -78,6 +81,7 @@ function _exportExcelInner() {
         recv.depositDate  || '',
         recv.balanceAmount || 0,
         recv.balanceDate  || '',
+        extraSum,
         c.visitCount   || 1,
         c.leadParked ? 'Y' : '',
         orderStatusSummary(c),

@@ -221,7 +221,12 @@ function guessContextVars(c) {
   if (['확정견적','잔금결제','시공준비중'].indexOf(stage) >= 0) {
     amountType = '잔금';
     var estPayForAlim = (typeof getLatestEstPay === 'function') ? getLatestEstPay(c) : c;
-    amount = Math.max((Number(estPayForAlim.price)||0) - (Number(estPayForAlim.depositAmount)||0), 0) || estPayForAlim.balanceAmount;
+    // 2026-10-20: 받은 돈(선금+잔금+추가 결제, 모든 견적서)을 빼서 '지금 남은 금액'으로 안내.
+    // 받은 기록이 전혀 없을 때만 예전 계산(총액-선금) 사용. 0원이면 청구할 잔금 없음 - 미리보기에서 사람이 확인.
+    var recvAll = (typeof getReceivedAmount === 'function') ? getReceivedAmount(c) : 0;
+    var priceAll = Number(c.price) || Number(estPayForAlim.price) || 0;
+    if (recvAll > 0 && priceAll > 0) amount = Math.max(priceAll - recvAll, 0);
+    else amount = Math.max((Number(estPayForAlim.price)||0) - (Number(estPayForAlim.depositAmount)||0), 0) || estPayForAlim.balanceAmount;
   } else {
     amountType = '계약금';
     amount = (typeof getLatestEstPay === 'function') ? getLatestEstPay(c).depositAmount : c.depositAmount;

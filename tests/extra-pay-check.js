@@ -34,6 +34,19 @@ async function run() {
   });
   const ok = (l, c, d) => log.push((c ? '✅' : '❌') + ' ' + l + (!c && d !== undefined ? ' — ' + JSON.stringify(d) : ''));
 
+  // 알림톡 잔금 안내 금액: 받은 돈(선금+잔금+추가 결제)을 뺀 남은 금액이어야 함
+  const alim = await page.evaluate(() => {
+    const cust = { id: 31, clientName: 'A1', date: '2026-09-15', stage: '잔금결제', price: 1500000, depositAmount: 500000, balanceAmount: 500000, staffName: '마스터' };
+    localStorage.setItem('dah_customers', JSON.stringify([cust]));
+    if (typeof _customerCache !== 'undefined') { _customerCache.length = 0; _customerCache.push(cust); }
+    const mk = (extra) => JSON.stringify([{ id: 'a1', clientId: 31, clientName: 'A1', price: 1500000, depositAmount: 500000, balanceAmount: 500000, savedAt: '2026-09-15T01:00:00Z', extraPayRows: extra }]);
+    localStorage.setItem('dah_saved', mk([{ id: 'q1', estimate_id: 'a1', amount: 300000, paid_date: '2026-10-05', method: '카드', receipt: false, memo: '', created_at: '2026-10-05T01:00:00Z' }]));
+    const withExtra = guessContextVars(cust).amount;
+    localStorage.setItem('dah_saved', mk([]));
+    const noExtra = guessContextVars(cust).amount;
+    return { withExtra, noExtra };
+  });
+  ok('알림톡 잔금 안내: 추가 결제 30만을 뺀 20만 / 추가 없으면 50만', alim.withExtra === 200000 && alim.noExtra === 500000, alim);
   const r = await page.evaluate(() => {
     const xr = (id, estId, amount, date, extra) => Object.assign({ id, estimate_id: estId, amount, paid_date: date, method: '카드', receipt: false, memo: '', created_at: date + 'T01:00:00Z' }, extra || {});
     localStorage.setItem('dah_saved', JSON.stringify([
