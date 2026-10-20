@@ -908,14 +908,14 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
 <script src="/shared-optimistic-lock.js?v=6937130d3492"></script>
 <script src="/est-sync-queue.js?v=f23dafb45dfc"></script>
 <script src="/dash-supabase-auth.js?v=21a67e59f4a9"></script>
-<script src="/est-form-controls.js?v=6a9730d9c37c"></script>
+<script src="/est-form-controls.js?v=2ece7c03e06c"></script>
 <script src="/est-calc-rules.js?v=ee7750f2d8a4"></script>
 <script src="/est-product-calc.js?v=676a1e220f40"></script>
 <script src="/est-calc-curtain.js?v=08e83e697a3e"></script>
 <script src="/est-calc-blind.js?v=858fe93efa7d"></script>
 <script src="/est-calc-svc.js?v=6e331bbf6369"></script>
 <script src="/est-survey.js?v=0e4bacb22873"></script>
-<script src="/est-save.js?v=e3de7e340253"></script>
+<script src="/est-save.js?v=e60bb08d4fdf"></script>
 <script src="/est-click-watch.js?v=192cb15c7ec3"></script>
 <script src="/est-save-stages.js?v=359d9ad9216a"></script>
 <script src="/est-stale-watch.js?v=1b89698be776"></script>
@@ -1193,7 +1193,7 @@ var currentTab = 'ga';
           // 항상 채워지던 주소가 여기선 비어보이는 회귀가 생길 뻔했음. client_id로
           // 고객 주소만 별도로 채워옴.
           if (e.client_id) {
-            var addrUrl = SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(e.client_id) + '&select=addr,measure_date,install_date,deposit_amount';
+            var addrUrl = SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(e.client_id) + '&select=addr,addr_detail,measure_date,install_date,deposit_amount'; // 2026-10-20: addr_detail 빠져 있어서 상세주소가 비어 보이고, 저장 때 DB의 상세주소가 지워졌음(노지경)
             var axhr = new XMLHttpRequest();
             axhr.open('GET', addrUrl, true);
             axhr.setRequestHeader('apikey', SUPABASE_KEY);

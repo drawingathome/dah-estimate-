@@ -592,6 +592,18 @@ function estimateNeedsSave() {
   return editing ? window._estDirty === true : true;
 }
 function ensureEstimateSavedThen(proceed) {
+  // 2026-10-20(노지경 사례): "최종 견적서" 탭 + 확정 안 됨 상태로 인쇄·PDF하면 종이는 최종견적서처럼 나오지만 서버에는 가견적으로 남음 → 먼저 확인.
+  try {
+    var _nm = /** @type {HTMLInputElement|null} */ (document.getElementById('c-name'));
+    var _unconfirmedFinal = typeof currentTab !== 'undefined' && currentTab === 'final' && !(window._estEditState && window._estEditState.estimateConfirmedAt) && _nm && _nm.value && _nm.value.trim();
+    if (_unconfirmedFinal) {
+      if (!window.confirm('⚠️ 지금 "최종 견적서" 탭인데 아직 [확정]이 안 눌렸어요.\n\n이 상태로 인쇄·PDF를 만들면 종이는 최종견적서처럼 나오지만, 서버와 대시보드에는 "가견적"으로 남아요.\n\n[확인] = 확정 없이 그대로 진행\n[취소] = 돌아가서 위쪽 주황색 [확정] 버튼 먼저 누르기')) {
+        estSendReceipt('print', 'final-tab-unconfirmed-cancel', {});
+        return;
+      }
+      estSendReceipt('print', 'final-tab-unconfirmed-proceed', {});
+    }
+  } catch (e0) {}
   if (!estimateNeedsSave()) { estSendReceipt('print', 'direct', {}); proceed(); return; }
   if (typeof showToast === 'function') showToast('저장하고 진행할게요…');
   window._estAfterSave = function (outcome) {

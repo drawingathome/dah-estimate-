@@ -580,6 +580,8 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['estimate-duplicate-blindspot-check.js', [target]]);
   scripts.push(['master-vs-staff-feature-check.js', []]);
   scripts.push(['est-editing-state-reset-check.js', [target]]);
+  scripts.push(['est-final-tab-unconfirmed-check.js', [target]]);
+  scripts.push(['est-addr-detail-select-check.js', []]);
   scripts.push(['pleat-width-rounding-check.js', [target]]);
   // 2026-09-06(선혜님 지시 - "지금 하자", 전문업체 기준 개선점 - "새로
   // 만든 안전장치에 영구 테스트가 없다"는 걸 해결하기 위해 추가):

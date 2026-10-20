@@ -41,6 +41,9 @@ function setStatus(s, isRestoring) {
     }
   }
   triggerSumPulse();
+  // 2026-10-20(선혜님 - 노지경 "최종견적서 누르고 프린트했는데 가견적이 나와, 몇 번째냐"): 기록(저장 영수증)상 최종견적서 탭만 켜고 확정 버튼은 한 번도
+  // 안 눌렸던 것이 원인이었음. 탭은 화면 모양일 뿐 확정이 아니므로, 탭을 바꿀 때마다 확정 버튼 표시를 다시 그려 "아직 확정 안 됨"을 눈에 띄게 함.
+  try { if (typeof renderConfirmBadge === 'function') renderConfirmBadge(); } catch (e) {}
 }
 
 var currentCustType = 'new';
@@ -345,11 +348,15 @@ function toggleConfirmEstimate() {
     });
     return;
   } else {
-    if (!confirm('이 견적 내용(사이즈·금액)을 확정할까요?\n확정하면 수정할 수 없게 잠깁니다. 다시 수정하려면 확정을 한번 더 눌러 해제하세요.')) return;
+    // 2026-10-20: 확정 시도는 지금까지 서버에 아무 기록이 없어서 "눌렀는데 안 됐다"를 나중에 확인할 방법이 없었음 → 누른 것·취소·결과를 영수증으로 남김
+    var _rc = function (o, extra) { try { if (typeof estSendReceipt === 'function') estSendReceipt('confirm', o, extra || {}); } catch (e) {} };
+    _rc('click', { tab: (typeof currentTab !== 'undefined' ? currentTab : null), edit_id: !!window._estEditState.editingEstDbId });
+    if (!confirm('이 견적 내용(사이즈·금액)을 확정할까요?\n확정하면 수정할 수 없게 잠깁니다. 다시 수정하려면 확정을 한번 더 눌러 해제하세요.')) { _rc('dialog-cancel'); return; }
     var newAt = new Date().toISOString();
     window._estEditState.estimateConfirmedAt = newAt;
     lockEstimateForm(true);
     estPersistConfirmState(newAt, function (res) {
+      _rc('result-' + res);
       if (res === 'ok') {
         showToast('견적이 확정·저장됐습니다 — 수정하려면 확정을 다시 눌러 해제하세요');
       } else if (res === 'unsaved') {
@@ -386,6 +393,12 @@ function renderConfirmBadge() {
     badge.style.background = '#3B6D11';
     badge.style.borderColor = '#3B6D11';
     badge.style.color = '#EAF3DE';
+  } else if (typeof currentTab !== 'undefined' && currentTab === 'final') {
+    // 최종견적서 탭을 보고 있는데 확정이 안 된 상태 - 눈에 띄게 표시(눌러서 확정)
+    badge.textContent = '⚠ 확정 안 됨 — 눌러서 확정';
+    badge.style.background = '#E67E22';
+    badge.style.borderColor = '#E67E22';
+    badge.style.color = '#fff';
   } else {
     badge.textContent = '✓ 확정';
     badge.style.background = 'transparent';
