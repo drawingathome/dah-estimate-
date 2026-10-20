@@ -49,8 +49,11 @@ function renderPaySection(c, payBody, est) {
 
   var paySec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
   if (est && est.estimateLabel) {
-    paySec.appendChild(div('font-size:11px;color:var(--sub);margin-bottom:8px', [
-      el('span', {text: est.estimateLabel + ' · ' + payBasisPrice.toLocaleString() + '원'})
+    // 2026-10-20(이상옥 사례): 견적서가 2개 이상이면 "지금 입력하는 입금이 어느 견적서의 돈인지"를 눈에 띄게 표시(입금은 견적서마다 따로 기록됨)
+    var _multiEst = false;
+    try { var _all = JSON.parse(localStorage.getItem('dah_saved') || '[]'); _multiEst = _all.filter(function (e) { return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; }).length > 1; } catch (eMulti) {}
+    paySec.appendChild(div(_multiEst ? 'font-size:12px;font-weight:700;color:var(--dark);background:var(--ivory1);border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin-bottom:8px;line-height:1.5' : 'font-size:11px;color:var(--sub);margin-bottom:8px', [
+      el('span', {text: (_multiEst ? '📌 아래 입금은 이 견적서에만 기록돼요 → ' : '') + est.estimateLabel + ' · ' + payBasisPrice.toLocaleString() + '원'})
     ]));
   }
   var paySecTitleRow = div('display:flex;align-items:center;justify-content:space-between;margin-bottom:10px', [
@@ -204,6 +207,14 @@ function renderPaySection(c, payBody, est) {
         // 이 화면이 들고 있던 예전 잠금값 그대로 곧바로 이어지는 고객 저장(단계 변경 등)은 스스로와 충돌했음.
         // 결제 저장이 성공하면 고객의 최신 잠금값을 다시 받아 로컬에 반영한 "다음에" 콜백을 실행함.
         if (!err) { est.depositAmount = newDep; est.balanceAmount = newBal; } // 같은 화면에서 이어 저장해도 가짜 충돌이 나지 않게 기준값 갱신
+        // 2026-10-20(이상옥 사례: 침구 완납 + 커튼 선금 50% = 견적서 2개): 대시보드 결제 저장은 견적서 입금만 바꿔서 고객의 매출 계산 기준금액(price)·성과매출이
+        // 견적서 합계로 갱신되지 않았음(견적서 앱에서 저장할 때만 갱신) → 받은 돈이 기준금액보다 커 보이는 "초과 입금" 오표시. 견적서 앱 저장과 같은 규칙으로 맞춤.
+        if (!err && c && c.id && typeof syncCustomerPriceFromPaidEstimates === 'function') {
+          syncCustomerPriceFromPaidEstimates(c, function () { continueAfterPaySave(); });
+          return;
+        }
+        continueAfterPaySave();
+        function continueAfterPaySave() {
         if (!err && c && c.id && typeof fetchLatestUpdatedAt === 'function') {
           fetchLatestUpdatedAt('customers', c.id, function (freshUpdatedAt) {
             try {
@@ -221,6 +232,7 @@ function renderPaySection(c, payBody, est) {
           return;
         }
         if (callback) callback();
+        }
       });
       return;
     }
@@ -569,4 +581,33 @@ function renderPaySection(c, payBody, est) {
   // 2026-10-14: 환불 영역(마스터 환불 등록·취소, 실장은 읽기 전용) - dash-refund.js
   if (est && typeof appendRefundSection === 'function') appendRefundSection(paySec, est, c);
   if (payBody) payBody.appendChild(paySec);
+}
+
+
+// 2026-10-20: 견적서 앱 저장(est-save-stages.js)과 같은 규칙 - "입금이 기록된 견적서(계약 건)들의 금액 합계"를 고객의 price / performance_revenue 로 맞춤.
+// 입금된 견적서가 하나도 없으면 건드리지 않음. 조회·저장이 실패해도 결제 저장 흐름은 계속(조용히 건너뜀 + 콘솔 경고).
+function syncCustomerPriceFromPaidEstimates(c, done) {
+  var finish = function () { try { if (done) done(); } catch (e) { console.warn(e); } };
+  try {
+    sbXHR('GET', 'estimates?client_id=eq.' + c.id + '&is_archived=eq.false&select=id,price,performance_revenue,deposit_amount,balance_amount', null, function (err, rows) {
+      if (err || !Array.isArray(rows)) { console.warn('고객 기준금액 동기화: 견적서 조회 실패'); finish(); return; }
+      var sumPrice = 0, sumPerf = 0, paidCount = 0;
+      rows.forEach(function (r) {
+        if ((Number(r.deposit_amount) || 0) + (Number(r.balance_amount) || 0) > 0) { paidCount++; sumPrice += Number(r.price) || 0; sumPerf += Number(r.performance_revenue) || 0; }
+      });
+      if (paidCount === 0) { finish(); return; }
+      if (Number(c.price) === sumPrice && Number(c.performanceRevenue) === sumPerf) { finish(); return; }
+      sbXHR('PATCH', 'customers?id=eq.' + c.id, { price: sumPrice, performance_revenue: sumPerf }, function (e2) {
+        if (e2) { console.warn('고객 기준금액 동기화 저장 실패'); finish(); return; }
+        try {
+          c.price = sumPrice; c.performanceRevenue = sumPerf;
+          if (typeof loadCustomers === 'function' && typeof saveCustomers === 'function') {
+            var arr = loadCustomers(); var t = arr.find(function (x) { return x.id === c.id; });
+            if (t) { t.price = sumPrice; t.performanceRevenue = sumPerf; saveCustomers(arr); }
+          }
+        } catch (e3) {}
+        finish();
+      });
+    });
+  } catch (e) { console.warn('고객 기준금액 동기화 예외', e); finish(); }
 }

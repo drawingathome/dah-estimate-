@@ -49,7 +49,7 @@ function addBlindRow() {
 
     '<td data-label="가로"><input type="text" inputmode="numeric" placeholder="cm" class="bmw" oninput="fmtPrice(this);calcBlindRow(this)" style="'+INP+'"></td>'+
     '<td data-label="높이"><input type="text" inputmode="numeric" placeholder="cm" class="bmh" oninput="fmtPrice(this);calcBlindRow(this)" style="'+INP+'"></td>'+
-    '<td data-label="옵션"><input type="text" placeholder="옵션" class="blind-opt" style="'+INP+'"></td>'+
+    '<td data-label="옵션"><input type="text" placeholder="옵션" class="blind-opt" onchange="moveNumericOptToExtra(this)" style="'+INP+'"></td>'+
     '<td data-label="단가">'+
       '<input type="text" inputmode="numeric" placeholder="단가(원/㎡)" class="blind-price" oninput="fmtPrice(this);calcBlindRow(this)" onfocus="fmtPriceFocus(this)" onblur="fmtPriceBlur(this);calcBlindRow(this)" style="'+INP+'">'+
       '<span class="bsqm">—</span>'+
@@ -91,6 +91,20 @@ function refreshBlindVendorOptions() {
 }
 
 // getBlindMinSqm(종류별 최소 청구 면적)은 est-calc-rules.js로 옮김(계산 규칙은 그 파일 한 곳에만 둠)
+
+// 2026-10-20(윤세현 사례): "옵션" 칸은 이름 칸이라 금액이 계산되지 않는데 숫자만 넣는 경우가 있었음 →
+// 숫자만 입력하면(예: 10000, 10,000원) 자동으로 "옵션추가금" 칸으로 옮겨 계산에 반영(옵션 이름 칸은 비움). 사람이 직접 입력했을 때만 동작(저장된 견적서를 불러올 땐 동작 안 함).
+function moveNumericOptToExtra(optEl) {
+  var tr = optEl && optEl.closest('tr'); if (!tr) return;
+  var m = String(optEl.value || '').trim().match(/^([0-9][0-9,]*)\s*원?$/);
+  if (!m) return;
+  var n = Number(m[1].replace(/,/g, '')) || 0; if (n <= 0) return;
+  var ex = tr.querySelector('.blind-extra'); if (!ex) return;
+  // 사람이 옵션추가금 칸에 직접 입력·이동할 때와 같은 순서(입력 → 서식 → 계산 → 포커스 해제 서식 → 계산)
+  optEl.value = ''; // 먼저 비워야 자동 생성되는 시공 줄의 내용에 숫자가 이름으로 들어가지 않음
+  ex.value = String(n); fmtPrice(ex); calcBlindRow(ex); fmtPriceBlur(ex); calcBlindRow(ex);
+  if (typeof showToast === 'function') showToast('옵션 칸의 숫자 ' + n.toLocaleString() + '원을 "옵션추가금"으로 옮겨 계산했어요');
+}
 
 function calcBlindRow(el) {
   var tr = el.closest('tr');

@@ -33,14 +33,14 @@
 | 22 | `dash-kanban.js` | DAH 대시보드 — 진행현황(칸반) 기능 | 9 |
 | 23 | `dash-pay-history.js` | 고객상세 - 결제 탭의 "입금 내역 보기" (읽기 전용) | 3 |
 | 24 | `dash-refund.js` | 고객상세 - 결제 탭의 "환불" 영역 (2026-10-14) | 4 |
-| 25 | `dash-extra-pay.js` | 고객상세 - 결제 탭의 "추가 결제" 영역 (2026-10-19) | 3 |
-| 26 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 1 |
+| 25 | `dash-extra-pay.js` | 고객상세 - 결제 탭의 "추가 결제" 영역 (2026-10-19) | 4 |
+| 26 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 2 |
 | 27 | `dash-customer-alim.js` | 고객상세 - 소통(알림톡) 탭 렌더링 | 11 |
 | 28 | `dash-customer-order.js` | 고객상세 - 발주 탭 렌더링 | 5 |
 | 29 | `dash-customer-as.js` | 고객상세 - AS 탭 렌더링 (React 전환 1호) | 2 |
 | 30 | `dash-customer-detail.js` | DAH 대시보드 — 고객상세 모달 기능 | 8 |
 | 31 | `dash-customer-detail-tabs.js` | DAH 대시보드 — 고객상세 모달: 정보탭/할일 + 하단 버튼·단계변경·삭제·복구 | 8 |
-| 32 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 8 |
+| 32 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 9 |
 | 33 | `dash-customer-add.js` | 고객 추가/수정 모달 (React 전환 2호) | 3 |
 | 34 | `dash-auth.js` | DAH 대시보드 — 로그인/세션/권한 기능 | 5 |
 | 35 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 8 |
@@ -66,7 +66,7 @@
 | 9 | `est-calc-rules.js` | DAH 견적서 앱 — 계산 규칙 (순수 함수: 화면/저장소를 전혀 안 만짐) | 23 |
 | 10 | `est-product-calc.js` | DAH 견적서 앱 — 공통 계산: 합계(calcTotal)/얼림 금액/행 삭제/드래그 정렬 | 10 |
 | 11 | `est-calc-curtain.js` | DAH 견적서 앱 — 커튼 행 계산 (추가/폭수·금액 계산/레일 자동/복사) | 4 |
-| 12 | `est-calc-blind.js` | DAH 견적서 앱 — 블라인드 행 계산 (추가/최소면적/옵션 추가금/부자재 자동/복사) | 6 |
+| 12 | `est-calc-blind.js` | DAH 견적서 앱 — 블라인드 행 계산 (추가/최소면적/옵션 추가금/부자재 자동/복사) | 7 |
 | 13 | `est-calc-svc.js` | DAH 견적서 앱 — 기타품목 · 부자재/서비스(실측비·시공비·레일) 행 계산과 요약 | 12 |
 | 14 | `est-survey.js` | DAH 견적서 앱 — 설문지 연동 | 2 |
 | 15 | `est-save.js` | DAH 견적서 앱 — 저장/검증/토스트 | 21 |
@@ -264,6 +264,7 @@
 | `estIsFinalTabUnconfirmed` | `est-form-controls.js` |
 | `estIsStaleLock` | `est-stale-watch.js` |
 | `estMissingInstallRows` | `est-save.js` |
+| `estPayBadge` | `dash-customer-estimates.js` |
 | `estPersistConfirmState` | `est-form-controls.js` |
 | `estRenderMismatchBanner` | `est-save.js` |
 | `estSendReceipt` | `est-save.js` |
@@ -288,6 +289,7 @@
 | `filterPipe` | `dash-kanban.js` |
 | `findCurrentDetailCustomer` | `dash-customer-detail.js` |
 | `findExistingCustomerByPhone` | `apps-script-survey-to-customer.js` |
+| `findOtherEstimateForAmount` | `dash-extra-pay.js` |
 | `fmt` | `dash-utils.js` |
 | `fmtPhone` | `dash-utils.js`, `est-form-controls.js` |
 | `fmtPrice` | `est-utils.js` |
@@ -386,6 +388,7 @@
 | `markSurveyProcessed` | `apps-script-survey-to-customer.js` |
 | `markSvcManualOverride` | `est-calc-svc.js` |
 | `memoSaveWithConflictGuard` | `dash-api-writes.js` |
+| `moveNumericOptToExtra` | `est-calc-blind.js` |
 | `newEstimate` | `est-save.js` |
 | `newExtraPayRequestId` | `dash-extra-pay.js` |
 | `newRefundRequestId` | `dash-refund.js` |
@@ -560,6 +563,7 @@
 | `supabaseAuthLogin` | `dash-supabase-auth.js` |
 | `switchDetailTab` | `dash-customer-detail.js` |
 | `syncCustomerLocksFromRows` | `dash-api-data.js` |
+| `syncCustomerPriceFromPaidEstimates` | `dash-customer-pay.js` |
 | `syncCustomerRow` | `apps-script-automation-hub.js` |
 | `syncCustomerToSheet` | `shared-common-utils.js` |
 | `syncStaffGoalsToCloud` | `dash-api.js` |

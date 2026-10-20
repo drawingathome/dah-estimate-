@@ -122,7 +122,8 @@ function buildCustomerHTML() {
     var price=getPriceVal(tr.querySelector('.sprice'));
     var qty  =parseFloat(tr.querySelector('.sqty')?.value)||1;
     var amt  =tr.querySelector('.samt')?.textContent||'';
-    if(desc&&amt&&amt!=='0원') svcRows.push({svcType:escHtml(svcType),space:escHtml(svcSpace),desc:escHtml(desc),price:price,qty:qty,amt:amt});
+    // 2026-10-20(윤세현 사례): 내용이 비어 있어도 금액이 있으면 시공 자재 줄에 포함(합계와 줄 합계가 항상 같도록)
+    if(amt&&amt!=='0원') svcRows.push({svcType:escHtml(svcType),space:escHtml(svcSpace),desc:escHtml(desc),price:price,qty:qty,amt:amt});
   });
 
   // 2026-09-15(선혜님 지시 - 침구/러그 등 기타 품목 신설): 커튼/블라인드와
@@ -231,7 +232,9 @@ function buildCustomerHTML() {
       var price = getPriceVal(tr.querySelector('.sprice'));
       var qty = parseFloat(tr.querySelector('.sqty')?.value) || 1;
       var amt = price * qty;
-      if (!desc || !amt) return;
+      // 2026-10-20(윤세현 사례): 예전엔 "내용" 칸이 비어 있으면 금액이 있어도 고객용 문서 줄에서 통째로 빠졌음(합계·내부 요약은 포함) →
+      // 시공 자재 줄들의 합이 소계와 안 맞고, 마지막에 추가한 시공비 100만원이 "실측+시공비"에 반영 안 됨. 금액이 있으면 내용이 비어도 항상 포함.
+      if (!amt) return;
       var svcSpaceVal = tr.querySelector('.svc-space')?.value || '';
       var group = (typeof categorizeSvcRow === 'function') ? categorizeSvcRow(tr) : 'etc';
       if (group === 'measureInstall') {
@@ -240,7 +243,7 @@ function buildCustomerHTML() {
         railSum += amt;
         // 2026-09-18: 위치가 이제 desc 텍스트에 안 합쳐져 있으므로(별도
         // .svc-space 칸으로 분리됨), 여기 요약 표시에서 다시 붙여줌.
-        railDetailBits.push((svcSpaceVal ? svcSpaceVal + ' ' : '') + desc.trim() + (qty > 1 ? ' ' + qty + '개' : ''));
+        railDetailBits.push((svcSpaceVal ? svcSpaceVal + ' ' : '') + (desc || '').trim() + (qty > 1 ? ' ' + qty + '개' : ''));
       } else if (group === 'motor') {
         motorMaterialSum += amt;
       } else {

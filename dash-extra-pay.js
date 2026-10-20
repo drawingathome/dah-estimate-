@@ -21,6 +21,25 @@ function reopenAfterExtraPay(c) {
   if (typeof loadEstimatesAsync === 'function') loadEstimatesAsync(loadCust, true); else loadCust();
 }
 
+// 2026-10-20(이상옥 사례): 같은 고객의 "다른 견적서"가 받아야 할 돈(선금 50% / 남은 금액)과 입력 금액이 같으면 그 견적서를 알려줌.
+// 침구 견적서 화면에서 커튼 선금 1,559,000원을 추가결제로 넣으려다 경고가 떴던 상황을 막기 위한 안내(입금은 견적서마다 따로 기록되므로).
+function findOtherEstimateForAmount(c, est, amount) {
+  var all = [];
+  try { all = JSON.parse(localStorage.getItem('dah_saved') || '[]'); } catch (e) {}
+  var mine = all.filter(function (e) { return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
+  for (var i = 0; i < mine.length; i++) {
+    var o = mine[i];
+    if (!o || o.id === est.id) continue;
+    var price = Number(o.price) || 0, dep = Number(o.depositAmount) || 0, bal = Number(o.balanceAmount) || 0;
+    if (price <= 0) continue;
+    var label = String(o.product || '다른 견적서').slice(0, 24) + ' · ' + price.toLocaleString() + '원';
+    if (!(dep > 0) && Math.abs(Math.round(price * 0.5) - amount) <= 10) return { label: label, kind: '선금(50%)' };
+    var remain = price - dep - bal;
+    if (dep > 0 && !(bal > 0) && remain > 0 && Math.abs(remain - amount) <= 10) return { label: label, kind: '잔금(남은 금액)' };
+  }
+  return null;
+}
+
 // est: 이 견적서(est.id, est.price, est.depositAmount, est.balanceAmount, est.extraPayRows), c: 고객
 function appendExtraPaySection(paySec, est, c) {
   if (!est || !est.id || typeof sbXHR !== 'function') return;
@@ -103,6 +122,10 @@ function appendExtraPaySection(paySec, est, c) {
     var amount = Number(String(amtIn.value).replace(/[^0-9]/g, '')) || 0;
     if (amount <= 0) { alert('추가 결제 금액을 입력해 주세요.'); amtIn.focus(); return; }
     if (!dateIn.value) { alert('입금 날짜를 입력해 주세요.'); dateIn.focus(); return; }
+    var otherEst = findOtherEstimateForAmount(c, est, amount);
+    if (otherEst) {
+      if (!confirm('⚠️ 이 금액(' + amount.toLocaleString() + '원)은 같은 고객의 "' + otherEst.label + '" 견적서의 ' + otherEst.kind + ' 금액과 같아요.\n입금은 견적서마다 따로 기록돼요. 그 견적서의 돈이라면 [취소]를 누르고 그 견적서 탭의 ' + (otherEst.kind.indexOf('선금') === 0 ? '선금' : '잔금') + ' 칸에 입력해 주세요.\n이 견적서(' + (est.estimateLabel || '현재') + ')의 추가 결제가 맞다면 [확인]을 눌러 주세요.')) return;
+    }
     if (price > 0) {
       var remain = price - basePaid - extraTotal; // 아직 더 받아야 할 금액(0 이하면 이미 채워진 상태)
       if (remain > 0 && !(Number(est.balanceAmount) > 0)) {

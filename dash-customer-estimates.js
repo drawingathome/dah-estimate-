@@ -7,6 +7,21 @@
    ══════════════════════════════════════════════════ */
 
 
+// 2026-10-20(이상옥 사례): 견적서 카드의 오른쪽 배지는 예전엔 "고객 전체 단계"(예: 선금결제)를 모든 견적서에 똑같이 보여줬음 →
+// 침구 견적서는 이미 완납인데 "선금결제"로 보여 혼란. 이제 받은 돈이 있는 견적서는 그 견적서 자신의 결제 상태(완납/선금)를 보여주고,
+// 입금이 없으면 예전처럼 고객 단계를 보여줌. (고객 전체 단계는 칸반·상단 요약에서 그대로 확인)
+function estPayBadge(e, customerStage) {
+  var price = Number(e && e.price) || 0;
+  var dep = Number(e && e.depositAmount) || 0, bal = Number(e && e.balanceAmount) || 0;
+  var extra = 0;
+  try { extra = (typeof getEstExtraRows === 'function') ? getEstExtraRows(e).reduce(function (t, x) { return t + x.amount; }, 0) : 0; } catch (err) {}
+  var got = dep + bal + extra;
+  if (price > 0 && got >= price) return { text: '완납', color: '#2E7D32' };
+  if (got > 0 && !(bal > 0)) return { text: '선금 입금', color: stageColorFor(customerStage) };
+  if (got > 0) return { text: '입금 ' + got.toLocaleString() + '원', color: stageColorFor(customerStage) };
+  return { text: customerStage || '—', color: stageColorFor(customerStage) };
+}
+
 function renderDetailEstTab() {
   var estEl = document.getElementById('detail-est-body');
   if (!estEl || !currentDetailName) return;
@@ -99,7 +114,8 @@ function renderDetailEstTabInner(estEl) {
     if (e.confirmedAt) {
       topItems.push(el('span', {style:'font-size:11px;font-weight:700;color:#fff;background:var(--dark);padding:2px 8px;border-radius:20px', text:'✓ 확정'}));
     }
-    topItems.push(el('span', {style:'margin-left:auto;font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px;background:#F5F2EE;color:'+stageColorFor(currentCustomerStage), text: currentCustomerStage || '—'}));
+    var _pb = estPayBadge(e, currentCustomerStage);
+    topItems.push(el('span', {style:'margin-left:auto;font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px;background:#F5F2EE;color:'+_pb.color, text: _pb.text}));
     var top = div('display:flex;align-items:center;gap:6px;margin-bottom:10px', topItems);
 
     // 금액 크게
@@ -461,8 +477,8 @@ function renderEstimateHistory(container, clientName, clientId) {
     
     var contractBadge = el('span', {style:
       'font-size:12px;font-weight:700;padding:3px 10px;border-radius:6px;' +
-      'background:#F5F2EE;color:' + stageColorFor(currentCustomerStageForHistory),
-      text: currentCustomerStageForHistory || '—'
+      'background:#F5F2EE;color:' + estPayBadge(e, currentCustomerStageForHistory).color,
+      text: estPayBadge(e, currentCustomerStageForHistory).text
     });
 
     top.appendChild(noEl); top.appendChild(contractBadge);
