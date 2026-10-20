@@ -376,6 +376,12 @@ function toggleConfirmEstimate() {
   if (typeof calcTotal === 'function') calcTotal(); // 저장 전이라도 상태를 즉시 반영
 }
 
+// 2026-10-20: "최종 견적서 탭을 보고 있는데 확정은 안 된 상태 + 고객명 있음"인지. 경고·확인창 표시용일 뿐, 확정 여부 판단에는 쓰지 않음(확정의 기준은 estimateConfirmedAt 하나).
+function estIsFinalTabUnconfirmed() {
+  var nm = /** @type {HTMLInputElement|null} */ (document.getElementById('c-name'));
+  return typeof currentTab !== 'undefined' && currentTab === 'final' && !(window._estEditState && window._estEditState.estimateConfirmedAt) && !!(nm && nm.value && nm.value.trim());
+}
+
 function renderConfirmBadge() {
   // 2026-08-26: 예전엔 배지(표시 전용, 확정시에만 보임)와 버튼(탭줄의
   // 액션, 항상 보임)이 따로 있었는데, 이제 hd-confirm-badge 하나가 표시+
