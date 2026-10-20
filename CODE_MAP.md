@@ -13,7 +13,7 @@
 | 2 | `dash-utils.js` | DAH 대시보드 — 순수 유틸리티 함수 모음 | 23 |
 | 3 | `dash-api.js` | DAH 대시보드 — 데이터 접근 계층 (Supabase / localStorage) | 5 |
 | 4 | `dash-api-settings.js` | DAH 대시보드 — 설정 접근자 (담당자/거래처/리드기준/지역비/쿠폰/담당자 이메일) | 13 |
-| 5 | `dash-api-data.js` | DAH 대시보드 — 데이터 변환·로딩 (DB행↔화면 객체, 고객/견적 불러오기) | 8 |
+| 5 | `dash-api-data.js` | DAH 대시보드 — 데이터 변환·로딩 (DB행↔화면 객체, 고객/견적 불러오기) | 9 |
 | 6 | `dash-api-writes.js` | DAH 대시보드 — 고객 DB 쓰기 (저장/선점/보관/삭제/복구/리드보류) | 11 |
 | 7 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 9 |
 | 8 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 5 |
@@ -40,7 +40,7 @@
 | 29 | `dash-customer-as.js` | 고객상세 - AS 탭 렌더링 (React 전환 1호) | 2 |
 | 30 | `dash-customer-detail.js` | DAH 대시보드 — 고객상세 모달 기능 | 8 |
 | 31 | `dash-customer-detail-tabs.js` | DAH 대시보드 — 고객상세 모달: 정보탭/할일 + 하단 버튼·단계변경·삭제·복구 | 8 |
-| 32 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 9 |
+| 32 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 10 |
 | 33 | `dash-customer-add.js` | 고객 추가/수정 모달 (React 전환 2호) | 3 |
 | 34 | `dash-auth.js` | DAH 대시보드 — 로그인/세션/권한 기능 | 5 |
 | 35 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 8 |
@@ -267,6 +267,8 @@
 | `estPayBadge` | `dash-customer-estimates.js` |
 | `estPersistConfirmState` | `est-form-controls.js` |
 | `estRenderMismatchBanner` | `est-save.js` |
+| `estSavedAtFromRow` | `dash-api-data.js` |
+| `estSavedDateKst` | `dash-customer-estimates.js` |
 | `estSendReceipt` | `est-save.js` |
 | `estShowCodeStaleBanner` | `est-stale-watch.js` |
 | `estShowSaveConflictModal` | `est-save-stages.js` |

@@ -123,7 +123,7 @@ function renderOrderSection(c, orderBody) {
                 changedAny = true;
               }
             } else {
-              cacheArr.push({ id: r.id, clientId: r.client_id, clientName: r.client_name, price: r.price, lineItems: r.line_items, contractStatus: r.contract_status, savedAt: r.updated_at || r.created_at });
+              cacheArr.push({ id: r.id, clientId: r.client_id, clientName: r.client_name, price: r.price, lineItems: r.line_items, contractStatus: r.contract_status, savedAt: (typeof estSavedAtFromRow === 'function') ? estSavedAtFromRow(r) : (r.created_at || r.updated_at) });
               changedAny = true;
             }
           });

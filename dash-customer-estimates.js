@@ -7,6 +7,17 @@
    ══════════════════════════════════════════════════ */
 
 
+// 2026-10-20: 저장일 표시는 한국 시간(KST) 날짜로(UTC 문자열 앞 10자를 그대로 자르면 새벽 0~9시 저장이 전날로 보임).
+function estSavedDateKst(e) {
+  var v = e && e.savedAt;
+  if (!v) return (e && e.date) || '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+  var d = new Date(v);
+  if (isNaN(d.getTime())) return String(v).slice(0, 10);
+  var k = new Date(d.getTime() + 9 * 3600 * 1000);
+  return k.toISOString().slice(0, 10);
+}
+
 // 2026-10-20(이상옥 사례): 견적서 카드의 오른쪽 배지는 예전엔 "고객 전체 단계"(예: 선금결제)를 모든 견적서에 똑같이 보여줬음 →
 // 침구 견적서는 이미 완납인데 "선금결제"로 보여 혼란. 이제 받은 돈이 있는 견적서는 그 견적서 자신의 결제 상태(완납/선금)를 보여주고,
 // 입금이 없으면 예전처럼 고객 단계를 보여줌. (고객 전체 단계는 칸반·상단 요약에서 그대로 확인)
@@ -139,7 +150,7 @@ function renderDetailEstTabInner(estEl) {
     });
 
     // 저장일
-    var savedDate = e.savedAt ? e.savedAt.slice(0,10) : (e.date||'');
+    var savedDate = estSavedDateKst(e);
     var dateRow = el('div', {style:'font-size:11px;color:var(--sub);margin-bottom:10px', text:'저장일: ' + savedDate});
 
     // 액션 버튼
@@ -499,7 +510,7 @@ function renderEstimateHistory(container, clientName, clientId) {
 
     
     var bot = el('div', {style:'font-size:11px;color:var(--sub)'});
-    var dateStr = e.savedAt ? e.savedAt.slice(0,10) : (e.date||'');
+    var dateStr = estSavedDateKst(e);
     bot.textContent = dateStr + (e.staffName ? ' · ' + e.staffName : '');
     card.appendChild(bot);
 

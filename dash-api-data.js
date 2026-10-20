@@ -102,6 +102,17 @@ function loadCustomers() {
 // 클라우드(estimates 테이블)에서 견적서를 가져와 로컬(dah_saved) 형식으로 변환 후
 // 병합 (2026-08-04 신규) — 예전엔 견적서 목록 화면이 로컬저장소만 보고 있어서,
 // 다른 기기에서 저장했거나 관리자가 직접 넣은 견적서가 전혀 안 보이는 문제가 있었음
+// 견적서 DB 행 → 정렬·표시용 "작성 시각"(ISO, 항상 UTC 표기). estimates.created_at 은 시간대 없는 UTC 값(DB 기본값 now(), 서버 시간대 UTC 확인)이므로 Z를 붙임.
+// 이 값만 정렬 기준으로 쓴다(수정 시각·실측 예정일을 쓰면 저장·입금할 때마다 순서가 뒤바뀜). 작성 시각이 없으면 date 로 대체.
+function estSavedAtFromRow(row) {
+  var c = row && row.created_at;
+  if (c) {
+    var v = String(c).replace(' ', 'T');
+    return /[zZ]|[+-]\d\d:?\d\d$/.test(v) ? v : v + 'Z';
+  }
+  return (row && row.date) || '';
+}
+
 function estimateDbRowToLocal(row) {
   // 2026-08-05: itemCount/curtainCount/blindCount/거래처목록이 전부 하드코딩(0, [])
   // 되어 있어서, 다른 기기에서 저장돼 클라우드로 동기화된 견적서는 발주현황이
@@ -154,9 +165,14 @@ function estimateDbRowToLocal(row) {
     // contract_status가 있으면 그대로 쓰고("미계약"이 새로고침해도 유지됨),
     // 없는(예전) 레코드만 estimate_status로 추정하는 기존 방식으로 폴백.
     contractStatus: row.contract_status || (row.estimate_status === 'final' ? 'contracted' : 'pending'),
-    savedAt: row.date || row.created_at || '',
+    // 2026-10-20(이상옥 사례): savedAt 은 예전엔 row.date 를 우선 썼는데, estimates.date 는 "실측 예정일"(견적서 화면 c-measure)이라
+    // 견적서 카드의 "저장일"·"N번째 견적" 순서·"최신 견적" 판단이 전부 실측 예정일 기준으로 틀어져 있었음(DB 185건 중 59건은 실측일이 작성일보다 뒤).
+    // 같은 일을 하는 변환이 3곳(여기 + 고객상세 결제 탭 + 발주 탭)에 따로 있었고 기준도 제각각(실측일/수정시각)이라, 결제 탭과 견적서 탭의 "N/M" 번호가 서로 반대로 보였음
+    // → 기준을 "작성 시각" 하나로 통일하고 계산은 estSavedAtFromRow() 한 곳에서만 함.
+    savedAt: estSavedAtFromRow(row),
     date: row.date || '',
-    installDate: '',
+    // 2026-10-20: estimates.install_date(견적서 시공 예정일)를 매핑함. 예전엔 항상 '' 으로 고정돼 견적서 카드 시공일이 늘 "—"로 보였음.
+    installDate: row.install_date || '',
     memo: row.memo || '',
     confirmedAt: row.confirmed_at || null,
     branch: row.branch || '반포점',

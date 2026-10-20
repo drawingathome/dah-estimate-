@@ -32,7 +32,8 @@ function findOtherEstimateForAmount(c, est, amount) {
     if (!o || o.id === est.id) continue;
     var price = Number(o.price) || 0, dep = Number(o.depositAmount) || 0, bal = Number(o.balanceAmount) || 0;
     if (price <= 0) continue;
-    var label = String(o.product || '다른 견적서').slice(0, 24) + ' · ' + price.toLocaleString() + '원';
+    var nm = String(o.fabric || o.product || '').trim();
+    var label = (nm ? nm.slice(0, 18) + ' ' : '') + (o.confirmedAt ? '확정견적서' : '가견적서') + ' · ' + price.toLocaleString() + '원';
     if (!(dep > 0) && Math.abs(Math.round(price * 0.5) - amount) <= 10) return { label: label, kind: '선금(50%)' };
     var remain = price - dep - bal;
     if (dep > 0 && !(bal > 0) && remain > 0 && Math.abs(remain - amount) <= 10) return { label: label, kind: '잔금(남은 금액)' };

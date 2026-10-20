@@ -353,7 +353,7 @@ function openDetailInner(name, id, forceTab) {
           id: r.id, clientId: r.client_id, clientName: r.client_name, price: r.price,
           depositAmount: r.deposit_amount, depositDate: r.deposit_date, depositMethod: r.deposit_method, depositReceipt: r.deposit_receipt,
           balanceAmount: r.balance_amount, balanceDate: r.balance_date, balanceMethod: r.balance_method, balanceReceipt: r.balance_receipt,
-          contractStatus: r.contract_status, savedAt: r.updated_at || r.created_at
+          contractStatus: r.contract_status, savedAt: (typeof estSavedAtFromRow === 'function') ? estSavedAtFromRow(r) : (r.created_at || r.updated_at)
         };
       });
       try {
