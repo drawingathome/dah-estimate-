@@ -24,7 +24,11 @@ let prev = 1, rankSeq = s1.map(sp => { const r = floorOf(sp); const v = r === nu
 const explicit = s1.map(sp => floorOf(sp)).filter(r => r !== null);
 ok('① 층 표기 있는 공간은 1층 → 2층 → 지하 순(되돌아가지 않음)', explicit.every((v, i) => i === 0 || explicit[i - 1] <= v), explicit.join(','));
 ok('① 지하 공간이 모두 맨 끝에 모임', (() => { const idx = s1.map((sp, i) => /지하/.test(sp) ? i : -1).filter(i => i >= 0); return idx.length && idx[0] === s1.length - idx.length; })(), s1.join(' / '));
-ok('① 안방 침실(층 표기 없음)은 1층 공간들 사이에 있음(지하/2층 뒤로 가지 않음)', s1.indexOf('안방 침실') < s1.indexOf('2층 미니거실'), s1.indexOf('안방 침실') + ' vs ' + s1.indexOf('2층 미니거실'));
+ok('① 안방(층 표기 없음)은 같은 이름의 "2층 안방 …"과 같은 2층 묶음에 붙음', ['안방 침실','안방 드레스룸','안방 거실 (TV쪽)'].every(sp => s1.indexOf(sp) > s1.indexOf('1층 주방 베란다') && s1.indexOf(sp) < s1.indexOf('지하 운동방')), s1.join(' / '));
+(() => { const m = estSpaceOrderMap(['1층 주방','거실','2층 거실','안방','2층 안방','지하 운동방']); const l = Object.keys(m).sort((a,b)=>m[a]-m[b]);
+  ok('① 같은 이름 층 표기가 있으면 그 층을 따름(안방→2층, 앞 공간 층 아님)', l.indexOf('안방') > l.indexOf('1층 주방') && l.indexOf('안방') < l.indexOf('지하 운동방') && Math.abs(l.indexOf('안방') - l.indexOf('2층 안방')) === 1, l.join(' / '));
+  const m2 = estSpaceOrderMap(['1층 거실','2층 거실','거실','지하 운동방']); const l2 = Object.keys(m2).sort((a,b)=>m2[a]-m2[b]);
+  ok('① 같은 이름이 층이 갈리면(1층·2층 모두) 억지로 정하지 않고 앞 공간 규칙대로', l2.indexOf('거실') > l2.indexOf('2층 거실') && l2.indexOf('거실') < l2.indexOf('지하 운동방'), l2.join(' / ')); })();
 ok('① 같은 공간은 항상 한 번만(붙어서) 나옴', new Set(s1).size === s1.length);
 
 // ③ 코드 연결(공통 함수 사용, 따로 정렬 금지)
