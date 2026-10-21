@@ -64,6 +64,18 @@ function openKakaoAddr(targetId, detailTargetId) {
   // 이를 막는 검증도 없었음. 그래서 (1) 검색 결과에서 주소를 못 가져오면 그 자리에서 알리고 칸을 비우지
   // 않음, (2) enableManualBaseAddr()로 "직접입력" 탈출구 제공, (3) 각 저장 경로에서 "기본주소 없이 상세주소만"
   // 저장을 차단(est-save.js, dash-customer-add.js).
+  // 2026-10-21(선혜님 - "주소에 아파트명이 나오게 할 수는 없어?"): 다음 우편번호가 주는 건물명(data.buildingName, 아파트면 data.apartment==='Y')을
+  // 지금까지 버리고 있었음 → "서울 서초구 사평대로 205"만 저장돼 의뢰서·견적서에 단지 이름이 안 나왔음.
+  // 기존 입력 습관("힐스테이트라군인테라스2차 201동 2602호"를 상세주소에 적음)과 같은 모양이 되도록, 상세주소 칸이 비어 있으면
+  // 건물명을 미리 채워 두고 커서를 끝에 둠(동·호수만 이어서 치면 됨). 상세주소 칸이 없는 화면은 기본주소 뒤에 "(건물명)"으로 붙임.
+  // 이미 기본주소 글자 안에 건물명이 있거나 상세주소에 이미 뭔가 적혀 있으면 아무것도 하지 않음(중복 방지).
+  function buildingNameOf(data) { return String((data && data.buildingName) || '').trim(); }
+  function setNativeValue(el, v) {
+    var desc = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value');
+    if (desc && desc.set) desc.set.call(el, v); else el.value = v;
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+  }
   function onPicked(data) {
     var addr = extractAddr(data);
     if (!addr) {
@@ -85,7 +97,17 @@ function openKakaoAddr(targetId, detailTargetId) {
       el.dispatchEvent(new Event('input', { bubbles: true }));
       el.dispatchEvent(new Event('change', { bubbles: true }));
     }
+    var bn = buildingNameOf(data);
+    var detEl = /** @type {HTMLInputElement|null} */ (detailTargetId ? document.getElementById(detailTargetId) : null);
+    if (bn && addr.indexOf(bn) < 0) {
+      if (detEl) {
+        if (!String(detEl.value || '').trim()) setNativeValue(detEl, bn + ' ');
+      } else if (el) {
+        setNativeValue(el, addr + ' (' + bn + ')');
+      }
+    }
     focusDetailField();
+    if (detEl && String(detEl.value || '').length) { setTimeout(function () { try { detEl.setSelectionRange(detEl.value.length, detEl.value.length); } catch (e) {} }, 60); }
   }
   // (이전엔 이 콜백이 script.onload용/이미 로드된 경우용 두 군데에 똑같이 복사돼 있었음 - 한 곳으로 통합)
   function openPostcode() {

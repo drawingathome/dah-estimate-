@@ -294,6 +294,7 @@ if (/dah-dashboard/.test(target)) {
   // 원인): Daum 우편번호 API의 autoRoadAddress fallback 누락 - 정상 검색 흐름에서도 발생
   // 가능했던 버그. 재발 감시.
   scripts.push(['daum-autoroadaddress-fallback-check.js', []]);
+  scripts.push(['addr-building-name-check.js', []]);
   // 2026-10-02(선혜님 - "이민선/김현정 결제했는데 상담에 뜨니, 쌍둥이 함수도 찾고
   // 앞으로 이런 버그 안생기게 하는 방향도 찾아" 요청으로 구조 개선): customers
   // deposit/balance 동기화는 이제 DB 트리거가 전담 - JS에 그 책임이 다시 생기면 잡아냄.
