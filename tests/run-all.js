@@ -631,6 +631,7 @@ if (/dah-estimate/.test(target)) {
   // 되어 있었음) 재발 방지.
   scripts.push(['est-save-resave-doublecount-check.js', []]);
   scripts.push(['est-sync-queue-prefer-header-check.js', []]);
+  scripts.push(['save-roundtrip-real-flow-check.js', []]);
 }
 
 // 2026-09-28(선혜님 - CI가 두 번 연속 실패했는데 로그 저장소(github blob 호스트)가 이 환경에서

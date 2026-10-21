@@ -26,7 +26,13 @@ function addToEstPendingQueue(payload, isEditMode, dbId, lockUpdatedAt) {
   // 네트워크가 끊긴 경우 재시도 시 PATCH(기존 견적서 갱신)가 아니라
   // POST(신규생성)가 나가 중복 견적서가 생기던 버그. isEditMode/dbId를
   // 큐 항목에 같이 저장해서 재시도시 정확한 method를 쓰도록 함.
-  q.push({ payload: payload, addedAt: new Date().toISOString(), isEditMode: !!isEditMode, dbId: dbId || null, lockUpdatedAt: lockUpdatedAt || null });
+  // 2026-10-21(W2 1단계 보완): 수정 저장이면 "열었을 때의 서버 행"도 같이 보관 — 재시도 때도 바꾼 칸만 보내
+  // (재시도라는 별개 경로에서 안 바뀐 칸을 덮어쓰는 구멍을 막음). 보관본(payload)은 전체 그대로라 아무것도 잃지 않음.
+  var _baseRow = null;
+  try { var _lr = window._estLoadedRow; if (isEditMode && dbId && _lr && String(_lr.id) === String(dbId)) _baseRow = _lr; } catch (eBase) {}
+  var _qItem = { payload: payload, addedAt: new Date().toISOString(), isEditMode: !!isEditMode, dbId: dbId || null, lockUpdatedAt: lockUpdatedAt || null };
+  if (_baseRow) _qItem.baseRow = _baseRow; // 수정 저장일 때만 추가(신규 견적서 항목 모양은 예전 그대로)
+  q.push(_qItem);
   if (q.length > 200) q = q.slice(-200); // 무한정 쌓이는 것 방지
   try { localStorage.setItem(EST_PENDING_KEY, JSON.stringify(q)); } catch(e) {}
   updateEstSyncBanner();
@@ -198,7 +204,12 @@ function _doRetryEstPendingSync(q) {
         alert('⚠️ 서버 저장 재시도 실패\n\n로그인 세션 있음: ' + hasSession + '\n실패 사유: ' + failReasons.join(', ') + '\n\n이 화면을 캡처해서 보내주세요.');
       }
     };
-    xhr.send(JSON.stringify(item.payload));
+    var sendBody = item.payload;
+    try {
+      var _dropFn = /** @type {any} */ (globalThis).estDropUnchangedColumns;
+      if (isEdit && item.baseRow && typeof _dropFn === 'function') sendBody = _dropFn(item.payload, item.baseRow);
+    } catch (eDrop) { sendBody = item.payload; }
+    xhr.send(JSON.stringify(sendBody));
   });
 }
 

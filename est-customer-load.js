@@ -453,6 +453,9 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
         // 복원 시점에 서로 다르므로(매번 새로 발급됨), 위치(공간) 이름이
         // 일치하는 커튼 행을 찾아 그 rowUid를 그대로 가져다 씀(같은
         // 폴백 방식을 getRailLengthText()에서도 이미 쓰고 있음).
+        // 2026-10-21(W2 1단계 — 윤세현 실데이터 확인에서 발견): 자동계산 항목이 아닌 줄(수동 추가 줄)도 저장 때 override=true로 기록되는데
+        // 열 때 이 표시를 복원하지 않아, 안 바꾸고 저장해도 값이 true→false로 바뀌었음(왕복 불변 깨짐). 저장된 true는 그대로 복원.
+        if (!it.autoType && it.override === true) str.setAttribute('data-manual-override', '1');
         if (it.autoType) {
           // 2026-10-08: 새 저장 형식은 override 필드로 "사용자가 고친 값"만 표시함. 필드가 없는
           // 예전 저장분은 autoType이 있으면 곧 사용자가 고친 값이었으므로 예전처럼 취급.

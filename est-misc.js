@@ -411,6 +411,9 @@ function loadDraft() {
             // 짝을 맞춰서, 임시저장 복원에도 자동계산 항목 수동수정
             // (autoType) 반영 - 안 그러면 저장은 안 됐어도 입력 도중
             // 새로고침만 해도 방금 수정한 값이 자동계산값으로 되돌아감.
+            // 2026-10-21(W2 1단계 — 윤세현 실데이터 확인에서 발견): 자동계산 항목이 아닌 줄(수동 추가 줄)도 저장 때 override=true로 기록되는데
+            // 열 때 이 표시를 복원하지 않아, 안 바꾸고 저장해도 값이 true→false로 바뀌었음(왕복 불변 깨짐). 저장된 true는 그대로 복원.
+            if (!item.autoType && item.override === true) str.setAttribute('data-manual-override', '1');
             if (item.autoType) {
               if (item.override !== false) str.dataset.manualOverride = '1';
               if (item.autoType === 'rail' || item.autoType === 'railcost') {
