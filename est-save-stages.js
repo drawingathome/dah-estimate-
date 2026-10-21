@@ -419,6 +419,15 @@ function _saveStage_estimatesActual(ctx) {
     // 새로만들기") 기존처럼 POST — 이 경우 응답에서 생성된 id를 받아 로컬에
     // dbId로 저장해둬야 다음번에 "열어서 수정"이 가능해짐.
     var isEditMode = !!window._estEditState.editingEstDbId;
+    // 2026-10-21(W2 1단계): 수정 저장은 열었을 때 서버 값과 달라진 칸만 보냄(안 바뀐 칸을 빈 값으로 덮어쓰는 사고 차단).
+    // 복구용 백업·재시도 큐는 전체 payload(estPayloadForRetry)를 그대로 보관해 아무것도 잃지 않음.
+    var estPayloadToSend = estPayloadForRetry;
+    try {
+      var _lrBase = /** @type {any} */ (window._estLoadedRow);
+      if (isEditMode && _lrBase && String(_lrBase.id) === String(window._estEditState.editingEstDbId) && window._estEditState.lockSource !== 'overwrite' && typeof /** @type {any} */ (globalThis).estDropUnchangedColumns === 'function') {
+        estPayloadToSend = /** @type {any} */ (globalThis).estDropUnchangedColumns(estPayloadForRetry, _lrBase);
+      }
+    } catch (eDiff) { estPayloadToSend = estPayloadForRetry; }
     // 2026-08-13: 동시편집 충돌 방지(낙관적 잠금) - PATCH할 때 "내가 불러온
     // 시점의 updated_at"도 조건에 포함시켜서, 그 사이 다른 사람(다른 탭/다른
     // 스태프)이 먼저 저장했으면(=updated_at이 달라졌으면) 이번 PATCH가 0건
@@ -578,6 +587,9 @@ function _saveStage_estimatesActual(ctx) {
               return;
             }
             // 성공 - 다음 저장을 위해 최신 updated_at 갱신
+            // 2026-10-21(W2 1단계): 저장된 서버 행을 새 기준으로 삼음 — 안 그러면 같은 화면에서 두 번째 저장 때
+            // "첫 저장에서 바꾼 칸을 원래대로 되돌린 것"을 안 바뀐 칸으로 착각해 빼먹게 됨
+            try { if (lockCheckRows[0] && lockCheckRows[0].id) window._estLoadedRow = Object.assign({}, window._estLoadedRow || {}, lockCheckRows[0]); } catch (eBase) {}
             if (lockCheckRows[0] && lockCheckRows[0].updated_at) { window._estEditState.editingEstUpdatedAt = lockCheckRows[0].updated_at; window._estEditState.lockSource = 'save'; window._estEditState.lockSetAt = Date.now(); }
           } catch(eLock) {
             // 응답 파싱 실패 = 실제로 뭐가 바뀌었는지 확인 불가 상태 —
@@ -628,7 +640,7 @@ function _saveStage_estimatesActual(ctx) {
       if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId, (typeof lockUpdatedAt !== 'undefined' ? lockUpdatedAt : null));
       onDone('failed'); // 2026-10-06: 서버에 못 올라간 경우 - 바깥에서 "저장됨"으로 착각하지 않게 결과를 알림
     };
-    xhr2.send(JSON.stringify(estPayloadForRetry));
+    xhr2.send(JSON.stringify(estPayloadToSend));
   } catch(e) {
     logSaveStage('견적서저장-예외', { message: e && e.message, stack: e && e.stack });
     console.warn('Supabase 연결 오류:', e);

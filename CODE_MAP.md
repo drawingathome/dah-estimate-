@@ -71,14 +71,15 @@
 | 14 | `est-survey.js` | DAH 견적서 앱 — 설문지 연동 | 2 |
 | 15 | `est-save.js` | DAH 견적서 앱 — 저장/검증/토스트 | 21 |
 | 16 | `est-click-watch.js` | est-click-watch.js — 견적서 앱: 저장 버튼 "눌림 관측" (2026-10-07 신규) | 0 |
-| 17 | `est-save-stages.js` | DAH 견적서 앱 — 저장 단계 함수 4개 (고객 저장 → 견적서 저장 → 로컬 저장) | 5 |
-| 18 | `est-stale-watch.js` | est-stale-watch.js — 견적서 앱: "내가 열어 둔 화면이 옛날 내용이 됐는지" 미리 알려줌 (2026-10-11 신규) | 7 |
-| 19 | `est-doc-customer.js` | DAH 견적서 앱 — 고객용 견적서 문서 생성 | 2 |
-| 20 | `est-doc-vendor.js` | DAH 견적서 앱 — 거래처별 발주서 문서 생성 | 5 |
-| 21 | `est-doc-vendor-ui.js` | DAH 견적서 앱 — 발주서: 거래처 정보 입력 모달 + 발주서 선택/인쇄 | 4 |
-| 22 | `est-doc-request.js` | DAH 견적서 앱 — 실측/시공 의뢰서 문서 생성 | 4 |
-| 23 | `est-customer-load.js` | DAH 견적서 앱 — PDF모달 / 고객불러오기 / 계약금계산 | 19 |
-| 24 | `est-misc.js` | DAH 견적서 앱 — 주소검색 / 날짜포맷 / 빈상태 / 공유 / 자동저장 | 8 |
+| 17 | `est-save-diff.js` | est-save-diff.js | 2 |
+| 18 | `est-save-stages.js` | DAH 견적서 앱 — 저장 단계 함수 4개 (고객 저장 → 견적서 저장 → 로컬 저장) | 5 |
+| 19 | `est-stale-watch.js` | est-stale-watch.js — 견적서 앱: "내가 열어 둔 화면이 옛날 내용이 됐는지" 미리 알려줌 (2026-10-11 신규) | 7 |
+| 20 | `est-doc-customer.js` | DAH 견적서 앱 — 고객용 견적서 문서 생성 | 2 |
+| 21 | `est-doc-vendor.js` | DAH 견적서 앱 — 거래처별 발주서 문서 생성 | 5 |
+| 22 | `est-doc-vendor-ui.js` | DAH 견적서 앱 — 발주서: 거래처 정보 입력 모달 + 발주서 선택/인쇄 | 4 |
+| 23 | `est-doc-request.js` | DAH 견적서 앱 — 실측/시공 의뢰서 문서 생성 | 4 |
+| 24 | `est-customer-load.js` | DAH 견적서 앱 — PDF모달 / 고객불러오기 / 계약금계산 | 19 |
+| 25 | `est-misc.js` | DAH 견적서 앱 — 주소검색 / 날짜포맷 / 빈상태 / 공유 / 자동저장 | 8 |
 
 ## 설문지 (survey.html) — 브라우저가 불러오는 순서대로
 
@@ -257,6 +258,7 @@
 | `estCheckStale` | `est-stale-watch.js` |
 | `estCollectFormSnapshot` | `est-save.js` |
 | `estCollectScriptVersions` | `est-stale-watch.js` |
+| `estDropUnchangedColumns` | `est-save-diff.js` |
 | `estFindStaleScripts` | `est-stale-watch.js` |
 | `estFlushReceiptQueue` | `est-save.js` |
 | `estimateDbRowToLocal` | `dash-api-data.js` |
@@ -264,6 +266,7 @@
 | `estIsFinalTabUnconfirmed` | `est-form-controls.js` |
 | `estIsStaleLock` | `est-stale-watch.js` |
 | `estMissingInstallRows` | `est-save.js` |
+| `estNormForDiff` | `est-save-diff.js` |
 | `estPayBadge` | `dash-customer-estimates.js` |
 | `estPersistConfirmState` | `est-form-controls.js` |
 | `estRenderMismatchBanner` | `est-save.js` |

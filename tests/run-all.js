@@ -158,6 +158,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['refund-revenue-check.js', []]);
   scripts.push(['extra-pay-check.js', []]);
   scripts.push(['pay-save-customer-price-sync-check.js', []]);
+  scripts.push(['save-changed-only-check.js', []]);
   scripts.push(['extra-pay-other-estimate-check.js', []]);
   scripts.push(['est-card-pay-badge-check.js', []]);
   scripts.push(['est-card-dates-mapping-check.js', []]);
