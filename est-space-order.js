@@ -12,15 +12,15 @@ var EST_BASEMENT_LAST_RANK = 1000;
 var EST_ATTIC_RANK = 900;
 function estFloorRankFromText(space) {
   var s = String(space || '');
-  var m = s.match(/지하|B\s*\d*\s*층?|(\d+)\s*층|옥탑|옥상|다락|루프탑/);
+  var m = s.match(/지하|지층|반지하|B\s*\d*\s*층?|(\d+)\s*층|(\d+)\s*[Ff](?![A-Za-z])|옥탑|옥상|다락|루프탑/);
   if (!m) return null;
-  if (/^지하/.test(m[0]) || /^B/i.test(m[0])) return EST_BASEMENT_LAST_RANK;
+  if (/^(지하|지층|반지하)/.test(m[0]) || /^B/i.test(m[0])) return EST_BASEMENT_LAST_RANK;
   if (/옥탑|옥상|다락|루프탑/.test(m[0])) return EST_ATTIC_RANK;
-  return parseInt(m[1], 10);
+  return parseInt(m[1] || m[2], 10);
 }
 // 층 표기·(외부) 등을 뗀 뒤 첫 단어("2층 안방 침실" → "안방")
 function estSpaceCoreWord(space) {
-  var s = String(space || '').replace(/\(외부\)|\(내부\)/g, ' ').replace(/지하|B\s*\d*\s*층?|\d+\s*층|옥탑|옥상|다락|루프탑/g, ' ').trim();
+  var s = String(space || '').replace(/\(외부\)|\(내부\)/g, ' ').replace(/지하|지층|반지하|B\s*\d*\s*층?|\d+\s*층|\d+\s*[Ff](?![A-Za-z])|옥탑|옥상|다락|루프탑/g, ' ').trim();
   var w = s.split(/\s+/)[0] || '';
   return w;
 }

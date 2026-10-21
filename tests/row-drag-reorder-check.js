@@ -31,6 +31,11 @@ function ok(l, c, d) { console.log((c ? '✅ ' : '❌ ') + l + (c ? '' : ' — '
   const li = await page.evaluate(() => { try { return (typeof collectLineItems === 'function' ? collectLineItems() : null); } catch (e) { return null; } });
   if (li) ok('④ 저장용 줄 목록도 옮긴 순서(B,C,A)', JSON.stringify(li.filter(x => x.type === 'curtain').map(x => x.space)) === JSON.stringify(['B', 'C', 'A']), JSON.stringify(li.filter(x => x.type === 'curtain').map(x => x.space)));
 
+  // ⑤ 저장 → 다시 열기(복원)해도 옮긴 순서 유지
+  if (li) { const back = await page.evaluate((li) => { restoreLineItemsToForm(JSON.parse(JSON.stringify(li)), ''); return [...document.querySelectorAll('#curtain-body tr')].map(tr => tr.querySelector('.space-inp').value); }, li);
+    ok('⑤ 저장한 줄 목록을 다시 불러와도 옮긴 순서(B,C,A) 그대로', JSON.stringify(back) === JSON.stringify(['B', 'C', 'A']), JSON.stringify(back));
+    await fill('curtain-body', 'addCurtainRow', ['B', 'C', 'A']); }
+
   // ② 터치(블라인드 3줄)
   await fill('blind-body', 'addBlindRow', ['T1', 'T2', 'T3']); await center('blind-body', 1);
   const t0 = await hbox('blind-body', 0), t2 = await hbox('blind-body', 2);
