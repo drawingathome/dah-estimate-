@@ -80,6 +80,17 @@ ok('③ 화면이 est-space-order.js를 문서 코드보다 먼저 읽음', html
     try { const c = collectVendorGroups(); const k = Object.keys(c.groups).find(g => /윈텍/.test(g)); out.vendor = k ? [...new Set(c.groups[k].map(i => i.space))] : []; out.vendorKeys = Object.keys(c.groups); } catch (e) { out.vendorErr = String(e); }
     return out;
   }, YUN);
+  // 비용 항목(위치 칸에 이름만 적은 직접 추가 줄)은 공간 순서와 상관없이 맨 마지막
+  const tailRes = await page.evaluate(() => {
+    ['전동모터 (블라인드)', '현장 아시바'].forEach(nm => { addSvcRow(); const tr = document.querySelector('#svc-body tr:last-child'); tr.querySelector('.svc-space').value = nm; tr.querySelector('.svc-content').value = nm; });
+    const strip = h => { const d = document.createElement('div'); d.innerHTML = h; return d; };
+    const rq = [...strip(buildRequestHTML('install', '')).querySelectorAll('tbody tr')].map(tr => ((tr.children[0] || {}).textContent || '').trim()).filter(Boolean);
+    const mt = strip(buildRequestHTML('measure', '')).textContent;
+    return { request: rq, mPosTail: mt.indexOf('전동모터 (블라인드)'), mPosLastBasement: Math.max(mt.lastIndexOf('지하 운동방 계단창'), mt.lastIndexOf('지하 운동방 탈의실')) };
+  });
+  const ri = tailRes.request;
+  ok('② 시공의뢰서: 비용 항목(전동모터·아시바)은 모든 공간 뒤 맨 마지막', ri.indexOf('전동모터 (블라인드)') > ri.indexOf('지하 운동방 계단창') && ri.indexOf('현장 아시바') > ri.indexOf('전동모터 (블라인드)') && ri.indexOf('현장 아시바') === ri.length - 1, JSON.stringify(ri.slice(-5)));
+  ok('② 실측의뢰서: 비용 항목도 모든 공간 뒤', tailRes.mPosTail > tailRes.mPosLastBasement && tailRes.mPosLastBasement > 0, JSON.stringify(tailRes));
   const expected = sortedUnique(YUN);
   const sameAs = (a) => JSON.stringify(a) === JSON.stringify(expected);
   ok('② 고객용 견적서의 공간 순서 = 규칙대로(1층→2층→지하)', sameAs(res.customer), JSON.stringify(res.customer.slice(0, 40)));

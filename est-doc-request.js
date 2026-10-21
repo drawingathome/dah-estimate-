@@ -100,11 +100,13 @@ function buildRequestHTML(kind, extraNote) {
       if(!(key in groups)) { groups[key] = { space: space||'—', subLoc: subLoc, parts: {} }; groupOrder.push(key); }
       return groups[key];
     }
+    var _mReal = {}, _mSvc = {};
     document.querySelectorAll('#curtain-body tr').forEach(function(tr){
       var space  = tr.querySelector('.space-inp')?.value || '';
       var fabric = tr.querySelector('.c-fabric')?.value || '';
       var name   = tr.querySelector('.c-display-name')?.value || '';
       if(!space && !fabric && !name) return;
+      _mReal[space] = true;
       var g = getGroup(space, extractSubLoc(name));
       var role = curtainRole(name);
       g.parts[role] = (g.parts[role]||0) + 1;
@@ -115,6 +117,7 @@ function buildRequestHTML(kind, extraNote) {
       var name   = tr.querySelector('.b-display-name')?.value || '';
       var fabric = tr.querySelector('.b-fabric')?.value || '';
       if(!space && !fabric && !name) return;
+      _mReal[space] = true;
       var g = getGroup(space, extractSubLoc(name));
       g.parts[kind2] = (g.parts[kind2]||0) + 1;
     });
@@ -132,6 +135,7 @@ function buildRequestHTML(kind, extraNote) {
       var content = tr.querySelector('.svc-content')?.value || '';
       var kind = tr.querySelector('.svc-kind')?.value || '기타';
       if (!space || !content) return;
+      _mSvc[space] = true;
       var g = getGroup(space, '');
       g.parts[kind] = (g.parts[kind]||0) + 1;
     });
@@ -141,7 +145,9 @@ function buildRequestHTML(kind, extraNote) {
     // 2026-10-21(선혜님 - "고객견적서·실측의뢰서·시공의뢰서 공간 순서가 같아야"): 시공의뢰서와 같은 층 순서 규칙(est-space-order.js: 1층→2층→…→지하)을 실측의뢰서에도 적용.
     // 같은 공간 안에서는 입력 순서 유지(세부위치 [메인]/[측면]도 입력 순서 그대로).
     try {
-      var _mOrd = /** @type {any} */ (globalThis).estSpaceOrderMap ? /** @type {any} */ (globalThis).estSpaceOrderMap(groupOrder.map(function(k){ return groups[k].space; })) : null;
+      var _mTail = {};
+      Object.keys(_mSvc).forEach(function(n){ if (!_mReal[n] && /** @type {any} */ (globalThis).estIsNonSpaceName && /** @type {any} */ (globalThis).estIsNonSpaceName(n)) _mTail[n] = true; });
+      var _mOrd = /** @type {any} */ (globalThis).estSpaceOrderMap ? /** @type {any} */ (globalThis).estSpaceOrderMap(groupOrder.map(function(k){ return groups[k].space; }), _mTail) : null;
       if (_mOrd) {
         var _mIdx = {}; groupOrder.forEach(function(k, i){ _mIdx[k] = i; });
         groupOrder.sort(function(a, b){ return ((_mOrd[groups[a].space] - _mOrd[groups[b].space]) || (_mIdx[a] - _mIdx[b])); });
@@ -311,7 +317,7 @@ function buildRequestHTML(kind, extraNote) {
       var content = tr.querySelector('.svc-content')?.value || '';
       var kind = tr.querySelector('.svc-kind')?.value || '기타';
       if (!space || !content) return;
-      rows.push({ space: space, size: '—', content: kind + ' — ' + content, etc: '—' });
+      rows.push({ space: space, size: '—', content: kind + ' — ' + content, etc: '—', svcOnly: true });
     });
 
     // 2026-09-08(선혜님 지시 - "고객견적서에 있는 공간 순서대로 정리해주면
@@ -329,7 +335,11 @@ function buildRequestHTML(kind, extraNote) {
     var spaceFirstOrder = {};
     rows.forEach(function(r, i) { if (!(r.space in spaceFirstOrder)) spaceFirstOrder[r.space] = i; });
     // 2026-10-21: 층 순서 규칙(est-space-order.js)을 고객용 견적서·발주서와 똑같이 적용(1층→2층→…→지하). 같은 공간 안에서는 입력 순서 유지.
-    var _reqOrd = /** @type {any} */ (globalThis).estSpaceOrderMap ? /** @type {any} */ (globalThis).estSpaceOrderMap(rows.map(function(r){ return r.space; })) : null;
+    // 위치 칸에 비용 항목 이름("전동모터 (블라인드)", "현장 아시바" 등)을 적은 직접 추가 줄은 공간이 아니므로 맨 마지막으로 보냄(진짜 공간 줄에 같은 이름이 있으면 공간으로 취급).
+    var _reqTail = {}, _reqReal = {};
+    rows.forEach(function(r){ if (!r.svcOnly) _reqReal[r.space] = true; });
+    rows.forEach(function(r){ if (r.svcOnly && !_reqReal[r.space] && /** @type {any} */ (globalThis).estIsNonSpaceName && /** @type {any} */ (globalThis).estIsNonSpaceName(r.space)) _reqTail[r.space] = true; });
+    var _reqOrd = /** @type {any} */ (globalThis).estSpaceOrderMap ? /** @type {any} */ (globalThis).estSpaceOrderMap(rows.map(function(r){ return r.space; }), _reqTail) : null;
     rows.forEach(function(r, i) { r.__i = i; });
     rows.sort(function(a, b) {
       var oa = _reqOrd ? _reqOrd[a.space] : spaceFirstOrder[a.space];

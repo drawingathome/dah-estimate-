@@ -41,7 +41,14 @@ function estRoomRank(space) {
   return EST_ROOM_ORDER.length;
 }
 // spaces: 입력 순서대로 나열한 공간 이름 목록(중복 가능). 반환: { 공간이름: 정렬번호 } — 번호가 작을수록 먼저.
-function estSpaceOrderMap(spaces) {
+var EST_TAIL_RANK = 2000;
+// "전동모터 (블라인드)", "현장 아시바", "옵션 추가비"처럼 위치 칸에 비용 항목 이름을 적은 줄(층·방 단어가 하나도 없음)인지
+function estIsNonSpaceName(name) {
+  var n = String(name || '').trim();
+  return !!n && n !== '—' && n !== '기타' && estFloorRankFromText(n) === null && estRoomRank(n) === EST_ROOM_ORDER.length;
+}
+// tailNames: { 이름: true } — 공간이 아니라 비용 항목이라 층·방 순서와 상관없이 맨 마지막(입력 순서)으로 보낼 이름들
+function estSpaceOrderMap(spaces, tailNames) {
   var uniq = [];
   var seen = {};
   (spaces || []).forEach(function (sp) { var k = String(sp || ''); if (!(k in seen)) { seen[k] = true; uniq.push(k); } });
@@ -50,10 +57,12 @@ function estSpaceOrderMap(spaces) {
   // 첫 단어별로 층 표기 있는 공간들의 층 모음(모두 같은 층일 때만 사용)
   var wordFloors = {};
   uniq.forEach(function (sp) {
+    if (tailNames && tailNames[sp]) return;
     var fr = estFloorRankFromText(sp); var w = estSpaceCoreWord(sp);
     if (fr !== null && w) { (wordFloors[w] = wordFloors[w] || {})[fr] = true; }
   });
   uniq.forEach(function (sp) {
+    if (tailNames && tailNames[sp]) { rank[sp] = EST_TAIL_RANK; return; }
     var r = estFloorRankFromText(sp);
     if (r === null) {
       var w = estSpaceCoreWord(sp), fl = w && wordFloors[w] ? Object.keys(wordFloors[w]) : [];
@@ -77,4 +86,4 @@ function estSpaceOrderMap(spaces) {
   sorted.forEach(function (sp, i) { order[sp] = i; });
   return order;
 }
-if (typeof module !== 'undefined' && module.exports) module.exports = { estSpaceOrderMap: estSpaceOrderMap, estRoomRank: estRoomRank, estFloorRankFromText: estFloorRankFromText };
+if (typeof module !== 'undefined' && module.exports) module.exports = { estSpaceOrderMap: estSpaceOrderMap, estIsNonSpaceName: estIsNonSpaceName, estRoomRank: estRoomRank, estFloorRankFromText: estFloorRankFromText };
