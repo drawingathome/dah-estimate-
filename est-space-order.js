@@ -6,7 +6,7 @@
 // 규칙: ① 층 순서 = 1층 → 2층 → 3층 … → 옥탑/다락 → 지하(마지막, 선혜님 결정 2026-10-21)
 //       ② 층 표기가 없는 공간(예: "안방 침실")은 (가) 같은 첫 단어를 가진 층 표기 공간이 모두 같은 층이면 그 층("2층 안방 침실"이 있으면 "안방 …"은 전부 2층),
 //          (나) 그런 공간이 없거나 층이 갈리면 목록에서 바로 앞 공간과 같은 층(앞이 없으면 1층)
-//       ③ 같은 층 안에서는 방 종류 순서: 거실 → 안방 → 자녀방 → 드레스룸 → 주방 → (그 외: 복도·입구·베란다·화장실 등, 입력 순서) (선혜님 결정 2026-10-21)
+//       ③ 같은 층 안에서는 방 종류 순서: 거실 → 안방(침실1) → 자녀방(침실2+) → 서재 → 드레스룸 → 주방 → (그 외: 복도·입구·베란다·화장실 등, 입력 순서) (선혜님 결정 2026-10-21)
 //          같은 방(첫 단어가 같은 공간, 예: 안방 침실/안방 드레스룸/2층 안방 침실)은 붙어서 나옴. 같은 종류 안에서는 입력한 순서.
 var EST_BASEMENT_LAST_RANK = 1000;
 var EST_ATTIC_RANK = 900;
@@ -24,12 +24,20 @@ function estSpaceCoreWord(space) {
   var w = s.split(/\s+/)[0] || '';
   return w;
 }
-// 방 종류 순서(작을수록 먼저). 바꾸고 싶으면 이 목록만 수정.
-var EST_ROOM_ORDER = [/거실/, /안방|마스터/, /자녀|아이방|아기방|키즈|딸방|아들방/, /드레스룸|드레스/, /주방|키친|부엌/];
+// 방 종류 순서(작을수록 먼저). 바꾸고 싶으면 이 목록만 수정. (선혜님 2026-10-21: 거실→안방→자녀방→서재→드레스룸→주방, 침실1=안방 자리·침실2 이상=자녀방 자리)
+var EST_ROOM_ORDER = [/거실/, /안방|마스터/, /자녀|아이방|아기방|애기|키즈|딸|아들|아드님|따님|첫째|둘째|막내|놀이방/, /서재/, /드레스|옷방/, /주방|키친|부엌/];
+var EST_ROOM_BEDROOM_MASTER = 1, EST_ROOM_BEDROOM_CHILD = 2; // 침실N 처리용(위 목록의 안방·자녀방 자리)
+function estBedroomRank(s) {
+  var m = String(s || '').match(/침실\s*(\d+)?/);
+  if (!m) return -1;
+  return (m[1] && parseInt(m[1], 10) >= 2) ? EST_ROOM_BEDROOM_CHILD : EST_ROOM_BEDROOM_MASTER;
+}
 function estRoomRank(space) {
   var w = estSpaceCoreWord(space), full = String(space || '');
   for (var i = 0; i < EST_ROOM_ORDER.length; i++) if (EST_ROOM_ORDER[i].test(w)) return i;
+  var bw = estBedroomRank(w); if (bw >= 0) return bw;
   for (var j = 0; j < EST_ROOM_ORDER.length; j++) if (EST_ROOM_ORDER[j].test(full)) return j;
+  var bf = estBedroomRank(full); if (bf >= 0) return bf;
   return EST_ROOM_ORDER.length;
 }
 // spaces: 입력 순서대로 나열한 공간 이름 목록(중복 가능). 반환: { 공간이름: 정렬번호 } — 번호가 작을수록 먼저.
