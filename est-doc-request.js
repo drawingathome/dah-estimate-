@@ -138,6 +138,15 @@ function buildRequestHTML(kind, extraNote) {
     function groupLabel(space, subLoc) { return space + (subLoc ? '['+subLoc+']' : ''); }
     var CURTAIN_PARTS = {'겉커튼':1,'속커튼':1,'커튼':1}; // 단위가 "장"인 구성요소(나머지는 블라인드류 - "피스")
     var items = [];
+    // 2026-10-21(선혜님 - "고객견적서·실측의뢰서·시공의뢰서 공간 순서가 같아야"): 시공의뢰서와 같은 층 순서 규칙(est-space-order.js: 1층→2층→…→지하)을 실측의뢰서에도 적용.
+    // 같은 공간 안에서는 입력 순서 유지(세부위치 [메인]/[측면]도 입력 순서 그대로).
+    try {
+      var _mOrd = /** @type {any} */ (globalThis).estSpaceOrderMap ? /** @type {any} */ (globalThis).estSpaceOrderMap(groupOrder.map(function(k){ return groups[k].space; })) : null;
+      if (_mOrd) {
+        var _mIdx = {}; groupOrder.forEach(function(k, i){ _mIdx[k] = i; });
+        groupOrder.sort(function(a, b){ return ((_mOrd[groups[a].space] - _mOrd[groups[b].space]) || (_mIdx[a] - _mIdx[b])); });
+      }
+    } catch (eMOrd) { /* 정렬 실패해도 예전 순서로 정상 출력 */ }
     groupOrder.forEach(function(key){
       var g = groups[key];
       var label = groupLabel(g.space, g.subLoc);
@@ -319,7 +328,14 @@ function buildRequestHTML(kind, extraNote) {
     // 커튼/블라인드가 섞여도 같은 공간끼리는 항상 붙어서 나옴.
     var spaceFirstOrder = {};
     rows.forEach(function(r, i) { if (!(r.space in spaceFirstOrder)) spaceFirstOrder[r.space] = i; });
-    rows.sort(function(a, b) { return spaceFirstOrder[a.space] - spaceFirstOrder[b.space]; });
+    // 2026-10-21: 층 순서 규칙(est-space-order.js)을 고객용 견적서·발주서와 똑같이 적용(1층→2층→…→지하). 같은 공간 안에서는 입력 순서 유지.
+    var _reqOrd = /** @type {any} */ (globalThis).estSpaceOrderMap ? /** @type {any} */ (globalThis).estSpaceOrderMap(rows.map(function(r){ return r.space; })) : null;
+    rows.forEach(function(r, i) { r.__i = i; });
+    rows.sort(function(a, b) {
+      var oa = _reqOrd ? _reqOrd[a.space] : spaceFirstOrder[a.space];
+      var ob = _reqOrd ? _reqOrd[b.space] : spaceFirstOrder[b.space];
+      return (oa - ob) || (a.__i - b.__i);
+    });
 
     if(rows.length === 0) {
       out += '<div style="padding:30px 0;text-align:center;color:#B0A99F;font-size:12px">입력된 공간/제품이 없습니다.</div>';

@@ -587,9 +587,13 @@ function collectVendorGroups(categoryFilter) {
   // 그대로 나열되고 있었는데, 같은 공간(거실/안방 등) 품목끼리 모여서
   // 보이는 게 실무에서 훨씬 보기 편함 - 각 거래처 그룹 안에서 공간 기준
   // 정렬(같은 공간끼리는 원래 입력 순서 그대로 유지되도록 안정 정렬).
+  // 2026-10-21: 가나다순을 버리고 고객용 견적서·의뢰서와 같은 층 순서(est-space-order.js: 1층→2층→…→지하)로 통일.
   Object.keys(groups).forEach(function(key){
+    var _vOrd = /** @type {any} */ (globalThis).estSpaceOrderMap ? /** @type {any} */ (globalThis).estSpaceOrderMap(groups[key].map(function(it){ return it.space || ''; })) : null;
+    groups[key].forEach(function(it, i){ it.__i = i; });
     groups[key].sort(function(a, b){
-      return (a.space||'').localeCompare(b.space||'', 'ko');
+      if (!_vOrd) return (a.space||'').localeCompare(b.space||'', 'ko');
+      return ((_vOrd[a.space||''] - _vOrd[b.space||'']) || (a.__i - b.__i));
     });
   });
 

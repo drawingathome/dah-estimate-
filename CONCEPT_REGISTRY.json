@@ -462,5 +462,37 @@
       "rail-save-restore-check.js"
     ],
     "금지패턴": "자동 생성 행을 \"다시 열 때 재계산으로 만들어지니까\" 하며 저장에서 빼는 것(합계엔 있고 행은 DB에 없어 중복/빠짐 - 조유정 308,000->398,000, 저장된 견적 62건) / 표식 있는 견적을 열 때 자동 시공 행을 또 만드는 것 / skipAutoSvc 해제를 빠뜨려 사용자가 지역을 바꿔도 재계산이 영구히 멈추는 것 / 성과매출에 시공비 행을 섞는 것(성과매출=제품비-할인)"
+  },
+  "문서_공간_순서": {
+    "의미": "고객용 견적서 / 실측 의뢰서 / 시공 의뢰서 / 발주서에 나오는 공간(방) 순서. 네 문서가 항상 같은 규칙으로 정렬된다: 1층 → 2층 → 3층 … → 옥탑/다락 → 지하(마지막, 선혜님 결정 2026-10-21), 층 표기가 없는 공간(예: 안방 침실)은 목록에서 바로 앞 공간과 같은 층, 같은 층 안에서는 입력한 순서, 같은 공간은 항상 붙어서 나옴",
+    "single_source_of_truth": "est-space-order.js:estSpaceOrderMap (순수 함수 — 네 문서가 모두 이 함수만 부름)",
+    "derived_fields": [],
+    "db_enforcement": "없음(출력 규칙 — 저장 데이터에는 영향 없음)",
+    "code_locations": [
+      "est-space-order.js:estSpaceOrderMap",
+      "est-doc-customer.js:buildCustomerHTML (공간 그룹 정렬)",
+      "est-doc-request.js:buildRequestHTML (시공 의뢰서 rows 정렬 + 실측 의뢰서 groupOrder 정렬)",
+      "est-doc-vendor.js:collectVendorGroups (거래처별 품목 정렬)"
+    ],
+    "guard_tests": [
+      "doc-space-order-check.js"
+    ],
+    "금지패턴": "문서마다 따로 공간을 정렬하는 것(가나다순 localeCompare, 등장 순서 stable sort 등) / 새 문서를 추가하면서 공통 함수를 안 부르는 것 / 실측 의뢰서와 시공 의뢰서는 코드가 따로라 한쪽만 고치는 것(2026-10-21 실제로 한쪽만 고쳐졌다가 발견)"
+  },
+  "줄_순서_이동": {
+    "의미": "견적서 화면의 커튼/블라인드/시공 줄을 오른쪽 ⠿ 손잡이로 끌어 순서를 바꾸는 기능. 마우스·터치 공통(Pointer Events), 줄이 화면보다 많아도 끌고 있는 동안 화면 위/아래 끝에서 자동 스크롤되어 끝까지 옮겨짐",
+    "single_source_of_truth": "est-product-calc.js:makeRowDraggable",
+    "derived_fields": [],
+    "db_enforcement": "없음(화면 기능). 저장은 화면에 보이는 줄 순서 그대로 line_items에 기록",
+    "code_locations": [
+      "est-product-calc.js:makeRowDraggable",
+      "est-calc-curtain.js:addCurtainRow",
+      "est-calc-blind.js:addBlindRow",
+      "est-calc-svc.js:addSvcRow"
+    ],
+    "guard_tests": [
+      "row-drag-reorder-check.js"
+    ],
+    "금지패턴": "화면에 보이는 범위까지만 옮겨지고 더 멀리는 못 가는 구현(줄 50개 견적서에서 15번째까지만 이동) / 마우스 전용 이벤트로 되돌리는 것(태블릿에서 안 됨)"
   }
 }

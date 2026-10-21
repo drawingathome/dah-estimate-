@@ -163,6 +163,12 @@ function buildCustomerHTML() {
       spaceGroups[key].push(r);
     });
 
+    // 2026-10-21: 공간 순서는 est-space-order.js 한 곳의 규칙(1층→2층→…→지하, 층 표기 없는 공간은 앞 공간과 같은 층)을 따름
+    try {
+      var _ordMap = /** @type {any} */ (globalThis).estSpaceOrderMap ? /** @type {any} */ (globalThis).estSpaceOrderMap(allRows.map(function(r){ return r.space || '기타'; })) : null;
+      if (_ordMap) spaceOrder.sort(function(a, b) { return _ordMap[a] - _ordMap[b]; });
+    } catch (eOrd) { /* 정렬 실패해도 문서는 예전 순서로 정상 출력 */ }
+
     function renderCurtainRow(r, isFirst, groupSize) {
       var specArr = r.spec.split(' · ');
       var usedSpecAsTitle = !r.name;

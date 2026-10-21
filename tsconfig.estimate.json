@@ -20,6 +20,7 @@
     "shared-staging-guard.js",
     "dash-supabase-auth.js",
     "est-customer-load.js",
+    "est-space-order.js",
     "est-doc-customer.js",
     "est-doc-request.js",
     "est-doc-vendor.js",

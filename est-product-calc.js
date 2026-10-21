@@ -375,12 +375,32 @@ function makeRowDraggable(tr) {
     // 더 이상 안 들어오는 문제가 있었음(재현 확인: 첫 재배치까지만 되고
     // 이후 멈춤 — "위치 이동이 안 된다"는 증상과 일치). 리스너를 위치가
     // 안 바뀌는 document에 걸어서 재배치와 무관하게 계속 이벤트를 받도록 수정.
-    function onMove(ev) {
-      var after = _getDragAfterRow(tbody, ev.clientY);
+    // 2026-10-21(선혜님 - "견적서에 순서를 옮기는게 안돼", 윤세현 견적서처럼 줄이 50개 가까우면 화면 끝까지만 옮겨지고 더 못 감):
+    // 끌고 있는 동안 포인터가 화면 위/아래 끝 근처에 있으면 화면이 자동으로 스크롤되고, 그 사이에도 줄 위치를 계속 다시 계산함.
+    var lastY = null, rafId = 0, dragging = true;
+    function place(y) {
+      var after = _getDragAfterRow(tbody, y);
       if (after == null) { if (tbody.lastElementChild !== tr) tbody.appendChild(tr); }
       else if (after !== tr) { tbody.insertBefore(tr, after); }
     }
+    function autoScrollTick() {
+      if (!dragging) return;
+      if (lastY !== null) {
+        var vh = window.innerHeight, edge = 90, speed = 0;
+        if (lastY < edge) speed = -Math.ceil((edge - lastY) / 5);
+        else if (lastY > vh - edge) speed = Math.ceil((lastY - (vh - edge)) / 5);
+        if (speed) { window.scrollBy(0, speed); place(lastY); }
+      }
+      rafId = requestAnimationFrame(autoScrollTick);
+    }
+    function onMove(ev) {
+      lastY = ev.clientY;
+      place(ev.clientY);
+    }
+    rafId = requestAnimationFrame(autoScrollTick);
     function onUp() {
+      dragging = false;
+      if (rafId) cancelAnimationFrame(rafId);
       tr.classList.remove('dragging-row');
       document.removeEventListener('pointermove', onMove);
       document.removeEventListener('pointerup', onUp);
