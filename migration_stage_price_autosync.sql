@@ -19,7 +19,7 @@ returns boolean language sql stable set search_path to 'public','pg_temp' as $$
                    and coalesce(e.price,0) > 0 and public.dah_estimate_paid(e.id) < e.price)
 $$;
 
--- ③ 단계 자동 이동: 선금 → 선금결제(기존) + 잔금 입금 → 시공준비중 + 모든 견적서 완납 → 시공준비중
+-- ③ 단계 자동 이동: 선금 → 선금결제(기존) + 모든 견적서 완납 → 시공준비중(일부 잔금은 이동 안 함)
 create or replace function public.customers_auto_stage_on_deposit()
 returns trigger language plpgsql set search_path to '' as $$
 begin
@@ -29,8 +29,7 @@ begin
       NEW.stage := '선금결제';
     end if;
     if NEW.stage in ('방문예약','상담','가견적','선금결제','실측준비중','확정견적','잔금결제') then
-      if (NEW.balance_amount is distinct from OLD.balance_amount and coalesce(NEW.balance_amount,0) > 0)
-         or public.dah_customer_fully_paid(NEW.id) then
+      if public.dah_customer_fully_paid(NEW.id) then  -- 결정(2026-10-22): 완납일 때만 이동(일부 잔금은 이동 안 함)
         NEW.stage := '시공준비중';
       end if;
     end if;
@@ -48,6 +47,7 @@ declare cid bigint; p numeric; r numeric; has_paid boolean;
 begin
   foreach cid in array array[NEW.client_id, case when TG_OP='UPDATE' and OLD.client_id is distinct from NEW.client_id then OLD.client_id end] loop
     continue when cid is null;
+    continue when exists (select 1 from public.customers c where c.id = cid and c.memo ~ '플러그|Pluuug');  -- 결정(2026-10-22): 플러그 이관 고객은 자동 재계산 제외
     select coalesce(sum(e.price),0), coalesce(sum(e.performance_revenue),0), count(*) > 0
       into p, r, has_paid
       from public.estimates e where e.client_id = cid and not coalesce(e.is_archived,false) and public.dah_estimate_paid(e.id) > 0;

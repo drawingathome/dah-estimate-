@@ -1,0 +1,45 @@
+name: DB Rules Test
+
+# DB 규칙(트리거·함수) 시험. 운영 DB와 무관한 임시 PostgreSQL에서 돈다.
+# 처음에는 배포(Deploy)를 막지 않는 별도 시험으로 두고, 안정적으로 통과하면 배포 조건에 넣는다.
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - 'db/**'
+      - 'migration_stage_price_autosync.sql'
+      - 'migration_2026_10_22_*.sql'
+      - '.github/workflows/db-rules-test.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'db/**'
+      - 'migration_*.sql'
+  workflow_dispatch:
+
+jobs:
+  db-rules:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+      - name: psql 확인
+        run: psql --version
+      - name: DB 규칙 시험 (규칙 21항목 + 적용 세트 연습)
+        run: bash db/run.sh
