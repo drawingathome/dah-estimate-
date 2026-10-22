@@ -24,10 +24,13 @@ insert into estimates(id,customer_name,client_id,price,performance_revenue,staff
 update estimates set deposit_amount=300000, deposit_date='2026-10-01' where id='00000000-0000-0000-0000-0000000090a1';
 select t.eq('S1 선금 입금 → 선금결제', (select stage from customers where id=9001), '선금결제');
 select t.eq('S1 기준금액 자동', (select price||'/'||performance_revenue from customers where id=9001), '1000000/800000');
+select t.eq('L1 선금 이동이 기록표에 남음', (select count(*)||'/'||min(from_stage)||'>'||min(to_stage) from customer_stage_auto_log where customer_id=9001), '1/가견적>선금결제');
 update estimates set balance_amount=200000, balance_date='2026-10-05' where id='00000000-0000-0000-0000-0000000090a1';
 select t.eq('S2 일부 잔금 → 단계 유지(완납 아님)', (select stage from customers where id=9001), '선금결제');
+select t.eq('L2 이동 안 한 저장은 기록 없음', (select count(*)::text from customer_stage_auto_log where customer_id=9001), '1');
 update estimates set balance_amount=700000 where id='00000000-0000-0000-0000-0000000090a1';
 select t.eq('S2 나머지 입금해 완납 → 시공준비중', (select stage from customers where id=9001), '시공준비중');
+select t.eq('L3 완납 이동 기록(사유 포함)', (select count(*)||'/'||max(to_stage)||'/'||bool_or(reason like '%완납%')::text from customer_stage_auto_log where customer_id=9001), '2/시공준비중/true');
 
 insert into customers(id,client_name,stage,staff_name) overriding system value values (9002,'B','확정견적','선혜');
 insert into estimates(id,customer_name,client_id,price,performance_revenue,staff_name,confirmed_at,deposit_amount,deposit_date,balance_amount,balance_date)
@@ -40,6 +43,7 @@ insert into estimates(id,customer_name,client_id,price,performance_revenue,staff
   ('00000000-0000-0000-0000-0000000090c2','C',9003,300000,250000,'선혜',null,null,null);
 update estimates set balance_amount=400000, balance_date='2026-09-10' where id='00000000-0000-0000-0000-0000000090c1';
 select t.eq('S4 견적 2개 중 1개만 완납 → 단계 유지', (select stage from customers where id=9003), '확정견적');
+select t.eq('L4 이동 안 한 고객은 기록 없음', (select count(*)::text from customer_stage_auto_log where customer_id=9003), '0');
 select t.eq('S4 기준금액은 입금된 견적서만 합산', (select price::text from customers where id=9003), '500000');
 
 -- ===== 2. 추가결제 =====

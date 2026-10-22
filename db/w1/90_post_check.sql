@@ -20,6 +20,7 @@ begin
   -- 보안: 점검 뷰 security_invoker, 기록표 RLS
   for n in select 1 where not exists (select 1 from pg_class where relname='data_integrity_issues' and relnamespace='public'::regnamespace and 'security_invoker=true' = any(reloptions)) loop raise exception '검증 실패: 점검 뷰 security_invoker 꺼짐'; end loop;
   for n in select 1 where not exists (select 1 from pg_class where relname='estimate_confirm_log' and relrowsecurity) loop raise exception '검증 실패: 확정 기록표 RLS 꺼짐'; end loop;
+  for n in select 1 where not exists (select 1 from pg_class where relname='customer_stage_auto_log' and relrowsecurity) loop raise exception '검증 실패: 자동 이동 기록표 RLS 꺼짐'; end loop;
   -- 기존 점검 뷰가 여전히 읽힘
   perform count(*) from public.data_integrity_issues;
 end $$;

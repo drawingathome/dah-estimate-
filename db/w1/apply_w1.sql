@@ -36,18 +36,46 @@ returns boolean language sql stable set search_path to 'public','pg_temp' as $$
                    and coalesce(e.price,0) > 0 and public.dah_estimate_paid(e.id) < e.price)
 $$;
 
--- ③ 단계 자동 이동: 선금 → 선금결제(기존) + 모든 견적서 완납 → 시공준비중(일부 잔금은 이동 안 함)
+-- ②-1 자동 이동 기록표: 규칙(DB)이 단계를 옮길 때마다 "언제·무엇에서 무엇으로·왜"를 남긴다. (사람이 직접 옮긴 것은 기록하지 않음)
+create table if not exists public.customer_stage_auto_log (
+  id bigint generated always as identity primary key,
+  customer_id bigint not null,
+  from_stage text,
+  to_stage text not null,
+  reason text not null,
+  changed_by uuid default auth.uid(),
+  changed_at timestamptz not null default now()
+);
+create index if not exists customer_stage_auto_log_customer_idx on public.customer_stage_auto_log (customer_id, changed_at desc);
+alter table public.customer_stage_auto_log enable row level security;
+drop policy if exists customer_stage_auto_log_select on public.customer_stage_auto_log;
+create policy customer_stage_auto_log_select on public.customer_stage_auto_log for select using (
+  (select auth.uid()) is not null and (
+    exists (select 1 from public.staff_profiles p where p.id = (select auth.uid()) and p.role = 'master')
+    or exists (select 1 from public.customers c join public.staff_profiles sp on sp.display_name = c.staff_name
+               where c.id = customer_stage_auto_log.customer_id and sp.id = (select auth.uid()))
+  )
+);
+
+-- ③ 단계 자동 이동: 선금 → 선금결제(기존) + 모든 견적서 완납 → 시공준비중(일부 잔금은 이동 안 함). 옮길 때마다 기록표에 남김.
 create or replace function public.customers_auto_stage_on_deposit()
-returns trigger language plpgsql set search_path to '' as $$
+returns trigger language plpgsql security definer set search_path to '' as $$
+declare v_from text;
 begin
   if TG_OP = 'UPDATE' then
     if NEW.deposit_amount is distinct from OLD.deposit_amount
        and NEW.stage in ('방문예약','상담','가견적') and coalesce(NEW.deposit_amount,0) > 0 then
+      v_from := NEW.stage;
       NEW.stage := '선금결제';
+      insert into public.customer_stage_auto_log(customer_id, from_stage, to_stage, reason)
+        values (NEW.id, v_from, NEW.stage, '선금 입금이 기록되어 자동 이동');
     end if;
     if NEW.stage in ('방문예약','상담','가견적','선금결제','실측준비중','확정견적','잔금결제') then
       if public.dah_customer_fully_paid(NEW.id) then  -- 결정(2026-10-22): 완납일 때만 이동(일부 잔금은 이동 안 함)
+        v_from := NEW.stage;
         NEW.stage := '시공준비중';
+        insert into public.customer_stage_auto_log(customer_id, from_stage, to_stage, reason)
+          values (NEW.id, v_from, NEW.stage, '모든 견적서가 완납되어 자동 이동');
       end if;
     end if;
   end if;
@@ -221,6 +249,7 @@ begin
   -- 보안: 점검 뷰 security_invoker, 기록표 RLS
   for n in select 1 where not exists (select 1 from pg_class where relname='data_integrity_issues' and relnamespace='public'::regnamespace and 'security_invoker=true' = any(reloptions)) loop raise exception '검증 실패: 점검 뷰 security_invoker 꺼짐'; end loop;
   for n in select 1 where not exists (select 1 from pg_class where relname='estimate_confirm_log' and relrowsecurity) loop raise exception '검증 실패: 확정 기록표 RLS 꺼짐'; end loop;
+  for n in select 1 where not exists (select 1 from pg_class where relname='customer_stage_auto_log' and relrowsecurity) loop raise exception '검증 실패: 자동 이동 기록표 RLS 꺼짐'; end loop;
   -- 기존 점검 뷰가 여전히 읽힘
   perform count(*) from public.data_integrity_issues;
 end $$;

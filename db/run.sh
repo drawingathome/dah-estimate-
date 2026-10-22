@@ -32,10 +32,10 @@ S=$($P -d dah_prodlike_test -Atc "select string_agg(id||':'||stage, ',' order by
 $P -d dah_prodlike_test -f w1/rollback_w1.sql >/dev/null 2>&1 || { echo "FAIL 되돌리기 실행"; fail=1; }
 AFTER=$(snap); [ "$BEFORE" = "$AFTER" ] && echo "PASS 되돌린 뒤 트리거·함수·뷰 동일" || { echo "FAIL 되돌린 뒤 차이"; fail=1; }
 # 중간 실패 시 전부 취소
-$P -d dah_prodlike_test -c "drop schema if exists backup_w1_20261022 cascade" -c "drop table if exists public.estimate_confirm_log" -c "alter table public.estimates drop column if exists unconfirm_reason" >/dev/null 2>&1
+$P -d dah_prodlike_test -c "drop schema if exists backup_w1_20261022 cascade" -c "drop table if exists public.estimate_confirm_log" -c "drop table if exists public.customer_stage_auto_log" -c "alter table public.estimates drop column if exists unconfirm_reason" >/dev/null 2>&1
 sed '$d' w1/apply_w1.sql > "$tmp"; printf 'select 1/0;\ncommit;\n' >> "$tmp"
 $P -d dah_prodlike_test -f "$tmp" >/dev/null 2>&1
-LEFT=$($P -d dah_prodlike_test -Atc "select (select count(*) from pg_trigger where tgname in ('trg_sync_customer_price','trg_extra_payment_touch_customer','trg_estimates_confirm_guard')) + (select count(*) from information_schema.schemata where schema_name='backup_w1_20261022') + (select count(*) from information_schema.tables where table_name='estimate_confirm_log')")
+LEFT=$($P -d dah_prodlike_test -Atc "select (select count(*) from pg_trigger where tgname in ('trg_sync_customer_price','trg_extra_payment_touch_customer','trg_estimates_confirm_guard')) + (select count(*) from information_schema.schemata where schema_name='backup_w1_20261022') + (select count(*) from information_schema.tables where table_name in ('estimate_confirm_log','customer_stage_auto_log'))")
 [ "$LEFT" = "0" ] && echo "PASS 중간 실패 시 전부 취소" || { echo "FAIL 중간 실패 뒤 잔여=$LEFT"; fail=1; }
 rm -f "$tmp"
 $P -d postgres -c "drop database if exists dah_rules_test" -c "drop database if exists dah_prodlike_test" >/dev/null 2>&1

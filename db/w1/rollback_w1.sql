@@ -26,4 +26,4 @@ end $$;
 drop function if exists public.dah_customer_fully_paid(bigint);
 drop function if exists public.dah_estimate_paid(uuid);
 commit;
--- (확정 기록표 estimate_confirm_log, 사유 칸 unconfirm_reason은 남겨도 무해. 지우려면 별도 승인 후.)
+-- (확정 기록표 estimate_confirm_log, 자동 이동 기록표 customer_stage_auto_log, 사유 칸 unconfirm_reason은 남겨도 무해. 지우려면 별도 승인 후.)
