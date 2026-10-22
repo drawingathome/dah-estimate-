@@ -78,7 +78,7 @@ function dahDailyBackup() {
   // 2026-10-12: 변경 이력(customer_history/estimate_history), 저장 기록(save_receipts), 점검 확인 기록(integrity_acks)도 백업 대상 -
   //   "누가 언제 뭘 바꿨는지"의 유일한 근거라 날아가면 복구 불가(합쳐서 수 MB라 용량 부담 없음).
   // 2026-10-10: 월 마감(monthly_close)과 입금 장부(payment_ledger)도 백업 대상 - 둘 다 새로 생긴 "숫자의 근거"라 날아가면 복구 불가.
-  var tables = ['customers', 'estimates', 'surveys', 'app_settings', 'as_records', 'staff_profiles', 'analytics_events', 'client_error_logs', 'monthly_close', 'payment_ledger', 'customer_history', 'estimate_history', 'save_receipts', 'integrity_acks', 'payment_refunds', 'integrity_daily_log'];
+  var tables = ['customers', 'estimates', 'surveys', 'app_settings', 'as_records', 'staff_profiles', 'analytics_events', 'client_error_logs', 'monthly_close', 'payment_ledger', 'customer_history', 'estimate_history', 'save_receipts', 'integrity_acks', 'payment_refunds', 'integrity_daily_log', 'estimate_extra_payments', 'estimate_confirm_log', 'customer_stage_auto_log'];
   // 2026-10-14: 환불 기록(payment_refunds)은 "돈이 빠져나간 근거"라 날아가면 복구 불가 → 백업 대상에 추가. 자동 점검 기록(integrity_daily_log)도 함께.
   var backup = { exportedAt: new Date().toISOString(), version: '1.0' };
   var errors = [];
