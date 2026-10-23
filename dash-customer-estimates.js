@@ -31,7 +31,7 @@ function estPayBadge(e, customerStage) {
   if (got > 0 && !(bal > 0)) return { text: '선금 입금', color: stageColorFor(customerStage) };
   if (got > 0) return { text: '입금 ' + got.toLocaleString() + '원', color: stageColorFor(customerStage) };
   // 2026-10-23: 단계 이름이 화면에 뜨는 곳은 모두 getDisplayStageLabel을 거침(배송 주문만 제작/발송 이름) — 이 배지만 빠져 있었음
-  return { text: customerStage ? getDisplayStageLabel({ id: e && e.clientId, stage: customerStage }) : '—', color: stageColorFor(customerStage) };
+  return { text: customerStage ? (typeof getDisplayStageLabel === 'function' ? getDisplayStageLabel({ id: e && e.clientId, stage: customerStage }) : customerStage) : '—', color: stageColorFor(customerStage) };
 }
 
 function renderDetailEstTab() {
