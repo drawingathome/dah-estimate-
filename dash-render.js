@@ -486,8 +486,8 @@ function renderHome(skipServerFetch) {
         }).join('');
         var isPrev = window._staffPerfViewMode === 'prev';
         var toggleHtml = '<div style="display:flex;gap:6px" onclick="event.stopPropagation()">' +
-          '<button onclick="window._staffPerfViewMode=\'this\';renderHome(true);" style="padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:' + (!isPrev?'var(--dark)':'#fff') + ';color:' + (!isPrev?'#fff':'var(--sub)') + ';font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">이번달</button>' +
-          '<button onclick="window._staffPerfViewMode=\'prev\';renderHome(true);" style="padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:' + (isPrev?'var(--dark)':'#fff') + ';color:' + (isPrev?'#fff':'var(--sub)') + ';font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">지난달</button>' +
+          '<button onclick="window._staffPerfViewMode=\'this\';renderHome(true);" style="padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:' + (!isPrev?'var(--dark)':'#fff') + ';color:' + (!isPrev?'#fff':'var(--sub)') + ';font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">' + parseInt(_thisMonthKey.slice(5), 10) + '월(이번달)</button>' +
+          '<button onclick="window._staffPerfViewMode=\'prev\';renderHome(true);" style="padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:' + (isPrev?'var(--dark)':'#fff') + ';color:' + (isPrev?'#fff':'var(--sub)') + ';font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">' + parseInt(_prevMonthKey.slice(5), 10) + '월(지난달)</button>' +
         '</div>';
         // 2026-08-31(선혜님 지적 — "확인해보고 검토하고 말하니?? 없잖아"로
         // 스크린샷을 직접 찍어보고서야 발견): 토글 버튼을 누르면
@@ -501,7 +501,7 @@ function renderHome(skipServerFetch) {
         return (
           '<div id="sec-staff-perf" style="background:#fff;border-bottom:1px solid var(--border)">' +
             '<div style="padding:14px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="window._staffPerfExpanded=!window._staffPerfExpanded;toggleHomeAccordion(this)">' +
-              '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">' + (isPrev?'지난달':'이번달') + ' 담당자별 성과</span>' +
+              '<span style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;text-transform:uppercase">' + (isPrev ? parseInt(_prevMonthKey.slice(5), 10) + '월(지난달)' : parseInt(_thisMonthKey.slice(5), 10) + '월(이번달)') + ' 담당자별 성과</span>' +
               toggleHtml +
             '</div>' +
             '<div style="display:' + (wasOpen?'block':'none') + '">' + (rows || '<div style="padding:14px 20px;font-size:12px;color:var(--sub);text-align:center">해당 기간에 담당자별 실적이 없어요</div>') + '</div>' +
