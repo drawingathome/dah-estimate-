@@ -50,7 +50,7 @@ var SUPABASE_SERVICE_ROLE_KEY = PropertiesService.getScriptProperties().getPrope
 // 붙여넣어야만 운영에 반영되는데, 저장소에서 고친 버전이 실제로 반영됐는지 확인할 방법이 없어서 낡은 코드(9/23~10/1 버전)가
 // 며칠 동안 매일 실패하는 걸 늦게 알았음. 버전을 코드에 박아 매일 메일·로그에 함께 찍어서, 낡은 코드가 돌고 있으면 바로
 // 보이게 함. ※ 이 파일을 고칠 때마다 아래 값도 같이 올릴 것(날짜.순번).
-var DAH_SCRIPT_VERSION = '2026-10-14.1';
+var DAH_SCRIPT_VERSION = '2026-10-23.1';
 
 // 점검 함수 하나가 오류로 죽어도 백업과 나머지 점검은 계속 돌게 감싸는 헬퍼. 죽은 점검은 failures에 모아서 메일로 알림.
 function dahSafeScan(name, fn, failures) {
@@ -93,21 +93,31 @@ function dahDailyBackup() {
       // 만들어서 그 함수를 통해 데이터를 가져오는 방식으로 우회함 - 이
       // 함수는 함수 소유자 권한으로 실행되어 이 이례적 문제와 무관하게
       // 항상 정상 작동함.
-      var url = SUPABASE_URL + '/rest/v1/rpc/dah_backup_export';
-      var res = UrlFetchApp.fetch(url, {
-        method: 'post',
-        contentType: 'application/json',
-        headers: {
-          'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY
-        },
-        payload: JSON.stringify({ table_name: table }),
-        muteHttpExceptions: true
+      // 2026-10-23: 서버가 한 번에 1000건까지만 돌려줘서 변경이력·저장기록·사용로그·에러로그가
+      //   1000건에서 잘려 백업되던 문제 발견 → 표 전체를 "배열 1개"로 돌려주는 dah_backup_export_all 사용
+      //   (행 수 제한 없음). 실패하면 예전 함수로 대체하되 1000건이면 '잘렸을 수 있음'으로 오류에 기록.
+      var hdr = { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY };
+      var res = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/rpc/dah_backup_export_all', {
+        method: 'post', contentType: 'application/json', headers: hdr,
+        payload: JSON.stringify({ table_name: table }), muteHttpExceptions: true
       });
+      var okAll = false;
       if (res.getResponseCode() === 200) {
-        backup[table] = JSON.parse(res.getContentText());
-      } else {
-        errors.push(table + ': HTTP ' + res.getResponseCode());
-        backup[table] = { error: res.getContentText() };
+        var parsed = JSON.parse(res.getContentText());
+        if (Array.isArray(parsed)) { backup[table] = parsed; okAll = true; }
+      }
+      if (!okAll) {
+        res = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/rpc/dah_backup_export', {
+          method: 'post', contentType: 'application/json', headers: hdr,
+          payload: JSON.stringify({ table_name: table }), muteHttpExceptions: true
+        });
+        if (res.getResponseCode() === 200) {
+          backup[table] = JSON.parse(res.getContentText());
+          if (backup[table].length >= 1000) errors.push(table + ': 예전 방식으로 받아 1000건에서 잘렸을 수 있음');
+        } else {
+          errors.push(table + ': HTTP ' + res.getResponseCode());
+          backup[table] = { error: res.getContentText() };
+        }
       }
     } catch (e) {
       errors.push(table + ': ' + e.message);
