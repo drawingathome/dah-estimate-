@@ -296,7 +296,7 @@ function renderHome(skipServerFetch) {
           '<div style="background:#fff;padding:14px 20px">',
             '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">진행 건수</div>',
             '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + thisMonthContracts + '<span style="font-size:12px;font-weight:400;color:var(--sub)">건</span></div>',
-            '<div style="font-size:10px;color:var(--sub);margin-top:2px">이번달 신규계약 ' + thisMonthNewContracts + '건</div>',
+            '<div style="font-size:10px;color:var(--sub);margin-top:2px">이번달 신규계약(선금 입금 기준) ' + thisMonthNewContracts + '건</div>',
           '</div>',
           '<div style="background:#fff;padding:14px 20px">',
             '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">전체 고객</div>',

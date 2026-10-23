@@ -675,9 +675,24 @@ function renderChartStaffRank(customers, range) {
 /* (getMonthRevenue는 파일 상단 "매출 계산 공용 함수" 섹션에 이미 통합되어 정의됨) */
 
 // 선금+잔금 기준 월별 건수 (계약 기준)
+// 2026-10-23(계약 수 정의 통일): "계약"은 선금이 처음 입금된 달 기준으로 센다(고객 1명 = 1건).
+// 예전엔 고객 등록일(c.date) 기준이라 등록만 하고 입금 안 한 고객이 섞이거나, 입금한 달과 어긋났음.
+// 선금 입금일이 없으면(이관 데이터 등) 가장 이른 입금일로 대신한다.
+function firstDepositMonth(c) {
+  var first = '';
+  getAllEstPays(c).forEach(function(e) {
+    if ((Number(e.depositAmount) || 0) > 0 && e.depositDate && (!first || e.depositDate < first)) first = e.depositDate;
+  });
+  if (!first) {
+    splitCustomerPayments(c).forEach(function(p) {
+      if (!p.isRefund && !p.cancel && p.date && (!first || p.date < first)) first = p.date;
+    });
+  }
+  return first.slice(0, 7);
+}
 function getMonthContractCount(customers, monthKey) {
   return customers.filter(function(c) {
     if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return false;
-    return (c.date||'').slice(0,7) === monthKey;
+    return firstDepositMonth(c) === monthKey;
   }).length;
 }

@@ -71,6 +71,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['test-port-range-check.js', []]);
   scripts.push(['perf-revenue-cap-check.js', []]);
   scripts.push(['server-month-revenue-check.js', []]);
+  scripts.push(['contract-count-first-deposit-check.js', []]);
   scripts.push(['multi-estimate-revenue-check.js', []]);
   scripts.push(['staff-comparison-check.js', []]);
   scripts.push(['detail-structure-check.js', [target]]);
