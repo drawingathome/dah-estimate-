@@ -79,6 +79,24 @@ function renderHome(skipServerFetch) {
   var _date  = _today.getDate();
   var _year  = _today.getFullYear();
 
+  // 2026-10-23(근본 수정): 이번달·지난달 매출은 DB 계산값(month_revenue_detail)을 쓴다.
+  // 화면을 다시 그릴 때마다 서버값을 비우고 새로 받아오며(고객/입금이 바뀐 직후엔 옛 값 금지),
+  // 받아온 값이 달라졌을 때만 한 번 더 그린다(_srvFromRefresh로 무한 반복 방지).
+  if (typeof refreshServerMonthDetail === 'function' && !/** @type {any} */ (window)._srvFromRefresh) {
+    invalidateServerMonthDetail();
+    var _mk0 = _year + '-' + String(_month).padStart(2, '0');
+    var _pd = new Date(_year, _today.getMonth() - 1, 1);
+    var _mk1 = _pd.getFullYear() + '-' + String(_pd.getMonth() + 1).padStart(2, '0');
+    var _redraw = function(changed) {
+      if (!changed) return;
+      var _w = /** @type {any} */ (window);
+      _w._srvFromRefresh = true;
+      try { renderHome(true); } finally { _w._srvFromRefresh = false; }
+    };
+    refreshServerMonthDetail([_mk0, _mk1], _redraw);
+    setTimeout(function() { refreshServerMonthDetail([_mk0, _mk1], _redraw); }, 2500);
+  }
+
   // skipServerFetch=true: 방금 로컬(localStorage)을 이미 최신으로 갱신한 직후 호출되는 경우
   // (고객 등록/수정/삭제 직후). 이때 서버 재조회를 하면, 저장 요청(POST/PATCH)이 아직
   // 서버에 반영되기 전에 조회 응답이 먼저 와서 "방금 한 작업이 없던 옛날 상태"로

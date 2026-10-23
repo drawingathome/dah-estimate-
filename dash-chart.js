@@ -259,11 +259,49 @@ function renderMonthClosePanel() {
   }
 }
 
+// 2026-10-23(선혜님 승인 - "근본 수정"): 진행 중인 달의 매출/성과매출은 기기(휴대폰·PC)가 아니라
+// DB 함수 month_revenue_detail 이 계산한 값을 그대로 쓴다. 기기마다 견적서 캐시(dah_saved)가
+// 낡아 숫자가 달라지던 문제의 뿌리 제거. 서버값이 없거나 오래되면(오프라인 등) 예전처럼 기기 계산.
+var _srvMonthDetail = {}; // { 'YYYY-MM': { at: ms, rows: [...] } }
+var SRV_MONTH_TTL = 120 * 1000;
+function _srvRowsFor(monthKey) {
+  var e = _srvMonthDetail[monthKey];
+  if (!e || (Date.now() - e.at) > SRV_MONTH_TTL) return null;
+  return e.rows;
+}
+function invalidateServerMonthDetail() { Object.keys(_srvMonthDetail).forEach(function(k) { _srvMonthDetail[k].at = 0; }); } // 값은 남기되 '낡음' 표시(변경 감지용)
+function refreshServerMonthDetail(monthKeys, cb) {
+  var left = monthKeys.length, changed = false;
+  if (!left) { if (cb) cb(false); return; }
+  monthKeys.forEach(function(mk) {
+    sbXHR('POST', 'rpc/month_revenue_detail', { p_month: mk }, function(err, rows) {
+      if (!err && Array.isArray(rows)) {
+        var prev = _srvMonthDetail[mk];
+        var sig = JSON.stringify(rows);
+        if (!prev || prev.sig !== sig || prev.at === 0) changed = true;
+        _srvMonthDetail[mk] = { at: Date.now(), rows: rows, sig: sig };
+      }
+      if (--left === 0 && cb) cb(changed);
+    });
+  });
+}
+// 서버 행 중 화면에 넘어온 고객(권한 필터 적용된 목록)의 것만 합산
+function _srvSum(customers, monthKey, field) {
+  var rows = _srvRowsFor(monthKey);
+  if (!rows) return null;
+  var ids = {};
+  customers.forEach(function(c) { ids[String(c.id)] = true; });
+  var t = 0;
+  rows.forEach(function(r) { if (ids[String(r.customer_id)]) t += Number(r[field]) || 0; });
+  return t;
+}
+
 // 특정 월(monthKey='YYYY-MM')의 실제 매출(입금액) 합계
 function getMonthRevenue(customers, monthKey, ignoreClosed) {
   // 2026-10-10(선혜님 - 지난달 매출이 나중에 고객 수정으로 바뀌면 안 됨): 마감된 달은 저장된 값을 그대로 씀.
   var _cl = ignoreClosed ? null : getClosedMonth(monthKey);
   if (_cl) return Number(_cl.revenue) || 0;
+  if (!ignoreClosed) { var _sv = _srvSum(customers, monthKey, 'revenue'); if (_sv !== null) return _sv; }
   var total = 0;
   customers.forEach(function(c) {
     if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return;
@@ -278,6 +316,7 @@ function getMonthRevenue(customers, monthKey, ignoreClosed) {
 function getMonthPerformanceRevenue(customers, monthKey, ignoreClosed) {
   var _cl = ignoreClosed ? null : getClosedMonth(monthKey);
   if (_cl) return Number(_cl.perf_revenue) || 0;
+  if (!ignoreClosed) { var _sv = _srvSum(customers, monthKey, 'perf'); if (_sv !== null) return _sv; }
   var total = 0;
   customers.forEach(function(c) {
     if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return;
@@ -306,6 +345,18 @@ function getMonthStaffPerformance(customers, monthKey, ignoreClosed) {
       }
     });
   });
+  if (!ignoreClosed && _srvRowsFor(monthKey)) {
+    // 금액은 서버 값으로 덮어씀(건수는 위 기기 계산 유지)
+    var _rows = _srvRowsFor(monthKey), _ids = {}, _sr = {};
+    customers.forEach(function(c) { _ids[String(c.id)] = c.staffName || '미지정'; });
+    _rows.forEach(function(r) {
+      var st = _ids[String(r.customer_id)];
+      if (st === undefined) return;
+      _sr[st] = (_sr[st] || 0) + (Number(r.perf) || 0);
+    });
+    Object.keys(byStaff).forEach(function(k) { if (!(k in _sr)) byStaff[k].rev = 0; });
+    Object.keys(_sr).forEach(function(k) { if (!byStaff[k]) byStaff[k] = { count: 0, rev: 0 }; byStaff[k].rev = _sr[k]; });
+  }
   return byStaff;
 }
 
