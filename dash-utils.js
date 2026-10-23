@@ -249,13 +249,32 @@ function isSoftDeleted(c) {
 // "명시적으로 배송 선택함"으로 봐도 안전함(초기 단계는 애초에 이 3개
 // 단계에 해당 안 되므로 영향 없음).
 var DELIVERY_STAGE_LABELS = { '실측준비중': '제작준비중', '시공준비중': '발송준비중', '시공완료': '발송완료' };
-function getDisplayStageLabel(customer) {
+// 2026-10-23(선혜님 - 채하나·신수정이 "제작준비중"으로 보임, 실제 단계는 실측준비중): 위 판단 기준(c.region)은
+// 고객 정보 표에 존재하지 않는 값이라(시공 지역은 견적서에만 있음) 모든 고객이 "배송 주문"으로 오판돼 왔음.
+// → 이제는 그 고객의 "가장 최근 견적서"에 "시공 안함(배송)"이 명시적으로 선택돼 있을 때만(deliveryOnly) 배송 이름을 보여줌.
+//   견적서가 없거나, 지역이 정해졌거나, 예전 견적서(지역 값이 아예 없음)면 원래 단계 이름.
+var _dslCache = { raw: null, map: null };
+function _deliveryOnlyMapFromEstimates() {
+  var raw = null;
+  try { raw = localStorage.getItem('dah_saved'); } catch (e) {}
+  if (raw === _dslCache.raw && _dslCache.map) return _dslCache.map;
+  var map = {}, latest = {};
+  try {
+    (JSON.parse(raw || '[]') || []).forEach(function(e) {
+      if (!e || e.isArchived || !e.clientId) return;
+      var at = String(e.savedAt || e.date || '');
+      if (latest[e.clientId] === undefined || at >= latest[e.clientId]) { latest[e.clientId] = at; map[e.clientId] = (e.deliveryOnly === true); }
+    });
+  } catch (e) {}
+  _dslCache = { raw: raw, map: map };
+  return map;
+}
+function getDisplayStageLabel(customer, stageOverride) {
   if (!customer) return '';
-  var stage = customer.stage;
-  if ((customer.region === '' || customer.region == null) && DELIVERY_STAGE_LABELS[stage]) {
-    return DELIVERY_STAGE_LABELS[stage];
-  }
-  return stage;
+  var stage = stageOverride || customer.stage;
+  if (!DELIVERY_STAGE_LABELS[stage]) return stage;
+  var delivery = customer.deliveryOnly === true || (customer.id != null && _deliveryOnlyMapFromEstimates()[customer.id] === true);
+  return delivery ? DELIVERY_STAGE_LABELS[stage] : stage;
 }
 
 // 2026-09-15(선혜님 - "쌍둥이함수까지 다 본거야??"로 점검 중 발견): 미배정

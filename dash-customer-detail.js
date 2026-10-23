@@ -670,7 +670,7 @@ function renderDetailStageSection(c, body, isMaster) {
   if (nextStage) {
     stageActionRow.appendChild(btn(
       'flex:1;padding:11px;border:none;background:var(--dark);color:#fff;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border-radius:10px',
-      getDisplayStageLabel({stage: nextStage, region: c.region}) + '으로 진행 →', function(){ changeStage(nextStage); }
+      getDisplayStageLabel(c, nextStage) + '으로 진행 →', function(){ changeStage(nextStage); }
     ));
   }
   var toggleStageBtn = btn(
@@ -695,7 +695,7 @@ function renderDetailStageSection(c, body, isMaster) {
       'padding:5px 11px;border:1px solid '+(on?'var(--dark)':'var(--border)')+';'+
       'background:'+(on?'var(--dark)':'#fff')+';color:'+(on?'#fff':'#6B6B6B')+';'+
       'font-size:11px;font-weight:'+(on?'700':'400')+';font-family:inherit;cursor:pointer;border-radius:10px',
-      num+'. '+getDisplayStageLabel({stage: s, region: c.region}), function(){ changeStage(s); }
+      num+'. '+getDisplayStageLabel(c, s), function(){ changeStage(s); }
     );
     stageBar.appendChild(pill);
   });

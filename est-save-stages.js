@@ -601,6 +601,8 @@ function _saveStage_estimatesActual(ctx) {
         }
         _saveOutcome = 'server';
         showToast('저장 완료! (DB+로컬)');
+        // 2026-10-23: 같은 견적서의 예전 재시도 대기 항목은 이 저장이 대체함(안 지우면 "저장 실패"가 허위로 반복됨)
+        try { if (isEditMode && window._estEditState.editingEstDbId && typeof estDropPendingForDb === 'function') estDropPendingForDb(window._estEditState.editingEstDbId); } catch (eDrop) {}
         if (!isEditMode) {
           try {
             var createdRows = JSON.parse(xhr2.responseText);

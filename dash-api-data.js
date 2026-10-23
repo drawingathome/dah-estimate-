@@ -180,6 +180,7 @@ function estimateDbRowToLocal(row) {
     lineItems: row.line_items || [],
     custType: row.cust_type || 'new',
     region: row.region || '',
+    deliveryOnly: row.region === '', // 2026-10-23: "시공 안함(배송)"이 명시적으로 선택된 견적서만 true(예전 견적서의 빈 값(null)은 false)
     asFeeType: row.as_fee_type || 'free',
     // 2026-08-24: isArchived 하나만 빠진 게 아니라, 컬럼 전체를 다시 대조해보니
     // 6개가 더 빠져있었음(같은 종류의 실수가 더 있는지 전수 재검사 — 선혜님

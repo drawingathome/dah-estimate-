@@ -32,10 +32,50 @@ function addToEstPendingQueue(payload, isEditMode, dbId, lockUpdatedAt) {
   try { var _lr = window._estLoadedRow; if (isEditMode && dbId && _lr && String(_lr.id) === String(dbId)) _baseRow = _lr; } catch (eBase) {}
   var _qItem = { payload: payload, addedAt: new Date().toISOString(), isEditMode: !!isEditMode, dbId: dbId || null, lockUpdatedAt: lockUpdatedAt || null };
   if (_baseRow) _qItem.baseRow = _baseRow; // 수정 저장일 때만 추가(신규 견적서 항목 모양은 예전 그대로)
+  // 2026-10-23(신수정 견적서 — 같은 견적서의 저장 요청이 대기목록에 3개 쌓여 "저장 실패"가 반복 표시됨):
+  //   수정 저장의 payload는 견적서 전체라서 같은 견적서의 예전 대기 항목은 새 항목이 완전히 대체함 → 중복으로 쌓지 않음
+  if (isEditMode && dbId) q = q.filter(function(it){ return !(it.isEditMode && String(it.dbId) === String(dbId)); });
   q.push(_qItem);
   if (q.length > 200) q = q.slice(-200); // 무한정 쌓이는 것 방지
   try { localStorage.setItem(EST_PENDING_KEY, JSON.stringify(q)); } catch(e) {}
   updateEstSyncBanner();
+}
+
+// 2026-10-23: 이 견적서가 방금 서버에 정상 저장됐으면, 같은 견적서의 예전 대기 항목은 더 이상 필요 없음(새 저장이 대체)
+function estDropPendingForDb(dbId) {
+  if (!dbId) return;
+  var q = getEstPendingQueue();
+  var nq = q.filter(function(it){ return !(it.isEditMode && String(it.dbId) === String(dbId)); });
+  if (nq.length === q.length) return;
+  try { localStorage.setItem(EST_PENDING_KEY, JSON.stringify(nq)); } catch(e) {}
+  updateEstSyncBanner();
+}
+
+function _estStable(v) {
+  if (Array.isArray(v)) return '[' + v.map(_estStable).join(',') + ']';
+  if (v && typeof v === 'object') return '{' + Object.keys(v).sort().map(function(k){ return JSON.stringify(k) + ':' + _estStable(v[k]); }).join(',') + '}';
+  return JSON.stringify(v === undefined ? null : v);
+}
+
+// 2026-10-23: 재시도 PATCH가 0건 반영일 때 "누가 먼저 바꿔서"인지 "이미 같은 내용이 저장돼 있어서"인지 구분.
+//   서버 행의 금액·날짜·품목이 이 대기 항목과 같으면 이미 저장된 것(실패 아님) — 확인 못 하면 예전처럼 "확인 필요"로 둠.
+function _estCheckAlreadySaved(item, cb) {
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(item.dbId) + '&select=price,date,line_items', true);
+    x.setRequestHeader('apikey', SUPABASE_KEY);
+    x.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+    x.onload = function() {
+      try {
+        var rows = JSON.parse(x.responseText || '[]');
+        var r = Array.isArray(rows) && rows[0];
+        var pl = item.payload || {};
+        cb(!!(r && String(r.price) === String(pl.price) && String(r.date || '') === String(pl.date || '') && _estStable(r.line_items || []) === _estStable(pl.line_items || [])));
+      } catch (e) { cb(false); }
+    };
+    x.onerror = function() { cb(false); };
+    x.send();
+  } catch (e) { cb(false); }
 }
 
 function updateEstSyncBanner() {
@@ -134,6 +174,14 @@ function _doRetryEstPendingSync(q) {
           if (Array.isArray(checkRows) && checkRows.length === 0) isZeroRowFail = true;
         } catch (eCheck) { isZeroRowFail = true; } // 응답을 못 읽으면 안전하게 "확인 필요"로 취급
       }
+      if (isZeroRowFail && !item._verified) {
+        done--; // 서버 행 확인이 끝날 때까지 이 항목은 아직 처리 중
+        _estCheckAlreadySaved(item, function(already) {
+          item._verified = true; item._alreadySaved = !!already;
+          xhr.onload(/** @type {any} */ (null));
+        });
+        return;
+      }
       if (isHttpFail) {
         remaining.push(item);
         // 2026-08-25(선혜님 지적 — "니 테스트가 어떤방식인지 궁금해"): 지금까지
@@ -164,6 +212,8 @@ function _doRetryEstPendingSync(q) {
             _doRetryEstPendingSync(getEstPendingQueue());
           });
         }
+      } else if (isZeroRowFail && item._alreadySaved) {
+        // 이미 같은 내용이 서버에 저장돼 있음 — 실패가 아니라 성공으로 취급(알림·백업 없음)
       } else if (isZeroRowFail) {
         // 서버에 실제로 반영 안 됨(권한 문제/동시저장충돌 추정) - 무한 재시도해도 같은
         // 이유로 계속 실패할 가능성이 높으니 큐에는 다시 안 남기되(무한반복 방지), 절대
