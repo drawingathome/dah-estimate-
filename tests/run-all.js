@@ -604,6 +604,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['stage-partial-patch-check.js', []]);
   scripts.push(['stage-conflict-guard-check.js', []]);
   scripts.push(['db-stage-move-reflect-check.js', []]);
+  scripts.push(['paid-stage-mismatch-home-check.js', []]);
   // 2026-10-08(같은 뿌리): 메모·결제링크·실측/시공일·발주체크도 "바꾸는 필드만" 서버로 보내는지, 큐에서 서로 덮이지 않는지, 새로고침이 대기 중인 값을 되돌리지 않는지.
   scripts.push(['field-partial-patch-check.js', []]);
   // 2026-10-08(선혜님 - 조유정 "시공비 이상하네 … 여러번 말했어"): 자동 시공 행(실측/시공/블라인드시공/레일)을 저장하고 열 때 그대로 복원(재계산 중복·빠짐 방지), 임시 초안 중복 방지, 시공비 없이 저장 시 경고.

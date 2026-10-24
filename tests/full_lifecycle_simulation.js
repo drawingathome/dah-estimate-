@@ -146,9 +146,10 @@ async function run() {
     var incomplete = hasIncompleteOrder(c);
     goTab('home'); renderHome(true);
     var todoOnly = document.getElementById('sec-todo').textContent.split('오늘/내일')[0];
-    return { pass: !todoOnly.includes('생애주기A'), incomplete, todoOnly: todoOnly.slice(-100) };
+    // 2026-10-24: 완납인데 단계가 아직 확정견적이면 "완납 단계 확인"은 정상적으로 남는다(앱이 단계를 직접 올리지 않음). 발주 항목만 사라졌는지 본다.
+    return { pass: !incomplete && !todoOnly.includes('발주'), incomplete, todoOnly: todoOnly.slice(-100) };
   });
-  ok('8. 발주 전부 체크 후 처리필요 섹션에서만 정확히 사라짐', r.pass === true, JSON.stringify(r));
+  ok('8. 발주 전부 체크 후 처리필요에서 발주 항목이 사라짐', r.pass === true, JSON.stringify(r));
 
   await wait();
   r = await page.evaluate(async () => {
