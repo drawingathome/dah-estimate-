@@ -9,6 +9,7 @@ on:
       - 'db/**'
       - 'migration_stage_price_autosync.sql'
       - 'migration_2026_10_22_*.sql'
+      - 'migration_2026_10_24_*.sql'
       - '.github/workflows/db-rules-test.yml'
   pull_request:
     branches: [main]

@@ -10,7 +10,7 @@
 | # | 파일 | 역할 | 함수 수 |
 |---|---|---|---|
 | 1 | `shared-staging-guard.js` | DAH 공용 — 스테이징 환경 쓰기 차단 안전장치 | 0 |
-| 2 | `dash-utils.js` | DAH 대시보드 — 순수 유틸리티 함수 모음 | 27 |
+| 2 | `dash-utils.js` | DAH 대시보드 — 순수 유틸리티 함수 모음 | 29 |
 | 3 | `dash-api.js` | DAH 대시보드 — 데이터 접근 계층 (Supabase / localStorage) | 5 |
 | 4 | `dash-api-settings.js` | DAH 대시보드 — 설정 접근자 (담당자/거래처/리드기준/지역비/쿠폰/담당자 이메일) | 13 |
 | 5 | `dash-api-data.js` | DAH 대시보드 — 데이터 변환·로딩 (DB행↔화면 객체, 고객/견적 불러오기) | 9 |
@@ -123,6 +123,7 @@
 | `_integrityEsc` | `dash-integrity-watch.js` |
 | `_integrityKey` | `dash-integrity-watch.js` |
 | `_integrityTime` | `dash-integrity-watch.js` |
+| `_localReceivedAmount` | `dash-utils.js` |
 | `_openAlimtalkPreview` | `dash-customer-alim.js` |
 | `_openPdfModalNow` | `est-customer-load.js` |
 | `_readSelfLockLedger` | `shared-optimistic-lock.js` |
@@ -191,6 +192,7 @@
 | `changeStage` | `dash-customer-detail-tabs.js` |
 | `changeStageByName` | `dash-kanban.js` |
 | `checkDuplicate` | `dash-ui-helpers.js` |
+| `checkMoneyMismatch` | `dash-utils.js` |
 | `Chip` | `survey-app.js` |
 | `claimCustomer` | `dash-api-writes.js` |
 | `claimUnassignedCustomer` | `dash-render.js` |

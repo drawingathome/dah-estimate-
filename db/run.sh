@@ -10,8 +10,8 @@ mk(){ $P -d postgres -c "drop database if exists $1" -c "create database $1"; }
 echo "=== A. 규칙 시험 (새 규칙이 들어간 DB) ==="
 mk dah_rules_test
 for f in test/01_schema.sql test/02_functions.sql test/03_stub_views.sql \
-         $R/migration_stage_price_autosync.sql $R/migration_2026_10_22_extra_payment_touch_customer.sql $R/migration_2026_10_22_estimate_confirm_guard.sql \
-         test/assertions.sql w1/95_backfill_lagging_stage.sql test/after_backfill.sql; do
+         $R/migration_stage_price_autosync.sql $R/migration_2026_10_22_extra_payment_touch_customer.sql $R/migration_2026_10_22_estimate_confirm_guard.sql $R/migration_2026_10_24_stage_rule.sql \
+         test/assertions.sql test/stage_rule_assertions.sql; do
   echo "-- $f"; out=$($P -d dah_rules_test -f $f 2>&1) || { echo "$out" | grep -E "FAIL|ERROR" | head -5; echo "A 실패: $f"; fail=1; break; }
   echo "$out" | grep -c "PASS" | sed 's/^/   통과 항목: /' | grep -v ": 0"
 done

@@ -18,7 +18,7 @@ end $$;
 insert into auth.users(id,email) values ('00000000-0000-0000-0000-0000000000a1','staff@t');
 insert into staff_profiles(id,display_name,role) values ('00000000-0000-0000-0000-0000000000a1','선혜','staff');
 
--- ===== 1. 단계 자동 이동 (완납일 때만 시공준비중) =====
+-- ===== 1. 단계 자동 이동 (운영 현재 규칙: 선금 입금 → 선금결제만. 완납→시공준비중은 2026-10-23 제거) =====
 insert into customers(id,client_name,stage,staff_name) overriding system value values (9001,'A','가견적','선혜');
 insert into estimates(id,customer_name,client_id,price,performance_revenue,staff_name) values ('00000000-0000-0000-0000-0000000090a1','A',9001,1000000,800000,'선혜');
 update estimates set deposit_amount=300000, deposit_date='2026-10-01' where id='00000000-0000-0000-0000-0000000090a1';
@@ -29,13 +29,13 @@ update estimates set balance_amount=200000, balance_date='2026-10-05' where id='
 select t.eq('S2 일부 잔금 → 단계 유지(완납 아님)', (select stage from customers where id=9001), '선금결제');
 select t.eq('L2 이동 안 한 저장은 기록 없음', (select count(*)::text from customer_stage_auto_log where customer_id=9001), '1');
 update estimates set balance_amount=700000 where id='00000000-0000-0000-0000-0000000090a1';
-select t.eq('S2 나머지 입금해 완납 → 시공준비중', (select stage from customers where id=9001), '시공준비중');
-select t.eq('L3 완납 이동 기록(사유 포함)', (select count(*)||'/'||max(to_stage)||'/'||bool_or(reason like '%완납%')::text from customer_stage_auto_log where customer_id=9001), '2/시공준비중/true');
+select t.eq('S2 나머지 입금해 완납 → 단계 유지(2026-10-23 긴급 수정: 완납만으로는 이동 안 함)', (select stage from customers where id=9001), '선금결제');
+select t.eq('L3 완납해도 이동 기록 없음(선금 이동 1건뿐)', (select count(*)::text from customer_stage_auto_log where customer_id=9001), '1');
 
 insert into customers(id,client_name,stage,staff_name) overriding system value values (9002,'B','확정견적','선혜');
 insert into estimates(id,customer_name,client_id,price,performance_revenue,staff_name,confirmed_at,deposit_amount,deposit_date,balance_amount,balance_date)
   values ('00000000-0000-0000-0000-0000000090b1','B',9002,500000,400000,'선혜',now(),200000,'2026-09-01',300000,'2026-09-20');
-select t.eq('S3 완납 견적 저장 → 시공준비중', (select stage from customers where id=9002), '시공준비중');
+select t.eq('S3 완납 견적 저장 → 단계 유지', (select stage from customers where id=9002), '확정견적');
 
 insert into customers(id,client_name,stage,staff_name) overriding system value values (9003,'C','확정견적','선혜');
 insert into estimates(id,customer_name,client_id,price,performance_revenue,staff_name,confirmed_at,deposit_amount,deposit_date) values
@@ -52,7 +52,7 @@ insert into estimates(id,customer_name,client_id,price,performance_revenue,staff
 insert into estimate_extra_payments(estimate_id,client_id,amount,paid_date) values ('00000000-0000-0000-0000-0000000090d1',9004,300000,'2026-09-15');
 select t.eq('S5 추가결제 일부 → 단계 유지', (select stage from customers where id=9004), '확정견적');
 insert into estimate_extra_payments(estimate_id,client_id,amount,paid_date) values ('00000000-0000-0000-0000-0000000090d1',9004,200000,'2026-09-20');
-select t.eq('S5 추가결제로 완납 → 시공준비중', (select stage from customers where id=9004), '시공준비중');
+select t.eq('S5 추가결제로 완납 → 단계 유지', (select stage from customers where id=9004), '확정견적');
 
 -- ===== 3. 플러그 이관 고객은 자동 재계산 제외 =====
 insert into customers(id,client_name,stage,memo,price,performance_revenue,staff_name) overriding system value values (9005,'이관','시공완료','플러그(Pluuug)에서 이관된 기존 고객',3320000,574000,'선혜');
@@ -71,7 +71,7 @@ select t.fails('G1 사유 없이 확정 해제', $q$update estimates set confirm
 update estimates set confirmed_at=null, unconfirm_reason='재견적' where id='00000000-0000-0000-0000-0000000090b1';
 select t.eq('G2 사유 있는 해제 → 가견적', (select estimate_status from estimates where id='00000000-0000-0000-0000-0000000090b1'), 'ga');
 select t.eq('G2 해제 기록 1건+사유', (select count(*)||'/'||max(reason) from estimate_confirm_log where estimate_id='00000000-0000-0000-0000-0000000090b1' and action='unconfirm'), '1/재견적');
-select t.eq('G2 해제 후 고객 단계 유지', (select stage from customers where id=9002), '시공준비중');
+select t.eq('G2 해제 후 고객 단계 유지', (select stage from customers where id=9002), '확정견적');
 update estimates set confirmed_at=now() where id='00000000-0000-0000-0000-0000000090b1';
 select t.eq('G3 재확정 → final + 확정 기록 1건(처음 입력 때는 기록 없음)', (select estimate_status||'/'||(select count(*) from estimate_confirm_log where estimate_id='00000000-0000-0000-0000-0000000090b1' and action='confirm') from estimates where id='00000000-0000-0000-0000-0000000090b1'), 'final/1');
 do $$ begin perform set_config('request.jwt.claim.sub','',false); end $$;

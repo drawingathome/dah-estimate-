@@ -84,6 +84,7 @@ function refreshServerMoney(cb) {
       var sig = JSON.stringify(rows.map(function(r) { return [r.customer_id, r.received]; }));
       changed = (_srvMoney.at === 0) || sig !== _srvMoney.sig;
       _srvMoney = { at: Date.now(), map: map, sig: sig };
+      checkMoneyMismatch(map);
     }
     if (cb) cb(changed);
   });
@@ -91,6 +92,29 @@ function refreshServerMoney(cb) {
 function getReceivedAmount(c) {
   var _sv = _srvReceivedFor(c);
   if (_sv !== null) return _sv;
+  return _localReceivedAmount(c);
+}
+// 재발 감시(2026-10-24): 서버값을 받을 때마다 "이 기기가 자기 복사본으로 계산한 값"과 비교해, 어긋난 고객이 있으면 기록(1시간에 한 번).
+// 어긋남 = 이 기기의 견적서 복사본이 낡았다는 뜻. 화면은 서버값을 쓰므로 틀리게 보이진 않지만, 어느 기기에서 얼마나 자주 나는지 보기 위함.
+var _moneyMismatchLoggedAt = 0;
+function checkMoneyMismatch(serverMap) {
+  try {
+    if (!serverMap || typeof loadCustomers !== 'function' || typeof logEvent !== 'function') return;
+    if (Date.now() - _moneyMismatchLoggedAt < 3600 * 1000) return;
+    var bad = [];
+    loadCustomers().forEach(function(c) {
+      if (DAH_POST_CONTRACT_STAGES.indexOf(c.stage) < 0) return;
+      var sv = serverMap[String(c.id)];
+      if (sv === undefined) return;
+      var lc = _localReceivedAmount(c);
+      if (Math.abs(lc - sv) > 0.5) bad.push([c.id, lc, sv]);
+    });
+    if (!bad.length) return;
+    _moneyMismatchLoggedAt = Date.now();
+    logEvent('money_mismatch', { n: bad.length, items: bad.slice(0, 10) });
+  } catch (e) { /* 감시 실패가 화면에 영향 주면 안 됨 */ }
+}
+function _localReceivedAmount(c) {
   // 2026-10-14(받은 돈 계산 한 곳으로): 예전엔 "견적서 합계"와 "고객칸" 중 큰 값을 따로 계산해서, 매출 계산(getAllEstPays)과
   // 서로 다른 답이 나올 수 있었음(환불로 견적서 금액을 줄이면 고객칸의 낡은 큰 값이 남는 문제 포함).
   // 이제 매출 계산과 똑같이 getAllEstPays(견적서별 결제, 견적서에 기록이 전혀 없을 때만 고객칸)의 합계를 씀.

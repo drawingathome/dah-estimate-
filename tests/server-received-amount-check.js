@@ -29,4 +29,17 @@ ok('7. 서버 오류여도 기기 계산으로 계속 동작', unpaid() === 2615
 ctx.sbXHR = (m, p, d, cb) => cb(null, [{ customer_id: 999, price: 1, received: 1, unpaid: 0 }]);
 ctx.refreshServerMoney(() => {});
 ok('8. 서버 목록에 없는 고객은 기기 계산으로 대체', unpaid() === 261500);
+// 재발 감시: 기기 복사본과 서버값이 어긋나면 기록(1시간에 1회)
+const events = [];
+ctx.loadCustomers = () => [c];
+ctx.logEvent = (type, d) => events.push({ type, d });
+ctx.sbXHR = (m, p, d, cb) => cb(null, [{ customer_id: 262, price: 586000, received: 586000, unpaid: 0 }]);
+ctx.refreshServerMoney(() => {});
+ok('9. 복사본이 낡아 서버값과 다르면 money_mismatch 기록', events.length === 1 && events[0].type === 'money_mismatch' && events[0].d.n === 1, JSON.stringify(events));
+ctx.refreshServerMoney(() => {});
+ok('10. 1시간 안에는 다시 기록하지 않음', events.length === 1);
+vm.runInContext('_moneyMismatchLoggedAt = 0', ctx);
+stale[0].balanceAmount = 261500; // 복사본이 최신이 되면
+ctx.refreshServerMoney(() => {});
+ok('11. 복사본이 서버값과 같으면 기록하지 않음', events.length === 1);
 log.forEach(l => console.log(l)); const f = log.filter(l => l.startsWith('❌')); console.log(f.length ? '\n실패 ' + f.length + '건' : '\n전체 통과'); process.exit(f.length ? 1 : 0);
