@@ -183,10 +183,24 @@ function verifyBeforeClose(monthKey, snap, cb) {
         if (err3 || !Array.isArray(ackRows)) return fail('데이터 점검 확인 기록을 불러오지 못해 마감하지 않았어요.');
         var acks = {}; ackRows.forEach(function(a) { acks[a.ack_key] = true; });
         var open = issues.filter(function(r) { return !acks[[r.code, r.customer_id || '', r.detail || ''].join('|')]; });
-        if (open.length) {
-          return fail('확인하지 않은 데이터 점검 경고가 ' + open.length + '건 있어서 마감하지 않았어요.\n(' + open.slice(0, 5).map(function(r){ return (r.client_name || '이름없음'); }).join(', ') + (open.length > 5 ? ' 외' : '') + ')\n\n홈 화면의 점검 카드에서 처리하거나 "확인함"을 눌러 주세요.');
-        }
-        cb(true, '');
+        if (!open.length) { cb(true, ''); return; }
+        // 2026-10-23(마감 검문 월 기준 개선 — 9월 마감이 10월 고객 경고 때문에 막혔던 문제): 확인 안 한 경고라도
+        // "이 달 입금에 포함된 고객"의 경고만 마감을 막고, 다른 달 고객·업무 단계 안내성 경고는 안내로만 알린다.
+        sbXHR('POST', 'rpc/month_revenue_detail', { p_month: monthKey }, function(err4, det) {
+          if (err4 || !Array.isArray(det)) return fail('이 달 입금 내역을 불러오지 못해 마감하지 않았어요. 잠시 후 다시 시도해 주세요.');
+          var inMonth = {}; det.forEach(function(d) { inMonth[String(d.customer_id)] = true; });
+          var INFO_ONLY = ['PAID_STAGE_LAG'];
+          var blocking = [], info = [];
+          open.forEach(function(r) {
+            var affects = INFO_ONLY.indexOf(r.code) < 0 && (!r.customer_id || inMonth[String(r.customer_id)]);
+            (affects ? blocking : info).push(r);
+          });
+          var names = function(a) { return a.slice(0, 5).map(function(r) { return (r.client_name || '이름없음'); }).join(', ') + (a.length > 5 ? ' 외 ' + (a.length - 5) + '건' : ''); };
+          if (blocking.length) {
+            return fail('확인하지 않은 데이터 점검 경고가 ' + blocking.length + '건 있어서 마감하지 않았어요.\n(' + names(blocking) + ')\n\n이 달 입금에 포함된 고객의 경고입니다. 고객 상세에서 확인하거나 확인 처리를 해주세요.');
+          }
+          cb(true, '', info.length ? ('참고: 이 달 매출과 관련 없는 점검 경고 ' + info.length + '건은 마감을 막지 않았어요. (' + names(info) + ')') : '');
+        });
       });
     });
   });
@@ -194,15 +208,15 @@ function verifyBeforeClose(monthKey, snap, cb) {
 function closeMonthNow(monthKey, callback) {
   if (!(isMasterUser())) return;
   var snap0 = computeMonthSnapshot(loadCustomers(), monthKey);
-  verifyBeforeClose(monthKey, snap0, function(okToClose, why) {
+  verifyBeforeClose(monthKey, snap0, function(okToClose, why, infoNote) {
     if (!okToClose) { alert(why); if (callback) callback(false); return; }
-    closeMonthAfterCheck(monthKey, callback);
+    closeMonthAfterCheck(monthKey, callback, infoNote);
   });
 }
-function closeMonthAfterCheck(monthKey, callback) {
+function closeMonthAfterCheck(monthKey, callback, infoNote) {
   var snap = computeMonthSnapshot(loadCustomers(), monthKey);
   var existing = window._monthClose[monthKey];
-  var msg = monthKey + ' 마감값을 저장할까요?\n\n성과매출 ' + Math.round(snap.perf_revenue).toLocaleString() + '원\n입금 합계 ' + Math.round(snap.revenue).toLocaleString() + '원\n\n저장하면 이후 고객 정보를 고쳐도 이 달 숫자는 바뀌지 않습니다.' + (existing ? '\n(이미 마감된 달입니다. 지금 계산값으로 다시 저장합니다.)' : '');
+  var msg = monthKey + ' 마감값을 저장할까요?\n\n성과매출 ' + Math.round(snap.perf_revenue).toLocaleString() + '원\n입금 합계 ' + Math.round(snap.revenue).toLocaleString() + '원\n\n저장하면 이후 고객 정보를 고쳐도 이 달 숫자는 바뀌지 않습니다.' + (existing ? '\n(이미 마감된 달입니다. 지금 계산값으로 다시 저장합니다.)' : '') + (infoNote ? '\n\n' + infoNote : '');
   if (!confirm(msg)) return;
   var body = { month: monthKey, revenue: snap.revenue, perf_revenue: snap.perf_revenue, contract_count: snap.contract_count, by_staff: snap.by_staff };
   var done = function(err, rows) {

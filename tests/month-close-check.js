@@ -35,6 +35,9 @@ async function run() {
         const d = mock.mode === 'diff' ? 777 : 0;
         req.respond({ status: 200, contentType: 'application/json', headers: H, body: JSON.stringify([{ revenue: String(mock.snap.revenue), perf_revenue: String(mock.snap.perf_revenue + d) }]) }); return;
       }
+      if (url.includes('/rpc/month_revenue_detail')) {
+        req.respond({ status: 200, contentType: 'application/json', headers: H, body: JSON.stringify((mock.detailIds || []).map(id => ({ customer_id: id, revenue: 1, perf: 1 }))) }); return;
+      }
       if (url.includes('/data_integrity_issues')) { req.respond({ status: 200, contentType: 'application/json', headers: H, body: JSON.stringify(mock.issues) }); return; }
       if (url.includes('/monthly_close')) {
         if (method === 'GET') { reqs.getClose++; req.respond({ status: 200, contentType: 'application/json', headers: H, body: '[]' }); return; }
@@ -119,10 +122,20 @@ async function run() {
   const patchesBefore = reqs.patch.length, postsBefore = reqs.post.length;
   await tryClose(keys.last, 'diff');
   ok('5-1. [검문] 화면과 DB 독립 계산이 다르면 마감하지 않고 차이를 알려줌', reqs.patch.length === patchesBefore && reqs.post.length === postsBefore && alerts.some(a => a.indexOf('독립 계산이 달라서') !== -1 && a.indexOf('777') !== -1), alerts[alerts.length - 1]);
+  mock.detailIds = ['x1'];
   await tryClose(keys.last, 'match', [{ code: 'OVERPAID', customer_id: 'x1', client_name: '점검고객', detail: 'd' }]);
   ok('5-2. [검문] 확인 안 한 데이터 점검 경고가 있으면 마감하지 않음', reqs.patch.length === patchesBefore && alerts.some(a => a.indexOf('점검 경고가 1건') !== -1), alerts[alerts.length - 1]);
   await tryClose(keys.last, 'fail');
   ok('5-3. [검문] 독립 검산이 통신 실패하면 마감하지 않음(안전하게 실패)', reqs.patch.length === patchesBefore && alerts.some(a => a.indexOf('독립 검산을 불러오지 못해') !== -1), alerts[alerts.length - 1]);
+
+  // 5-4) 다른 달 고객의 경고 / 안내성 경고(PAID_STAGE_LAG)는 마감을 막지 않음
+  mock.detailIds = ['x1'];
+  const p4 = reqs.patch.length;
+  await tryClose(keys.last, 'match', [{ code: 'OVERPAID', customer_id: 'other', client_name: '다른달고객', detail: 'd' }]);
+  ok('5-4. [검문] 이 달 입금에 없는 고객의 경고는 마감을 막지 않음(안내만)', reqs.patch.length === p4 + 1, 'patch ' + (reqs.patch.length - p4));
+  const p5 = reqs.patch.length;
+  await tryClose(keys.last, 'match', [{ code: 'PAID_STAGE_LAG', customer_id: 'x1', client_name: '단계고객', detail: 'd' }]);
+  ok('5-5. [검문] 안내성 경고(PAID_STAGE_LAG)는 이 달 고객이어도 마감을 막지 않음', reqs.patch.length === p5 + 1, 'patch ' + (reqs.patch.length - p5));
 
   // 6) 이번 달은 마감값이 있어도 무시(진행 중인 달은 항상 실시간)
   const curIgnored = await page.evaluate((k) => {
