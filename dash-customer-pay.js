@@ -301,7 +301,17 @@ function renderPaySection(c, payBody, est) {
           // 로컬에 반영해서, 뒤이은 changeStage()가 최신 락값을 쓰게 함.
           var arr = loadCustomers();
           var localC = arr.find(function(x){ return x.id === c.id; });
-          if (localC) { localC.updatedAt = data[0].updated_at; saveCustomers(arr); }
+          if (localC) {
+            localC.updatedAt = data[0].updated_at;
+            // 2026-10-24: DB 규칙이 이 결제 저장 때문에 단계를 자동으로 올렸으면(서버가 돌려준 행의 stage) 화면·기기에도 즉시 반영한다.
+            // 반영하지 않으면 이 기기가 옛 단계를 들고 있다가 다음 저장 때 되돌려버릴 수 있다.
+            if (data[0].stage && data[0].stage !== localC.stage) {
+              var movedFrom = localC.stage;
+              localC.stage = data[0].stage; c.stage = data[0].stage;
+              try { showToast('단계가 자동으로 "' + data[0].stage + '"(으)로 이동됐어요 (이전: ' + movedFrom + ')'); } catch (eT) {}
+            }
+            saveCustomers(arr);
+          }
         }
         if (callback) callback();
       });
