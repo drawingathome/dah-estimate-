@@ -139,3 +139,10 @@ end $$;
 drop trigger if exists trg_extra_pay_recheck_stage on public.estimate_extra_payments;
 create trigger trg_extra_pay_recheck_stage after insert or update or delete on public.estimate_extra_payments
   for each row execute function public.dah_extra_pay_recheck_stage();
+
+-- 내부 도우미 함수는 앱(로그인 사용자)이 직접 호출하지 못하게 한다(트리거 안에서만 실행).
+revoke all on function public.dah_log_stage_rule(bigint, text, text, boolean) from public, anon, authenticated;
+revoke all on function public.dah_recheck_customer_stage(bigint) from public, anon, authenticated;
+revoke all on function public.dah_stage_rule_mode() from public, anon, authenticated;
+revoke all on function public.dah_estimates_recheck_stage() from public, anon, authenticated;
+revoke all on function public.dah_extra_pay_recheck_stage() from public, anon, authenticated;

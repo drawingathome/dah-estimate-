@@ -69,7 +69,7 @@ async function run() {
   await new Promise(r => setTimeout(r, 800));
 
   await page.evaluate(() => {
-    saveCustomers([{ id: 1, clientName: '락값테스트', staffName: '마스터', stage: '확정견적', price: 1000000, updatedAt: '2026-09-08T11:00:00.000Z', is_archived: false }]);
+    saveCustomers([{ id: 1, clientName: '락값테스트', staffName: '마스터', stage: '상담', price: 1000000, updatedAt: '2026-09-08T11:00:00.000Z', is_archived: false }]);
     openDetail('락값테스트', 1);
   });
   await new Promise(r => setTimeout(r, 500));
@@ -77,7 +77,7 @@ async function run() {
   await new Promise(r => setTimeout(r, 300));
 
   await page.evaluate(() => {
-    var amtInput = document.querySelector('input[placeholder^="잔금 금액"]');
+    var amtInput = document.querySelector('input[placeholder^="선금 금액"]');
     amtInput.value = '500000';
     amtInput.dispatchEvent(new Event('input'));
     var dateInput = amtInput.parentElement.querySelector('input[type="date"]');
@@ -86,7 +86,7 @@ async function run() {
   await new Promise(r => setTimeout(r, 200));
   await page.evaluate(() => {
     var btns = Array.from(document.querySelectorAll('button'));
-    var saveBtn = btns.find(b => b.textContent.includes('잔금 저장'));
+    var saveBtn = btns.find(b => b.textContent.includes('선금 저장'));
     if (saveBtn) saveBtn.click();
   });
   await new Promise(r => setTimeout(r, 1000));

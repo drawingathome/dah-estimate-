@@ -131,7 +131,7 @@ async function run() {
     await new Promise(res => setTimeout(res, 400));
     return loadCustomers().find(x=>x.id===5000).stage;
   });
-  ok('7. 잔금입금 후 시공준비중 자동전환', r === '시공준비중', r);
+  ok('7. 잔금입금(전액)해도 앱이 단계를 직접 올리지 않음(DB 규칙 담당)', r !== '시공준비중' && !!r, r);
 
   await wait(400);
   await page.evaluate(() => { openDetail('생애주기A', 5000, 'order'); });
