@@ -14,7 +14,7 @@
 | 3 | `dash-api.js` | DAH 대시보드 — 데이터 접근 계층 (Supabase / localStorage) | 5 |
 | 4 | `dash-api-settings.js` | DAH 대시보드 — 설정 접근자 (담당자/거래처/리드기준/지역비/쿠폰/담당자 이메일) | 13 |
 | 5 | `dash-api-data.js` | DAH 대시보드 — 데이터 변환·로딩 (DB행↔화면 객체, 고객/견적 불러오기) | 9 |
-| 6 | `dash-api-writes.js` | DAH 대시보드 — 고객 DB 쓰기 (저장/선점/보관/삭제/복구/리드보류) | 11 |
+| 6 | `dash-api-writes.js` | DAH 대시보드 — 고객 DB 쓰기 (저장/선점/보관/삭제/복구/리드보류) | 12 |
 | 7 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 9 |
 | 8 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 5 |
 | 9 | `dash-sync-queue.js` | DAH — 오프라인/네트워크 실패 동기화 큐 (2026-08-05 신규) | 6 |
@@ -436,6 +436,7 @@
 | `parseRecoveryTokenFromUrl` | `dash-supabase-auth.js` |
 | `parseRefundError` | `dash-refund.js` |
 | `patchCustomerFieldsToDb` | `dash-api-writes.js` |
+| `patchStageGuarded` | `dash-api-writes.js` |
 | `permanentlyDeleteCustomer` | `dash-customer-detail-tabs.js` |
 | `permanentlyDeleteCustomerFromDb` | `dash-api-writes.js` |
 | `pickCustomSpace` | `est-form-controls.js` |

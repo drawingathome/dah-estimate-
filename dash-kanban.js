@@ -55,7 +55,8 @@ function changeStageByName(customerName, newStage, id) {
     if (customers[idx].id && typeof patchCustomerFieldsToDb === 'function') {
       var kanbanFields = { stage: newStage };
       if (newStage === '확정견적' && customers[idx].confirmDate) kanbanFields.confirm_date = customers[idx].confirmDate;
-      patchCustomerFieldsToDb(customers[idx], kanbanFields, function(err) {
+      patchStageGuarded(customers[idx], oldStage, kanbanFields, function(err) {
+        if (err && err.stageConflict) { try { renderPipe(loadCustomers()); } catch (eR) {} return; }
         if (err) console.warn('스테이지 동기화 실패:', err);
       });
     }

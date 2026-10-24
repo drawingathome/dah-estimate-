@@ -215,6 +215,36 @@ function patchCustomerFieldsToDb(customer, fields, callback, opts) {
   });
 }
 
+// 2026-10-24 단계 저장 전용 충돌 방지(오래된 기기 덮어쓰기 방지). 서버 단계가 "내가 화면에서 본 단계(fromStage)"일 때만 새 단계를 반영한다.
+// 그 사이 다른 기기나 DB 자동 규칙이 단계를 바꿨으면(0건 반영) 서버 단계를 읽어 내 화면을 그 값으로 맞추고, 덮어쓰지 않는다.
+// callback(err, data): 충돌이면 err.stageConflict=true, err.serverStage=서버 단계.
+function patchStageGuarded(customer, fromStage, fields, callback) {
+  var guard = fromStage ? '&stage=eq.' + encodeURIComponent(fromStage) : '';
+  patchCustomerFieldsToDb(customer, fields, callback, {
+    query: guard,
+    onZeroRows: function(zeroErr) {
+      sbXHR('GET', 'customers?id=eq.' + customer.id + '&select=stage', null, function(gErr, rows) {
+        if (gErr || !Array.isArray(rows) || !rows[0] || rows[0].stage === fromStage) {
+          // 충돌이 아니라 권한 문제 등: 기존 안내와 같은 방식으로 알림
+          if (typeof showToast === 'function') showToast('⚠️ 서버에 반영되지 않았어요 (권한 문제일 수 있어요) — 마스터님께 알려주세요');
+          if (callback) callback(zeroErr, null);
+          return;
+        }
+        var srv = rows[0].stage;
+        try {
+          var arr = loadCustomers();
+          var idx = arr.findIndex(function(x){ return String(x.id) === String(customer.id); });
+          if (idx >= 0) { arr[idx].stage = srv; saveCustomers(arr); }
+          customer.stage = srv;
+        } catch (eLocal) { /* 화면 맞춤 실패는 아래 안내로 충분 */ }
+        if (typeof logEvent === 'function') logEvent('stage_conflict', { customerId: customer.id, mine: fromStage, wanted: fields && fields.stage, server: srv });
+        if (typeof showToast === 'function') showToast('⚠️ 다른 곳에서 이미 "' + srv + '"(으)로 바뀌어 있어서 덮어쓰지 않았어요. 화면을 맞췄으니 다시 확인해 주세요');
+        if (callback) callback({ stageConflict: true, serverStage: srv, text: '단계 충돌' }, null);
+      });
+    }
+  });
+}
+
 // 2026-10-08: 고객 정보 중 "필드 몇 개만" 바꾸는 저장(메모/결제링크/실측·시공일/발주체크)의 공용 입구.
 // 서버 id가 있으면 그 필드만 보내고(patchCustomerFieldsToDb), 아직 서버에 없는 고객(id 없음)이면 예전처럼 전체 저장(생성)으로 보냄.
 function saveCustomerFieldsToDb(customer, fields, callback) {
