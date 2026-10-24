@@ -94,7 +94,8 @@ function renderHome(skipServerFetch) {
       try { renderHome(true); } finally { _w._srvFromRefresh = false; }
     };
     refreshServerMonthDetail([_mk0, _mk1], _redraw);
-    setTimeout(function() { refreshServerMonthDetail([_mk0, _mk1], _redraw); }, 2500);
+    if (typeof refreshServerMoney === 'function') refreshServerMoney(_redraw);
+    setTimeout(function() { refreshServerMonthDetail([_mk0, _mk1], _redraw); if (typeof refreshServerMoney === 'function') refreshServerMoney(_redraw); }, 2500);
   }
 
   // skipServerFetch=true: 방금 로컬(localStorage)을 이미 최신으로 갱신한 직후 호출되는 경우

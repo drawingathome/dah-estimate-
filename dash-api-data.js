@@ -318,7 +318,7 @@ function loadCustomersAsync(callback, force) {
   });
 }
 
-function saveCustomers(arr) { _customerCache = arr; if (typeof invalidateServerMonthDetail === "function") invalidateServerMonthDetail(); try { localStorage.setItem('dah_customers', JSON.stringify(arr)); } catch(e) {} }
+function saveCustomers(arr) { _customerCache = arr; if (typeof invalidateServerMonthDetail === "function") invalidateServerMonthDetail(); if (typeof invalidateServerMoney === "function") invalidateServerMoney(); try { localStorage.setItem('dah_customers', JSON.stringify(arr)); } catch(e) {} }
 
 // 서버가 방금 돌려준 고객 행들의 수정 시각(updated_at)을 고객 목록 캐시에 반영 (sbXHR이 고객 PATCH 성공 때마다 호출)
 function syncCustomerLocksFromRows(rows) {

@@ -64,7 +64,33 @@ function renderStaffBadge(staffName, sizePx) {
 // 고객이 전액 미수금으로 잘못 표시되는 광범위한 버그였음. dash-
 // customer-pay.js가 견적서 단위 저장으로 전환되기 전까지는, 두 소스
 // 중 더 큰 쪽(실제로 기록된 쪽)을 받은 금액으로 인정해야 안전함.
+// 2026-10-24(선혜님 - "완납인데 왜 미납으로 뜨지?" 근본 수정): 받은 금액/미수금은 이 기기에 저장된 견적서 복사본(dah_saved)이 아니라
+// DB 함수 customer_money_status 값을 쓴다. 복사본은 견적서 탭·고객 상세를 열 때만 갱신돼서, 다른 기기(실장)가 넣은 잔금·추가결제가
+// 빠진 채 "미수금"으로 보였음. 서버값이 없거나 2분이 지나면(오프라인 등) 예전처럼 기기 계산으로 대체.
+var _srvMoney = { at: 0, map: null, sig: '' };
+var SRV_MONEY_TTL = 120 * 1000;
+function _srvReceivedFor(c) {
+  if (!c || c.id == null || !_srvMoney.map || (Date.now() - _srvMoney.at) > SRV_MONEY_TTL) return null;
+  var r = _srvMoney.map[String(c.id)];
+  return r === undefined ? null : r;
+}
+function invalidateServerMoney() { _srvMoney.at = 0; }
+function refreshServerMoney(cb) {
+  sbXHR('POST', 'rpc/customer_money_status', {}, function(err, rows) {
+    var changed = false;
+    if (!err && Array.isArray(rows)) {
+      var map = {};
+      rows.forEach(function(r) { map[String(r.customer_id)] = Number(r.received) || 0; });
+      var sig = JSON.stringify(rows.map(function(r) { return [r.customer_id, r.received]; }));
+      changed = (_srvMoney.at === 0) || sig !== _srvMoney.sig;
+      _srvMoney = { at: Date.now(), map: map, sig: sig };
+    }
+    if (cb) cb(changed);
+  });
+}
 function getReceivedAmount(c) {
+  var _sv = _srvReceivedFor(c);
+  if (_sv !== null) return _sv;
   // 2026-10-14(받은 돈 계산 한 곳으로): 예전엔 "견적서 합계"와 "고객칸" 중 큰 값을 따로 계산해서, 매출 계산(getAllEstPays)과
   // 서로 다른 답이 나올 수 있었음(환불로 견적서 금액을 줄이면 고객칸의 낡은 큰 값이 남는 문제 포함).
   // 이제 매출 계산과 똑같이 getAllEstPays(견적서별 결제, 견적서에 기록이 전혀 없을 때만 고객칸)의 합계를 씀.
