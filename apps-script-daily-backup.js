@@ -50,7 +50,7 @@ var SUPABASE_SERVICE_ROLE_KEY = PropertiesService.getScriptProperties().getPrope
 // 붙여넣어야만 운영에 반영되는데, 저장소에서 고친 버전이 실제로 반영됐는지 확인할 방법이 없어서 낡은 코드(9/23~10/1 버전)가
 // 며칠 동안 매일 실패하는 걸 늦게 알았음. 버전을 코드에 박아 매일 메일·로그에 함께 찍어서, 낡은 코드가 돌고 있으면 바로
 // 보이게 함. ※ 이 파일을 고칠 때마다 아래 값도 같이 올릴 것(날짜.순번).
-var DAH_SCRIPT_VERSION = '2026-10-25.3';
+var DAH_SCRIPT_VERSION = '2026-10-26.1';
 
 // 점검 함수 하나가 오류로 죽어도 백업과 나머지 점검은 계속 돌게 감싸는 헬퍼. 죽은 점검은 failures에 모아서 메일로 알림.
 function dahSafeScan(name, fn, failures) {
@@ -189,6 +189,8 @@ function dahDailyBackup() {
   integrityIssues = integrityIssues.concat(dahSafeScan('dahScanDbIntegrityView', function () { return dahScanDbIntegrityView(); }, scanFailures));
   // 2026-10-25(R-02): 구글에 붙여넣은 스크립트가 저장소 최신본인지 매일 비교(붙여넣기를 깜빡하면 알림)
   integrityIssues = integrityIssues.concat(dahSafeScan('dahScanScriptVersion', function () { return dahScanScriptVersion(); }, scanFailures));
+  // 2026-10-26(R-13): 마감된 달의 저장값이 지금 DB 독립 계산과 같은지 매일 비교
+  integrityIssues = integrityIssues.concat(dahSafeScan('dahScanClosedMonthDrift', function () { return dahScanClosedMonthDrift(backup); }, scanFailures));
   // 2026-10-25(R-07): 월요일마다 지난 7일 저장 실패(동시저장충돌 등) 요약
   integrityIssues = integrityIssues.concat(dahSafeScan('dahScanWeeklySaveFailures', function () { return dahScanWeeklySaveFailures(); }, scanFailures));
   if (integrityIssues.length > 0) {
@@ -470,6 +472,29 @@ function dahScanWeeklySaveFailures() {
   var by = {};
   rows.forEach(function (r) { var k = (r.user_name || '(이름 없음)') + ' / ' + String(r.message || '').replace(/ - 내용 백업됨/, ''); by[k] = (by[k] || 0) + 1; });
   issues.push('[주간 저장 실패 요약] 지난 7일 저장 실패 ' + rows.length + '건 - ' + Object.keys(by).map(function (k) { return k + ' ' + by[k] + '건'; }).join(' | ') + ' (같은 순간 여러 건은 한 번의 저장 재시도일 수 있음. 반복되면 원인 점검 필요)');
+  return issues;
+}
+
+// 2026-10-26(R-13): 월 마감은 마감 순간에만 화면=DB 일치를 확인함. 마감 뒤 과거 입금·견적서·환불이 바뀌면 저장된 마감값과 실제가 조용히 벌어질 수 있음
+// → 마감된 달마다 저장값(revenue, perf_revenue)을 DB 독립 계산(independent_month_check)과 매일 비교해 1원 넘게 다르면 알림. (최근 12개 마감월)
+function dahScanClosedMonthDrift(backup) {
+  var issues = [];
+  if (!backup || !Array.isArray(backup.monthly_close)) return issues;
+  var H = { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY };
+  var rows = backup.monthly_close.filter(function (r) { return r && r.month; }).sort(function (a, b) { return a.month < b.month ? 1 : -1; }).slice(0, 12);
+  rows.forEach(function (r) {
+    try {
+      var res = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/rpc/independent_month_check', { method: 'post', contentType: 'application/json', headers: H, payload: JSON.stringify({ p_month: r.month }), muteHttpExceptions: true });
+      if (res.getResponseCode() !== 200) { issues.push('[마감값 검산 실패] ' + r.month + ' independent_month_check 호출 실패(상태코드 ' + res.getResponseCode() + ')'); return; }
+      var d = JSON.parse(res.getContentText());
+      if (!Array.isArray(d) || !d[0]) { issues.push('[마감값 검산 실패] ' + r.month + ' 응답 형식 이상'); return; }
+      var dRev = Math.round(Number(r.revenue) - Number(d[0].revenue)), dPerf = Math.round(Number(r.perf_revenue) - Number(d[0].perf_revenue));
+      if (!isFinite(dRev) || !isFinite(dPerf)) { issues.push('[마감값 검산 실패] ' + r.month + ' 숫자 변환 불가'); return; }
+      if (Math.abs(dRev) > 1 || Math.abs(dPerf) > 1) {
+        issues.push('[마감 후 숫자 변동] ' + r.month + ' 마감 저장값과 현재 DB 계산이 다름 — 입금 ' + Math.round(Number(r.revenue)).toLocaleString() + '→' + Math.round(Number(d[0].revenue)).toLocaleString() + ' / 성과매출 ' + Math.round(Number(r.perf_revenue)).toLocaleString() + '→' + Math.round(Number(d[0].perf_revenue)).toLocaleString() + ' (마감 뒤 과거 입금·환불·견적서가 바뀌었는지 확인 필요)');
+      }
+    } catch (e) { issues.push('[마감값 검산 실패] ' + r.month + ' ' + e.message); }
+  });
   return issues;
 }
 

@@ -31,7 +31,8 @@ function buildContext(opts) {
     console, Date, JSON, Math, Array, Object, String, Number, RegExp, parseInt, parseFloat, isNaN, encodeURIComponent, decodeURIComponent, Error, Set, Map,
     PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => (k === 'LAST_ERROR_CHECK_TIME' ? null : 'fake-secret'), setProperty: () => {}, getProperties: () => ({}) }) },
     UrlFetchApp: { fetch: (url, o) => {
-      if (url.includes('rpc/dah_backup_export')) { const t = JSON.parse(o.payload).table_name; fetchedTables.push(t); if (t === 'monthly_close') return respond(opts.monthlyClose === 'error' ? { error: 'x' } : (opts.monthlyClose || [{ month: prevMonthKey }])); return respond(t === 'customers' ? customers : t === 'estimates' ? (opts.estimates || []) : []); }
+      if (url.includes('rpc/dah_backup_export')) { const t = JSON.parse(o.payload).table_name; fetchedTables.push(t); if (t === 'monthly_close') return respond(opts.monthlyClose === 'error' ? { error: 'x' } : (opts.monthlyClose || [{ month: prevMonthKey, revenue: 1000000, perf_revenue: 900000 }])); return respond(t === 'customers' ? customers : t === 'estimates' ? (opts.estimates || []) : []); }
+      if (url.includes('rpc/independent_month_check')) return respond(opts.indep || [{ revenue: 1000000, perf_revenue: 900000 }]);
       if (url.includes('client_error_logs?select=message,user_name')) return respond(opts.saveFails || []);
       if (url.includes('client_error_logs?')) return respond(opts.errorLogs || []);
       if (url.includes('v_critical_triggers_status')) return respond((opts.triggers || ['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment', 'trg_guard_staff_name_customers', 'trg_guard_staff_name_estimates', 'trg_guard_payment_reduction_customers', 'trg_guard_payment_reduction_estimates', 'trg_guard_payment_date', 'trg_guard_archived_estimate_payment', 'trg_payment_refunds_append_only', 'trg_estimates_confirm_guard', 'trg_sync_customer_price', 'trg_adjust_customer_amounts_on_estimate_delete', 'trg_extra_payment_touch_customer', 'trg_customers_auto_stage']).map(n => ({ trigger_name: n })));
@@ -219,6 +220,13 @@ const wkTue = runOnDay(1, { customers: [], saveFails: [{ message: '견적서 저
 ok('10-20. [R-07 화요일] 월요일이 아니면 요약 없음', !wkTue.mails.some(m => /주간 저장 실패 요약/.test(m.body)), JSON.stringify(wkTue.mails.map(m => m.subject)));
 const wkNone = runOnDay(0, { customers: [], saveFails: [] });
 ok('10-21. [R-07 월요일, 실패 0건] 요약 메일 없음', !wkNone.mails.some(m => /주간 저장 실패 요약/.test(m.body)), JSON.stringify(wkNone.mails.map(m => m.subject)));
+
+const cmOk = run({ customers: [], monthlyClose: [{ month: '2026-09', revenue: 1000000, perf_revenue: 900000 }] });
+ok('10-22. [R-13 마감값 = 현재 DB 계산] 알림 없음', !cmOk.mails.some(m => /마감 후 숫자 변동|마감값 검산 실패/.test(m.body)), JSON.stringify(cmOk.mails.map(m => m.subject)));
+const cmDrift = run({ customers: [], monthlyClose: [{ month: '2026-09', revenue: 1000000, perf_revenue: 900000 }], indep: [{ revenue: 1041000, perf_revenue: 900000 }] });
+ok('10-23. [R-13 마감 뒤 입금이 바뀜] 어느 달·얼마→얼마 알림', cmDrift.mails.some(m => /마감 후 숫자 변동/.test(m.body) && /2026-09/.test(m.body) && /1,041,000/.test(m.body)), JSON.stringify(cmDrift.mails.map(m => m.subject)));
+const cmNone = run({ customers: [], monthlyClose: [] });
+ok('10-24. [R-13 마감된 달이 없음] 검산 알림 없음', !cmNone.mails.some(m => /마감 후 숫자 변동|마감값 검산 실패/.test(m.body)), JSON.stringify(cmNone.mails.map(m => m.subject)));
 
 const bkNew = run({ customers: [] });
 ok('11. 매일 백업이 환불 기록(payment_refunds)·자동 점검 기록도 가져옴(돈이 빠져나간 근거가 백업에서 빠지지 않게)', bkNew.fetchedTables.indexOf("payment_refunds") >= 0 && bkNew.fetchedTables.indexOf("integrity_daily_log") >= 0, JSON.stringify(bkNew.fetchedTables));
