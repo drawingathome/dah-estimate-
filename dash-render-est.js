@@ -237,12 +237,13 @@ function renderEstList() {
           // 아니면 못 보고 그 직후 이어지는 화면이동이 실패한 것처럼 보였음.
           var staffName3 = (typeof currentUser !== 'undefined' && currentUser && currentUser.role === 'staff') ? currentUser.name : '마스터';
           var payload = { client_name: entry.clientName, phone: entry.phone || null, stage: '가견적', price: entry.price || 0, staff_name: staffName3 };
-          sbXHR('POST', 'customers', payload, function(err, rows){
-            entry._registeringAsCustomer = false;
-            if (err || !rows || !rows[0]) { showToast('고객 등록 실패 — 다시 시도해주세요'); return; }
-            var newId = rows[0].id;
+          // 2026-10-25 전수표 T-09: 고객은 만들어졌는데 견적 연결(PATCH)이 실패하면, 다시 눌렀을 때 고객이 또 만들어져 중복되던 문제.
+          // 만든 고객 번호를 기억해 두었다가 다시 누르면 고객 생성은 건너뛰고 연결만 재시도한다.
+          function linkAndOpen(newId) {
+            entry._registeringAsCustomer = true;
             sbXHR('PATCH', 'estimates?id=eq.' + entry.id, { client_id: newId }, function(err){
-              if (err) { showToast('⚠️ 고객은 등록됐지만 이 견적과 연결이 안 됐어요 — 새로고침해서 다시 시도해주세요'); return; }
+              entry._registeringAsCustomer = false;
+              if (err) { showToast('⚠️ 고객은 등록됐지만 이 견적과 연결이 안 됐어요 — 같은 버튼을 다시 누르면 연결만 다시 시도해요'); return; }
               entry.clientId = newId;
               try {
                 var arr = JSON.parse(localStorage.getItem('dah_saved')||'[]');
@@ -252,6 +253,22 @@ function renderEstList() {
               showToast('고객으로 등록했어요');
               openDetail(entry.clientName, newId, 'est');
             });
+          }
+          // 목록을 다시 그려도(화면 이동 후 복귀) 기억하도록 화면 단위 표에 보관. 같은 이름+전화번호의 등록 고객이 이미 있어도 새로 만들지 않고 연결만 한다.
+          window._estCreatedCustomerByEstId = window._estCreatedCustomerByEstId || {};
+          var knownId = window._estCreatedCustomerByEstId[entry.id];
+          if (!knownId && entry.phone) {
+            try {
+              var same = (typeof loadCustomers === 'function' ? loadCustomers() : []).filter(function(c){ return !c.is_archived && c.clientName === entry.clientName && c.phone && c.phone === entry.phone; });
+              if (same.length === 1) knownId = same[0].id;
+            } catch (eSame) { /* 조회 실패는 새로 만드는 기존 흐름으로 */ }
+          }
+          if (knownId) { linkAndOpen(knownId); return; }
+          sbXHR('POST', 'customers', payload, function(err, rows){
+            entry._registeringAsCustomer = false;
+            if (err || !rows || !rows[0]) { showToast('고객 등록 실패 — 다시 시도해주세요'); return; }
+            window._estCreatedCustomerByEstId[entry.id] = rows[0].id;
+            linkAndOpen(rows[0].id);
           });
         }
         return;
