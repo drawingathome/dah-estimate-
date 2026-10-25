@@ -37,6 +37,8 @@ function buildContext(opts) {
       if (url.includes('integrity_daily_log')) return respond(opts.dbLog || [{ run_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString(), total_count: 0 }]);
       if (url.includes('data_integrity_issues')) return respond(opts.dbIssues || []);
       if (url.includes('permission_selftest_log?')) return respond(opts.selftest || [{ run_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString(), ok: true, detail: {} }]);
+      if (url.includes('estimate_confirm_log?')) return respond(opts.confirmLog || []);
+      if (url.includes('/customers?id=in.')) return respond([{ id: 7, client_name: '해제테스트' }]);
       if (url.includes('/surveys?status=eq.')) return respond(opts.newSurveys || []);
       if (url.includes('integrity_acks')) return respond(opts.dbAcks || []);
       if (url.includes('v_critical_constraints_status')) return respond([{ constraint_name: 'surveys_client_idempotency_key_unique' }]);
@@ -185,6 +187,16 @@ ok('10-10. [방금 들어온 설문] 알림 없음(다음 실행에서 처리될
 
 const noConfirmGuard = run({ customers: [], triggers: ['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment', 'trg_guard_staff_name_customers', 'trg_guard_staff_name_estimates', 'trg_guard_payment_reduction_customers', 'trg_guard_payment_reduction_estimates', 'trg_guard_payment_date', 'trg_guard_archived_estimate_payment', 'trg_payment_refunds_append_only', 'trg_sync_customer_price', 'trg_adjust_customer_amounts_on_estimate_delete', 'trg_extra_payment_touch_customer', 'trg_customers_auto_stage'] });
 ok('10-11. [확정 보호 트리거가 사라짐] 알림이 옴(전수표 T-07)', noConfirmGuard.mails.some(m => /trg_estimates_confirm_guard/.test(m.body)), JSON.stringify(noConfirmGuard.mails.map(m => m.subject)));
+
+const H = (h) => new Date(Date.now() - h * 3600 * 1000).toISOString();
+const cfNoReason = run({ customers: [], confirmLog: [{ estimate_id: 'e1', client_id: 7, action: 'unconfirm', reason: null, changed_at: H(1) }] });
+ok('10-12. [R-06 사유 없이 확정이 풀림] 즉시 알림(고객 이름 포함)', cfNoReason.mails.some(m => /확정 해제 상태 유지/.test(m.body) && /해제테스트/.test(m.body) && /없음/.test(m.body)), JSON.stringify(cfNoReason.mails.map(m => m.subject)));
+const cfOld = run({ customers: [], confirmLog: [{ estimate_id: 'e2', client_id: 7, action: 'unconfirm', reason: '고객 요청', changed_at: H(30) }] });
+ok('10-13. [R-06 사유 있어도 24시간 넘게 재확정 안 됨] 알림', cfOld.mails.some(m => /확정 해제 상태 유지/.test(m.body)), JSON.stringify(cfOld.mails.map(m => m.subject)));
+const cfFresh = run({ customers: [], confirmLog: [{ estimate_id: 'e3', client_id: 7, action: 'unconfirm', reason: '고객 요청', changed_at: H(2) }] });
+ok('10-14. [R-06 사유 있고 방금 풀림] 알림 없음(재확정 시간 줌)', !cfFresh.mails.some(m => /확정 해제 상태 유지/.test(m.body)), JSON.stringify(cfFresh.mails.map(m => m.subject)));
+const cfRe = run({ customers: [], confirmLog: [{ estimate_id: 'e4', client_id: 7, action: 'unconfirm', reason: null, changed_at: H(40) }, { estimate_id: 'e4', client_id: 7, action: 'confirm', reason: null, changed_at: H(39) }] });
+ok('10-15. [R-06 풀렸다가 재확정됨] 알림 없음', !cfRe.mails.some(m => /확정 해제 상태 유지/.test(m.body)), JSON.stringify(cfRe.mails.map(m => m.subject)));
 
 const bkNew = run({ customers: [] });
 ok('11. 매일 백업이 환불 기록(payment_refunds)·자동 점검 기록도 가져옴(돈이 빠져나간 근거가 백업에서 빠지지 않게)', bkNew.fetchedTables.indexOf("payment_refunds") >= 0 && bkNew.fetchedTables.indexOf("integrity_daily_log") >= 0, JSON.stringify(bkNew.fetchedTables));

@@ -380,6 +380,38 @@ function dahScanDbIntegrityView() {
       if (stuck.length) issues.push('[설문 자동등록 지연] 3시간 넘게 고객으로 등록되지 않은 설문 ' + stuck.length + '건(' + stuck.slice(0, 3).map(function (r) { return r.client_name || '이름없음'; }).join(', ') + ') - 이름/연락처 누락이거나 자동 등록이 실패 중일 수 있음');
     }
   } catch (eSv) { /* 이 확인이 실패해도 다른 점검은 계속 */ }
+  // 2026-10-25(R-06): 견적서 확정이 풀리면(estimate_confirm_log action='unconfirm') 매출·단계 계산이 달라질 수 있는데 아무도 모르고 지나갔음.
+  // 최근 14일 기록에서 견적서별 "마지막 동작"을 보고 ① 사유 없이 풀린 건 즉시 ② 사유가 있어도 24시간 넘게 재확정 안 된 건을 메일에 포함.
+  // (몇 분 안에 다시 확정되는 정상 수정은 조용히 넘어감)
+  try {
+    var since = new Date(Date.now() - 14 * 24 * 3600 * 1000).toISOString();
+    var cfRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/estimate_confirm_log?select=estimate_id,client_id,action,reason,changed_at&changed_at=gte.' + encodeURIComponent(since) + '&order=changed_at.asc&limit=1000', { headers: H, muteHttpExceptions: true });
+    if (cfRes.getResponseCode() !== 200) {
+      issues.push('[확정 해제 점검 실패] estimate_confirm_log 조회 실패(상태코드 ' + cfRes.getResponseCode() + ')');
+    } else {
+      var lastBy = {};
+      (JSON.parse(cfRes.getContentText()) || []).forEach(function (r) { lastBy[r.estimate_id] = r; });
+      var openRel = Object.keys(lastBy).map(function (k) { return lastBy[k]; }).filter(function (r) {
+        if (r.action !== 'unconfirm') return false;
+        var noReason = !r.reason || !String(r.reason).trim();
+        var age = Date.now() - new Date(r.changed_at).getTime();
+        return noReason || age > 24 * 3600 * 1000;
+      });
+      if (openRel.length) {
+        var nameById = {};
+        try {
+          var ids = openRel.map(function (r) { return r.client_id; }).filter(function (x) { return x; });
+          if (ids.length) {
+            var cnRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?id=in.(' + ids.join(',') + ')&select=id,client_name', { headers: H, muteHttpExceptions: true });
+            if (cnRes.getResponseCode() === 200) JSON.parse(cnRes.getContentText()).forEach(function (c) { nameById[c.id] = c.client_name; });
+          }
+        } catch (eN) { /* 이름 조회 실패해도 알림은 보냄 */ }
+        openRel.forEach(function (r) {
+          issues.push('[확정 해제 상태 유지] ' + (nameById[r.client_id] || ('고객 id ' + r.client_id)) + ' 견적서 확정이 ' + new Date(r.changed_at).toISOString().slice(0, 16).replace('T', ' ') + '(UTC)에 풀린 뒤 다시 확정되지 않음 - 사유: ' + ((r.reason && String(r.reason).trim()) || '없음(확인 필요)') + ' / 의도한 수정이면 재확정, 아니면 원인 확인');
+        });
+      }
+    }
+  } catch (eCf) { issues.push('[확정 해제 점검 실패] ' + eCf.message); }
   try {
     var vRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/data_integrity_issues?select=code,severity,customer_id,client_name,staff_name,detail&limit=500', { headers: H, muteHttpExceptions: true });
     var aRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/integrity_acks?select=ack_key&limit=2000', { headers: H, muteHttpExceptions: true });
