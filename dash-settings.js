@@ -308,8 +308,12 @@ function renderSettings() {
       if (!note || !note.trim()) { showToast('인수인계 메모 없이는 이관할 수 없습니다'); return; }
       if (!confirm(name + ' 담당 고객·견적 ' + count + '건을 ' + target + '로 이관하고 로그인을 차단합니다.\n(그동안의 매출 실적은 ' + name + ' 것으로 그대로 유지됩니다)\n진행할까요?')) return;
       sbXHR('PATCH', 'customers?staff_name=eq.' + encodeURIComponent(name), { staff_name: target }, function(err2, rows2) {
-        var custMoved = (!err2 && Array.isArray(rows2)) ? rows2.length : 0;
+        // T-12: 고객 이관이 실패하면 로그인 차단·목록 삭제를 하지 않고 중단(예전엔 실패해도 "이관 완료"로 표시됨)
+        if (err2) { showToast('⚠️ 고객 이관에 실패해 중단했습니다(담당자·로그인은 그대로). 잠시 후 다시 시도해 주세요'); if (typeof reportClientError === 'function') reportClientError('staff_offboard_customers', err2.text || err2); return; }
+        var custMoved = Array.isArray(rows2) ? rows2.length : 0;
         sbXHR('PATCH', 'estimates?staff_name=eq.' + encodeURIComponent(name), { staff_name: target }, function(err3, rows3) {
+          // 견적서가 0건인 담당자는 정상(zeroRows) — 그 외 오류만 중단
+          if (err3 && !err3.zeroRows) { showToast('⚠️ 고객은 이관됐지만 견적서 이관에 실패해 로그인 차단을 보류했습니다. 다시 한 번 삭제를 눌러 주세요'); if (typeof reportClientError === 'function') reportClientError('staff_offboard_estimates', err3.text || err3); return; }
           var estMoved = (!err3 && Array.isArray(rows3)) ? rows3.length : 0;
           if (typeof logEvent === 'function') logEvent('staff_offboard', { from: name, to: target, customerCount: custMoved, estimateCount: estMoved, note: note.trim() });
           finishStaffRemoval(name);

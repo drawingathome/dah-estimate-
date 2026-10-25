@@ -545,6 +545,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['est-retry-queue-already-saved-check.js', []]); // 2026-10-23 재시도 대기 중복·이미 저장된 내용 허위 실패 방지
   scripts.push(['memo-concurrent-edit-check.js', []]); // 2026-10-15 메모 동시편집 충돌방지
   scripts.push(['est-register-customer-dup-check.js', []]); // 2026-10-25 견적에서 고객 등록 중 연결 실패 후 재시도 중복 방지(전수표 T-09)
+  scripts.push(['staff-offboard-failure-check.js', []]); // 2026-10-25 담당자 퇴사 이관 실패시 완료 표시·로그인 차단 방지(전수표 T-12)
   scripts.push(['order-status-concurrent-check.js', []]); // 2026-10-25 발주 현황 동시편집 충돌방지(전수표 T-01)
   scripts.push(['est-order-status-lock-check.js', []]); // 2026-10-25 견적서 앱 발주 현황 잠금(전수표 T-01)
   scripts.push(['price-override-concurrent-check.js', []]); // 2026-10-16 금액 수동확정 동시편집
