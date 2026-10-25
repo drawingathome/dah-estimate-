@@ -1,3 +1,4 @@
 node_modules/
 tests/_shot_*.png
 qa/*.png
+node_modules
