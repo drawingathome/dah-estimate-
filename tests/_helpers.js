@@ -139,6 +139,8 @@ async function blockRealNetwork(page) {
         // 같은 흐름은 DELETE 실패시 로컬 반영을 아예 안 하도록 되어있어서
         // (안전을 위해 의도된 설계), 이 mock이 없으면 삭제 관련 테스트 자체가
         // "서버 실패"로 조용히 아무 일도 안 하고 넘어가고 있었음.
+        // R-09(2026-10-26): id 지정 삭제는 지운 행을 돌려받음(0건이면 실패 처리) - 정상 삭제는 1건이 지워진 것으로 흉내
+        if (/[?&]id=eq\./.test(url)) { req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[{"id":1}]' }); return; }
         req.respond({ status: 204, headers: { 'Access-Control-Allow-Origin': '*' } });
         return;
       }

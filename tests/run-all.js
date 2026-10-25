@@ -551,6 +551,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['no-master-pw-upload-check.js', []]); // 2026-10-25 비밀번호류를 서버 설정표에 올리지 않음(전수표 T-19)
   scripts.push(['schema-contract-check.js', []]); // 2026-10-26 조회 주소의 표·열 이름이 실제 DB에 있는지(스키마 계약)
   scripts.push(['deploy-compare-check.js', []]); // 2026-10-26 F-5 배포 후 파일 비교가 낡은 파일·404·통신 끊김을 실제로 잡는지
+  scripts.push(['delete-zero-rows-check.js', []]); // 2026-10-26 R-09 id 지정 삭제가 0건이면 성공으로 착각하지 않는지
   scripts.push(['settings-seed-master-only-check.js', ['dah-dashboard.html']]); // 2026-10-25 설정표 최초 올리기는 마스터 화면만(전수표 T-04)
   scripts.push(['order-status-concurrent-check.js', []]); // 2026-10-25 발주 현황 동시편집 충돌방지(전수표 T-01)
   scripts.push(['est-order-status-lock-check.js', []]); // 2026-10-25 견적서 앱 발주 현황 잠금(전수표 T-01)

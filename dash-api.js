@@ -37,7 +37,10 @@ function sbXHR(method, path, data, callback, _retried) {
   // 전체 기능(estimates만 고쳤던 것과 같은 원인, 훨씬 넓은 범위)이 전부 이
   // 위험에 노출돼 있었음. PATCH도 항상 return=representation으로 받아서
   // 실제 반영 건수(0건이면 실패)를 확인하도록 수정.
-  xhr.setRequestHeader('Prefer', method === 'DELETE' ? 'return=minimal' : 'return=representation');
+  // R-09(2026-10-26): id 하나를 지정한 삭제는 지워진 행을 돌려받아, 0건이면(권한 문제·이미 지워짐) 성공으로 착각하지 않게 함.
+  // 조건 여러 건 삭제(client_id=eq... 등)는 0건이 정상일 수 있어 기존대로 minimal.
+  var _delOne = method === 'DELETE' && /[?&]id=eq\./.test(path);
+  xhr.setRequestHeader('Prefer', (method === 'DELETE' && !_delOne) ? 'return=minimal' : 'return=representation');
   // 2026-08-06: 타임아웃이 아예 없어서, 모바일 네트워크가 느리거나 불안정하면
   // 요청이 무한정 걸릴 수 있었음 — 그동안 화면이 데이터를 못 받아 완전히
   // 그려지지 않은 채로 멈춰있을 수 있었음(선혜님이 겪은 "스크롤이 끝까지 안
@@ -53,6 +56,10 @@ function sbXHR(method, path, data, callback, _retried) {
       // 실제로는 아무것도 안 바뀐 것 — 이걸 성공으로 보고하면 안 됨.
       if ((method === 'PATCH' || method === 'PUT') && Array.isArray(result) && result.length === 0) {
         callback({status: xhr.status, text: '0건 반영됨(권한 문제일 수 있음)', zeroRows: true}, null);
+        return;
+      }
+      if (_delOne && Array.isArray(result) && result.length === 0) {
+        callback({status: xhr.status, text: '0건 삭제됨(권한 문제이거나 이미 지워졌을 수 있음)', zeroRows: true}, null);
         return;
       }
       // 고객 행을 바꾼 요청이면 DB가 새로 찍은 수정 시각(잠금값)을 고객 목록 캐시에 바로 반영(담당변경·리드보관·복구·일괄이관 등 모든 쓰기 공통 -
