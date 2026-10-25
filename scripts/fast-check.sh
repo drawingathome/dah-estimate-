@@ -19,5 +19,6 @@ run 앱스크립트실행 node tests/apps-script-run-check.js
 run 설문스크립트 node tests/survey-to-customer-script-check.js
 run 비밀번호업로드 node tests/no-master-pw-upload-check.js
 run 스키마계약 node tests/schema-contract-check.js
+run 배포비교 node tests/deploy-compare-check.js
 if [ "$fail" -ne 0 ]; then echo "❌ 빠른 점검 실패 — 고친 뒤 다시 푸시하세요"; exit 1; fi
 echo "✅ 빠른 점검 통과 (전체 회귀는 verify-all.sh 로 별도 확인했는지 꼭 확인)"
