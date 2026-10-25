@@ -82,3 +82,8 @@ G 항목 원문 분실(docs/plans/2026-10-25_G-items-lost.md)의 대체 점검. 
 - 근거: dash-settings.js 약 311~320행. 고객/견적 이관 PATCH의 오류를 확인하지 않고 항상 finishStaffRemoval + 성공 안내. 실패하면 고객은 옛 담당자 이름에 남은 채 목록에서 담당자가 사라져 아무도 못 보는 상태가 됨.
 - 수정: 고객 이관 실패 → 중단(담당자·로그인 유지). 견적 이관 오류 → 중단(견적 0건은 정상). 
 - 시험: tests/staff-offboard-failure-check.js (고치기 전 코드에서 2건 실패 확인 — 변이 점검 완료). 브랜치 t09에 포함(커밋 534ae26).
+
+### T-13 🟢 낮음(관찰) 삭제(DELETE) 요청은 권한 때문에 0건 삭제돼도 성공으로 처리됨
+- 근거: dash-api.js sbXHR는 PATCH/PUT만 0건 반영을 실패로 봄(DELETE는 return=minimal). 추가결제 삭제(dash-extra-pay.js 85행), 견적 삭제 등이 해당. 삭제 권한은 마스터/담당 실장에 한정되고 RLS가 막는 경우가 드물어 실제 발생 가능성 낮음.
+- 판정: 관찰. 고치려면 DELETE도 return=representation으로 받되 "0건이 정상인 호출(견적 없는 고객의 견적 삭제)"을 구분해야 해서 범용 변경은 위험 → 필요한 호출(추가결제 삭제)에만 개별 적용 검토.
+- 참고: dash-customer-pay.js 603행 기준금액 동기화 PATCH는 견적서에서 다시 계산되는 파생값이라 잠금 없이도 안전(🟢).
