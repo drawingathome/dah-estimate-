@@ -352,6 +352,34 @@ function dahScanDbIntegrityView() {
       }
     }
   } catch (e) { issues.push('[DB 자동 점검 확인 실패] ' + e.message); }
+  // 2026-10-25(전수표 T-18): 매일 아침 DB가 "실장 계정으로 마스터 고객을 보거나 지우거나 수정할 수 있는지" 스스로 시험한 결과
+  // (permission_selftest_log)가 쌓이기만 하고 아무도 안 보고 있었음 → 시험이 실패(ok=false)했거나 36시간 넘게 안 돌았으면 메일에 포함.
+  try {
+    var stRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/permission_selftest_log?select=run_at,ok,detail&order=run_at.desc&limit=1', { headers: H, muteHttpExceptions: true });
+    if (stRes.getResponseCode() !== 200) {
+      issues.push('[권한 자동시험 확인 실패] permission_selftest_log 조회 실패(상태코드 ' + stRes.getResponseCode() + ')');
+    } else {
+      var stRows = JSON.parse(stRes.getContentText());
+      var stRun = stRows && stRows[0] ? new Date(stRows[0].run_at).getTime() : 0;
+      if (!stRun || Date.now() - stRun > 36 * 3600 * 1000) {
+        issues.push('[권한 자동시험 멈춤] 실장 권한을 매일 확인하는 시험 기록이 36시간 넘게 없음');
+      } else if (stRows[0].ok !== true) {
+        var failedItems = [];
+        try { var dd = stRows[0].detail || {}; Object.keys(dd).forEach(function (k) { if (dd[k] && dd[k].ok === false) failedItems.push(k); }); } catch (eD) {}
+        issues.push('[권한 자동시험 실패] 실장 계정 권한 시험에서 문제 발견' + (failedItems.length ? ': ' + failedItems.join(', ') : '') + ' - 실장이 보면 안 되는 것을 보거나 바꿀 수 있는 상태일 수 있음');
+      }
+    }
+  } catch (eSt) { issues.push('[권한 자동시험 확인 실패] ' + eSt.message); }
+  // 2026-10-25(전수표 T-15 후속): 설문→고객 자동 등록이 실패하면 설문이 '신규'로 남아 10분마다 재시도됨(고객 유실 방지).
+  // 그런데 계속 실패하면 아무도 모르므로, 3시간 넘게 '신규'로 남은 설문이 있으면 알림 메일에 포함.
+  try {
+    var svRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/surveys?status=eq.' + encodeURIComponent('신규') + '&select=id,client_name,created_at&order=created_at.asc&limit=20', { headers: H, muteHttpExceptions: true });
+    if (svRes.getResponseCode() === 200) {
+      var svRows = JSON.parse(svRes.getContentText()) || [];
+      var stuck = svRows.filter(function (r) { return r.created_at && Date.now() - new Date(r.created_at).getTime() > 3 * 3600 * 1000; });
+      if (stuck.length) issues.push('[설문 자동등록 지연] 3시간 넘게 고객으로 등록되지 않은 설문 ' + stuck.length + '건(' + stuck.slice(0, 3).map(function (r) { return r.client_name || '이름없음'; }).join(', ') + ') - 이름/연락처 누락이거나 자동 등록이 실패 중일 수 있음');
+    }
+  } catch (eSv) { /* 이 확인이 실패해도 다른 점검은 계속 */ }
   try {
     var vRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/data_integrity_issues?select=code,severity,customer_id,client_name,staff_name,detail&limit=500', { headers: H, muteHttpExceptions: true });
     var aRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/integrity_acks?select=ack_key&limit=2000', { headers: H, muteHttpExceptions: true });

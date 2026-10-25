@@ -36,6 +36,8 @@ function buildContext(opts) {
       if (url.includes('v_critical_triggers_status')) return respond((opts.triggers || ['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment', 'trg_guard_staff_name_customers', 'trg_guard_staff_name_estimates', 'trg_guard_payment_reduction_customers', 'trg_guard_payment_reduction_estimates', 'trg_guard_payment_date', 'trg_guard_archived_estimate_payment', 'trg_payment_refunds_append_only']).map(n => ({ trigger_name: n })));
       if (url.includes('integrity_daily_log')) return respond(opts.dbLog || [{ run_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString(), total_count: 0 }]);
       if (url.includes('data_integrity_issues')) return respond(opts.dbIssues || []);
+      if (url.includes('permission_selftest_log?')) return respond(opts.selftest || [{ run_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString(), ok: true, detail: {} }]);
+      if (url.includes('/surveys?status=eq.')) return respond(opts.newSurveys || []);
       if (url.includes('integrity_acks')) return respond(opts.dbAcks || []);
       if (url.includes('v_critical_constraints_status')) return respond([{ constraint_name: 'surveys_client_idempotency_key_unique' }]);
       return respond([]);
@@ -165,6 +167,21 @@ ok('10-3. [점검 기록이 하나도 없음] 알림이 옴', dbNoLog.mails.some
 const noGuard = run({ customers: [], triggers: ['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment'] });
 const noGuardMail = noGuard.mails.find(m => /데이터 정합성/.test(m.subject));
 ok('10-4. [보호 트리거가 사라짐] 담당자·감액 보호 트리거 누락이 알림으로 옴', !!noGuardMail && /trg_guard_staff_name_customers/.test(noGuardMail.body) && /trg_guard_payment_reduction_estimates/.test(noGuardMail.body), JSON.stringify(noGuard.mails.map(m => m.subject)));
+
+// ── 2026-10-25(전수표 T-18): 권한 자동시험 결과 알림 ──
+const stFail = run({ customers: [], selftest: [{ run_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString(), ok: false, detail: { delete_master_customer: { ok: false }, see_master_customers: { ok: true } } }] });
+ok('10-5. [권한 시험 실패] 실패한 항목 이름이 포함된 알림 메일이 옴', stFail.mails.some(m => /권한 자동시험 실패/.test(m.body) && /delete_master_customer/.test(m.body)), JSON.stringify(stFail.mails.map(m => m.subject)));
+const stStale = run({ customers: [], selftest: [{ run_at: new Date(Date.now() - 50 * 3600 * 1000).toISOString(), ok: true, detail: {} }] });
+ok('10-6. [권한 시험이 36시간 넘게 멈춤] 알림이 옴', stStale.mails.some(m => /권한 자동시험 멈춤/.test(m.body)), JSON.stringify(stStale.mails.map(m => m.subject)));
+const stNone = run({ customers: [], selftest: [] });
+ok('10-7. [권한 시험 기록이 하나도 없음] 알림이 옴', stNone.mails.some(m => /권한 자동시험 멈춤/.test(m.body)), JSON.stringify(stNone.mails.map(m => m.subject)));
+const stOk = run({ customers: [] });
+ok('10-8. [정상] 권한 시험 관련 알림 없음', !stOk.mails.some(m => /권한 자동시험/.test(m.body)), JSON.stringify(stOk.mails.map(m => m.subject)));
+
+const svStuck = run({ customers: [], newSurveys: [{ id: 5, client_name: '대기고객', created_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString() }] });
+ok('10-9. [설문이 3시간 넘게 신규로 남음] 알림이 옴', svStuck.mails.some(m => /설문 자동등록 지연/.test(m.body) && /대기고객/.test(m.body)), JSON.stringify(svStuck.mails.map(m => m.subject)));
+const svFresh = run({ customers: [], newSurveys: [{ id: 6, client_name: '방금', created_at: new Date(Date.now() - 20 * 60 * 1000).toISOString() }] });
+ok('10-10. [방금 들어온 설문] 알림 없음(다음 실행에서 처리될 시간)', !svFresh.mails.some(m => /설문 자동등록 지연/.test(m.body)), JSON.stringify(svFresh.mails.map(m => m.subject)));
 
 const bkNew = run({ customers: [] });
 ok('11. 매일 백업이 환불 기록(payment_refunds)·자동 점검 기록도 가져옴(돈이 빠져나간 근거가 백업에서 빠지지 않게)', bkNew.fetchedTables.indexOf("payment_refunds") >= 0 && bkNew.fetchedTables.indexOf("integrity_daily_log") >= 0, JSON.stringify(bkNew.fetchedTables));
