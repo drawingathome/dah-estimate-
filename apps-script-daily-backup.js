@@ -50,7 +50,7 @@ var SUPABASE_SERVICE_ROLE_KEY = PropertiesService.getScriptProperties().getPrope
 // 붙여넣어야만 운영에 반영되는데, 저장소에서 고친 버전이 실제로 반영됐는지 확인할 방법이 없어서 낡은 코드(9/23~10/1 버전)가
 // 며칠 동안 매일 실패하는 걸 늦게 알았음. 버전을 코드에 박아 매일 메일·로그에 함께 찍어서, 낡은 코드가 돌고 있으면 바로
 // 보이게 함. ※ 이 파일을 고칠 때마다 아래 값도 같이 올릴 것(날짜.순번).
-var DAH_SCRIPT_VERSION = '2026-10-23.1';
+var DAH_SCRIPT_VERSION = '2026-10-25.2';
 
 // 점검 함수 하나가 오류로 죽어도 백업과 나머지 점검은 계속 돌게 감싸는 헬퍼. 죽은 점검은 failures에 모아서 메일로 알림.
 function dahSafeScan(name, fn, failures) {
@@ -187,6 +187,8 @@ function dahDailyBackup() {
   integrityIssues = integrityIssues.concat(triggerIssues);
   // 2026-10-14: DB가 매일 스스로 돌리는 점검 결과(확인함 처리 안 된 이상)와 그 점검이 살아 있는지도 같은 메일에 합침
   integrityIssues = integrityIssues.concat(dahSafeScan('dahScanDbIntegrityView', function () { return dahScanDbIntegrityView(); }, scanFailures));
+  // 2026-10-25(R-02): 구글에 붙여넣은 스크립트가 저장소 최신본인지 매일 비교(붙여넣기를 깜빡하면 알림)
+  integrityIssues = integrityIssues.concat(dahSafeScan('dahScanScriptVersion', function () { return dahScanScriptVersion(); }, scanFailures));
   if (integrityIssues.length > 0) {
     Logger.log('⚠️ 데이터 정합성 의심 ' + integrityIssues.length + '건 발견:\n' + integrityIssues.join('\n'));
     try {
@@ -427,6 +429,27 @@ function dahScanDbIntegrityView() {
       });
     }
   } catch (e2) { issues.push('[DB 점검 뷰 조회 실패] ' + e2.message); }
+  return issues;
+}
+
+// 2026-10-25(R-02): 이 스크립트 파일도 사이트(Vercel)에 함께 배포되므로, 배포된 최신본의 DAH_SCRIPT_VERSION과 지금 돌고 있는 버전을 비교한다.
+// 다르면 "저장소에는 새 코드가 있는데 구글 Apps Script에는 아직 안 붙여넣은 상태" → 알림. (DB 변경 없음, 비밀 값은 파일에 없음)
+// 코드를 고칠 때는 DAH_SCRIPT_VERSION 값을 함께 올려야 이 비교가 의미가 있다(tests/apps-script-run-check.js 가 버전 변경 여부는 못 잡으므로 pre-push 점검 대상).
+var DAH_SCRIPT_LIVE_URL = 'https://dah-dashboard.vercel.app/apps-script-daily-backup.js';
+function dahScanScriptVersion() {
+  var issues = [];
+  try {
+    var res = UrlFetchApp.fetch(DAH_SCRIPT_LIVE_URL + '?v=' + Date.now(), { muteHttpExceptions: true });
+    if (res.getResponseCode() !== 200) {
+      issues.push('[스크립트 최신본 확인 실패] 배포된 스크립트 파일을 못 읽음(상태코드 ' + res.getResponseCode() + ') - 사이트 일시 문제일 수 있음, 며칠 계속되면 확인');
+      return issues;
+    }
+    var m = /var DAH_SCRIPT_VERSION = '([^']+)'/.exec(res.getContentText());
+    if (!m) { issues.push('[스크립트 최신본 확인 실패] 배포된 파일에서 버전 표시를 찾지 못함'); return issues; }
+    if (m[1] !== DAH_SCRIPT_VERSION) {
+      issues.push('[스크립트가 최신이 아님] 구글에 붙여넣은 버전 ' + DAH_SCRIPT_VERSION + ' / 저장소 최신 ' + m[1] + ' - apps-script-daily-backup.js 최신 코드를 Apps Script에 다시 붙여넣어야 새 점검이 적용됩니다');
+    }
+  } catch (e) { issues.push('[스크립트 최신본 확인 실패] ' + e.message); }
   return issues;
 }
 

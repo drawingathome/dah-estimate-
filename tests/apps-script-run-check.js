@@ -37,6 +37,7 @@ function buildContext(opts) {
       if (url.includes('integrity_daily_log')) return respond(opts.dbLog || [{ run_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString(), total_count: 0 }]);
       if (url.includes('data_integrity_issues')) return respond(opts.dbIssues || []);
       if (url.includes('permission_selftest_log?')) return respond(opts.selftest || [{ run_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString(), ok: true, detail: {} }]);
+      if (url.includes('apps-script-daily-backup.js')) return { getResponseCode: () => opts.liveVer === 'fail' ? 500 : 200, getContentText: () => "var DAH_SCRIPT_VERSION = '" + (opts.liveVer || fs.readFileSync(FILE, 'utf-8').match(/var DAH_SCRIPT_VERSION = '([^']+)'/)[1]) + "';", getHeaders: () => ({}) };
       if (url.includes('estimate_confirm_log?')) return respond(opts.confirmLog || []);
       if (url.includes('/customers?id=in.')) return respond([{ id: 7, client_name: '해제테스트' }]);
       if (url.includes('/surveys?status=eq.')) return respond(opts.newSurveys || []);
@@ -197,6 +198,13 @@ const cfFresh = run({ customers: [], confirmLog: [{ estimate_id: 'e3', client_id
 ok('10-14. [R-06 사유 있고 방금 풀림] 알림 없음(재확정 시간 줌)', !cfFresh.mails.some(m => /확정 해제 상태 유지/.test(m.body)), JSON.stringify(cfFresh.mails.map(m => m.subject)));
 const cfRe = run({ customers: [], confirmLog: [{ estimate_id: 'e4', client_id: 7, action: 'unconfirm', reason: null, changed_at: H(40) }, { estimate_id: 'e4', client_id: 7, action: 'confirm', reason: null, changed_at: H(39) }] });
 ok('10-15. [R-06 풀렸다가 재확정됨] 알림 없음', !cfRe.mails.some(m => /확정 해제 상태 유지/.test(m.body)), JSON.stringify(cfRe.mails.map(m => m.subject)));
+
+const svSame = run({ customers: [] });
+ok('10-16. [R-02 붙여넣은 버전 = 최신] 스크립트 버전 알림 없음', !svSame.mails.some(m => /스크립트가 최신이 아님|스크립트 최신본 확인 실패/.test(m.body)), JSON.stringify(svSame.mails.map(m => m.subject)));
+const svOld = run({ customers: [], liveVer: '2099-01-01.9' });
+ok('10-17. [R-02 저장소가 더 새 버전] 붙여넣기 필요 알림', svOld.mails.some(m => /스크립트가 최신이 아님/.test(m.body) && /2099-01-01\.9/.test(m.body)), JSON.stringify(svOld.mails.map(m => m.subject)));
+const svFail = run({ customers: [], liveVer: 'fail' });
+ok('10-18. [R-02 사이트 파일을 못 읽음] 확인 실패로 표시(조용히 넘어가지 않음)', svFail.mails.some(m => /스크립트 최신본 확인 실패/.test(m.body)), JSON.stringify(svFail.mails.map(m => m.subject)));
 
 const bkNew = run({ customers: [] });
 ok('11. 매일 백업이 환불 기록(payment_refunds)·자동 점검 기록도 가져옴(돈이 빠져나간 근거가 백업에서 빠지지 않게)', bkNew.fetchedTables.indexOf("payment_refunds") >= 0 && bkNew.fetchedTables.indexOf("integrity_daily_log") >= 0, JSON.stringify(bkNew.fetchedTables));
