@@ -226,7 +226,7 @@ function _doRetryEstPendingSync(q) {
           localStorage.setItem('dah_failed_saves', JSON.stringify(failedSaves));
         } catch (eBackup) {}
         if (typeof reportClientError === 'function') {
-          reportClientError('견적서 저장 실패(재시도 큐 0건 반영) - 내용 백업됨', null, { estPayload: item.payload, dbId: item.dbId });
+          reportClientError('견적서 저장 실패(재시도 큐 0건 반영) - 내용 백업됨', null, { estPayload: item.payload, dbId: item.dbId, verified: !!item._verified, alreadySaved: !!item._alreadySaved, queuedAt: item.queuedAt || item.savedAt || null }); // 2026-10-25: 10/23 02:33 같은 시각 3건(내용은 DB와 같았는데 '이미 저장됨' 판정 실패) 원인 추적용으로 판정 결과도 함께 기록
         }
         failReasons.push('0건 반영(권한 문제 또는 동시저장충돌 추정) — 내용은 안전하게 백업됨, 확인 필요');
       }
