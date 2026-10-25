@@ -240,6 +240,7 @@
 | `dahScanForDuplicates` | `apps-script-daily-backup.js` |
 | `dahScanForMissingTriggers` | `apps-script-daily-backup.js` |
 | `dahScanScriptVersion` | `apps-script-daily-backup.js` |
+| `dahScanWeeklySaveFailures` | `apps-script-daily-backup.js` |
 | `dashCheckCodeStale` | `dash-stale-code.js` |
 | `dashCollectScriptVersions` | `dash-stale-code.js` |
 | `dashFindStaleScripts` | `dash-stale-code.js` |

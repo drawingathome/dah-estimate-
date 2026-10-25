@@ -32,6 +32,7 @@ function buildContext(opts) {
     PropertiesService: { getScriptProperties: () => ({ getProperty: (k) => (k === 'LAST_ERROR_CHECK_TIME' ? null : 'fake-secret'), setProperty: () => {}, getProperties: () => ({}) }) },
     UrlFetchApp: { fetch: (url, o) => {
       if (url.includes('rpc/dah_backup_export')) { const t = JSON.parse(o.payload).table_name; fetchedTables.push(t); if (t === 'monthly_close') return respond(opts.monthlyClose === 'error' ? { error: 'x' } : (opts.monthlyClose || [{ month: prevMonthKey }])); return respond(t === 'customers' ? customers : t === 'estimates' ? (opts.estimates || []) : []); }
+      if (url.includes('client_error_logs?select=message,user_name')) return respond(opts.saveFails || []);
       if (url.includes('client_error_logs?')) return respond(opts.errorLogs || []);
       if (url.includes('v_critical_triggers_status')) return respond((opts.triggers || ['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment', 'trg_guard_staff_name_customers', 'trg_guard_staff_name_estimates', 'trg_guard_payment_reduction_customers', 'trg_guard_payment_reduction_estimates', 'trg_guard_payment_date', 'trg_guard_archived_estimate_payment', 'trg_payment_refunds_append_only', 'trg_estimates_confirm_guard', 'trg_sync_customer_price', 'trg_adjust_customer_amounts_on_estimate_delete', 'trg_extra_payment_touch_customer', 'trg_customers_auto_stage']).map(n => ({ trigger_name: n })));
       if (url.includes('integrity_daily_log')) return respond(opts.dbLog || [{ run_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString(), total_count: 0 }]);
@@ -205,6 +206,19 @@ const svOld = run({ customers: [], liveVer: '2099-01-01.9' });
 ok('10-17. [R-02 저장소가 더 새 버전] 붙여넣기 필요 알림', svOld.mails.some(m => /스크립트가 최신이 아님/.test(m.body) && /2099-01-01\.9/.test(m.body)), JSON.stringify(svOld.mails.map(m => m.subject)));
 const svFail = run({ customers: [], liveVer: 'fail' });
 ok('10-18. [R-02 사이트 파일을 못 읽음] 확인 실패로 표시(조용히 넘어가지 않음)', svFail.mails.some(m => /스크립트 최신본 확인 실패/.test(m.body)), JSON.stringify(svFail.mails.map(m => m.subject)));
+
+// R-07 주간 저장 실패 요약: 월요일에만 동작. 시계를 월요일/화요일로 고정해 검증
+function runOnDay(utcMondayOffset, extra) {
+  const RealDate = Date; const base = new RealDate('2026-10-26T01:00:00Z').getTime() + utcMondayOffset * 86400000; // 2026-10-26 = 월요일(KST 10시)
+  const FakeDate = class extends RealDate { constructor(...a) { if (a.length) super(...a); else super(base); } static now() { return base; } };
+  return run(extra, (ctx) => { ctx.Date = FakeDate; });
+}
+const wkMon = runOnDay(0, { customers: [], saveFails: [{ message: '견적서 저장 실패(권한문제 또는 동시저장충돌) - 내용 백업됨', user_name: '오지은 실장', created_at: '2026-10-23T02:00:00Z' }, { message: '견적서 저장 실패(권한문제 또는 동시저장충돌) - 내용 백업됨', user_name: '오지은 실장', created_at: '2026-10-23T03:00:00Z' }] });
+ok('10-19. [R-07 월요일] 지난 7일 저장 실패 요약이 옴(사람·종류별 건수)', wkMon.mails.some(m => /주간 저장 실패 요약/.test(m.body) && /오지은 실장/.test(m.body) && /2건/.test(m.body)), JSON.stringify(wkMon.mails.map(m => m.subject)));
+const wkTue = runOnDay(1, { customers: [], saveFails: [{ message: '견적서 저장 실패 - 내용 백업됨', user_name: '오지은 실장', created_at: '2026-10-26T02:00:00Z' }] });
+ok('10-20. [R-07 화요일] 월요일이 아니면 요약 없음', !wkTue.mails.some(m => /주간 저장 실패 요약/.test(m.body)), JSON.stringify(wkTue.mails.map(m => m.subject)));
+const wkNone = runOnDay(0, { customers: [], saveFails: [] });
+ok('10-21. [R-07 월요일, 실패 0건] 요약 메일 없음', !wkNone.mails.some(m => /주간 저장 실패 요약/.test(m.body)), JSON.stringify(wkNone.mails.map(m => m.subject)));
 
 const bkNew = run({ customers: [] });
 ok('11. 매일 백업이 환불 기록(payment_refunds)·자동 점검 기록도 가져옴(돈이 빠져나간 근거가 백업에서 빠지지 않게)', bkNew.fetchedTables.indexOf("payment_refunds") >= 0 && bkNew.fetchedTables.indexOf("integrity_daily_log") >= 0, JSON.stringify(bkNew.fetchedTables));

@@ -50,7 +50,7 @@ var SUPABASE_SERVICE_ROLE_KEY = PropertiesService.getScriptProperties().getPrope
 // 붙여넣어야만 운영에 반영되는데, 저장소에서 고친 버전이 실제로 반영됐는지 확인할 방법이 없어서 낡은 코드(9/23~10/1 버전)가
 // 며칠 동안 매일 실패하는 걸 늦게 알았음. 버전을 코드에 박아 매일 메일·로그에 함께 찍어서, 낡은 코드가 돌고 있으면 바로
 // 보이게 함. ※ 이 파일을 고칠 때마다 아래 값도 같이 올릴 것(날짜.순번).
-var DAH_SCRIPT_VERSION = '2026-10-25.2';
+var DAH_SCRIPT_VERSION = '2026-10-25.3';
 
 // 점검 함수 하나가 오류로 죽어도 백업과 나머지 점검은 계속 돌게 감싸는 헬퍼. 죽은 점검은 failures에 모아서 메일로 알림.
 function dahSafeScan(name, fn, failures) {
@@ -189,6 +189,8 @@ function dahDailyBackup() {
   integrityIssues = integrityIssues.concat(dahSafeScan('dahScanDbIntegrityView', function () { return dahScanDbIntegrityView(); }, scanFailures));
   // 2026-10-25(R-02): 구글에 붙여넣은 스크립트가 저장소 최신본인지 매일 비교(붙여넣기를 깜빡하면 알림)
   integrityIssues = integrityIssues.concat(dahSafeScan('dahScanScriptVersion', function () { return dahScanScriptVersion(); }, scanFailures));
+  // 2026-10-25(R-07): 월요일마다 지난 7일 저장 실패(동시저장충돌 등) 요약
+  integrityIssues = integrityIssues.concat(dahSafeScan('dahScanWeeklySaveFailures', function () { return dahScanWeeklySaveFailures(); }, scanFailures));
   if (integrityIssues.length > 0) {
     Logger.log('⚠️ 데이터 정합성 의심 ' + integrityIssues.length + '건 발견:\n' + integrityIssues.join('\n'));
     try {
@@ -450,6 +452,24 @@ function dahScanScriptVersion() {
       issues.push('[스크립트가 최신이 아님] 구글에 붙여넣은 버전 ' + DAH_SCRIPT_VERSION + ' / 저장소 최신 ' + m[1] + ' - apps-script-daily-backup.js 최신 코드를 Apps Script에 다시 붙여넣어야 새 점검이 적용됩니다');
     }
   } catch (e) { issues.push('[스크립트 최신본 확인 실패] ' + e.message); }
+  return issues;
+}
+
+// 2026-10-25(R-07): 저장 실패(동시저장충돌·재시도 큐 0건 반영 등)가 오류 로그에만 쌓이고 한 번도 모아서 보지 않았음(10/25 점검에서 오지은 실장 주 1회 꼴 반복 발견).
+// 월요일(한국 시간)에만 지난 7일치를 사람·종류별로 묶어 알림 메일에 포함. 0건이면 아무것도 안 보냄.
+function dahScanWeeklySaveFailures() {
+  var issues = [];
+  var kstDay = new Date(Date.now() + 9 * 3600 * 1000).getUTCDay(); // 0=일 1=월
+  if (kstDay !== 1) return issues;
+  var H = { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY };
+  var since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+  var res = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/client_error_logs?select=message,user_name,created_at&message=like.' + encodeURIComponent('*저장 실패*') + '&created_at=gte.' + encodeURIComponent(since) + '&limit=500', { headers: H, muteHttpExceptions: true });
+  if (res.getResponseCode() !== 200) { issues.push('[주간 저장 실패 요약 확인 실패] 상태코드 ' + res.getResponseCode()); return issues; }
+  var rows = JSON.parse(res.getContentText()) || [];
+  if (!rows.length) return issues;
+  var by = {};
+  rows.forEach(function (r) { var k = (r.user_name || '(이름 없음)') + ' / ' + String(r.message || '').replace(/ - 내용 백업됨/, ''); by[k] = (by[k] || 0) + 1; });
+  issues.push('[주간 저장 실패 요약] 지난 7일 저장 실패 ' + rows.length + '건 - ' + Object.keys(by).map(function (k) { return k + ' ' + by[k] + '건'; }).join(' | ') + ' (같은 순간 여러 건은 한 번의 저장 재시도일 수 있음. 반복되면 원인 점검 필요)');
   return issues;
 }
 
