@@ -407,7 +407,10 @@ function dahScanForMissingTriggers() {
   var EXPECTED = ['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment',
     // 2026-10-14: 오늘 추가한 보호 장치(담당자 변경 차단·입금 감액 차단·입금일 보호·보관 견적서 입금 차단·환불 기록 보호)도 감시. 꺼지거나 사라지면 알림.
     'trg_guard_staff_name_customers', 'trg_guard_staff_name_estimates', 'trg_guard_payment_reduction_customers', 'trg_guard_payment_reduction_estimates',
-    'trg_guard_payment_date', 'trg_guard_archived_estimate_payment', 'trg_payment_refunds_append_only'];
+    'trg_guard_payment_date', 'trg_guard_archived_estimate_payment', 'trg_payment_refunds_append_only',
+    // 2026-10-25(전수표 T-07): 확정 보호·고객 기준금액 자동 계산·견적 삭제시 금액 보정·추가결제 반영·단계 자동 이동도 감시 목록에 추가.
+    // ⚠️ DB의 v_critical_triggers_status 뷰에 같은 이름을 먼저 넣은 뒤(월요일 DB 묶음) 이 파일을 붙여넣을 것 — 순서가 바뀌면 매일 거짓 알림이 감.
+    'trg_estimates_confirm_guard', 'trg_sync_customer_price', 'trg_adjust_customer_amounts_on_estimate_delete', 'trg_extra_payment_touch_customer', 'trg_customers_auto_stage'];
   try {
     var res = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/v_critical_triggers_status?select=trigger_name', {
       headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },

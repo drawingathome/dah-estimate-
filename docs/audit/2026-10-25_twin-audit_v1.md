@@ -127,3 +127,15 @@ G 항목 원문 분실(docs/plans/2026-10-25_G-items-lost.md)의 대체 점검. 
 - 수정: 매일 백업 스크립트(dahScanDbIntegrityView)에 ① 시험 실패(실패 항목 이름 포함) ② 36시간 넘게 기록 없음 ③ 설문이 3시간 넘게 '신규'로 남음(T-15 후속: 자동등록 실패가 계속될 때) 알림 추가. 시험 tests/apps-script-run-check.js 10-5~10-10 (고치기 전 코드에서 4건 실패 확인).
 - 확인함(🟢): 점검 규칙 15종(OVERPAID, ORPHAN_ESTIMATE, NO_STAFF 등)이 이미 폭넓게 있고, 매일 점검(pg_cron 22:00 UTC)은 3일 연속 정상. 규칙 추가가 필요한 새 항목(TEST_RESIDUE 등)은 월요일 DB 묶음.
 - 남은 일: 구글 Apps Script 매일백업 파일에 수정본 붙여넣기(월요일 묶음).
+
+### T-19 🔴→코드 수정 완료(push 대기) + DB 삭제는 월요일 묶음: 설정표에 옛 마스터 비밀번호가 남아 있고 로그인한 누구나 읽을 수 있음
+- 근거: app_settings에 key='master_pw'(길이 15, 2026-08-01 저장)가 남아 있음. app_settings 읽기 정책은 "로그인한 누구나"라 실장 계정으로도 읽을 수 있음. 앱은 더 이상 이 값을 쓰지 않지만(8-29 제거), dash-api.js 166행이 "서버에 master_pw가 없으면 이 기기 값을 올려줌"을 계속 가지고 있었음.
+- 수정(코드): 그 줄 제거 + 정적 시험 tests/no-master-pw-upload-check.js(고치기 전 코드에서 실패 확인).
+- 수정(DB, 승인 필요): docs/db/2026-10-26_security_batch_apply.sql 에서 해당 행 삭제.
+- 선혜님 확인 필요: 이 값이 지금도 쓰는 비밀번호와 같거나 비슷하다면(다른 서비스 포함) 그 비밀번호를 바꾸는 것이 안전함.
+
+### T-04 / T-07 / T-10 수정안 준비 완료 (월요일 DB 묶음, 승인 대기)
+- 파일: docs/db/2026-10-26_security_batch_apply.sql / _rollback.sql / _rehearse.mjs (모의 DB에서 적용→기능 확인→되돌리기까지 10개 확인 통과).
+- T-04: 설정표 새 항목 만들기 마스터 한정. 짝 코드(설정 최초 올리기는 마스터 화면만)는 tests/settings-seed-master-only-check.js 로 확인(고치기 전 코드에서 실패).
+- T-07: 핵심 트리거 감시 목록에 확정 보호(trg_estimates_confirm_guard) 등 5개 추가. 구글 스크립트의 목록도 같이 넓힘(⚠ DB 먼저, 스크립트 붙여넣기는 그 다음 — 순서가 바뀌면 거짓 알림).
+- T-10: 월 마감 수정·삭제 시 이전 값을 monthly_close_history에 보관(마스터만 조회).

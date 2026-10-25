@@ -548,6 +548,8 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['staff-offboard-failure-check.js', []]); // 2026-10-25 담당자 퇴사 이관 실패시 완료 표시·로그인 차단 방지(전수표 T-12)
   scripts.push(['restore-customer-failure-check.js', []]); // 2026-10-25 고객 복구 실패·대상 불명 시 거짓 성공·이름 폴백 방지(전수표 T-14)
   scripts.push(['survey-to-customer-script-check.js', []]); // 2026-10-25 설문→고객 자동등록: 등록 거절시 유실 방지·중복 조회 실패시 미룸·전화 표기 차이(전수표 T-15)
+  scripts.push(['no-master-pw-upload-check.js', []]); // 2026-10-25 비밀번호류를 서버 설정표에 올리지 않음(전수표 T-19)
+  scripts.push(['settings-seed-master-only-check.js', ['dah-dashboard.html']]); // 2026-10-25 설정표 최초 올리기는 마스터 화면만(전수표 T-04)
   scripts.push(['order-status-concurrent-check.js', []]); // 2026-10-25 발주 현황 동시편집 충돌방지(전수표 T-01)
   scripts.push(['est-order-status-lock-check.js', []]); // 2026-10-25 견적서 앱 발주 현황 잠금(전수표 T-01)
   scripts.push(['price-override-concurrent-check.js', []]); // 2026-10-16 금액 수동확정 동시편집

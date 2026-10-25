@@ -159,11 +159,14 @@ function loadAppSettingsAsync(callback) {
       if (callback) callback();
       return;
     }
+    // 2026-10-25(전수표 T-04): 설정표에 새 항목을 만드는 권한을 마스터로 한정할 예정(DB 규칙)이라, 최초 올리기도 마스터 화면에서만 시도함.
+    // (실장 화면에서 시도하면 실패 경고만 뜸. 설정이 아직 없는 항목은 마스터가 한 번 접속하면 채워짐)
+    if (!(typeof isMasterUser === 'function' && isMasterUser())) { if (callback) callback(); return; }
     // Supabase에 아직 없는 값은 이 컴퓨터에 있는 값으로 최초 1회 올려줌 (첫 동기화)
     if (!found.staff_list) { try { var sl = JSON.parse(localStorage.getItem('dah_staff_list')||'[]'); if (sl.length) sbSyncSetting('staff_list', sl); } catch(e){} }
     if (!found.settings) { try { var s = JSON.parse(localStorage.getItem('dah_settings')||'{}'); if (Object.keys(s).length) sbSyncSetting('settings', s); } catch(e){} }
     if (!found.webhook_url) { try { var w = localStorage.getItem('dah_webhook_url'); if (w) sbSyncSetting('webhook_url', w); } catch(e){} }
-    if (!found.master_pw) { try { var mp = localStorage.getItem('dah_master_pw'); if (mp) sbSyncSetting('master_pw', mp); } catch(e){} }
+    // 2026-10-25(전수표 T-19): 예전엔 여기서 마스터 비밀번호를 서버 설정표에 올려줬음 → 로그인한 누구나(실장 포함) 읽을 수 있는 표라 제거. 비밀번호는 Supabase 로그인이 관리함.
     if (!found.master_email) { try { var me = localStorage.getItem('dah_master_email'); if (me) sbSyncSetting('master_email', me); } catch(e){} }
     if (!found.staff_emails) { try { var se = JSON.parse(localStorage.getItem('dah_staff_emails')||'{}'); if (Object.keys(se).length) sbSyncSetting('staff_emails', se); } catch(e){} }
     if (!found.staff_goals) { syncStaffGoalsToCloud(); }

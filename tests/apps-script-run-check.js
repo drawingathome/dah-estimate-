@@ -33,7 +33,7 @@ function buildContext(opts) {
     UrlFetchApp: { fetch: (url, o) => {
       if (url.includes('rpc/dah_backup_export')) { const t = JSON.parse(o.payload).table_name; fetchedTables.push(t); if (t === 'monthly_close') return respond(opts.monthlyClose === 'error' ? { error: 'x' } : (opts.monthlyClose || [{ month: prevMonthKey }])); return respond(t === 'customers' ? customers : t === 'estimates' ? (opts.estimates || []) : []); }
       if (url.includes('client_error_logs?')) return respond(opts.errorLogs || []);
-      if (url.includes('v_critical_triggers_status')) return respond((opts.triggers || ['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment', 'trg_guard_staff_name_customers', 'trg_guard_staff_name_estimates', 'trg_guard_payment_reduction_customers', 'trg_guard_payment_reduction_estimates', 'trg_guard_payment_date', 'trg_guard_archived_estimate_payment', 'trg_payment_refunds_append_only']).map(n => ({ trigger_name: n })));
+      if (url.includes('v_critical_triggers_status')) return respond((opts.triggers || ['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment', 'trg_guard_staff_name_customers', 'trg_guard_staff_name_estimates', 'trg_guard_payment_reduction_customers', 'trg_guard_payment_reduction_estimates', 'trg_guard_payment_date', 'trg_guard_archived_estimate_payment', 'trg_payment_refunds_append_only', 'trg_estimates_confirm_guard', 'trg_sync_customer_price', 'trg_adjust_customer_amounts_on_estimate_delete', 'trg_extra_payment_touch_customer', 'trg_customers_auto_stage']).map(n => ({ trigger_name: n })));
       if (url.includes('integrity_daily_log')) return respond(opts.dbLog || [{ run_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString(), total_count: 0 }]);
       if (url.includes('data_integrity_issues')) return respond(opts.dbIssues || []);
       if (url.includes('permission_selftest_log?')) return respond(opts.selftest || [{ run_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString(), ok: true, detail: {} }]);
@@ -182,6 +182,9 @@ const svStuck = run({ customers: [], newSurveys: [{ id: 5, client_name: '대기�
 ok('10-9. [설문이 3시간 넘게 신규로 남음] 알림이 옴', svStuck.mails.some(m => /설문 자동등록 지연/.test(m.body) && /대기고객/.test(m.body)), JSON.stringify(svStuck.mails.map(m => m.subject)));
 const svFresh = run({ customers: [], newSurveys: [{ id: 6, client_name: '방금', created_at: new Date(Date.now() - 20 * 60 * 1000).toISOString() }] });
 ok('10-10. [방금 들어온 설문] 알림 없음(다음 실행에서 처리될 시간)', !svFresh.mails.some(m => /설문 자동등록 지연/.test(m.body)), JSON.stringify(svFresh.mails.map(m => m.subject)));
+
+const noConfirmGuard = run({ customers: [], triggers: ['trg_enforce_estimate_status', 'trg_estimate_history', 'trg_customer_history', 'trg_sync_customer_payment', 'trg_guard_staff_name_customers', 'trg_guard_staff_name_estimates', 'trg_guard_payment_reduction_customers', 'trg_guard_payment_reduction_estimates', 'trg_guard_payment_date', 'trg_guard_archived_estimate_payment', 'trg_payment_refunds_append_only', 'trg_sync_customer_price', 'trg_adjust_customer_amounts_on_estimate_delete', 'trg_extra_payment_touch_customer', 'trg_customers_auto_stage'] });
+ok('10-11. [확정 보호 트리거가 사라짐] 알림이 옴(전수표 T-07)', noConfirmGuard.mails.some(m => /trg_estimates_confirm_guard/.test(m.body)), JSON.stringify(noConfirmGuard.mails.map(m => m.subject)));
 
 const bkNew = run({ customers: [] });
 ok('11. 매일 백업이 환불 기록(payment_refunds)·자동 점검 기록도 가져옴(돈이 빠져나간 근거가 백업에서 빠지지 않게)', bkNew.fetchedTables.indexOf("payment_refunds") >= 0 && bkNew.fetchedTables.indexOf("integrity_daily_log") >= 0, JSON.stringify(bkNew.fetchedTables));
