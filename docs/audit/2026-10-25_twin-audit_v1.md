@@ -32,3 +32,32 @@ G 항목 원문 분실(docs/plans/2026-10-25_G-items-lost.md)의 대체 점검. 
 
 ## 다음 점검 순서
 1) 대시보드 쓰기 지점 재대조 2) DB 트리거·점검 규칙 3) 권한·알림 규칙 4) 구글 스크립트 나머지 함수
+
+---
+## v1 추가분 (2026-10-25, DB 트리거·권한·점검 규칙 읽기 전용 조회)
+
+### T-01 상태 갱신
+- 수정 완료(커밋 17bbb32, push 대기): 대시보드는 서버 값에 바꾼 항목만 합쳐 수정시각 조건으로 저장, 견적서 앱은 수정시각 조건 + 1회 재시도. 시험: tests/order-status-concurrent-check.js, tests/est-order-status-lock-check.js.
+
+### T-04 🟡 app_settings INSERT가 로그인한 누구나 가능 (UPDATE는 마스터 한정)
+- 근거: pg_policies. app_settings_update는 마스터만, app_settings_insert는 `auth.uid() is not null`. 이미 있는 키는 못 바꾸지만 새 키는 추가 가능.
+- 정정: 이전에 "app_settings 쓰기를 마스터로 조이기"라고 적은 것은 UPDATE가 아니라 INSERT가 대상. master_pw 삭제는 별도로 필요.
+- 완료 기준: INSERT도 마스터 한정(월요일 SQL 묶음에 포함, 승인 필요).
+
+### T-05 🟡 surveys UPDATE·as_records 전체가 로그인한 누구나 가능 (기존 S4)
+- 근거: pg_policies. 개인정보 범위 결정(선혜님) 대기.
+
+### T-06 🟢 WITH CHECK 없는 UPDATE 정책 (customers, estimates, extra_pay 등)
+- 근거: pg_policies. customers·estimates는 trg_guard_staff_name_* 트리거로 담당자 변경을 막고 있음(S1·S2 처리). extra_pay UPDATE는 마스터 한정. 현재 위험 낮음.
+
+### T-07 🔴 매일 점검의 "중요 트리거 감시 목록"에 중요한 트리거들이 빠져 있음
+- 근거: v_critical_triggers_status 정의에 11개 이름이 하드코딩. 운영에 있지만 목록에 없는 것: trg_estimates_confirm_guard(확정 보호), trg_customers_auto_stage(입금 시 단계), trg_adjust_customer_amounts_on_estimate_delete, trg_sync_customer_price, trg_customers_updated / trg_estimates_updated(수정시각 갱신 = 동시 수정 잠금의 기반), 추가결제 트리거.
+- 위험: 이 트리거가 지워지거나 꺼져도 매일 점검이 알려주지 못함.
+- 완료 기준: 목록에 위 트리거 추가 + "운영에 있는 사용자 트리거 전체와 목록 대조" 규칙(목록에 없는 트리거가 생기면 경고), 시험 추가. DB 뷰 변경이라 승인 필요.
+
+### T-08 🟡 점검 경고 3건 (참고, 신규 아님)
+- 신화경(PAID_CUSTOMER_DELETED, 복원 결정 대기), 최금희 221(PAY_DATE_MISMATCH, 고객 칸 잔금일 정정 대기), **동혜원 286(CONFIRM_MISSING: 잔금결제 단계인데 확정 견적서 없음, 오지은 실장 고객 — 확인 필요, 새로 보임)**.
+
+### 정상 확인
+- 매일 점검 기록: 10-22, 10-23, 10-24 밤 22:00(UTC) 실행 정상(총 3, 2, 3건).
+- 보안 함수(SECURITY DEFINER 15개): 백업·내부 가드 함수는 일반 사용자 호출 불가. 환불 등록·취소는 호출 가능하지만 함수 안에서 마스터 확인(10-15 확인 내용).
