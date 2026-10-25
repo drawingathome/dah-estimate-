@@ -1,3 +1,10 @@
+-- ══ 실제 운영 적용 기록 (2026-10-25 밤, 선혜님 승인 후) ══
+-- 이 파일은 계획본이며, 실제 적용은 도구 제한 때문에 작은 조각으로 나눠 실행했다. 차이점:
+--  1) app_settings_insert: drop/create 대신 `alter policy app_settings_insert ... with check (마스터만)` 로 적용
+--  2) trg_monthly_close_history() 함수: public/anon/authenticated 실행권한 revoke 추가 적용
+--  3) 기존 트리거는 drop 하지 않고 create 만 수행(옛 트리거 유지)
+--  4) 단계 규칙(shadow)은 별도 파일 2026-10-26_stage_rule_apply.sql / _rollback.sql 로 적용 (트리거 trg_customers_auto_stage_rule 추가)
+--  5) 적용 후 읽기 전용 조회로 확인 완료(v_critical_triggers_status 17행, 트리거 33개, 고객 188명)
 -- 2026-10-26(월) 보안·감시 묶음 — 선혜님 승인 후 적용. 되돌리기: 2026-10-26_security_batch_rollback.sql
 -- 순서: (1) 단계 규칙 SQL(별도 파일, 먼저) → (2) 이 파일. 이 파일은 한 번에 실행해도 되고 항목별로 나눠 실행해도 됨.
 -- 전수표 항목: T-04(설정표 새 항목 만들기 마스터 한정) / T-19(설정표에 남은 옛 비밀번호 삭제) / T-07(핵심 트리거 감시 목록 확장) / T-10(월 마감 변경 이력)
