@@ -231,7 +231,8 @@ function renderOrderSection(c, orderBody) {
           : false;
         saveCustomers(arr);
         // 2026-10-08: 발주 현황만 서버로 보냄(고객 전체를 보내면 낡은 계약금 등이 서버를 덮어쓰거나 동시저장충돌로 실패 - 오늘 조유정 사례와 같은 뿌리)
-        if (typeof saveCustomerFieldsToDb === 'function') saveCustomerFieldsToDb(target, { order_status: target.orderStatus || {} }, function(err) { if (err) console.warn('발주현황 DB 동기화 실패:', err.text); });
+        if (typeof saveOrderItemGuarded === 'function') saveOrderItemGuarded(target, item.key, target.orderStatus[item.key], function(err) { if (err) console.warn('발주현황 DB 동기화 실패:', err.text); });
+        else if (typeof saveCustomerFieldsToDb === 'function') saveCustomerFieldsToDb(target, { order_status: target.orderStatus || {} }, function(err) { if (err) console.warn('발주현황 DB 동기화 실패:', err.text); });
         if (typeof logEvent === 'function') logEvent('order_check', { item: item.key, checked: checkbox.checked });
       }
 

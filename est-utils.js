@@ -534,12 +534,15 @@ function getCustomerOrderStatus(callback) {
   } catch (e) { callback({}); }
 }
 
-function updateOrderStatus(updates) {
+// 2026-10-25 전수표 T-01: 읽을 때 수정 시각(updated_at)도 가져와 PATCH 조건에 넣음(그 사이 다른 기기가 저장했으면 0건 → 다시 읽어 합쳐 1회 재시도).
+// 예전엔 select에 updated_at이 없어 잠금값이 항상 비어 있었고, 조건 없이 덮어썼음.
+function updateOrderStatus(updates, triesLeft) {
+  if (triesLeft === undefined) triesLeft = 1;
   if (!window._estEditState.estSaveCustomerId || typeof SUPABASE_URL === 'undefined') return;
   if (!updates || Object.keys(updates).length === 0) return;
   try {
     var xhrGet = new XMLHttpRequest();
-    xhrGet.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estEditState.estSaveCustomerId) + '&select=order_status', true);
+    xhrGet.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estEditState.estSaveCustomerId) + '&select=order_status,updated_at', true);
     xhrGet.setRequestHeader('apikey', SUPABASE_KEY);
     xhrGet.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
     xhrGet.onload = function() {
@@ -558,12 +561,21 @@ function updateOrderStatus(updates) {
       var merged = Object.assign({}, current, updates);
       try {
         var xhrPatch = new XMLHttpRequest();
-        xhrPatch.open('PATCH', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estEditState.estSaveCustomerId), true);
+        xhrPatch.open('PATCH', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estEditState.estSaveCustomerId) + (lockBefore ? '&updated_at=eq.' + encodeURIComponent(lockBefore) : ''), true);
         xhrPatch.setRequestHeader('apikey', SUPABASE_KEY);
         xhrPatch.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
         xhrPatch.setRequestHeader('Content-Type', 'application/json');
         xhrPatch.setRequestHeader('Prefer', 'return=representation');
         xhrPatch.onload = function() {
+          // 0건 반영(그 사이 다른 기기가 먼저 저장): 다시 읽어 합쳐 1회 재시도
+          try {
+            if (lockBefore && xhrPatch.status < 300 && JSON.parse(xhrPatch.responseText || '[]').length === 0) {
+              if (triesLeft > 0) { updateOrderStatus(updates, triesLeft - 1); return; }
+              typeof reportClientError==='function' && reportClientError('업무현황 자동갱신 충돌(재시도 후에도 0건)');
+              if (typeof showToast === 'function') showToast('⚠️ 업무 현황판 발주 기록이 다른 곳에서 동시에 바뀌어 저장되지 않았어요 — 대시보드에서 확인해주세요');
+              return;
+            }
+          } catch (eZero) { /* 응답 해석 실패는 아래 기존 흐름으로 */ }
           // 이 갱신도 고객 수정 시각(잠금값)을 바꾸므로 공용 장부에 기록(shared-optimistic-lock.js) - 안 하면 열려 있는 대시보드가 가짜 충돌을 냄
           try {
             var patched = JSON.parse(xhrPatch.responseText);

@@ -215,6 +215,36 @@ function patchCustomerFieldsToDb(customer, fields, callback, opts) {
   });
 }
 
+// 2026-10-25 발주 현황 저장 전용 충돌 방지(전수표 T-01). 이 기기의 발주 현황 "전체"를 보내면 낡은 캐시가 다른 기기의 발주 체크를 지운다.
+// 그래서 저장 직전에 서버의 발주 현황과 수정 시각을 읽어, 바꾼 항목(itemKey) 하나만 서버 값에 합치고, 읽은 수정 시각과 같을 때만 반영한다.
+// 그 사이 누가 먼저 저장했으면(0건) 한 번만 다시 읽어 합쳐 재시도하고, 그래도 안 되면 알린다. 서버를 못 읽으면(오프라인) 예전 방식으로 저장해 재시도 큐를 탄다.
+// callback(err, data)
+function saveOrderItemGuarded(customer, itemKey, itemValue, callback) {
+  if (!customer || !customer.id) { saveCustomerFieldsToDb(customer, { order_status: customer && customer.orderStatus || {} }, callback); return; }
+  function attempt(triesLeft) {
+    sbXHR('GET', 'customers?id=eq.' + customer.id + '&select=order_status,updated_at', null, function(gErr, rows) {
+      if (gErr || !Array.isArray(rows) || !rows[0]) {
+        // 서버를 읽지 못함(오프라인 등): 예전 방식(이 기기 값 전체)으로 저장 - 실패하면 재시도 큐
+        saveCustomerFieldsToDb(customer, { order_status: customer.orderStatus || {} }, callback);
+        return;
+      }
+      var merged = Object.assign({}, rows[0].order_status || {});
+      merged[itemKey] = itemValue;
+      var q = rows[0].updated_at ? '&updated_at=eq.' + encodeURIComponent(rows[0].updated_at) : '';
+      patchCustomerFieldsToDb(customer, { order_status: merged }, callback, {
+        query: q,
+        onZeroRows: function(zeroErr) {
+          if (triesLeft > 0) { attempt(triesLeft - 1); return; }
+          if (typeof showToast === 'function') showToast('⚠️ 발주 체크가 다른 곳에서 동시에 바뀌어 저장되지 않았어요 — 새로고침 후 다시 체크해주세요');
+          if (typeof reportClientError === 'function') reportClientError('발주 현황 저장 충돌(재시도 후에도 0건)', null, { customerId: customer.id, itemKey: itemKey });
+          if (callback) callback(zeroErr, null);
+        }
+      });
+    });
+  }
+  attempt(1);
+}
+
 // 2026-10-24 단계 저장 전용 충돌 방지(오래된 기기 덮어쓰기 방지). 서버 단계가 "내가 화면에서 본 단계(fromStage)"일 때만 새 단계를 반영한다.
 // 그 사이 다른 기기나 DB 자동 규칙이 단계를 바꿨으면(0건 반영) 서버 단계를 읽어 내 화면을 그 값으로 맞추고, 덮어쓰지 않는다.
 // callback(err, data): 충돌이면 err.stageConflict=true, err.serverStage=서버 단계.
