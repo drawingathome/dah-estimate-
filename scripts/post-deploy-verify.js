@@ -33,7 +33,9 @@ async function fetchBuf(url) { const r = await fetch(url + (url.includes('?') ? 
 async function checkDeployedVersion(base) {
   if (process.env.SKIP_HASH_CHECK === '1') return true; // 역검증(옛 코드로 시나리오가 실제로 실패하는지 확인)용
   // 2026-10-09: 어제(10/8) 고친 저장 구조 파일들도 포함 - 이 파일들이 운영에 실제로 올라갔는지 바이트 단위로 확인
-  const files = ['shared-common-utils.js', 'dash-customer-add.js', 'est-save.js', 'est-misc.js', 'est-calc-svc.js', 'est-customer-load.js', 'dash-api-writes.js', 'dash-customer-detail-tabs.js', 'dash-api-data.js'];
+  // R-01(2026-10-25): 예전엔 핵심 9개 파일만 비교해서 나머지 파일이 안 올라가도 통과했음 → 루트의 모든 .js 파일(.vercelignore 제외 대상 제외)을 비교
+  const files = fs.readdirSync(ROOT).filter(f => /\.js$/.test(f) && !/\.config\.js$/.test(f) && fs.statSync(path.join(ROOT, f)).isFile());
+  if (files.length < 30) { ok('비교 대상 파일 목록이 정상(30개 이상)', false, '목록 ' + files.length + '개 - 파일 수집 이상'); return false; }
   const deadline = Date.now() + WAIT_MIN * 60000;
   for (;;) {
     const diffs = [];
