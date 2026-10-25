@@ -35,6 +35,13 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
+  // 2026-10-25: CI가 바쁠 때 고정 대기(1.5초)만으로는 값이 채워지기 전에 읽어 가끔 실패했음(208370d) → 최대 12초까지 값이 채워지길 기다린 뒤 읽는다.
+  // 끝내 안 채워지면(진짜 버그) 아래 비교에서 그대로 실패하므로 검증력은 같다.
+  for (let i = 0; i < 24; i++) {
+    const v = await page.evaluate(() => document.getElementById('c-staff')?.value);
+    if (v === '오지은 실장') break;
+    await new Promise(r => setTimeout(r, 500));
+  }
   const result = await page.evaluate(() => document.getElementById('c-staff')?.value);
   // 2026-09-01(bb58be6) 실제사고 재현: 대시보드 "다시보기"가 항상 쓰는
   // loadEstDbId 경로로 다른 담당자(오지은 실장)의 견적서를 열었을 때,
@@ -52,4 +59,4 @@ async function run() {
   process.exit(failed.length === 0 && jsErrors.length === 0 ? 0 : 1);
 }
 run().catch(e => { console.error(e); process.exit(1); });
-setTimeout(() => process.exit(1), 30000);
+setTimeout(() => process.exit(1), 45000);
