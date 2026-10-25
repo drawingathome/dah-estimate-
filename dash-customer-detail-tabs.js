@@ -392,12 +392,17 @@ function restoreCustomer(clientName, id) {
   if (!confirm((clientName||'고객') + ' 정보를 복구할까요?')) return;
   var arr = loadCustomers();
   var target = id ? arr.find(function(c) { return String(c.id) === String(id); }) : arr.find(function(c) { return c.clientName === clientName; });
-  restoreCustomerFromDb(target || clientName, null);
-  if (target) target.is_archived = false;
-  saveCustomers(arr);
-  showToast(clientName + ' 정보가 복구됐습니다');
-  closeDetail();
-  if (typeof renderSearch === 'function') renderSearch();
+  // 전수표 T-14: 대상을 못 찾았는데 이름만으로 서버에 보내면 같은 이름의 다른 고객까지 복구될 수 있음 → 중단.
+  // 또 서버 저장 결과를 확인하지 않고 "복구됐습니다"라고 알리던 문제 → 성공했을 때만 알림·화면 반영.
+  if (!target || !target.id) { showToast('⚠️ 복구할 고객을 정확히 찾지 못해 중단했습니다. 새로고침 후 다시 시도해 주세요'); return; }
+  restoreCustomerFromDb(target, function(err) {
+    if (err) { showToast('⚠️ 복구가 서버에 저장되지 않았습니다 - 잠시 후 다시 시도해 주세요'); return; }
+    target.is_archived = false;
+    saveCustomers(arr);
+    showToast(clientName + ' 정보가 복구됐습니다');
+    closeDetail();
+    if (typeof renderSearch === 'function') renderSearch();
+  });
 }
 
 var editingCustomerName = null;

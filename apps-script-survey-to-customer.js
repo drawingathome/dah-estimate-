@@ -122,12 +122,18 @@ function fetchNewSurveys() {
 // 2026-08-05 신규: 전화번호로 기존 고객이 이미 있는지 확인 (중복등록 방지용)
 function findExistingCustomerByPhone(phone) {
   if (!phone) return null;
-  var url = SUPABASE_URL + '/rest/v1/customers?phone=eq.' + encodeURIComponent(phone) + '&select=id,client_name&limit=1';
-  // 2026-09-30(선혜님 - "누락된거 없어?" 요청으로 전수검색 중 발견한 심각한 쌍둥이 버그):
-  // Authorization 헤더 없이 apikey만 보내고 있었음 - 이러면 Supabase가 익명 사용자로 취급해서
-  // RLS에 막혀 이 조회가 항상 실패하고, 바로 아래 "기존고객 조회 실패... 그냥 등록 진행"으로
-  // 빠지게 됨. 즉 이 함수의 존재 목적(전화번호 중복 체크로 같은 고객이 설문으로 두 번
-  // 등록되는 걸 막는 것) 자체가 처음부터 조용히 무력화돼 있었을 가능성이 있음.
+  // 2026-10-25(전수표 T-15): 전화번호가 입력된 모양 그대로 저장돼서 "010-1234-5678"과 "01012345678"을 다른 사람으로 보고
+  // 같은 고객이 중복 등록될 수 있었음 → 숫자만/하이픈 형태 둘 다로 조회.
+  var digits = String(phone).replace(/[^0-9]/g, '');
+  var variants = [String(phone).trim()];
+  if (digits) {
+    variants.push(digits);
+    if (digits.length === 11) variants.push(digits.slice(0, 3) + '-' + digits.slice(3, 7) + '-' + digits.slice(7));
+    if (digits.length === 10) variants.push(digits.slice(0, 3) + '-' + digits.slice(3, 6) + '-' + digits.slice(6));
+  }
+  var uniq = variants.filter(function(v, i) { return v && variants.indexOf(v) === i; });
+  var inList = uniq.map(function(v) { return '"' + v.replace(/"/g, '') + '"'; }).join(',');
+  var url = SUPABASE_URL + '/rest/v1/customers?phone=in.(' + encodeURIComponent(inList) + ')&select=id,client_name&limit=1';
   var options = {
     method: 'get',
     headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + SUPABASE_SERVICE_ROLE_KEY },
@@ -135,8 +141,9 @@ function findExistingCustomerByPhone(phone) {
   };
   var response = UrlFetchApp.fetch(url, options);
   if (response.getResponseCode() !== 200) {
-    Logger.log('기존고객 조회 실패(중복체크 스킵하고 그냥 등록 진행): ' + response.getContentText());
-    return null;
+    // 2026-10-25(전수표 T-15): 예전엔 조회 실패 시 "그냥 등록 진행"(fail-open)이라 중복 고객이 생길 수 있었음.
+    // 이제 실패하면 이번 설문은 건너뛰고 다음 실행(10분 뒤)에 다시 시도함(설문은 '신규' 상태로 남음).
+    throw new Error('기존고객 조회 실패 — 중복 위험이라 등록을 미룹니다: ' + response.getContentText());
   }
   var rows = JSON.parse(response.getContentText());
   return rows && rows.length > 0 ? rows[0] : null;
@@ -159,6 +166,11 @@ function insertCustomer(customer) {
     muteHttpExceptions: true
   };
   var response = UrlFetchApp.fetch(url, options);
+  // 2026-10-25(전수표 T-15): 응답 코드를 확인하지 않아 등록이 실패해도 "고객 등록 완료"로 보고 설문을 '등록완료'로 바꿔
+  // 고객이 영영 만들어지지 않을 수 있었음 → 실패하면 오류를 던져 설문을 '신규'로 남기고 다음 실행에서 재시도.
+  if (response.getResponseCode() >= 300) {
+    throw new Error('고객 등록 실패(' + response.getResponseCode() + '): ' + response.getContentText());
+  }
   return JSON.parse(response.getContentText());
 }
 
