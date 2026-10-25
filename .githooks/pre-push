@@ -1,0 +1,4 @@
+#!/bin/bash
+# 2026-10-25(전수표 R-08): 푸시 전 빠른 점검 자동 실행. 켜는 법(이 저장소에서 1회): git config core.hooksPath .githooks
+# 급할 때 건너뛰기(비권장): git push --no-verify
+exec bash "$(git rev-parse --show-toplevel)/scripts/fast-check.sh"
