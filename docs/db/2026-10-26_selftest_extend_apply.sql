@@ -59,6 +59,12 @@ begin
     res := res || jsonb_build_object(own_denies[i][1], jsonb_build_object('rows', n, 'ok', ok_i));
     all_ok := all_ok and ok_i;
   end loop;
+  -- 헛통과 방지(정정 2026-10-26): '입금 줄이기' 시험은 대상 행이 0건이면 아무것도 확인하지 못한 채 통과함 → 대상 행 수를 함께 기록하고,
+  -- 0건이면 vacuous=true 로 표시(실패 처리는 안 함 — 입금 있는 고객이 없을 수도 있으므로). 메일 점검은 vacuous 항목 수를 안내.
+  res := res || jsonb_build_object('reduce_deposit_candidates', jsonb_build_object(
+    'customers', public._selftest_run(uid, format('select * from public.customers where staff_name = %L and coalesce(deposit_amount,0) > 0', sname)),
+    'estimates', public._selftest_run(uid, format('select * from public.estimates where staff_name = %L and coalesce(deposit_amount,0) > 0', sname)),
+    'ok', true));
   -- 점검 뷰는 조회자 권한으로 동작해야 함(2026-10-14 사고 재발 방지)
   select reloptions::text into opts from pg_class where oid = 'public.data_integrity_issues'::regclass;
   ok_i := coalesce(opts, '') like '%security_invoker=true%';
