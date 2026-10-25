@@ -255,8 +255,8 @@ function renderEstList() {
             });
           }
           // 목록을 다시 그려도(화면 이동 후 복귀) 기억하도록 화면 단위 표에 보관. 같은 이름+전화번호의 등록 고객이 이미 있어도 새로 만들지 않고 연결만 한다.
-          window._estCreatedCustomerByEstId = window._estCreatedCustomerByEstId || {};
-          var knownId = window._estCreatedCustomerByEstId[entry.id];
+          /** @type {any} */ (window)._estCreatedCustomerByEstId = /** @type {any} */ (window)._estCreatedCustomerByEstId || {};
+          var knownId = /** @type {any} */ (window)._estCreatedCustomerByEstId[entry.id];
           if (!knownId && entry.phone) {
             try {
               var same = (typeof loadCustomers === 'function' ? loadCustomers() : []).filter(function(c){ return !c.is_archived && c.clientName === entry.clientName && c.phone && c.phone === entry.phone; });
@@ -267,7 +267,7 @@ function renderEstList() {
           sbXHR('POST', 'customers', payload, function(err, rows){
             entry._registeringAsCustomer = false;
             if (err || !rows || !rows[0]) { showToast('고객 등록 실패 — 다시 시도해주세요'); return; }
-            window._estCreatedCustomerByEstId[entry.id] = rows[0].id;
+            /** @type {any} */ (window)._estCreatedCustomerByEstId[entry.id] = rows[0].id;
             linkAndOpen(rows[0].id);
           });
         }
