@@ -1,0 +1,36 @@
+import { PGlite } from '@electric-sql/pglite';
+import fs from 'fs';
+const R='../r/docs/db/';
+const db = new PGlite();
+const M='00000000-0000-0000-0000-000000000001', S='00000000-0000-0000-0000-000000000002';
+await db.exec(`
+create role anon; create role authenticated; create schema auth; create function auth.uid() returns uuid language sql as $$ select nullif(current_setting('app.uid', true),'')::uuid $$;
+create table staff_profiles(id uuid primary key, role text);
+insert into staff_profiles values ('${M}','master'),('${S}','staff');
+create table monthly_close(month text primary key);
+insert into monthly_close values ('2026-09');
+create table estimates(id uuid primary key default gen_random_uuid(), memo text, deposit_date text, deposit_amount numeric, balance_date text, balance_amount numeric);
+create table estimate_extra_payments(id uuid primary key default gen_random_uuid(), estimate_id uuid, amount numeric, paid_date text);
+insert into estimates(id,deposit_date,deposit_amount) values ('11111111-1111-1111-1111-111111111111','2026-09-10',1000000);
+insert into estimates(id,deposit_date,deposit_amount) values ('22222222-2222-2222-2222-222222222222','2026-10-05',500000);
+`);
+await db.exec(fs.readFileSync(R+'2026-10-26_closed_month_guard_DRAFT.sql','utf8'));
+const out=[]; const ok=(l,c,d)=>out.push((c?'✅ ':'❌ ')+l+(d?' — '+d:''));
+async function as(uid, sql){ await db.exec(`select set_config('app.uid','${uid||''}',false)`); try{ await db.exec(sql); return true;}catch(e){ return e.message; } }
+let r;
+r=await as(S,"insert into estimate_extra_payments(estimate_id,amount,paid_date) values ('11111111-1111-1111-1111-111111111111',100,'2026-09-20')"); ok('1. 실장: 9월(마감) 추가결제 입력 거부', typeof r==='string' && r.includes('마감된 달'), String(r));
+r=await as(S,"insert into estimate_extra_payments(estimate_id,amount,paid_date) values ('22222222-2222-2222-2222-222222222222',100,'2026-10-20')"); ok('2. 실장: 10월(열린 달) 추가결제 입력 허용', r===true, String(r));
+r=await as(M,"insert into estimate_extra_payments(estimate_id,amount,paid_date) values ('11111111-1111-1111-1111-111111111111',100,'2026-09-21')"); ok('3. 마스터: 9월 입력 허용', r===true, String(r));
+let n=(await db.query("select count(*)::int c from closed_month_edit_log where tbl='estimate_extra_payments'")).rows[0].c; ok('4. 마스터 입력은 기록됨(1건)', n===1, 'n='+n);
+r=await as(S,"update estimates set memo='메모만 수정' where id='11111111-1111-1111-1111-111111111111'"); ok('5. 실장: 마감월 견적서의 입금과 무관한 수정은 허용', r===true, String(r));
+r=await as(S,"update estimates set deposit_amount=900000 where id='11111111-1111-1111-1111-111111111111'"); ok('6. 실장: 9월 입금액 변경 거부', typeof r==='string' && r.includes('마감된 달'), String(r));
+r=await as(S,"update estimates set deposit_amount=450000 where id='22222222-2222-2222-2222-222222222222'"); ok('7. 실장: 10월 입금액 변경 허용', r===true, String(r));
+r=await as(S,"update estimates set deposit_date='2026-10-01' where id='11111111-1111-1111-1111-111111111111'"); ok('8. 실장: 9월 입금을 10월로 옮기기도 거부(옛 날짜가 마감월)', typeof r==='string', String(r));
+r=await as(S,"update estimates set deposit_date='2026-09-15' where id='22222222-2222-2222-2222-222222222222'"); ok('9. 실장: 10월 입금을 9월로 옮기기도 거부(새 날짜가 마감월)', typeof r==='string', String(r));
+// 환불 변수: 표시가 있으면(=register_refund) 마감월 입금액 감액이 통과해야 함
+r=await as(S,"select set_config('dah.refund_in_progress','1',true); update estimates set deposit_amount=800000 where id='11111111-1111-1111-1111-111111111111'"); 
+ok('10. 환불 표시가 있으면 9월 입금액 감액 통과(단일 문장 실행 시)', r===true, String(r));
+r=await as(null,"update estimates set deposit_amount=700000 where id='11111111-1111-1111-1111-111111111111'"); ok('11. 서버(로그인 없음) 작업은 통과+기록', r===true, String(r));
+r=await as(S,"update estimates set deposit_amount=700000 where id='11111111-1111-1111-1111-111111111111'"); ok('12. 같은 값으로 저장(변화 없음)은 허용', r===true, String(r));
+r=await as(S,"delete from estimate_extra_payments where paid_date='2026-09-21'"); ok('13. 실장: 9월 추가결제 삭제 거부', typeof r==='string', String(r));
+console.log(out.join('\n'));
