@@ -83,7 +83,10 @@ function appendExtraPaySection(paySec, est, c) {
         if (!confirm('이 추가 결제 ' + x.amount.toLocaleString() + '원(' + x.date + ')을 삭제할까요?\n잘못 입력한 경우에만 삭제하세요. 실제로 돌려준 돈은 삭제가 아니라 환불로 기록해야 해요.')) return;
         if (typeof logEvent === 'function') logEvent('extra_payment_delete', { estimateId: est.id, customerId: c.id, amount: x.amount });
         sbXHR('DELETE', 'estimate_extra_payments?id=eq.' + encodeURIComponent(x.id), null, function (err) {
-          if (err) { showToast('⚠️ 삭제되지 않았어요 - 잠시 후 다시 시도해 주세요'); return; }
+          if (err) {
+            var _cmD = (typeof closedMonthRejectMessage === 'function') ? closedMonthRejectMessage(err.status, err.text) : '';
+            showToast(_cmD ? ('🔒 ' + _cmD) : '⚠️ 삭제되지 않았어요 - 잠시 후 다시 시도해 주세요'); return; // 2026-10-26(H-17)
+          }
           showToast('삭제했어요');
           reopenAfterExtraPay(c);
         });
@@ -150,6 +153,8 @@ function appendExtraPaySection(paySec, est, c) {
       // 같은 request_id가 이미 저장돼 있으면(중복 클릭·재시도) 중복 오류(409)로 오는데, 이미 저장된 것이므로 성공으로 취급함.
       var dup = err && (err.status === 409 || /duplicate key|23505/.test(String(err.text || '')));
       if (err && !dup) {
+        var _cmX = (typeof closedMonthRejectMessage === 'function') ? closedMonthRejectMessage(err.status, err.text) : '';
+        if (_cmX) { showToast('🔒 ' + _cmX); return; } // 2026-10-26(H-17): 마감된 달 = 영구 거절(다시 눌러도 같음)
         showToast('⚠️ 추가 결제가 서버에 저장되지 않았어요 - 잠시 후 다시 눌러 주세요');
         return;
       }

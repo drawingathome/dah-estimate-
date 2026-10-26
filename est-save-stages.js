@@ -628,10 +628,17 @@ function _saveStage_estimatesActual(ctx) {
         showToast('저장 완료! (DB+로컬)');
       } else {
         console.warn('Supabase 견적서 저장 실패 (status='+xhr2.status+'):', xhr2.responseText);
+        // 2026-10-26(H-17): 마감된 달의 입금 기록 수정은 영구 거절이므로 재시도 큐에 넣지 않고, 이유를 분명히 알린다.
+        var _cmMsg = (typeof closedMonthRejectMessage === 'function') ? closedMonthRejectMessage(xhr2.status, xhr2.responseText) : '';
+        if (_cmMsg) {
+          showToast('🔒 ' + _cmMsg);
+          try { alert('🔒 저장되지 않았어요\n\n' + _cmMsg + '\n\n이 견적서의 입금 내용은 서버에 반영되지 않았어요. 마스터에게 요청해 주세요.\n(이 기기 화면의 값은 서버와 다를 수 있으니 새로고침해서 확인해 주세요)'); } catch (eAl) {}
+        } else {
         showToast('⚠️ 서버 저장 실패 — 이 기기에만 임시 저장됐어요, 자동 재시도할게요');
         // 2026-08-05: 실패하면 그걸로 끝이라 나중에 수동으로 다시 저장해야 했음 —
         // 재시도 큐에 등록해서 네트워크 복구시 자동으로 다시 시도되도록 함
         if (typeof addToEstPendingQueue === 'function') addToEstPendingQueue(estPayloadForRetry, isEditMode, window._estEditState.editingEstDbId, (typeof lockUpdatedAt !== 'undefined' ? lockUpdatedAt : null));
+        }
       }
       onDone(_saveOutcome); // 2026-08-24: 성공/409/실패 모든 경우에 버튼 다시 눌러도 되게 원상복구 (2026-10-06: 서버가 받았을 때만 'server')
     };

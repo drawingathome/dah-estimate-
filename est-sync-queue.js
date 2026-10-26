@@ -146,6 +146,7 @@ function _doRetryEstPendingSync(q) {
   var pending = q.length;
   var done = 0;
   var failReasons = [];
+  var closedRejects = [];
   q.forEach(function(item) {
     var xhr = new XMLHttpRequest();
     var isEdit = item.isEditMode && item.dbId;
@@ -182,7 +183,11 @@ function _doRetryEstPendingSync(q) {
         });
         return;
       }
-      if (isHttpFail) {
+      // 2026-10-26(H-17): 마감된 달 입금 거절은 영구 거절 — 큐에서 빼고(재시도 무의미), 로그인 문제로 오인해 재로그인 팝업을 띄우지 않는다.
+      var _cmRetry = isHttpFail ? ((typeof closedMonthRejectMessage === 'function') ? closedMonthRejectMessage(xhr.status, xhr.responseText) : '') : '';
+      if (_cmRetry) {
+        closedRejects.push(_cmRetry);
+      } else if (isHttpFail) {
         remaining.push(item);
         // 2026-08-25(선혜님 지적 — "니 테스트가 어떤방식인지 궁금해"): 지금까지
         // 제가 몇 번을 "이게 원인이다" 추측해서 고쳤는데도 똑같은 403이
@@ -237,6 +242,9 @@ function _doRetryEstPendingSync(q) {
         // 2026-08-25: 401/403이었던 건은 위에서 이미 재로그인 팝업으로 안내
         // 중이므로, 여기서 또 alert까지 뜨면 팝업 두 개가 겹쳐서 혼란스러움.
         // 재로그인 관련 실패가 아닌 다른 이유(400 등)로 남은 게 있을 때만 alert.
+        if (closedRejects.length > 0) {
+          try { alert('🔒 대기 중이던 저장 ' + closedRejects.length + '건이 마감된 달이라 거절돼 대기열에서 뺐어요\n\n' + closedRejects[0] + '\n\n마스터에게 요청해 주세요. 화면은 새로고침해서 서버 값을 확인해 주세요.'); } catch (eAl) {}
+        }
         var nonAuthFail = failReasons.some(function(r){ return r.indexOf('401') === -1 && r.indexOf('403') === -1; });
         if ((remaining.length > 0 || failReasons.length > 0) && nonAuthFail) {
           alert('⚠️ 서버 저장 재시도 결과 확인 필요\n\n로그인 세션 있음: ' + hasSession + '\n사유: ' + failReasons.join(', ') + '\n\n이 화면을 캡처해서 보내주세요.');

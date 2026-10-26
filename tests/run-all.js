@@ -542,6 +542,8 @@ if (/dah-dashboard/.test(target)) {
   // 0건 반영(권한문제/동시저장충돌)을 성공으로 착각하고 조용히 삭제하던 버그를 고침 - 회귀 감시.
   scripts.push(['est-retry-queue-golden-master-check.js', []]);
   scripts.push(['est-retry-queue-lock-check.js', []]); // 2026-10-15 재시도 큐 동시편집 잠금
+  scripts.push(['closed-month-reject-check.js', []]); // 2026-10-26 H-17 마감월 입력 거부 시 재시도 큐·재로그인 오인 방지
+  scripts.push(['stage-auto-note-check.js', []]); // 2026-10-26 N-12 고객상세 자동 이동 안내
   scripts.push(['est-retry-queue-already-saved-check.js', []]); // 2026-10-23 재시도 대기 중복·이미 저장된 내용 허위 실패 방지
   scripts.push(['memo-concurrent-edit-check.js', []]); // 2026-10-15 메모 동시편집 충돌방지
   scripts.push(['est-register-customer-dup-check.js', []]); // 2026-10-25 견적에서 고객 등록 중 연결 실패 후 재시도 중복 방지(전수표 T-09)
@@ -655,7 +657,6 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['save-roundtrip-real-flow-check.js', []]);
   scripts.push(['doc-space-order-check.js', []]);
   scripts.push(['doc-address-amount-check.js', []]);
-  scripts.push(['stage-auto-note-check.js', []]);
   scripts.push(['row-drag-reorder-check.js', []]);
 }
 

@@ -243,3 +243,19 @@ var DAH_PRE_CONTRACT_STAGES = ['방문예약','상담','가견적'];
 // 2026-09-30(코드정리 - 계약 이후 6단계도 dash-customer-estimates.js/dash-utils.js에 각각
 // 하드코딩돼 있던 것 발견): DAH_STAGE_ORDER에서 계약 이전 3단계를 뺀 나머지와 정확히 같음.
 var DAH_POST_CONTRACT_STAGES = ['선금결제','실측준비중','확정견적','잔금결제','시공준비중','시공완료'];
+
+// ── 마감된 달 입력 거부 판별 ─────────────────────────────────────
+// 2026-10-26(H-17): 마감된 달의 입금 기록을 DB가 거부하면(예정, docs/db/2026-10-26_closed_month_guard_DRAFT.sql) 서버는 403과
+// '마감된 달(YYYY-MM)의 입금 기록은 수정할 수 없습니다. 마스터에게 요청하세요.' 문구를 돌려준다.
+// 이건 네트워크·로그인 문제가 아니라 "영구 거절"이라, 재시도 큐에 쌓거나 재로그인을 요구하면 안 된다.
+// 반환: 서버가 준 안내 문구(거절이면) / ''(그 외). 문구를 못 읽어도 '마감된 달(' 포함 여부만으로 판별한다.
+function closedMonthRejectMessage(status, text) {
+  try {
+    if (status !== 403 && status !== 400) return '';
+    var raw = String(text == null ? '' : text);
+    if (raw.indexOf('마감된 달(') === -1) return '';
+    var msg = raw;
+    try { var o = JSON.parse(raw); msg = String(o.message || o.msg || o.error || raw); } catch (eJ) {}
+    return msg.slice(0, 200);
+  } catch (e) { return ''; }
+}
