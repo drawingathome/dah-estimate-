@@ -359,8 +359,12 @@ function _copySelectValues(original, clone) {
    ══════════════════════════════════════════════════ */
 function makeRowDraggable(tr) {
   var handle = tr.querySelector('.row-drag-handle');
-  if (!handle || handle.dataset.dragBound) return;
-  handle.dataset.dragBound = '1';
+  // 2026-10-26(선혜님 - "복사한 줄은 올리고 내려도 순서가 안 바뀜"): 예전엔 '이미 연결함' 표시를 HTML 속성(data-drag-bound)에 남겼는데,
+  // 줄 복사(cloneNode)가 그 속성까지 그대로 복제해서 복사본은 '이미 연결됨'으로 오해받아 끌기 기능이 안 붙었음.
+  // 복제되지 않는 자바스크립트 속성에 표시해, 복사본은 새로 연결되고 같은 줄을 두 번 연결하는 일은 계속 막음.
+  if (!handle || handle._dragBound) return;
+  handle._dragBound = true;
+  handle.removeAttribute('data-drag-bound');
   handle.style.touchAction = 'none'; // 터치로 핸들을 잡았을 때 화면 스크롤과 충돌하지 않도록
 
   handle.addEventListener('pointerdown', function(e) {
