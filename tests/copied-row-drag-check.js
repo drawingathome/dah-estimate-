@@ -27,6 +27,8 @@ function ok(l, c, d) { console.log((c ? '✅ ' : '❌ ') + l + (c ? '' : ' — '
     // A를 복사 → A, A(복사), B, C 가 되고, 복사본에 이름 표시
     await page.evaluate((body, copyFn) => { const btn = document.querySelector('#' + body + ' tr .copy-btn'); window[copyFn](btn); const rows = document.querySelectorAll('#' + body + ' tr'); rows[1].querySelector('.space-inp').value = 'A복사'; }, body, copyFn);
     ok(label + ': 복사하면 바로 아래에 복사본이 생김', JSON.stringify(await order(body)).startsWith('["A","A복사"'), JSON.stringify(await order(body)));
+    const focused = await page.evaluate((body) => { const rows = document.querySelectorAll('#' + body + ' tr'); return document.activeElement === rows[1].querySelector('.space-inp'); }, body);
+    ok(label + ': 복사 직후 복사본의 위치(방) 칸에 커서가 가 있음(이름 바꾸기 안내)', focused);
     // 복사본(2번째 줄)을 맨 아래로 끌기
     await center(body, 1);
     const n = (await order(body)).length;

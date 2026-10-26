@@ -64,7 +64,7 @@
 | 7 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 16 |
 | 8 | `est-form-controls.js` | DAH 견적서 앱 — 폼 상태/타입 제어 | 16 |
 | 9 | `est-calc-rules.js` | DAH 견적서 앱 — 계산 규칙 (순수 함수: 화면/저장소를 전혀 안 만짐) | 23 |
-| 10 | `est-product-calc.js` | DAH 견적서 앱 — 공통 계산: 합계(calcTotal)/얼림 금액/행 삭제/드래그 정렬 | 10 |
+| 10 | `est-product-calc.js` | DAH 견적서 앱 — 공통 계산: 합계(calcTotal)/얼림 금액/행 삭제/드래그 정렬 | 11 |
 | 11 | `est-calc-curtain.js` | DAH 견적서 앱 — 커튼 행 계산 (추가/폭수·금액 계산/레일 자동/복사) | 4 |
 | 12 | `est-calc-blind.js` | DAH 견적서 앱 — 블라인드 행 계산 (추가/최소면적/옵션 추가금/부자재 자동/복사) | 7 |
 | 13 | `est-calc-svc.js` | DAH 견적서 앱 — 기타품목 · 부자재/서비스(실측비·시공비·레일) 행 계산과 요약 | 12 |
@@ -115,6 +115,7 @@
 | `_exportEstimatesExcelInner` | `dash-export.js` |
 | `_exportExcelInner` | `dash-export.js` |
 | `_findSameSpaceInsertPoint` | `est-product-calc.js` |
+| `_focusCopiedSpace` | `est-product-calc.js` |
 | `_getDragAfterRow` | `est-product-calc.js` |
 | `_getSupabaseRealtimeClient` | `dash-realtime.js` |
 | `_handleRealtimeCustomerChange` | `dash-realtime.js` |

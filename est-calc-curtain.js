@@ -285,6 +285,7 @@ function copyCurtainRow(btn) {
   var insertAfter = _findSameSpaceInsertPoint(tr);
   insertAfter.parentNode.insertBefore(clone,insertAfter.nextSibling);
   makeRowDraggable(clone);
+  _focusCopiedSpace(clone);
   if (typeof autoUpdateRail === 'function') autoUpdateRail(clone);
   calcTotal();
 }

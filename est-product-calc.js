@@ -317,6 +317,18 @@ function delRow(btn) {
 // 같은 공간 안에 다른 행이 더 있으면 그 사이에 끼어들어 "순서가 이상해진다"는
 // 지적(선혜님, 2026-08-22)이 있었음. 같은 공간이 없으면(=원본이 그 공간의
 // 마지막 행) 기존과 동일하게 원본 바로 다음에 붙음.
+
+// 2026-10-26(선혜님 - 김민아 견적서: 복사한 줄을 다른 방 아래로 옮겼는데 문서에서는 원래 방 쪽에 나옴): 문서는 같은 방 이름끼리 묶어서 보여주므로,
+// 복사한 줄은 위치(방) 이름이 원본과 같은 채로 남아 있음. 복사 직후 위치 칸에 커서를 두고 안내해서, 다른 방이면 바로 이름을 바꾸게 함.
+function _focusCopiedSpace(clone) {
+  try {
+    var inp = clone && clone.querySelector('.space-inp');
+    if (!inp) return;
+    inp.focus();
+    if (inp.select) inp.select();
+    if (typeof showToast === 'function') showToast('복사했어요 — 다른 방이면 위치(방) 이름을 바꿔 주세요. 문서는 같은 이름끼리 묶여 나와요');
+  } catch (e) {}
+}
 function _findSameSpaceInsertPoint(tr) {
   var space = tr.querySelector('.space-inp')?.value || '';
   var insertAfter = tr;

@@ -223,6 +223,7 @@ function copyBlindRow(btn) {
   var insertAfter = _findSameSpaceInsertPoint(tr);
   insertAfter.parentNode.insertBefore(clone,insertAfter.nextSibling);
   makeRowDraggable(clone);
+  _focusCopiedSpace(clone);
   autoAddBlindSvc();
   // 2026-08-28(선혜님 지적 — "옵션칸에 금액을 넣어도 금액 추가가 안되네",
   // 실제로는 블라인드 행을 복사했을 때 재현됨): autoAddBlindSvc(블라인드
