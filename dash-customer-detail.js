@@ -650,6 +650,37 @@ function renderDetailStageSection(c, body, isMaster) {
   ]);
   stageSec.appendChild(stageTop);
 
+  // 2026-10-26(N-12, 선혜님 위임 "추천대로"): 단계가 시스템 규칙으로 자동 이동됐으면 그 이유를 고객상세에 계속 보여준다.
+  // 서버 기록표(customer_stage_auto_log)의 가장 최근 '실제 이동'만 읽는다. 아래 두 경우는 보여주지 않는다:
+  //  ① '[기록전용]' 행 = 규칙을 시험 가동만 한 기록(실제로 이동하지 않음) → 보여주면 거짓 안내가 됨
+  //  ② 기록의 도착 단계가 지금 단계와 다름 = 그 뒤에 사람이 단계를 바꿈 → 낡은 안내
+  // 읽기 실패·권한 없음·기록 없음이면 아무것도 표시하지 않는다(화면을 막거나 오류를 띄우지 않음).
+  var stageAutoNote = div('display:none;margin:-4px 0 10px;font-size:11px;color:var(--text-muted,#8A8378);line-height:1.5', []);
+  stageAutoNote.id = 'stage-auto-note';
+  stageSec.appendChild(stageAutoNote);
+  try {
+    var _noteCid = c.id, _noteStage = c.stage;
+    if (typeof sbXHR === 'function' && /^[0-9]+$/.test(String(_noteCid))) {
+      sbXHR('GET', 'customer_stage_auto_log?customer_id=eq.' + _noteCid + '&order=changed_at.desc&limit=5&select=from_stage,to_stage,reason,changed_at', null, function(err, rows) {
+        try {
+          if (err || !Array.isArray(rows)) return;
+          var node = document.getElementById('stage-auto-note');
+          if (!node || node !== stageAutoNote) return;            // 그 사이 다른 고객 화면으로 바뀜
+          var hit = null;
+          for (var i = 0; i < rows.length; i++) {
+            if (String(rows[i].reason || '').indexOf('[기록전용]') === 0) continue;
+            hit = rows[i]; break;                                   // 가장 최근 '실제' 이동
+          }
+          if (!hit || hit.to_stage !== _noteStage) return;
+          var d = hit.changed_at ? new Date(hit.changed_at) : null;
+          var when = (d && !isNaN(d.getTime())) ? ((d.getMonth() + 1) + '/' + d.getDate() + ' ') : '';
+          node.textContent = 'ⓘ ' + when + '자동 이동: ' + (hit.from_stage || '?') + ' → ' + hit.to_stage + (hit.reason ? ' (' + hit.reason + ')' : '');
+          node.style.display = 'block';
+        } catch (eN2) {}
+      });
+    }
+  } catch (eN) {}
+
   
   var progressBar = div('display:flex;gap:3px;margin-bottom:10px', []);
   STAGES.forEach(function(s) {

@@ -655,6 +655,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['save-roundtrip-real-flow-check.js', []]);
   scripts.push(['doc-space-order-check.js', []]);
   scripts.push(['doc-address-amount-check.js', []]);
+  scripts.push(['stage-auto-note-check.js', []]);
   scripts.push(['row-drag-reorder-check.js', []]);
 }
 
