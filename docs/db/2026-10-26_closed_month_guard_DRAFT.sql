@@ -96,6 +96,7 @@ drop trigger if exists trg_closed_month_guard_est on public.estimates;
 create trigger trg_closed_month_guard_est before update on public.estimates
   for each row execute function public.dah_closed_month_guard();
 
--- TODO(예행 후): register_refund 본문 첫머리(권한 확인 직후)에
---   perform set_config('dah.refund_in_progress', '1', true);
--- 한 줄 추가 (트랜잭션 안에서만 유효). 함수 전체 교체 SQL은 예행 때 함께 작성.
+-- 정정(2026-10-27, 운영 함수 본문을 읽어 확인): register_refund·reverse_refund는 함수 맨 처음에 '마스터만' 검사한다.
+--   가드는 마스터를 어차피 통과시키고 기록만 남기므로, 환불 함수에 dah.refund_in_progress 표시 한 줄을 넣는 수정은 **필요 없다**
+--   (돈 함수를 건드리지 않는 쪽이 더 안전). 표시 변수는 있으면 기록 이름만 'refund'로 바꿔 줄 뿐이다.
+--   근거: docs/db/2026-10-26_closed_month_guard_refund_rehearse.mjs (환불 함수 변경 없이 마스터 환불 통과·기록, 실장은 거부).
