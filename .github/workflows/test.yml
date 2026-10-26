@@ -26,7 +26,20 @@ jobs:
         run: node tests/typecheck-check.js
 
       - name: 대시보드 회귀 테스트
-        run: node tests/run-all.js dah-dashboard.html
+        run: |
+          mkdir -p ci-logs
+          set -o pipefail
+          node tests/run-all.js dah-dashboard.html 2>&1 | tee ci-logs/dashboard.log
 
       - name: 견적서 앱 회귀 테스트
-        run: node tests/run-all.js dah-estimate.html
+        run: |
+          mkdir -p ci-logs
+          set -o pipefail
+          node tests/run-all.js dah-estimate.html 2>&1 | tee ci-logs/estimate.log
+      - name: 실패 시 시험 출력 저장 (원인 확인용, H-25)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs
+          path: ci-logs/
+          retention-days: 14
