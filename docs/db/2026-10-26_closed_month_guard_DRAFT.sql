@@ -38,6 +38,7 @@ declare
   v_master boolean := false;
   v_old_m text; v_new_m text; v_hit text;
   v_refund boolean := coalesce(current_setting('dah.refund_in_progress', true), '') = '1';
+  v_cdate text;
 begin
   if v_uid is not null then
     select exists (select 1 from public.staff_profiles where id = v_uid and role = 'master') into v_master;
@@ -53,16 +54,18 @@ begin
   elsif tg_table_name = 'estimates' then
     -- 입금일/금액이 바뀐 칸만 검사(선금·잔금)
     if tg_op <> 'UPDATE' then return coalesce(new, old); end if;
+    select nullif(c.date::text,'') into v_cdate from public.customers c where c.id = new.client_id;
     if old.deposit_date is not distinct from new.deposit_date and old.deposit_amount is not distinct from new.deposit_amount
        and old.balance_date is not distinct from new.balance_date and old.balance_amount is not distinct from new.balance_amount then
       return new;
     end if;
-    -- 바뀐 칸의 옛/새 날짜 중 마감월에 걸리는 첫 달을 찾음
+    -- 바뀐 칸의 옛/새 날짜 중 마감월에 걸리는 첫 달을 찾음.
+    -- 입금일이 비어 있으면 월 매출 계산(independent_month_check)과 같이 '고객 날짜(customers.date)'의 달로 본다(잔금일 없는 64건 대응).
     select m into v_hit from (
-      select left(old.deposit_date,7) m where old.deposit_date is distinct from new.deposit_date or old.deposit_amount is distinct from new.deposit_amount
-      union select left(new.deposit_date,7) where old.deposit_date is distinct from new.deposit_date or old.deposit_amount is distinct from new.deposit_amount
-      union select left(old.balance_date,7) where old.balance_date is distinct from new.balance_date or old.balance_amount is distinct from new.balance_amount
-      union select left(new.balance_date,7) where old.balance_date is distinct from new.balance_date or old.balance_amount is distinct from new.balance_amount
+      select left(coalesce(nullif(old.deposit_date,''), v_cdate),7) m where old.deposit_date is distinct from new.deposit_date or old.deposit_amount is distinct from new.deposit_amount
+      union select left(coalesce(nullif(new.deposit_date,''), v_cdate),7) where old.deposit_date is distinct from new.deposit_date or old.deposit_amount is distinct from new.deposit_amount
+      union select left(coalesce(nullif(old.balance_date,''), v_cdate),7) where old.balance_date is distinct from new.balance_date or old.balance_amount is distinct from new.balance_amount
+      union select left(coalesce(nullif(new.balance_date,''), v_cdate),7) where old.balance_date is distinct from new.balance_date or old.balance_amount is distinct from new.balance_amount
     ) x where m is not null and m <> '' and exists (select 1 from public.monthly_close c where c.month = x.m) limit 1;
     if v_hit is null then return new; end if;
     v_old_m := v_hit; v_new_m := v_hit;
