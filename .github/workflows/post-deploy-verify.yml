@@ -12,7 +12,7 @@ on:
 jobs:
   verify:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # N-32: ubuntu-latest가 새 이미지(resolute)로 바뀌어 apt 다운로드가 멈춤 → 고정(가설, 효과는 다음 실행으로 확인)
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
