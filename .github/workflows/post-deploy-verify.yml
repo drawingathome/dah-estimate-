@@ -27,11 +27,25 @@ jobs:
         timeout-minutes: 12
         run: |
           set -x
-          npm install --no-save playwright@latest
-          for i in 1 2; do
-            if timeout 300 npx playwright install --with-deps chromium webkit; then echo "설치 성공(시도 $i)"; break; fi
-            echo "설치 시도 $i 실패 또는 5분 초과 — 재시도"; [ "$i" = 2 ] && exit 1
-          done
+          mkdir -p ci-logs
+          {
+            echo "playwright 설치 시작 $(date -u +%FT%TZ)"; node -v; npm -v
+            npm install --no-save playwright@latest
+            node -p "'playwright ' + require('playwright/package.json').version"
+            for i in 1 2; do
+              if DEBUG=pw:install timeout 300 npx playwright install --with-deps chromium webkit; then echo "설치 성공(시도 $i)"; break; fi
+              echo "설치 시도 $i 실패 또는 5분 초과 — 재시도 $(date -u +%FT%TZ)"; [ "$i" = 2 ] && exit 1
+            done
+          } 2>&1 | tee ci-logs/install.log
+          exit ${PIPESTATUS[0]}
+      # H-31: 설치가 실패하면 로그를 파일로 올려 Claude가 직접 읽을 수 있게 한다(H-25와 같은 방식).
+      - name: 설치 로그 저장(실패 시)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs-verify-install
+          path: ci-logs/
+          retention-days: 14
       - name: 운영 배포 검증
         timeout-minutes: 14
         run: node scripts/post-deploy-verify.js
