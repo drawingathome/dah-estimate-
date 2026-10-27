@@ -543,6 +543,7 @@ if (/dah-dashboard/.test(target)) {
   // 0건 반영(권한문제/동시저장충돌)을 성공으로 착각하고 조용히 삭제하던 버그를 고침 - 회귀 감시.
   scripts.push(['est-retry-queue-golden-master-check.js', []]);
   scripts.push(['est-retry-queue-lock-check.js', []]); // 2026-10-15 재시도 큐 동시편집 잠금
+  scripts.push(['extra-pay-closed-month-check.js', []]); // 2026-10-28 H-28① 추가결제 화면의 마감월 거절(저장·삭제) 버튼 동작
   scripts.push(['closed-month-reject-check.js', []]); // 2026-10-26 H-17 마감월 입력 거부 시 재시도 큐·재로그인 오인 방지
   scripts.push(['est-first-save-closed-month-check.js', []]); // 2026-10-27 H-28① 견적서 첫 저장 경로의 마감월 거절 처리
   scripts.push(['stage-auto-note-check.js', []]); // 2026-10-26 N-12 고객상세 자동 이동 안내
