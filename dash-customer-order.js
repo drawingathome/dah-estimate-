@@ -18,16 +18,18 @@ function getRelevantOrderItems(c) {
     return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName;
   });
   myEsts.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
-  var latestEst = myEsts[0];
-  // 2026-08-06: 견적서는 있는데 품목데이터(curtainCount/blindCount/lineItems)가
-  // 전부 비어있는 경우(예전 버그로 저장된 115건짜리 견적서들), "판단할 근거가
-  // 없다"고 전부 숨기는 대신 "견적서 자체가 없는 경우"와 똑같이 취급해서 5개
-  // 항목을 정상적으로 다 보여줌. 스태프가 견적서를 다시 입력할 필요 없이,
-  // 발주 탭에서 바로 수동으로 체크하면서 관리할 수 있게 하려는 것
-  // (재입력을 요구하는 건 너무 번거롭다는 선혜님 피드백으로 변경).
-  var estHasData = latestEst && ((Number(latestEst.curtainCount)||0) > 0 || (Number(latestEst.blindCount)||0) > 0 || (Array.isArray(latestEst.lineItems) && latestEst.lineItems.length > 0));
-  var hasCurtain = estHasData ? (Number(latestEst.curtainCount)||0) > 0 : true;
-  var hasBlind   = estHasData ? (Number(latestEst.blindCount)||0) > 0 : true;
+  // 2026-10-27(H-30): 예전엔 '가장 최근 견적서 1건'만 봐서, 같은 고객이 커튼·블라인드 견적서와 '기타만' 견적서를 같이 만들면
+  // 최신이 기타만일 때 발주 항목이 하나도 안 떴음(이상옥 사례). DB 규칙(dah_order_complete)과 똑같이 '보관되지 않은 모든 견적서'의
+  // 품목을 합쳐서 판단한다. 품목 정보가 하나도 없으면 예전처럼 5개 전부 보여준다.
+  var liveEsts = myEsts.filter(function(e){ return e.isArchived !== true; });
+  var estHasData = false, hasCurtain = false, hasBlind = false;
+  liveEsts.forEach(function(e){
+    var cc = Number(e.curtainCount)||0, bc = Number(e.blindCount)||0;
+    if (cc > 0 || bc > 0 || (Array.isArray(e.lineItems) && e.lineItems.length > 0)) estHasData = true;
+    if (cc > 0) hasCurtain = true;
+    if (bc > 0) hasBlind = true;
+  });
+  if (!estHasData) { hasCurtain = true; hasBlind = true; }
   var allOrderItems = [
     { key: 'fabric', label: '원단 발주', relevant: hasCurtain },
     { key: 'production', label: '제작 발주', relevant: hasCurtain },
