@@ -1,7 +1,7 @@
 // tests/doc-address-amount-check.js
 // 2026-10-26(N-15): 고객용 견적서 / 실측 의뢰서 / 시공 의뢰서 세 문서가 "같은 화면 데이터"로 만들어질 때
 // 주소(기본+상세)·연락처·고객명·총액이 서로 같은지 확인한다. (공간 순서는 doc-space-order-check.js가 이미 시험)
-// 한계: 가짜 서버·Chromium 환경의 시험이다. 실제 고객 데이터·Edge 화면 확인은 아님.
+// 한계: 가짜 서버·Chromium 환경의 시험이다. 실제 고객 데이터·Edge 화면 확인은 아님. (총액은 H-12로 입력 기반 기대값 100,000원과 직접 비교)
 const path = require('path');
 const { launchBrowser, startServer, loginAs } = require('./_helpers');
 let failed = 0;
@@ -40,8 +40,10 @@ function ok(l, c, d) { console.log((c ? '✅ ' : '❌ ') + l + (c ? '' : ' — '
   ok('세 문서 모두 연락처 표시', [res.cu, res.me, res.ins].every(t => t.includes('010-1234-5678') || t.includes('01012345678')));
   ok('세 문서 모두 고객명 표시', [res.cu, res.me, res.ins].every(t => t.includes('시험고객')));
   const totNum = (res.total.replace(/[^0-9]/g, '') | 0);
-  ok('화면 총액이 0보다 큼(시험이 의미 있음)', totNum > 0, res.total);
-  ok('고객용 견적서에 화면 총액이 그대로 표시', totNum > 0 && res.cu.replace(/,/g, '').includes(String(totNum)), res.total);
+  // 2026-10-27(H-12): 예전엔 '화면 총액이 문서에 그대로 나오는가'만 봐서, 계산이 틀려도(화면과 문서가 같이 틀리면) 통과하는 관찰형 시험이었다.
+  // 입력이 고정(폭 300·단가 10,000인 줄 2개 → 줄당 폭수 5×10,000=50,000원)이므로 기대 총액 100,000원을 시험이 직접 알고 있어야 한다.
+  ok('화면 총액이 입력으로 계산한 기대값(줄당 5폭×10,000원=50,000 × 2줄 = 100,000원)과 같음', totNum === 100000, res.total);
+  ok('고객용 견적서에도 같은 기대 총액(100,000원)이 표시', res.cu.replace(/,/g, '').includes('100000'), res.total);
   ok('JS 에러 없음', errs.length === 0, errs.join(' | '));
   await browser.close(); server.kill();
   console.log(failed ? '\n❌ 실패 ' + failed + '건' : '\n✅ 모두 통과'); process.exit(failed ? 1 : 0);
