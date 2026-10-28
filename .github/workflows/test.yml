@@ -36,6 +36,9 @@ jobs:
           mkdir -p ci-logs
           set -o pipefail
           node tests/run-all.js dah-estimate.html 2>&1 | tee ci-logs/estimate.log
+      - name: 실패 시 원인 줄을 주석으로 남김 (H-32, 로그 파일을 못 내려받아도 API로 읽기)
+        if: failure()
+        run: bash scripts/ci-failure-annotate.sh ci-logs
       - name: 실패 시 시험 출력 저장 (원인 확인용, H-25)
         if: failure()
         uses: actions/upload-artifact@v4
