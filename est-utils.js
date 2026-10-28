@@ -4,7 +4,7 @@
    구글드라이브 문서저장/고객시트 동기화.
    ══════════════════════════════════════════════════ */
 
-var DAH_LOGO_B64 = 'https://raw.githubusercontent.com/drawingathome/dah-estimate-/main/logo.png';
+var DAH_LOGO_B64 = 'https://dah-dashboard.vercel.app/logo.png';
 
 function fmtPrice(inp) {
   // 2026-08-14: getPriceVal을 고쳐도 여전히 음수가 안 살아나던 진짜 원인 —

@@ -547,6 +547,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['extra-pay-closed-month-check.js', []]); // 2026-10-28 H-28① 추가결제 화면의 마감월 거절(저장·삭제) 버튼 동작
 scripts.push(['pay-closed-month-local-rollback-check.js', []]); // 2026-10-28 H-28② 결제 칸에서 마감월 거절 뒤 이 기기 값이 서버 값으로 돌아오는지(관찰+역검증: 재열기 제거 시 실패)
 scripts.push(['staff-reduce-deposit-check.js', []]); // 2026-10-28 H-34② 이미 기록된 선금을 줄이려 할 때 DB 거절 문구 안내+이 기기 값 복구(역검증: 마스터 문구 분기를 끄면 2건 실패)
+scripts.push(['no-public-repo-url-check.js', []]); // 2026-10-29 N-39 화면·인쇄물이 공개 저장소 주소를 쓰지 않는지(비공개 전환 대비, 역검증: 옛 주소로 되돌리면 실패)
   scripts.push(['closed-month-reject-check.js', []]); // 2026-10-26 H-17 마감월 입력 거부 시 재시도 큐·재로그인 오인 방지
   scripts.push(['est-first-save-closed-month-check.js', []]); // 2026-10-27 H-28① 견적서 첫 저장 경로의 마감월 거절 처리
   scripts.push(['stage-auto-note-check.js', []]); // 2026-10-26 N-12 고객상세 자동 이동 안내
