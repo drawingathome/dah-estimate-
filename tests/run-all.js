@@ -167,6 +167,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['est-card-pay-badge-check.js', []]);
   scripts.push(['est-card-dates-mapping-check.js', []]);
   scripts.push(['refund-ui-check.js', []]);
+  scripts.push(['refund-cases-check.js', []]); // 2026-10-28 H-13 환불 경우의 수(전액·잔금·마감월 거절 안내·실장 읽기 전용·환불 취소) 가짜 서버 시험
   // 2026-09-22("다 해야지"로 전 영역 재검사 - 결제탭 서버재확인과 같은
   // 계열): 발주탭도 로컬캐시만 보고 있어서 다른 기기 견적서의 발주
   // 품목을 놓칠 위험 발견 + 두 안전장치(결제탭/발주탭)끼리 캐시를 두고
