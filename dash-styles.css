@@ -1247,6 +1247,8 @@ input,button,select,textarea { font-family:inherit; }
   .tabs { display:none !important; }
   .mob-app-header { display:flex; }
   .mob-bottom-nav { display:block; }
+  /* 2026-10-29(H-37 3차): 오른쪽 아래 버전 표시가 하단 탭(매출)을 덮던 문제 — 폰에서는 탭 막대 바로 위로 올림 */
+  #dah-build-badge { bottom: calc(56px + env(safe-area-inset-bottom) + 4px) !important; }
   .wrap { padding:0 0 calc(56px + env(safe-area-inset-bottom) + 40px); }
   
   .search-input-clean { font-size:11px !important; }
