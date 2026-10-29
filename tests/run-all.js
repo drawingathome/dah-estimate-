@@ -357,6 +357,7 @@ if (/dah-dashboard/.test(target)) {
   // 저장된 실제 계약금을 화면에 채우는 코드가 아예 없어서, 인쇄화면이
   // 매번 50% 자동추정치로 표시되던 문제
   scripts.push(['est-load-deposit-restore-check.js', []]);
+  scripts.push(['multi-estimate-deposit-check.js', []]); // 2026-10-29 N-44 견적 2건 이상 고객: 열기·복사·고객불러오기에서 계약금이 '이 견적 입금'이어야 함(고객 합계가 덮어쓰면 실패, 1건 고객 대조 2종)
   scripts.push(['print-deposit-balance-real-check.js', []]);
   scripts.push(['restore-option-row-dup-check.js', []]);
   scripts.push(['open-mismatch-banner-check.js', []]);
