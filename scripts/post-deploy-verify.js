@@ -240,6 +240,36 @@ async function dashboardFieldScenario(base) {
   } finally { await browser.close(); }
 }
 
+
+// 2026-10-29(선혜님 - "로고는 전문업체 기준으로 확인이 안 되는 거야? 내가 확인해야 해?" / N-41·N-48④):
+// 로고는 사람 눈에만 맡기지 않고 운영 주소에서 자동으로 확인한다.
+//  1) 운영의 /logo.png 가 저장소의 logo.png 와 바이트 단위로 같은 PNG(659×100)인지
+//  2) 운영 대시보드 화면을 열었을 때 로고 이미지가 실제로 읽혀서(naturalWidth 659) 깨지지 않는지, 주소에 버전(?v=)이 있는지
+//  3) 어두운 상단 바의 로고에 흰색 표시 필터(invert)가 적용돼 있는지(흰 박스·안 보임 방지)
+// 한계: 눈으로 '선명하다'는 판단은 못 함(파일이 같고 크기·필터가 맞는지만 확인).
+async function checkLogo(base) {
+  const local = fs.readFileSync(path.join(ROOT, 'logo.png'));
+  let r;
+  try { r = await fetchBuf(base + '/logo.png'); } catch (e) { ok(`[${base}] 로고: 운영 /logo.png 접속`, false, e.message); return; }
+  ok(`[${base}] 로고: 운영 /logo.png 가 열림(HTTP 200)`, r.status === 200, 'status=' + r.status);
+  const isPng = r.buf.length > 24 && r.buf.slice(1, 4).toString() === 'PNG';
+  const w = isPng ? r.buf.readUInt32BE(16) : 0, h = isPng ? r.buf.readUInt32BE(20) : 0, ct = isPng ? r.buf[25] : -1;
+  ok(`[${base}] 로고: PNG 659×100·투명 포함(RGBA)`, isPng && w === 659 && h === 100 && ct === 6, JSON.stringify({ isPng, w, h, colorType: ct }));
+  ok(`[${base}] 로고: 운영 로고가 저장소 logo.png 와 바이트 단위로 동일`, sha(r.buf) === sha(local), sha(r.buf) + ' vs ' + sha(local));
+  const browser = await chromium.launch(CHROMIUM_EXECUTABLE ? { executablePath: CHROMIUM_EXECUTABLE } : {});
+  try {
+    const page = await (await browser.newContext({ viewport: { width: 420, height: 900 } })).newPage();
+    await page.goto(base + DASH_PATH, { waitUntil: 'load', timeout: 45000 });
+    await page.waitForFunction(() => { const l = Array.from(document.querySelectorAll('img')).filter(i => /logo\.png/.test(i.getAttribute('src') || '')); return l.length > 0 && l.every(i => i.complete); }, null, { timeout: 15000 }).catch(() => {});
+    const info = await page.evaluate(() => Array.from(document.querySelectorAll('img')).filter(i => /logo\.png/.test(i.getAttribute('src') || '')).map(i => ({ src: i.getAttribute('src'), loaded: i.complete && i.naturalWidth === 659, filter: getComputedStyle(i).filter, inHeader: !!i.closest('#mob-app-header') })));
+    ok(`[${base}] 로고: 대시보드에서 로고 이미지를 찾음`, info.length >= 1, JSON.stringify(info));
+    ok(`[${base}] 로고: 모든 로고 이미지가 실제로 읽힘(깨짐 없음, 폭 659)·주소에 ?v= 버전 포함`, info.length >= 1 && info.every(i => i.loaded && /\?v=\d+/.test(i.src)), JSON.stringify(info));
+    const hdr = info.filter(i => i.inHeader);
+    ok(`[${base}] 로고: 어두운 상단 바 로고에 흰색 표시 필터(invert) 적용`, hdr.length >= 1 && hdr.every(i => /invert/.test(i.filter)), JSON.stringify(hdr));
+  } catch (e) { ok(`[${base}] 로고: 화면 검사 실행`, false, e.message); }
+  await browser.close();
+}
+
 async function vendorProbe() {
   if (process.env.SKIP_VENDOR_PROBE === '1') { console.log('⏭  카카오 스크립트 점검 건너뜀(SKIP_VENDOR_PROBE=1)'); return; }
   const browser = await chromium.launch(CHROMIUM_EXECUTABLE ? { executablePath: CHROMIUM_EXECUTABLE } : {}); const page = await (await browser.newContext()).newPage();
@@ -260,6 +290,7 @@ async function vendorProbe() {
   if (BASES.length === 0) { console.error('BASE_URLS가 비어있음'); process.exit(2); }
   for (const base of BASES) {
     console.log(`\n▶ 대상: ${base}`);
+    if (process.env.ONLY_LOGO === '1') { await checkLogo(base); continue; } // 로컬 점검용: 로고 검사만
     const same = await checkDeployedVersion(base);
     if (!same) { console.log('   (배포 불일치 - 이후 E2E는 옛 코드를 검증하게 되므로 건너뜀)'); continue; }
     for (const order of ['detail-first', 'search-first']) {
@@ -268,9 +299,12 @@ async function vendorProbe() {
     }
     await estimateSaveScenario(base);
     await dashboardFieldScenario(base);
+    await checkLogo(base);
   }
+  if (process.env.ONLY_LOGO !== '1') {
   console.log('\n▶ 외부 의존성(카카오 우편번호) 점검');
   await vendorProbe();
+  }
   console.log('\n' + (failed === 0 ? '✅ 운영 배포 검증 통과' : `❌ 운영 배포 검증 실패 ${failed}건`));
   process.exit(failed === 0 ? 0 : 1);
 })().catch(e => { console.error('검증 스크립트 오류:', e.message); process.exit(1); });
