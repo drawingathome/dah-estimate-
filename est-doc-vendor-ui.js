@@ -317,6 +317,13 @@ function printForVendor(categoryFilter) {
   navBtns.appendChild(closeBtn);
   navBtns.appendChild(doneBtn);
   navBtns.appendChild(printBtn);
+  // 2026-10-29(H-37): 폰(600px 이하)에선 제목을 줄이고 막대·버튼 여백을 줄여 "발.."처럼 잘리지 않게 함
+  if (window.innerWidth <= 600) {
+    navLabel.textContent = categoryFilter ? (CATEGORY_TITLE[categoryFilter] || '발주서').replace(' 발주서', '') : '발주서';
+    nav.style.padding = '0 10px';
+    navBtns.style.gap = '6px';
+    navBtns.querySelectorAll('button').forEach(function(b){ b.style.padding = '7px 9px'; });
+  }
   nav.appendChild(navLabel);
   nav.appendChild(navBtns);
 
