@@ -14,6 +14,7 @@ const EST = {
 const CUST = {
   777: { id: 777, client_name: '시험다건', phone: '01090001001', addr: '서울 서초구', deposit_amount: 3322000, measure_date: null, install_date: null },
   778: { id: 778, client_name: '시험단건', phone: '01090001002', addr: '서울 서초구', deposit_amount: 1000000, measure_date: null, install_date: null },
+  780: { id: 780, client_name: '시험신규', phone: '01090001004', addr: '서울 서초구', deposit_amount: 500000, measure_date: null, install_date: null },
   779: { id: 779, client_name: '시험무입금', phone: '01090001003', addr: '서울 서초구', deposit_amount: 0, measure_date: null, install_date: null },
 };
 
@@ -77,10 +78,10 @@ async function run() {
   ok('3. 같은 고객의 견적 B(완납)는 자기 입금(1,763,000)', digits(r.dep) === '1763000', JSON.stringify(r));
 
   r = await open('loadEstDbId=multi-a&mode=copy');
-  ok('4. 복사(copy)는 새 견적이므로 고객 합계(3,322,000)나 원본 입금이 계약금에 들어가지 않음', digits(r.dep) !== '3322000', JSON.stringify(r));
+  ok('4. 복사(copy)는 새 견적이므로 고객 합계(3,322,000)도 원본 입금(1,559,000)도 계약금에 들어가지 않음(빈 칸)', digits(r.dep) === '', JSON.stringify(r));
 
   r = await open('loadCustId=777&loadCustName=' + encodeURIComponent('시험다건'));
-  ok('5. 고객 불러오기(loadCustId): 최신 견적(A) 입금(1,559,000), 고객 합계 아님', digits(r.dep) !== '3322000', JSON.stringify(r));
+  ok('5. 고객 불러오기(loadCustId): 최신 견적(A) 입금(1,559,000), 고객 합계 아님', digits(r.dep) === '1559000', JSON.stringify(r));
 
   r = await open('loadEstDbId=single-paid&mode=edit');
   ok('6. [회귀 대조] 1건 고객·입금 있음: 계약금 1,000,000 그대로', digits(r.dep) === '1000000', JSON.stringify(r));
@@ -88,6 +89,29 @@ async function run() {
   r = await open('loadEstDbId=single-none&mode=edit');
   ok('7. [회귀 대조] 1건 고객·입금 없음: 계약금 칸 비어 있음(자동 50% 유지)', !r.dep || r.dep === '' || digits(r.dep) === '', JSON.stringify(r));
 
+
+  // N-47: 고객 불러오기 모달(loadCustByIdx) - 이 기기 로컬 견적 캐시(dah_saved)가 비어 있는 경우(새 폰·다른 기기)
+  async function modal(cust) {
+    await page.goto(`http://localhost:${port}/dah-estimate.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await new Promise(r => setTimeout(r, 1500));
+    await loginAs(page, 'master');
+    await setupValidSession(page);
+    await new Promise(r => setTimeout(r, 1500));
+    await page.evaluate((c) => {
+      localStorage.setItem('dah_customers', JSON.stringify([c]));
+      localStorage.setItem('dah_saved', '[]');
+      loadCustByIdx({ getAttribute: function () { return '0'; } });
+    }, cust);
+    await new Promise(r => setTimeout(r, 6500));
+    return page.evaluate(() => {
+      const d = document.getElementById('deposit-input');
+      return { dep: d ? d.value : '없음' };
+    });
+  }
+  r = await modal({ id: 777, clientName: '시험다건', phone: '01090001001', addr: '서울 서초구', depositAmount: 3322000 });
+  ok('8. [N-47 점검] 고객 불러오기 모달·로컬 캐시 없음·견적 2건 고객: 최신 견적 입금(1,559,000), 고객 합계 아님', digits(r.dep) === '1559000', JSON.stringify(r));
+  r = await modal({ id: 780, clientName: '시험신규', phone: '01090001004', addr: '서울 서초구', depositAmount: 500000 });
+  ok('9. [현재 동작 기록] 고객 불러오기 모달·견적이 하나도 없는 신규 고객: 계약금 빈 칸(불러오기가 폼을 초기화하므로). 바꾸려면 의도적으로 이 시험도 함께 고칠 것', digits(r.dep) === '', JSON.stringify(r));
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));
   const failed = log.filter(l => l.startsWith('❌'));
