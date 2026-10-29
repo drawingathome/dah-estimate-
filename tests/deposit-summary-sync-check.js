@@ -26,7 +26,7 @@ async function run() {
   page.on('pageerror', e => jsErrors.push(e.message));
   page.on('dialog', async d => { try { await d.accept(); } catch (e) {} });
 
-  // 민소아님 시나리오와 동일: 저장된 deposit=1,000,000인데, 저장된 finalTotal(6,837,000)이
+  // 시험하님 시나리오와 동일: 저장된 deposit=1,000,000인데, 저장된 finalTotal(6,837,000)이
   // 지금 화면 재계산(체크된 할인 조합에 따라 6,718,000 등 다른 값)과 안 맞는 상황
   const est = {
     id: 'dep-mismatch-est', client_id: 1400, customer_name: '계약금불일치테스트', phone: '010-1111-2222',

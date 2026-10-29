@@ -19,7 +19,7 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-  // 최금희 실사례 완전 재현: 서울 선택 -> 시공비 칸에 실수로 실측비 금액 입력
+  // 시험나 실사례 완전 재현: 서울 선택 -> 시공비 칸에 실수로 실측비 금액 입력
   // -> 지역 토글 -> 여전히 잘못된 값이 남아있지만 이제는 눈에 띄어야 함
   const r1 = await page.evaluate(() => {
     var regionSel = document.getElementById('c-region');

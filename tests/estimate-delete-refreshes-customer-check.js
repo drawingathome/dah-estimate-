@@ -1,4 +1,4 @@
-// 견적서를 삭제하면 DB가 고객 금액을 빼고 수정 시각을 바꾸므로, 화면의 고객 캐시도 서버 값으로 맞춰지는지 검증 (김성은 사례: 지운 견적서 금액이 고객 금액에 유령처럼 남음)
+// 견적서를 삭제하면 DB가 고객 금액을 빼고 수정 시각을 바꾸므로, 화면의 고객 캐시도 서버 값으로 맞춰지는지 검증 (시험바 사례: 지운 견적서 금액이 고객 금액에 유령처럼 남음)
 const path = require('path');
 const { launchBrowser, startServer, loginAs, blockRealNetwork } = require('./_helpers');
 let fail = 0;

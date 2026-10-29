@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 // tests/customer-level-pay-sync-check.js
 // ══════════════════════════════════════════════════
-// 2026-10-01(선혜님 - 최금희 고객 "컴퓨터에서는 결제완료, 아이패드에서는
+// 2026-10-01(선혜님 - 시험나 고객 "컴퓨터에서는 결제완료, 아이패드에서는
 // 미수금" 신고): 2026-09-21에 "결제를 견적서 단위로 관리"하도록 바꾸면서,
 // savePayData()가 est(견적서)가 있으면 customers 테이블의 deposit_amount/
 // balance_amount를 영원히 안 건드리게 됐었음(estimates PATCH 후 바로 return) -
 // 홈화면 카드(getUnpaidAmount)는 여전히 이 고객레벨 값에 기대는 로컬 캐시
 // 로직을 쓰고 있어서, 서버의 진짜 소스(customers)가 낡은 채로 남아 기기마다
 // (그 견적서를 로컬에 캐시해둔 기기인지에 따라) 다른 결과를 보여주고 있었음.
-// 실제 DB로 재현·확인: 최금희 - price 2,985,000 / 견적서엔 잔금 2,235,000까지
+// 실제 DB로 재현·확인: 시험나 - price 2,985,000 / 견적서엔 잔금 2,235,000까지
 // 전부 입금(완납)인데 customers.balance_amount는 0으로 그대로 남아있었음.
 //
-// 2026-10-02(선혜님 - "이민선/김현정 결제했는데 상담에 뜨니, 쌍둥이 함수도 찾고
+// 2026-10-02(선혜님 - "시험다/시험사 결제했는데 상담에 뜨니, 쌍둥이 함수도 찾고
 // 앞으로 이런 버그 안생기게 하는 방향도 찾아" 요청으로 구조 변경): 위 "JS가 합계를
 // 재계산해서 customers에 PATCH" 방식 자체가, 날짜/수단/영수확인 필드를 깜빡 빠뜨리는
-// 새 버그(이민선/김현정 사례)로 이어짐 - 알고보니 똑같은 책임을 지는 DB 트리거
+// 새 버그(시험다/시험사 사례)로 이어짐 - 알고보니 똑같은 책임을 지는 DB 트리거
 // (sync_customer_payment_from_estimates)가 이미 있었는데 그 트리거도 날짜 관련 필드를
 // 안 다루는 같은 결함이 있었음("쌍둥이"). 트리거 쪽을 확장해 DB가 항상 정확히
 // 보장하도록 만들고, 이 JS 중복 로직은 완전히 제거함. 그래서 이 테스트의 기대값도
@@ -97,15 +97,15 @@ async function run() {
 
   await page.evaluate(() => {
     localStorage.setItem('dah_saved', JSON.stringify([
-      { id: 'est-A', clientId: 501, clientName: '최금희', price: 2985000, date: '2026-09-22',
+      { id: 'est-A', clientId: 501, clientName: '시험나', price: 2985000, date: '2026-09-22',
         depositAmount: 750000, depositDate: '2026-09-22', depositMethod: '현금', depositReceipt: true,
         balanceAmount: 0, balanceDate: '', balanceMethod: '', balanceReceipt: false },
-      { id: 'est-B', clientId: 501, clientName: '최금희', price: 600000, date: '2026-09-25',
+      { id: 'est-B', clientId: 501, clientName: '시험나', price: 600000, date: '2026-09-25',
         depositAmount: 300000, depositDate: '2026-09-25', depositMethod: '카드', depositReceipt: true,
         balanceAmount: 300000, balanceDate: '2026-09-28', balanceMethod: '카드', balanceReceipt: true }
     ]));
-    saveCustomers([{ id: 501, clientName: '최금희', phone: '01011112222', stage: '시공준비중', staffName: '마스터', price: 2985000, depositAmount: 750000, balanceAmount: 0 }]);
-    openDetail('최금희', 501);
+    saveCustomers([{ id: 501, clientName: '시험나', phone: '01011112222', stage: '시공준비중', staffName: '마스터', price: 2985000, depositAmount: 750000, balanceAmount: 0 }]);
+    openDetail('시험나', 501);
   });
   await new Promise(r => setTimeout(r, 600));
 

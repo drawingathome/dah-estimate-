@@ -49,7 +49,7 @@ function loadSurveyFromSheet() {
       document.getElementById('c-phone').value = data.phone;
     }
     if(data.addr && !document.getElementById('c-addr').value) {
-      // 2026-10-01(선혜님 - 이민선 고객 사례로 발견한 것과 같은 쌍둥이: 정규식
+      // 2026-10-01(선혜님 - 시험다 고객 사례로 발견한 것과 같은 쌍둥이: 정규식
       // 추측 쪼개기는 2026-09-22에 이미 "세 번 재발한 근본 원인"으로 결론나서
       // 다른 화면은 다 바꿨는데 여기 남아있었음) - 쪼개지 않고 전체를 그대로
       // 넣음(정보 손실 없음이 항상 더 안전).

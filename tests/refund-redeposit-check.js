@@ -1,4 +1,4 @@
-// 2026-10-16 이영욱 재결제 사례: (1) 환불 뒤 옛 결제 임시저장을 실제로 지움 (2) 선금이 견적금액 전액이면 50% 확인창을 띄우지 않음
+// 2026-10-16 시험라 재결제 사례: (1) 환불 뒤 옛 결제 임시저장을 실제로 지움 (2) 선금이 견적금액 전액이면 50% 확인창을 띄우지 않음
 const path = require('path');
 const { launchBrowser, startServer, loginAs, blockRealNetwork } = require('./_helpers');
 async function run() {
@@ -12,7 +12,7 @@ async function run() {
     localStorage.setItem('dah_pay_draft_248', JSON.stringify({ dep: { method: '카드', amount: '1027000', date: '2026-10-05' } }));
     localStorage.setItem('dah_pay_draft_999', JSON.stringify({ dep: { amount: '1' } }));
     window.loadCustomersAsync = function(cb) { cb && cb(); }; window.closeDetail = function(){}; window.openDetail = function(){};
-    reopenAfterRefund({ id: 248, clientName: '이영욱' });
+    reopenAfterRefund({ id: 248, clientName: '시험라' });
     return {
       draftGone: localStorage.getItem('dah_pay_draft_248') === null,
       otherKept: localStorage.getItem('dah_pay_draft_999') !== null,

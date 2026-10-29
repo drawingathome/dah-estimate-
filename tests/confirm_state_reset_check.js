@@ -20,13 +20,13 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-  // 허서진 사례 재현: 이전 고객(노지경) 견적을 확정한 뒤 "새 견적서"로 새 고객 시작
+  // 시험머 사례 재현: 이전 고객(시험가) 견적을 확정한 뒤 "새 견적서"로 새 고객 시작
   const r1 = await page.evaluate(() => {
-    document.getElementById('c-name').value = '노지경';
+    document.getElementById('c-name').value = '시험가';
     toggleConfirmEstimate(); // 확정
     return { confirmedAtSet: !!window._estEditState.estimateConfirmedAt, badgeText: document.getElementById('hd-confirm-badge').textContent };
   });
-  ok('1. 이전 고객(노지경) 견적을 확정하면 확정 상태/배지가 켜짐(사전조건 확인)', r1.confirmedAtSet && r1.badgeText.indexOf('확정됨') !== -1, JSON.stringify(r1));
+  ok('1. 이전 고객(시험가) 견적을 확정하면 확정 상태/배지가 켜짐(사전조건 확인)', r1.confirmedAtSet && r1.badgeText.indexOf('확정됨') !== -1, JSON.stringify(r1));
 
   const r2 = await page.evaluate(() => {
     newEstimate(); // "새 견적서" 버튼과 동일한 함수
@@ -41,10 +41,10 @@ async function run() {
   ok('3. 배지도 다시 "✓ 확정"(미확정 상태)으로 돌아옴', r2.badgeTextAfterNew.trim() === '✓ 확정', r2.badgeTextAfterNew);
   ok('4. 새 견적서 시작 후 고객명 입력칸이 잠겨있지 않음(실제 입력 가능)', r2.nameFieldDisabled === false, JSON.stringify(r2));
 
-  // 실제로 새 고객(허서진) 정보를 입력해서 정상적으로 값이 들어가는지까지 확인
+  // 실제로 새 고객(시험머) 정보를 입력해서 정상적으로 값이 들어가는지까지 확인
   const r3 = await page.evaluate(() => {
-    document.getElementById('c-name').value = '허서진';
-    document.getElementById('c-phone').value = '010-9114-0737';
+    document.getElementById('c-name').value = '시험머';
+    document.getElementById('c-phone').value = '010-9000-9006';
     var row = document.querySelector('#curtain-body tr');
     if (row) row.querySelector('.c-display-name').value = '테스트커튼';
     return {
@@ -52,7 +52,7 @@ async function run() {
       displayName: row ? row.querySelector('.c-display-name').value : null
     };
   });
-  ok('5. 새 고객 정보(허서진)를 실제로 입력하면 정상적으로 값이 들어감(잠겨서 안 들어가던 문제 해결)', r3.name === '허서진' && r3.displayName === '테스트커튼', JSON.stringify(r3));
+  ok('5. 새 고객 정보(시험머)를 실제로 입력하면 정상적으로 값이 들어감(잠겨서 안 들어가던 문제 해결)', r3.name === '시험머' && r3.displayName === '테스트커튼', JSON.stringify(r3));
 
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));

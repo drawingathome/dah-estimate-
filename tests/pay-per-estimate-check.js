@@ -7,7 +7,7 @@
 // 어느 것 것인지" 애매함이 근본적으로 사라짐. estimates 테이블에
 // deposit_amount 등 8개 컬럼 신설, renderPaySection(c, payBody, est)
 // 의 3번째 인자로 견적서를 받아 그 견적서 기준으로 표시/저장하고,
-// est가 없으면(신규 고객) 예전처럼 고객 레벨 폴백 유지. 검증: 노지경
+// est가 없으면(신규 고객) 예전처럼 고객 레벨 폴백 유지. 검증: 시험가
 // 님과 동일 조건(견적서 2건, 각각 다른 결제)으로 재현해 카드가
 // 각각 독립적으로 표시되고, 저장시 customers가 아니라 정확한
 // estimates?id=eq.X로 PATCH되는지, 신규 고객은 회귀 없이 폴백되는지.
@@ -32,18 +32,18 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-  // 노지경(9401) - 견적서 2건, 각각 다른 결제 상태
+  // 시험가(9401) - 견적서 2건, 각각 다른 결제 상태
   await page.evaluate(() => {
     localStorage.setItem('dah_saved', JSON.stringify([
-      { id: 'est-A', clientId: 9401, clientName: '노지경', price: 6479000, date: '2026-09-15',
+      { id: 'est-A', clientId: 9401, clientName: '시험가', price: 6479000, date: '2026-09-15',
         depositAmount: 3200000, depositDate: '2026-09-15', depositMethod: '현금', depositReceipt: true,
         balanceAmount: 0, balanceDate: '', balanceMethod: '', balanceReceipt: false },
-      { id: 'est-B', clientId: 9401, clientName: '노지경', price: 620000, date: '2026-09-21',
+      { id: 'est-B', clientId: 9401, clientName: '시험가', price: 620000, date: '2026-09-21',
         depositAmount: 0, depositDate: '', depositMethod: '', depositReceipt: false,
         balanceAmount: 0, balanceDate: '', balanceMethod: '', balanceReceipt: false }
     ]));
-    saveCustomers([{ id: 9401, clientName: '노지경', phone: '01011112222', stage: '선금결제', staffName: '마스터', price: 7099000 }]);
-    openDetail('노지경', 9401);
+    saveCustomers([{ id: 9401, clientName: '시험가', phone: '01011112222', stage: '선금결제', staffName: '마스터', price: 7099000 }]);
+    openDetail('시험가', 9401);
   });
   await new Promise(r => setTimeout(r, 500));
 

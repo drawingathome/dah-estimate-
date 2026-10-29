@@ -48,7 +48,7 @@ async function run() {
     localStorage.setItem('dah_saved', JSON.stringify([]));
     saveCustomers([
       { id: 9980, clientName: '계약전일정고객', phone: '01099990080', stage: '가견적', staffName: '마스터', price: 2000000, measureDate: today, depositAmount: 0, balanceAmount: 0, addr: '서울' },
-      { id: 9981, clientName: '계약일정고객', phone: '01099990081', stage: '실측준비중', staffName: '마스터', price: 2000000, measureDate: today, depositAmount: 1000000, balanceAmount: 0, addr: '서울' }
+      { id: 9981, clientName: '계약일정고객', phone: '01090009007', stage: '실측준비중', staffName: '마스터', price: 2000000, measureDate: today, depositAmount: 1000000, balanceAmount: 0, addr: '서울' }
     ]);
     renderHome(true);
     const rows = Array.from(document.querySelectorAll('#home [data-cname]'));

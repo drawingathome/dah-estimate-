@@ -1,5 +1,5 @@
 // tests/pay-save-customer-price-sync-check.js
-// 2026-10-20(이상옥 사례: 침구 완납 + 커튼 선금 50% = 견적서 2개): 대시보드 결제 저장 뒤 고객의 매출 계산 기준금액(price)·성과매출이
+// 2026-10-20(시험카 사례: 침구 완납 + 커튼 선금 50% = 견적서 2개): 대시보드 결제 저장 뒤 고객의 매출 계산 기준금액(price)·성과매출이
 // 입금이 기록된 견적서들의 합계로 맞춰지는지 확인(견적서 앱 저장과 같은 규칙). 입금된 견적서가 없거나 이미 같으면 건드리지 않고, 조회 실패해도 흐름이 끊기지 않음.
 const path = require('path');
 const fs = require('fs');
@@ -30,7 +30,7 @@ async function run() {
       syncCustomerPriceFromPaidEstimates(cust, () => { finished = true; resolve({ calls, finished, price: cust.price, perf: cust.performanceRevenue }); });
       setTimeout(() => { if (!finished) resolve({ calls, finished, timeout: true }); }, 1500);
     });
-    // 이상옥형: 침구 완납(1,763,000) + 커튼 선금 50%(1,559,000 / 총 3,118,000), 고객 칸은 아직 침구 금액만
+    // 시험카형: 침구 완납(1,763,000) + 커튼 선금 50%(1,559,000 / 총 3,118,000), 고객 칸은 아직 침구 금액만
     out.two = await run({ id: 271, price: 1763000, performanceRevenue: 1763000 }, [
       { id: 'a', price: 3118000, performance_revenue: 2900000, deposit_amount: 1559000, balance_amount: 0 },
       { id: 'b', price: 1763000, performance_revenue: 1763000, deposit_amount: 1763000, balance_amount: 0 }]);

@@ -1,5 +1,5 @@
 // tests/est-card-dates-mapping-check.js
-// 2026-10-20(이상옥 사례): 견적서 DB행 → 로컬 객체 변환에서 시공일이 들어오고, 저장일(savedAt)이 실측 예정일이 아니라 작성 시각 기준인지(node 단독 시험).
+// 2026-10-20(시험카 사례): 견적서 DB행 → 로컬 객체 변환에서 시공일이 들어오고, 저장일(savedAt)이 실측 예정일이 아니라 작성 시각 기준인지(node 단독 시험).
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const src = fs.readFileSync(path.resolve(__dirname, '..', 'dash-api-data.js'), 'utf8');
 const mh = src.match(/function estSavedAtFromRow\(row\) \{[\s\S]*?\n\}\n/);

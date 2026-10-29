@@ -1,6 +1,6 @@
 // tests/pay-multi-estimate-check.js
 // 2026-09-21(선혜님 - "견적서가 두갠데 결제 화면이 무슨 견적서에
-// 대한 결제건인지 확인이 안되게 되어있고" - 노지경 고객 사례): 처음엔
+// 대한 결제건인지 확인이 안되게 되어있고" - 시험가 고객 사례): 처음엔
 // 결제 화면 상단에 "이 견적서 N건 합계에 대한 결제예요"라는 안내를
 // 추가했었는데, 그 직후 "견적서 두건의 합계를 챙기면 변수가 생길꺼
 // 같은데 따로 해야지"라는 지적으로 결제 자체를 견적서별로 완전히
@@ -38,7 +38,7 @@ async function run() {
       if (text.includes(needle)) {
         // 2026-09-21(순차 실행시에만 재현되는 실패 조사 중 발견): openDetail()이
         // 비동기라서, 이전 고객 모달 내용이 지워지기 "직전" 짧은 과도기 순간에도
-        // 우연히 needle이 이미 포함돼 있을 수 있음(예: 이전 노지경님의 결제
+        // 우연히 needle이 이미 포함돼 있을 수 있음(예: 이전 시험가님의 결제
         // 카드 2개가 아직 안 지워진 채로 "결제 관리" 텍스트 자체는 이미 있음) -
         // 텍스트가 처음 나타난 시점 그대로 믿지 않고, 100ms 후 한 번 더 읽어서
         // 내용이 그대로 안정됐을 때만 최종 결과로 확정.
@@ -54,14 +54,14 @@ async function run() {
     return lastText || await page.evaluate(() => document.body.textContent);
   }
 
-  // 노지경(9401) - 견적서 2건, 합계 6,479,000원
+  // 시험가(9401) - 견적서 2건, 합계 6,479,000원
   await page.evaluate(() => {
     localStorage.setItem('dah_saved', JSON.stringify([
-      { id: 'est-A', clientId: 9401, clientName: '노지경', price: 1000000 },
-      { id: 'est-B', clientId: 9401, clientName: '노지경', price: 5479000 }
+      { id: 'est-A', clientId: 9401, clientName: '시험가', price: 1000000 },
+      { id: 'est-B', clientId: 9401, clientName: '시험가', price: 5479000 }
     ]));
-    saveCustomers([{ id: 9401, clientName: '노지경', phone: '01011112222', stage: '선금결제', staffName: '마스터', price: 6479000 }]);
-    openDetail('노지경', 9401);
+    saveCustomers([{ id: 9401, clientName: '시험가', phone: '01011112222', stage: '선금결제', staffName: '마스터', price: 6479000 }]);
+    openDetail('시험가', 9401);
   });
   const multiState = await waitForText('결제 관리');
   ok('1. 견적서 2건인 고객은 결제 관리가 견적서별로 2개의 독립된 카드로 표시됨', (multiState.match(/결제 관리/g) || []).length === 2, (multiState.match(/결제 관리/g) || []).length);

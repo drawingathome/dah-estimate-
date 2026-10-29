@@ -32,7 +32,7 @@ function addToEstPendingQueue(payload, isEditMode, dbId, lockUpdatedAt) {
   try { var _lr = window._estLoadedRow; if (isEditMode && dbId && _lr && String(_lr.id) === String(dbId)) _baseRow = _lr; } catch (eBase) {}
   var _qItem = { payload: payload, addedAt: new Date().toISOString(), isEditMode: !!isEditMode, dbId: dbId || null, lockUpdatedAt: lockUpdatedAt || null };
   if (_baseRow) _qItem.baseRow = _baseRow; // 수정 저장일 때만 추가(신규 견적서 항목 모양은 예전 그대로)
-  // 2026-10-23(신수정 견적서 — 같은 견적서의 저장 요청이 대기목록에 3개 쌓여 "저장 실패"가 반복 표시됨):
+  // 2026-10-23(시험어 견적서 — 같은 견적서의 저장 요청이 대기목록에 3개 쌓여 "저장 실패"가 반복 표시됨):
   //   수정 저장의 payload는 견적서 전체라서 같은 견적서의 예전 대기 항목은 새 항목이 완전히 대체함 → 중복으로 쌓지 않음
   if (isEditMode && dbId) q = q.filter(function(it){ return !(it.isEditMode && String(it.dbId) === String(dbId)); });
   q.push(_qItem);
@@ -163,7 +163,7 @@ function _doRetryEstPendingSync(q) {
       done++;
       var isHttpFail = (xhr.status < 200 || xhr.status >= 300) && xhr.status !== 409;
       var isZeroRowFail = false;
-      // 2026-09-30(선혜님 - "지금 고쳐야지" - 노지경 견적서 사례로 발견한 근본원인):
+      // 2026-09-30(선혜님 - "지금 고쳐야지" - 시험가 견적서 사례로 발견한 근본원인):
       // PATCH가 HTTP상 성공(2xx)해도 낙관적 잠금/권한(RLS) 문제로 실제로는 0건 매칭될 수
       // 있는데, 이 재시도 경로는 그동안 이걸 전혀 확인 안 해서 "성공"으로 착각하고 조용히
       // 큐에서 지워버렸음 - 원본 저장(est-save-stages.js)이 2026-08-25에 이미 고친 것과

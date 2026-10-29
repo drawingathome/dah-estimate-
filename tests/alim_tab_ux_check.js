@@ -19,7 +19,7 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-  // 황남주 사례 재현: 시공준비중 단계, 8번(일정확정)이 지금 할 일로 뜨는 상황
+  // 시험거 사례 재현: 시공준비중 단계, 8번(일정확정)이 지금 할 일로 뜨는 상황
   await page.evaluate(() => {
     saveCustomers([{ id: 7001, clientName: 'UX테스트고객', phone: '01077770000', stage: '시공준비중', staffName: '마스터', installDate: '2026-09-20' }]);
     openDetail('UX테스트고객', 7001, 'alim');

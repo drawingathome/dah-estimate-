@@ -1,5 +1,5 @@
 // tests/multi-estimate-revenue-check.js
-// 2026-10-13: 견적서가 여러 건인 고객의 성과매출이 과다 계산되던 버그(노지경 9월 약 609만 원, 서지원 약 630만 원 과다) 재발 방지.
+// 2026-10-13: 견적서가 여러 건인 고객의 성과매출이 과다 계산되던 버그(시험가 9월 약 609만 원, 시험오 약 630만 원 과다) 재발 방지.
 // 규칙: 견적서가 있는 고객은 "각 견적서 자신의 성과매출"을 입금 비율대로 인식. 고객 칸 합계는 견적서 없는 옛 이관 고객에만 사용.
 const path = require('path');
 const { launchBrowser, startServer, loginAs, blockRealNetwork } = require('./_helpers');
@@ -29,12 +29,12 @@ async function run() {
       return { perf: sum(parts), revenue: rev(parts), n: parts.length };
     }
     const out = {};
-    // 1) 견적서 2건 모두 입금(노지경 실사례): 고객 칸 성과매출은 합계(6,399,600)
+    // 1) 견적서 2건 모두 입금(시험가 실사례): 고객 칸 성과매출은 합계(6,399,600)
     out.both = run(
       { id: 1, clientName: '두건입금', stage: '선금결제', price: 6972000, performanceRevenue: 6399600, depositAmount: 3820000, balanceAmount: 0, date: '2026-09-15' },
       [{ clientId: 1, clientName: '두건입금', price: 6352000, performanceRevenue: 5779600, depositAmount: 3200000, depositDate: '2026-09-15', savedAt: '1' },
        { clientId: 1, clientName: '두건입금', price: 620000, performanceRevenue: 620000, depositAmount: 620000, depositDate: '2026-09-16', savedAt: '2' }]);
-    // 2) 입금 없는 가견적 + 입금한 견적(서지원 실사례): 입금 없는 가견적은 매출에 안 잡힘
+    // 2) 입금 없는 가견적 + 입금한 견적(시험오 실사례): 입금 없는 가견적은 매출에 안 잡힘
     out.unpaidPlusPaid = run(
       { id: 2, clientName: '가견적섞임', stage: '시공완료', price: 80000, performanceRevenue: 6380000, depositAmount: 0, balanceAmount: 80000, date: '2026-01-01' },
       [{ clientId: 2, clientName: '가견적섞임', price: 6300000, performanceRevenue: 6300000, depositAmount: 0, balanceAmount: 0, savedAt: '1' },

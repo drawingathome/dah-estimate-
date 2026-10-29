@@ -19,7 +19,7 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-  // 최금희 실사례 재현: 계약금 75만원 직접 입력 -> 이후 품목표(커튼)를
+  // 시험나 실사례 재현: 계약금 75만원 직접 입력 -> 이후 품목표(커튼)를
   // 수정 -> 계약금이 그대로 75만원으로 남아있어야 함(예전엔 50% 자동계산으로 덮어써짐)
   const r1 = await page.evaluate(() => {
     var addBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === '+ 커튼 추가');

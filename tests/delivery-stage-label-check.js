@@ -27,7 +27,7 @@ async function run() {
       deliveryComplete: getDisplayStageLabel({ stage: '시공완료', deliveryOnly: true }),
       deliveryMeasure: getDisplayStageLabel({ stage: '실측준비중', deliveryOnly: true }),
       unrelatedStage: getDisplayStageLabel({ stage: '상담', deliveryOnly: true }), // 매핑 대상 아닌 단계는 그대로여야 함
-      noRegionField: getDisplayStageLabel({ stage: '시공준비중' }) // 배송 표시가 없으면(채하나·신수정 사례) 원래 이름이어야 함
+      noRegionField: getDisplayStageLabel({ stage: '시공준비중' }) // 배송 표시가 없으면(시험노·시험어 사례) 원래 이름이어야 함
     };
   });
   ok('1. 시공지역 있으면 원래 이름(시공준비중) 유지', fnCheck.installCustomer === '시공준비중', fnCheck.installCustomer);
@@ -35,7 +35,7 @@ async function run() {
   ok('3. 시공완료 -> 발송완료', fnCheck.deliveryComplete === '발송완료', fnCheck.deliveryComplete);
   ok('4. 실측준비중 -> 제작준비중', fnCheck.deliveryMeasure === '제작준비중', fnCheck.deliveryMeasure);
   ok('5. 매핑 대상 아닌 단계(상담)는 안 바뀜', fnCheck.unrelatedStage === '상담', fnCheck.unrelatedStage);
-  ok('6. [핵심] 견적서에 배송 선택이 없는 고객은 원래 이름(채하나·신수정 오표시 재발 방지)', fnCheck.noRegionField === '시공준비중', fnCheck.noRegionField);
+  ok('6. [핵심] 견적서에 배송 선택이 없는 고객은 원래 이름(시험노·시험어 오표시 재발 방지)', fnCheck.noRegionField === '시공준비중', fnCheck.noRegionField);
 
   // 실제 화면(고객상세)에서 반영되는지
   const detailCheck = await page.evaluate(() => {
@@ -116,7 +116,7 @@ async function run() {
     const before = getDisplayStageLabel({ id: 9700, stage: '시공준비중' });
     mk([{ id: 'a', clientId: 9700, deliveryOnly: true, isArchived: false, savedAt: '2026-10-20T00:00:00Z' }, { id: 'b', clientId: 9700, region: '경기', deliveryOnly: false, isArchived: false, savedAt: '2026-10-22T00:00:00Z' }]);
     const after = getDisplayStageLabel({ id: 9700, stage: '시공준비중' });
-    // 채하나·신수정 사례: 고객에는 지역 정보가 없고 최근 견적서는 서울 → 실측준비중 그대로
+    // 시험노·시험어 사례: 고객에는 지역 정보가 없고 최근 견적서는 서울 → 실측준비중 그대로
     mk([{ id: 'c', clientId: 9701, region: '서울', deliveryOnly: false, isArchived: false, savedAt: '2026-10-22T00:00:00Z' }]);
     const seoul = getDisplayStageLabel({ id: 9701, stage: '실측준비중' });
     // 예전 견적서(지역 값 없음 → deliveryOnly false) / 견적서 없는 고객
@@ -126,7 +126,7 @@ async function run() {
     return { before, after, seoul, legacy, noEst };
   });
   ok('14. 배송->시공 전환시(더 최근 견적서 기준) 원래 이름 복귀', switchBack.before === '발송준비중' && switchBack.after === '시공준비중', JSON.stringify(switchBack));
-  ok('15. [핵심] 서울 견적서 고객(채하나·신수정 사례)은 실측준비중 그대로', switchBack.seoul === '실측준비중', switchBack.seoul);
+  ok('15. [핵심] 서울 견적서 고객(시험노·시험어 사례)은 실측준비중 그대로', switchBack.seoul === '실측준비중', switchBack.seoul);
   ok('16. 예전 견적서(지역 값 없음)·견적서 없는 고객은 원래 이름', switchBack.legacy === '시공완료' && switchBack.noEst === '시공완료', JSON.stringify([switchBack.legacy, switchBack.noEst]));
 
   const mapped = await page.evaluate(() => {

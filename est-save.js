@@ -36,7 +36,7 @@ var EST_SESSION_RESET_VALUES = {
   lockSetAt: 0,
   viewingFrozenEstimate: false,
   estSaveCustomerId: null,
-  estimateConfirmedAt: null, // 9/15: 확정 상태 - 안 넣었다가 "허서진 데이터 실종" 사건 발생
+  estimateConfirmedAt: null, // 9/15: 확정 상태 - 안 넣었다가 "시험머 데이터 실종" 사건 발생
   // skipTodayDuplicateCheck(2026-09-15 도입 "복사해서 새로 만들기" 전용 플래그)는 2026-09-30에
   // 제거함 - 이 플래그를 읽던 "오늘 이미 저장된 견적 찾기" 안전장치 자체를 없앴으니(전문업체
   // 판단 - 실수로 중복저장 방지는 이미 idempotency key가 더 정확하게 하고 있었음, 날짜+고객
@@ -45,7 +45,7 @@ var EST_SESSION_RESET_VALUES = {
   lastCalcBreakdown: null,
   lastDiscountBreakdown: null,
   lastAppliedDiscounts: null,
-  // 2026-09-22(선혜님 - "안바뀌엇고 열면 자꾸 50%로 된다니깐" - 최금희
+  // 2026-09-22(선혜님 - "안바뀌엇고 열면 자꾸 50%로 된다니깐" - 시험나
   // 실사례 끝까지 추적해서 발견): 견적서를 불러올 때 저장된 품목(커튼/
   // 블라인드)을 화면에 다시 그리는 과정(addCurtainRow 등)이 "사용자가
   // 방금 품목을 편집했다"는 신호로 오인돼 unfreezeEstimateIfEditing()이
@@ -71,7 +71,7 @@ function resetEstEditingState() {
   window._estEditState = Object.assign({}, EST_SESSION_RESET_VALUES);
   if (typeof lockEstimateForm === 'function') lockEstimateForm(false);
   if (typeof renderConfirmBadge === 'function') renderConfirmBadge();
-  // 2026-08-29(선혜님이 자동백업 중복탐지 알림으로 발견 — 임민희 견적서
+  // 2026-08-29(선혜님이 자동백업 중복탐지 알림으로 발견 — 시험조 견적서
   // 8건 중복, 0.074초 안에 생성됨): idempotency_key는 위 목록과 달리
   // "고정된 초기값"이 아니라 매번 새로 생성해야 하는 값이라 별도 처리 -
   // 이 견적서 편집 세션 하나당 키 하나만 쓰도록 여기서 한 번만 생성.
@@ -164,7 +164,7 @@ function showFieldError(fieldId, msg) {
 
 function validateEstimate() {
   // 2026-09-22(선혜님 - "오류를 모두 확인한거 맞니 누락 없이 개선을
-  // 해야지" - 실제 프로덕션 로그 조회 중 발견: 오지은 실장이 "윤정자"
+  // 해야지" - 실제 프로덕션 로그 조회 중 발견: 오지은 실장이 "시험서"
   // 고객을 15분 안에 3번 저장 시도했는데 전부 실패, 근데 왜 실패했는지
   // 로그에 detail이 항상 null로 남아서 원인을 전혀 알 수 없었음): 각
   // 검증 실패 지점마다 화면에 보여주는 것과 똑같은 이유를 이 변수에도
@@ -173,18 +173,18 @@ function validateEstimate() {
   window._lastValidationFailReason = null;
   var name = document.getElementById('c-name')?.value?.trim();
   if (!name) { showFieldError('c-name', '고객명을 입력해주세요'); window._lastValidationFailReason = '고객명 없음'; return false; }
-  // 2026-08-29(선혜님 지적 - "이게 중복이 생기는거는 심각한데", 신화경
+  // 2026-08-29(선혜님 지적 - "이게 중복이 생기는거는 심각한데", 시험아
   // 사례로 발견): 고객명만 필수였고 연락처는 검증이 전혀 없어서, 연락처
   // 없이 저장하면 그런 고객이 그대로 자동 생성됐음 - 나중에 같은 사람을
   // 연락처 포함해서 다시 등록하면, 연락처가 다르니(하나는 없음) 시스템이
-  // "다른 사람"으로 착각해 중복 경고 없이 통과되고 있었음(신화경님 사례
+  // "다른 사람"으로 착각해 중복 경고 없이 통과되고 있었음(시험아님 사례
   // - 견적 1,192,000원짜리 빈 고객과 실제 결제완료된 고객이 따로 존재).
   // 연락처도 필수로 만들어서 이 경로 자체를 막음.
   var phone = document.getElementById('c-phone')?.value?.trim();
   if (!phone) { showFieldError('c-phone', '연락처를 입력해주세요'); window._lastValidationFailReason = '연락처 없음'; return false; }
-  // 2026-10-05(선혜님 - 김유진 고객 주소 재발 신고): 기본주소는 비었는데 상세주소에만 글이 있으면
-  // 저장 코드가 ' ' + 상세주소로 합쳐 "맨 앞 공백 + 도로명 없는 주소"가 DB에 저장됨(배수희 9/19,
-  // 김유진 10/5). 주소를 아직 모르는 상태(둘 다 빔)는 정상이라 막지 않고, 이 모순된 조합만 차단.
+  // 2026-10-05(선혜님 - 시험너 고객 주소 재발 신고): 기본주소는 비었는데 상세주소에만 글이 있으면
+  // 저장 코드가 ' ' + 상세주소로 합쳐 "맨 앞 공백 + 도로명 없는 주소"가 DB에 저장됨(시험버 9/19,
+  // 시험너 10/5). 주소를 아직 모르는 상태(둘 다 빔)는 정상이라 막지 않고, 이 모순된 조합만 차단.
   var addrBaseEl = /** @type {HTMLInputElement|null} */ (document.getElementById('c-addr'));
   var addrDetailEl = /** @type {HTMLInputElement|null} */ (document.getElementById('c-addr2'));
   var addrBaseVal = addrBaseEl ? addrBaseEl.value.trim() : '';
@@ -354,7 +354,7 @@ function _saveEstimateInner(_onDone) {
 // 그대로 중복 생성됨(실제 사례: 0.15초 안에 5건 중복 생성 확인). 버튼을 즉시
 // 비활성화하고, 저장 흐름이 끝나면(성공/실패 무관) 다시 눌러도 되게 원상복구.
 //
-// 2026-08-29(선혜님이 자동백업 중복탐지 알림으로 발견 — 임민희 8건 중복,
+// 2026-08-29(선혜님이 자동백업 중복탐지 알림으로 발견 — 시험조 8건 중복,
 // 0.074초 안에 발생): 근본 원인은 idempotency_key가 매번 새로 생성돼서
 // DB의 기존 유니크 인덱스(estimates_idempotency_key_uniq, 이미 있었음 -
 // pg_constraint로만 찾다가 놓쳤던 별도 unique index)가 무력화되고 있던
@@ -387,7 +387,7 @@ function logSaveAttempt() {
 }
 
 // 2026-09-21(선혜님 - "니가 한 자료 계속 똑같은 문제가 생기지 무조건
-// 원인 찾아!!" - 민소아 견적서: 화면엔 저장한 것처럼 보였는데 서버
+// 원인 찾아!!" - 시험하 견적서: 화면엔 저장한 것처럼 보였는데 서버
 // 이력에 그 시점 기록이 전혀 없던 두 번째 재발): logSaveAttempt()는
 // "저장 버튼을 눌렀다"는 사실 하나만 남겼지, 그 다음 어느 단계에서
 // 멈췄는지(검증 실패/확인창 취소/세션 만료/서버 응답 실패 등)는 전혀
@@ -417,7 +417,7 @@ function logSaveStage(stage, detail) {
   } catch (e2) { /* 서버 기록 실패해도 저장 흐름엔 영향 안 줌 */ }
 }
 
-// 2026-10-08(조유정 "처음부터 실측시공비가 빠져있었어 서울 지역 체크했는데도…" — 원인 재현 불가):
+// 2026-10-08(시험마 "처음부터 실측시공비가 빠져있었어 서울 지역 체크했는데도…" — 원인 재현 불가):
 // 원인이 뭐든 "시공이 있는 지역인데 실측비·시공비 행이 하나도 없는" 견적이 조용히 저장되는 것을 막는
 // 최후 안전장치 + 그 순간의 화면 상태를 관측 기록(영수증)에 남겨 다음 발생 때 원인을 증거로 찾기 위한 요약.
 function estSvcState() {
@@ -460,7 +460,7 @@ function saveEstimate() {
   logSaveAttempt();
   logSaveStage('시작');
   estSendReceipt('save', 'start', { phase: 'start', confirm_state: { mem: !!window._estEditState.estimateConfirmedAt, loaded: !!(window._estLoadedRow && window._estLoadedRow.confirmed_at), edit_id: !!window._estEditState.editingEstDbId }, pending_queue: (typeof getEstPendingQueue === 'function') ? getEstPendingQueue().length : null, svc: estSvcState() });
-  // 2026-10-06(선혜님 - "저장 눌렀어"/"프린트까지 했는데" 김성은님 견적서가 서버에 없음): 인쇄·PDF 전에 저장을 먼저 하고, 그 결과를 받아 진행 여부를
+  // 2026-10-06(선혜님 - "저장 눌렀어"/"프린트까지 했는데" 시험바님 견적서가 서버에 없음): 인쇄·PDF 전에 저장을 먼저 하고, 그 결과를 받아 진행 여부를
   // 정하기 위한 콜백(ensureEstimateSavedThen이 설정). 저장 흐름이 어디서 끝나든(검증 중단/확인창 취소/이미 진행 중/서버 성공/서버 실패) 정확히 한 번만 호출됨.
   var _afterSave = window._estAfterSave || null; window._estAfterSave = null;
   function _finishAfter(outcome) { var cb = _afterSave; _afterSave = null; if (cb) { try { cb(outcome); } catch (eCb) { console.error('저장 후 처리 오류:', eCb); } } }
@@ -543,7 +543,7 @@ function saveEstimate() {
     // reenable()이 어떤 이유로든 실행되지 않아 버튼이 disabled 상태로
     // 고착되면, 그 뒤로는 "저장"을 몇 번을 눌러도 여기서 매번 조용히
     // 끝나버려서 완전히 흔적 없는 실패가 반복될 수 있었음(인테리어오월/
-    // 민소아 사건과 정확히 같은 증상 패턴). 단순히 알리기만 하는 게
+    // 시험하 사건과 정확히 같은 증상 패턴). 단순히 알리기만 하는 게
     // 아니라, 15초 넘게 비활성 상태로 멈춰있으면(정상적인 저장은
     // 그보다 훨씬 빨리 끝남) 고착으로 판단하고 스스로 풀어서 이번
     // 클릭으로 다시 시도하게 함 - 사람이 새로고침할 때까지 기다리지 않음.
@@ -581,7 +581,7 @@ function saveEstimate() {
   }
 }
 
-// 2026-10-06(선혜님 - 김성은님 견적서: "저장 눌렀어, 프린트까지 했는데" 서버엔 없음): 인쇄·PDF가 저장 여부를 확인하지 않아서 서버에 없는 서류가
+// 2026-10-06(선혜님 - 시험바님 견적서: "저장 눌렀어, 프린트까지 했는데" 서버엔 없음): 인쇄·PDF가 저장 여부를 확인하지 않아서 서버에 없는 서류가
 // 종이로 나갔음. 저장이 필요한 상태(새 견적서이거나 수정 후 저장 안 함)면 먼저 저장하고, 서버가 받았을 때만 곧바로 진행. 서버에 못 올리면 물어봄.
 function estimateNeedsSave() {
   var nameEl = /** @type {HTMLInputElement|null} */ (document.getElementById('c-name'));
@@ -592,7 +592,7 @@ function estimateNeedsSave() {
   return editing ? window._estDirty === true : true;
 }
 function ensureEstimateSavedThen(proceed) {
-  // 2026-10-20(노지경 사례): "최종 견적서" 탭 + 확정 안 됨 상태로 인쇄·PDF하면 종이는 최종견적서처럼 나오지만 서버에는 가견적으로 남음 → 먼저 확인.
+  // 2026-10-20(시험가 사례): "최종 견적서" 탭 + 확정 안 됨 상태로 인쇄·PDF하면 종이는 최종견적서처럼 나오지만 서버에는 가견적으로 남음 → 먼저 확인.
   try {
     if (typeof estIsFinalTabUnconfirmed === 'function' && estIsFinalTabUnconfirmed()) {
       if (!window.confirm('⚠️ 지금 "최종 견적서" 탭인데 아직 [확정]이 안 눌렸어요.\n\n이 상태로 인쇄·PDF를 만들면 종이는 최종견적서처럼 나오지만, 서버와 대시보드에는 "가견적"으로 남아요.\n\n[확인] = 확정 없이 그대로 진행\n[취소] = 돌아가서 위쪽 주황색 [확정] 버튼 먼저 누르기')) {
@@ -615,7 +615,7 @@ function ensureEstimateSavedThen(proceed) {
 
 // ══ 저장·열기·인쇄 영수증 (2026-10-06) ══
 // 선혜님 - "너 희안하게 원인을 찾을 생각을 안하는거 같다 / 어떻게 하면 니가 오류를 찾을 수 있을까 고민해봐": 서버에는 "저장 결과"만 남고 "그때 화면에서 일어난
-// 일"(화면에 보인 금액, 연 방법, 입력값, 기기, 로그인 상태)은 어디에도 없어서 9/23 김성은님 견적서나 08:59 할인 변화 같은 일을 매번 추측으로 풀어야 했음.
+// 일"(화면에 보인 금액, 연 방법, 입력값, 기기, 로그인 상태)은 어디에도 없어서 9/23 시험바님 견적서나 08:59 할인 변화 같은 일을 매번 추측으로 풀어야 했음.
 // 저장 시작/끝, 견적서 열기(저장된 금액 vs 화면 금액), 인쇄·PDF 때마다 화면 상태를 save_receipts 표에 남긴다(직원은 쓰기만, 읽기는 서버 관리자만).
 // 영수증 전송이 실패해도 저장·인쇄 흐름에는 절대 영향이 없고, 실패하면 이 기기에 30건까지 보관했다가 다시 보냄(오프라인이었던 때의 기록도 나중에 도착).
 var EST_RECEIPT_QUEUE_KEY = 'dah_receipt_queue';
@@ -704,7 +704,7 @@ function estCheckOpenMismatch(source) {
   try {
     var row = window._estLoadedRow; if (!row) return;
     var shown = parseInt(String((document.getElementById('sum-total') || {}).textContent || '').replace(/[^0-9]/g, ''), 10) || 0;
-    // 2026-10-09: 열고 3.5초 시점엔 쿠폰·시공 행 복원이 아직 끝나기 전이라 금액이 중간값일 수 있음(실제로 박윤아 1,503,000원/유경진 3,542,000원처럼
+    // 2026-10-09: 열고 3.5초 시점엔 쿠폰·시공 행 복원이 아직 끝나기 전이라 금액이 중간값일 수 있음(실제로 시험차 1,503,000원/시험자 3,542,000원처럼
     // 잘못된 값으로 거짓 경고가 뜸). 복원이 끝나(저장 버튼이 다시 켜지고) 금액이 2번 연속 같을 때까지 기다렸다가 판단함(최대 약 20초).
     var saveBtnEl = /** @type {HTMLButtonElement|null} */ (document.getElementById('btn-save-estimate'));
     var restoring = !!(saveBtnEl && saveBtnEl.disabled);
@@ -720,7 +720,7 @@ function estCheckOpenMismatch(source) {
     var stored = Number(row.price) || 0;
     var mismatch = stored > 0 && shown > 0 && shown !== stored;
     estSendReceipt('open', mismatch ? 'mismatch' : 'ok', { source: source, stored_price: stored, shown_total: shown, stored_final: row.price_breakdown && row.price_breakdown.finalTotal, stored_region: row.region || null, stored_install_tbd: row.install_date_tbd, stored_manual_discount: (row.applied_discounts && row.applied_discounts.manual) || null });
-    // 2026-10-09(선혜님 - 박윤아: 예전 형식 견적서를 열면 저장 1,361,000원이 1,411,000원으로 바뀌는데 알림이 3.5초 뒤 잠깐 떴다 사라져 놓치기 쉬움):
+    // 2026-10-09(선혜님 - 시험차: 예전 형식 견적서를 열면 저장 1,361,000원이 1,411,000원으로 바뀌는데 알림이 3.5초 뒤 잠깐 떴다 사라져 놓치기 쉬움):
     // 잠깐 뜨는 알림 대신 화면에 계속 남는 안내를 띄우고, 저장 직전에도 한 번 더 확인함(saveEstimate).
     window._estOpenMismatch = mismatch ? { stored: stored, shown: shown } : null;
     window._estMismatchAck = false;
@@ -731,7 +731,7 @@ function estCheckOpenMismatch(source) {
 }
 // 2026-10-09 고정 자동화(선혜님 - "고정자동화해줘"): 예전 형식(시공 행 표식 없음) 견적서 중 계약금이 들어왔거나 확정된 것은,
 // 열었을 때 저장 금액과 화면 금액이 정확히 같으면 지금 화면의 행들을 그대로 저장해 "고정"함(표식 svcRowsSaved). 이후 열 때 금액이 바뀌지 않음.
-// 금액이 다르면(박윤아·우사랑 같은 경우) 절대 건드리지 않고 경고만 유지. 금액·계약금·잔금·성과매출은 건드리지 않고 행과 표식만 저장.
+// 금액이 다르면(시험차·시험터 같은 경우) 절대 건드리지 않고 경고만 유지. 금액·계약금·잔금·성과매출은 건드리지 않고 행과 표식만 저장.
 // 동시 수정 방지로 열었을 때의 updated_at이 그대로일 때만 저장하며, 실패해도 조용히 넘어감(다음에 열 때 다시 시도).
 function estAutoFreezeOnOpen(row, mismatch, stored, shown) {
   try {

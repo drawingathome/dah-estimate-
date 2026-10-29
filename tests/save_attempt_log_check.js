@@ -20,7 +20,7 @@ async function run() {
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
   // 1) 검증 실패로 저장이 중간에 멈추는 경우(고객명/연락처/제품금액 없음)에도
-  // "시도 기록"은 무조건 남는지 확인 - 손현영 사례 재현
+  // "시도 기록"은 무조건 남는지 확인 - 시험파 사례 재현
   const r1 = await page.evaluate(() => {
     localStorage.removeItem('dah_save_attempts');
     document.getElementById('c-name').value = '테스트고객오월';

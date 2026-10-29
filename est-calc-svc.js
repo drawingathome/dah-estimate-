@@ -1,7 +1,7 @@
 /* ══════════════════════════════════════════════════
    DAH 견적서 앱 — 기타품목 · 부자재/서비스(실측비·시공비·레일) 행 계산과 요약
    2026-09-28(선혜님 - "밑에 세개를 그러면 놔두는게 베스트야?"): est-product-calc.js에서 "기타품목/서비스(svc)" 함수만 분리함.
-   신안라 사건(자동계산 항목 직접수정시 값 유실)의 markSvcManualOverride도 여기 있음.
+   시험더 사건(자동계산 항목 직접수정시 값 유실)의 markSvcManualOverride도 여기 있음.
    코드 내용은 한 줄도 안 바꾸고 위치만 옮김(전역 함수 소스 비교로 확인).
    포함: addOtherItemRow, calcOtherItemRow, copyOtherItemRow, addSvcRow, markSvcManualOverride, calcSvcRow,
          autoAddSvcFee, delSvcRow, copySvcRow, categorizeSvcRow, renderSvcSummary, summarizeSvcDetails, toggleSvcDetail
@@ -74,7 +74,7 @@ function addSvcRow() {
   tbody.appendChild(tr);
 }
 
-// 2026-09-19(선혜님 - "신안라 님 견적서... 다시 열어보니 실측+레일비가
+// 2026-09-19(선혜님 - "시험더 님 견적서... 다시 열어보니 실측+레일비가
 // 765,000원+604,800원인데 금액은 똑같이 28,134,000원이 나오는데 이게
 // 말이 되니?????????" - 실제 데이터 유실/총액 불일치 재현으로 발견):
 // 실측비/시공비/레일(자동계산 svc행)의 단가를 사용자가 직접 수정해도,
@@ -102,7 +102,7 @@ function markSvcManualOverride(el) {
     var qtyInp = tr.querySelector('.sqty');
     if (qtyInp) qtyInp.value = '1';
     // 2026-09-22(선혜님 - "오류가 너무 많아서 못쓸 지경이야, 찾아"로
-    // 원인 추적 - 최금희 고객 사례 100% 재현 성공): "직접 수정"된 값은
+    // 원인 추적 - 시험나 고객 사례 100% 재현 성공): "직접 수정"된 값은
     // 지역을 나중에 다시 선택해도 영구히 유지되는데(의도된 설계 -
     // 2026-09-19 도입), 실측비/시공비처럼 나란히 붙어있는 자동생성
     // 필드에 실수로 다른 칸의 값을 잘못 입력해도(예: 시공비 칸에
@@ -134,7 +134,7 @@ function calcSvcRow(el) {
   var q = Math.max(0, parseFloat(tr.querySelector('.sqty')?.value)||1);
   tr.querySelector('.samt').textContent = (p*q).toLocaleString()+'원';
   calcTotal();
-  // 2026-09-22(선혜님 지적 - "더하기 계산이 안맞는게 더 문제야", 최금희
+  // 2026-09-22(선혜님 지적 - "더하기 계산이 안맞는게 더 문제야", 시험나
   // 고객 견적서에서 상세 내역 합이 2,145,000원인데 위 요약카드엔
   // 1,865,000원으로 떠서 280,000원 차이나던 것으로 발견): 이 줄 자신의
   // 금액(.samt)과 맨 아래 전체 합계(calcTotal)는 매번 정확히 갱신되고

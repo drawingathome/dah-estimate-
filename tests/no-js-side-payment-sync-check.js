@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // tests/no-js-side-payment-sync-check.js
 // ══════════════════════════════════════════════════
-// 2026-10-02(선혜님 - "이민선/김현정 결제했는데 상담에 뜨니, 쌍둥이 함수도 찾고 앞으로
+// 2026-10-02(선혜님 - "시험다/시험사 결제했는데 상담에 뜨니, 쌍둥이 함수도 찾고 앞으로
 // 이런 버그 안생기게 하는 방향도 찾아" 요청으로 재발방지 구조 도입): customers 테이블의
 // deposit/balance 금액·날짜·수단·영수확인 동기화 책임은 이제 Supabase DB 트리거
 // (sync_customer_payment_from_estimates, estimates 테이블에 연결)가 전담함 - JS 코드가

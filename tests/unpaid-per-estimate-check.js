@@ -30,15 +30,15 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-  // 노지경(9401) - 견적서 2건, 각각 결제 있음(합계 3,200,000원 받음), 총액 7,099,000원
+  // 시험가(9401) - 견적서 2건, 각각 결제 있음(합계 3,200,000원 받음), 총액 7,099,000원
   await page.evaluate(() => {
     localStorage.setItem('dah_saved', JSON.stringify([
-      { id: 'est-A', clientId: 9401, clientName: '노지경', price: 6479000, date: '2026-09-15',
+      { id: 'est-A', clientId: 9401, clientName: '시험가', price: 6479000, date: '2026-09-15',
         depositAmount: 3200000, depositDate: '2026-09-15', depositMethod: '현금', depositReceipt: true, balanceAmount: 0 },
-      { id: 'est-B', clientId: 9401, clientName: '노지경', price: 620000, date: '2026-09-21',
+      { id: 'est-B', clientId: 9401, clientName: '시험가', price: 620000, date: '2026-09-21',
         depositAmount: 0, balanceAmount: 0 }
     ]));
-    saveCustomers([{ id: 9401, clientName: '노지경', phone: '01011112222', stage: '선금결제', staffName: '마스터', price: 7099000 }]);
+    saveCustomers([{ id: 9401, clientName: '시험가', phone: '01011112222', stage: '선금결제', staffName: '마스터', price: 7099000 }]);
   });
 
   const results = await page.evaluate(() => {

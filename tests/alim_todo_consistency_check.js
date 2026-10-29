@@ -19,7 +19,7 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-  // 문지윤 사례 재현: 시공준비중 단계, 방문일이 아직 D-1이 아닌 경우
+  // 시험고 사례 재현: 시공준비중 단계, 방문일이 아직 D-1이 아닌 경우
   // (8번 일정확정=즉시성이라 항상 뜸, 3번 방문전날안내=D-1 타이밍이라 아직 안 떠야 함)
   await page.evaluate(() => {
     // 2026-09-29(선혜님 - React 전환 커밋 CI가 실패해서 발견): 시공일을 절대 날짜(2026-09-30)로

@@ -16,8 +16,8 @@ function isRoutineStage(r) {
 const log = [];
 function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + JSON.stringify(detail) : '')); }
 
-// 1) 박윤아 실사례 재현: 전부 정상 저장 단계 -> 전부 조용히 걸러져야 함
-const 박윤아사례 = [
+// 1) 시험차 실사례 재현: 전부 정상 저장 단계 -> 전부 조용히 걸러져야 함
+const 시험차사례 = [
   { message: '저장단계: 시작' },
   { message: '저장단계: 세션확인-정상' },
   { message: '저장단계: 검증통과' },
@@ -25,8 +25,8 @@ const 박윤아사례 = [
   { message: '저장단계: 고객저장-응답', extra: { status: 200 } },
   { message: '저장단계: 견적서저장-응답', extra: { status: 201 } }
 ];
-const 필터결과1 = 박윤아사례.filter(function(r) { return !isRoutineStage(r); });
-ok('1. 박윤아 실사례(전부 정상 응답)는 전부 걸러져서 메일 대상이 0건이 됨', 필터결과1.length === 0, 필터결과1);
+const 필터결과1 = 시험차사례.filter(function(r) { return !isRoutineStage(r); });
+ok('1. 시험차 실사례(전부 정상 응답)는 전부 걸러져서 메일 대상이 0건이 됨', 필터결과1.length === 0, 필터결과1);
 
 // 2) 대조군: 응답 단계에서 실제로 4xx/5xx가 나오면 여전히 진짜 문제로 남아야 함
 const 진짜실패사례 = [
@@ -78,7 +78,7 @@ ok('6. [회귀방지] 동시저장충돌 중 하나라도 미해결이면 진짜
 // 7) 대조군: 동시저장충돌이 아닌(검증실패 등) 다른 문제가 섞여있으면, 그건 항상 진짜 문제로 셈
 const 검증실패섞임 = [
   { message: '견적서 저장 실패(권한문제 또는 동시저장충돌) - 내용 백업됨' },
-  { message: '저장단계: 검증실패-중단', extra: { detail: '제품 금액 0개', customerName: '윤정자' } }
+  { message: '저장단계: 검증실패-중단', extra: { detail: '제품 금액 0개', customerName: '시험서' } }
 ];
 const 결과7 = genuineIssueCount(검증실패섞임, function() { return true; }); // 동시저장충돌은 해결됐다고 쳐도
 ok('7. [핵심] 동시저장충돌은 해결됐어도, 검증실패 같은 다른 종류 문제는 항상 진짜확인필요로 셈(숨기지 않음)', 결과7 === 1, 결과7);

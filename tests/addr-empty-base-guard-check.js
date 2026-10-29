@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 // tests/addr-empty-base-guard-check.js
 // ══════════════════════════════════════════════════
-// 2026-10-05(선혜님 - "주소 해결됐다고하지만 주소 여전히 오류야 제대로 확인해", 김유진 고객):
+// 2026-10-05(선혜님 - "주소 해결됐다고하지만 주소 여전히 오류야 제대로 확인해", 시험너 고객):
 // 주소 버그를 "고쳤다"고 한 지 3일 뒤 등록분에서 재발. DB 증거: 저장된 값이
 // " 힐스테이트라군인테라스2차 201동 2602호" - 맨 앞 공백은 저장 코드가 기본주소(빈 문자열) + ' ' +
-// 상세주소로 합쳤다는 서명이고, 같은 서명이 배수희(9/19, 힐스테이트등촌역)에도 있었음. 둘 다 입주 초기
+// 상세주소로 합쳤다는 서명이고, 같은 서명이 시험버(9/19, 힐스테이트등촌역)에도 있었음. 둘 다 입주 초기
 // 신축 단지 - 다음 우편번호 API는 "도로명주소가 발급된 주소만 검색 가능"(공식 Q&A)이라 검색에 안 잡히면,
 // 기본주소 칸이 readOnly라 사용자는 상세주소 칸에 전부 쓸 수밖에 없었고, 저장 시 막는 검증도 없었음.
 //
@@ -68,8 +68,8 @@ async function newPage(browser, port, posts) {
     await new Promise(r => setTimeout(r, 1000));
 
     const fill = (base, detail) => page.evaluate((b, d) => {
-      document.getElementById('c-name').value = '김유진';
-      document.getElementById('c-phone').value = '010-9985-8429';
+      document.getElementById('c-name').value = '시험너';
+      document.getElementById('c-phone').value = '010-9000-9002';
       document.getElementById('c-addr').value = b;
       document.getElementById('c-addr2').value = d;
       document.querySelectorAll('.field-err').forEach(e => e.remove());
@@ -150,8 +150,8 @@ async function newPage(browser, port, posts) {
     // 수정 전 main에서 실측한 원래 폭 264px - 버튼을 같은 줄에 넣었을 땐 188px로 줄었음(긴 도로명주소가 더 잘림)
     const wMod = await page.evaluate(() => { const el = document.getElementById('add-addr'); return el ? el.getBoundingClientRect().width : -1; });
     ok('B5. [모달] 모바일(390px)에서 기본주소 칸 폭이 원래 수준(264px) 유지', wMod >= 250, 'width=' + wMod);
-    await setNative('add-name', '김유진');
-    await setNative('add-phone', '01099858429');
+    await setNative('add-name', '시험너');
+    await setNative('add-phone', '01090009002');
     await setNative('add-addr-detail', '힐스테이트라군인테라스2차 201동 2602호');
     await page.click('#add-save-btn');
     await new Promise(r => setTimeout(r, 500));

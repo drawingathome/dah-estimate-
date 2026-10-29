@@ -1,6 +1,6 @@
 -- 2026-10-14 (2-2) DB 쪽 "받은 돈 / 계약 여부" 판정 한 곳. 운영 DB 적용 완료(마이그레이션 dah_received_and_contract_functions).
 -- 앱의 getReceivedAmount / isContractedCustomer와 같은 규칙: 견적서(보관 제외)에 입금 기록이 있으면 견적서 합계, 하나도 없을 때만 고객 칸. 견적서 칸은 환불 반영 후 순입금.
--- 검증(운영): 고객 164명 중 고객칸 합계와 다른 건 0, 계약 114명, 계약 전 단계인데 입금 있는 고객 0, 계약 이후 단계인데 입금 없는 4명은 모두 0원 협찬(문수현·이솔·인플루언서 2명).
+-- 검증(운영): 고객 164명 중 고객칸 합계와 다른 건 0, 계약 114명, 계약 전 단계인데 입금 있는 고객 0, 계약 이후 단계인데 입금 없는 4명은 모두 0원 협찬(시험느·시험나나·인플루언서 2명).
 -- 되돌리기: drop function public.dah_is_contracted(bigint); drop function public.dah_received_amount(bigint);
 create or replace function public.dah_received_amount(p_customer_id bigint)
 returns numeric language sql stable set search_path = public, pg_temp as $$

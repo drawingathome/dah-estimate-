@@ -142,10 +142,10 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['unfreeze-estimate-check.js', []]);
   // 2026-09-21: "미수금" 계산이 견적서(dah_saved)와 고객레벨(customers
   // 테이블) 두 소스 중 하나만 보다가, 실제 입금 기록이 있는데도 전액
-  // 미수금으로 잘못 표시되던 버그 검증 (김은/황남주 실사례로 발견)
+  // 미수금으로 잘못 표시되던 버그 검증 (김은/시험거 실사례로 발견)
   scripts.push(['received_amount_source_mismatch_check.js', []]);
   // 2026-09-21(선혜님 - "결제가 되어야 넘어가는거 아니야?? 구조를 확실히
-  // 확인해봐" - 최선미 고객 사례): 결제 전(상담/가견적 단계)에 이미
+  // 확인해봐" - 시험처 고객 사례): 결제 전(상담/가견적 단계)에 이미
   // 입력된 실측예정일이 캘린더에서 확정된 일정과 똑같이 보이던 문제 -
   // "미확정(결제 전)" 표시로 구분되는지 검증
   scripts.push(['cal-unconfirmed-schedule-check.js', []]);
@@ -178,13 +178,13 @@ if (/dah-dashboard/.test(target)) {
   // 알림톡이 이 기기 로컬에도 반영돼 중복발송을 막는지 검증
   scripts.push(['alimtalk-sent-server-sync-check.js', []]);
   // 2026-09-21: 계약금만으로 총액이 다 채워진 경우 잔금 UI가 "완납"과
-  // 앞뒤가 맞게 표시되는지 검증 (노지경 두번째 견적서 실사례로 발견)
+  // 앞뒤가 맞게 표시되는지 검증 (시험가 두번째 견적서 실사례로 발견)
   scripts.push(['no_balance_needed_ui_check.js', []]);
   // 2026-09-21: getLatestEstPay/getAllEstPays도 getReceivedAmount와
   // 같은 견적서-고객레벨 소스 불일치 함정이 있었음을 전수점검으로
   // 발견해서 같이 수정 - 검증
   scripts.push(['est_pay_source_fallback_check.js', []]);
-  // 2026-09-21(근본원인 수정 - 김은/황남주 실사례): 결제탭이 "이 고객
+  // 2026-09-21(근본원인 수정 - 김은/시험거 실사례): 결제탭이 "이 고객
   // 견적서가 있는지"를 로컬 캐시로만 판단하다가, 서버엔 있는데 로컬
   // 캐시엔 없는 경우(다른 기기 등) 예전 고객레벨 방식으로 조용히
   // 되돌아가던 문제 - 서버로 재확인 후 자동 교정하는지 검증
@@ -214,7 +214,7 @@ if (/dah-dashboard/.test(target)) {
   // 전송→다시 불러오기 전체 사이클에서 위치 정보가 안 사라지는지,
   // 그리고 hasProduct 검사도 svc-body를 인식하는지 검증.
   scripts.push(['rail-save-restore-check.js', []]);
-  // 2026-09-19(선혜님 - "노지경님 견적서가 1개였는데 내가 한개를 더
+  // 2026-09-19(선혜님 - "시험가님 견적서가 1개였는데 내가 한개를 더
   // 넣었어..."): 한 고객이 여러 견적서를 가지면 customers.price가
   // 최신 것으로만 덮어써지던 버그 - 다른 견적서 조회 후 합산되는지 검증.
   scripts.push(['customer-price-sum-check.js', []]);
@@ -231,7 +231,7 @@ if (/dah-dashboard/.test(target)) {
   // 지금 화면 재계산과 안 맞으면 얼림을 아예 적용 안 하고 재계산값을 둠.
   scripts.push(['frozen-total-sanity-check.js', []]);
   // 2026-09-21(선혜님 - "니가 한 자료 계속 똑같은 문제가 생기지
-  // 무조건 원인 찾아!!" - 민소아 견적서 재발 조사): 저장 요청이
+  // 무조건 원인 찾아!!" - 시험하 견적서 재발 조사): 저장 요청이
   // 영원히 응답 없으면 버튼이 영구히 잠기던 치명적 경로 - 타임아웃
   // 으로 해결됐는지 검증(16초 이상 걸리는 느린 테스트).
   scripts.push(['save-timeout-unlock-check.js', []]);
@@ -272,9 +272,9 @@ if (/dah-dashboard/.test(target)) {
   // 링크값과 합쳐질 때 "https://https://" 이중 접두어가 안 생기는지 검증
   scripts.push(['payment_link_button_check.js', []]);
   // 2026-09-15: "새 견적서" 버튼이 이전 고객의 확정상태를 초기화하는지
-  // 검증 - 허서진 고객 사례("데이터 다 날아감")로 발견
+  // 검증 - 시험머 고객 사례("데이터 다 날아감")로 발견
   scripts.push(['confirm_state_reset_check.js', []]);
-  // 2026-09-22(선혜님 - "더하기 계산이 안맞는게 더 문제야" - 최금희 고객
+  // 2026-09-22(선혜님 - "더하기 계산이 안맞는게 더 문제야" - 시험나 고객
   // 견적서 실사례): 요약카드(renderSvcSummary)가 행 추가/자동생성 때만
   // 갱신되고, 기존 행 단가를 직접 고치거나 복제/삭제할 때는 안 갱신되던
   // 문제 + 복제본이 자동관리 태그를 물려받아 원본과 혼선 생기던 문제
@@ -283,13 +283,13 @@ if (/dah-dashboard/.test(target)) {
   // 칸 옆 시공비 칸에 실수로 다른 값을 잘못 입력해도 화면상 자동계산값과
   // 구분이 안 되던 문제 - 직접수정시 눈에 띄는 표시가 붙는지 검증
   scripts.push(['manual-override-visual-marker-check.js', []]);
-  // 2026-10-01(선혜님 - 이민선 고객 사례 "실제 도로명주소를 넣었는데 상세주소만
+  // 2026-10-01(선혜님 - 시험다 고객 사례 "실제 도로명주소를 넣었는데 상세주소만
   // 저렇게 보이는거야"): "정규식으로 추측해서 쪼갠다"는 방식(splitAddrDetail)
   // 자체를 완전히 제거하고 전체 주소를 그대로 보존하는 방식으로 교체 -
   // split-addr-detail-check.js는 그 제거된 함수의 단위테스트라 함께 삭제하고
   // addr-no-split-check.js로 교체.
   scripts.push(['addr-no-split-check.js', []]);
-  // 2026-10-02(선혜님 - 김현정 고객 사례 "주소 왜 여전히 안되냐 너 확인한거 맞다면서!!"):
+  // 2026-10-02(선혜님 - 시험사 고객 사례 "주소 왜 여전히 안되냐 너 확인한거 맞다면서!!"):
   // 진짜 원인은 불러오기 로직이 아니라 c-addr 입력칸이 자유 타이핑 가능했던 것 - readOnly +
   // 클릭시 자동 주소검색 연결로 전환, 재발 감시.
   scripts.push(['addr-input-readonly-check.js', []]);
@@ -300,7 +300,7 @@ if (/dah-dashboard/.test(target)) {
   // 가능했던 버그. 재발 감시.
   scripts.push(['daum-autoroadaddress-fallback-check.js', []]);
   scripts.push(['addr-building-name-check.js', []]);
-  // 2026-10-02(선혜님 - "이민선/김현정 결제했는데 상담에 뜨니, 쌍둥이 함수도 찾고
+  // 2026-10-02(선혜님 - "시험다/시험사 결제했는데 상담에 뜨니, 쌍둥이 함수도 찾고
   // 앞으로 이런 버그 안생기게 하는 방향도 찾아" 요청으로 구조 개선): customers
   // deposit/balance 동기화는 이제 DB 트리거가 전담 - JS에 그 책임이 다시 생기면 잡아냄.
   scripts.push(['no-js-side-payment-sync-check.js', []]);
@@ -317,14 +317,14 @@ if (/dah-dashboard/.test(target)) {
   // 2026-10-06(선혜님 - 매일 아침 issues is not defined 실패 메일, "해결해"): 정적 검사(린트)만으로는 부족해서, 구글 서비스를
   // 가짜로 대체한 환경에서 dahDailyBackup()을 실제로 끝까지 실행(정상/이상 데이터/점검 하나가 죽는 날)해 검증.
   scripts.push(['apps-script-run-check.js', []]);
-  // 2026-10-05(선혜님 - "주소 해결됐다고하지만 주소 여전히 오류야 제대로 확인해", 김유진 고객 재발):
+  // 2026-10-05(선혜님 - "주소 해결됐다고하지만 주소 여전히 오류야 제대로 확인해", 시험너 고객 재발):
   // 기본주소 없이 상세주소만 저장되는 사고(맨 앞 공백 서명)를 견적서 화면/고객추가 모달 양쪽에서 차단.
   scripts.push(['addr-empty-base-guard-check.js', []]);
   // 2026-10-06(선혜님 - "상세주소랑 따로 넣어도 왜 이렇게 뜨지?? 이 오류 여러번 말했지??", 9/15부터 반복): 상세주소를 따로 저장(addr_detail)하고
   // 모달/견적서 화면이 정확히 다시 나눠 보여주는지 + 최근 주소 칩 제거 확인.
   scripts.push(['addr-detail-roundtrip-check.js', []]);
   // 2026-10-06(선혜님 - "어떻게 하면 니가 오류를 찾을 수 있을까"): 저장·열기 때 화면 상태를 서버에 영수증으로 남기는 장치(전송 실패 시 기기 보관·재전송 포함).
-  // 2026-10-06(선혜님 - 김성은님 견적서 "저장 눌렀어, 프린트까지 했는데" 서버엔 없음): 서버가 받았을 때만 저장됨 표시 + 인쇄·PDF 전 저장/확인(고객용·실측요청서·발주서 공통).
+  // 2026-10-06(선혜님 - 시험바님 견적서 "저장 눌렀어, 프린트까지 했는데" 서버엔 없음): 서버가 받았을 때만 저장됨 표시 + 인쇄·PDF 전 저장/확인(고객용·실측요청서·발주서 공통).
   scripts.push(['estimate-save-integrity-check.js', []]);
   scripts.push(['save-receipt-check.js', []]);
   // 2026-10-07(선혜님 - 17:30경 저장을 눌렀는데 서버에 요청 0건): 저장 버튼 눌림 관측(가림/비활성/저장 미시작/로그인 덮개/탭 상태, 기기 순환 기록 + 서버 전송). 현실적인 로그인 + 실제 클릭으로 시험.
@@ -335,11 +335,11 @@ if (/dah-dashboard/.test(target)) {
   // 2026-10-01(선혜님 - "전문가입장에서도 보라니깐 놔둬도 될 정도이니??" 지적으로 재점검):
   // 견적서 공개보기가 테이블 전체 직접조회 대신 좁은 rpc 함수만 쓰는지 회귀 감시.
   scripts.push(['public-estimate-view-narrowed-check.js', []]);
-  // 2026-10-01(선혜님 - 최금희 고객 "컴퓨터에서는 결제완료, 아이패드에서는
+  // 2026-10-01(선혜님 - 시험나 고객 "컴퓨터에서는 결제완료, 아이패드에서는
   // 미수금" 신고): est가 있으면 customers 테이블 동기화가 영원히 안 되던
   // 문제를 고친 뒤 회귀 감시.
   scripts.push(['customer-level-pay-sync-check.js', []]);
-  // 2026-10-01(선혜님 - "최금희 외 다른 고객이 문제있는건 확인 가능하니?? 쌍둥이 함수
+  // 2026-10-01(선혜님 - "시험나 외 다른 고객이 문제있는건 확인 가능하니?? 쌍둥이 함수
   // 모두 확인해" - 배포 전 실제 DB 전수조회로 발견한 긴급 위험): 레거시 고객(견적서엔
   // 입금기록 0, customers 레벨에만 과거 거액 입금)이 새 견적서에 결제 입력시 과거
   // 기록이 지워지지 않는지 감시.
@@ -348,12 +348,12 @@ if (/dah-dashboard/.test(target)) {
   // 견적서 합계 조회가 실패하면 0으로 간주해 과거 누적금액을 지울 위험이 있었음 - 감시.
   scripts.push(['customer-price-sum-fail-protection-check.js', []]);
   // 2026-09-22(선혜님 - "선금 75만원 입력했는데 왜 또 50%로 뜨니?? 아까도
-  // 물어본건데" - 최금희 실사례): 품목표 수정시 "얼려둔 예전 스냅샷"
+  // 물어본건데" - 시험나 실사례): 품목표 수정시 "얼려둔 예전 스냅샷"
   // 보호를 푸는 로직이 "사용자가 방금 직접 입력한 계약금" 보호까지
   // 같이 지워버려서 50% 자동계산이 실제 입금액을 덮어쓰던 문제
   scripts.push(['deposit-manual-protection-check.js', []]);
   // 2026-09-22(선혜님 - "확정을 해도 자꾸 풀리는데?? 왜 자꾸 같은 오류가
-  // 생기지" - 최금희 실사례): loadEstDbId URL로 견적서를 불러올 때
+  // 생기지" - 시험나 실사례): loadEstDbId URL로 견적서를 불러올 때
   // 저장된 실제 계약금을 화면에 채우는 코드가 아예 없어서, 인쇄화면이
   // 매번 50% 자동추정치로 표시되던 문제
   scripts.push(['est-load-deposit-restore-check.js', []]);
@@ -367,7 +367,7 @@ if (/dah-dashboard/.test(target)) {
   // 값으로 덮어쓸 수 있던 경쟁상태 발견): applyRealDepositToForm에
   // 다운그레이드 방지 가드 추가로 모든 호출 경로 한번에 안전해짐
   scripts.push(['deposit-race-downgrade-check.js', []]);
-  // 2026-09-22(선혜님 - "안바뀌엇고 열면 자꾸 50%로 된다니깐" - 최금희
+  // 2026-09-22(선혜님 - "안바뀌엇고 열면 자꾸 50%로 된다니깐" - 시험나
   // 실사례 끝까지 추적한 진짜 최종 원인): 할인쿠폰이 있는 견적서를 불러올
   // 때, 할인 복원이 계약금 복원보다 먼저 실행되면서 생기는 "보호 안 된
   // 임시 50%값"을 방금 위에서 만든 다운그레이드 방지 가드가 "이미 있는
@@ -375,12 +375,12 @@ if (/dah-dashboard/.test(target)) {
   // 자체가 "사용자 편집"으로 오인되던 문제(isRestoringEstimate 플래그로 해결)
   scripts.push(['deposit-with-discount-restore-check.js', []]);
   // 2026-09-22(선혜님 - "PC에서 확정을 하고 핸드폰에서 보면 확정이
-  // 풀려있어" - 최금희 실사례): estimate_status가 확정 버튼(estimateConfirmedAt)
+  // 풀려있어" - 시험나 실사례): estimate_status가 확정 버튼(estimateConfirmedAt)
   // 과 무관하게 "가견적서/최종견적서" 탭 상태만 보고 저장되던 문제
   scripts.push(['estimate-status-confirm-sync-check.js', []]);
   // 2026-10-10(선혜님 - 확정이 누가/왜 풀렸는지 알 수 없었음): 확정 취소 시 사유 선택 필수 + 입금 경고 + 영수증 기록.
   scripts.push(['unconfirm-reason-check.js', []]);
-  // 2026-10-17(선혜님 - 김유진 "확정을 눌러도 가견적으로 바뀜"): 확정/해제 즉시 서버 저장 + 서버 확정을 화면이 덮어 지우지 않음
+  // 2026-10-17(선혜님 - 시험너 "확정을 눌러도 가견적으로 바뀜"): 확정/해제 즉시 서버 저장 + 서버 확정을 화면이 덮어 지우지 않음
   scripts.push(['confirm-persist-check.js', []]);
   scripts.push(['code-stale-check.js', []]);
   scripts.push(['dash-code-stale-check.js', []]);
@@ -476,10 +476,10 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['cust-lock-adopt-cache-check.js', []]);
   // 2026-10-11: 홈 "데이터 점검" 카드(DB 이상 데이터 뷰를 읽어 이상 있을 때만 표시) 검증
   scripts.push(['integrity-banner-check.js', []]);
-  // 2026-10-13(김성은 사례): 견적서 삭제 후 고객 금액·잠금값이 서버 값으로 갱신되는지
+  // 2026-10-13(시험바 사례): 견적서 삭제 후 고객 금액·잠금값이 서버 값으로 갱신되는지
   scripts.push(['estimate-delete-refreshes-customer-check.js', []]);
   scripts.push(['unpaid-per-estimate-check.js', []]);
-  // 2026-09-21(선혜님 - 전보현/민소아 고객 실제 발생 확인): 실측/시공
+  // 2026-09-21(선혜님 - 시험러/시험하 고객 실제 발생 확인): 실측/시공
   // 예정일 수정시 예전 "미정" 플래그가 안 지워지던 버그 검증.
   scripts.push(['date-tbd-clear-check.js', []]);
   // 2026-09-21(선혜님 - "위 내용 코드 정리해줘 버그가 많을꺼 같은데"
@@ -540,7 +540,7 @@ if (/dah-dashboard/.test(target)) {
   // 몰린 파일): 저장 로직의 "지금 동작"(서버로 나가는 요청/확인창/토스트/로컬저장)을 8개
   // 시나리오로 기록해두고, 앞으로 이 코드를 고칠 때 글자 하나라도 달라지면 알려줌.
   scripts.push(['save-golden-master-check.js', []]);
-  // 2026-09-30(선혜님 - "지금 고쳐야지" - 노지경 견적서 사례로 발견한 근본원인): 재시도 큐가
+  // 2026-09-30(선혜님 - "지금 고쳐야지" - 시험가 견적서 사례로 발견한 근본원인): 재시도 큐가
   // 0건 반영(권한문제/동시저장충돌)을 성공으로 착각하고 조용히 삭제하던 버그를 고침 - 회귀 감시.
   scripts.push(['est-retry-queue-golden-master-check.js', []]);
   scripts.push(['est-retry-queue-lock-check.js', []]); // 2026-10-15 재시도 큐 동시편집 잠금
@@ -622,14 +622,14 @@ if (/dah-estimate/.test(target)) {
   // shared-optimistic-lock.js(낙관적잠금 락값갱신 공용함수) 검증.
   scripts.push(['optimistic-lock-check.js', []]);
   scripts.push(['pay-changestage-lock-sync-check.js', []]);
-  // 2026-10-08(선혜님 - "완납되었는데 상담으로 뜬다", 조유정 사례): 단계 변경은 "단계(와 확정일)만" 서버로 보내고, 낡은 값으로 고객 전체를 덮어쓰지 않는지(락 없음, 서버 최신 행 반영, 실패 시 단계만 재시도 큐).
+  // 2026-10-08(선혜님 - "완납되었는데 상담으로 뜬다", 시험마 사례): 단계 변경은 "단계(와 확정일)만" 서버로 보내고, 낡은 값으로 고객 전체를 덮어쓰지 않는지(락 없음, 서버 최신 행 반영, 실패 시 단계만 재시도 큐).
   scripts.push(['stage-partial-patch-check.js', []]);
   scripts.push(['stage-conflict-guard-check.js', []]);
   scripts.push(['db-stage-move-reflect-check.js', []]);
   scripts.push(['paid-stage-mismatch-home-check.js', []]);
   // 2026-10-08(같은 뿌리): 메모·결제링크·실측/시공일·발주체크도 "바꾸는 필드만" 서버로 보내는지, 큐에서 서로 덮이지 않는지, 새로고침이 대기 중인 값을 되돌리지 않는지.
   scripts.push(['field-partial-patch-check.js', []]);
-  // 2026-10-08(선혜님 - 조유정 "시공비 이상하네 … 여러번 말했어"): 자동 시공 행(실측/시공/블라인드시공/레일)을 저장하고 열 때 그대로 복원(재계산 중복·빠짐 방지), 임시 초안 중복 방지, 시공비 없이 저장 시 경고.
+  // 2026-10-08(선혜님 - 시험마 "시공비 이상하네 … 여러번 말했어"): 자동 시공 행(실측/시공/블라인드시공/레일)을 저장하고 열 때 그대로 복원(재계산 중복·빠짐 방지), 임시 초안 중복 방지, 시공비 없이 저장 시 경고.
   scripts.push(['svc-rows-persist-check.js', []]);
   // 2026-09-08(선혜님 지적 - "얼렁뚱땅 넘어가지 마... 이래서 너를
   // 믿겠니??"로 발견된 신뢰 문제 해결): 같은 종류의 select값 유실
@@ -655,7 +655,7 @@ if (/dah-estimate/.test(target)) {
   // 2026-09-15: 저장 버튼을 눌렀는데 검증실패로 조용히 멈춰도 "시도 기록"이
   // 무조건 남는지 검증 - "인테리어오월" 견적서 실종 사건으로 발견한 위험
   scripts.push(['save_attempt_log_check.js', []]);
-  // 2026-09-22(선혜님 - 최금희 견적서 사고 - "쌍둥이함수까지 찾아" 요청
+  // 2026-09-22(선혜님 - 시험나 견적서 사고 - "쌍둥이함수까지 찾아" 요청
   // 으로 발견한 심각한 버그): 신규 견적서 재저장시 매출기준금액이
   // 이중계산돼서 부풀려지던 버그(Prefer 헤더가 isEditMode와 반대로
   // 되어 있었음) 재발 방지.

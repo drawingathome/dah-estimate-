@@ -18,7 +18,7 @@ async function run() {
   await new Promise(r => setTimeout(r, 700));
   await loginAs(page, 'master');
   const log = [];
-  // 견적서 2개 고객의 결제 탭 맨 위 합계 안내(노지경형 중복 입금 방지용)
+  // 견적서 2개 고객의 결제 탭 맨 위 합계 안내(시험가형 중복 입금 방지용)
   const multi = await page.evaluate(async () => {
     const cust = { id: 21, clientName: 'M1', date: '2026-09-15', stage: '시공준비중', price: 7001000, depositAmount: 3200000, balanceAmount: 0, staffName: '마스터' };
     localStorage.setItem('dah_customers', JSON.stringify([cust]));
@@ -47,7 +47,7 @@ async function run() {
     return { withExtra, noExtra };
   });
   ok('알림톡 잔금 안내: 추가 결제 30만을 뺀 20만 / 추가 없으면 50만', alim.withExtra === 200000 && alim.noExtra === 500000, alim);
-  // 실제 운영 데이터 모양 그대로: 노지경형(견적서 2개, 고객 총액=합계, 완납) / 박소진형(가견적 옛 견적서+실제 견적서)
+  // 실제 운영 데이터 모양 그대로: 시험가형(견적서 2개, 고객 총액=합계, 완납) / 시험보형(가견적 옛 견적서+실제 견적서)
   const alim2 = await page.evaluate(() => {
     const out = {};
     const run = (cust, ests) => {
@@ -66,8 +66,8 @@ async function run() {
       [{ id: 'h1', clientId: 43, clientName: 'H1', price: 1000000, depositAmount: 400000, balanceAmount: 0, savedAt: '2026-09-15T01:00:00Z' }]);
     return out;
   });
-  ok('알림톡 잔금: 노지경형(견적서 2개·완납)은 0원', alim2.njk === 0, alim2);
-  ok('알림톡 잔금: 박소진형(옛 가견적+실제 견적서, 잔금 완납)은 0원', alim2.psj === 0, alim2);
+  ok('알림톡 잔금: 시험가형(견적서 2개·완납)은 0원', alim2.njk === 0, alim2);
+  ok('알림톡 잔금: 시험보형(옛 가견적+실제 견적서, 잔금 완납)은 0원', alim2.psj === 0, alim2);
   ok('알림톡 잔금: 선금 40만만 받은 100만 건은 60만원', alim2.half === 600000, alim2);
   // 고객 엑셀: 실제로 만들어지는 파일 내용을 가로채서 추가결제액 열과 열 개수를 확인
   const csv = await page.evaluate(async () => {

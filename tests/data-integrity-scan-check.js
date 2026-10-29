@@ -32,7 +32,7 @@ function dahScanForDataIntegrity(backup) {
 const log = [];
 function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + JSON.stringify(detail) : '')); }
 
-// 1) 김은/황남주 실사례 재현: 고객레벨엔 완납 기록, 견적서엔 결제정보가
+// 1) 김은/시험거 실사례 재현: 고객레벨엔 완납 기록, 견적서엔 결제정보가
 // 아예 없음(0) - 이건 오늘 이미 코드로 고쳤지만(둘 중 큰 쪽 신뢰), 그래도
 // 근본적으로 "서로 다른 값"이 존재했다는 사실 자체는 정합성 문제로
 // 남겨서 확인하게 해야 함. 근데 이 케이스는 "한쪽이 0"이라 조건(둘 다
@@ -53,12 +53,12 @@ const 진짜불일치사례 = {
 const 결과2 = dahScanForDataIntegrity(진짜불일치사례);
 ok('2. 양쪽 다 값이 있는데 실제로 다르면 "결제 불일치"로 정확히 잡힘', 결과2.some(i => i.indexOf('결제 불일치') !== -1 && i.indexOf('불일치테스트') !== -1), 결과2);
 
-// 3) 최선미 실사례 재현: 상담 단계, 결제 0원, 실측예정일 있음
-const 최선미사례 = {
-  customers: [{ id: 400, client_name: '최선미', stage: '상담', deposit_amount: 0, balance_amount: 0, measure_date: '2026-09-22', install_date: null, is_archived: false }],
+// 3) 시험처 실사례 재현: 상담 단계, 결제 0원, 실측예정일 있음
+const 시험처사례 = {
+  customers: [{ id: 400, client_name: '시험처', stage: '상담', deposit_amount: 0, balance_amount: 0, measure_date: '2026-09-22', install_date: null, is_archived: false }],
   estimates: []
 };
-const 결과3 = dahScanForDataIntegrity(최선미사례);
+const 결과3 = dahScanForDataIntegrity(시험처사례);
 ok('3. 선금 전(상담단계, 결제0원)에 실측예정일이 있어도 알림 대상 아님(계약 전 일정 입력은 정상)', 결과3.length === 0, 결과3);
 
 // 4) 정상 케이스: 결제도 됐고 단계도 진행됐으면 아무 문제 없어야 함(회귀 없음)

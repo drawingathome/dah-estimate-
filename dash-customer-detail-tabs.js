@@ -9,7 +9,7 @@
    ══════════════════════════════════════════════════ */
 
 function renderDetailTodoSection(c, body) {
-  // 2026-09-14(선혜님 지적 - 문지윤 고객 실제 캡처로 발견): 여기가 소통
+  // 2026-09-14(선혜님 지적 - 시험고 고객 실제 캡처로 발견): 여기가 소통
   // 탭과 다른 로직(단순 단계매칭)을 써서 서로 다른 개수가 나오고 있었음 -
   // 공용 함수(getDueAlimKeys)로 통일해서 두 탭이 항상 같은 답을 보여주게 함.
   var todoKeys = getDueAlimKeys(c);
@@ -117,7 +117,7 @@ function renderDetailInfoSection(c, body) {
         target.memo = newVal;
         saveCustomers(arr);
         clearMemoDraft();
-        // 2026-10-08: 메모만 서버로 보냄(고객 전체를 보내면 낡은 계약금 등이 서버를 덮어쓰거나 동시저장충돌로 실패 - 오늘 조유정 사례와 같은 뿌리)
+        // 2026-10-08: 메모만 서버로 보냄(고객 전체를 보내면 낡은 계약금 등이 서버를 덮어쓰거나 동시저장충돌로 실패 - 오늘 시험마 사례와 같은 뿌리)
         // 2026-10-15 동시편집: 메모는 글이라 "나중에 저장한 사람이 앞사람 메모를 통째로 지우는" 위험이 있어, 내가 편집을 시작할 때 본 메모(oldMemo)와
         // 서버 메모가 같을 때만 반영. 다르면(그 사이 다른 사람이 고침) 두 메모를 이어 붙여 둘 다 보존(memoSaveWithConflictGuard).
         memoSaveWithConflictGuard(target, oldMemo, newVal, function(err, finalMemo){
@@ -189,7 +189,7 @@ function renderDetailInfoSection(c, body) {
           var target = findCurrentDetailCustomer(arr);
           if (target) {
             target[item.key] = newVal || '';
-            // 2026-09-21(선혜님 - 전보현/민소아 고객 실제 발생 확인):
+            // 2026-09-21(선혜님 - 시험러/시험하 고객 실제 발생 확인):
             // 실제 날짜를 입력하는데도 예전에 "미정"으로 체크해뒀던
             // 플래그(measureDateTbd/installDateTbd)가 그대로 남아있으면,
             // 이 값이 견적서에 동기화될 때 "미정" 상태로 잘못 복원돼서
@@ -247,7 +247,7 @@ function renderDetailInfoSection(c, body) {
                       patchXhr.setRequestHeader('Content-Type', 'application/json');
                       var patchBody = {};
                       patchBody[estField] = newVal || null;
-                      // 2026-09-21(선혜님 - 전보현/민소아 고객 실제
+                      // 2026-09-21(선혜님 - 시험러/시험하 고객 실제
                       // 발생 확인 - 진짜 근본 원인): 견적서 앱이 실제로
                       // 참조하는 건 estimates.measure_date_tbd/
                       // install_date_tbd(applyScheduleAndDepositToForm이
@@ -361,7 +361,7 @@ function deleteCustomer() {
 // 실행됨. 되돌릴 방법이 전혀 없음.
 //
 // 2026-08-28(선혜님 지시 — "삭제하면 보관처리 하지마 그러면 자꾸 이런
-// 헷갈리거나 중복되는 일이 생기는거 같아", 배재연 사례로 확인됨): 보관처리
+// 헷갈리거나 중복되는 일이 생기는거 같아", 시험로 사례로 확인됨): 보관처리
 // (소프트삭제)가 나중에 "이미 등록된 고객"으로 잘못 잡히는 등 계속 혼란을
 // 만들어서, 이제 "삭제"는 항상 이 완전삭제 함수 하나로 통일함(deleteCustomer는
 // 이 함수를 그대로 재사용 - 같은 로직을 두 번 안 짜기 위함, 체크리스트 24번).

@@ -92,7 +92,7 @@ function refreshBlindVendorOptions() {
 
 // getBlindMinSqm(종류별 최소 청구 면적)은 est-calc-rules.js로 옮김(계산 규칙은 그 파일 한 곳에만 둠)
 
-// 2026-10-20(윤세현 사례): "옵션" 칸은 이름 칸이라 금액이 계산되지 않는데 숫자만 넣는 경우가 있었음 →
+// 2026-10-20(시험타 사례): "옵션" 칸은 이름 칸이라 금액이 계산되지 않는데 숫자만 넣는 경우가 있었음 →
 // 숫자만 입력하면(예: 10000, 10,000원) 자동으로 "옵션추가금" 칸으로 옮겨 계산에 반영(옵션 이름 칸은 비움). 사람이 직접 입력했을 때만 동작(저장된 견적서를 불러올 땐 동작 안 함).
 function moveNumericOptToExtra(optEl) {
   var tr = optEl && optEl.closest('tr'); if (!tr) return;

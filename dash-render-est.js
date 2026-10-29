@@ -216,7 +216,7 @@ function renderEstList() {
     (function(entry){ row.addEventListener('click', function(ev){
       if (ev.target.closest('button')) return; // 삭제/계약상태 버튼 클릭은 여기로 안 번지게
       if (!entry.clientName) return;
-      // 2026-08-25(선혜님 발견 — 신화경님 사례): 견적서 앱에서 고객명을
+      // 2026-08-25(선혜님 발견 — 시험아님 사례): 견적서 앱에서 고객명을
       // 직접 타이핑만 하고 저장하면(고객 등록/불러오기를 안 거치면) 그
       // 견적이 어떤 고객 레코드와도 연결이 안 된 채(client_id 없이) 저장됨.
       // 그런 견적을 목록에서 클릭하면 openDetail이 그 이름의 고객을 찾다가

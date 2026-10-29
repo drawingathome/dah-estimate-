@@ -18,7 +18,7 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-  // 노지경 두 번째 견적서 사례 재현: 총액 620,000원, 계약금 620,000원(총액과 동일)
+  // 시험가 두 번째 견적서 사례 재현: 총액 620,000원, 계약금 620,000원(총액과 동일)
   const r1 = await page.evaluate(() => {
     saveCustomers([{ id: 9930, clientName: '잔금없음테스트', phone:'01099990000', stage:'실측준비중', staffName:'마스터' }]);
     var est = { id: 'est-9930', clientId: 9930, clientName: '잔금없음테스트', price: 620000, depositAmount: 620000, depositDate: '2026-09-16', depositMethod: '현금', depositReceipt: true, balanceAmount: 0, balanceDate: '' };

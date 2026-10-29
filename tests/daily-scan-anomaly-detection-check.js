@@ -3,7 +3,7 @@
 // ══════════════════════════════════════════════════
 // 2026-10-02(선혜님 - "전문업체 기준으로 확인해" / "해결방법은 뭔데" / "그럼 너가
 // 순서를 정해서 위 부분 모두 적용하자" 요청으로 추가): apps-script-daily-backup.js의
-// dahScanForDataIntegrity()에 오늘 실제로 터진 3가지 사고 패턴(이민선/김현정의
+// dahScanForDataIntegrity()에 오늘 실제로 터진 3가지 사고 패턴(시험다/시험사의
 // 결제-단계 불일치·입금날짜 누락, 플러그 이관 19건의 매출 미인식, Daum API
 // autoRoadAddress 누락으로 인한 주소 이상)을 자동 감시로 추가 - 사용자 신고로
 // 발견되기 전에 매일 밤 자동 백업 시점에 먼저 잡아내기 위함.
@@ -38,7 +38,7 @@ function dahScanForDataIntegrity(backup) {
     ests.forEach(function(e) { estDepSum += Number(e.deposit_amount) || 0; estBalSum += Number(e.balance_amount) || 0; });
 
     // 1) 결제 정합성: 고객 레벨과 견적서 레벨 둘 다 결제 기록이 있는데
-    // (둘 다 0이 아닌데) 서로 다른 금액이면 - 오늘 발견한 김은/황남주
+    // (둘 다 0이 아닌데) 서로 다른 금액이면 - 오늘 발견한 김은/시험거
     // 사례처럼 "쓰는 곳과 읽는 곳이 서로 다른 값을 본다"는 신호.
     if ((custDep + custBal) > 0 && (estDepSum + estBalSum) > 0 && (custDep !== estDepSum || custBal !== estBalSum)) {
       issues.push('[결제 불일치] ' + c.client_name + '(id:' + c.id + ') — 고객레벨(선금' + custDep.toLocaleString() + '/잔금' + custBal.toLocaleString() +
@@ -49,7 +49,7 @@ function dahScanForDataIntegrity(backup) {
     var isPrePayment = ['방문예약', '상담', '가견적'].indexOf(c.stage) !== -1;
     var hasNoPayment = custDep === 0 && custBal === 0 && estDepSum === 0 && estBalSum === 0;
 
-    // 2026-10-02(선혜님 - "이민선/김현정 결제했는데 상담에 뜨니 ... 전체 확인해" /
+    // 2026-10-02(선혜님 - "시험다/시험사 결제했는데 상담에 뜨니 ... 전체 확인해" /
     // "전문업체 기준으로 확인해" 요청으로 추가한 자동 감시 3종): 전부 오늘 실제로
     // 터진 사고 패턴 - 사용자 신고로 발견되기 전에 매일 밤 자동으로 먼저 잡아내기 위함.
     // 실제 운영 DB로 미리 검증(아래 3~5번 조건) 중, "입금날짜 누락"이 62건이나 나오는
@@ -70,14 +70,14 @@ function dahScanForDataIntegrity(backup) {
     var recent = isRecentlyUpdated(c);
 
     // 3) 결제(선금 또는 잔금)는 있는데 아직 방문예약/상담/가견적 단계에 머물러
-    // 있음 - 이민선/김현정 사례(estimates PATCH는 됐는데 customers 동기화가
+    // 있음 - 시험다/시험사 사례(estimates PATCH는 됐는데 customers 동기화가
     // 안 되거나, 단계전환이 조용히 실패한 신호).
     if (recent && isPrePayment && (custDep > 0 || custBal > 0)) {
       issues.push('[결제-단계 불일치] ' + c.client_name + '(id:' + c.id + ') — "' + c.stage +
         '" 단계인데 입금 기록(선금' + custDep.toLocaleString() + '/잔금' + custBal.toLocaleString() + ')이 있음 - 단계전환이 안 된 것으로 보임');
     }
 
-    // 4) 입금액은 있는데 입금날짜가 비어있음 - 이민선/김현정 사례의 정확한 증상
+    // 4) 입금액은 있는데 입금날짜가 비어있음 - 시험다/시험사 사례의 정확한 증상
     // (estimates엔 날짜가 있는데 customers 동기화에서 날짜만 빠지는 패턴). 최근
     // 변경분만 - 과거 이관 데이터는 원래부터 날짜가 없는 경우가 많아 매일 반복
     // 경고하면 의미가 없음.

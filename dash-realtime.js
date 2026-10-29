@@ -141,7 +141,7 @@ function _showRealtimeUpdateBanner(customer) {
   document.getElementById('realtime-dismiss-btn').addEventListener('click', function() { banner.remove(); });
 }
 
-// 2026-09-13(선혜님 - 유경진/황남주/손현영 저장충돌 원인 조사 후 "지금
+// 2026-09-13(선혜님 - 시험자/시험거/시험파 저장충돌 원인 조사 후 "지금
 // 진행해야지"로 결정): 지금까지는 "동시에 같은 고객을 두 곳에서 저장하려다
 // 충돌"이 일어난 뒤에야(저장 실패로) 알 수 있었음 - 미리 "지금 누가 이
 // 고객을 보고 있는지" 알려주면 애초에 충돌 자체를 줄일 수 있음.

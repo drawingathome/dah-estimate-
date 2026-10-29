@@ -88,7 +88,7 @@ async function blockRealNetwork(page) {
       if (url.includes('/rest/v1/app_settings') && url.includes('staff_emails')) {
         // 2026-08-27 추가 — doStaffConfirm/doMasterConfirm이 로그인 시
         // "이 사람이 진짜 누구인지" 재확인하려고 staff_emails를 조회함
-        // (보안수정: 조회 실패시 더 이상 마스터로 자동승격 안 됨). 이 요청을
+        // (보시험코: 조회 실패시 더 이상 마스터로 자동승격 안 됨). 이 요청을
         // 처리 안 해두면 req.abort()로 떨어져서 네트워크 에러가 되고,
         // 로그인 자체가 완료 안 됨 — 예전엔 "실패시 마스터로" 버그 덕에
         // 우연히 테스트가 통과했었음. 테스트용 스태프 목록(_테스트실장 등)을

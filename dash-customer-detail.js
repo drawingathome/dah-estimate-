@@ -178,7 +178,7 @@ function switchDetailTab(tab) {
 }
 
 function openDetail(name, id, forceTab) {
-  // 2026-08-28(선혜님 지적 — "유경진 이름 클릭하면 견적서 3개 나와", F5해도
+  // 2026-08-28(선혜님 지적 — "시험자 이름 클릭하면 견적서 3개 나와", F5해도
   // 그대로였던 문제와 같은 원인이 이 화면(고객상세 '정보'탭, 이름클릭으로
   // 들어오는 기본화면)에도 있었음): renderEstimateHistory()와 이력탭
   // 배지(dtab-est-cnt)가 전부 localStorage(dah_saved)만 그대로 읽고
@@ -198,7 +198,7 @@ function openDetailInner(name, id, forceTab) {
   // 재현이 안 돼서 오늘 검증에서 계속 놓쳤음 — 앞으로 클릭 경로까지 실제로 재현해서 검증할 것.
   var c = id ? customers.find(function(x) { return String(x.id) === String(id); }) : customers.find(function(x) { return x.clientName === name; });
   if (!c) {
-    // 2026-08-25(선혜님 발견 — 오지은 실장 계정에서 신화경님 견적 클릭시
+    // 2026-08-25(선혜님 발견 — 오지은 실장 계정에서 시험아님 견적 클릭시
     // "고객 정보를 찾을 수 없어요" 뜸): 로컬 캐시에 없으면 바로 실패 처리만
     // 하고 서버에 다시 물어보는 로직이 아예 없었음. 최근에 다른 기기/계정에서
     // 새로 만든 고객은 이 기기가 아직 동기화 전이라 당연히 로컬엔 없는데,
@@ -258,7 +258,7 @@ function openDetailInner(name, id, forceTab) {
   // 견적 건수 배지
   var all = []; try { all = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
   // 2026-08-31(선혜님 지시 - "더 디테일한 검사를 하길 바래"로 발견): 오늘
-  // clientId 매핑 누락 버그(신화경 사례)와 정확히 같은 위험 패턴 - 여기는
+  // clientId 매핑 누락 버그(시험아 사례)와 정확히 같은 위험 패턴 - 여기는
   // id 체크 자체가 없이 무조건 이름으로만 세고 있었음. 동명이인이 있으면
   // 서로의 견적 건수가 합쳐져서 잘못된 숫자("N건")가 표시될 수 있었음.
   var estCnt = all.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; }).length;
@@ -278,7 +278,7 @@ function openDetailInner(name, id, forceTab) {
   // 아직 견적서를 만든 적 없음) est 없이 한 번 호출해서 예전처럼
   // 고객(customers) 레벨 결제 폴백을 그대로 씀.
   //
-  // 2026-09-21(선혜님 지적 - "근본까지 하자": 김은/황남주 실사례로 발견한
+  // 2026-09-21(선혜님 지적 - "근본까지 하자": 김은/시험거 실사례로 발견한
   // 진짜 근본 원인): 위 "견적서가 있는지" 판단이 이 기기의 로컬 캐시
   // (dah_saved)만 보고 있어서, 서버엔 견적서가 실제로 있어도 이 기기
   // 로컬에 그게 없으면(다른 기기에서 결제 처리했거나 캐시가 비어있던
@@ -294,7 +294,7 @@ function openDetailInner(name, id, forceTab) {
     if (sorted.length === 0) {
       renderPaySection(c, payBody);
     } else {
-      // 2026-10-19(노지경 사례 - 한 번에 받은 3,200,000원에 침구 620,000원이 들어 있는데 침구 견적서에도 따로 620,000원을 적어 중복): 견적서가 2개 이상이면
+      // 2026-10-19(시험가 사례 - 한 번에 받은 3,200,000원에 침구 620,000원이 들어 있는데 침구 견적서에도 따로 620,000원을 적어 중복): 견적서가 2개 이상이면
       // 결제 탭 맨 위에 "이 고객의 앱 받은 돈 합계"를 크게 보여 줘서 통장 입금액과 바로 비교되게 함(입금은 견적서 안에 갇혀 있어 앱이 중복을 스스로 알 수 없음).
       if (sorted.length >= 2) {
         var perEst = sorted.map(function(e){
@@ -442,7 +442,7 @@ function renderDetailHeader(c) {
   var allEstsForCur = [];
   try { allEstsForCur = JSON.parse(localStorage.getItem('dah_saved')||'[]'); } catch(e) {}
   // 2026-08-31(선혜님 지시 - "더 디테일한 검사를 하길 바래"로 발견,
-  // 오늘 신화경 사건이 실제로는 여기서부터 시작됐을 가능성이 높음):
+  // 오늘 시험아 사건이 실제로는 여기서부터 시작됐을 가능성이 높음):
   // "고객상세 화면 상단에 항상 보이는 현재 견적 요약"이 id 체크 없이
   // 무조건 이름으로만 매칭하고 있었음 - 동명이인이 있으면 다른 사람의
   // 최근 견적이 이 고객의 "현재 견적"인 것처럼 화면 맨 위에 표시될 수
@@ -450,7 +450,7 @@ function renderDetailHeader(c) {
   var myEsts = allEstsForCur.filter(function(e){ return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; });
   myEsts.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
   var latestEst = myEsts[0];
-  // 2026-09-19(선혜님 - "노지경님 견적서가 1개였는데 내가 한개를 더
+  // 2026-09-19(선혜님 - "시험가님 견적서가 1개였는데 내가 한개를 더
   // 넣었어... 2건에 대한 건 없고 이거뿐이야" / "그래야지" - 확인 후
   // 진행): "진행중인 견적" 요약이 이 고객의 견적서가 여러 건이어도
   // 항상 "가장 최근 것 하나"만 보여주고 있었음 - 앞서 매출 계산

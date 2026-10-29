@@ -1,5 +1,5 @@
 // tests/est-card-pay-badge-check.js
-// 2026-10-20(이상옥 사례): 견적서 카드 배지가 고객 전체 단계가 아니라 "그 견적서의 결제 상태"(완납/선금)를 보여주는지(node 단독 시험).
+// 2026-10-20(시험카 사례): 견적서 카드 배지가 고객 전체 단계가 아니라 "그 견적서의 결제 상태"(완납/선금)를 보여주는지(node 단독 시험).
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const src = fs.readFileSync(path.resolve(__dirname, '..', 'dash-customer-estimates.js'), 'utf8');
 const m = src.match(/function estPayBadge[\s\S]*?\n}\n/);

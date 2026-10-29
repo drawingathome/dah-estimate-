@@ -1,11 +1,11 @@
 // tests/pay-history-check.js
-// 2026-10-11: 고객상세 "입금 내역 보기"의 계산(dash-pay-history.js) 검증 - 윤정자님 실제 이력 모양 기준.
+// 2026-10-11: 고객상세 "입금 내역 보기"의 계산(dash-pay-history.js) 검증 - 시험서님 실제 이력 모양 기준.
 const fs = require('fs'), path = require('path');
 const { buildPayHistoryEntries, formatPayHistoryLine } = new Function(fs.readFileSync(path.join(__dirname, '..', 'dash-pay-history.js'), 'utf8') + '\nreturn { buildPayHistoryEntries: buildPayHistoryEntries, formatPayHistoryLine: formatPayHistoryLine };')();
 let fail = 0;
 function ok(c, m) { console.log((c ? '✅ ' : '❌ ') + m); if (!c) fail++; }
 
-// 윤정자님 형태: 이력은 "바뀌기 직전 상태"
+// 시험서님 형태: 이력은 "바뀌기 직전 상태"
 const snaps = [
   { changed_at: '2026-10-03T03:49:58Z', snapshot: { deposit_amount: 0, deposit_date: '', balance_amount: 0, balance_date: '' } },
   { changed_at: '2026-10-06T07:52:02Z', snapshot: { deposit_amount: 100000, deposit_date: '2026-09-22', balance_amount: 0, balance_date: '' } },

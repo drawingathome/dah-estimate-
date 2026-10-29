@@ -65,7 +65,7 @@ function saveCustomerToDb(customer, callback) {
     }
     if (_origCallback) _origCallback(err, data);
   };
-  // 2026-08-28(선혜님 지적 — "이 문구는 왜 또 뜨지??", 배재연을 방금 등록한
+  // 2026-08-28(선혜님 지적 — "이 문구는 왜 또 뜨지??", 시험로을 방금 등록한
   // 직후 본인 화면에서 "다른 곳에서 방금 업데이트됐어요" 배너가 뜬 사례):
   // Realtime 구독은 "누가" 바꿨는지 구분 안 하고 이 브라우저 자신의 저장도
   // 그대로 되돌아와서 알려줌 - 그래서 본인이 방금 한 행동인데도 "다른 곳에서"
@@ -118,7 +118,7 @@ function saveCustomerToDb(customer, callback) {
             { customerPayload: row, reason: lockUpdatedAt ? '동시저장충돌' : '권한문제' });
         }
         // 2026-09-05(선혜님 지시 - "쌍둥이함수"로 발견, 실제 client_error_logs
-        // 데이터에서 "김 은"/"유경진" 고객정보가 짧은 간격으로 반복 저장
+        // 데이터에서 "김 은"/"시험자" 고객정보가 짧은 간격으로 반복 저장
         // 실패한 패턴 확인): est-save.js에 방금 고친 것과 정확히 같은
         // 쌍둥이 버그 - 동시저장충돌 감지 후 락값(customer.updatedAt)을
         // 갱신하는 코드가 없어서, 재시도해도 계속 예전(불일치) 락값 그대로
@@ -168,7 +168,7 @@ function saveCustomerToDb(customer, callback) {
   });
 }
 
-// 2026-10-08(선혜님 - "완납되었는데 상담으로 뜬다", 조유정 사례 / client_error_logs 서버 기록으로 확정):
+// 2026-10-08(선혜님 - "완납되었는데 상담으로 뜬다", 시험마 사례 / client_error_logs 서버 기록으로 확정):
 // 계약금 저장 1초 뒤 단계 변경이 "동시저장충돌"로 실패. 9/6·9/8에 같은 이유로 고쳤지만 "락값을 맞추는" 증상 수정이었음.
 // 진짜 문제는 단계만 바꾸는데 saveCustomerToDb가 이 기기에 있던 고객 전체(낡은 계약금 0원 포함)를 통째로 PATCH한다는 점 -
 // 락이 맞아떨어지면 방금 저장된 계약금이 0원으로 되돌아가고, 락이 안 맞으면 단계 변경이 실패함(둘 다 사고).
@@ -349,7 +349,7 @@ function archiveEstimate(est, callback) {
   if (typeof est.id === 'string' && est.id.length > 20) { // UUID면 서버(client_id 있는 정식 견적서)에도 반영
     sbXHR('DELETE', 'estimates?id=eq.' + est.id, null, function(err){
       if (err) { if (callback) callback(err); return; }
-      // 2026-10-13(김성은 사례): 견적서를 지우면 DB가 고객의 매출기준금액·성과매출에서 그 몫을 빼고 수정 시각(잠금값)도 바꿈 -
+      // 2026-10-13(시험바 사례): 견적서를 지우면 DB가 고객의 매출기준금액·성과매출에서 그 몫을 빼고 수정 시각(잠금값)도 바꿈 -
       // 화면의 고객 캐시도 서버 값으로 맞춰야 낡은 금액이 남거나 다음 저장이 가짜 충돌을 내지 않음. 이 조회가 실패해도 삭제 자체는 성공이므로 그대로 진행.
       var cid = est.clientId || est.client_id;
       if (!cid || typeof loadCustomers !== 'function') { if (callback) callback(null); return; }

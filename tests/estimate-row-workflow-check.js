@@ -23,7 +23,7 @@ function ok(l, c, d) { console.log((c ? '✅ ' : '❌ ') + l + (c ? '' : ' — '
   const center = (body, i) => page.evaluate((body, i) => document.querySelectorAll('#' + body + ' tr')[i].scrollIntoView({ block: 'center' }), body, i);
 
   // 2026-10-26 P-1(선혜님 지적: 같은 오류가 반복) — 견적서 작성 업무를 순서대로 한 번에 재생하는 시험.
-  // 김민아 견적서(커튼 6줄 + 블라인드 6줄) 구조로: 불러오기 → 줄 복사 → 복사본 끌어 이동 → 위치 이름 수정 → 줄 삭제 → 저장용 목록 → 다시 불러오기 → 문서 공간 순서.
+  // 시험구 견적서(커튼 6줄 + 블라인드 6줄) 구조로: 불러오기 → 줄 복사 → 복사본 끌어 이동 → 위치 이름 수정 → 줄 삭제 → 저장용 목록 → 다시 불러오기 → 문서 공간 순서.
   const C=(space,name,mw,pnum,price)=>({type:'curtain',space,displayName:name,mw:String(mw),mh:'265',pnum:String(pnum),price,hemType:'8cm',openType:'양개형',pleatType:'민자형',heightAdjust:'-3',shapeProcess:true});
   const B=(space,kind,price)=>({type:'blind',space,kind,displayName:kind,bmw:'100',bmh:'200',price,handle:'좌손',extra:0});
   const items=[C('거실','이븐 겉커튼',390,5,185000),C('거실','시소코 속커튼',390,6,135000),C('안방','라떼 암막',288,4,150000),C('자녀방 1 (테라스방)','굿나잇 암막',310,4,125000),C('자녀방 1 (테라스방)','PLS 1540 속커튼',310,5,75000),C('자녀방 2','셀마 암막',300,4,99000),

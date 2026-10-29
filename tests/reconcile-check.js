@@ -36,10 +36,10 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 70000);
       '거래일시\t적요\t입금액\t출금액\t잔액\t내용',
       '2026.10.01 10:12:33\t전자금융\t500,000\t0\t3,000,000\t김철수',
       '2026.10.03 09:00:00\t전자금융\t1,111,000\t0\t4,111,000\t홍길동',
-      '2026.10.05 11:30:00\t전자금융\t1,200,000\t0\t5,311,000\t이영욱',
+      '2026.10.05 11:30:00\t전자금융\t1,200,000\t0\t5,311,000\t시험라',
       '2026.10.07 14:00:00\t전자금융\t700,000\t0\t6,011,000\t이영희',
       '2026.10.08 14:00:00\t전자금융\t0\t300,000\t5,711,000\t환불출금',
-      '2026.10.12 16:20:00\t전자금융\t982,000\t0\t6,693,000\t이영욱'
+      '2026.10.12 16:20:00\t전자금융\t982,000\t0\t6,693,000\t시험라'
     ].join('\n');
     const r = await page.evaluate((bankText) => {
       const E = (id, cid, name, o) => Object.assign({ id, clientId: cid, clientName: name, price: 1000000, performanceRevenue: 900000, depositAmount: 0, depositDate: '', balanceAmount: 0, balanceDate: '' }, o);
@@ -47,11 +47,11 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 70000);
       localStorage.setItem('dah_saved', JSON.stringify([
         E('e1', 1, '김철수', { depositAmount: 500000, depositDate: '2026-10-01' }),
         E('e2', 2, '이영희', { balanceAmount: 700000, balanceDate: '2026-10-05' }),
-        E('e3', 3, '이영욱', { price: 1027000, depositAmount: 982000, depositDate: '2026-10-12', refundRows: [rf] }),
+        E('e3', 3, '시험라', { price: 1027000, depositAmount: 982000, depositDate: '2026-10-12', refundRows: [rf] }),
         E('e4', 4, '박민수', { depositAmount: 300000, depositDate: '2026-10-02' }),
         E('e5', 5, '범위밖', { depositAmount: 450000, depositDate: '2026-08-01' })
       ]));
-      const custs = [1, 2, 3, 4, 5].map(i => ({ id: i, clientName: ['김철수', '이영희', '이영욱', '박민수', '범위밖'][i - 1], staffName: '마스터', price: 1000000, depositAmount: 0, balanceAmount: 0 }));
+      const custs = [1, 2, 3, 4, 5].map(i => ({ id: i, clientName: ['김철수', '이영희', '시험라', '박민수', '범위밖'][i - 1], staffName: '마스터', price: 1000000, depositAmount: 0, balanceAmount: 0 }));
       const rows = reconParseTable(bankText);
       const det = reconDetectColumns(rows);
       const bank = reconBuildBankRows(rows, det);
@@ -62,9 +62,9 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 70000);
     }, bankText);
     ok(r.det.hasHeader && r.det.dateCol === 0 && r.det.amountCol === 2, '머리글·날짜 열(0)·입금액 열(2)을 자동으로 찾음(출금액·잔액 열은 선택 안 함)', r.det);
     ok(r.bankN === 5, '입금만 5건(출금 행은 제외)', r.bankN);
-    ok(r.matched.length === 4, '4건 일치(김철수·이영희·이영욱 환불된 입금·이영욱 재결제)', r.matched);
+    ok(r.matched.length === 4, '4건 일치(김철수·이영희·시험라 환불된 입금·시험라 재결제)', r.matched);
     ok(r.matched.indexOf('700000:이영희:2') >= 0, '날짜가 2일 달라도 오차(3일) 안이면 일치로 보고 차이를 표시', r.matched);
-    ok(r.matched.indexOf('1200000:이영욱:0') >= 0, '환불된 입금(120만)도 통장에 들어왔던 돈으로 일치 처리', r.matched);
+    ok(r.matched.indexOf('1200000:시험라:0') >= 0, '환불된 입금(120만)도 통장에 들어왔던 돈으로 일치 처리', r.matched);
     ok(JSON.stringify(r.bankOnly) === '[1111000]', '통장에만 있음: 111.1만(홍길동)', r.bankOnly);
     ok(JSON.stringify(r.appOnly) === '["박민수:300000"]', '앱에만 있음: 박민수 30만. 통장 기간 밖(8월) 입금은 비교 불가라 제외', r.appOnly);
 
@@ -90,7 +90,7 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 70000);
 
     // ── 3) 설정 화면 연동(붙여넣기 → 대조하기 → 결과) ──
     const ui = await page.evaluate(async (bankText) => {
-      saveCustomers([1, 2, 3, 4, 5].map(i => ({ id: i, clientName: ['김철수', '이영희', '이영욱', '박민수', '범위밖'][i - 1], staffName: '마스터', stage: '선금결제', price: 1000000, depositAmount: 0, balanceAmount: 0 })));
+      saveCustomers([1, 2, 3, 4, 5].map(i => ({ id: i, clientName: ['김철수', '이영희', '시험라', '박민수', '범위밖'][i - 1], staffName: '마스터', stage: '선금결제', price: 1000000, depositAmount: 0, balanceAmount: 0 })));
       window.loadEstimatesAsync = function (cb) { cb([]); };
       window.loadCustomersAsync = function (cb) { cb(loadCustomers()); };
       const wrap = document.createElement('div'); document.body.appendChild(wrap);

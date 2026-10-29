@@ -19,7 +19,7 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-  // 실제 손현영 케이스 재현: shapeProcess 필드 자체가 없는 예전 데이터
+  // 실제 시험파 케이스 재현: shapeProcess 필드 자체가 없는 예전 데이터
   const r1 = await page.evaluate(() => {
     var ctr = document.querySelector('#curtain-body tr');
     var it = { space: '거실', displayName: '린넨룩 아이보리 속커튼', mw: '445', mh: '249' }; // shapeProcess 필드 없음(예전 데이터)
@@ -27,7 +27,7 @@ async function run() {
     sp.checked = (it.shapeProcess !== undefined) ? !!it.shapeProcess : getDefaultShapeProcessChecked();
     return sp.checked;
   });
-  ok('1. 손현영 케이스 재현(shapeProcess 필드 없는 예전 데이터) → 기본값 O로 복원', r1 === true, 'checked=' + r1);
+  ok('1. 시험파 케이스 재현(shapeProcess 필드 없는 예전 데이터) → 기본값 O로 복원', r1 === true, 'checked=' + r1);
 
   // 명시적으로 false 저장된 경우(사용자가 실제로 X를 선택했던 경우) → 그 값 존중
   const r2 = await page.evaluate(() => {

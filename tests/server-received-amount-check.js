@@ -8,7 +8,7 @@ const ctx = { console, localStorage: { getItem: (k) => k === 'dah_saved' ? JSON.
 ctx.window = ctx; vm.createContext(ctx);
 for (const f of ['dash-utils.js']) { try { vm.runInContext(fs.readFileSync(path.join(dir, f), 'utf8'), ctx, { filename: f }); } catch (e) { console.log('로드 경고', e.message); } }
 const log = []; const ok = (l, c, d) => log.push((c ? '✅ ' : '❌ ') + l + (d ? ' — ' + d : ''));
-const c = { id: 262, clientName: '이다정', stage: '시공준비중', price: 586000, depositAmount: 324500, balanceAmount: 261500 };
+const c = { id: 262, clientName: '시험르', stage: '시공준비중', price: 586000, depositAmount: 324500, balanceAmount: 261500 };
 const unpaid = () => ctx.getUnpaidAmount(c);
 ctx.sbXHR = (m, p, d, cb) => cb(null, [{ customer_id: 262, price: 586000, received: 586000, unpaid: 0 }]);
 vm.runInContext('1', ctx);

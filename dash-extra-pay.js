@@ -21,7 +21,7 @@ function reopenAfterExtraPay(c) {
   if (typeof loadEstimatesAsync === 'function') loadEstimatesAsync(loadCust, true); else loadCust();
 }
 
-// 2026-10-20(이상옥 사례): 같은 고객의 "다른 견적서"가 받아야 할 돈(선금 50% / 남은 금액)과 입력 금액이 같으면 그 견적서를 알려줌.
+// 2026-10-20(시험카 사례): 같은 고객의 "다른 견적서"가 받아야 할 돈(선금 50% / 남은 금액)과 입력 금액이 같으면 그 견적서를 알려줌.
 // 침구 견적서 화면에서 커튼 선금 1,559,000원을 추가결제로 넣으려다 경고가 떴던 상황을 막기 위한 안내(입금은 견적서마다 따로 기록되므로).
 function findOtherEstimateForAmount(c, est, amount) {
   var all = [];

@@ -360,7 +360,7 @@ function filterCustLoad() {
 // 2026-08-05: 저장된 견적의 lineItems로 커튼/블라인드 표를 채우는 공용 함수.
 // "고객 불러오기" 팝업과 "견적서 앱에서 열기"(대시보드 진입) 두 경로 모두
 // 품목 복원이 안 되던 문제라 공용화해서 두 곳에서 재사용.
-// 2026-08-05: 이관된 예전 데이터(문혜자 등)는 line_items 자체가 원본에
+// 2026-08-05: 이관된 예전 데이터(시험포 등)는 line_items 자체가 원본에
 // 없어서 비어있음 — 텍스트 요약(fabric, "품목명(1,000원), ...")을 파싱해서
 // 최소한 품목명+금액이라도 채우는 폴백
 function parseProductString(str) {
@@ -428,7 +428,7 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       // 기본값이 시공서비스 항목에도 붙어 보였음). 'service'도 같이 인식하도록.
       // ('bedding'/'item'은 실제 제품 항목이라 원래대로 커튼 표로 가야 정상 —
       // 처음에 이것도 같이 옮기려 했다가 되돌림.
-      // 2026-10-09(선혜님 - 선금 있는 견적서 전수 검사 중 박윤아 사례로 발견: 저장 1,361,000원이
+      // 2026-10-09(선혜님 - 선금 있는 견적서 전수 검사 중 시험차 사례로 발견: 저장 1,361,000원이
       // 열면 1,577,000원): 블라인드 행을 복원하는 도중 옵션추가금 자동 행이 이미 만들어지는데,
       // 저장돼 있던 옵션추가금 행을 또 새 행으로 추가해서 같은 항목이 2번 들어갔음.
       // 이미 있는 옵션추가금 자동 행이 있으면 새로 만들지 않고 그 행에 저장값을 덮어씀.
@@ -453,7 +453,7 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
         // 복원 시점에 서로 다르므로(매번 새로 발급됨), 위치(공간) 이름이
         // 일치하는 커튼 행을 찾아 그 rowUid를 그대로 가져다 씀(같은
         // 폴백 방식을 getRailLengthText()에서도 이미 쓰고 있음).
-        // 2026-10-21(W2 1단계 — 윤세현 실데이터 확인에서 발견): 자동계산 항목이 아닌 줄(수동 추가 줄)도 저장 때 override=true로 기록되는데
+        // 2026-10-21(W2 1단계 — 시험타 실데이터 확인에서 발견): 자동계산 항목이 아닌 줄(수동 추가 줄)도 저장 때 override=true로 기록되는데
         // 열 때 이 표시를 복원하지 않아, 안 바꾸고 저장해도 값이 true→false로 바뀌었음(왕복 불변 깨짐). 저장된 true는 그대로 복원.
         if (!it.autoType && it.override === true) str.setAttribute('data-manual-override', '1');
         if (it.autoType) {
@@ -511,7 +511,7 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       // 하는" 유형이라, 저장 추가할 때 바로 여기도 함께 넣음(놓치는 걸 방지).
       var yd = ctr.querySelector('.c-yardage'); if (yd) yd.value = it.yardage || '';
       // 2026-09-12(선혜님 지적 - "형상가공 O으로 하자고 했는데 그런거 다
-      // 누락했네": 손현영 견적서 재현으로 발견): shapeProcess 필드가 아직
+      // 누락했네": 시험파 견적서 재현으로 발견): shapeProcess 필드가 아직
       // 없던 예전 저장 데이터(it.shapeProcess가 undefined)를 복원할 때
       // !!undefined가 항상 false가 되어 무조건 X로 뜨고 있었음 - 기본값
       // O 로직(getDefaultShapeProcessChecked)이 신규행에만 적용되고
@@ -608,7 +608,7 @@ function loadCustByIdx(el) {
   if(c.clientName && document.getElementById('c-name')) document.getElementById('c-name').value=c.clientName;
   if(c.phone && document.getElementById('c-phone')) document.getElementById('c-phone').value=c.phone;
   if(c.addr && document.getElementById('c-addr')) {
-    // 2026-10-01(선혜님 - 이민선 고객 사례로 발견: "실제 도로명주소를 넣었는데
+    // 2026-10-01(선혜님 - 시험다 고객 사례로 발견: "실제 도로명주소를 넣었는데
     // 상세주소만 저렇게 보이는거야" - 2026-09-22에 "이미 합쳐진 텍스트를 정규식
     // 으로 추측해서 쪼개는 방식 자체가 세 번 재발한 근본 원인"이라고 이미 결론
     // 내고 고객 추가 화면(openKakaoAddr)은 다른 방식으로 바꿨는데, 여기(견적서가
@@ -676,7 +676,7 @@ function calcDeposit() {
   var bal = grand - dep;
   var balEl = document.getElementById('sum-balance');
   if(balEl) balEl.textContent = bal.toLocaleString()+'원';
-  // 2026-08-24(선혜님 발견 — 최시내님 사례: 계약금을 직접 입력해도 위쪽
+  // 2026-08-24(선혜님 발견 — 시험커님 사례: 계약금을 직접 입력해도 위쪽
   // 검은 박스(TOTAL ESTIMATE)의 계약금/잔금 표시가 그대로 50% 자동계산값에
   // 멈춰있던 문제): 아래 "잔금" 줄만 갱신하고 위쪽 박스는 안 건드리고
   // 있었음 — 이 함수가 처음 만들어질 때부터 있던 누락으로 보임. 같이 갱신.

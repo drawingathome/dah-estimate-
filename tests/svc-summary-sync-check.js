@@ -19,7 +19,7 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-  // 1) 최금희 사례 재현: 기존 행의 단가를 직접 수정하면 요약카드가 즉시 갱신돼야 함
+  // 1) 시험나 사례 재현: 기존 행의 단가를 직접 수정하면 요약카드가 즉시 갱신돼야 함
   const r1 = await page.evaluate(() => {
     document.getElementById('svc-body').innerHTML = '';
     addSvcRow();

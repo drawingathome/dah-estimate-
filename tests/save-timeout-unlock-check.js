@@ -1,6 +1,6 @@
 // tests/save-timeout-unlock-check.js
 // 2026-09-21(선혜님 - "니가 한 자료 계속 똑같은 문제가 생기지 무조건
-// 원인 찾아!!" - 민소아 견적서: 실제 서버 DB(estimate_history,
+// 원인 찾아!!" - 시험하 견적서: 실제 서버 DB(estimate_history,
 // client_error_logs)를 직접 조회해도 토요일 저장 시도의 흔적이
 // 전혀 없던 두 번째 재발("인테리어오월"에 이어)로 원인 조사 중 발견):
 // xhr.onload/onerror 콜백이 브라우저 사정으로(탭이 백그라운드로

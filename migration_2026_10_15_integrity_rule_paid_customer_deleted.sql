@@ -1,6 +1,6 @@
 -- 2026-10-15 점검 규칙 PAID_CUSTOMER_DELETED: 최근 30일 안에 삭제된, 입금이 기록돼 있던 고객(테스트·진단 이름 제외)을 점검 카드에 띄움.
--- 계기: 신화경(시공완료, 오지은 실장 담당)이 10-11에 삭제된 것을 아무도 몰랐음. 삭제는 customer_history(before_delete)에서 복구 가능.
--- 운영 DB 적용 완료(신화경 1건 감지, security_invoker 유지 확인). 되돌리기: 이 규칙의 UNION ALL 블록을 뺀 정의로 create or replace 후 security_invoker 재설정.
+-- 계기: 시험아(시공완료, 오지은 실장 담당)이 10-11에 삭제된 것을 아무도 몰랐음. 삭제는 customer_history(before_delete)에서 복구 가능.
+-- 운영 DB 적용 완료(시험아 1건 감지, security_invoker 유지 확인). 되돌리기: 이 규칙의 UNION ALL 블록을 뺀 정의로 create or replace 후 security_invoker 재설정.
 DO $m$
 declare d text; d2 text;
   add_ text := $q$

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // tests/addr-detail-roundtrip-check.js
 // ══════════════════════════════════════════════════
-// 2026-10-06(선혜님 - "상세주소랑 따로 넣어도 왜 이렇게 뜨지?? 이 오류 여러번 말했지??", 9/15부터 반복 지적, 민지성 고객 화면):
+// 2026-10-06(선혜님 - "상세주소랑 따로 넣어도 왜 이렇게 뜨지?? 이 오류 여러번 말했지??", 9/15부터 반복 지적, 시험허 고객 화면):
 // 고객추가창에서 기본주소(서울 서대문구 통일로 339)와 상세주소(110동 901호)를 따로 넣어도, 견적서 화면에서 불러오면 전부 위 칸에
 // 합쳐지고 상세주소 칸이 비어 보였음. 원인: DB에 합친 addr 한 칸만 저장돼서 불러올 때 어디까지가 상세주소인지 알 수 없었고,
 // 9/15엔 글자 모양으로 추측해 쪼개다 틀렸고 10/1엔 쪼개기를 없앴음. 이제 customers.addr_detail에 상세주소를 따로 저장하고
@@ -82,14 +82,14 @@ async function newPage(browser, port, store) {
     await new Promise(r => setTimeout(r, 600));
     await page.evaluate(() => {
       localStorage.setItem('dah_customers', JSON.stringify([
-        { id: 501, clientName: '민지성', phone: '010-3637-5050', addr: '서울 서대문구 통일로 339 110동 901호', addrDetail: '110동 901호', stage: '상담', date: '2026-10-06' },
+        { id: 501, clientName: '시험허', phone: '010-9000-9001', addr: '서울 서대문구 통일로 339 110동 901호', addrDetail: '110동 901호', stage: '상담', date: '2026-10-06' },
         { id: 502, clientName: '옛고객', phone: '010-2222-2222', addr: '서초구 반포대로 275 래미안 퍼스티지 110동 702호', addrDetail: '', stage: '상담', date: '2026-08-04' },
       ]));
       const btn = document.createElement('button'); btn.setAttribute('data-idx', '0'); loadCustByIdx(btn);
     });
     await new Promise(r => setTimeout(r, 400));
     const vals = await page.evaluate(() => ({ b: document.getElementById('c-addr').value, d: document.getElementById('c-addr2').value }));
-    ok('4-1. [견적서 화면] 따로 저장된 주소가 기본주소 칸/상세주소 칸으로 나뉘어 표시됨(민지성 화면 재현)', vals.b === '서울 서대문구 통일로 339' && vals.d === '110동 901호', JSON.stringify(vals));
+    ok('4-1. [견적서 화면] 따로 저장된 주소가 기본주소 칸/상세주소 칸으로 나뉘어 표시됨(시험허 화면 재현)', vals.b === '서울 서대문구 통일로 339' && vals.d === '110동 901호', JSON.stringify(vals));
     await page.evaluate(() => { const btn = document.createElement('button'); btn.setAttribute('data-idx', '1'); loadCustByIdx(btn); });
     await new Promise(r => setTimeout(r, 400));
     const vals2 = await page.evaluate(() => ({ b: document.getElementById('c-addr').value, d: document.getElementById('c-addr2').value }));
@@ -118,7 +118,7 @@ async function newPage(browser, port, store) {
 
     // 2) 따로 입력해 저장 → addr + addr_detail
     await page.evaluate(() => { window.daum = { Postcode: function (o) { this.open = function () { o.oncomplete({ roadAddress: '서울 서대문구 통일로 339', buildingName: '', query: '통일로 339' }); }; } }; });
-    await setNative('add-name', '민지성'); await setNative('add-phone', '01036375050');
+    await setNative('add-name', '시험허'); await setNative('add-phone', '01090009001');
     await page.evaluate(() => document.getElementById('add-addr').click());
     await new Promise(r => setTimeout(r, 300));
     await setNative('add-addr-detail', '110동 901호');

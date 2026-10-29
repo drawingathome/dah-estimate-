@@ -110,8 +110,8 @@ async function fillForm(page, price) {
   await page.evaluate((price) => {
     window._estEditState.estSaveCustomerId = 501;
     const set = (id, v) => { const el = document.getElementById(id); if (el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); } };
-    if (!document.getElementById('c-name').value) set('c-name', '노지경');
-    if (!document.getElementById('c-phone').value) set('c-phone', '01089130078');
+    if (!document.getElementById('c-name').value) set('c-name', '시험가');
+    if (!document.getElementById('c-phone').value) set('c-phone', '01090009010');
     set('c-addr', '경기 과천시 별양로 11'); set('c-measure', '2026-10-05'); set('c-install', '2026-10-15');
     if (document.querySelectorAll('#curtain-body tr').length === 0) addCurtainRow();
     const tr = document.querySelector('#curtain-body tr');
@@ -134,7 +134,7 @@ async function clickSave(page) {
   let allOk = true;
   const sharedBrowser = await launchBrowser(); // localStorage가 유지되는 하나의 브라우저 - 실제 "같은 컴퓨터, 새 탭"을 정확히 흉내
 
-  console.log('=== 1일차: 노지경 고객 견적서 새로 작성 ===');
+  console.log('=== 1일차: 시험가 고객 견적서 새로 작성 ===');
   { const { page } = await openPage(port, '', {}, sharedBrowser);
     await fillForm(page, 1000000); await clickSave(page); await page.close(); }
   log(`저장 후 DB 상태: ${fakeDb.length}건, is_archived=[${fakeDb.map(r => r.is_archived)}]`);

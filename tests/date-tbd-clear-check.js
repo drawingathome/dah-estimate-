@@ -1,5 +1,5 @@
 // tests/date-tbd-clear-check.js
-// 2026-09-21(선혜님 - 전보현/민소아 고객 실제 발생 확인, 데이터는
+// 2026-09-21(선혜님 - 시험러/시험하 고객 실제 발생 확인, 데이터는
 // Supabase에서 직접 고침): 대시보드 고객상세에서 실측/시공 예정일을
 // 클릭해서 실제 날짜를 입력해도, 예전에 "미정"으로 체크해뒀던 경우
 // 그 플래그(measure_date_tbd/install_date_tbd)가 그대로 남아있어서,
@@ -70,10 +70,10 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-  // 전보현 재현: 실측 예정일이 예전엔 "미정"이었던 고객, 지금 실제 날짜를 입력
+  // 시험러 재현: 실측 예정일이 예전엔 "미정"이었던 고객, 지금 실제 날짜를 입력
   await page.evaluate(() => {
-    saveCustomers([{ id: 9500, clientName: '전보현재현', phone: '01055556666', stage: '실측준비중', staffName: '마스터', measureDate: '', measureDateTbd: true }]);
-    openDetail('전보현재현', 9500);
+    saveCustomers([{ id: 9500, clientName: '시험러재현', phone: '01055556666', stage: '실측준비중', staffName: '마스터', measureDate: '', measureDateTbd: true }]);
+    openDetail('시험러재현', 9500);
   });
   await new Promise(r => setTimeout(r, 500));
   const clickResult = await page.evaluate(() => {

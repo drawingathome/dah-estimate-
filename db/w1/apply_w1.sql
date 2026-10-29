@@ -15,7 +15,7 @@ create table backup_w1_20261022.old_defs as
   union all
   select 'view', c.relname::text, pg_get_viewdef(c.oid, true) from pg_class c where c.relnamespace='public'::regnamespace and c.relname='data_integrity_issues';
 -- ① 단계·금액 자동 규칙
--- 2026-10-20  단계·기준금액을 DB가 한 곳에서 맞추기 (이민선·조유정·이상옥 사례)
+-- 2026-10-20  단계·기준금액을 DB가 한 곳에서 맞추기 (시험다·시험마·시험카 사례)
 -- 원칙: 화면(버튼) 코드가 아니라 DB 규칙이 단계·고객 기준금액을 맞춘다. 어느 화면에서 저장해도 같은 결과.
 -- 안전: 애매한 경우(견적서 여러 개 중 일부만 입금 등)는 자동으로 옮기지 않고 점검 카드로만 알린다.
 

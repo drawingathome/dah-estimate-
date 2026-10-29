@@ -10,7 +10,7 @@
 // 다르면(신뢰할 수 없는 스냅샷) 얼림 자체를 적용 안 하고 재계산된
 // 정확한 값을 그대로 둠 - 예전 버그 데이터를 다시 입력/저장하지 않고
 // 그냥 열기만 해도, 최소한 "화면 항목=총액"이라는 앞뒤가 맞는 상태는
-// 항상 보장됨. 신안라님 실제 상황(커튼 500만원 하나 + 저장된 finalTotal
+// 항상 보장됨. 시험더님 실제 상황(커튼 500만원 하나 + 저장된 finalTotal
 // 28,134,000원, 서로 안 맞음)을 그대로 재현해서 검증.
 const path = require('path');
 const { launchBrowser, startServer, setupValidSession } = require('./_helpers');
@@ -26,7 +26,7 @@ async function run() {
   page.on('dialog', async d => { try { await d.accept(); } catch (e) {} });
 
   const oldBuggyEstimate = {
-    id: 'old-buggy-est', client_id: 1300, customer_name: '신안라재현테스트', phone: '010-1111-2222',
+    id: 'old-buggy-est', client_id: 1300, customer_name: '시험더재현테스트', phone: '010-1111-2222',
     addr: '서울시 강남구', region: '서울',
     line_items: [
       { type: 'curtain', space: '거실', displayName: '거실커튼', mw: 300, mh: 250, price: 5000000, qty: 1 }
@@ -71,7 +71,7 @@ async function run() {
   ok('1. 예전에 저장된 앞뒤 안 맞는 총액(28,134,000원)이 더는 그대로 노출되지 않음', !state.screenTotalText.includes('28,134,000'), JSON.stringify(state));
   ok('2. 얼림 상태가 자동으로 풀려서, 이후 편집시 정상적으로 재계산됨', state.frozen === false, JSON.stringify(state));
   // 2026-09-21(선혜님 - "100만원 선금이 정리가 되어있는데 왜 계약금
-  // 3,359,000원으로 정리가 되냐고" - 민소아 견적서로 실제 재현된
+  // 3,359,000원으로 정리가 되냐고" - 시험하 견적서로 실제 재현된
   // 부작용): 총액 불일치로 얼림을 안 적용하는 상황에서도, 이미 실제로
   // 받은 계약금(50%가 아닌 임의 금액, 예: 100만원)이 자동 50% 추정치로
   // 조용히 덮어써지면 안 됨 - 저장된 계약금 그대로 유지되는지 검증.

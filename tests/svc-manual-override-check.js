@@ -1,5 +1,5 @@
 // tests/svc-manual-override-check.js
-// 2026-09-19(선혜님 - "신안라 님 견적서 확인해봐... 다시 열어보니
+// 2026-09-19(선혜님 - "시험더 님 견적서 확인해봐... 다시 열어보니
 // 실측+레일비가 765,000원+604,800원인데 금액은 똑같이 28,134,000원이
 // 나오는데 이게 말이 되니?????????"): 실측비/시공비/레일 등 자동계산
 // svc 항목의 단가를 사용자가 직접 수정해도, "자동생성이라 재계산으로
@@ -33,7 +33,7 @@ async function run() {
       if (method === 'OPTIONS') { req.respond({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Allow-Headers': '*' } }); return; }
       if (url.includes('/estimates') && url.includes('saved-override-est') && method === 'GET') {
         req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify([{
-          id: 'saved-override-est', client_id: 1000, customer_name: '신안라테스트', phone: '010-1111-2222',
+          id: 'saved-override-est', client_id: 1000, customer_name: '시험더테스트', phone: '010-1111-2222',
           addr: '서울시 강남구', region: '서울', line_items: savedLineItems.current || [],
           updated_at: new Date().toISOString(), created_at: new Date().toISOString(), confirmed_at: null
         }]) });
@@ -62,7 +62,7 @@ async function run() {
 
   // 1) 커튼 입력 → 실측비/레일 자동생성 → 사용자가 직접 단가 수정
   await page.evaluate(() => {
-    document.getElementById('c-name').value = '신안라테스트';
+    document.getElementById('c-name').value = '시험더테스트';
     document.getElementById('c-phone').value = '010-1111-2222';
     document.getElementById('c-addr').value = '서울시 강남구';
     document.getElementById('c-region').value = '서울';
@@ -111,7 +111,7 @@ async function run() {
       if (method === 'OPTIONS') { req.respond({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Allow-Headers': '*' } }); return; }
       if (url.includes('/estimates') && url.includes('saved-override-est') && method === 'GET') {
         req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify([{
-          id: 'saved-override-est', client_id: 1000, customer_name: '신안라테스트', phone: '010-1111-2222',
+          id: 'saved-override-est', client_id: 1000, customer_name: '시험더테스트', phone: '010-1111-2222',
           addr: '서울시 강남구', region: '서울', line_items: savedLineItems.current || [],
           updated_at: new Date().toISOString(), created_at: new Date().toISOString(), confirmed_at: null
         }]) });

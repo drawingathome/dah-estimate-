@@ -1,5 +1,5 @@
 // tests/customer-price-sum-check.js
-// 2026-09-19(선혜님 - "노지경님 견적서가 1개였는데 내가 한개를 더
+// 2026-09-19(선혜님 - "시험가님 견적서가 1개였는데 내가 한개를 더
 // 넣었어 근데 결제 체크를 하려고 보니 총 2건에 대한 결제가 되야 하는데
 // 이 부분은 기존꺼랑 그대로인거 같네"): 견적서를 저장할 때마다
 // customers.price/performance_revenue를 "이번 견적서 하나"의 금액으로
@@ -64,11 +64,11 @@ async function run() {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await new Promise(r => setTimeout(r, 800));
 
-  // "노지경" 고객 - 기존 견적서(estSaveCustomerId=900)가 이미 있는 상태로, 새 견적서(80만원)를 저장
+  // "시험가" 고객 - 기존 견적서(estSaveCustomerId=900)가 이미 있는 상태로, 새 견적서(80만원)를 저장
   await page.evaluate(() => {
     window._estEditState.estSaveCustomerId = 900;
     window._estEditState.editingEstDbId = null; // 새 견적서(복사/신규)를 저장하는 상황 - 기존 A는 조회 대상에 포함, 제외 안 함
-    document.getElementById('c-name').value = '노지경';
+    document.getElementById('c-name').value = '시험가';
     document.getElementById('c-phone').value = '010-1234-5678';
     document.getElementById('c-addr').value = '서울시 강남구';
     document.getElementById('c-region').value = '서울';

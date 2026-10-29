@@ -23,7 +23,7 @@ async function run() {
       if (url.includes('/estimates?id=eq.test-est-choi')) {
         req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
           body: JSON.stringify([{
-            id: 'test-est-choi', customer_name: '최금희재현', phone: '01099981234', addr: '서울 서초구', price: 3582000, deposit_amount: 750000, balance_amount: 0,
+            id: 'test-est-choi', customer_name: '시험나재현', phone: '01099981234', addr: '서울 서초구', price: 3582000, deposit_amount: 750000, balance_amount: 0,
             line_items: [
               { type: 'curtain', space: '거실', mw: 550, mh: 264.5, pnum: 9, price: 185000, displayName: '린 겉커튼', pleatType: '나비주름형', openType: '양개형', hemType: '리드', heightAdjust: '-3', shapeProcess: true },
               { type: 'blind', kind: '롤스크린', space: '거실측면', bmw: 83, bmh: 195, price: 90000, displayName: '울트라 슬림 아이보리 롤 블라인드', opt: '하단 감쌈 (사각)', handle: '기타' },
@@ -48,7 +48,7 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-  // 최금희 실사례 완전 재현: 할인쿠폰이 적용된 견적서를 loadEstDbId로
+  // 시험나 실사례 완전 재현: 할인쿠폰이 적용된 견적서를 loadEstDbId로
   // 불러오면, 할인 복원 과정에서 생기는 "보호 안 된 임시 50%값"에
   // 진짜 계약금(750,000원)이 가려지지 않고 정확히 채워져야 함
   const r1 = await page.evaluate(() => {

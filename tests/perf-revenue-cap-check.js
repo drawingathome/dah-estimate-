@@ -1,4 +1,4 @@
-// 이영욱 사례: 받은 돈(선금 1,200,000)이 총액(982,000)보다 커도 성과매출이 총액(862,000)을 넘으면 안 됨 (순수 계산 검사, 브라우저 불필요)
+// 시험라 사례: 받은 돈(선금 1,200,000)이 총액(982,000)보다 커도 성과매출이 총액(862,000)을 넘으면 안 됨 (순수 계산 검사, 브라우저 불필요)
 const vm = require('vm'), fs = require('fs'), path = require('path');
 const dir = path.resolve(__dirname, '..');
 const ctx = { console, localStorage: { getItem: () => '[]', setItem() {} }, document: { getElementById: () => null }, Date, Math, JSON, Number, parseInt, Array, Object, String,

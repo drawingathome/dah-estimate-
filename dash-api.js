@@ -16,7 +16,7 @@ var DRIVE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyyNG-Y6sABngKq
 
 function sbXHR(method, path, data, callback, _retried) {
   // 2026-10-06: 요청이 나가는 순간 토큰이 만료됐거나 30초 안에 만료되면 먼저 갱신한 뒤 보냄(탭을 오래 두고 돌아와 곧바로 저장하면
-  // 갱신이 끝나기 전에 옛 토큰으로 나가 401로 거절돼 입력이 서버에 안 닿던 문제 - 이민선님 잔금). _retried=true면 한 번 더 점검하지 않음(무한 루프 방지).
+  // 갱신이 끝나기 전에 옛 토큰으로 나가 401로 거절돼 입력이 서버에 안 닿던 문제 - 시험다님 잔금). _retried=true면 한 번 더 점검하지 않음(무한 루프 방지).
   if (!_retried && typeof getAuthSession === 'function' && typeof refreshAuthSessionForce === 'function') {
     var _s = getAuthSession();
     if (_s && typeof _s.expires_at === 'number' && _s.expires_at - Date.now() < 30 * 1000) {

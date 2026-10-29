@@ -16,7 +16,7 @@ async function run() {
 
   const result = await page.evaluate(async () => {
     saveCustomers([
-      { id: 1001, clientName: '구정화재현', phone:'01049290527', stage:'선금결제', staffName:'마스터', date: '2026-07-11', depositAmount: 2500000, depositDate: '2026-07-11', measureDate: '2026-08-07' },
+      { id: 1001, clientName: '시험퍼재현', phone:'01090009013', stage:'선금결제', staffName:'마스터', date: '2026-07-11', depositAmount: 2500000, depositDate: '2026-07-11', measureDate: '2026-08-07' },
       { id: 1002, clientName: '미입금테스트', phone:'01000000000', stage:'선금결제', staffName:'마스터', date: '2026-08-01', depositAmount: 0 },
       { id: 1003, clientName: '확정견적테스트', phone:'01000000001', stage:'확정견적', staffName:'마스터', date: '2026-08-01', orderStatus: {} }
     ]);
@@ -26,7 +26,7 @@ async function run() {
     renderHome(true);
     var todoText = document.getElementById('sec-todo').textContent;
 
-    openDetail('구정화재현', 1001, 'order');
+    openDetail('시험퍼재현', 1001, 'order');
     // 2026-09-21(견적서별 결제 관리 전환 후 CI에서 처음 드러남): openDetail()은
     // loadEstimatesAsync()를 거치는 비동기 함수인데, 이 테스트는 호출 직후
     // 바로 document.body.textContent를 읽고 있었음 - 원래도 타이밍에 취약한
@@ -41,12 +41,12 @@ async function run() {
   });
 
   const checks = [
-    !result.todoText.match(/구정화재현[\s\S]{0,50}선금결제 처리/),
+    !result.todoText.match(/시험퍼재현[\s\S]{0,50}선금결제 처리/),
     result.todoText.includes('미입금테스트') && result.todoText.includes('선금결제 처리'),
     result.todoText.includes('확정견적테스트') && result.todoText.includes('발주 필요'),
     result.orderTabText.includes('확정견적 단계부터')
   ];
-  console.log('이미 입금된 구정화재현이 "결제처리"로 안 뜸:', checks[0] ? '✅' : '❌');
+  console.log('이미 입금된 시험퍼재현이 "결제처리"로 안 뜸:', checks[0] ? '✅' : '❌');
   console.log('미입금인 미입금테스트는 "결제처리" 뜸:', checks[1] ? '✅' : '❌');
   console.log('확정견적테스트는 "발주 필요" 뜸:', checks[2] ? '✅' : '❌');
   console.log('선금결제 단계 발주탭에 안내문구 확인:', checks[3] ? '✅' : '❌');

@@ -11,7 +11,7 @@
    tests/save-golden-master-check.js(저장 동작 기록이 글자 단위로 동일한지 비교).
    ══════════════════════════════════════════════════ */
 
-// 2026-09-19(선혜님 - "노지경님 견적서가 1개였는데 내가 한개를 더
+// 2026-09-19(선혜님 - "시험가님 견적서가 1개였는데 내가 한개를 더
 // 넣었어" - 재구매/여러 견적서 고객 시나리오로 발견): customers.price/
 // performance_revenue가 "이번에 저장하는 견적서 하나"의 금액으로 매번
 // 통째로 덮어써지고 있었음 - 한 고객에게 견적서가 2개 이상이면, 나중에
@@ -54,7 +54,7 @@ function _saveStage_customers(ctx) {
       } catch (eSum) { sumFailed = true; console.warn('다른 견적서 합계 조회 파싱 실패:', eSum); }
       proceed(otherGrand, otherPerf, sumFailed, thisPaid, otherPaidCount);
     };
-    // 2026-10-01(선혜님 - "최금희 외 다른 고객이 문제있는건 확인 가능하니?? 쌍둥이 함수
+    // 2026-10-01(선혜님 - "시험나 외 다른 고객이 문제있는건 확인 가능하니?? 쌍둥이 함수
     // 모두 확인해" 요청으로 발견): 조회가 네트워크 오류로 실패하면 "다른 견적서 금액=0"으로
     // 간주해서 proceed(0,0)으로 넘기고 있었음 - 그러면 아래에서 custPayload.price/
     // performance_revenue가 "이번 견적서 금액만"으로 서버값을 덮어써서, 이 고객의 다른
@@ -102,7 +102,7 @@ function proceed(otherEstGrand, otherEstPerf, sumFailed, thisEstPaid, otherPaidC
     var isUpdate = !!existingCustId;
     xhr.open(isUpdate ? 'PATCH' : 'POST', SUPABASE_URL+'/rest/v1/customers'+(isUpdate ? '?id=eq.'+existingCustId : ''), true);
     // 2026-09-21(선혜님 - "니가 한 자료 계속 똑같은 문제가 생기지
-    // 무조건 원인 찾아!!" - 민소아 견적서, 서버 이력엔 그날 기록이
+    // 무조건 원인 찾아!!" - 시험하 견적서, 서버 이력엔 그날 기록이
     // 전혀 없던 두 번째 재발로 원인 조사 중 발견): xhr.onload/onerror
     // 콜백이 브라우저 사정으로(탭이 백그라운드로 전환되며 요청이
     // 멈추는 등, 오지은 실장님 태블릿 사례와 같은 유형) 영원히 한
@@ -132,7 +132,7 @@ function proceed(otherEstGrand, otherEstPerf, sumFailed, thisEstPaid, otherPaidC
       } else {
         var resData = null;
         try { resData = xhr.responseText ? JSON.parse(xhr.responseText) : []; } catch(eP) { resData = null; }
-        // 2026-10-11(선혜님 - "시간차가 나도 자꾸 충돌한다", 마스터 PC 한 대에서도 발생 - 김현정/이민선/조유정 이력 시각 대조로 확정):
+        // 2026-10-11(선혜님 - "시간차가 나도 자꾸 충돌한다", 마스터 PC 한 대에서도 발생 - 시험사/시험다/시험마 이력 시각 대조로 확정):
         // 견적서 앱의 이 고객 저장은 잠금 없이 고객 행을 갱신하는데, 그때마다 DB가 고객의 updated_at(잠금값)을 새로 찍음.
         // 같은 브라우저를 쓰는 대시보드는 이 고객 목록 캐시(dah_customers)의 예전 updated_at을 그대로 들고 있어서,
         // 몇 분~몇 시간 뒤 대시보드에서 그 고객을 저장하면 "다른 곳에서 먼저 저장"으로 오판해 충돌했음. 서버가 준 새 시각을 캐시에 바로 반영.
@@ -201,7 +201,7 @@ function proceed(otherEstGrand, otherEstPerf, sumFailed, thisEstPaid, otherPaidC
     if (addrCombined || !isUpdate) custPayload.addr_detail = addr2 || null; // 2026-10-06: 상세주소를 따로 저장해 불러올 때 다시 나눠 보여줌
     // 2026-09-08(선혜님 지시 - "날짜 단일화" 논의 중 "각자 다 다르잖아"로
     // 발견: 재구매 고객은 견적서마다 실측일/시공일이 다름(실제 사례:
-    // 김명석 고객이 8/4·8/22에 서로 다른 프로젝트로 2건 견적) - 그래서
+    // 시험소 고객이 8/4·8/22에 서로 다른 프로젝트로 2건 견적) - 그래서
     // "고객 레코드에 날짜 하나만"으로 단일화하면 재구매시 이전 견적의
     // 날짜 정보가 사라지는 데이터 손실 위험이 있어 그 방향은 폐기함.
     // 대신: 각 견적서는 그대로 자기만의 날짜를 유지하되(estimates 테이블,
@@ -230,7 +230,7 @@ function proceed(otherEstGrand, otherEstPerf, sumFailed, thisEstPaid, otherPaidC
     // 혹시 오래 방치돼도 하위호환 폴백에 잘못 걸리지 않도록 안전하게 둠.
     //
     // 2026-08-28(선혜님 지적 — "결제도 대시보드쪽에 적으면 견적서에
-    // 같이 적어지게 해줘", 최시내 사례로 발견: 선금 200만원을 실제
+    // 같이 적어지게 해줘", 시험커 사례로 발견: 선금 200만원을 실제
     // 받았는데도 칸반카드엔 금액이 하나도 안 보였음): 위 gate가
     // "확정견적일 때만"이라 가견적 단계인 고객은 견적을 몇 번을 다시
     // 저장해도 customers.price가 계속 0으로 남아서, 칸반카드의 금액
@@ -262,7 +262,7 @@ function proceed(otherEstGrand, otherEstPerf, sumFailed, thisEstPaid, otherPaidC
 function _saveStage_estimates(ctx) {
   // 2026-09-30(선혜님 - "하자" - "둘 다 안 맞는거 같은데 전문업체서는 어떻게 하니" 요청으로
   // 제거): 여기 있던 "오늘 이미 저장된 견적 찾기" 안전장치(2026-08-26 도입, 08-31 한 번 더
-  // 보강)를 완전히 제거함. 실제로 "노지경 고객에게 견적서를 4개 연속으로 만들면 몇 개가
+  // 보강)를 완전히 제거함. 실제로 "시험가 고객에게 견적서를 4개 연속으로 만들면 몇 개가
   // 남는가"를 직접 재현해서 확인한 결과, 이 안전장치가 매번 오늘 만든 이전 견적서를 찾아
   // PATCH로 계속 덮어써서 4개를 만들어도 서버엔 항상 1개만 남는 것을 확인함 - "실수로
   // 중복 저장"과 "의도적으로 두 번째 견적서를 만드는 것"을 이 로직(같은 날 + 같은 고객
@@ -344,7 +344,7 @@ function _saveStage_estimatesActual(ctx) {
     customer_name:name, price:grand,
     performance_revenue:perf, staff_name:staffName,
     // 2026-09-22(선혜님 지적 - "PC에서 확정을 하고 핸드폰에서 보면
-    // 확정이 풀려있어" - 최금희 실사례로 발견): estimate_status가
+    // 확정이 풀려있어" - 시험나 실사례로 발견): estimate_status가
     // "확정" 버튼(estimateConfirmedAt)과 무관하게, 그 순간 "가견적서/
     // 최종견적서" 탭이 뭐였는지(currentTab)만 보고 정해지고 있었음 -
     // 확정 버튼을 안 눌러도 "최종견적서" 탭만 보고 있다가 저장하면
@@ -399,7 +399,7 @@ function _saveStage_estimatesActual(ctx) {
     // 2026-08-24(선혜님 확인 — "다시 열어도 저장 당시 금액 그대로"): 제품소계/
     // 시공자재/할인/최종금액/계약금/잔금 스냅샷을 같이 저장. 안 하면 견적을
     // 나중에 다시 열었을 때 그 사이 바뀐 할인쿠폰/설정으로 재계산되어 금액이
-    // 달라지는 문제가 있었음(최시내님 사례로 발견 — 저장시 482만원이었는데
+    // 달라지는 문제가 있었음(시험커님 사례로 발견 — 저장시 482만원이었는데
     // 나중에 다시 여니 490.9만원으로 나옴).
     price_breakdown: window._estEditState.lastCalcBreakdown || null
   }, currentCustType === 'as' ? {
@@ -465,7 +465,7 @@ function _saveStage_estimatesActual(ctx) {
     // 받아서 실제 몇 건이 바뀌었는지 확인하도록 수정.
     // 2026-09-22(선혜님 - "버그를 고쳐도 왜 같은 버그가 생기지, 쌍둥이
     // 함수까지 찾아" 지시로 끝까지 추적해서 발견한 진짜 근본원인 -
-    // 최금희 견적서 매출기준금액 2배 부풀림 사건): 이 줄이 완전히
+    // 시험나 견적서 매출기준금액 2배 부풀림 사건): 이 줄이 완전히
     // 거꾸로였음 - isEditMode(수정)일 때 return=representation을 쓰는
     // 건 맞지만, 신규 저장(!isEditMode, POST)일 때 정확히 그 반대
     // (return=minimal, 빈 응답)를 쓰고 있었음. 근데 바로 아래 코드가
@@ -473,7 +473,7 @@ function _saveStage_estimatesActual(ctx) {
     // editingEstDbId에 저장"하는 로직이라, 이 두 부분이 정확히 서로
     // 모순됐음: 신규 저장 성공 직후 응답 바디가 항상 비어있어서
     // JSON.parse('')가 예외를 던지고, editingEstDbId가 설정되지
-    // 않은 채로 남음. 그 상태에서 같은 화면을 재저장하면(최금희님처럼
+    // 않은 채로 남음. 그 상태에서 같은 화면을 재저장하면(시험나님처럼
     // 확인창이 뜨는 사이 다시 눌러서), saveToCustomers()의 "다른
     // 견적서 합계" 조회가 자기 자신(방금 만든 그 견적서)을 editingEstDbId
     // 로 제외해야 하는데 그 값이 비어있으니 제외를 못 하고 그대로 세어서,
@@ -505,7 +505,7 @@ function _saveStage_estimatesActual(ctx) {
               // 재시도는 위험하니 큐에 안 넣는다"는 판단까지는 맞지만,
               // 그럼 그 내용 자체를 아예 어디에도 안 남기고 있었음 -
               // 유일한 백업이던 자동저장 초안(dah_estimate_draft)도
-              // 60분 지나면 지워지는 임시용이라, 신화경 사례처럼 며칠
+              // 60분 지나면 지워지는 임시용이라, 시험아 사례처럼 며칠
               // 뒤엔 이미 사라지고 없었음. 재시도는 안 하되(위험 방지는
               // 유지), 이 payload 자체는 기한 없이 별도 보관해서 절대
               // 사라지지 않게 함 - 나중에 마스터가 이 백업을 보고 수동
@@ -561,7 +561,7 @@ function _saveStage_estimatesActual(ctx) {
               // 공용 함수로 뽑아냄 - 조회 로직 자체의 버그는 이제 고칠
               // 곳이 한 곳뿐이라, 한쪽만 고치고 깜빡하는 실수가 구조적
               // 으로 불가능해짐.
-              // 2026-10-11(선혜님 - 오지은 실장님이 같은 견적서를 두 기기에서 열어두고 저장하다 한국화님 건에서 발견):
+              // 2026-10-11(선혜님 - 오지은 실장님이 같은 견적서를 두 기기에서 열어두고 저장하다 시험가가님 건에서 발견):
               // 위처럼 거절 직후 락값을 "자동으로" 새로 맞추면, 실장님이 저장을 한 번 더 누르는 순간 아무 확인 없이
               // 다른 기기에서 먼저 저장한 내용을 덮어쓰게 됨. 동시저장충돌일 때는 자동 갱신을 하지 않고, 최신 내용을
               // 먼저 볼지 / 내 내용으로 덮어쓸지를 직접 고르게 함(덮어쓰기를 고르면 그때서야 락값을 맞추고 서버에 기록).

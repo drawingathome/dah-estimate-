@@ -267,7 +267,7 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
           window._estCurrentUser = { name: '마스터', role: 'master' };
           autoFillStaffField('마스터');
           // 2026-08-31(선혜님 지시 - "그 비슷한 버그를 더 찾아봐"로 발견,
-          // 신화경 사건의 진짜 근본원인으로 추정): 아래 staff_emails
+          // 시험아 사건의 진짜 근본원인으로 추정): 아래 staff_emails
           // 조회(비동기)가 끝나야 "이 사람이 진짜 마스터인지 실장인지"가
           // 확정되는데, 그 사이 몇백ms 동안은 담당자 필드가 일단 '마스터'
           // 로 채워진 채로 열려있음. 이미 "값이 '마스터'로 남아있을 때만
@@ -481,7 +481,7 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
       </div>
       <div class="info-item">
         <label class="info-label">설치기사 연락처</label>
-        <input type="text" id="c-installer-phone" placeholder="예: 010-4464-7463" oninput="fmtPhone(this)">
+        <input type="text" id="c-installer-phone" placeholder="예: 010-9000-9000" oninput="fmtPhone(this)">
       </div>
     </div>
     <div class="region-row print-hide">
@@ -903,30 +903,30 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
   <option value="허니콤 No.1">허니콤 No.1</option>
   <option value="알루미늄 No.1">알루미늄 No.1</option>
 </datalist>
-<script src="/est-utils.js?v=c84d6e633ca5"></script>
-<script src="/shared-common-utils.js?v=384eab353feb"></script>
+<script src="/est-utils.js?v=99f31cee3054"></script>
+<script src="/shared-common-utils.js?v=97df8e0aa32a"></script>
 <script src="/shared-optimistic-lock.js?v=6937130d3492"></script>
-<script src="/est-sync-queue.js?v=6e846ca14add"></script>
-<script src="/dash-supabase-auth.js?v=21a67e59f4a9"></script>
-<script src="/est-form-controls.js?v=96316efc051e"></script>
+<script src="/est-sync-queue.js?v=1c92640d5273"></script>
+<script src="/dash-supabase-auth.js?v=70d0fe31c31d"></script>
+<script src="/est-form-controls.js?v=2e68a8fa9713"></script>
 <script src="/est-calc-rules.js?v=ee7750f2d8a4"></script>
-<script src="/est-product-calc.js?v=f899a4bb31d8"></script>
+<script src="/est-product-calc.js?v=921b0729bcd6"></script>
 <script src="/est-calc-curtain.js?v=d1ece64ca605"></script>
-<script src="/est-calc-blind.js?v=26e63c3fdd31"></script>
-<script src="/est-calc-svc.js?v=6e331bbf6369"></script>
-<script src="/est-survey.js?v=0e4bacb22873"></script>
-<script src="/est-save.js?v=15b6319eab1b"></script>
-<script src="/est-click-watch.js?v=192cb15c7ec3"></script>
+<script src="/est-calc-blind.js?v=eb95980281b6"></script>
+<script src="/est-calc-svc.js?v=2210b2564b04"></script>
+<script src="/est-survey.js?v=7e192ae24bb3"></script>
+<script src="/est-save.js?v=be29b17afe6d"></script>
+<script src="/est-click-watch.js?v=5060b982c53f"></script>
 <script src="/est-save-diff.js?v=8e7bc14a30a2"></script>
-<script src="/est-save-stages.js?v=e2e6ffd0cc55"></script>
+<script src="/est-save-stages.js?v=76b953c86fa5"></script>
 <script src="/est-stale-watch.js?v=1b89698be776"></script>
-<script src="/est-space-order.js?v=7383ec0f79a6"></script>
-<script src="/est-doc-customer.js?v=55d43ea65363"></script>
-<script src="/est-doc-vendor.js?v=465e195b6ce3"></script>
+<script src="/est-space-order.js?v=20180ff6de71"></script>
+<script src="/est-doc-customer.js?v=577d5ca474cb"></script>
+<script src="/est-doc-vendor.js?v=8eebba7f5331"></script>
 <script src="/est-doc-vendor-ui.js?v=485ee9acf535"></script>
-<script src="/est-doc-request.js?v=41237ce81b9c"></script>
-<script src="/est-customer-load.js?v=537c31e48514"></script>
-<script src="/est-misc.js?v=f95793973a91"></script>
+<script src="/est-doc-request.js?v=23be59f17e2e"></script>
+<script src="/est-customer-load.js?v=b2c260876e2c"></script>
+<script src="/est-misc.js?v=00f0b545fa6f"></script>
 <script>
 var currentTab = 'ga';
 
@@ -988,7 +988,7 @@ var currentTab = 'ga';
       if (typeof toggleDateTbd === 'function') toggleDateTbd('c-install');
     }
     // 2026-09-22(선혜님 - "저거까지 봐야 하는거 아니야?? 관련된 경로
-    // 모두 확인해"로 전 경로 재점검 - 최금희 실사례 후속): loadEstDbId
+    // 모두 확인해"로 전 경로 재점검 - 시험나 실사례 후속): loadEstDbId
     // 경로 안에서 이 함수가 비동기로(고객 주소 조회 콜백 안에서) 나중에
     // 실행되는데, 그 직전에 이미 "이 견적서 자체에 저장된 진짜 계약금"
     // (e.deposit_amount)이 먼저 정확히 채워져 있을 수 있음 - 이 함수가
@@ -1043,7 +1043,7 @@ var currentTab = 'ga';
           if (c.client_name) document.getElementById('c-name').value = c.client_name;
           if (c.phone) document.getElementById('c-phone').value = c.phone;
           if (c.addr) {
-            // 2026-10-01(선혜님 - 이민선 고객 사례로 발견한 것과 같은 쌍둥이):
+            // 2026-10-01(선혜님 - 시험다 고객 사례로 발견한 것과 같은 쌍둥이):
             // 정규식 추측 쪼개기는 2026-09-22에 이미 "세 번 재발한 근본 원인"으로
             // 결론나서 다른 화면은 다 바꿨는데 여기 남아있었음 - 쪼개지 않고
             // 전체를 그대로 넣음(정보 손실 없음이 항상 더 안전).
@@ -1071,7 +1071,7 @@ var currentTab = 'ga';
               var loadedItems = false;
               if (e && e.line_items && typeof restoreLineItemsToForm === 'function') {
                 // 2026-09-22(선혜님 - "안바뀌엇고 열면 자꾸 50%로 된다니깐"
-                // - 최금희 실사례, 이후 estimate-conversion-check.js의
+                // - 시험나 실사례, 이후 estimate-conversion-check.js의
                 // "품목 지우면 계약금이 새로 재계산돼야 함" 케이스를
                 // 부작용으로 깨뜨렸다가 재수정): 이전엔 5초짜리 넓은
                 // 시간창으로 막았다가, 그 시간 안에 일어나는 "진짜" 사용자
@@ -1195,7 +1195,7 @@ var currentTab = 'ga';
           // 항상 채워지던 주소가 여기선 비어보이는 회귀가 생길 뻔했음. client_id로
           // 고객 주소만 별도로 채워옴.
           if (e.client_id) {
-            var addrUrl = SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(e.client_id) + '&select=addr,addr_detail,measure_date,install_date,deposit_amount'; // 2026-10-20: addr_detail 빠져 있어서 상세주소가 비어 보이고, 저장 때 DB의 상세주소가 지워졌음(노지경)
+            var addrUrl = SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(e.client_id) + '&select=addr,addr_detail,measure_date,install_date,deposit_amount'; // 2026-10-20: addr_detail 빠져 있어서 상세주소가 비어 보이고, 저장 때 DB의 상세주소가 지워졌음(시험가)
             var axhr = new XMLHttpRequest();
             axhr.open('GET', addrUrl, true);
             axhr.setRequestHeader('apikey', SUPABASE_KEY);
@@ -1205,14 +1205,14 @@ var currentTab = 'ga';
                 var arows = JSON.parse(axhr.responseText);
                 var cRow = arows && arows[0];
                 if (cRow && cRow.addr && document.getElementById('c-addr')) {
-                  // 2026-10-01(선혜님 - 이민선 고객 사례로 발견한 것과 같은 쌍둥이):
+                  // 2026-10-01(선혜님 - 시험다 고객 사례로 발견한 것과 같은 쌍둥이):
                   // 정규식 추측 쪼개기는 2026-09-22에 이미 "세 번 재발한 근본 원인"
                   // 으로 결론나서 다른 화면은 다 바꿨는데 여기 남아있었음 - 쪼개지
                   // 않고 전체를 그대로 넣음(정보 손실 없음이 항상 더 안전).
                   var _sp2 = splitStoredAddr(cRow.addr, cRow.addr_detail); document.getElementById('c-addr').value = _sp2.base; var _d22 = document.getElementById('c-addr2'); if (_d22) _d22.value = _sp2.detail;
                 }
                 // 2026-08-28(선혜님 지적 — "실측일 넣고 선금을 넣어도
-                // 견적서에는 적용이 안돼!!", 유경진 사례): 대시보드↔견적서
+                // 견적서에는 적용이 안돼!!", 시험자 사례): 대시보드↔견적서
                 // 동기화를 loadCustId 경로(완전 신규/견적없는 고객)에만
                 // 넣어놨는데, openEstimate()는 기존 견적이 있는 고객이면
                 // 전부 이 loadEstDbId 경로로 오게 되어있어서(2026-08-24
@@ -1227,7 +1227,7 @@ var currentTab = 'ga';
           var loadedItems = false;
           if (e.line_items && typeof restoreLineItemsToForm === 'function') {
             // 2026-09-22(선혜님 - "안바뀌엇고 열면 자꾸 50%로 된다니깐" -
-            // 최금희 실사례, loadCustId 경로와 동일한 이유): 이 복원 루프
+            // 시험나 실사례, loadCustId 경로와 동일한 이유): 이 복원 루프
             // 동안만 정확히 보호함(넓은 시간창 대신).
             // 2026-10-08: 경로 A와 같은 이유(시공 행이 모두 저장된 견적은 재계산 없이 그대로 복원).
             window._estEditState.skipAutoSvc = !!(e.price_breakdown && e.price_breakdown.svcRowsSaved);
@@ -1397,7 +1397,7 @@ var currentTab = 'ga';
               if (typeof renderConfirmBadge === 'function') renderConfirmBadge();
             }
             // 2026-09-22(선혜님 - "확정을 해도 자꾸 풀리는데?? 왜 자꾸
-            // 같은 오류가 생기지" - 최금희 견적서 인쇄화면에서 계약금
+            // 같은 오류가 생기지" - 시험나 견적서 인쇄화면에서 계약금
             // 750,000원 대신 자동 50%(1,791,000원)로 뜨는 실사례로 발견):
             // 이 견적서를 이 URL(loadEstDbId)로 불러올 때, 저장돼 있던
             // 실제 계약금(e.deposit_amount)을 화면에 채우는 코드가 아예

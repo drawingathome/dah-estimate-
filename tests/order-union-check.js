@@ -21,10 +21,10 @@ const { launchBrowser, startServer, loginAs, blockRealNetwork } = require('./_he
     return getRelevantOrderItems({ id: cid, clientName: '검증' }).map(i => i.key).sort().join(',');
   }, ests, cid);
   const ALL = 'blind,fabric,install,material,production', CURT = 'fabric,install,material,production', BLIND = 'blind,install';
-  check('최신이 기타만이어도 이전 커튼·블라인드 견적의 발주 항목이 전부 나옴(이상옥 사례)', await keys([
+  check('최신이 기타만이어도 이전 커튼·블라인드 견적의 발주 항목이 전부 나옴(시험카 사례)', await keys([
     { clientId: 1, curtainCount: 2, blindCount: 1, lineItems: [{}], savedAt: '2026-10-17 02:53' },
     { clientId: 1, curtainCount: 0, blindCount: 0, lineItems: [{}, {}], savedAt: '2026-10-17 03:03' }], 1) === ALL, '');
-  check('기타만 있는 고객은 발주 항목 0개(박창우 사례, 기존 동작 유지)', (await keys([{ clientId: 2, curtainCount: 0, blindCount: 0, lineItems: [{}], savedAt: '2026-10-12' }], 2)) === '', '');
+  check('기타만 있는 고객은 발주 항목 0개(시험드 사례, 기존 동작 유지)', (await keys([{ clientId: 2, curtainCount: 0, blindCount: 0, lineItems: [{}], savedAt: '2026-10-12' }], 2)) === '', '');
   check('견적서가 없으면 5개 전부', (await keys([], 3)) === ALL, '');
   check('보관된 커튼 견적은 무시', (await keys([
     { clientId: 4, curtainCount: 3, blindCount: 0, lineItems: [{}], isArchived: true, savedAt: '2026-10-01' },

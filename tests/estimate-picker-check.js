@@ -1,6 +1,6 @@
 // tests/estimate-picker-check.js
 // 2026-09-21(선혜님 - "견적서 확인을 누르면 2개의 견적서를 선택하는게
-// 아니라 그 중 제일 마지막 견적만 확인이 되고 있어" - 노지경 고객
+// 아니라 그 중 제일 마지막 견적만 확인이 되고 있어" - 시험가 고객
 // 사례): openEstimate()가 limit=1로 최신 견적서 하나만 가져와서
 // 바로 이동해버려서, 견적서가 여러 건인 고객은 예전 것을 볼 방법
 // 자체가 없었음 - 2건 이상이면 선택 모달을 보여주고, 1건 이하는
@@ -57,7 +57,7 @@ async function run() {
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
   const jsErrors = [];
 
-  // 1) 노지경 고객(9401) - 견적서 2건 -> 선택 모달이 떠야 함
+  // 1) 시험가 고객(9401) - 견적서 2건 -> 선택 모달이 떠야 함
   const page = await browser.newPage();
   page.on('pageerror', e => jsErrors.push(e.message));
   page.on('dialog', async d => { try { await d.accept(); } catch (e) {} });
@@ -70,9 +70,9 @@ async function run() {
   await new Promise(r => setTimeout(r, 700));
   await loginAs(page, 'master');
   await page.evaluate(() => {
-    saveCustomers([{ id: 9401, clientName: '노지경', phone: '01011112222', stage: '선금결제', staffName: '마스터' }]);
+    saveCustomers([{ id: 9401, clientName: '시험가', phone: '01011112222', stage: '선금결제', staffName: '마스터' }]);
   });
-  await page.evaluate(() => { openEstimate('노지경', 9401); });
+  await page.evaluate(() => { openEstimate('시험가', 9401); });
   await new Promise(r => setTimeout(r, 700));
 
   const modalState = await page.evaluate(() => {

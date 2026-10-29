@@ -1,5 +1,5 @@
 // tests/blind-opt-numeric-auto-check.js
-// 2026-10-20(윤세현 사례): 블라인드 "옵션" 칸(이름 칸)에 숫자만 넣으면 "옵션추가금"으로 자동 이동·합계 반영, 글자 옵션은 그대로 두는지.
+// 2026-10-20(시험타 사례): 블라인드 "옵션" 칸(이름 칸)에 숫자만 넣으면 "옵션추가금"으로 자동 이동·합계 반영, 글자 옵션은 그대로 두는지.
 const path = require('path');
 const { launchBrowser, startServer, loginAs } = require('./_helpers');
 (async () => {

@@ -24,7 +24,7 @@ function dbRowToCustomer(row) {
     visitCount:         Number(row.visit_count)||1,
     measureDate:        row.measure_date||'',
     installDate:        row.install_date||'',
-    // 2026-09-21(선혜님 - 전보현/민소아 고객 실제 발생 확인, 데이터는
+    // 2026-09-21(선혜님 - 시험러/시험하 고객 실제 발생 확인, 데이터는
     // Supabase에서 직접 고침): 대시보드 고객상세에서 실측/시공 예정일을
     // 클릭해서 실제 날짜를 입력해도, customers.measure_date_tbd/
     // install_date_tbd(견적서 "미정" 체크박스가 켜져 있으면 저장되는
@@ -127,7 +127,7 @@ function estimateDbRowToLocal(row) {
     id: row.id,
     dbId: row.id,
     // 2026-08-31(선혜님 지적 — "신화정 견적서를 확인해봐", 실제로는
-    // 신화경 오타 - 동명이인 2명 중 한 명(오지은 실장 담당, id=165)이
+    // 시험아 오타 - 동명이인 2명 중 한 명(오지은 실장 담당, id=165)이
     // 다른 한 명(마스터 담당, id=150)의 견적서를 이력탭에서 잘못 보고
     // 확정을 시도했다가 권한 없음으로 조용히 실패했던 사건으로 발견):
     // clientId를 매핑하는 줄 자체가 이 함수에 통째로 빠져있었음! 그래서
@@ -165,7 +165,7 @@ function estimateDbRowToLocal(row) {
     // contract_status가 있으면 그대로 쓰고("미계약"이 새로고침해도 유지됨),
     // 없는(예전) 레코드만 estimate_status로 추정하는 기존 방식으로 폴백.
     contractStatus: row.contract_status || (row.estimate_status === 'final' ? 'contracted' : 'pending'),
-    // 2026-10-20(이상옥 사례): savedAt 은 예전엔 row.date 를 우선 썼는데, estimates.date 는 "실측 예정일"(견적서 화면 c-measure)이라
+    // 2026-10-20(시험카 사례): savedAt 은 예전엔 row.date 를 우선 썼는데, estimates.date 는 "실측 예정일"(견적서 화면 c-measure)이라
     // 견적서 카드의 "저장일"·"N번째 견적" 순서·"최신 견적" 판단이 전부 실측 예정일 기준으로 틀어져 있었음(DB 185건 중 59건은 실측일이 작성일보다 뒤).
     // 같은 일을 하는 변환이 3곳(여기 + 고객상세 결제 탭 + 발주 탭)에 따로 있었고 기준도 제각각(실측일/수정시각)이라, 결제 탭과 견적서 탭의 "N/M" 번호가 서로 반대로 보였음
     // → 기준을 "작성 시각" 하나로 통일하고 계산은 estSavedAtFromRow() 한 곳에서만 함.

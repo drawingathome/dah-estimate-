@@ -34,7 +34,7 @@ function buildCustomerHTML() {
     sumDeposit = depRaw ? parseInt(depRaw).toLocaleString()+'원' : '—';
   }
   var sumBalance = document.getElementById('sum-balance')?.textContent||'—';
-  // 2026-10-09(선혜님 - 최금희: 선금 75만원인데 인쇄 화면 잔금이 자동 50%로 남음, 직접 재현 확인):
+  // 2026-10-09(선혜님 - 시험나: 선금 75만원인데 인쇄 화면 잔금이 자동 50%로 남음, 직접 재현 확인):
   // 계약금은 입력창 값을 쓰면서 잔금은 별도 표시(sum-balance)를 읽어 서로 어긋날 수 있었음.
   // 인쇄 화면은 항상 "총액 - 계약금"으로 직접 계산해 둘이 반드시 맞게 함.
   if (_grandNum > 0 && sumDeposit !== '—') {
@@ -122,7 +122,7 @@ function buildCustomerHTML() {
     var price=getPriceVal(tr.querySelector('.sprice'));
     var qty  =parseFloat(tr.querySelector('.sqty')?.value)||1;
     var amt  =tr.querySelector('.samt')?.textContent||'';
-    // 2026-10-20(윤세현 사례): 내용이 비어 있어도 금액이 있으면 시공 자재 줄에 포함(합계와 줄 합계가 항상 같도록)
+    // 2026-10-20(시험타 사례): 내용이 비어 있어도 금액이 있으면 시공 자재 줄에 포함(합계와 줄 합계가 항상 같도록)
     if(amt&&amt!=='0원') svcRows.push({svcType:escHtml(svcType),space:escHtml(svcSpace),desc:escHtml(desc),price:price,qty:qty,amt:amt});
   });
 
@@ -238,7 +238,7 @@ function buildCustomerHTML() {
       var price = getPriceVal(tr.querySelector('.sprice'));
       var qty = parseFloat(tr.querySelector('.sqty')?.value) || 1;
       var amt = price * qty;
-      // 2026-10-20(윤세현 사례): 예전엔 "내용" 칸이 비어 있으면 금액이 있어도 고객용 문서 줄에서 통째로 빠졌음(합계·내부 요약은 포함) →
+      // 2026-10-20(시험타 사례): 예전엔 "내용" 칸이 비어 있으면 금액이 있어도 고객용 문서 줄에서 통째로 빠졌음(합계·내부 요약은 포함) →
       // 시공 자재 줄들의 합이 소계와 안 맞고, 마지막에 추가한 시공비 100만원이 "실측+시공비"에 반영 안 됨. 금액이 있으면 내용이 비어도 항상 포함.
       if (!amt) return;
       var svcSpaceVal = tr.querySelector('.svc-space')?.value || '';

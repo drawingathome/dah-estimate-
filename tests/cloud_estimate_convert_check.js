@@ -15,7 +15,7 @@ async function run() {
   await loginAs(page, 'master');
 
   const result = await page.evaluate(() => {
-    // 우사랑님과 비슷한 클라우드 row 형태를 직접 변환
+    // 시험터님과 비슷한 클라우드 row 형태를 직접 변환
     var row = {
       id: 'test-est-1', customer_name: '변환테스트', client_id: 9700,
       price: 500000,

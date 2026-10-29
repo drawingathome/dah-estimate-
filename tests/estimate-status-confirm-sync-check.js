@@ -52,7 +52,7 @@ async function run() {
     tr.querySelector('.cprice').value = 100000; calcCurtainRow(tr.querySelector('.cprice'));
   });
 
-  // 1) 최금희 실사례 재현: "최종 견적서" 탭으로만 전환(확정 버튼은 안 누름) 후 저장
+  // 1) 시험나 실사례 재현: "최종 견적서" 탭으로만 전환(확정 버튼은 안 누름) 후 저장
   await page.evaluate(() => {
     var finalTabBtn = Array.from(document.querySelectorAll('button, [onclick*="setStatus"]')).find(b => b.textContent && b.textContent.trim() === '최종 견적서');
     if (finalTabBtn) finalTabBtn.click();

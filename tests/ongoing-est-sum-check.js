@@ -1,5 +1,5 @@
 // tests/ongoing-est-sum-check.js
-// 2026-09-19(선혜님 - "노지경님 견적서가 1개였는데 내가 한개를 더
+// 2026-09-19(선혜님 - "시험가님 견적서가 1개였는데 내가 한개를 더
 // 넣었어... 2건에 대한 건 없고 이거뿐이야" → "진행중인 견적도 두
 // 견적서 합계로 보여드릴까요?" → "그래야지"): 고객상세 화면 상단의
 // "진행중인 견적" 요약이 이 고객의 견적서가 여러 건이어도 항상
@@ -7,7 +7,7 @@
 // 기준금액과는 별개의, 로컬 dah_saved 기반 표시). openDetail()이
 // 이미 loadEstimatesAsync()로 서버 최신 목록을 받아온 뒤에만 화면을
 // 그리므로, 최신 것 하나 대신 전체 합계로 바꿔도 데이터 신뢰성 문제
-// 없음 - 노지경님과 정확히 같은 조건(견적서 2건, 합계 6,479,000원/
+// 없음 - 시험가님과 정확히 같은 조건(견적서 2건, 합계 6,479,000원/
 // 17품목)으로 재현 검증.
 const path = require('path');
 const { launchBrowser, startServer, loginAs, blockRealNetwork } = require('./_helpers');
@@ -30,20 +30,20 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-  // 노지경 고객(9401) - 서버에 견적서 2건(100만원/8품목, 5,479,000원/9품목 → 합계 6,479,000원/17품목)
+  // 시험가 고객(9401) - 서버에 견적서 2건(100만원/8품목, 5,479,000원/9품목 → 합계 6,479,000원/17품목)
   await page.evaluate(() => {
     window.sbXHR = function(method, path, data, cb) {
       if (method === 'GET' && path.indexOf('estimates?select=*') === 0) {
         cb(null, [
-          { id: 'est-A', client_id: 9401, customer_name: '노지경', price: 1000000, performance_revenue: 950000, line_items: new Array(8).fill({}), estimate_status: 'ga', date: '2026-09-10' },
-          { id: 'est-B', client_id: 9401, customer_name: '노지경', price: 5479000, performance_revenue: 5200000, line_items: new Array(9).fill({}), estimate_status: 'ga', date: '2026-09-19' }
+          { id: 'est-A', client_id: 9401, customer_name: '시험가', price: 1000000, performance_revenue: 950000, line_items: new Array(8).fill({}), estimate_status: 'ga', date: '2026-09-10' },
+          { id: 'est-B', client_id: 9401, customer_name: '시험가', price: 5479000, performance_revenue: 5200000, line_items: new Array(9).fill({}), estimate_status: 'ga', date: '2026-09-19' }
         ]);
         return;
       }
       cb(null, []);
     };
-    saveCustomers([{ id: 9401, clientName: '노지경', phone: '01089130078', stage: '선금결제', staffName: '마스터', price: 620000, performanceRevenue: 600000 }]);
-    openDetail('노지경', 9401);
+    saveCustomers([{ id: 9401, clientName: '시험가', phone: '01090009010', stage: '선금결제', staffName: '마스터', price: 620000, performanceRevenue: 600000 }]);
+    openDetail('시험가', 9401);
   });
   await new Promise(r => setTimeout(r, 700));
 

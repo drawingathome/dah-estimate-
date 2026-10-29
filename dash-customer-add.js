@@ -150,7 +150,7 @@ function AddCustomerModal({ editName, registerApi }) {
     var errs = /** @type {Record<string, string>} */ ({});
     if (!nameResult.ok) errs.name = nameResult.msg;
     if (!phoneResult.ok) errs.phone = phoneResult.msg;
-    // 2026-10-05(선혜님 - 김유진 고객 주소 재발 신고): 기본주소는 비었는데 상세주소만 있으면 저장이
+    // 2026-10-05(선혜님 - 시험너 고객 주소 재발 신고): 기본주소는 비었는데 상세주소만 있으면 저장이
     // 맨 앞 공백 + 도로명 없는 주소로 되던 것을 차단(est-save.js와 동일 규칙). 둘 다 빈 건 정상.
     if (!addr.trim() && addrDetail.trim()) errs.addr = '기본주소가 비어있어요 - [주소 검색]으로 먼저 선택해주세요. 검색에 안 나오는 신축이면 [직접 입력]을 눌러 적어주세요.';
     var finalPhone = phone;

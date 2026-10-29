@@ -1,5 +1,5 @@
 // tests/est-retry-queue-already-saved-check.js
-// 2026-10-23(신수정 견적서): 재시도 대기 항목이 중복으로 쌓이거나, 이미 저장된 내용을 "실패"로 표시하던 문제 방지 확인.
+// 2026-10-23(시험어 견적서): 재시도 대기 항목이 중복으로 쌓이거나, 이미 저장된 내용을 "실패"로 표시하던 문제 방지 확인.
 const path = require('path');
 const { launchBrowser, startServer, setupValidSession } = require('./_helpers');
 const CORS = { 'Access-Control-Allow-Origin': '*' };

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // tests/customer-price-sum-fail-protection-check.js
 // ══════════════════════════════════════════════════
-// 2026-10-01(선혜님 - "최금희 외 다른 고객이 문제있는건 확인 가능하니?? 쌍둥이 함수
+// 2026-10-01(선혜님 - "시험나 외 다른 고객이 문제있는건 확인 가능하니?? 쌍둥이 함수
 // 모두 확인해" 요청으로 발견): est-save-stages.js:_saveStage_customers가 "이 고객의
 // 다른 견적서 합계"를 조회해서 customers.price/performance_revenue에 반영하는데,
 // 그 조회가 네트워크 오류/HTTP 에러/파싱 실패로 실패하면 "다른 견적서 금액=0"으로

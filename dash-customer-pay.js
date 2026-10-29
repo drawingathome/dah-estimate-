@@ -9,7 +9,7 @@
 // 2026-09-21(선혜님 - "그럼 언제 하라는거지??????" → 견적서별 결제
 // 관리로 구조 전환 지시): 결제(선금/잔금)가 그동안 "고객 하나"에
 // 저장돼서, 고객에게 견적서가 2개 이상이면 "이 결제가 어느 견적서
-// 것인지" 근본적으로 알 방법이 없었음(노지경 고객 사례) - 실제 청구/
+// 것인지" 근본적으로 알 방법이 없었음(시험가 고객 사례) - 실제 청구/
 // 인보이스 시스템처럼 결제는 항상 "견적서 하나"에 속하도록 전환.
 // renderPaySection(c, payBody, est)의 3번째 인자(est)가 있으면 그
 // 견적서(est.id, est.price, est.deposit_amount 등 estimates 테이블
@@ -49,7 +49,7 @@ function renderPaySection(c, payBody, est) {
 
   var paySec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
   if (est && est.estimateLabel) {
-    // 2026-10-20(이상옥 사례): 견적서가 2개 이상이면 "지금 입력하는 입금이 어느 견적서의 돈인지"를 눈에 띄게 표시(입금은 견적서마다 따로 기록됨)
+    // 2026-10-20(시험카 사례): 견적서가 2개 이상이면 "지금 입력하는 입금이 어느 견적서의 돈인지"를 눈에 띄게 표시(입금은 견적서마다 따로 기록됨)
     var _multiEst = false;
     try { var _all = JSON.parse(localStorage.getItem('dah_saved') || '[]'); _multiEst = _all.filter(function (e) { return (c.id && e.clientId) ? e.clientId === c.id : e.clientName === c.clientName; }).length > 1; } catch (eMulti) {}
     paySec.appendChild(div(_multiEst ? 'font-size:12px;font-weight:700;color:var(--dark);background:var(--ivory1);border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin-bottom:8px;line-height:1.5' : 'font-size:11px;color:var(--sub);margin-bottom:8px', [
@@ -163,7 +163,7 @@ function renderPaySection(c, payBody, est) {
             payBody.insertBefore(bar, payBody.firstChild);
           } catch (eBar) { /* 경고 표시 실패는 저장 흐름에 영향 없게 */ }
         }
-        // 2026-10-02(선혜님 - "이민선/김현정 결제했는데 상담에 뜨니, 쌍둥이 함수도 찾고
+        // 2026-10-02(선혜님 - "시험다/시험사 결제했는데 상담에 뜨니, 쌍둥이 함수도 찾고
         // 앞으로 이런 버그 안생기게 하는 방향도 찾아" 요청으로 구조 개선): customers의
         // deposit/balance 금액·날짜·수단·영수확인을 이 JS 코드가 직접 재계산해서 PATCH하던
         // 로직을 완전히 제거함 - estimates 테이블에 똑같은 책임을 지는 DB 트리거
@@ -202,12 +202,12 @@ function renderPaySection(c, payBody, est) {
             findEstXhr.send();
           } catch (eEstOuter) {}
         }
-        // 2026-10-11(선혜님 - "저장 충돌이 계속 난다", 김현정·이민선·조유정 사례를 DB 이력 시각 대조로 확정):
+        // 2026-10-11(선혜님 - "저장 충돌이 계속 난다", 시험사·시험다·시험마 사례를 DB 이력 시각 대조로 확정):
         // 위 estimates 저장 때문에 DB 트리거가 이 고객 행을 바로 갱신해서 고객의 updated_at(낙관적 잠금값)이 바뀜.
         // 이 화면이 들고 있던 예전 잠금값 그대로 곧바로 이어지는 고객 저장(단계 변경 등)은 스스로와 충돌했음.
         // 결제 저장이 성공하면 고객의 최신 잠금값을 다시 받아 로컬에 반영한 "다음에" 콜백을 실행함.
         if (!err) { est.depositAmount = newDep; est.balanceAmount = newBal; } // 같은 화면에서 이어 저장해도 가짜 충돌이 나지 않게 기준값 갱신
-        // 2026-10-20(이상옥 사례: 침구 완납 + 커튼 선금 50% = 견적서 2개): 대시보드 결제 저장은 견적서 입금만 바꿔서 고객의 매출 계산 기준금액(price)·성과매출이
+        // 2026-10-20(시험카 사례: 침구 완납 + 커튼 선금 50% = 견적서 2개): 대시보드 결제 저장은 견적서 입금만 바꿔서 고객의 매출 계산 기준금액(price)·성과매출이
         // 견적서 합계로 갱신되지 않았음(견적서 앱에서 저장할 때만 갱신) → 받은 돈이 기준금액보다 커 보이는 "초과 입금" 오표시. 견적서 앱 저장과 같은 규칙으로 맞춤.
         if (!err && c && c.id && typeof syncCustomerPriceFromPaidEstimates === 'function') {
           syncCustomerPriceFromPaidEstimates(c, function () { continueAfterPaySave(); });
@@ -292,7 +292,7 @@ function renderPaySection(c, payBody, est) {
         } else if (data && data[0] && data[0].updated_at) {
           // 2026-09-08(선혜님 지적 - "너가 이런데이터를 만들기만 하고
           // 방치한게 꽤 되는걸로 아는데" → 실제 client_error_logs에서
-          // 오늘 발생한 "손현영" 고객 저장실패로 재발 확인): 어제(9/6)
+          // 오늘 발생한 "시험파" 고객 저장실패로 재발 확인): 어제(9/6)
           // savePayData→changeStage 순서는 보장했지만, savePayData의
           // PATCH 성공 후 로컬스토리지의 락값(updatedAt)을 갱신하는 걸
           // 빠뜨렸음 - 그래서 곧바로 이어지는 changeStage()가 여전히
@@ -427,7 +427,7 @@ function renderPaySection(c, payBody, est) {
         depDate.focus();
         return;
       }
-      // 2026-10-15: 입금 합계가 견적금액을 넘으면 저장 전에 분명히 경고(이영욱·신화경 사례 - 환불/재결제는 "환불 등록"으로 처리해야 기록이 남음)
+      // 2026-10-15: 입금 합계가 견적금액을 넘으면 저장 전에 분명히 경고(시험라·시험아 사례 - 환불/재결제는 "환불 등록"으로 처리해야 기록이 남음)
       var depTotalAfter = inputAmt + (Number(payData.balanceAmount) || 0) + extraPaidTotal;
       var depOver = payBasisPrice > 0 && depTotalAfter > payBasisPrice;
       if (depOver && !confirm('⚠️ 입금 합계(' + depTotalAfter.toLocaleString() + '원)가 견적금액(' + payBasisPrice.toLocaleString() + '원)보다 ' + (depTotalAfter - payBasisPrice).toLocaleString() + '원 많아요.\n카드 취소 후 재결제나 환불이 있었다면 입금칸을 고치지 말고 마스터가 "환불 등록"을 먼저 해야 기록이 남아요.\n그래도 이대로 저장할까요?')) return;
@@ -458,7 +458,7 @@ function renderPaySection(c, payBody, est) {
   paySec.appendChild(depSec);
 
   // 잔금 섹션
-  // 2026-09-21(선혜님 지적 — "노지경 두번째 견적서가 완납으로 끝나는
+  // 2026-09-21(선혜님 지적 — "시험가 두번째 견적서가 완납으로 끝나는
   // 건인데 결제부분이 왜 이렇지??": 계약금(선금) 하나만으로 이미 견적
   // 총액을 다 채운 경우(예: 620,000원 견적에 계약금 620,000원), 잔금
   // 자체가 존재하지 않는데도 화면은 "아직 잔금 안 받음"으로 보고 빈

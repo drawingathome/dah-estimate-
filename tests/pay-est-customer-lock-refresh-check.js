@@ -1,5 +1,5 @@
 // 견적서 단위 결제 저장 직후, 고객의 최신 수정 시각(낙관적 잠금값)을 서버에서 다시 받아 로컬에 반영하는지 검증
-// 2026-10-11(선혜님 - "저장 충돌이 계속 난다", 김현정/이민선/조유정): 결제를 estimates에 저장하면 DB 트리거가
+// 2026-10-11(선혜님 - "저장 충돌이 계속 난다", 시험사/시험다/시험마): 결제를 estimates에 저장하면 DB 트리거가
 // 고객 행을 즉시 갱신해 고객 updated_at이 바뀜 -> 이 화면의 낡은 잠금값으로 이어지는 고객 저장이 스스로와 충돌했음.
 const path = require('path');
 const { launchBrowser, startServer, loginAs, blockRealNetwork } = require('./_helpers');

@@ -19,7 +19,7 @@ function getRelevantOrderItems(c) {
   });
   myEsts.sort(function(a,b){ return (b.savedAt||b.date||'') > (a.savedAt||a.date||'') ? 1 : -1; });
   // 2026-10-27(H-30): 예전엔 '가장 최근 견적서 1건'만 봐서, 같은 고객이 커튼·블라인드 견적서와 '기타만' 견적서를 같이 만들면
-  // 최신이 기타만일 때 발주 항목이 하나도 안 떴음(이상옥 사례). DB 규칙(dah_order_complete)과 똑같이 '보관되지 않은 모든 견적서'의
+  // 최신이 기타만일 때 발주 항목이 하나도 안 떴음(시험카 사례). DB 규칙(dah_order_complete)과 똑같이 '보관되지 않은 모든 견적서'의
   // 품목을 합쳐서 판단한다. 품목 정보가 하나도 없으면 예전처럼 5개 전부 보여준다.
   var liveEsts = myEsts.filter(function(e){ return e.isArchived !== true; });
   var estHasData = false, hasCurtain = false, hasBlind = false;
@@ -41,7 +41,7 @@ function getRelevantOrderItems(c) {
 }
 
 // 2026-08-06 신규: 견적서는 있는데(latestEst 존재) 정작 line_items/제품개수가
-// 하나도 없어서 "발주할 게 없다"고 조용히 판단되던 케이스(우사랑님 실제 사례)를
+// 하나도 없어서 "발주할 게 없다"고 조용히 판단되던 케이스(시험터님 실제 사례)를
 // 구분. 이 경우 hasIncompleteOrder()는 false를 반환해서 처리필요 목록에서
 // 아예 사라졌었는데, "발주할 게 정말 없음"과 "데이터가 비어서 판단 불가"는
 // 전혀 다른 상황이라 구분해서 다르게 알려줘야 함.
@@ -88,7 +88,7 @@ function renderOrderSection(c, orderBody) {
     // 서버재확인 안전장치와 정확히 같은 계열): getRelevantOrderItems가
     // 오직 이 기기의 로컬 캐시(dah_saved)만 보고 있어서, 다른 기기에서
     // 견적서를 작성했거나 캐시가 비어있으면 실제로는 발주할 품목이
-    // 있는데도 "없음"으로 잘못 판단할 위험이 있었음(김은/황남주 결제
+    // 있는데도 "없음"으로 잘못 판단할 위험이 있었음(김은/시험거 결제
     // 사건과 같은 근본 원인).
     //
     // 재검증 과정에서 이 안전장치끼리도 서로 부딪히는 걸 발견함: 결제탭
@@ -232,7 +232,7 @@ function renderOrderSection(c, orderBody) {
           ? { done: true, vendor: vendorInput.value.trim(), orderDate: orderDateInput.value, dueDate: dueDateInput.value }
           : false;
         saveCustomers(arr);
-        // 2026-10-08: 발주 현황만 서버로 보냄(고객 전체를 보내면 낡은 계약금 등이 서버를 덮어쓰거나 동시저장충돌로 실패 - 오늘 조유정 사례와 같은 뿌리)
+        // 2026-10-08: 발주 현황만 서버로 보냄(고객 전체를 보내면 낡은 계약금 등이 서버를 덮어쓰거나 동시저장충돌로 실패 - 오늘 시험마 사례와 같은 뿌리)
         if (typeof saveOrderItemGuarded === 'function') saveOrderItemGuarded(target, item.key, target.orderStatus[item.key], function(err) { if (err) console.warn('발주현황 DB 동기화 실패:', err.text); });
         else if (typeof saveCustomerFieldsToDb === 'function') saveCustomerFieldsToDb(target, { order_status: target.orderStatus || {} }, function(err) { if (err) console.warn('발주현황 DB 동기화 실패:', err.text); });
         if (typeof logEvent === 'function') logEvent('order_check', { item: item.key, checked: checkbox.checked });

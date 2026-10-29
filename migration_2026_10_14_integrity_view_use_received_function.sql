@@ -1,6 +1,6 @@
 -- 2026-10-14 (2-2 마무리) 점검 뷰 data_integrity_issues의 OVERPAID·PAID_STAGE_NO_DEPOSIT 규칙이 고객 칸을 직접 더하지 않고
 -- dah_received_amount()(앱과 같은 받은 돈 규칙)를 쓰도록 교체. 운영 DB 적용 완료.
--- 모의 실행(롤백)으로 변경 전후 점검 결과 동일(OVERPAID 이영욱 1건) 확인 후 적용. 뷰 권한(authenticated 조회, anon 없음) 유지 확인.
+-- 모의 실행(롤백)으로 변경 전후 점검 결과 동일(OVERPAID 시험라 1건) 확인 후 적용. 뷰 권한(authenticated 조회, anon 없음) 유지 확인.
 -- 되돌리기: 이 파일의 치환 문자열 n1↔o1, n2↔o2를 반대로 적용해 create or replace view.
 DO $m$
 declare d text; d2 text;

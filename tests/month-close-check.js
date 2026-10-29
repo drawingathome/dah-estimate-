@@ -77,7 +77,7 @@ async function run() {
 
   // 1) 지난달에 100만원 입금된 고객 → 성과매출 100만원
   await page.evaluate((k) => {
-    saveCustomers([{ id: 9501, clientName: '마감시험고객', phone: '01000009501', stage: '선금결제', staffName: '마스터', date: k.lastDay,
+    saveCustomers([{ id: 9501, clientName: '마감시험고객', phone: '01090009011', stage: '선금결제', staffName: '마스터', date: k.lastDay,
       price: 2000000, depositAmount: 1000000, depositDate: k.lastDay, balanceAmount: 0 }]);
   }, keys);
   const live1 = await page.evaluate((k) => getMonthPerformanceRevenue(loadCustomers(), k.last), keys);
@@ -91,7 +91,7 @@ async function run() {
 
   // 3) 고객 데이터를 고쳐도 마감한 달은 그대로
   await page.evaluate((k) => {
-    saveCustomers([{ id: 9501, clientName: '마감시험고객', phone: '01000009501', stage: '선금결제', staffName: '마스터', date: k.lastDay,
+    saveCustomers([{ id: 9501, clientName: '마감시험고객', phone: '01090009011', stage: '선금결제', staffName: '마스터', date: k.lastDay,
       price: 3000000, depositAmount: 2500000, depositDate: k.lastDay, balanceAmount: 0 }]);
   }, keys);
   const after = await page.evaluate((k) => ({

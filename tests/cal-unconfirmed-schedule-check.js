@@ -22,10 +22,10 @@ async function run() {
   const todayM = String(new Date().getMonth() + 1).padStart(2, '0');
   const measureDateThisMonth = `${todayY}-${todayM}-22`;
 
-  // 최선미 사례 재현: 상담 단계, 입금 0원, 그런데도 실측예정일이 이미 입력됨
+  // 시험처 사례 재현: 상담 단계, 입금 0원, 그런데도 실측예정일이 이미 입력됨
   const r1 = await page.evaluate((mDate) => {
     saveCustomers([{
-      id: 9950, clientName: '최선미재현', phone: '01099990010', stage: '상담', staffName: '오지은 실장',
+      id: 9950, clientName: '시험처재현', phone: '01099990010', stage: '상담', staffName: '오지은 실장',
       price: 4118000, measureDate: mDate, installDate: '', addr: '서울 서초구',
       depositAmount: 0, balanceAmount: 0
     }]);

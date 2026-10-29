@@ -17,12 +17,12 @@ async function run() {
       if (req.method() === 'OPTIONS') { req.respond({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Allow-Headers': '*' } }); return; }
       if (url.includes('/estimates?id=eq.test-est-1')) {
         req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
-          body: JSON.stringify([{ id: 'test-est-1', customer_name: '최금희재현', phone: '01099981234', addr: '서울 서초구', price: 3582000, deposit_amount: 750000, balance_amount: 0, line_items: [], estimate_status: 'final', confirmed_at: '2026-09-22T00:00:00Z', client_id: 999 }]) });
+          body: JSON.stringify([{ id: 'test-est-1', customer_name: '시험나재현', phone: '01099981234', addr: '서울 서초구', price: 3582000, deposit_amount: 750000, balance_amount: 0, line_items: [], estimate_status: 'final', confirmed_at: '2026-09-22T00:00:00Z', client_id: 999 }]) });
         return;
       }
       if (url.includes('/estimates?id=eq.test-est-2')) {
         req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
-          body: JSON.stringify([{ id: 'test-est-2', customer_name: '계약금없음재현', phone: '01099981235', addr: '서울 서초구', price: 1000000, deposit_amount: 0, balance_amount: 0, line_items: [], client_id: 998 }]) });
+          body: JSON.stringify([{ id: 'test-est-2', customer_name: '계약금없음재현', phone: '01090009009', addr: '서울 서초구', price: 1000000, deposit_amount: 0, balance_amount: 0, line_items: [], client_id: 998 }]) });
         return;
       }
       req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[]' });
@@ -35,7 +35,7 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-  // 1) 최금희 실사례: loadEstDbId로 불러오면 저장된 계약금(750,000)이 채워지고 보호돼야 함
+  // 1) 시험나 실사례: loadEstDbId로 불러오면 저장된 계약금(750,000)이 채워지고 보호돼야 함
   await page.goto(`http://localhost:${port}/dah-estimate.html?loadEstDbId=test-est-1&mode=edit`, { waitUntil: 'domcontentloaded', timeout: 15000 });
   await new Promise(r => setTimeout(r, 1500));
   await loginAs(page, 'master');

@@ -413,7 +413,7 @@ function collectVendorGroups(categoryFilter) {
     // 채운 행은 이 시점에 통째로 걸러져(return) 그 아래(611번대)에 이미
     // 있던 railVendor 처리 코드에 도달하지도 못하고 있었음 - 조건에
     // railVendor도 포함해서 이 행이 계속 처리되게 함.
-    // 2026-09-11(선혜님 발견 - 손현영님 사례: "왜 발주서에는 거실 2개
+    // 2026-09-11(선혜님 발견 - 시험파님 사례: "왜 발주서에는 거실 2개
     // 안방 2개 되지??" 확인 과정에서 실제로는 정반대의 더 심각한 문제를
     // 발견함): 원단거래처를 아직 안 정했거나 고객이 직접 원단을 대는
     // 경우(fabric/vendor 둘 다 빈값), 캔가공소 제작 발주는 원단거래처와
@@ -530,7 +530,7 @@ function collectVendorGroups(categoryFilter) {
     var bmh   = tr.querySelector('.bmh')?.value || '';
     var displayNameCheck = tr.querySelector('.b-display-name')?.value || '';
     // 2026-09-11(선혜님 발견 - "지금은 캔가공소만 뜨잖아": 커튼과 완전히
-    // 같은 모양의 문제가 블라인드에도 있었음. 손현영님 실제 데이터로
+    // 같은 모양의 문제가 블라인드에도 있었음. 시험파님 실제 데이터로
     // 재확인 - 블라인드 4개 항목 전부 fabric/vendor가 비어있어서
     // (제품명/사이즈는 있는데) 이 조기 return에 걸려 발주서에서 통째로
     // 빠지고 있었음. 커튼의 "제작은 원단거래처와 무관하게 항상 필요"와는

@@ -41,7 +41,7 @@ function setStatus(s, isRestoring) {
     }
   }
   triggerSumPulse();
-  // 2026-10-20(선혜님 - 노지경 "최종견적서 누르고 프린트했는데 가견적이 나와, 몇 번째냐"): 기록(저장 영수증)상 최종견적서 탭만 켜고 확정 버튼은 한 번도
+  // 2026-10-20(선혜님 - 시험가 "최종견적서 누르고 프린트했는데 가견적이 나와, 몇 번째냐"): 기록(저장 영수증)상 최종견적서 탭만 켜고 확정 버튼은 한 번도
   // 안 눌렸던 것이 원인이었음. 탭은 화면 모양일 뿐 확정이 아니므로, 탭을 바꿀 때마다 확정 버튼 표시를 다시 그려 "아직 확정 안 됨"을 눈에 띄게 함.
   try { if (typeof renderConfirmBadge === 'function') renderConfirmBadge(); } catch (e) {}
 }
@@ -226,7 +226,7 @@ function lockEstimateForm(locked) {
 
 // 2026-10-10(선혜님 - "수정 중 확정이 풀렸는데 누가/왜 풀었는지 알 수 없다"): 확정을 풀 때 사유를 반드시 고르게 하고,
 // 누가·언제·왜를 서버 영수증(estSendReceipt)에 남김. 이미 입금이 있으면 "금액을 바꾸면 총액과 입금이 안 맞을 수 있다"고 경고만 함
-// (정당한 수정은 막지 않음 - 이영욱·윤정자 같은 경우). 사유 목록은 설계 문서(입금원장 범위조정) 기준.
+// (정당한 수정은 막지 않음 - 시험라·시험서 같은 경우). 사유 목록은 설계 문서(입금원장 범위조정) 기준.
 var EST_UNCONFIRM_REASONS = ['고객 요청(제품·수량 변경)', '금액 오류 수정', '일정·시공 조건 변경', '실수로 확정함', '기타'];
 function estAskUnconfirmReason(paidAmount, onDone) {
   var old = document.getElementById('est-unconfirm-modal'); if (old) old.remove();
@@ -275,7 +275,7 @@ function estAskUnconfirmReason(paidAmount, onDone) {
   row.appendChild(cancel); row.appendChild(ok); box.appendChild(row);
   wrap.appendChild(box); document.body.appendChild(wrap);
 }
-// 2026-10-17(선혜님 - "확정견적서를 눌러도 자꾸 가견적서로 바뀐다", 김유진 사례. DB 이력 조사 결과 그 견적서는 한 번도 확정으로
+// 2026-10-17(선혜님 - "확정견적서를 눌러도 자꾸 가견적서로 바뀐다", 시험너 사례. DB 이력 조사 결과 그 견적서는 한 번도 확정으로
 // 저장된 적이 없었고, 다른 견적서들은 사유 기록 없이 확정이 풀린 흔적이 3건 있었음): 확정 버튼은 지금까지 "화면 메모리"만 바꾸고
 // 저장 버튼을 따로 눌러야 DB에 들어갔는데 안내는 "확정됐습니다"라서 저장된 것처럼 보였음.
 // → 이미 DB에 있는 견적서는 확정/해제를 누르는 순간 확정 칸만 바로 서버에 저장하고(내가 본 updated_at일 때만 = 동시수정 보호),

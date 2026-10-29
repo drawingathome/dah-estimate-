@@ -1,4 +1,4 @@
--- (2026-10-14: PRICE_DIFF는 계약 이후 단계만 비교 - 가견적은 여러 건이 정상이고 합산하지 않으므로 오탐이었음(임민희).)
+-- (2026-10-14: PRICE_DIFF는 계약 이후 단계만 비교 - 가견적은 여러 건이 정상이고 합산하지 않으므로 오탐이었음(시험조).)
 -- (2026-10-13: 입금 0원 점검은 금액이 0원(무료 협찬 등)인 고객 제외. PRICE_DIFF는 고객의 모든 견적서 합계와 비교(계약 여러 건 고객 오탐 수정). 실측일/시공일은 선금 전에도 입력하는 정상 값이라 STALE_SCHEDULE 규칙 제거)
 -- 2026-10-11: 이상 데이터 자동 점검 뷰 (홈 화면 "데이터 점검" 카드가 읽음). 읽기 전용 / security_invoker=true라 로그인한 사람의 RLS 권한대로만 보임.
 -- 이미 운영 DB에 적용됨(apply_migration data_integrity_issues_view_price_diff + data_integrity_issues_lock_grants). 재적용해도 안전(create or replace).

@@ -15,8 +15,8 @@ async function run() {
   await loginAs(page, 'master');
 
   const result = await page.evaluate(async () => {
-    saveCustomers([{ id: 9900, clientName: '우사랑재현2', phone:'01083444649', stage:'시공준비중', staffName:'마스터', date: '2026-06-20', price: 2670000 }]);
-    openDetail('우사랑재현2', 9900);
+    saveCustomers([{ id: 9900, clientName: '시험터재현2', phone:'01090009008', stage:'시공준비중', staffName:'마스터', date: '2026-06-20', price: 2670000 }]);
+    openDetail('시험터재현2', 9900);
     // 2026-09-22(선혜님 - "코드정리 싹 해봐" 요청으로 전수 점검 중 발견):
     // openDetail()은 비동기(loadEstimatesAsync 경유)인데, 호출 직후
     // 곧바로 getBoundingClientRect()를 측정하고 있었음 - 렌더링이 끝나기

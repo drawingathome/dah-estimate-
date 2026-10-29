@@ -2,7 +2,7 @@
 // tests/save-receipt-check.js
 // ══════════════════════════════════════════════════
 // 2026-10-06(선혜님 - "너 희안하게 원인을 찾을 생각을 안하는거 같다 / 어떻게 하면 니가 오류를 찾을 수 있을까를 고민해봐"):
-// 서버에는 "저장 결과"만 남고 "그때 화면에서 일어난 일"이 어디에도 없어서, 9/23 김성은님 견적서(서버에 안 감)나 8/6 08:59 할인 변화 같은 일을 매번
+// 서버에는 "저장 결과"만 남고 "그때 화면에서 일어난 일"이 어디에도 없어서, 9/23 시험바님 견적서(서버에 안 감)나 8/6 08:59 할인 변화 같은 일을 매번
 // 추측으로 풀어야 했음. 견적서 화면이 저장·열기·인쇄 때마다 화면 상태를 save_receipts 표에 영수증으로 남긴다.
 //
 // 감시하는 것(실제 견적서 화면을 열어 실제 함수를 실행, 서버는 흉내):
@@ -10,7 +10,7 @@
 //  2) 서버 저장 실패: 'failed' 영수증이 남음
 //  3) 영수증 서버가 죽어도 저장은 정상 성공, 영수증은 이 기기에 보관되고 서버가 살아나면 다시 전송됨(오프라인이었던 때의 증거도 나중에 도착)
 //  4) 검증에서 막힌 저장(이름 없음): 'invalid' 영수증
-//  5) 견적서를 열었을 때 저장된 금액과 화면 금액이 다르면 'mismatch' 영수증 + 경고(오늘 김성은님: 저장 7,968,000원 vs 열면 7,544,000원)
+//  5) 견적서를 열었을 때 저장된 금액과 화면 금액이 다르면 'mismatch' 영수증 + 경고(오늘 시험바님: 저장 7,968,000원 vs 열면 7,544,000원)
 //  6) 불러온 견적서가 없으면 열기 영수증은 없음(불필요한 기록 없음)
 //  7) 인쇄·PDF: 저장 필요 여부와 결과가 'print' 영수증으로 남음
 //
@@ -39,7 +39,7 @@ const FILL = `
   document.getElementById('c-name').dispatchEvent(new Event('input', { bubbles: true }));
 `;
 
-// 김성은님 견적서(오늘 실제로 "열면 금액이 달라지던" 행)와 같은 모양
+// 시험바님 견적서(오늘 실제로 "열면 금액이 달라지던" 행)와 같은 모양
 function buildReopenRows() {
   const blinds = [['거실', '133', '260', '롤스크린', 75000, '(솜피전동) 시어 롤 블라인드', '262,500원'], ['거실', '133', '260', '롤스크린', 75000, '(솜피전동) 시어 롤 블라인드', '262,500원'], ['거실', '133', '260', '롤스크린', 75000, '(솜피전동) 시어 롤 블라인드', '262,500원'],
     ['거실 맞은편', '133', '195', '롤스크린', 75000, '(솜피전동) 시어 롤 블라인드', '195,000원'], ['거실 맞은편', '133', '195', '롤스크린', 75000, '(솜피전동) 시어 롤 블라인드', '195,000원'], ['거실 맞은편', '133', '195', '롤스크린', 75000, '(솜피전동) 시어 롤 블라인드', '195,000원'],
@@ -53,10 +53,10 @@ function buildReopenRows() {
   li.push({ qty: '1', kind: '시공비', type: 'svc', price: 475000, space: '', content: '서울 시공비 ✏️직접수정', autoType: 'install' });
   li.push({ qty: '12', kind: '시공비', type: 'svc', price: 10000, space: '', content: '블라인드 시공비 (12개)', autoType: 'install' });
   li.push({ qty: '1', kind: '레일', type: 'svc', price: 16000, space: '', content: '레일', autoType: 'rail' });
-  const est = { id: '939ce05f-78a0-43b8-848e-d0386534cccc', created_at: '2026-10-06T08:20:00', updated_at: '2026-10-06T09:50:00+00:00', date: '2026-10-07', memo: '', phone: '010-4627-8743', price: 7968000, space: '방2 (게스트룸)', branch: '반포점', region: '서울', product: '우디 속커튼', client_id: 226, cust_type: 'new', line_items: li, staff_name: '마스터', is_archived: false, install_date: '', customer_name: '김성은', contract_status: 'pending', estimate_status: 'ga',
+  const est = { id: '939ce05f-78a0-43b8-848e-d0386534cccc', created_at: '2026-10-06T08:20:00', updated_at: '2026-10-06T09:50:00+00:00', date: '2026-10-07', memo: '', phone: '010-9000-9015', price: 7968000, space: '방2 (게스트룸)', branch: '반포점', region: '서울', product: '우디 속커튼', client_id: 226, cust_type: 'new', line_items: li, staff_name: '마스터', is_archived: false, install_date: '', customer_name: '시험바', contract_status: 'pending', estimate_status: 'ga',
     price_breakdown: { balance: 3984000, deposit: 3984000, discount: 369600, finalTotal: 7968000, discountDetail: [{ label: '직접입력 10%', amount: 368660 }, { label: '끝자리 절사', amount: 940 }], installSubtotal: 4651000, productSubtotal: 3686600, performanceRevenue: 3317000 },
     install_date_tbd: true, measure_date_tbd: false, applied_discounts: { manual: { type: 'pct', value: 10, amount: 368660 }, coupons: [] }, performance_revenue: 3317000 };
-  const cust = { id: 226, addr: '서울 서초구 신반포로 20 트리니원 107동 804호', date: '2026-09-23', memo: '', phone: '010-4627-8743', price: 7968000, stage: '상담', branch: '반포점', staff_name: '마스터', addr_detail: '트리니원 107동 804호', client_name: '김성은', is_archived: false, measure_date: '2026-10-07', install_date_tbd: true, measure_date_tbd: false };
+  const cust = { id: 226, addr: '서울 서초구 신반포로 20 트리니원 107동 804호', date: '2026-09-23', memo: '', phone: '010-9000-9015', price: 7968000, stage: '상담', branch: '반포점', staff_name: '마스터', addr_detail: '트리니원 107동 804호', client_name: '시험바', is_archived: false, measure_date: '2026-10-07', install_date_tbd: true, measure_date_tbd: false };
   return { est, cust };
 }
 
@@ -141,7 +141,7 @@ const kinds = (st, kind) => st.receipts.filter(r => r && r.kind === kind);
     ok('4-1. [검증에서 막힘] "invalid" 영수증이 남음(저장 시도가 있었다는 증거)', kinds(state, 'save').some(r => r.outcome === 'invalid'), JSON.stringify(kinds(state, 'save').map(r => r.outcome)));
     await browser.close(); server.kill();
   }
-  // 5) 열었을 때 금액 불일치(오늘 김성은님 사례)
+  // 5) 열었을 때 금액 불일치(오늘 시험바님 사례)
   {
     const { server, browser, page, state } = await open(18504, { reopen: true }, '?loadEstDbId=939ce05f-78a0-43b8-848e-d0386534cccc');
     await page.evaluate(() => { const o = window.showToast; window.__toasts = []; window.showToast = function (m) { window.__toasts.push(String(m)); return o.apply(this, arguments); }; });

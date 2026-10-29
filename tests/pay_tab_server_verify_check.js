@@ -15,7 +15,7 @@ async function run() {
     const method = req.method();
     if (url.includes('supabase.co')) {
       if (method === 'OPTIONS') { req.respond({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Allow-Headers': '*' } }); return; }
-      // 김은/황남주 사례 재현: 로컬 캐시(dah_saved)엔 이 고객의 견적서가
+      // 김은/시험거 사례 재현: 로컬 캐시(dah_saved)엔 이 고객의 견적서가
       // 하나도 없지만, 서버(estimates 테이블)엔 실제로 완납된 견적서가 있음
       if (url.includes('/estimates?client_id=eq.9940')) {
         req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
@@ -44,7 +44,7 @@ async function run() {
   // 서버 재확인이 끝난 뒤: 실제로는 견적서가 있고 완납이라는 게 반영돼야 함
   await new Promise(r => setTimeout(r, 800));
   const after = await page.evaluate(() => document.getElementById('detail-pay-body').textContent);
-  ok('1. 서버 재확인 후 실제로 존재하는 견적서(완납)로 화면이 다시 그려짐(김은/황남주 근본 수정)', after.indexOf('1,500,000원') !== -1 && after.indexOf('1,600,000원') !== -1, after.slice(0, 300));
+  ok('1. 서버 재확인 후 실제로 존재하는 견적서(완납)로 화면이 다시 그려짐(김은/시험거 근본 수정)', after.indexOf('1,500,000원') !== -1 && after.indexOf('1,600,000원') !== -1, after.slice(0, 300));
 
   const cacheFixed = await page.evaluate(() => {
     var arr = JSON.parse(localStorage.getItem('dah_saved')||'[]');

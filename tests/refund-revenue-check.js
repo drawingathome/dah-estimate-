@@ -22,7 +22,7 @@ async function run() {
   const r = await page.evaluate(() => {
     const rf = (id, estId, slot, amount, paid, refund, extra) => Object.assign({ id, entry_type: 'refund', estimate_id: estId, slot, amount, paid_date: paid, refund_date: refund }, extra || {});
     localStorage.setItem('dah_saved', JSON.stringify([
-      // S1 이영욱형: 10/5 카드 120만 → 10/10 전액 취소 → 10/12 98.2만 재결제(칸에는 재결제분만 남음)
+      // S1 시험라형: 10/5 카드 120만 → 10/10 전액 취소 → 10/12 98.2만 재결제(칸에는 재결제분만 남음)
       { id: 'e1', clientId: 1, clientName: 'S1', price: 1027000, performanceRevenue: 907000, depositAmount: 982000, depositDate: '2026-10-12', balanceAmount: 0, balanceDate: '',
         refundRows: [rf('r1', 'e1', 'deposit', 1200000, '2026-10-05', '2026-10-10')] },
       // S2 달을 넘긴 전액 환불: 9/20 100만 입금 → 10/3 전액 환불(칸 0)
@@ -43,7 +43,7 @@ async function run() {
     for (let i = 1; i <= 5; i++) out['s' + i] = { sep: sumBy(cust(i), '2026-09'), oct: sumBy(cust(i), '2026-10') };
     return out;
   });
-  ok('S1 이영욱형: 10월 입금 순액 98.2만 (120만 -120만 +98.2만)', r.s1.oct.rev === 982000, r.s1.oct);
+  ok('S1 시험라형: 10월 입금 순액 98.2만 (120만 -120만 +98.2만)', r.s1.oct.rev === 982000, r.s1.oct);
   ok('S1 10월 성과매출 = 총액 대비 98.2만분(867,258)', r.s1.oct.perf === 867258, r.s1.oct);
   ok('S1 취소 아님(받은 돈이 남아 있음)', r.s1.oct.cancel === 0, r.s1.oct);
   ok('S2 9월 입금 100만·성과 90만이 9월에 그대로 남음', r.s2.sep.rev === 1000000 && r.s2.sep.perf === 900000, r.s2.sep);

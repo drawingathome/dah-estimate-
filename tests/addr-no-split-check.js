@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // tests/addr-no-split-check.js
 // ══════════════════════════════════════════════════
-// 2026-10-01(선혜님 - 이민선 고객 사례 "실제 도로명주소를 넣었는데 상세주소만
+// 2026-10-01(선혜님 - 시험다 고객 사례 "실제 도로명주소를 넣었는데 상세주소만
 // 저렇게 보이는거야"): 고객/설문 데이터를 불러와 c-addr에 채우는 "이미 합쳐진
 // 텍스트를 정규식으로 추측해서 쪼갠다"는 방식(splitAddrDetail)이 2026-09-22에
 // 이미 "세 번 재발한 근본 원인"으로 결론나서 고객 추가 화면은 다른 방식으로
@@ -41,7 +41,7 @@ async function run() {
       if (req.method() === 'OPTIONS') { req.respond({ status: 204, headers: { ...CORS, 'Access-Control-Allow-Methods': 'GET,POST,PATCH,OPTIONS', 'Access-Control-Allow-Headers': '*' } }); return; }
       const u = new URL(url);
       if (u.pathname.includes('/rest/v1/customers')) {
-        req.respond({ status: 200, contentType: 'application/json', headers: CORS, body: JSON.stringify([{ id: 501, client_name: '이민선', phone: '010-4493-3135', addr: weirdAddr, updated_at: new Date().toISOString() }]) });
+        req.respond({ status: 200, contentType: 'application/json', headers: CORS, body: JSON.stringify([{ id: 501, client_name: '시험다', phone: '010-9000-9003', addr: weirdAddr, updated_at: new Date().toISOString() }]) });
         return;
       }
       req.respond({ status: 200, contentType: 'application/json', headers: CORS, body: '[]' });

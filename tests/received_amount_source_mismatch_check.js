@@ -17,7 +17,7 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-  // 김은/황남주 사례 재현: 고객 레벨엔 완납 기록이 있지만(dash-customer-pay.js가
+  // 김은/시험거 사례 재현: 고객 레벨엔 완납 기록이 있지만(dash-customer-pay.js가
   // 실제로 쓰는 곳), 이 고객 이름으로 저장된 견적서(dah_saved)엔 결제 정보가
   // 하나도 없는 상태(견적서 자체는 있지만 depositAmount/balanceAmount가 없음)
   const r1 = await page.evaluate(() => {

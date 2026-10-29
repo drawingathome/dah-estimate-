@@ -69,7 +69,7 @@ async function run() {
     tr.querySelector('.mw').value = 100; calcCurtainRow(tr.querySelector('.mw'));
     tr.querySelector('.mh').value = 100; calcCurtainRow(tr.querySelector('.mh'));
     tr.querySelector('.cprice').value = 10000; calcCurtainRow(tr.querySelector('.cprice'));
-    // 수동으로 추가하고 단가를 직접 친 시공 줄(윤세현 실데이터 모양: autoType 없음 + override=true)
+    // 수동으로 추가하고 단가를 직접 친 시공 줄(시험타 실데이터 모양: autoType 없음 + override=true)
     addSvcRow();
     var str = document.querySelector('#svc-body tr:last-child');
     str.querySelector('.svc-kind').value = '전동';

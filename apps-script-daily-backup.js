@@ -245,8 +245,8 @@ function dahDailyBackup() {
  * ══════════════════════════════════════════════════
  * 중복 의심 데이터 스캔 (dahScanForDuplicates)
  * ══════════════════════════════════════════════════
- * 2026-08-26 도입 — 8/26에 실제로 발견했던 중복 사례(김채은/유경진 견적서,
- * 정은송/박소진 마이그레이션 중복)를 계기로, "사람이 우연히 발견하기 전에
+ * 2026-08-26 도입 — 8/26에 실제로 발견했던 중복 사례(시험토/시험자 견적서,
+ * 시험후/시험보 마이그레이션 중복)를 계기로, "사람이 우연히 발견하기 전에
  * 자동으로 걸러내자"는 취지로 만듦.
  *
  * backup 객체(customers/estimates 배열 포함)를 받아서:
@@ -297,7 +297,7 @@ function dahScanForDuplicates(backup) {
   }
 
   // 3) 고아 데이터 의심 (2026-08-27 추가 — 선혜님과 함께 실제로 발견한
-  // 최시내 고객님 사례가 계기: 선금결제 단계까지 갔는데 정작 확정된
+  // 시험커 고객님 사례가 계기: 선금결제 단계까지 갔는데 정작 확정된
   // 견적서가 하나도 없던 상태. "결제 단계인데 뒷받침하는 견적이 없다"는
   // 건을 자동으로 걸러냄.)
   if (Array.isArray(backup.customers) && Array.isArray(backup.estimates)) {
@@ -579,7 +579,7 @@ function dahScanForDataIntegrity(backup) {
     ests.forEach(function(e) { estDepSum += Number(e.deposit_amount) || 0; estBalSum += Number(e.balance_amount) || 0; });
 
     // 1) 결제 정합성: 고객 레벨과 견적서 레벨 둘 다 결제 기록이 있는데
-    // (둘 다 0이 아닌데) 서로 다른 금액이면 - 오늘 발견한 김은/황남주
+    // (둘 다 0이 아닌데) 서로 다른 금액이면 - 오늘 발견한 김은/시험거
     // 사례처럼 "쓰는 곳과 읽는 곳이 서로 다른 값을 본다"는 신호.
     if ((custDep + custBal) > 0 && (estDepSum + estBalSum) > 0 && (custDep !== estDepSum || custBal !== estBalSum)) {
       issues.push('[결제 불일치] ' + c.client_name + '(id:' + c.id + ') — 고객레벨(선금' + custDep.toLocaleString() + '/잔금' + custBal.toLocaleString() +
@@ -590,7 +590,7 @@ function dahScanForDataIntegrity(backup) {
     var isPrePayment = ['방문예약', '상담', '가견적'].indexOf(c.stage) !== -1;
     var hasNoPayment = custDep === 0 && custBal === 0 && estDepSum === 0 && estBalSum === 0;
 
-    // 2026-10-02(선혜님 - "이민선/김현정 결제했는데 상담에 뜨니 ... 전체 확인해" /
+    // 2026-10-02(선혜님 - "시험다/시험사 결제했는데 상담에 뜨니 ... 전체 확인해" /
     // "전문업체 기준으로 확인해" 요청으로 추가한 자동 감시 3종): 전부 오늘 실제로
     // 터진 사고 패턴 - 사용자 신고로 발견되기 전에 매일 밤 자동으로 먼저 잡아내기 위함.
     // 실제 운영 DB로 미리 검증(아래 3~5번 조건) 중, "입금날짜 누락"이 62건이나 나오는
@@ -615,14 +615,14 @@ function dahScanForDataIntegrity(backup) {
     var recent = isRecentlyUpdated(c) && !isLegacyImport;
 
     // 3) 결제(선금 또는 잔금)는 있는데 아직 방문예약/상담/가견적 단계에 머물러
-    // 있음 - 이민선/김현정 사례(estimates PATCH는 됐는데 customers 동기화가
+    // 있음 - 시험다/시험사 사례(estimates PATCH는 됐는데 customers 동기화가
     // 안 되거나, 단계전환이 조용히 실패한 신호).
     if (recent && isPrePayment && (custDep > 0 || custBal > 0)) {
       issues.push('[결제-단계 불일치] ' + c.client_name + '(id:' + c.id + ') — "' + c.stage +
         '" 단계인데 입금 기록(선금' + custDep.toLocaleString() + '/잔금' + custBal.toLocaleString() + ')이 있음 - 단계전환이 안 된 것으로 보임');
     }
 
-    // 4) 입금액은 있는데 입금날짜가 비어있음 - 이민선/김현정 사례의 정확한 증상
+    // 4) 입금액은 있는데 입금날짜가 비어있음 - 시험다/시험사 사례의 정확한 증상
     // (estimates엔 날짜가 있는데 customers 동기화에서 날짜만 빠지는 패턴). 최근
     // 변경분만 - 과거 이관 데이터는 원래부터 날짜가 없는 경우가 많아 매일 반복
     // 경고하면 의미가 없음.
@@ -641,11 +641,11 @@ function dahScanForDataIntegrity(backup) {
     }
 
     // 2026-10-10(선혜님 - "전문업체 기준 다음 단계", 오늘 전수 점검에서 찾은 유형 추가): 최근 변경분만(위 3~5번과 같은 소음 방지 원칙).
-    // 7) 받은 돈(선금+잔금)이 총액보다 큼 - 환불·제품 변경 후 정리 안 된 신호(이영욱·신화경 사례).
+    // 7) 받은 돈(선금+잔금)이 총액보다 큼 - 환불·제품 변경 후 정리 안 된 신호(시험라·시험아 사례).
     if (recent && Number(c.price) > 0 && (custDep + custBal) > Number(c.price)) {
       issues.push('[입금 초과] ' + c.client_name + '(id:' + c.id + ') — 받은 돈 ' + (custDep + custBal).toLocaleString() + '원이 총액 ' + Number(c.price).toLocaleString() + '원보다 큼(환불/조정 정리 필요)');
     }
-    // 8) 성과매출이 총액보다 큼 - 통계가 부풀 수 있음(김명석·서지원 사례: 고객 금액이 견적 합계와 달라진 신호).
+    // 8) 성과매출이 총액보다 큼 - 통계가 부풀 수 있음(시험소·시험오 사례: 고객 금액이 견적 합계와 달라진 신호).
     if (recent && Number(c.price) > 0 && Number(c.performance_revenue) > Number(c.price)) {
       issues.push('[성과매출 초과] ' + c.client_name + '(id:' + c.id + ') — 성과매출 ' + Number(c.performance_revenue).toLocaleString() + '원이 총액 ' + Number(c.price).toLocaleString() + '원보다 큼(견적 합계와 고객 금액 확인)');
     }
@@ -797,7 +797,7 @@ function dahCheckClientErrors() {
     // 갑자기 수백건이 한꺼번에 몰리는 걸 방지
     props.setProperty('LAST_ERROR_CHECK_TIME', nowISO);
     // 2026-09-21(선혜님 - "이 메일이 진짜 실패만 걸러서 오게 해줘" -
-    // 박윤아 견적서 정상 저장 건이 "오류"처럼 메일로 온 사례로 발견):
+    // 시험차 견적서 정상 저장 건이 "오류"처럼 메일로 온 사례로 발견):
     // logSaveStage()는 저장이 "성공"했을 때도 각 단계를 전부 서버에
     // 기록하는데(다음에 진짜 문제가 생기면 어디까지 갔는지 보려고
     // 일부러 그렇게 만든 것), 이 메일은 그걸 성공/실패 구분 없이 전부
@@ -881,7 +881,7 @@ function dahCheckClientErrors() {
         tag = checkResolved(r) ? ' [금액/단계 일치 확인됨 - 그래도 한 번 봐주세요]' : ' [확인 안 됨]';
       }
       // 2026-09-22(선혜님 - "오류를 모두 확인한거 맞니... 개선을 해야지" -
-      // "윤정자" 고객 3회 저장실패 사례로 발견): "검증실패-중단"은 왜
+      // "시험서" 고객 3회 저장실패 사례로 발견): "검증실패-중단"은 왜
       // 실패했는지(고객명 없음/연락처 없음/제품금액 0개/단가누락 등)를
       // est-save.js가 이제 extra.detail에 남기는데, 정작 이 메일 요약은
       // detail을 안 보여주고 있어서 "실패했다"는 것만 알고 이유는 매번
@@ -1313,7 +1313,7 @@ function dahDiagnoseSchema() {
  * "설문진단테스트_..."가 남아있는 게 발견됨. 이 함수는 그 패턴에
  * 정확히 일치하는 레코드만 찾아서 삭제함(실제 고객 데이터는 절대 안 건드림).
  */
-// 2026-10-01(선혜님 - 최금희 고객 "컴퓨터에서는 결제완료, 아이패드에서는 미수금"
+// 2026-10-01(선혜님 - 시험나 고객 "컴퓨터에서는 결제완료, 아이패드에서는 미수금"
 // 신고 - "니가 해" 요청으로, SQL을 직접 짜서 달라고 하는 대신 이미 열려있는 이
 // 진단 도구에 전용 함수를 추가함. 대상 고객명만 아래에서 바꿔서 실행하면 됨 -
 // customers/estimates 원본 데이터를 그대로 보여주고, 클라이언트(dash-utils.js의
@@ -1325,7 +1325,7 @@ function dahCheckCustomerPaymentMismatch() {
   // 실제로 실행하면 첫 report() 호출에서 바로 ReferenceError로 터졌을 것. 함수 설명
   // 주석의 "실행 로그에서 확인"이라는 용도에 맞게 Logger.log로 연결하는 로컬 헬퍼로 수정.
   var report = function (msg) { Logger.log(msg); };
-  var TARGET_NAME = '최금희'; // 다른 고객을 확인하려면 이 이름만 바꿔서 다시 실행
+  var TARGET_NAME = '시험나'; // 다른 고객을 확인하려면 이 이름만 바꿔서 다시 실행
   report('=== "' + TARGET_NAME + '" 결제상태 불일치 진단 ===');
 
   var custRes = UrlFetchApp.fetch(SUPABASE_URL + '/rest/v1/customers?client_name=eq.' + encodeURIComponent(TARGET_NAME) + '&select=*', {

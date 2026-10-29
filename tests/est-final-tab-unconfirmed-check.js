@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // tests/est-final-tab-unconfirmed-check.js
 // 2026-10-20: "최종견적서 탭 + 확정 안 누름" 상태로 인쇄·PDF하면 확인창이 뜨고, 확정 버튼이 주황색 "확정 안 됨"으로 눈에 띄는지 확인.
-// (노지경 사례: 저장 영수증상 탭만 켜고 확정은 한 번도 안 눌렸는데 종이는 최종견적서처럼 나옴)
+// (시험가 사례: 저장 영수증상 탭만 켜고 확정은 한 번도 안 눌렸는데 종이는 최종견적서처럼 나옴)
 const path = require('path');
 const { launchBrowser, startServer } = require('./_helpers');
 async function run() {

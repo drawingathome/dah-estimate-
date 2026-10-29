@@ -98,7 +98,7 @@ ok('3-3. [점검 하나가 죽는 날] "어떤 점검이 죽었는지" 알림 �
 // 실제 운영 기록 모양 그대로: 저장 성공 응답은 상태값이 extra.detail.status(한 단계 아래)에 있음(DB로 확인).
 const now = new Date().toISOString();
 const routineLogs = [
-  { created_at: now, message: '저장단계: 시작', url: '', extra: { stage: '시작', detail: null, customerName: '홍은지' }, app: 'estimate', user_role: 'staff' },
+  { created_at: now, message: '저장단계: 시작', url: '', extra: { stage: '시작', detail: null, customerName: '시험호' }, app: 'estimate', user_role: 'staff' },
   { created_at: now, message: '저장단계: 세션확인-정상', url: '', extra: { stage: '세션확인-정상', detail: null }, app: 'estimate', user_role: 'staff' },
   { created_at: now, message: '저장단계: 검증통과', url: '', extra: { stage: '검증통과', detail: null }, app: 'estimate', user_role: 'staff' },
   { created_at: now, message: '저장단계: 고객저장-응답', url: '', extra: { stage: '고객저장-응답', detail: { status: 200, bodyLen: 826 } }, app: 'estimate', user_role: 'staff' },
@@ -158,10 +158,10 @@ ok('9-4. 매일 백업이 변경 이력·저장 기록·점검 확인 기록도 
 ok('9-3. 매일 백업이 월 마감(monthly_close)·입금 장부(payment_ledger)도 가져옴', bk.fetchedTables.indexOf('monthly_close') !== -1 && bk.fetchedTables.indexOf('payment_ledger') !== -1, JSON.stringify(bk.fetchedTables));
 
 // ── 2026-10-14: DB 자동 점검 연동 검증 ──
-const dbIssue = { code: 'OVERPAID', severity: 'warn', customer_id: 248, client_name: '이영욱', staff_name: '오지은 실장', detail: '입금합계 1200000원이 금액 1027000원보다 큼' };
+const dbIssue = { code: 'OVERPAID', severity: 'warn', customer_id: 248, client_name: '시험라', staff_name: '오지은 실장', detail: '입금합계 1200000원이 금액 1027000원보다 큼' };
 const dbBad = run({ customers: [], dbIssues: [dbIssue] });
 const dbBadMail = dbBad.mails.find(m => /데이터 정합성/.test(m.subject));
-ok('10. [DB 점검에 확인 안 한 이상] 메일에 고객·내용이 포함됨', dbBad.error === null && !!dbBadMail && /OVERPAID/.test(dbBadMail.body) && /이영욱/.test(dbBadMail.body), JSON.stringify(dbBad.mails.map(m => m.subject)));
+ok('10. [DB 점검에 확인 안 한 이상] 메일에 고객·내용이 포함됨', dbBad.error === null && !!dbBadMail && /OVERPAID/.test(dbBadMail.body) && /시험라/.test(dbBadMail.body), JSON.stringify(dbBad.mails.map(m => m.subject)));
 const dbAcked = run({ customers: [], dbIssues: [dbIssue], dbAcks: [{ ack_key: 'OVERPAID|248|' + dbIssue.detail }] });
 ok('10-1. [확인함 처리한 이상] 매일 메일로 반복되지 않음', dbAcked.error === null && !dbAcked.mails.some(m => /데이터 정합성/.test(m.subject)), JSON.stringify(dbAcked.mails.map(m => m.subject)));
 const dbStale = run({ customers: [], dbLog: [{ run_at: new Date(Date.now() - 50 * 3600 * 1000).toISOString(), total_count: 0 }] });

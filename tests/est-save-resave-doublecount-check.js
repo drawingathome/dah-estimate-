@@ -1,5 +1,5 @@
 // tests/est-save-resave-doublecount-check.js
-// 2026-09-22(선혜님 - 최금희 견적서 사고: "잔금이 왜 없니 토탈이랑 금액이
+// 2026-09-22(선혜님 - 시험나 견적서 사고: "잔금이 왜 없니 토탈이랑 금액이
 // 왜 다르지??????" "견적서 또 날라갔다!!!!" → "버그를 고쳐도 왜 같은
 // 버그가 생기지???? 쌍둥이함수까지 찾아~" 지시로 끝까지 추적해 발견한
 // 진짜 근본원인): est-save.js의 신규 견적서 저장(POST) 요청이
@@ -66,7 +66,7 @@ function setupNetwork(page, captured) {
         const newId = 'srv-est-' + estCounter;
         estimates.push({ id: newId, price: body.price, performance_revenue: body.performance_revenue });
         captured.push({ type: 'POST-estimate', body, newId, prefer: req.headers()['prefer'] });
-        // 2026-09-22(최금희 사례 정밀 재현 - 진짜 원인 발견): 실제
+        // 2026-09-22(시험나 사례 정밀 재현 - 진짜 원인 발견): 실제
         // Supabase는 Prefer: return=minimal이면 201 응답에 빈 바디를
         // 준다 - est-save.js가 신규 저장(POST)일 때 정확히 이 헤더를
         // 보내고 있었음. 실제 서버 동작을 정확히 흉내내기 위해 헤더에
@@ -110,7 +110,7 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-  // 2026-09-22(최금희 사례 재현 - 정확한 조건 맞추기): 최금희 사례는
+  // 2026-09-22(시험나 사례 재현 - 정확한 조건 맞추기): 시험나 사례는
   // "완전 신규 고객"이 아니라 "이미 customers 레코드가 있는 고객에게
   // 새 견적서를 추가"하는 상황이었음(고객은 초기 입력 단계에서 이미
   // 만들어져 있었고, 13분 후에 견적서를 저장함) - estSaveCustomerId를
@@ -118,7 +118,7 @@ async function run() {
   await page.evaluate(() => {
     window._estEditState = window._estEditState || {};
     window._estEditState.estSaveCustomerId = 221;
-    // 2026-09-22(최금희 사례 정밀 재현): 실제 사례는 1차 저장부터 이미
+    // 2026-09-22(시험나 사례 정밀 재현): 실제 사례는 1차 저장부터 이미
     // "기존 고객 업데이트"(isUpdate:true)였음 - est-save.js의 로컬
     // dah_customers 매칭 로직(이름+전화번호)이 실제로 이 고객을 찾아야
     // 정확히 같은 조건이 됨.
@@ -126,7 +126,7 @@ async function run() {
       { id: 221, clientName: '이중계산재현', phone: '01000001234', stage: '상담', price: 0 }
     ]));
   });
-  // 최금희 재현: 커튼 품목 하나 입력, 고객정보, 시공예정일은 비워둠(확인창 뜸)
+  // 시험나 재현: 커튼 품목 하나 입력, 고객정보, 시공예정일은 비워둠(확인창 뜸)
   await page.evaluate(() => {
     document.getElementById('c-name').value = '이중계산재현';
     document.getElementById('c-phone').value = '01000001234';
@@ -143,7 +143,7 @@ async function run() {
   await page.evaluate(() => { saveEstimate(); });
   await new Promise(r => setTimeout(r, 1000));
 
-  // 2차 저장(동일 내용, 재저장) - 최금희 사례처럼 짧은 시간 뒤 다시 클릭
+  // 2차 저장(동일 내용, 재저장) - 시험나 사례처럼 짧은 시간 뒤 다시 클릭
   await page.evaluate(() => { saveEstimate(); });
   await new Promise(r => setTimeout(r, 1000));
 

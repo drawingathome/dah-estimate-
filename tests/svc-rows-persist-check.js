@@ -1,5 +1,5 @@
 // tests/svc-rows-persist-check.js
-// 2026-10-08(선혜님 — 조유정 견적 "시공비 이상하네 … 여러번 말했어"):
+// 2026-10-08(선혜님 — 시험마 견적 "시공비 이상하네 … 여러번 말했어"):
 // 자동으로 생기는 시공 행(실측비·시공비·블라인드시공·레일)을 저장 때 DB에서 빼고
 // "다시 열 때 재계산으로 만든다"는 구조가 근본 원인이었음.
 //   - 저장된 견적 65건 중 62건(95%)이 합계엔 시공비가 있는데 행은 DB에 없었음
@@ -10,7 +10,7 @@
 // 검증(고치기 전엔 실패해야 하는 시험들 — 되돌려보기 검증 대상):
 //   1 저장: 자동 행 3종이 line_items에 들어감 + 표식
 //   2 저장↔복원: 열어도 행/합계 동일
-//   3 직접 추가한 "실측 시공비" 행이 있어도 중복 없음 (조유정 재현)
+//   3 직접 추가한 "실측 시공비" 행이 있어도 중복 없음 (시험마 재현)
 //   4 사용자가 행을 모두 지운 상태로 저장 → 열어도 안 되살아남
 //   5 열린 뒤 사용자가 지역을 바꾸면 자동 재계산 유지(회귀 방지)
 //   6 표식 없는 예전 견적은 예전 방식 그대로(회귀 방지)
@@ -124,7 +124,7 @@ async function run() {
     ok('2 (1단계 저장이 안 돼서 건너뜀)', false, '저장 요청 없음');
   }
 
-  // ── 3. 조유정 재현: 직접 추가한 "실측 시공비 90,000" + 블라인드시공(자동) + 표식
+  // ── 3. 시험마 재현: 직접 추가한 "실측 시공비 90,000" + 블라인드시공(자동) + 표식
   const joBd = { balance: 0, deposit: 308000, discount: 0, finalTotal: 308000, discountDetail: [], installSubtotal: 110000, productSubtotal: 198000, performanceRevenue: 198000, svcRowsSaved: true };
   const joItems = BLINDS.concat([
     { qty: '1', kind: '시공비', type: 'svc', price: 90000, space: '', content: '실측 시공비', autoType: '', override: false },
@@ -132,7 +132,7 @@ async function run() {
   ]);
   const p3 = await openSaved(estRow(joItems, joBd));
   const r3 = await readSvc(p3);
-  ok('3 [조유정] 직접 추가한 실측 시공비가 있어도 자동 실측/시공비가 또 붙지 않음 (총액 308,000원)', r3.total === '308000', 'rows=' + JSON.stringify(r3.rows) + ' total=' + r3.total);
+  ok('3 [시험마] 직접 추가한 실측 시공비가 있어도 자동 실측/시공비가 또 붙지 않음 (총액 308,000원)', r3.total === '308000', 'rows=' + JSON.stringify(r3.rows) + ' total=' + r3.total);
   ok('3-b 시공 행은 저장된 2개 그대로', r3.rows.length === 2, String(r3.rows.length));
   await p3.close();
 

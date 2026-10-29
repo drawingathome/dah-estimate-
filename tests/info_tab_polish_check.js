@@ -19,7 +19,7 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
-  // 손현영 사례 재현: 견적금액과 매출기준금액이 같은 경우(2,003,000원 둘 다)
+  // 시험파 사례 재현: 견적금액과 매출기준금액이 같은 경우(2,003,000원 둘 다)
   await page.evaluate(() => {
     saveCustomers([{ id: 9700, clientName: '가격중복테스트', phone: '01033330000', stage: '시공준비중', staffName: '마스터', price: 2003000 }]);
     localStorage.setItem('dah_saved', JSON.stringify([{ id: 9700, no: 'DAH-TEST-01', clientId: 9700, clientName: '가격중복테스트', price: 2003000, itemCount: 6, dbId: 'est-dup-test', savedAt: new Date().toISOString() }]));
