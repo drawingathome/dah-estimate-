@@ -147,7 +147,7 @@ function buildCustomerHTML() {
   var allRows = curtainRows.concat(blindRows).concat(otherRows);
   var prodHTML = '';
   if(allRows.length) {
-    prodHTML += '<div class="pv-table-scroll-wrap"><div class="pv-table-scroll"><table class="pv-prod-table pv-prod6">';
+    prodHTML += '<div class="pv-table-scroll-wrap pv-prod6-wrap"><div class="pv-table-scroll"><table class="pv-prod-table pv-prod6">';
     prodHTML += '<colgroup><col style="width:13%"><col style="width:14%"><col style="width:35%"><col class="pv-hide-m" style="width:9%"><col class="pv-hide-m" style="width:13%"><col style="width:16%"></colgroup>';
     prodHTML += '<thead><tr><th style="text-align:left">공간</th><th style="text-align:left">사이즈(cm)</th><th style="text-align:left">제품명</th><th class="r pv-hide-m">폭</th><th class="r pv-hide-m">단가</th><th class="r">금액</th></tr></thead><tbody>';
 

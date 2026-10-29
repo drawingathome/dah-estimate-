@@ -65,6 +65,10 @@ const ROOT = path.resolve(__dirname, '..');
     ok(label + ' — 미리보기가 열려 있는 동안 버전표시가 문서 위에 겹쳐 보이지 않음', !m.bVisible && !m.badgeHitsText);
     ok(label + ' — 상단 막대 제목이 잘리지 않음', m.navTruncated === false, String(m.navTruncated));
     ok(label + ' — 문서 전체가 옆으로 삐져나가지 않음', !m.docOverflow);
+    // 인쇄/PDF 저장은 폰에서도 폭·단가 칸까지 전부 나와야 함(화면용 숨김은 인쇄에 적용되면 안 됨)
+    await page.emulateMediaType('print');
+    const pc = await page.evaluate(() => [...document.querySelectorAll('#pv-overlay .pv-prod-table thead th')].filter(x => x.offsetParent).map(x => x.textContent.trim()).join('|'));
+    ok(label + ' — 인쇄/PDF 저장 모드에서는 폭·단가 칸까지 6칸 모두 나옴', pc === '공간|사이즈(cm)|제품명|폭|단가|금액', pc);
     await page.close();
   }
   await browser.close(); server.kill ? server.kill() : server.close && server.close();

@@ -803,7 +803,6 @@ td.amt{
   .pv-prod6 col:nth-child(1){width:13%!important}.pv-prod6 col:nth-child(2){width:23%!important}.pv-prod6 col:nth-child(3){width:42%!important}.pv-prod6 col:nth-child(6){width:22%!important}
   .pv-header{flex-direction:column;align-items:flex-start;gap:10px;padding:18px 20px 14px}
   .pv-header-right{align-items:flex-start}
-  .pv-table-scroll-wrap::after{display:none}
   .pv-table-scroll-wrap{position:relative}
   .pv-table-scroll-wrap::after{
     content:'\203a';color:#B0A99F;font-size:14px;font-weight:700;
@@ -814,6 +813,8 @@ td.amt{
     pointer-events:none;transition:opacity 0.2s;
   }
   .pv-table-scroll-wrap.scrolled-end::after{opacity:0}
+  /* 2026-10-29(H-37): 폰에서는 폭·단가 칸을 숨겨 표가 다 들어가므로 스크롤 안내(그림자·화살표)는 금액 칸을 가릴 뿐 — 6칸 표(.pv-prod6)에서 끔(공개 링크는 안내를 끄는 코드가 없어 항상 떠 있었음) */
+  .pv-prod6-wrap::after,.pv-table-scroll-wrap:has(.pv-prod6)::after{display:none!important}
 
 /* 2026-08-19: 카톡공유 PDF 생성(html2canvas) 전용 - html2canvas는 @media print를
    평가하지 않아 화면용 스크롤힌트(화살표)가 그대로 캡처되던 문제 발견·수정.
@@ -824,6 +825,13 @@ td.amt{
 /* N-49: 폰에서 숨긴 폭·단가 칸은 카톡공유 PDF에는 그대로 나와야 함 */
 .pv-pdf-capture .pv-prod-table th.pv-hide-m,.pv-pdf-capture .pv-prod-table td.pv-hide-m{display:table-cell!important}
 .pv-pdf-capture .pv-prod-table col.pv-hide-m{display:table-column!important}
+@media print{
+  /* N-49: 인쇄·PDF 저장은 폰에서도 폭·단가 칸 포함 6칸 전부 */
+  .pv-prod-table th.pv-hide-m,.pv-prod-table td.pv-hide-m{display:table-cell!important}
+  .pv-prod-table col.pv-hide-m{display:table-column!important}
+  .pv-prod6 col:nth-child(1){width:13%!important}.pv-prod6 col:nth-child(2){width:14%!important}.pv-prod6 col:nth-child(3){width:35%!important}.pv-prod6 col:nth-child(6){width:16%!important}
+  .pv-header{flex-direction:row!important;align-items:flex-end!important}
+}
 .pv-pdf-capture .pv-prod6 col:nth-child(1){width:13%!important}.pv-pdf-capture .pv-prod6 col:nth-child(2){width:14%!important}.pv-pdf-capture .pv-prod6 col:nth-child(3){width:35%!important}.pv-pdf-capture .pv-prod6 col:nth-child(6){width:16%!important}
 .pv-pdf-capture .pv-header{flex-direction:row!important;align-items:flex-end!important}
 }
