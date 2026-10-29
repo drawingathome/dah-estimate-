@@ -10,7 +10,7 @@ const bad = [];
 files.forEach(f => { const s = fs.readFileSync(path.join(root, f), 'utf8'); if (/raw\.githubusercontent\.com\/drawingathome|drawingathome\.github\.io/.test(s)) bad.push(f); });
 ok('최상위 화면·스크립트 파일 ' + files.length + '개가 공개 저장소 주소를 쓰지 않음', bad.length === 0, bad.join(', '));
 const utils = fs.readFileSync(path.join(root, 'est-utils.js'), 'utf8');
-ok('견적서 로고(DAH_LOGO_B64)가 배포 주소의 /logo.png를 가리킴', /var DAH_LOGO_B64 = 'https:\/\/dah-dashboard\.vercel\.app\/logo\.png'/.test(utils));
+ok('견적서 로고(DAH_LOGO_B64)가 배포 주소의 /logo.png를 가리킴', /var DAH_LOGO_B64 = 'https:\/\/dah-dashboard\.vercel\.app\/logo\.png(\?v=\d+)?'/.test(utils));
 ok('logo.png 파일이 저장소 루트에 있어 함께 배포됨', fs.existsSync(path.join(root, 'logo.png')) && fs.statSync(path.join(root, 'logo.png')).size > 1000);
 const vj = fs.readFileSync(path.join(root, 'vercel.json'), 'utf8');
 ok('vercel.json에 /logo.png 규칙이 있음', vj.indexOf('"/logo.png"') >= 0);
