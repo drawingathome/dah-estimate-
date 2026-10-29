@@ -1080,6 +1080,10 @@ var currentTab = 'ga';
           exhr.onload = function() {
             try {
               var erows = JSON.parse(exhr.responseText);
+              // 2026-10-29(N-48): 서버가 오류 JSON(401 등, 배열이 아님)을 주면 '견적 없음'으로 오해해 고객 합계 계약금을
+              // 적용하던 문제 - 배열이 아니면 조회 실패로 보고 계약금을 건드리지 않음.
+              var estFetchFailed = !Array.isArray(erows);
+              if (estFetchFailed) { try { showToast('⚠️ 견적 정보를 불러오지 못했어요 — 계약금은 비워 둡니다. 새로고침 후 다시 열어 주세요'); } catch (eT) {} }
               var e = erows && erows[0];
               window._estLoadedRow = e || null; setTimeout(function(){ estCheckOpenMismatch('customer'); }, 3500); // 2026-10-06: 열기 영수증
               var loadedItems = false;
@@ -1104,7 +1108,7 @@ var currentTab = 'ga';
               }
               // 2026-08-28: 이 견적서 자체에 저장된 실측일/시공일이 있으면
               // (고객 레코드값보다 더 구체적이므로) 공용함수로 우선 반영.
-              applyScheduleAndDepositToForm(c, e && e.date, e && e.install_date, e && e.measure_date_tbd, e && e.install_date_tbd, undefined, e || null);
+              applyScheduleAndDepositToForm(c, e && e.date, e && e.install_date, e && e.measure_date_tbd, e && e.install_date_tbd, estFetchFailed ? 'skip' : undefined, e || null);
               // 2026-08-29(선혜님 지적 - "확정견적서를 눌러도 왜 계속
               // 다시 가견적서로 돌아가니", 오늘 계속 발견한 것과 정확히
               // 같은 패턴): currentTab(가견적/확정 상태 변수)에 값을

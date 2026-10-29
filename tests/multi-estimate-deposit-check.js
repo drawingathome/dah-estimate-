@@ -11,6 +11,7 @@ const EST = {
   'single-paid': { id: 'single-paid', customer_name: '시험단건', phone: '01090001002', price: 2000000, deposit_amount: 1000000, balance_amount: 0, line_items: [], estimate_status: 'final', confirmed_at: '2026-10-01T00:00:00Z', client_id: 778, created_at: '2026-10-01T00:00:00Z' },
   'single-none': { id: 'single-none', customer_name: '시험무입금', phone: '01090001003', price: 1000000, deposit_amount: 0, balance_amount: 0, line_items: [], estimate_status: 'ga', client_id: 779, created_at: '2026-10-01T00:00:00Z' },
 };
+let failEst = false;
 const CUST = {
   777: { id: 777, client_name: '시험다건', phone: '01090001001', addr: '서울 서초구', deposit_amount: 3322000, measure_date: null, install_date: null },
   778: { id: 778, client_name: '시험단건', phone: '01090001002', addr: '서울 서초구', deposit_amount: 1000000, measure_date: null, install_date: null },
@@ -35,6 +36,7 @@ async function run() {
       let m = url.match(/\/estimates\?id=eq\.([^&]+)/);
       if (m && EST[decodeURIComponent(m[1])]) { req.respond({ status: 200, contentType: 'application/json', headers: H, body: JSON.stringify([EST[decodeURIComponent(m[1])]]) }); return; }
       m = url.match(/\/estimates\?client_id=eq\.(\d+)/);
+      if (m && failEst) { req.respond({ status: 401, contentType: 'application/json', headers: H, body: JSON.stringify({ message: 'JWT expired', code: 'PGRST301' }) }); return; }
       if (m) {
         const cid = Number(m[1]);
         const rows = Object.values(EST).filter(e => e.client_id === cid).sort((a, b) => (b.created_at > a.created_at ? 1 : -1));
@@ -112,6 +114,12 @@ async function run() {
   ok('8. [N-47 점검] 고객 불러오기 모달·로컬 캐시 없음·견적 2건 고객: 최신 견적 입금(1,559,000), 고객 합계 아님', digits(r.dep) === '1559000', JSON.stringify(r));
   r = await modal({ id: 780, clientName: '시험신규', phone: '01090001004', addr: '서울 서초구', depositAmount: 500000 });
   ok('9. [현재 동작 기록] 고객 불러오기 모달·견적이 하나도 없는 신규 고객: 계약금 빈 칸(불러오기가 폼을 초기화하므로). 바꾸려면 의도적으로 이 시험도 함께 고칠 것', digits(r.dep) === '', JSON.stringify(r));
+
+  // N-48: 견적 조회가 오류 JSON(401)으로 실패해도 고객 합계(3,322,000)가 계약금에 들어가면 안 됨
+  failEst = true;
+  r = await open('loadCustId=777&loadCustName=' + encodeURIComponent('시험다건'));
+  failEst = false;
+  ok('10. [N-48] loadCustId에서 견적 조회가 401 오류 JSON이면 고객 합계(3,322,000)를 계약금에 넣지 않음(빈 칸)', digits(r.dep) === '', JSON.stringify(r));
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));
   const failed = log.filter(l => l.startsWith('❌'));
