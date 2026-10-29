@@ -797,7 +797,13 @@ td.amt{
 .pv-table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 @media (max-width:600px){
   .pv-table-scroll{width:100%}
-  .pv-table-scroll .pv-prod-table{width:520px!important}
+  .pv-table-scroll .pv-prod-table{width:100%!important}
+  /* 2026-10-29(N-49): 폰에서는 폭·단가 칸을 숨겨 공간·사이즈·제품명·금액이 한 화면에 다 보이게 함(금액이 옆으로 잘리던 문제) */
+  .pv-prod-table .pv-hide-m{display:none}
+  .pv-prod6 col:nth-child(1){width:13%!important}.pv-prod6 col:nth-child(2){width:23%!important}.pv-prod6 col:nth-child(3){width:42%!important}.pv-prod6 col:nth-child(6){width:22%!important}
+  .pv-header{flex-direction:column;align-items:flex-start;gap:10px;padding:18px 20px 14px}
+  .pv-header-right{align-items:flex-start}
+  .pv-table-scroll-wrap::after{display:none}
   .pv-table-scroll-wrap{position:relative}
   .pv-table-scroll-wrap::after{
     content:'\203a';color:#B0A99F;font-size:14px;font-weight:700;
@@ -815,6 +821,11 @@ td.amt{
 .pv-pdf-capture .pv-table-scroll-wrap::after{display:none!important}
 .pv-pdf-capture .pv-table-scroll{overflow:visible!important}
 .pv-pdf-capture .pv-table-scroll .pv-prod-table{width:auto!important}
+/* N-49: 폰에서 숨긴 폭·단가 칸은 카톡공유 PDF에는 그대로 나와야 함 */
+.pv-pdf-capture .pv-prod-table th.pv-hide-m,.pv-pdf-capture .pv-prod-table td.pv-hide-m{display:table-cell!important}
+.pv-pdf-capture .pv-prod-table col.pv-hide-m{display:table-column!important}
+.pv-pdf-capture .pv-prod6 col:nth-child(1){width:13%!important}.pv-pdf-capture .pv-prod6 col:nth-child(2){width:14%!important}.pv-pdf-capture .pv-prod6 col:nth-child(3){width:35%!important}.pv-pdf-capture .pv-prod6 col:nth-child(6){width:16%!important}
+.pv-pdf-capture .pv-header{flex-direction:row!important;align-items:flex-end!important}
 }
  
 .pv-meta{
@@ -1036,6 +1047,7 @@ td.amt{
    보이고 클릭도 되던 문제. 미리보기 열림 표시인 body.preview-open일 때는
    화면에서도(인쇄 때뿐 아니라) 숨김. */
 body.preview-open #self-diag-btn { display:none!important; }
+body.preview-open #dah-build-badge { display:none!important; }
 
 @media print{
   /* 숨길 요소 - 작업화면 UI(버튼/탭바 등)가 인쇄물에 찍히지 않도록. 원본에 있던 규칙인데

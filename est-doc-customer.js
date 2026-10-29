@@ -147,9 +147,9 @@ function buildCustomerHTML() {
   var allRows = curtainRows.concat(blindRows).concat(otherRows);
   var prodHTML = '';
   if(allRows.length) {
-    prodHTML += '<div class="pv-table-scroll-wrap"><div class="pv-table-scroll"><table class="pv-prod-table">';
-    prodHTML += '<colgroup><col style="width:13%"><col style="width:14%"><col style="width:35%"><col style="width:9%"><col style="width:13%"><col style="width:16%"></colgroup>';
-    prodHTML += '<thead><tr><th style="text-align:left">공간</th><th style="text-align:left">사이즈(cm)</th><th style="text-align:left">제품명</th><th class="r">폭</th><th class="r">단가</th><th class="r">금액</th></tr></thead><tbody>';
+    prodHTML += '<div class="pv-table-scroll-wrap"><div class="pv-table-scroll"><table class="pv-prod-table pv-prod6">';
+    prodHTML += '<colgroup><col style="width:13%"><col style="width:14%"><col style="width:35%"><col class="pv-hide-m" style="width:9%"><col class="pv-hide-m" style="width:13%"><col style="width:16%"></colgroup>';
+    prodHTML += '<thead><tr><th style="text-align:left">공간</th><th style="text-align:left">사이즈(cm)</th><th style="text-align:left">제품명</th><th class="r pv-hide-m">폭</th><th class="r pv-hide-m">단가</th><th class="r">금액</th></tr></thead><tbody>';
 
     // 고객용 견적서는 "공간"(거실/안방/자녀방 등) 기준으로 묶어서 보여줌 —
     // 입력화면(내부관리)에서는 커튼/블라인드로 나눠 작성하지만, 고객이 받는 문서는
@@ -179,8 +179,8 @@ function buildCustomerHTML() {
         +spaceCell
         +'<td class="sz">'+(r.mw?r.mw+'×'+r.mh:(r.sizeText||'—'))+'</td>'
         +'<td class="name">'+title+(subSpec?'<div class="pv-cell-sub">'+subSpec+'</div>':'')+'</td>'
-        +'<td class="r" style="color:#B0A99F;font-size:10.5px">'+(r.pnum?r.pnum:'—')+'</td>'
-        +'<td class="r" style="color:#B0A99F;font-size:10.5px">'+(r.price?r.price.toLocaleString():'—')+'</td>'
+        +'<td class="r pv-hide-m" style="color:#B0A99F;font-size:10.5px">'+(r.pnum?r.pnum:'—')+'</td>'
+        +'<td class="r pv-hide-m" style="color:#B0A99F;font-size:10.5px">'+(r.price?r.price.toLocaleString():'—')+'</td>'
         +'<td class="amt">'+r.amt+'</td>'
         +'</tr>';
       return html;
@@ -198,8 +198,8 @@ function buildCustomerHTML() {
         +spaceCell
         +'<td class="sz">'+(r.bw?r.bw+'×'+r.bh:'—')+'</td>'
         +'<td class="name">'+title+(subSpec?'<div class="pv-cell-sub">'+subSpec+'</div>':'')+'</td>'
-        +'<td class="r">—</td>'
-        +'<td class="r" style="color:#B0A99F;font-size:10.5px">'+(r.price?r.price.toLocaleString():'—')+'</td>'
+        +'<td class="r pv-hide-m">—</td>'
+        +'<td class="r pv-hide-m" style="color:#B0A99F;font-size:10.5px">'+(r.price?r.price.toLocaleString():'—')+'</td>'
         +'<td class="amt">'+r.amt+'</td>'
         +'</tr>';
       return html;
@@ -514,6 +514,7 @@ function printForCustomer() {
   var isFinal = (document.getElementById('status-final')?.classList.contains('on'));
   var navLabel = document.createElement('span');
   navLabel.textContent = isFinal ? '최종 견적서 — 고객용 미리보기' : '가견적서 — 고객용 미리보기';
+  navLabel.textContent = (window.innerWidth <= 600) ? (isFinal ? '최종 견적서' : '가견적서') : navLabel.textContent;
   navLabel.style.cssText = 'color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;letter-spacing:0.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto;margin-right:8px';
   var navBtns = document.createElement('div');
   navBtns.style.cssText = 'display:flex;gap:var(--sp-2);flex-shrink:0';
@@ -536,6 +537,12 @@ function printForCustomer() {
   navBtns.appendChild(closeBtn);
   navBtns.appendChild(shareBtn);
   navBtns.appendChild(printBtn);
+  // 2026-10-29(N-49): 폰(600px 이하)에선 버튼 좌우 여백·막대 여백을 줄여 제목이 "가…"로 잘리지 않게 함
+  if (window.innerWidth <= 600) {
+    nav.style.padding = '0 10px';
+    navBtns.style.gap = '6px';
+    [closeBtn, shareBtn, printBtn].forEach(function(b){ b.style.padding = '7px 9px'; });
+  }
   nav.appendChild(navLabel);
   nav.appendChild(navBtns);
 
