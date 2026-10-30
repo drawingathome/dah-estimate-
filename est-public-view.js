@@ -24,9 +24,12 @@ function loadEstimateForPublicView(estId) {
   xhr.setRequestHeader('apikey', SUPABASE_KEY);
   xhr.setRequestHeader('Authorization', 'Bearer ' + SUPABASE_KEY); // 로그인 없이 anon 키로만 호출(이 함수만 공개 실행권한 보유)
   xhr.setRequestHeader('Content-Type', 'application/json');
+  xhr.timeout = 25000;
   xhr.onload = function() {
+    // N-57: 서버 오류(5xx)·권한 오류를 '견적서 없음'으로 잘못 안내하지 않도록 분리
+    if (xhr.status < 200 || xhr.status >= 300) { showPublicViewError('일시적으로 견적서를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.', true, estId); return; }
     var rows;
-    try { rows = JSON.parse(xhr.responseText); } catch (e) { showPublicViewError('견적서를 불러오는 중 문제가 발생했어요.'); return; }
+    try { rows = JSON.parse(xhr.responseText); } catch (e) { showPublicViewError('견적서를 불러오는 중 문제가 발생했어요.', true, estId); return; }
     var row = rows && rows[0];
     if (!row) { showPublicViewError('견적서를 찾을 수 없어요. 링크를 다시 확인해주세요.'); return; }
     try {
@@ -35,7 +38,8 @@ function loadEstimateForPublicView(estId) {
       showPublicViewError('견적서를 표시하는 중 문제가 발생했어요.');
     }
   };
-  xhr.onerror = function() { showPublicViewError('네트워크 연결을 확인해주세요.'); };
+  xhr.onerror = function() { showPublicViewError('네트워크 연결을 확인해주세요.', true, estId); };
+  xhr.ontimeout = function() { showPublicViewError('연결이 오래 걸리고 있어요. 잠시 후 다시 시도해 주세요.', true, estId); };
   xhr.send(JSON.stringify({ p_id: estId }));
 }
 
@@ -72,12 +76,13 @@ function renderPublicViewFromRow(row) {
 
 function showPublicViewLoading() {
   var c = document.getElementById('public-view-container');
-  c.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;color:#8E8078;font-size:13px">불러오는 중...</div>';
+  c.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;text-align:center;line-height:1.7;color:#8E8078;font-size:13px">내용을 불러오고 있어요<br><span style="font-size:11px;opacity:.8">처음에는 몇 초 걸릴 수 있어요</span></div>';
 }
 
-function showPublicViewError(msg) {
+function showPublicViewError(msg, retry, estId) {
   var c = document.getElementById('public-view-container');
-  c.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;text-align:center;color:#8E8078;font-size:13px">' + msg.replace(/[<>&]/g, function(ch){ return {'<':'&lt;','>':'&gt;','&':'&amp;'}[ch]; }) + '</div>';
+  c.innerHTML = '<div style="display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;min-height:100vh;padding:20px;text-align:center;color:#8E8078;font-size:13px"><div>' + msg.replace(/[<>&]/g, function(ch){ return {'<':'&lt;','>':'&gt;','&':'&amp;'}[ch]; }) + '</div>' + (retry ? '<button id="pv-retry" type="button" style="padding:10px 22px;border:1px solid #8E8078;border-radius:8px;background:#fff;color:#5a4f48;font-size:13px">다시 시도</button>' : '') + '</div>';
+  if (retry) { var b = document.getElementById('pv-retry'); if (b) b.onclick = function() { loadEstimateForPublicView(estId); }; }
 }
 
 function showPublicViewContent(html) {
