@@ -1,0 +1,21 @@
+name: Uptime watch (앱 다운 감시)
+
+# 2026-10-30(N-64 ①): 3시간마다 앱 주소 2곳과 서버(DB)가 응답하는지 가볍게 확인한다(요청만, 브라우저 없음, 운영 데이터는 읽기만).
+# 실패하면 이 작업이 빨간불이 되고 GitHub이 저장소 소유자에게 "실행 실패" 메일을 보낸다. 3번까지 다시 시도해 일시적 끊김 오탐을 줄임.
+# 알림이 안 오면: GitHub > Settings > Notifications > Actions 에서 "실패한 작업" 알림이 켜져 있는지 확인.
+on:
+  schedule:
+    - cron: "17 */3 * * *"   # UTC 기준 3시간마다(한국 시간 +9)
+  workflow_dispatch:
+
+jobs:
+  uptime:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 앱·서버 응답 확인
+        run: node scripts/uptime-check.js
