@@ -270,6 +270,27 @@ async function checkLogo(base) {
   await browser.close();
 }
 
+// 2026-10-30(선혜님: "견적서가 안 열린다" — 폰에서 실제로 열리는지 사람이 매번 봐야 했음): 운영 공개 링크(?view=)가
+// 로그인 없이 열리고 서버 함수(get_public_estimate)까지 도달하는지 자동 확인. 실제 고객 견적 번호는 저장소에 넣지 않고(번호를 아는 사람은
+// 누구나 볼 수 있는 구조라 공개 저장소에 두면 안 됨), 존재하지 않는 번호로 열어 "찾을 수 없어요" 안내가 정상으로 뜨는지로 확인한다.
+async function checkPublicLink(base) {
+  const browser = await chromium.launch(CHROMIUM_EXECUTABLE ? { executablePath: CHROMIUM_EXECUTABLE } : {});
+  try {
+    for (const [vn, vp] of [['폰390', { width: 390, height: 844 }], ['PC1280', { width: 1280, height: 900 }]]) {
+      const page = await (await browser.newContext({ viewport: vp })).newPage();
+      const errs = []; page.on('pageerror', e => errs.push(String(e.message).slice(0, 120)));
+      await page.goto(base + '/dah-estimate.html?view=00000000-0000-4000-8000-000000000000', { waitUntil: 'load', timeout: 45000 });
+      await page.waitForFunction(() => { const c = document.getElementById('public-view-container'); return c && /찾을 수 없|문제가 발생|네트워크/.test(c.textContent || ''); }, { timeout: 20000 }).catch(() => {});
+      const r = await page.evaluate(() => { const c = document.getElementById('public-view-container'); const g = document.getElementById('est-auth-gate'); return { text: (c && c.textContent || '').trim().slice(0, 60), gateShown: !!g && getComputedStyle(g).display !== 'none', publicMode: document.body.classList.contains('public-view-mode') }; });
+      ok(`[${base}] 공개 링크(${vn}): 로그인 화면 없이 공개 보기 모드로 열림`, r.publicMode && !r.gateShown, JSON.stringify(r));
+      ok(`[${base}] 공개 링크(${vn}): 서버까지 도달해 "견적서를 찾을 수 없어요" 안내가 뜸(없는 번호)`, /찾을 수 없/.test(r.text), JSON.stringify(r));
+      ok(`[${base}] 공개 링크(${vn}): 화면 오류(JS) 없음`, errs.length === 0, errs.join(';'));
+      await page.close();
+    }
+  } catch (e) { ok(`[${base}] 공개 링크: 화면 검사 실행`, false, e.message); }
+  await browser.close();
+}
+
 async function vendorProbe() {
   if (process.env.SKIP_VENDOR_PROBE === '1') { console.log('⏭  카카오 스크립트 점검 건너뜀(SKIP_VENDOR_PROBE=1)'); return; }
   const browser = await chromium.launch(CHROMIUM_EXECUTABLE ? { executablePath: CHROMIUM_EXECUTABLE } : {}); const page = await (await browser.newContext()).newPage();
@@ -290,7 +311,7 @@ async function vendorProbe() {
   if (BASES.length === 0) { console.error('BASE_URLS가 비어있음'); process.exit(2); }
   for (const base of BASES) {
     console.log(`\n▶ 대상: ${base}`);
-    if (process.env.ONLY_LOGO === '1') { await checkLogo(base); continue; } // 로컬 점검용: 로고 검사만
+    if (process.env.ONLY_LOGO === '1') { await checkLogo(base); await checkPublicLink(base); continue; } // 로컬 점검용: 로고 검사만
     const same = await checkDeployedVersion(base);
     if (!same) { console.log('   (배포 불일치 - 이후 E2E는 옛 코드를 검증하게 되므로 건너뜀)'); continue; }
     for (const order of ['detail-first', 'search-first']) {
@@ -300,6 +321,7 @@ async function vendorProbe() {
     await estimateSaveScenario(base);
     await dashboardFieldScenario(base);
     await checkLogo(base);
+    await checkPublicLink(base);
   }
   if (process.env.ONLY_LOGO !== '1') {
   console.log('\n▶ 외부 의존성(카카오 우편번호) 점검');
