@@ -667,6 +667,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['customer-doc-mobile-layout-check.js', []]);
   scripts.push(['doc-nav-title-check.js', []]);
   scripts.push(['public-view-mobile-check.js', []]);
+  scripts.push(['public-view-id-clean-check.js', []]);
   scripts.push(['dash-badge-nav-check.js', []]);
   scripts.push(['doc-address-amount-check.js', []]);
   scripts.push(['row-drag-reorder-check.js', []]);

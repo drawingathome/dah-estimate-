@@ -183,7 +183,15 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
       doFill();
     }
   }
-  window._publicViewEstId = new URLSearchParams(location.search).get('view');
+  // 2026-10-30(선혜님 폰: 드린 공개 링크가 "견적서를 찾을 수 없어요"): 주소 끝에 점·공백·따옴표·한글 글자가 붙거나 대문자로 바뀐 번호도
+  // 서버에서는 "없는 견적"으로 처리돼 같은 안내가 뜸 → view 값에서 견적 번호(UUID) 모양만 뽑아 소문자로 사용.
+  // 번호 모양이 없으면 원래 값을 그대로 넘겨 기존처럼 "찾을 수 없어요" 안내가 뜸.
+  window._publicViewEstId = (function () {
+    var raw = new URLSearchParams(location.search).get('view');
+    if (!raw) return raw;
+    var m = String(raw).match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
+    return m ? m[0].toLowerCase() : raw;
+  })();
   function hasValidDashboardSession() {
     try {
       var s = JSON.parse(localStorage.getItem('dah_session') || 'null');
