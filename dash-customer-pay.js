@@ -48,6 +48,7 @@ function renderPaySection(c, payBody, est) {
   var payBasisPrice = est ? Number(est.price)||0 : Number(c.price)||0;
 
   var paySec = div('margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)', []);
+  if (est && est.id) paySec.setAttribute('data-est-pay-id', est.id); // N-61: 다른 견적서 결제 칸으로 화면 이동할 때 찾는 표시
   if (est && est.estimateLabel) {
     // 2026-10-20(시험카 사례): 견적서가 2개 이상이면 "지금 입력하는 입금이 어느 견적서의 돈인지"를 눈에 띄게 표시(입금은 견적서마다 따로 기록됨)
     var _multiEst = false;

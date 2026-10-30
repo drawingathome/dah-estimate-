@@ -33,7 +33,7 @@
 | 22 | `dash-kanban.js` | DAH 대시보드 — 진행현황(칸반) 기능 | 9 |
 | 23 | `dash-pay-history.js` | 고객상세 - 결제 탭의 "입금 내역 보기" (읽기 전용) | 3 |
 | 24 | `dash-refund.js` | 고객상세 - 결제 탭의 "환불" 영역 (2026-10-14) | 4 |
-| 25 | `dash-extra-pay.js` | 고객상세 - 결제 탭의 "추가 결제" 영역 (2026-10-19) | 4 |
+| 25 | `dash-extra-pay.js` | 고객상세 - 결제 탭의 "추가 결제" 영역 (2026-10-19) | 5 |
 | 26 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 2 |
 | 27 | `dash-customer-alim.js` | 고객상세 - 소통(알림톡) 탭 렌더링 | 11 |
 | 28 | `dash-customer-order.js` | 고객상세 - 발주 탭 렌더링 | 5 |
@@ -546,6 +546,7 @@
 | `saveSettings` | `dash-settings.js` |
 | `sbSyncSetting` | `dash-api.js` |
 | `sbXHR` | `dash-api.js` |
+| `scrollToEstimatePaySection` | `dash-extra-pay.js` |
 | `searchMatch` | `dash-search.js` |
 | `selectPdfOpt` | `est-customer-load.js` |
 | `sendAlimtalk` | `dash-customer-alim.js` |

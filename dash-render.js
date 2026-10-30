@@ -219,7 +219,7 @@ function renderHome(skipServerFetch) {
       // 규칙(DB)이 꺼져 있거나 못 움직인 경우에도 사람이 놓치지 않게 하는 용도(돈 판정은 getPayStatus 한 곳).
       if (['선금결제','실측준비중','확정견적'].indexOf(c.stage) >= 0 && typeof getPayStatus === 'function') {
         var _ps = getPayStatus(c);
-        if (_ps && (_ps.state === 'full' || _ps.state === 'over')) reasons.push('완납 단계 확인(현재 ' + getDisplayStageLabel(c) + ')');
+        if (_ps && (_ps.state === 'full' || _ps.state === 'over')) reasons.push('완납 단계 확인(현재 ' + getDisplayStageLabel(c) + ' → 다음 단계 잔금결제로 옮겨 주세요)'); // 2026-10-30(N-62): 지금 단계와 다음 단계를 같이 알려 줌(자동 이동 규칙이 보는 다음 단계 = 완납 후 잔금결제)
       }
       if (ORDER_STAGES_FOR_ACTION.indexOf(c.stage) >= 0) {
         // 2026-07-21 수정: 예전엔 "5개 항목 전부 미체크"일 때만 발주필요로 떴는데,

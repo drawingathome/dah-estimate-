@@ -34,11 +34,24 @@ function findOtherEstimateForAmount(c, est, amount) {
     if (price <= 0) continue;
     var nm = String(o.fabric || o.product || '').trim();
     var label = (nm ? nm.slice(0, 18) + ' ' : '') + (o.confirmedAt ? '확정견적서' : '가견적서') + ' · ' + price.toLocaleString() + '원';
-    if (!(dep > 0) && Math.abs(Math.round(price * 0.5) - amount) <= 10) return { label: label, kind: '선금(50%)' };
+    if (!(dep > 0) && Math.abs(Math.round(price * 0.5) - amount) <= 10) return { label: label, kind: '선금(50%)', id: o.id };
     var remain = price - dep - bal;
-    if (dep > 0 && !(bal > 0) && remain > 0 && Math.abs(remain - amount) <= 10) return { label: label, kind: '잔금(남은 금액)' };
+    if (dep > 0 && !(bal > 0) && remain > 0 && Math.abs(remain - amount) <= 10) return { label: label, kind: '잔금(남은 금액)', id: o.id };
   }
   return null;
+}
+
+// 2026-10-30(N-61): 경고창에서 [취소]를 누르면 돈이 들어갈 다른 견적서의 결제 칸으로 화면을 옮기고 잠깐 강조함.
+function scrollToEstimatePaySection(estId) {
+  try {
+    var t = /** @type {HTMLElement|null} */ (document.querySelector('[data-est-pay-id="' + String(estId).replace(/"/g, '') + '"]'));
+    if (!t) return;
+    t.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    var prev = t.style.boxShadow;
+    t.style.transition = 'box-shadow .3s';
+    t.style.boxShadow = '0 0 0 3px #E8B04A';
+    setTimeout(function () { t.style.boxShadow = prev; }, 2600);
+  } catch (e) {}
 }
 
 // est: 이 견적서(est.id, est.price, est.depositAmount, est.balanceAmount, est.extraPayRows), c: 고객
@@ -128,7 +141,7 @@ function appendExtraPaySection(paySec, est, c) {
     if (!dateIn.value) { alert('입금 날짜를 입력해 주세요.'); dateIn.focus(); return; }
     var otherEst = findOtherEstimateForAmount(c, est, amount);
     if (otherEst) {
-      if (!confirm('⚠️ 이 금액(' + amount.toLocaleString() + '원)은 같은 고객의 "' + otherEst.label + '" 견적서의 ' + otherEst.kind + ' 금액과 같아요.\n입금은 견적서마다 따로 기록돼요. 그 견적서의 돈이라면 [취소]를 누르고 그 견적서 탭의 ' + (otherEst.kind.indexOf('선금') === 0 ? '선금' : '잔금') + ' 칸에 입력해 주세요.\n이 견적서(' + (est.estimateLabel || '현재') + ')의 추가 결제가 맞다면 [확인]을 눌러 주세요.')) return;
+      if (!confirm('⚠️ 이 금액(' + amount.toLocaleString() + '원)은 같은 고객의 "' + otherEst.label + '" 견적서의 ' + otherEst.kind + ' 금액과 같아요.\n입금은 견적서마다 따로 기록돼요. 그 견적서의 돈이라면 [취소]를 누르면 그 견적서 칸으로 이동해요. 거기 ' + (otherEst.kind.indexOf('선금') === 0 ? '선금' : '잔금') + ' 칸에 입력해 주세요.\n이 견적서(' + (est.estimateLabel || '현재') + ')의 추가 결제가 맞다면 [확인]을 눌러 주세요.')) { scrollToEstimatePaySection(otherEst.id); return; }
     }
     if (price > 0) {
       var remain = price - basePaid - extraTotal; // 아직 더 받아야 할 금액(0 이하면 이미 채워진 상태)
