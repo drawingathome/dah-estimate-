@@ -326,10 +326,18 @@ function renderPaySection(c, payBody, est) {
   // (반드시 depositDone 체크/buildDepForm 최초호출보다 먼저 정의할 것 —
   // 처음엔 아래쪽에 뒀다가 payDraftKey가 undefined인 채로 buildDepForm이
   // 먼저 호출되는 버그가 있었음)
-  var payDraftKey = 'dah_pay_draft_' + c.id;
-  function getPayDraft() { try { return JSON.parse(localStorage.getItem(payDraftKey) || '{}'); } catch(e) { return {}; } }
+  // 2026-10-30(N-63, 선혜님 - 잔금 날짜 기본값이 오늘이 아니라 옛 날짜 10-20으로 떠 있었음): 임시저장이 ①고객 단위라 견적서끼리 섞이고
+  // ②기한 없이 남아 옛 날짜가 기본값이 됐음 → 견적서별 키 + "저장한 날(day)이 오늘인 임시저장만" 되살림(어제 이전 것은 버림).
+  var payDraftKey = 'dah_pay_draft_' + c.id + (est ? ('_' + est.id) : '');
+  function getPayDraft() {
+    var d = {};
+    try { d = JSON.parse(localStorage.getItem(payDraftKey) || '{}') || {}; } catch(e) { d = {}; }
+    var today = todayStr();
+    Object.keys(d).forEach(function (k) { if (!d[k] || d[k].day !== today) delete d[k]; });
+    return d;
+  }
   function savePayDraft(section, data) {
-    var d = getPayDraft(); d[section] = data;
+    var d = getPayDraft(); data.day = todayStr(); d[section] = data;
     try { localStorage.setItem(payDraftKey, JSON.stringify(d)); } catch(e) {}
   }
   function clearPayDraft(section) {

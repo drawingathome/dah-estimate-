@@ -161,6 +161,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['view-security-invoker-check.js', []]);
   scripts.push(['refund-revenue-check.js', []]);
   scripts.push(['extra-pay-check.js', []]);
+  scripts.push(['pay-draft-date-check.js', []]);
   scripts.push(['pay-save-customer-price-sync-check.js', []]);
   scripts.push(['save-changed-only-check.js', []]);
   scripts.push(['extra-pay-other-estimate-check.js', []]);
