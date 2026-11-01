@@ -1,0 +1,24 @@
+-- N-74: 방문예약·상담 고객이 견적서(보관 제외)를 가지면 가견적으로 자동 이동 (앞으로 가는 이동만)
+-- 운영 적용 순서: 11-02 켜기 안정 후, 선혜님 승인, 아래 1) 적용 2) 읽기 확인.
+-- 적용 직전 스냅샷(되돌리기용)
+create table if not exists public.n74_stage_snapshot as
+  select id, stage, now() as saved_at from public.customers where stage in ('방문예약','상담');
+
+create or replace function public.dah_target_stage(c customers)
+ returns text language plpgsql stable
+ set search_path to 'public', 'pg_temp'
+as $function$
+declare s text := c.stage;
+begin
+  if coalesce(c.is_archived, false) or coalesce(c.memo, '') ~ '플러그|Pluuug' then return s; end if;
+  -- N-74: 선금 입금이 없는 방문예약·상담 + 보관 안 된 견적서 1건 이상 → 가견적
+  if s in ('방문예약','상담') and coalesce(c.deposit_amount, 0) = 0
+     and exists (select 1 from public.estimates e where e.client_id = c.id and not coalesce(e.is_archived, false)) then
+    s := '가견적';
+  end if;
+  if s = '선금결제' and coalesce(c.deposit_amount, 0) > 0
+     and coalesce(c.measure_date, '') <> '' and not coalesce(c.measure_date_tbd, false) then s := '실측준비중'; end if;
+  if s in ('선금결제','실측준비중','확정견적') and public.dah_customer_fully_paid(c.id) then s := '잔금결제'; end if;
+  if s = '잔금결제' and public.dah_order_complete(c.id, c.order_status) then s := '시공준비중'; end if;
+  return s;
+end $function$;
