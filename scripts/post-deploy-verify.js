@@ -247,6 +247,21 @@ async function dashboardFieldScenario(base) {
 //  2) 운영 대시보드 화면을 열었을 때 로고 이미지가 실제로 읽혀서(naturalWidth 659) 깨지지 않는지, 주소에 버전(?v=)이 있는지
 //  3) 어두운 상단 바의 로고에 흰색 표시 필터(invert)가 적용돼 있는지(흰 박스·안 보임 방지)
 // 한계: 눈으로 '선명하다'는 판단은 못 함(파일이 같고 크기·필터가 맞는지만 확인).
+async function checkCacheHeaders(base) {
+  // N-69 ①: 운영에서 실제 캐시 헤더 확인 — 화면(HTML)은 항상 새로, 버전(?v=) 붙은 JS는 오래 캐시.
+  try {
+    const hr = await fetch(base + DASH_PATH + '?verify=' + Date.now(), { cache: 'no-store' });
+    const html = await hr.text();
+    ok(`[${base}] 캐시: 화면(HTML)은 no-store`, /no-store/.test(hr.headers.get('cache-control') || ''), hr.headers.get('cache-control'));
+    const m = html.match(/<script[^>]+src="(\/?[^":"]+\.js\?v=[^"]+)"/);
+    if (!m) { ok(`[${base}] 캐시: ?v= 붙은 JS 찾기`, false, '화면에서 못 찾음'); return; }
+    const u = new URL(m[1], base + '/').href;
+    const jr = await fetch(u, { cache: 'no-store' });
+    ok(`[${base}] 캐시: ?v= JS는 immutable (${m[1].slice(0, 40)})`, /immutable/.test(jr.headers.get('cache-control') || ''), jr.headers.get('cache-control'));
+    const nr = await fetch(u.split('?')[0] + '?nov=' + Date.now(), { cache: 'no-store' });
+    ok(`[${base}] 캐시: ?v= 없는 JS는 immutable 아님`, !/immutable/.test(nr.headers.get('cache-control') || ''), nr.headers.get('cache-control'));
+  } catch (e) { ok(`[${base}] 캐시 헤더 점검`, false, e.message); }
+}
 async function checkLogo(base) {
   const local = fs.readFileSync(path.join(ROOT, 'logo.png'));
   let r;
@@ -322,6 +337,7 @@ async function vendorProbe() {
     await dashboardFieldScenario(base);
     await checkLogo(base);
     await checkPublicLink(base);
+    await checkCacheHeaders(base);
   }
   if (process.env.ONLY_LOGO !== '1') {
   console.log('\n▶ 외부 의존성(카카오 우편번호) 점검');

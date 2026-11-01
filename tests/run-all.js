@@ -672,6 +672,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['public-view-id-clean-check.js', []]);
   scripts.push(['public-view-error-msg-check.js', []]);
   scripts.push(['uptime-check-test.js', []]);
+  scripts.push(['vercel-cache-headers-check.js', []]);
   scripts.push(['public-view-fast-open-check.js', []]);
   scripts.push(['dash-badge-nav-check.js', []]);
   scripts.push(['doc-address-amount-check.js', []]);
