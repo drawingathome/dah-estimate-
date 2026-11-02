@@ -156,6 +156,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['integrity-auto-note-check.js', []]);
   scripts.push(['scenario-customers-money-check.js', []]);
   scripts.push(['journey-consistency-check.js', []]);
+  scripts.push(['whats-new-check.js', []]);
   scripts.push(['integrity-rule-labels-check.js', []]);
   scripts.push(['reconcile-check.js', []]);
   scripts.push(['tax-export-check.js', []]);

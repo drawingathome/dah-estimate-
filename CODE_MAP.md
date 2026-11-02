@@ -34,22 +34,23 @@
 | 23 | `dash-pay-history.js` | 고객상세 - 결제 탭의 "입금 내역 보기" (읽기 전용) | 3 |
 | 24 | `dash-refund.js` | 고객상세 - 결제 탭의 "환불" 영역 (2026-10-14) | 4 |
 | 25 | `dash-extra-pay.js` | 고객상세 - 결제 탭의 "추가 결제" 영역 (2026-10-19) | 5 |
-| 26 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 2 |
-| 27 | `dash-customer-alim.js` | 고객상세 - 소통(알림톡) 탭 렌더링 | 11 |
-| 28 | `dash-customer-order.js` | 고객상세 - 발주 탭 렌더링 | 5 |
-| 29 | `dash-customer-as.js` | 고객상세 - AS 탭 렌더링 (React 전환 1호) | 2 |
-| 30 | `dash-customer-detail.js` | DAH 대시보드 — 고객상세 모달 기능 | 8 |
-| 31 | `dash-customer-detail-tabs.js` | DAH 대시보드 — 고객상세 모달: 정보탭/할일 + 하단 버튼·단계변경·삭제·복구 | 8 |
-| 32 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 10 |
-| 33 | `dash-customer-add.js` | 고객 추가/수정 모달 (React 전환 2호) | 3 |
-| 34 | `dash-auth.js` | DAH 대시보드 — 로그인/세션/권한 기능 | 5 |
-| 35 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 8 |
-| 36 | `dash-settings-sections.js` | DAH 대시보드 — 설정 화면 구역별 렌더링 (거래처/메모/지역비/쿠폰/연동/데이터) | 6 |
-| 37 | `dash-reconcile.js` | dash-reconcile.js | 11 |
-| 38 | `dash-tax-export.js` | dash-tax-export.js | 3 |
-| 39 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
-| 40 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
-| 41 | `dash-stale-code.js` | dash-stale-code.js — 대시보드: "열어 둔 화면의 프로그램(코드)이 옛 버전인지" 알려줌 (2026-10-18 신규) | 5 |
+| 26 | `dash-whats-new.js` | dash-whats-new.js — "새 소식" 한 줄 안내 (N-69 ②, 2026-11-02) | 3 |
+| 27 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 2 |
+| 28 | `dash-customer-alim.js` | 고객상세 - 소통(알림톡) 탭 렌더링 | 11 |
+| 29 | `dash-customer-order.js` | 고객상세 - 발주 탭 렌더링 | 5 |
+| 30 | `dash-customer-as.js` | 고객상세 - AS 탭 렌더링 (React 전환 1호) | 2 |
+| 31 | `dash-customer-detail.js` | DAH 대시보드 — 고객상세 모달 기능 | 8 |
+| 32 | `dash-customer-detail-tabs.js` | DAH 대시보드 — 고객상세 모달: 정보탭/할일 + 하단 버튼·단계변경·삭제·복구 | 8 |
+| 33 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 10 |
+| 34 | `dash-customer-add.js` | 고객 추가/수정 모달 (React 전환 2호) | 3 |
+| 35 | `dash-auth.js` | DAH 대시보드 — 로그인/세션/권한 기능 | 5 |
+| 36 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 8 |
+| 37 | `dash-settings-sections.js` | DAH 대시보드 — 설정 화면 구역별 렌더링 (거래처/메모/지역비/쿠폰/연동/데이터) | 6 |
+| 38 | `dash-reconcile.js` | dash-reconcile.js | 11 |
+| 39 | `dash-tax-export.js` | dash-tax-export.js | 3 |
+| 40 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
+| 41 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
+| 42 | `dash-stale-code.js` | dash-stale-code.js — 대시보드: "열어 둔 화면의 프로그램(코드)이 옛 버전인지" 알려줌 (2026-10-18 신규) | 5 |
 
 ## 견적서 앱 (dah-estimate.html) — 브라우저가 불러오는 순서대로
 
@@ -143,6 +144,8 @@
 | `_srvReceivedFor` | `dash-utils.js` |
 | `_srvRowsFor` | `dash-chart.js` |
 | `_srvSum` | `dash-chart.js` |
+| `_whatsNewMarkSeen` | `dash-whats-new.js` |
+| `_whatsNewSeen` | `dash-whats-new.js` |
 | `addBlindRow` | `est-calc-blind.js` |
 | `addCurtainRow` | `est-calc-curtain.js` |
 | `AddCustomerModal` | `dash-customer-add.js` |
@@ -582,6 +585,7 @@
 | `showStageMenu` | `dash-kanban.js` |
 | `showToast` | `shared-common-utils.js` |
 | `showVendorOrderFromEstimate` | `dash-customer-estimates.js` |
+| `showWhatsNew` | `dash-whats-new.js` |
 | `sortCustomers` | `dash-kanban.js` |
 | `span` | `dash-ui-helpers.js` |
 | `splitCustomerPayments` | `dash-chart.js` |
