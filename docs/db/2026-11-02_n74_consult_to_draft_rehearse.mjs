@@ -7,6 +7,7 @@ await db.exec(`
 create table public.customers(id bigint primary key, stage text, deposit_amount numeric default 0, is_archived boolean default false,
   memo text, measure_date text default '', measure_date_tbd boolean default false, order_status jsonb default '{}');
 create table public.estimates(id serial primary key, client_id bigint, is_archived boolean default false);
+create table public.app_settings(key text primary key, value jsonb);
 create function public.dah_customer_fully_paid(p bigint) returns boolean language sql as $$ select false $$;
 create function public.dah_order_complete(p bigint, o jsonb) returns boolean language sql as $$ select false $$;
 `);
@@ -40,7 +41,7 @@ ok('보관된 고객 제외', t[7] === '상담');
 ok('이미 가견적 → 그대로', t[8] === '가견적');
 ok('시공완료 같은 뒤 단계는 뒤로 안 감', t[9] === '시공완료');
 ok('보관 1건 + 살아있는 1건 → 가견적', t[10] === '가견적');
-const snap = (await db.query('select count(*)::int n from public.n74_stage_snapshot')).rows[0].n;
+const snap = (await db.query("select count(*)::int n from public.app_settings a, jsonb_object_keys(a.value) where a.key like 'n74_stage_snapshot_%'")).rows[0].n;
 ok('스냅샷 표에 방문예약·상담 고객이 저장됨', snap === 8, '저장 ' + snap + '건');
 await db.exec(fs.readFileSync(R + '2026-11-02_n74_consult_to_draft_rollback.sql', 'utf8').split('-- 2)')[0]);
 t = await target();

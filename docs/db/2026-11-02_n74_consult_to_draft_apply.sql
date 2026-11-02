@@ -1,8 +1,11 @@
 -- N-74: 방문예약·상담 고객이 견적서(보관 제외)를 가지면 가견적으로 자동 이동 (앞으로 가는 이동만)
--- 운영 적용 순서: 11-02 켜기 안정 후, 선혜님 승인, 아래 1) 적용 2) 읽기 확인.
--- 적용 직전 스냅샷(되돌리기용)
-create table if not exists public.n74_stage_snapshot as
-  select id, stage, now() as saved_at from public.customers where stage in ('방문예약','상담');
+-- 운영 적용 순서: 11-02 이후(켜기 안정 후), 선혜님 승인, 아래 1) 적용 2) 읽기 확인.
+-- 적용 직전 스냅샷(되돌리기용): 이 화면에서는 표 만들기(DDL)가 자동 취소되므로 app_settings 한 줄에 저장
+insert into public.app_settings(key, value)
+select 'n74_stage_snapshot_' || to_char(now() at time zone 'Asia/Seoul', 'YYYY-MM-DD'),
+       coalesce(jsonb_object_agg(id::text, stage), '{}'::jsonb)
+from public.customers where stage in ('방문예약','상담')
+on conflict (key) do nothing;
 
 create or replace function public.dah_target_stage(c customers)
  returns text language plpgsql stable

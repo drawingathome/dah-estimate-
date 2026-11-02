@@ -13,4 +13,4 @@ begin
   return s;
 end $function$;
 -- 2) 이미 옮겨진 고객 단계 복원이 필요하면(승인 후): 
--- update public.customers c set stage = s.stage from public.n74_stage_snapshot s where c.id = s.id and c.stage = '가견적';
+-- update public.customers c set stage = s.value->>c.id::text from (select value from public.app_settings where key like 'n74_stage_snapshot_%' order by key desc limit 1) s where s.value ? c.id::text and c.stage = '가견적';
