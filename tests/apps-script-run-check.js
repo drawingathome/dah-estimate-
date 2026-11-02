@@ -48,7 +48,8 @@ function buildContext(opts) {
       return respond([]);
     } },
     DriveApp: { getFoldersByName: () => ({ hasNext: () => false }), createFolder: () => ({ getFilesByName: () => ({ hasNext: () => false }), createFile: (n) => { created.push(n); } }) },
-    Utilities: { formatDate: (d) => d.toISOString().slice(0, 10) },
+    // (2026-11-03) 시간대를 무시하고 UTC 날짜를 돌려주던 가짜 함수 때문에, 한국 시각 매달 3일 00~09시(UTC로는 아직 2일)에 월 마감 시험이 헛실패했음 → 실제처럼 시간대를 반영
+    Utilities: { formatDate: (d, tz) => new Intl.DateTimeFormat('en-CA', { timeZone: tz || 'UTC', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d) },
     MailApp: { sendEmail: (...a) => mails.push({ subject: String(a[1] || ''), body: String(a[2] || '') }) },
     Session: { getActiveUser: () => ({ getEmail: () => 'owner@example.com' }), getEffectiveUser: () => ({ getEmail: () => 'owner@example.com' }) },
     Logger: { log: (m) => logs.push(String(m)), getLog: () => logs.join('\n') },
@@ -142,7 +143,8 @@ ok('6-2. [이관 고객] 건물명만 있는 주소도 경고에 안 잡힘', le
 
 // 9) 월 마감 미실시 점검(매달 3일 이후, 지난달이 monthly_close에 없으면 알림)
 const _today = new Date();
-if (_today.getDate() >= 3) {
+const _kstDay = Number(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', day: '2-digit' }).format(_today));
+if (_kstDay >= 3) {
   const unclosed = run({ customers: [], monthlyClose: [] });
   const ucMail = unclosed.mails.find(m => /데이터 정합성/.test(m.subject));
   ok('9. [월 마감 미실시] 지난달이 마감되지 않았으면 알림이 옴', unclosed.error === null && !!ucMail && /월 마감 미실시/.test(ucMail.body), JSON.stringify(unclosed.mails.map(m => m.subject)));
