@@ -26,6 +26,7 @@ async function run() {
   const log = [];
   function ok(label, cond, detail) { log.push((cond ? '✅' : '❌') + ' ' + label + (detail !== undefined ? ' — ' + detail : '')); }
 
+  // (N-69 ②) 새 소식 안내 상자에도 '완납' 글자가 있어 화면 전체 글자 검사에서 상자는 제외
   // 1) 선금+잔금 = 총액 정확히 일치 → 완납 배지 떠야 함
   await page.evaluate(() => {
     saveCustomers([{ id: 9301, clientName: '완납테스트고객', phone: '01011112222', stage: '시공완료', staffName: '마스터',
@@ -35,7 +36,7 @@ async function run() {
   await new Promise(r => setTimeout(r, 500));
   const paidState = await page.evaluate(() => {
     var payBody = document.getElementById('detail-pay-body') || document.getElementById('pay-body');
-    return payBody ? payBody.textContent.indexOf('완납') !== -1 : (document.body.textContent.indexOf('완납') !== -1);
+    return payBody ? payBody.textContent.indexOf('완납') !== -1 : (document.body.textContent.replace((document.getElementById('whats-new')||{}).textContent||'','').indexOf('완납') !== -1);
   });
   ok('1. 선금+잔금이 총액과 정확히 일치하면 "완납" 배지가 표시됨', paidState);
 
@@ -46,7 +47,7 @@ async function run() {
     openDetail('미수금테스트고객', 9302);
   });
   await new Promise(r => setTimeout(r, 500));
-  const unpaidState = await page.evaluate(() => document.body.textContent.indexOf('완납') !== -1);
+  const unpaidState = await page.evaluate(() => document.body.textContent.replace((document.getElementById('whats-new')||{}).textContent||'','').indexOf('완납') !== -1);
   ok('2. [회귀방지] 선금+잔금이 총액보다 적으면(미수금) "완납" 배지가 안 뜸', !unpaidState);
 
   // 3) 결제 입력이 아예 없는 고객 → 완납 배지 안 떠야 함(불필요한 정보 방지)
@@ -56,7 +57,7 @@ async function run() {
     openDetail('무결제테스트고객', 9303);
   });
   await new Promise(r => setTimeout(r, 500));
-  const noPayState = await page.evaluate(() => document.body.textContent.indexOf('완납') !== -1);
+  const noPayState = await page.evaluate(() => document.body.textContent.replace((document.getElementById('whats-new')||{}).textContent||'','').indexOf('완납') !== -1);
   ok('3. 결제 입력이 아예 없으면 "완납" 배지가 안 뜸', !noPayState);
 
   // 4) 총액이 0(견적 미확정)인 고객 → 완납 배지 안 떠야 함(비교 기준 자체가 없으므로)
@@ -66,7 +67,7 @@ async function run() {
     openDetail('총액없음테스트고객', 9304);
   });
   await new Promise(r => setTimeout(r, 500));
-  const noPriceState = await page.evaluate(() => document.body.textContent.indexOf('완납') !== -1);
+  const noPriceState = await page.evaluate(() => document.body.textContent.replace((document.getElementById('whats-new')||{}).textContent||'','').indexOf('완납') !== -1);
   ok('4. 총액이 아직 없으면 "완납" 배지가 안 뜸', !noPriceState);
 
   // 5) 선금만 냈음(모자람) → "잔금 N원 남음" 표시 + 잔금 입력칸에 예상 금액 안내
