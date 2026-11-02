@@ -158,6 +158,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['journey-consistency-check.js', []]);
   scripts.push(['whats-new-check.js', []]);
   scripts.push(['font-subset-check.js', []]);
+  scripts.push(['estimate-delete-ux-check.js', []]);
   scripts.push(['integrity-rule-labels-check.js', []]);
   scripts.push(['reconcile-check.js', []]);
   scripts.push(['tax-export-check.js', []]);

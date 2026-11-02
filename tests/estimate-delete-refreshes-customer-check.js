@@ -44,7 +44,8 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 50000);
     ok(r.price === 6203000 && r.perf === 4469400, '삭제 후 고객 금액이 서버 값(남은 견적서 몫)으로 갱신됨: ' + r.price + '/' + r.perf);
     ok(r.lock === 'new-lock', '고객 수정 시각(잠금값)도 서버 값으로 갱신됨(다음 저장이 가짜 충돌 안 남)');
     ok(r.cbErr2 === null && r.price2 === 111, '고객 조회가 실패해도 삭제는 성공으로 끝나고 캐시는 그대로');
-    ok(r.calls3.length === 1 && r.calls3[0] === 'DELETE estimates', '고객 id를 모르면 불필요한 조회를 하지 않음: ' + r.calls3.join(','));
+    // (N-79 ㉣) 삭제 기록(analytics_events) 전송은 허용 — 고객 조회(GET customers)만 없어야 함
+    ok(r.calls3.indexOf('DELETE estimates') !== -1 && !r.calls3.some(function (x) { return x.indexOf('GET customers') === 0; }), '고객 id를 모르면 불필요한 고객 조회를 하지 않음: ' + r.calls3.join(','));
     ok(errs.length === 0, 'JS 오류 없음 ' + errs.join('|'));
   } catch (e) { console.log('❌ 예외', e.message); fail++; }
   await browser.close(); server.kill(); process.exit(fail ? 1 : 0);

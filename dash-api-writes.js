@@ -322,6 +322,15 @@ function savePriceOverrideToDb(customerId, oldPrice, newPrice, callback) {
   sbXHR('PATCH', 'customers?id=eq.' + customerId + cas, { price: newPrice, performance_revenue: newPrice }, callback);
 }
 
+// 2026-11-02(N-79 ㉣): 견적서 삭제 뒤 안내 문구 — 삭제 장치(DB)가 남은 견적서 기준으로 다시 계산한 "서버의 실제 고객 금액"을 보여줌
+// (화면에서 따로 계산하지 않음: 계산 규칙을 여러 곳에 두면 어긋나서 사고가 났었음).
+var _lastEstDeleteInfo = null; // 마지막 삭제 결과(서버가 다시 계산한 고객 금액)
+var EST_DELETE_CONFIRM_NOTE = '\n\n삭제하면 고객 금액은 남은 견적서 기준으로 자동 다시 계산돼요.';
+function estDeleteDoneText() {
+  var i = _lastEstDeleteInfo;
+  return '완전히 삭제했어요' + (i && typeof i.customerPrice === 'number' ? ' · 고객 금액 ' + i.customerPrice.toLocaleString() + '원으로 다시 계산됐어요' : '');
+}
+
 // 견적서 삭제 — 2026-08-05: 예전엔 견적서를 삭제/숨길 방법이
 // 앱 어디에도 없었음(estimates.is_archived 컬럼은 있는데 쓰는 코드가 없었음)
 //
@@ -346,7 +355,11 @@ function archiveEstimate(est, callback) {
     : all.findIndex(function(x){ return !x.id && x.no === est.no; });
   if (idx >= 0) all.splice(idx, 1); // 완전삭제 - 로컬 캐시에서도 그냥 제거(보관 플래그 대신)
   localStorage.setItem('dah_saved', JSON.stringify(all));
+  _lastEstDeleteInfo = null;
   if (typeof est.id === 'string' && est.id.length > 20) { // UUID면 서버(client_id 있는 정식 견적서)에도 반영
+    // 2026-11-02(N-79 ㉣): 누가·언제·어떤 견적서를 지웠는지 남김(DB 변경기록엔 작업자가 없어 11-02 사고 때 추적이 어려웠음).
+    // 개인정보 최소화 — 이름은 안 남기고 견적서·고객 번호와 금액만.
+    if (typeof logEvent === 'function') logEvent('estimate_deleted', { estimateId: est.id, no: est.no || null, clientId: est.clientId || est.client_id || null, price: Number(est.price) || 0 });
     sbXHR('DELETE', 'estimates?id=eq.' + est.id, null, function(err){
       if (err) { if (callback) callback(err); return; }
       // 2026-10-13(시험바 사례): 견적서를 지우면 DB가 고객의 매출기준금액·성과매출에서 그 몫을 빼고 수정 시각(잠금값)도 바꿈 -
@@ -360,6 +373,7 @@ function archiveEstimate(est, callback) {
             var t = arr.find(function (c) { return String(c.id) === String(cid); });
             if (t) {
               t.price = Number(rows[0].price) || 0;
+              _lastEstDeleteInfo = { customerPrice: t.price };
               t.performanceRevenue = Number(rows[0].performance_revenue) || 0;
               if (rows[0].updated_at) t.updatedAt = rows[0].updated_at;
               saveCustomers(arr);
