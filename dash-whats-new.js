@@ -24,7 +24,7 @@ function showWhatsNew() {
   var box = document.createElement('div');
   box.id = 'whats-new';
   box.setAttribute('role', 'status');
-  box.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:84px;z-index:900;width:min(92vw,520px);box-sizing:border-box;' +
+  box.style.cssText = 'position:fixed;pointer-events:none;left:50%;transform:translateX(-50%);bottom:84px;z-index:900;width:min(92vw,520px);box-sizing:border-box;' +
     'background:var(--dark,#3a332c);color:#fff;border-radius:12px;padding:12px 14px;font-size:12px;line-height:1.5;box-shadow:0 6px 24px rgba(0,0,0,.25);display:flex;gap:10px;align-items:flex-start';
   var text = document.createElement('div');
   text.style.cssText = 'flex:1;min-width:0';
@@ -41,7 +41,7 @@ function showWhatsNew() {
   btn.type = 'button';
   btn.id = 'whats-new-ok';
   btn.textContent = '확인';
-  btn.style.cssText = 'flex:none;border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;min-height:32px';
+  btn.style.cssText = 'flex:none;border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;pointer-events:auto;min-height:32px';
   btn.onclick = function () { _whatsNewMarkSeen(); if (box.parentNode) box.parentNode.removeChild(box); };
   box.appendChild(text);
   box.appendChild(btn);

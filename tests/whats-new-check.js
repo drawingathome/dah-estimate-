@@ -50,6 +50,7 @@ async function run() {
   if (shown) { await page.click('#whats-new-ok'); ok('기록 칸이 막혀도 닫힘', !(await state(page)).shown); }
   ok('기록 칸이 막혀도 JS 오류 없음', errs.filter(e => !/blocked/.test(e)).length === 0, errs);
   await page.close();
+  { const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'dash-whats-new.js'), 'utf8'); ok('안내 상자가 뒤 화면 클릭을 막지 않음(상자 pointer-events:none, 버튼만 auto) — 일정 탭 시험이 막혔던 사례', /position:fixed;pointer-events:none/.test(src) && /pointer-events:auto/.test(src)); }
   console.log(log.join('\n')); await browser.close(); server.close();
   process.exit(log.some(l => l.startsWith('❌')) ? 1 : 0);
 }
