@@ -181,6 +181,15 @@ function renderPipeKanban(customers) {
   searchWrap.innerHTML = '<div class="search-bar-wrap"><svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--light)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="search" id="pipe-search" class="search-input-clean" placeholder="고객명 검색" oninput="filterPipe(this.value)"></div>';
   wrap.appendChild(searchWrap);
 
+  var parkedN = customers.filter(function(c) { return c.leadParked; }).length;
+  if (parkedN > 0) {
+    var note = document.createElement('div');
+    note.id = 'kanban-parked-note';
+    note.style.cssText = 'padding:0 16px 6px;font-size:12px;color:var(--light)';
+    note.textContent = '대기 리드 ' + parkedN + '명은 보드에서 숨겨요 · 고객목록 [보관]에서 볼 수 있어요';
+    wrap.appendChild(note);
+  }
+
   // 칸반 래퍼
   var kanbanWrap = document.createElement('div');
   kanbanWrap.className = 'kanban-wrap';
@@ -192,6 +201,9 @@ function renderPipeKanban(customers) {
 
 function renderKanbanCols(customers, kanbanWrap) {
   kanbanWrap.innerHTML = '';
+  // 2026-11-03 N-83: 대기 리드(lead_parked)는 보드에서 숨김 — 홈·고객목록은 이미 숨기는데 보드만 그대로 보여서 "대시보드에 남아 있다"는 문제.
+  // 지우는 게 아니라 고객목록 [보관]에서 볼 수 있고, 복귀하면 다시 나타남.
+  customers = (customers || []).filter(function(c) { return !c.leadParked; });
   PIPE_STAGES.forEach(function(stage) {
     var stageCustomers = customers.filter(function(c) { return c.stage === stage.key; });
 
