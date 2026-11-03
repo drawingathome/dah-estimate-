@@ -22,7 +22,7 @@
 | 11 | `dash-realtime.js` | 실시간 동기화 (Supabase Realtime) | 9 |
 | 12 | `dash-ui-helpers.js` | DAH 대시보드 — UI 헬퍼 / 입력값 검증 함수 모음 | 15 |
 | 13 | `dash-core.js` | DAH 대시보드 — 앱 핵심 진입점 함수 | 1 |
-| 14 | `dash-render.js` | DAH 대시보드 — 홈/견적목록/고객검색 화면 렌더링 | 5 |
+| 14 | `dash-render.js` | DAH 대시보드 — 홈/견적목록/고객검색 화면 렌더링 | 6 |
 | 15 | `dash-failed-saves.js` | DAH 대시보드 — 저장 실패 백업 확인/복구 화면 | 6 |
 | 16 | `dash-integrity-watch.js` | 데이터 점검 카드 (2026-10-11, 선혜님 "전문업체 기준 보완" 요청) | 6 |
 | 17 | `dash-render-est.js` | 견적서 탭(가견적/확정견적 목록) 렌더링 | 2 |
@@ -473,6 +473,7 @@
 | `refreshBlindVendorOptions` | `est-calc-blind.js` |
 | `refreshServerMoney` | `dash-utils.js` |
 | `refreshServerMonthDetail` | `dash-chart.js` |
+| `refreshStaleLeadMap` | `dash-render.js` |
 | `regionFeeContent` | `est-calc-rules.js` |
 | `regionFeeHint` | `est-calc-rules.js` |
 | `removeFailedSaveEntry` | `dash-failed-saves.js` |

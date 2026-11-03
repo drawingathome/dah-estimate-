@@ -69,6 +69,21 @@ function parkLeadFromHome(btnEl) {
 }
 
 /** 홈 화면 렌더링 — 오늘 배너, 처리 필요, 일정 */
+// 2026-11-03 N-85: 오래된 리드(마지막 활동 기준) 서버 계산값 받기. 받으면 { 고객id: 활동 없는 일수 } 를 보관하고,
+// 이전 값과 달라졌을 때만 콜백(true)으로 화면을 한 번 더 그리게 함. 실패하면 아무것도 안 바꿈(예전 방식으로 대신 표시).
+function refreshStaleLeadMap(cb) {
+  var days = (typeof getLeadStaleDays === 'function') ? getLeadStaleDays() : 14;
+  sbXHR('POST', 'rpc/dah_stale_lead_candidates', { p_days: days }, function(err, rows) {
+    if (err || !Array.isArray(rows)) return;
+    var m = {};
+    rows.forEach(function(r) { m[r.customer_id] = r.idle_days; });
+    var w = /** @type {any} */ (window);
+    var changed = JSON.stringify(m) !== JSON.stringify(w._staleLeadMap);
+    w._staleLeadMap = m;
+    if (cb) cb(changed);
+  });
+}
+
 function renderHome(skipServerFetch) {
   var wrap = document.getElementById('home');
   if (!wrap) return;
@@ -95,6 +110,7 @@ function renderHome(skipServerFetch) {
     };
     refreshServerMonthDetail([_mk0, _mk1], _redraw);
     if (typeof refreshServerMoney === 'function') refreshServerMoney(_redraw);
+    if (typeof refreshStaleLeadMap === 'function') refreshStaleLeadMap(_redraw);
     setTimeout(function() { refreshServerMonthDetail([_mk0, _mk1], _redraw); if (typeof refreshServerMoney === 'function') refreshServerMoney(_redraw); }, 2500);
   }
 
@@ -232,9 +248,16 @@ function renderHome(skipServerFetch) {
         // 판단 자체가 불가능한 경우는 별도 이유로 계속 표시해서 놓치지 않게 함.
         else if (typeof hasOrderDataGap === 'function' && hasOrderDataGap(c)) reasons.push('발주정보 확인 필요(견적서 재입력 필요)');
       }
-      if (DAH_PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0 && c.date && !c.leadParked) {
-        var daysSince = Math.floor((_today - new Date(c.date)) / (1000*60*60*24));
-        if (daysSince >= LEAD_STALE_DAYS) reasons.push(getDisplayStageLabel(c) + ' 후 ' + daysSince + '일째 진행없음');
+      if (DAH_PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0 && !c.leadParked) {
+        // 2026-11-03 N-85: 알림 기준을 '등록일'이 아니라 서버가 계산한 '마지막 활동(견적서 수정)'으로 통일
+        // (대기 리드 자동 이동과 같은 기준). 서버값을 못 받았을 때만 예전 방식(등록일)으로 대신함.
+        var _sm = /** @type {any} */ (window)._staleLeadMap;
+        if (_sm) {
+          if (_sm[c.id] != null) reasons.push(getDisplayStageLabel(c) + ' 후 ' + _sm[c.id] + '일째 진행없음');
+        } else if (c.date) {
+          var daysSince = Math.floor((_today - new Date(c.date)) / (1000*60*60*24));
+          if (daysSince >= LEAD_STALE_DAYS) reasons.push(getDisplayStageLabel(c) + ' 후 ' + daysSince + '일째 진행없음');
+        }
       }
       if (reasons.length > 0) needActionMap[c.clientName] = { customer: c, reasons: reasons };
     });

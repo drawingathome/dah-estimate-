@@ -153,6 +153,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['received-amount-single-source-check.js', []]);
   scripts.push(['kanban-expected-amount-check.js', []]);
   scripts.push(['kanban-parked-hidden-check.js', []]);
+  scripts.push(['home-stale-lead-alert-check.js', []]);
   scripts.push(['pay-concurrent-edit-check.js', []]);
   scripts.push(['integrity-auto-note-check.js', []]);
   scripts.push(['scenario-customers-money-check.js', []]);
