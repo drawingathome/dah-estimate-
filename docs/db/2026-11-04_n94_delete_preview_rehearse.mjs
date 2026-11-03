@@ -2,12 +2,17 @@ import { PGlite } from '@electric-sql/pglite';
 import fs from 'fs';
 const db = new PGlite(); let ok = 0, fail = 0;
 const t = (n, c) => { c ? ok++ : fail++; console.log((c ? 'PASS ' : 'FAIL ') + n); };
-await db.exec(`create table estimates(id uuid primary key, client_id bigint, price bigint, performance_revenue bigint, is_archived boolean default false, paid bigint default 0, updated_at timestamptz, created_at timestamptz default now());
+await db.exec(`create table customers(id bigint primary key, memo text, price bigint default 0, performance_revenue bigint default 0);
+create table estimates(id uuid primary key, client_id bigint, price bigint, performance_revenue bigint, is_archived boolean default false, paid bigint default 0, updated_at timestamptz, created_at timestamptz default now());
 create function public.dah_estimate_paid(p uuid) returns bigint language sql stable as $$ select paid from estimates where id=p $$;`);
 // 운영 규칙 함수 원문(N-79 ㉠ apply 파일에서 첫 함수만 추출)
 const src = fs.readFileSync(new URL('./2026-11-02_n79_delete_recalc_apply.sql', import.meta.url), 'utf8');
 const first = src.slice(src.indexOf('create or replace function public.dah_customer_amounts'), src.indexOf('create or replace function public.adjust_customer_amounts'));
 await db.exec(first);
+const trgSrc = src.slice(src.indexOf('create or replace function public.adjust_customer_amounts_on_estimate_delete'));
+await db.exec(trgSrc.slice(0, trgSrc.indexOf('$$;', trgSrc.indexOf('return OLD')) + 3));
+await db.exec(`create trigger trg_del after delete on estimates for each row execute function public.adjust_customer_amounts_on_estimate_delete();`);
+await db.exec(`create role anon; create role authenticated;`);
 await db.exec(fs.readFileSync(new URL('./2026-11-04_n94_delete_preview_apply.sql', import.meta.url), 'utf8'));
 const id = n => `00000000-0000-0000-0000-0000000000${String(n).padStart(2,'0')}`;
 const ins = (n,c,p,pr,paid,arch,upd) => db.exec(`insert into estimates(id,client_id,price,performance_revenue,paid,is_archived,updated_at) values ('${id(n)}',${c},${p},${pr},${paid},${arch},'${upd}')`);
@@ -27,14 +32,20 @@ r = await after(7); t('5 마지막 견적 삭제 → 0원', Number(r.price) === 
 r = await after(8); t('6 보관된 견적은 계산에서 제외(삭제 후 0)', Number(r.price) === 0);
 r = await after(9); t('7 보관된 견적을 삭제해도 현재 활성 견적 유지(100)', Number(r.price) === 100);
 t('8 없는 견적서 번호 → 결과 없음', (await db.query(`select * from dah_customer_amounts_after_delete('${id(99)}')`)).rows.length === 0);
-// 일치 검사: 삭제할 대상이 아닌 견적을 지정해도 두 함수가 같은 규칙인지(현재값과 비교하려고, 대상을 먼저 보관 처리한 뒤 실제 함수와 비교)
-for (const [n,c] of [[1,1],[2,1],[3,1],[5,2],[6,2],[7,3]]) {
+// 실제 삭제 비교: 고객 금액을 규칙대로 채운 뒤, 삭제 전 미리보기 값 == 삭제 후 customers 값 이어야 함
+await db.exec(`insert into customers(id) values (1),(2),(3),(4); insert into customers(id,memo,price) values (5,'플러그 이관',777)`);
+await ins(10,5,100,90,0,false,'2026-10-01'); await ins(11,5,200,180,0,false,'2026-10-02'); await db.exec(`insert into estimates(id,client_id,price,performance_revenue,updated_at) values ('${id(12)}',null,5,5,'2026-10-01')`);
+for (const c of [1,2,3,4]) await db.exec(`update customers set price=(select price from dah_customer_amounts(${c})), performance_revenue=(select performance_revenue from dah_customer_amounts(${c})) where id=${c}`);
+for (const n of [1,3,5,7,9,4,6,2]) {
   const pv = await after(n);
-  await db.exec(`update estimates set is_archived=true where id='${id(n)}'`);
-  const real = await now(c);
-  t(`일치 견적${n}: 미리보기 = 실제 재계산`, Number(pv.price) === Number(real.price) && Number(pv.performance_revenue) === Number(real.performance_revenue));
-  await db.exec(`update estimates set is_archived=false where id='${id(n)}'`);
+  await db.exec(`delete from estimates where id='${id(n)}'`);
+  const c = (await db.query(`select c.id, c.price, c.performance_revenue from customers c where c.id=(${pv ? pv.customer_id : 'null'})`)).rows[0];
+  if (pv) t(`실제 삭제 비교 견적${n}: 미리보기=${pv.price} / 삭제 후 고객 금액=${c.price}`, Number(pv.price) === Number(c.price) && Number(pv.performance_revenue) === Number(c.performance_revenue));
+  else t(`견적${n}: 미리보기 없음(대상 아님)`, true);
 }
+t('플러그 이관 고객: 미리보기 결과 없음 + 실제로 금액 안 바뀜(777 유지)', (await after(10)) === undefined && (await (async () => { await db.exec(`delete from estimates where id='${id(10)}'`); return Number((await db.query('select price from customers where id=5')).rows[0].price) === 777; })()));
+t('고객 연결 없는 견적서: 미리보기 결과 없음', (await after(12)) === undefined);
+t('anon은 실행 권한 없음, 로그인 사용자는 있음', await (async () => { const a=(await db.query(`select has_function_privilege('anon','public.dah_customer_amounts_after_delete(uuid)','execute') x`)).rows[0].x; const b=(await db.query(`select has_function_privilege('authenticated','public.dah_customer_amounts_after_delete(uuid)','execute') x`)).rows[0].x; return !a && b; })());
 await db.exec(fs.readFileSync(new URL('./2026-11-04_n94_delete_preview_rollback.sql', import.meta.url), 'utf8'));
 t('되돌리기 후 함수 없음', (await db.query(`select count(*)::int n from pg_proc where proname='dah_customer_amounts_after_delete'`)).rows[0].n === 0);
 console.log(`\n${ok} 통과 / ${fail} 실패`); process.exit(fail ? 1 : 0);
