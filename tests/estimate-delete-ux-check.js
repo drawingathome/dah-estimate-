@@ -41,7 +41,7 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 50000);
     ok(r.text3 === '완전히 삭제했어요' && r.log3, '고객 번호를 모르면 기록은 남고 금액 문구는 없음');
     ok(r.note.indexOf('남은 견적서 기준') !== -1, '확인창 안내 문구에 "남은 견적서 기준 자동 계산"이 있음');
     const src = ['dash-customer-estimates.js', 'dash-render-est.js'].map(f => require('fs').readFileSync(path.resolve(__dirname, '..', f), 'utf8')).join('\n');
-    ok((src.match(/EST_DELETE_CONFIRM_NOTE/g) || []).length >= 3 && (src.match(/estDeleteDoneText\(\)/g) || []).length >= 3, '삭제 화면 3곳 모두 안내 문구·완료 문구 공용 함수를 씀');
+    ok((src.match(/confirmEstimateDelete\(/g) || []).length >= 3 && /EST_DELETE_CONFIRM_NOTE/.test(require('fs').readFileSync(path.resolve(__dirname, '..', 'dash-api-writes.js'), 'utf8')) && (src.match(/estDeleteDoneText\(\)/g) || []).length >= 3, '삭제 화면 3곳 모두 안내 문구·완료 문구 공용 함수를 씀');
     ok(!/showToast\('완전히 삭제했어요'\)/.test(src), '옛 고정 문구가 남아있지 않음');
   } finally { await browser.close(); server.kill(); }
   console.log(fail ? '\n❌ 실패 ' + fail : '\n✅ 모두 통과'); process.exit(fail ? 1 : 0);

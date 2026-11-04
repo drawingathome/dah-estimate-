@@ -326,6 +326,34 @@ function savePriceOverrideToDb(customerId, oldPrice, newPrice, callback) {
 // (화면에서 따로 계산하지 않음: 계산 규칙을 여러 곳에 두면 어긋나서 사고가 났었음).
 var _lastEstDeleteInfo = null; // 마지막 삭제 결과(서버가 다시 계산한 고객 금액)
 var EST_DELETE_CONFIRM_NOTE = '\n\n삭제하면 고객 금액은 남은 견적서 기준으로 자동 다시 계산돼요.';
+// 2026-11-04(N-94): 견적서 삭제 확인창 — 서버(dah_customer_amounts_after_delete, 읽기 전용)가 "이 견적서를 빼면 고객 금액이 얼마가 되는지"를
+// 미리 계산해 주면 확인창에 지금 금액→삭제 후 금액을 보여줌. 서버 오류·빈 응답(플러그 고객 등)·시간 초과 시에는 예전 안내 문구로 대체하며
+// 삭제 흐름은 절대 막지 않음. 계산은 서버 한 곳(화면에서 따로 계산하지 않음). 확인하면 onYes 호출.
+function confirmEstimateDelete(estId, customerId, label, onYes) {
+  var done = false;
+  function ask(note) {
+    if (done) return; done = true;
+    var head = label ? label + '\n\n' : '';
+    if (confirm(head + '⚠️ 이 견적서를 완전히 삭제할까요? 이 작업은 되돌릴 수 없습니다.' + note)) onYes();
+  }
+  if (!estId || typeof sbXHR !== 'function') { ask(EST_DELETE_CONFIRM_NOTE); return; }
+  var timer = setTimeout(function () { ask(EST_DELETE_CONFIRM_NOTE); }, 2500);
+  sbXHR('POST', 'rpc/dah_customer_amounts_after_delete', { p_estimate_id: estId }, function (err, rows) {
+    clearTimeout(timer);
+    var note = EST_DELETE_CONFIRM_NOTE;
+    try {
+      if (!err && Array.isArray(rows) && rows[0] && typeof rows[0].price === 'number') {
+        var cur = null;
+        if (customerId != null && typeof loadCustomers === 'function') {
+          var c = loadCustomers().filter(function (x) { return String(x.id) === String(customerId); })[0];
+          if (c) cur = Number(c.price) || 0;
+        }
+        note = '\n\n삭제하면 고객 금액이 ' + (cur !== null ? cur.toLocaleString() + '원에서 ' : '') + rows[0].price.toLocaleString() + '원으로 다시 계산돼요(남은 견적서 기준).';
+      }
+    } catch (e) { note = EST_DELETE_CONFIRM_NOTE; }
+    ask(note);
+  });
+}
 function estDeleteDoneText() {
   var i = _lastEstDeleteInfo;
   return '완전히 삭제했어요' + (i && typeof i.customerPrice === 'number' ? ' · 고객 금액 ' + i.customerPrice.toLocaleString() + '원으로 다시 계산됐어요' : '');

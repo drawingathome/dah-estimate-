@@ -150,6 +150,7 @@ if (/dah-dashboard/.test(target)) {
   // "미확정(결제 전)" 표시로 구분되는지 검증
   scripts.push(['cal-unconfirmed-schedule-check.js', []]);
   scripts.push(['customer-repurchase-no-duplicate-check.js', []]);
+  scripts.push(['est-delete-preview-check.js', []]);
   scripts.push(['contract-rule-single-source-check.js', []]);
   scripts.push(['received-amount-single-source-check.js', []]);
   scripts.push(['kanban-expected-amount-check.js', []]);
