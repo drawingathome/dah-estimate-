@@ -84,7 +84,7 @@ async function run() {
     await page.evaluate((suffix) => {
       var d = new Date();
       var ts = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-      saveCustomers([{ clientName: '오늘실측검증' + suffix, phone: '01000000009', addr: '서울', stage: '실측', staffName: '마스터', measureDate: ts, date: '2026-07-01' }]);
+      saveCustomers([{ clientName: '오늘실측검증' + suffix, phone: '01000000009', addr: '서울', stage: '실측', staffName: '마스터', measureDate: ts, date: '2026-07-01', depositAmount: 500000 }]); // 2026-11-04: 선금 전 고객은 일정에 안 올라가므로 선금 입금 고객으로 시험
       renderHome(true);
     }, label);
     await new Promise(r => setTimeout(r, 400));

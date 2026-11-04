@@ -21,10 +21,12 @@ function getCalEvents(customers, year, month) {
   customers.forEach(function(c) {
     var region = getRegionFromAddr(c.addr);
     // 실측일 - 메인 표시
-    if ((c.measureDate||'').slice(0,7) === monStr)
+    // 2026-11-04(선혜님): 선금 전(계약 전) 고객의 실측·시공은 일정에 올리지 않음(날짜 데이터는 보존, 화면에서만 제외)
+    var _paid = typeof isContractedCustomer === 'function' ? isContractedCustomer(c) : true;
+    if (_paid && (c.measureDate||'').slice(0,7) === monStr)
       events.push({date:c.measureDate, name:c.clientName, space:c.space||'—', region:region, type:'실측', stage:c.stage, price:c.price||0, cust:c});
     // 시공일 - 메인 표시
-    if ((c.installDate||'').slice(0,7) === monStr)
+    if (_paid && (c.installDate||'').slice(0,7) === monStr)
       events.push({date:c.installDate, name:c.clientName, space:c.space||'—', region:region, type:'시공', stage:c.stage, price:c.price||0, cust:c});
     // 상담일 - dotOnly (점만, 달력 격자에서만 표시. 하단 목록에는 표시 안 함)
     if ((c.date||'').slice(0,7) === monStr)
@@ -47,9 +49,9 @@ function renderCal() {
 
   // 월 요약바
   var monStr = yr + '-' + pad2(mo+1);
-  var monMeasure = customers.filter(function(c){ return (c.measureDate||'').slice(0,7)===monStr; }).length;
+  var monMeasure = customers.filter(function(c){ return isContractedCustomer(c) && (c.measureDate||'').slice(0,7)===monStr; }).length;
   var monRev = getMonthRevenue(customers, monStr);
-  var monInstall = customers.filter(function(c){ return (c.installDate||'').slice(0,7)===monStr; }).length;
+  var monInstall = customers.filter(function(c){ return isContractedCustomer(c) && (c.installDate||'').slice(0,7)===monStr; }).length;
   var sumBar = document.getElementById('cal-summary-bar');
   if (sumBar) {
     sumBar.innerHTML = [

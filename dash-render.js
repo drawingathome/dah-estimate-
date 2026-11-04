@@ -273,12 +273,18 @@ function renderHome(skipServerFetch) {
       if (typeof isContractedCustomer === 'function' && isContractedCustomer(c)) return '';
       return ' · <span class="sched-unconfirmed" style="font-weight:700;color:#B0A99F">미확정(결제 전)</span>';
     };
-    var todaySchedule = customers.filter(function(c) {
-      return c.measureDate === todayStr || c.installDate === todayStr || c.date === todayStr;
-    });
-    var tomorrowSchedule = customers.filter(function(c) {
-      return c.measureDate === tomorrowStr || c.installDate === tomorrowStr || c.date === tomorrowStr;
-    });
+    // 2026-11-04(선혜님 - "돈을 안 주고 견적만 받은 단계를 왜 실측에 올리니, 말이 되니?"): 선금 전(계약 전) 고객의
+    // 실측·시공 일정은 홈 일정에 아예 올리지 않음(날짜 데이터는 그대로 두고 화면에서만 뺌). 판정은 isContractedCustomer 한 곳.
+    // 상담 방문(c.date)은 계약 전에도 정상 일정이라 그대로 표시.
+    var _schedType = function(c, dayStr) {
+      var paid = typeof isContractedCustomer === 'function' ? isContractedCustomer(c) : true;
+      if (paid && c.measureDate === dayStr) return '실측';
+      if (paid && c.installDate === dayStr) return '시공';
+      if (c.date === dayStr) return '방문';
+      return '';
+    };
+    var todaySchedule = customers.filter(function(c) { return _schedType(c, todayStr) !== ''; });
+    var tomorrowSchedule = customers.filter(function(c) { return _schedType(c, tomorrowStr) !== ''; });
 
     // ── HTML 조립 ────────────────────────────────────
     wrap.innerHTML = [
@@ -454,7 +460,7 @@ function renderHome(skipServerFetch) {
           ? '<div class="empty-inline">예정된 일정이 없습니다</div>'
           : [].concat(
               todaySchedule.map(function(c) {
-                var type = c.measureDate === todayStr ? '실측' : c.installDate === todayStr ? '시공' : '방문';
+                var type = _schedType(c, todayStr);
                 var targetTab2 = (type === '실측' || type === '시공') ? 'order' : 'info';
                 return '<div data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-cid="' + escHtml(c.id||'') + '" data-tab="' + targetTab2 + '" onclick="openDetail(this.getAttribute(\'data-cname\'),this.getAttribute(\'data-cid\')||undefined,this.getAttribute(\'data-tab\'))" ' +
                   'style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:var(--sp-3);cursor:pointer">' +
@@ -468,7 +474,7 @@ function renderHome(skipServerFetch) {
                 '</div>';
               }),
               tomorrowSchedule.map(function(c) {
-                var type = c.measureDate === tomorrowStr ? '실측' : c.installDate === tomorrowStr ? '시공' : '방문';
+                var type = _schedType(c, tomorrowStr);
                 var targetTab3 = (type === '실측' || type === '시공') ? 'order' : 'info';
                 return '<div data-cname="' + escHtml((c.clientName||'').replace(/"/g,'')) + '" data-cid="' + escHtml(c.id||'') + '" data-tab="' + targetTab3 + '" onclick="openDetail(this.getAttribute(\'data-cname\'),this.getAttribute(\'data-cid\')||undefined,this.getAttribute(\'data-tab\'))" ' +
                   'style="padding:12px 20px;border-top:1px solid var(--ivory2);display:flex;align-items:center;gap:var(--sp-3);cursor:pointer">' +

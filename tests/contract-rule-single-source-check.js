@@ -56,8 +56,8 @@ async function run() {
     const a = find('계약전일정고객'), b = find('계약일정고객');
     return { aText: a ? a.textContent : null, bText: b ? b.textContent : null };
   });
-  ok('2-1. 홈 일정: 선금 전 고객 일정에 "미확정(결제 전)"이 표시됨', !!home.aText && home.aText.indexOf('미확정') !== -1, home.aText);
-  ok('2-2. 홈 일정: 선금 낸 고객 일정에는 "미확정"이 없음', !!home.bText && home.bText.indexOf('미확정') === -1, home.bText);
+  ok('2-1. 홈 일정: 선금 전 고객의 실측은 일정에 올라가지 않음(2026-11-04 선혜님 지시)', home.aText === null, home.aText);
+  ok('2-2. 홈 일정: 선금 낸 고객 일정은 표시되고 "미확정"이 없음', !!home.bText && home.bText.indexOf('미확정') === -1, home.bText);
 
   // 3) 캘린더: 입금한 견적서가 옛 것이어도 계약 고객은 "미확정"이 아님
   const cal = await page.evaluate(() => {

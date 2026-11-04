@@ -35,7 +35,7 @@ async function run() {
     var body = document.getElementById('cal-list');
     return { text: body ? body.textContent : 'cal-list 없음' };
   }, measureDateThisMonth);
-  ok('1. 결제 안 한 실측예정 고객에게 "미확정(결제 전)" 표시가 뜸', r1.text.indexOf('미확정') !== -1, r1.text.slice(0, 300));
+  ok('1. 결제 안 한 고객은 실측 일정에 올라가지 않음(시험처재현 없음)', r1.text.indexOf('시험처재현') === -1, r1.text.slice(0, 300));
 
   // 대조군: 선금이라도 입금되면 "미확정" 표시 대신 정상적으로 "선금✓" 뜸(회귀 없음)
   const r2 = await page.evaluate((mDate) => {
@@ -49,7 +49,25 @@ async function run() {
     var body = document.getElementById('cal-list');
     return { text: body ? body.textContent : 'cal-list 없음' };
   }, measureDateThisMonth);
-  ok('2. 선금 입금된 고객은 "미확정" 대신 "선금" 체크 표시가 정상적으로 뜸(회귀 없음)', r2.text.indexOf('선금') !== -1 && r2.text.indexOf('미확정') === -1, r2.text.slice(0, 300));
+  ok('2. 선금 입금된 고객은 "미확정" 대신 "선금" 체크 표시가 정상적으로 뜸(회귀 없음)', r2.text.indexOf('결제완료고객') !== -1 && r2.text.indexOf('선금') !== -1 && r2.text.indexOf('미확정') === -1, r2.text.slice(0, 300));
+
+  // 홈 "오늘/내일 일정": 결제 전 고객의 실측은 안 뜨고, 결제한 고객은 뜸
+  const r3 = await page.evaluate(() => {
+    var d = new Date(), f = function(x){ return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); };
+    var t = f(d);
+    saveCustomers([
+      { id: 9960, clientName: '미결제실측고객', phone: '01099990020', stage: '상담', staffName: '오지은 실장', price: 2548000, measureDate: t, installDate: '', addr: '경기 성남시', depositAmount: 0, balanceAmount: 0 },
+      { id: 9961, clientName: '결제실측고객', phone: '01099990021', stage: '실측준비중', staffName: '오지은 실장', price: 3000000, measureDate: t, installDate: '', addr: '서울 서초구', depositAmount: 1500000, balanceAmount: 0 },
+      { id: 9962, clientName: '미결제상담방문', phone: '01099990022', stage: '상담', staffName: '오지은 실장', price: 0, date: t, measureDate: '', installDate: '', addr: '서울', depositAmount: 0, balanceAmount: 0 }
+    ]);
+    localStorage.setItem('dah_saved', JSON.stringify([]));
+    goTab('home'); renderHome(true);
+    var h = document.getElementById('sec-hero'); var w = h ? h.parentElement : document.body;
+    return w.textContent;
+  });
+  ok('3. 홈 일정: 결제 전 고객의 실측은 안 뜸', r3.indexOf('미결제실측고객') === -1);
+  ok('4. 홈 일정: 결제한 고객의 실측은 정상 표시', r3.indexOf('결제실측고객') !== -1);
+  ok('5. 홈 일정: 결제 전이라도 상담 방문은 표시', r3.indexOf('미결제상담방문') !== -1);
 
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));
