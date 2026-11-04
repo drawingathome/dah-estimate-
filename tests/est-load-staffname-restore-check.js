@@ -59,4 +59,4 @@ async function run() {
   process.exit(failed.length === 0 && jsErrors.length === 0 ? 0 : 1);
 }
 run().catch(e => { console.error(e); process.exit(1); });
-setTimeout(() => process.exit(1), 45000);
+setTimeout(() => process.exit(1), 90000); // 2026-11-05(N-108): 느린 CI에서 45초 강제 종료가 먼저 걸려 간헐 실패 → 90초

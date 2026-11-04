@@ -78,8 +78,16 @@ function renderDetailInfoSection(c, body) {
   // 2026-08-10: 메모도 blur(포커스 아웃) 전에 새로고침 등으로 중단되면
   // 타이핑 내용이 날아가던 문제 - 고객ID별 임시저장 키로 해결.
   var memoDraftKey = 'dah_memo_draft_' + c.id;
-  function getMemoDraft() { try { return localStorage.getItem(memoDraftKey) || ''; } catch(e) { return ''; } }
-  function saveMemoDraft(v) { try { localStorage.setItem(memoDraftKey, v); } catch(e) {} }
+  // 2026-11-05(N-109, 임시저장 전수 점검): 초안에 "저장한 날"과 "그때의 서버 메모"를 같이 적어, 오늘 쓴 초안이고 그 사이 다른 사람이 메모를
+  // 바꾸지 않았을 때만 되살림(예전엔 기한·기준 없이 남아 새 메모를 가렸음 - 잔금 날짜 N-63과 같은 유형). 예전 형식(그냥 문자열)은 버림.
+  function getMemoDraft() {
+    try {
+      var o = JSON.parse(localStorage.getItem(memoDraftKey) || 'null');
+      if (!o || typeof o !== 'object' || o.day !== todayStr() || (o.base || '') !== (c.memo || '')) return '';
+      return o.v || '';
+    } catch(e) { return ''; }
+  }
+  function saveMemoDraft(v) { try { localStorage.setItem(memoDraftKey, JSON.stringify({ v: v, base: c.memo || '', day: todayStr() })); } catch(e) {} }
   function clearMemoDraft() { try { localStorage.removeItem(memoDraftKey); } catch(e) {} }
 
   var memoBlock = div('background:#FFFBF5;border:1px solid #FFE5CC;border-radius:12px;padding:10px 14px;margin-bottom:var(--sp-2);cursor:pointer', []);

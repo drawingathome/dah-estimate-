@@ -151,6 +151,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['cal-unconfirmed-schedule-check.js', []]);
   scripts.push(['customer-repurchase-no-duplicate-check.js', []]);
   scripts.push(['est-delete-preview-check.js', []]);
+  scripts.push(['memo-draft-stale-check.js', []]);
   scripts.push(['contract-rule-single-source-check.js', []]);
   scripts.push(['received-amount-single-source-check.js', []]);
   scripts.push(['kanban-expected-amount-check.js', []]);
