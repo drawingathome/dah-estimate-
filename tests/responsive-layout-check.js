@@ -104,9 +104,9 @@ async function run() {
         var d = new Date();
         var ts = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-15';
         saveCustomers([
-          { clientName: '박서준', phone: '01000000003', addr: '서울', stage: '실측', staffName: '마스터', measureDate: ts, date: '2026-07-06' },
-          { clientName: '최유리', phone: '01000000004', addr: '인천', stage: '시공', staffName: '마스터', installDate: ts, date: '2026-07-08' },
-          { clientName: '정하늘', phone: '01000000005', addr: '부산', stage: '시공', staffName: '마스터', installDate: ts, date: '2026-07-10' }
+          { clientName: '박서준', phone: '01000000003', addr: '서울', stage: '실측', staffName: '마스터', measureDate: ts, date: '2026-07-06', depositAmount: 500000 },
+          { clientName: '최유리', phone: '01000000004', addr: '인천', stage: '시공', staffName: '마스터', installDate: ts, date: '2026-07-08', depositAmount: 500000 },
+          { clientName: '정하늘', phone: '01000000005', addr: '부산', stage: '시공', staffName: '마스터', installDate: ts, date: '2026-07-10', depositAmount: 500000 }
         ]);
       });
       await new Promise(r => setTimeout(r, 400));

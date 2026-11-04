@@ -20,7 +20,8 @@ async function run() {
 
   const todayY = new Date().getFullYear();
   const todayM = String(new Date().getMonth() + 1).padStart(2, '0');
-  const measureDateThisMonth = `${todayY}-${todayM}-22`;
+  // 브라우저 시계 기준으로 이번 달 22일을 계산(시험 프로그램 시계와 브라우저 시계가 달라도 흔들리지 않게)
+  const measureDateThisMonth = await page.evaluate(() => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-22'; });
 
   // 시험처 사례 재현: 상담 단계, 입금 0원, 그런데도 실측예정일이 이미 입력됨
   const r1 = await page.evaluate((mDate) => {
