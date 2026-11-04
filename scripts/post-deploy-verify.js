@@ -303,6 +303,22 @@ async function checkPublicLink(base) {
       await page.close();
     }
   } catch (e) { ok(`[${base}] 공개 링크: 화면 검사 실행`, false, e.message); }
+  // N-58(측정만, 합격/불합격 없음): 폰 4G 수준(1.6Mbps·지연 150ms)에서 공개 링크가 '처음 그려지는 시간'·'글자가 나오는 시간'·'다 불러오는 시간'을 로그로 남긴다.
+  // 로컬 측정(11-05): 총 3.5MB 중 글꼴 2.4MB, 4G에서 처음 그림 1.5초·글자 6.4초·다 불러오기 16.7초 → 개선 전에는 실패 처리하지 않고 추이만 본다.
+  try {
+    const page = await (await browser.newContext({ viewport: { width: 390, height: 844 } })).newPage();
+    const cdp = await page.context().newCDPSession(page); await cdp.send('Network.enable');
+    await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 150, downloadThroughput: 1.6 * 1024 * 1024 / 8, uploadThroughput: 0.75 * 1024 * 1024 / 8 });
+    const t0 = Date.now();
+    await page.goto(base + '/dah-estimate.html?view=00000000-0000-4000-8000-000000000000', { waitUntil: 'commit', timeout: 45000 });
+    await page.waitForFunction(() => performance.getEntriesByType('paint').length > 0, { timeout: 30000 });
+    const fp = Date.now() - t0;
+    await page.waitForFunction(() => { const c = document.getElementById('public-view-container'); return c && (c.textContent || '').trim().length > 0; }, { timeout: 40000 });
+    const tx = Date.now() - t0;
+    await page.waitForLoadState('load', { timeout: 45000 }); const ld = Date.now() - t0;
+    console.log(`⏱  [N-58 측정만] ${base} 공개 링크 폰4G: 처음 그림 ${fp}ms · 글자 표시 ${tx}ms · 다 불러오기 ${ld}ms (목표: 글자 표시 3000ms)`);
+    await page.close();
+  } catch (e) { console.log(`⏱  [N-58 측정만] 측정 실패(무시): ${String(e.message).slice(0, 100)}`); }
   await browser.close();
 }
 
