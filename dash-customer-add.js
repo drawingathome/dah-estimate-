@@ -208,6 +208,12 @@ function AddCustomerModal({ editName, registerApi }) {
     var samePersonExisting = arr.find(function (c) { return !c.is_archived && c.clientName === nm && (c.phone || '').replace(/\D/g, '') === (ph || '').replace(/\D/g, ''); })
       || (serverMatch ? { clientName: serverMatch.client_name, phone: serverMatch.phone, staffName: serverMatch.staff_name, visitCount: 1 } : null);
     var sameNameDiffPhone = !samePersonExisting && arr.find(function (c) { return !c.is_archived && c.clientName === nm; });
+    // 2026-11-04(선혜님 - 임현정이 마스터/오지은 둘로 등록됨): 서버에만 있고 내 화면에는 없는 고객(= 다른 담당자 소유)은
+    // 새 행을 또 만들지 않고 막음. 예전엔 '재구매로 업데이트할까요?'에서 예를 눌러도 새 행이 하나 더 생겼음.
+    if (serverMatch && !arr.find(function (c) { return !c.is_archived && (c.phone || '').replace(/\D/g, '') === (ph || '').replace(/\D/g, ''); })) {
+      alert('"' + nm + '"(' + ph + ') 고객은 이미 ' + (serverMatch.staff_name || '다른 담당자') + ' 담당으로 등록돼 있어요.\n새로 또 만들면 같은 고객이 둘이 되므로 등록하지 않았어요. 담당자에게 확인하거나 마스터에게 담당 변경을 요청해 주세요.');
+      setSaving(false); return;
+    }
     if (samePersonExisting) {
       var myName = (currentUser && currentUser.role === 'staff') ? currentUser.name : '마스터';
       var otherStaffNote = (samePersonExisting.staffName && samePersonExisting.staffName !== myName) ? ('\n\n⚠️ 현재 담당자: ' + samePersonExisting.staffName) : '';
@@ -217,7 +223,24 @@ function AddCustomerModal({ editName, registerApi }) {
     }
     var existing = samePersonExisting;
     var visitCount = existing ? (existing.visitCount || 1) + 1 : 1;
-    if (existing) arr = arr.filter(function (c) { return !(c.clientName === nm && (c.phone || '').replace(/\D/g, '') === (ph || '').replace(/\D/g, '')); });
+    // 2026-11-04: 재구매는 기존 행(id)을 그대로 갱신 — 금액·단계·결제 기록은 유지, 방문횟수만 올림. (예전엔 기존 행을 지우고 금액 0원·상담 단계의 새 행을 만들어 중복이 생겼음)
+    var localRow = existing && existing.id ? arr.find(function (c) { return c.id === existing.id; }) : null;
+    if (localRow) {
+      var updated = Object.assign({}, localRow, { visitCount: visitCount });
+      var _addr = getCombinedAddr();
+      if (_addr) { updated.addr = _addr; updated.addrDetail = addrDetail.trim(); }
+      if (space.trim()) updated.space = space.trim();
+      if (date) updated.date = date;
+      if (measureDate) updated.measureDate = measureDate;
+      if (installDate) updated.installDate = installDate;
+      if (memo.trim()) updated.memo = memo.trim();
+      arr = arr.map(function (c) { return c.id === localRow.id ? updated : c; });
+      saveCustomers(arr);
+      saveCustomerToDb(updated, function (err) { if (err && typeof showToast === 'function') showToast('⚠️ 고객정보: 로컬엔 저장됨(서버 재시도 대기)'); });
+      closeAdd(); renderHome(true); openDetail(nm, updated.id);
+      showToast('기존 고객 정보를 업데이트했습니다(재구매)');
+      return;
+    }
     var newCustomer = { clientName: nm, phone: ph, addr: getCombinedAddr(), addrDetail: addrDetail.trim(), space: space.trim(), price: 0, performanceRevenue: 0, staffName: staffName, stage: stage, date: date, measureDate: measureDate, installDate: installDate, memo: memo.trim(), visitCount: visitCount, createdAt: new Date().toISOString(), branch: '반포점' };
     arr.unshift(newCustomer); saveCustomers(arr);
     saveCustomerToDb(newCustomer, function (err, data) { if (!err && data && data[0]) { newCustomer.id = data[0].id; saveCustomers(arr); } });

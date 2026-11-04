@@ -149,6 +149,7 @@ if (/dah-dashboard/.test(target)) {
   // 입력된 실측예정일이 캘린더에서 확정된 일정과 똑같이 보이던 문제 -
   // "미확정(결제 전)" 표시로 구분되는지 검증
   scripts.push(['cal-unconfirmed-schedule-check.js', []]);
+  scripts.push(['customer-repurchase-no-duplicate-check.js', []]);
   scripts.push(['contract-rule-single-source-check.js', []]);
   scripts.push(['received-amount-single-source-check.js', []]);
   scripts.push(['kanban-expected-amount-check.js', []]);
