@@ -8,7 +8,7 @@ const path = require('path');
 const CORS = { 'Access-Control-Allow-Origin': '*' };
 const json = (o) => JSON.stringify(o);
 
-async function scenario(name, idx, serverDup, noId) {
+async function scenario(name, idx, serverDup, noId, rpcFail) {
   const dir = path.resolve(__dirname, '..');
   const port = 30700 + idx;
   const server = await startServer(dir, port);
@@ -25,6 +25,7 @@ async function scenario(name, idx, serverDup, noId) {
     const p = new URL(url).pathname + new URL(url).search;
     if (p.includes('/rest/v1/app_settings')) { req.respond({ status: 200, contentType: 'application/json', headers: CORS, body: '[]' }); return; }
     let body = null; try { body = JSON.parse(req.postData() || 'null'); } catch (e) {}
+    if (p.includes('rpc/check_phone_duplicate') && rpcFail) { req.respond({ status: 500, contentType: 'application/json', headers: CORS, body: json({ message: 'boom' }) }); return; }
     if (p.includes('rpc/check_phone_duplicate')) { req.respond({ status: 200, contentType: 'application/json', headers: CORS, body: json([{ exists_flag: !!serverDup, staff_name: '마스터' }]) }); return; }
     if (p.includes('/rest/v1/customers')) { rec.reqs.push({ method, p, body }); req.respond({ status: method === 'POST' ? 201 : 200, contentType: 'application/json', headers: CORS, body: json([{ id: 777, ...(body || {}) }]) }); return; }
     req.respond({ status: 200, contentType: 'application/json', headers: CORS, body: '[]' });
@@ -61,6 +62,8 @@ async function scenario(name, idx, serverDup, noId) {
   ok('A7. 기존 메모는 유지(이어 붙임), 기존 상담일은 덮어쓰지 않음', A.state[0] && String(A.state[0].memo).indexOf('기존메모') !== -1 && A.state[0].date === '2026-10-01', A.state);
   const C = await scenario('C', 3, false, true);
   ok('C1. 서버에 안 올라간(id 없는) 같은 사람 행이 있어도 내 화면에 1명만 남음', C.state.length === 1, C.state);
+  const D = await scenario('D', 4, false, false, true);
+  ok('D1. 중복 확인이 서버 오류로 실패하면 사용자에게 확인을 물음(조용히 등록 안 함)', D.rec.dialogs.some(d => d.indexOf('확인하지 못했어요') !== -1), D.rec.dialogs);
   const B = await scenario('B', 2, true);
   ok('B1. 서버에만 있는 고객(다른 담당자)이면 새 행(POST)을 만들지 않음', B.rec.reqs.filter(r => r.method === 'POST').length === 0, B.rec.reqs);
   ok('B2. 내 화면에도 새로 생기지 않음', B.state.length === 0, B.state);

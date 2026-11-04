@@ -195,6 +195,8 @@ function AddCustomerModal({ editName, registerApi }) {
       var phoneNorm = (finalPhone || '').replace(/\D/g, '');
       if (typeof sbXHR === 'function' && phoneNorm) {
         sbXHR('POST', 'rpc/check_phone_duplicate', { phone_input: finalPhone }, function (err, rows) {
+          // 2026-11-04(N-105): 중복 확인을 못 한 채(서버 오류·끊김) 조용히 등록하면 같은 고객이 둘이 될 수 있어 본인에게 물어봄.
+          if (err && !confirm('같은 연락처 고객이 이미 있는지 서버에서 확인하지 못했어요.\n그래도 새 고객으로 등록할까요? (이미 있는 고객이면 중복이 생길 수 있어요)')) { setSaving(false); return; }
           var serverMatch = (!err && Array.isArray(rows) && rows[0] && rows[0].exists_flag) ? { client_name: trimmedName, phone: finalPhone, staff_name: rows[0].staff_name } : null;
           saveNewCustomerActual(trimmedName, finalPhone, arr, serverMatch);
         });
