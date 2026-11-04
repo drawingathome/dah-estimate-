@@ -267,12 +267,6 @@ function renderHome(skipServerFetch) {
     var tomorrow = new Date(_today); tomorrow.setDate(_today.getDate()+1);
     var fmt = function(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
     var todayStr = fmt(_today), tomorrowStr = fmt(tomorrow);
-    // 2026-10-13: 선금 전(계약 전) 고객의 실측·시공 일정은 "미확정"으로 표시(판정은 isContractedCustomer 한 곳). 캘린더와 같은 기준.
-    var _unconfirmedTag = function(c, type) {
-      if (type !== '실측' && type !== '시공') return '';
-      if (typeof isContractedCustomer === 'function' && isContractedCustomer(c)) return '';
-      return ' · <span class="sched-unconfirmed" style="font-weight:700;color:#B0A99F">미확정(결제 전)</span>';
-    };
     // 2026-11-04(선혜님 - "돈을 안 주고 견적만 받은 단계를 왜 실측에 올리니, 말이 되니?"): 선금 전(계약 전) 고객의
     // 실측·시공 일정은 홈 일정에 아예 올리지 않음(날짜 데이터는 그대로 두고 화면에서만 뺌). 판정은 isContractedCustomer 한 곳.
     // 상담 방문(c.date)은 계약 전에도 정상 일정이라 그대로 표시.
@@ -469,7 +463,7 @@ function renderHome(skipServerFetch) {
                   '</div>' +
                   '<div style="flex:1">' +
                     '<div style="font-size:12px;font-weight:700;color:var(--dark)">' + escHtml(c.clientName||'') + '</div>' +
-                    '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(type) + ' · ' + escHtml(c.addr||'주소 미입력') + _unconfirmedTag(c, type) + '</div>' +
+                    '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(type) + ' · ' + escHtml(c.addr||'주소 미입력') + '</div>' +
                   '</div>' +
                 '</div>';
               }),
@@ -483,7 +477,7 @@ function renderHome(skipServerFetch) {
                   '</div>' +
                   '<div style="flex:1">' +
                     '<div style="font-size:12px;font-weight:700;color:var(--dark)">' + escHtml(c.clientName||'') + '</div>' +
-                    '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(type) + ' · ' + escHtml(c.addr||'주소 미입력') + _unconfirmedTag(c, type) + '</div>' +
+                    '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(type) + ' · ' + escHtml(c.addr||'주소 미입력') + '</div>' +
                   '</div>' +
                 '</div>';
               })

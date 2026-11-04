@@ -230,10 +230,11 @@ function AddCustomerModal({ editName, registerApi }) {
       var _addr = getCombinedAddr();
       if (_addr) { updated.addr = _addr; updated.addrDetail = addrDetail.trim(); }
       if (space.trim()) updated.space = space.trim();
-      if (date) updated.date = date;
-      if (measureDate) updated.measureDate = measureDate;
-      if (installDate) updated.installDate = installDate;
-      if (memo.trim()) updated.memo = memo.trim();
+      // 기존 값이 비어 있을 때만 채움(상담일·실측일·시공일을 덮어쓰면 전환율·진행 일수 계산과 옛 일정이 망가짐). 메모는 이어 붙임.
+      if (date && !localRow.date) updated.date = date;
+      if (measureDate && !localRow.measureDate) updated.measureDate = measureDate;
+      if (installDate && !localRow.installDate) updated.installDate = installDate;
+      if (memo.trim()) updated.memo = (localRow.memo ? localRow.memo + '\n' : '') + memo.trim();
       arr = arr.map(function (c) { return c.id === localRow.id ? updated : c; });
       saveCustomers(arr);
       saveCustomerToDb(updated, function (err) { if (err && typeof showToast === 'function') showToast('⚠️ 고객정보: 로컬엔 저장됨(서버 재시도 대기)'); });
@@ -241,6 +242,8 @@ function AddCustomerModal({ editName, registerApi }) {
       showToast('기존 고객 정보를 업데이트했습니다(재구매)');
       return;
     }
+    // 서버에 아직 올라가지 않아 id가 없는 같은 사람의 로컬 행은 예전처럼 새 행으로 합침(중복 방지)
+    if (existing && !localRow) arr = arr.filter(function (c) { return !(c.clientName === nm && (c.phone || '').replace(/\D/g, '') === (ph || '').replace(/\D/g, '')); });
     var newCustomer = { clientName: nm, phone: ph, addr: getCombinedAddr(), addrDetail: addrDetail.trim(), space: space.trim(), price: 0, performanceRevenue: 0, staffName: staffName, stage: stage, date: date, measureDate: measureDate, installDate: installDate, memo: memo.trim(), visitCount: visitCount, createdAt: new Date().toISOString(), branch: '반포점' };
     arr.unshift(newCustomer); saveCustomers(arr);
     saveCustomerToDb(newCustomer, function (err, data) { if (!err && data && data[0]) { newCustomer.id = data[0].id; saveCustomers(arr); } });

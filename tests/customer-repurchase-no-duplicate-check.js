@@ -8,7 +8,7 @@ const path = require('path');
 const CORS = { 'Access-Control-Allow-Origin': '*' };
 const json = (o) => JSON.stringify(o);
 
-async function scenario(name, idx, serverDup) {
+async function scenario(name, idx, serverDup, noId) {
   const dir = path.resolve(__dirname, '..');
   const port = 30700 + idx;
   const server = await startServer(dir, port);
@@ -32,10 +32,10 @@ async function scenario(name, idx, serverDup) {
   await page.goto(`http://localhost:${port}/dah-dashboard.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });
   await new Promise(r => setTimeout(r, 700));
   await loginAs(page, 'master');
-  await page.evaluate((withLocal) => {
+  await page.evaluate((withLocal, noId) => {
     localStorage.setItem('dah_settings', JSON.stringify({ account: '123-456-789', holder: '선혜' }));
-    saveCustomers(withLocal ? [{ id: 701, clientName: '재구매고객', phone: '010-5555-6666', stage: '시공완료', staffName: '마스터', price: 1000000, performanceRevenue: 800000, depositAmount: 500000, balanceAmount: 500000, visitCount: 1 }] : []);
-  }, !serverDup);
+    saveCustomers(withLocal ? [{ id: noId ? undefined : 701, memo: '기존메모', date: '2026-10-01', clientName: '재구매고객', phone: '010-5555-6666', stage: '시공완료', staffName: '마스터', price: 1000000, performanceRevenue: 800000, depositAmount: 500000, balanceAmount: 500000, visitCount: 1 }] : []);
+  }, !serverDup, noId);
   const setNative = (id, v) => page.evaluate((id, v) => { const el = document.getElementById(id); const proto = window.HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })); }, id, v);
   await page.evaluate(() => openAdd());
   await new Promise(r => setTimeout(r, 250));
@@ -43,7 +43,7 @@ async function scenario(name, idx, serverDup) {
   await setNative('add-phone', '01055556666');
   await page.click('#add-save-btn');
   await new Promise(r => setTimeout(r, 800));
-  const state = await page.evaluate(() => loadCustomers().filter(c => (c.phone || '').replace(/\D/g, '') === '01055556666').map(c => ({ id: c.id, price: c.price, stage: c.stage, visitCount: c.visitCount, deposit: c.depositAmount })));
+  const state = await page.evaluate(() => loadCustomers().filter(c => (c.phone || '').replace(/\D/g, '') === '01055556666').map(c => ({ id: c.id, price: c.price, stage: c.stage, visitCount: c.visitCount, deposit: c.depositAmount, memo: c.memo, date: c.date })));
   await browser.close(); server.kill();
   return { rec, state };
 }
@@ -58,6 +58,9 @@ async function scenario(name, idx, serverDup) {
   ok('A4. 방문횟수가 2로 올라감', A.state[0] && A.state[0].visitCount === 2, A.state);
   ok('A5. 기존 행(701) 갱신 요청(PATCH)이 나감', A.rec.reqs.some(r => r.method === 'PATCH' && /701/.test(r.p)), A.rec.reqs);
   ok('A6. 화면 오류 없음', A.rec.errs.length === 0, A.rec.errs);
+  ok('A7. 기존 메모는 유지(이어 붙임), 기존 상담일은 덮어쓰지 않음', A.state[0] && String(A.state[0].memo).indexOf('기존메모') !== -1 && A.state[0].date === '2026-10-01', A.state);
+  const C = await scenario('C', 3, false, true);
+  ok('C1. 서버에 안 올라간(id 없는) 같은 사람 행이 있어도 내 화면에 1명만 남음', C.state.length === 1, C.state);
   const B = await scenario('B', 2, true);
   ok('B1. 서버에만 있는 고객(다른 담당자)이면 새 행(POST)을 만들지 않음', B.rec.reqs.filter(r => r.method === 'POST').length === 0, B.rec.reqs);
   ok('B2. 내 화면에도 새로 생기지 않음', B.state.length === 0, B.state);
