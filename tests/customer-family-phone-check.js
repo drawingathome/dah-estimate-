@@ -28,7 +28,7 @@ async function scenario(idx, rpcRow, typedName, accept) {
     const p = new URL(url).pathname + new URL(url).search;
     if (p.includes('/rest/v1/app_settings')) { req.respond({ status: 200, contentType: 'application/json', headers: CORS, body: '[]' }); return; }
     let body = null; try { body = JSON.parse(req.postData() || 'null'); } catch (e) {}
-    if (p.includes('rpc/check_phone_duplicate')) { req.respond({ status: 200, contentType: 'application/json', headers: CORS, body: json([rpcRow]) }); return; }
+    if (p.includes('rpc/check_phone_duplicate')) { rec.dupCalls = (rec.dupCalls || []); rec.dupCalls.push(body); if (rpcRow && rpcRow.__oldFn && body && 'name_input' in body) { req.respond({ status: 404, contentType: 'application/json', headers: CORS, body: json({ code: 'PGRST202', message: 'Could not find the function public.check_phone_duplicate(name_input, phone_input) in the schema cache' }) }); return; } req.respond({ status: 200, contentType: 'application/json', headers: CORS, body: json([{ exists_flag: rpcRow.exists_flag, staff_name: rpcRow.staff_name, ...(rpcRow.same_name === undefined ? {} : { same_name: rpcRow.same_name }) }]) }); return; }
     if (p.includes('/rest/v1/customers')) { rec.reqs.push({ method, p, body }); req.respond({ status: method === 'POST' ? 201 : 200, contentType: 'application/json', headers: CORS, body: json([{ id: 778, ...(body || {}), updated_at: '2026-11-05T00:00:00Z' }]) }); return; }
     req.respond({ status: 200, contentType: 'application/json', headers: CORS, body: '[]' });
   });
@@ -61,8 +61,10 @@ async function scenario(idx, rpcRow, typedName, accept) {
   const F3 = await scenario(3, { exists_flag: true, staff_name: '오지은 실장', same_name: true }, '임가족', true);
   ok('F3. 같은 번호·같은 이름은 기존처럼 중복 차단(안내문, POST 0건)', F3.rec.dialogs.some(m => /이미 .*담당으로 등록/.test(m)) && F3.rec.reqs.filter(r => r.method === 'POST').length === 0, { d: F3.rec.dialogs, r: F3.rec.reqs.length });
   // F4: 예전 DB 함수(이름을 안 돌려줌)에서는 이름이 달라도 기존처럼 차단 — 앱이 먼저 배포돼도 안전
-  const F4 = await scenario(4, { exists_flag: true, staff_name: '오지은 실장' }, '다른가족', true);
+  const F4 = await scenario(4, { exists_flag: true, staff_name: '오지은 실장', __oldFn: true }, '다른가족', true);
   ok('F4. 예전 함수(이름 비교 정보 없음)에서는 기존처럼 차단(DB를 아직 안 바꿔도 안전)', F4.rec.dialogs.some(m => /이미 .*담당으로 등록/.test(m)) && F4.rec.reqs.filter(r => r.method === 'POST').length === 0, { d: F4.rec.dialogs, r: F4.rec.reqs.length });
+  ok('F4-2. 예전 함수가 이름 인자를 몰라 404를 주면 번호만으로 다시 물어봄(첫 호출 이름 포함, 두 번째 번호만)', (F4.rec.dupCalls || []).length === 2 && 'name_input' in F4.rec.dupCalls[0] && !('name_input' in F4.rec.dupCalls[1]), F4.rec.dupCalls);
+  ok('F4-3. 그 경우 "확인하지 못했어요" 창이 뜨지 않음(중복 확인이 정상 작동)', !F4.rec.dialogs.some(m => /확인하지 못했어요/.test(m)), F4.rec.dialogs);
   ok('JS 오류 없음', [F1, F2, F3, F4].every(s => s.rec.errs.length === 0), [F1, F2, F3, F4].map(s => s.rec.errs));
   console.log(log.join('\n')); const bad = log.some(l => l.startsWith('❌')); console.log(bad ? '\n❌ 실패 있음' : '\n✅ 모두 통과'); process.exit(bad ? 1 : 0);
 })();

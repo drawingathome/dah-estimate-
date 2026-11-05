@@ -194,7 +194,15 @@ function AddCustomerModal({ editName, registerApi }) {
     } else {
       var phoneNorm = (finalPhone || '').replace(/\D/g, '');
       if (typeof sbXHR === 'function' && phoneNorm) {
-        sbXHR('POST', 'rpc/check_phone_duplicate', { phone_input: finalPhone, name_input: trimmedName }, function (err, rows) {
+        // 2026-11-05(N-105②): 새 DB 함수(이름 비교 포함)가 아직 없으면 서버가 '그런 함수 없음'(404/PGRST202)이라 답함 → 예전 방식(번호만)으로 한 번 더 물어봄.
+        var _askDup = function (withName, done) {
+          var body = withName ? { phone_input: finalPhone, name_input: trimmedName } : { phone_input: finalPhone };
+          sbXHR('POST', 'rpc/check_phone_duplicate', body, function (e, r) {
+            if (e && withName && /404|PGRST202/.test(String((e && (e.status || e.message || e.text)) || '') + JSON.stringify(e || ''))) { _askDup(false, done); return; }
+            done(e, r);
+          });
+        };
+        _askDup(true, function (err, rows) {
           // 2026-11-04(N-105): 중복 확인을 못 한 채(서버 오류·끊김) 조용히 등록하면 같은 고객이 둘이 될 수 있어 본인에게 물어봄.
           if (err && !confirm('같은 연락처 고객이 이미 있는지 서버에서 확인하지 못했어요.\n그래도 새 고객으로 등록할까요? (이미 있는 고객이면 중복이 생길 수 있어요)')) { setSaving(false); return; }
           var serverMatch = (!err && Array.isArray(rows) && rows[0] && rows[0].exists_flag) ? { client_name: trimmedName, nameKnown: typeof rows[0].same_name === 'boolean', sameName: rows[0].same_name !== false, phone: finalPhone, staff_name: rows[0].staff_name } : null;

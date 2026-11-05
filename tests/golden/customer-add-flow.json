@@ -39,6 +39,7 @@
   "requests": [
    {
     "body": {
+     "name_input": "신규고객",
      "phone_input": "010-1111-2222"
     },
     "method": "POST",
@@ -199,6 +200,7 @@
   "requests": [
    {
     "body": {
+     "name_input": "담당자테스트",
      "phone_input": "010-7777-8888"
     },
     "method": "POST",
