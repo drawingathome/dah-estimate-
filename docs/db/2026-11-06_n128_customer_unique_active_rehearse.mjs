@@ -1,0 +1,28 @@
+// N-128 가짜 DB 예행: 진행 중 중복 차단, 시공완료+재구매 허용, 보관 무시, 번호 모양/이름 공백·대소문자 무시, 단계 변경 충돌, 중복 남으면 적용 중단, 되돌리기
+import { PGlite } from '@electric-sql/pglite';
+import fs from 'fs';
+const R = new URL('.', import.meta.url).pathname;
+const out = []; const ok = (l, c, d) => out.push((c ? '✅ ' : '❌ ') + l + (c ? '' : ' — ' + (d || '')));
+const mk = async () => { const db = new PGlite(); await db.exec(`create table public.customers(id bigint primary key, client_name text, phone text, stage text default '상담', is_archived boolean default false);`); return db; };
+const apply = fs.readFileSync(R + '2026-11-06_n128_customer_unique_active_apply.sql', 'utf8');
+const rb = fs.readFileSync(R + '2026-11-06_n128_customer_unique_active_rollback.sql', 'utf8');
+const fails = async (db, sql) => { try { await db.exec(sql); return null; } catch (e) { try { await db.exec('rollback'); } catch (_) {} return String(e.message || e).slice(0, 80); } };
+let db = await mk();
+await db.exec(`insert into public.customers values (1,'소지선','010-6258-8804','시공완료',false),(2,'김태연','010-7502-7924','상담',false),(3,'보관','010-3333-4444','상담',true),(4,'가족A','010-5555-6666','상담',false);`);
+await db.exec(apply);
+ok('적용 성공(중복 없는 상태)', true);
+ok('시공완료 고객과 같은 번호·이름의 새 진행 건 허용(재구매)', (await fails(db, `insert into public.customers values (5,'소지선','01062588804','방문예약',false)`)) === null);
+let e = await fails(db, `insert into public.customers values (6,'김태연','01075027924','가견적',false)`); ok('진행 중 같은 번호·같은 이름 두 번째 등록은 거절', !!e && /unique|duplicate/i.test(e), e);
+e = await fails(db, `insert into public.customers values (7,' 김태연 ','010 7502 7924','상담',false)`); ok('번호 모양·이름 공백이 달라도 거절', !!e, e);
+ok('같은 번호·다른 이름(가족)은 허용', (await fails(db, `insert into public.customers values (8,'김가족','01075027924','상담',false)`)) === null);
+ok('보관된 고객과 같은 번호·이름의 새 등록은 허용', (await fails(db, `insert into public.customers values (9,'보관','01033334444','상담',false)`)) === null);
+ok('보관 고객끼리·번호 없는 고객 여러 명은 허용', (await fails(db, `insert into public.customers values (10,'보관','01033334444','상담',true),(11,'무번호',null,'상담',false),(12,'무번호','', '상담',false)`)) === null);
+e = await fails(db, `update public.customers set stage='상담' where id=1`); ok('시공완료 고객을 다시 진행 단계로 바꿀 때 이미 진행 건이 있으면 거절(23505)', !!e, e);
+await db.exec(rb);
+const idx = (await db.query(`select count(*)::int n from pg_indexes where indexname='customers_active_phone_name_uniq'`)).rows[0].n; ok('되돌리기: 잠금이 제거됨', idx === 0);
+ok('되돌린 뒤 중복 등록이 다시 가능(원상태)', (await fails(db, `insert into public.customers values (20,'김태연','01075027924','상담',false)`)) === null);
+const db2 = await mk();
+await db2.exec(`insert into public.customers values (1,'임현정','010-7282-4432','가견적',false),(2,'임현정','01072824432','상담',false)`);
+e = await fails(db2, apply); ok('진행 중 중복이 남아 있으면 적용이 멈추고 아무것도 안 바뀜', !!e && /N-128/.test(e), e);
+const idx2 = (await db2.query(`select count(*)::int n from pg_indexes where indexname='customers_active_phone_name_uniq'`)).rows[0].n; ok('멈춘 뒤 인덱스 없음(트랜잭션 롤백)', idx2 === 0);
+console.log(out.join('\n')); const bad = out.some(l => l.startsWith('❌')); console.log(bad ? '\n❌ 실패 있음' : '\n✅ 모두 통과'); process.exit(bad ? 1 : 0);
