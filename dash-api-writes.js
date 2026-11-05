@@ -145,6 +145,13 @@ function saveCustomerToDb(customer, callback) {
         return;
       }
       console.error((customer.id?'수정':'추가') + ' 오류:', err.text);
+      // 2026-11-06(N-128): 새 고객 등록(POST)이 '같은 번호+같은 이름의 진행 중 고객이 이미 있음'(409/23505)으로 거절되면
+      // 같은 요청을 다시 보내도 영원히 거절되므로 재시도 대기열에 넣지 않음 — 안내만 하고 끝냄(무한 재시도·'저장 대기' 배너 방지).
+      if (!customer.id && err && (err.status === 409 || /23505|duplicate key/i.test(String(err.text || '')))) {
+        if (typeof showToast === 'function') showToast('⚠️ 같은 번호·이름의 진행 중 고객이 이미 있어요 — 고객 목록에서 확인해주세요');
+        if (callback) callback(err, data);
+        return;
+      }
       // 2026-08-05: 실패를 콘솔에만 남기고 조용히 무시하던 것 수정 —
       // 대기 큐에 기록해서 화면에 경고 배너가 뜨고, 네트워크 복구시 자동 재시도됨
       if (typeof addToPendingSyncQueue === 'function') addToPendingSyncQueue(key, method, path, row);

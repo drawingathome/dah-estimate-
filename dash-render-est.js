@@ -267,6 +267,7 @@ function renderEstList() {
           if (knownId) { linkAndOpen(knownId); return; }
           sbXHR('POST', 'customers', payload, function(err, rows){
             entry._registeringAsCustomer = false;
+            if (err && (err.status === 409 || /23505|duplicate key/i.test(String(err.text || '')))) { showToast('⚠️ 같은 번호·이름의 진행 중 고객이 이미 있어요 — 고객 목록에서 확인해주세요'); return; }
             if (err || !rows || !rows[0]) { showToast('고객 등록 실패 — 다시 시도해주세요'); return; }
             /** @type {any} */ (window)._estCreatedCustomerByEstId[entry.id] = rows[0].id;
             linkAndOpen(rows[0].id);
