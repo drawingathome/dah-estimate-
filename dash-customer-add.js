@@ -194,10 +194,10 @@ function AddCustomerModal({ editName, registerApi }) {
     } else {
       var phoneNorm = (finalPhone || '').replace(/\D/g, '');
       if (typeof sbXHR === 'function' && phoneNorm) {
-        sbXHR('POST', 'rpc/check_phone_duplicate', { phone_input: finalPhone }, function (err, rows) {
+        sbXHR('POST', 'rpc/check_phone_duplicate', { phone_input: finalPhone, name_input: trimmedName }, function (err, rows) {
           // 2026-11-04(N-105): 중복 확인을 못 한 채(서버 오류·끊김) 조용히 등록하면 같은 고객이 둘이 될 수 있어 본인에게 물어봄.
           if (err && !confirm('같은 연락처 고객이 이미 있는지 서버에서 확인하지 못했어요.\n그래도 새 고객으로 등록할까요? (이미 있는 고객이면 중복이 생길 수 있어요)')) { setSaving(false); return; }
-          var serverMatch = (!err && Array.isArray(rows) && rows[0] && rows[0].exists_flag) ? { client_name: trimmedName, phone: finalPhone, staff_name: rows[0].staff_name } : null;
+          var serverMatch = (!err && Array.isArray(rows) && rows[0] && rows[0].exists_flag) ? { client_name: trimmedName, nameKnown: typeof rows[0].same_name === 'boolean', sameName: rows[0].same_name !== false, phone: finalPhone, staff_name: rows[0].staff_name } : null;
           saveNewCustomerActual(trimmedName, finalPhone, arr, serverMatch);
         });
         return;
@@ -207,6 +207,13 @@ function AddCustomerModal({ editName, registerApi }) {
   }
 
   function saveNewCustomerActual(nm, ph, arr, serverMatch) {
+    // 2026-11-05(N-105②): 서버(새 DB 함수)가 '같은 번호인데 입력한 이름과는 다르다'고 알려 주면 같은 사람이 아니라 '같은 번호를 쓰는 가족'일 수 있음 →
+    // 영영 막지 않고 본인에게 물어봄(기존 고객 이름은 다른 담당자 고객이라 서버가 알려 주지 않음 — 이름 노출 방지). 예(별도 등록)면 서버 일치는 무시하고 새 고객으로 진행, 아니오면 중단.
+    // 이 정보(same_name)를 안 주는 예전 함수는 기존대로 차단.
+    if (serverMatch && serverMatch.nameKnown && !serverMatch.sameName) {
+      if (!confirm('같은 연락처(' + ph + ')로 이미 ' + (serverMatch.staff_name || '다른 담당자') + ' 담당 고객이 등록돼 있어요. 그런데 등록된 이름이 "' + nm + '"님과 달라요.\n가족이거나 같은 번호를 쓰는 다른 분일 수 있어요.\n\n"' + nm + '"님을 별도의 새 고객으로 등록할까요?\n(같은 분이라면 \'취소\'를 누르고 ' + (serverMatch.staff_name || '담당자') + '에게 확인하세요)')) { setSaving(false); return; }
+      serverMatch = null;
+    }
     var samePersonExisting = arr.find(function (c) { return !c.is_archived && c.clientName === nm && (c.phone || '').replace(/\D/g, '') === (ph || '').replace(/\D/g, ''); })
       || (serverMatch ? { clientName: serverMatch.client_name, phone: serverMatch.phone, staffName: serverMatch.staff_name, visitCount: 1 } : null);
     var sameNameDiffPhone = !samePersonExisting && arr.find(function (c) { return !c.is_archived && c.clientName === nm; });

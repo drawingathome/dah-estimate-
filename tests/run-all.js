@@ -681,6 +681,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['public-view-slow-network-check.js', []]);
   scripts.push(['doc-pdf-print-check.js', []]);
   scripts.push(['customer-delete-atomic-check.js', []]);
+  scripts.push(['customer-family-phone-check.js', []]);
   scripts.push(['public-view-id-clean-check.js', []]);
   scripts.push(['public-view-error-msg-check.js', []]);
   scripts.push(['uptime-check-test.js', []]);
