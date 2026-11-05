@@ -517,7 +517,9 @@ function renderWorkStatusCards() {
 }
 
 function getCustomerOrderStatus(callback) {
-  if (!window._estEditState.estSaveCustomerId || typeof SUPABASE_URL === 'undefined') { callback({}); return; }
+  // 2026-11-05(N-111②): 느린 망에서는 est-save.js(_estEditState 정의)가 이 함수보다 늦게 도착할 수 있음 → 없으면 조용히 건너뜀
+  var _st = window._estEditState;
+  if (!_st || !_st.estSaveCustomerId || typeof SUPABASE_URL === 'undefined') { callback({}); return; }
   try {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estEditState.estSaveCustomerId) + '&select=order_status,updated_at', true);
