@@ -126,6 +126,39 @@ function proceed(otherEstGrand, otherEstPerf, sumFailed, thisEstPaid, otherPaidC
     xhr.setRequestHeader('Prefer', 'return=representation');
     xhr.onload=function(){
       logSaveStage('고객저장-응답', { status: xhr.status, isUpdate: isUpdate, bodyLen: (xhr.responseText||'').length });
+      if (!isUpdate && xhr.status === 409 && !ctx._dup409Retried) {
+        // 2026-11-06(N-128): DB가 '같은 번호+같은 이름의 진행 중 고객'을 거절(409)한 경우 — 새로 만들지 말고 그 기존 고객에 이어서 저장.
+        // 내 화면에서 보이는(내 담당·미배정·마스터) 고객만 찾을 수 있음. 못 찾으면(다른 담당자 고객) 아래 일반 실패 안내로 넘어감.
+        ctx._dup409Retried = true;
+        logSaveStage('고객저장-중복거절409', { status: 409 });
+        try {
+          var gx = new XMLHttpRequest();
+          gx.open('GET', SUPABASE_URL+'/rest/v1/customers?select=id,client_name,phone,stage&is_archived=eq.false&client_name=eq.'+encodeURIComponent(name), true);
+          gx.timeout = 10000;
+          gx.setRequestHeader('apikey', SUPABASE_KEY);
+          gx.setRequestHeader('Authorization', 'Bearer '+(typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+          var give = function(){ showToast('⚠️ 같은 번호·이름의 진행 중 고객이 이미 있어요(다른 담당자 고객일 수 있어요) — 고객 목록에서 확인해주세요'); _saveStage_estimates(ctx); };
+          gx.onload = function(){
+            var rows = []; try { rows = JSON.parse(gx.responseText || '[]'); } catch (eG) {}
+            var d = String(phone || '').replace(/\D/g, '');
+            var hit = (Array.isArray(rows) ? rows : []).filter(function(r){ return String(r.phone || '').replace(/\D/g, '') === d && r.stage !== '시공완료'; })[0];
+            if (gx.status >= 200 && gx.status < 300 && hit && hit.id) {
+              window._estEditState.estSaveCustomerId = hit.id;
+              // 이 기기의 고객 목록(dah_customers)에도 그 고객을 넣어줘야 함 — 안 그러면 localStorage 저장 단계가 id를 비워서 다시 '새 고객'으로 만들려 함.
+              try {
+                var arrAd = JSON.parse(localStorage.getItem('dah_customers') || '[]').filter(function(c){ return c.id || c.clientName !== name; });
+                if (!arrAd.some(function(c){ return String(c.id) === String(hit.id); })) arrAd.unshift({ id: hit.id, clientName: name, phone: phone, stage: hit.stage || '상담', price: 0 });
+                localStorage.setItem('dah_customers', JSON.stringify(arrAd));
+              } catch (eAd) {}
+              showToast('이미 같은 고객이 있어서 그 고객에 이어서 저장할게요');
+              _saveStage_customers(ctx);
+            } else { give(); }
+          };
+          gx.onerror = give; gx.ontimeout = give;
+          gx.send();
+        } catch (eDup) { showToast('⚠️ 같은 번호·이름의 진행 중 고객이 이미 있어요 — 고객 목록에서 확인해주세요'); _saveStage_estimates(ctx); }
+        return;
+      }
       if (xhr.status < 200 || xhr.status >= 300) {
         console.warn('Supabase 고객 저장 실패 (status='+xhr.status+'):', xhr.responseText);
         showToast('⚠️ 고객정보가 서버에 저장되지 않았어요(오류 '+xhr.status+') — 새로고침해서 확인해주세요');
