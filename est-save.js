@@ -195,18 +195,22 @@ function validateEstimate() {
     return false;
   }
   var hasProduct = false;
+  // 2026-11-05(N-127, 선혜님 - "0원을 막을 필요는 없을 것 같다"): 무상 지원 줄은 단가에 0을 직접 적음.
+  // 예전엔 getPriceVal이 '빈칸'과 '0'을 둘 다 0으로 돌려줘서 무상 줄도 '단가누락'으로 막혔고,
+  // 인쇄·PDF·카톡공유는 저장을 먼저 거치므로 같이 멈췄음. 이제 칸에 글자가 있으면(0 포함) 입력한 것으로 봄.
+  function priceTyped(el) { return !!el && String(el.value == null ? '' : el.value).trim() !== ''; }
   var missingPriceRows = []; // 가로/높이는 채웠는데 단가를 빼먹은 행 번호(사람이 세는 순서, 1부터)
 
   document.querySelectorAll('#curtain-body tr').forEach(function(r, idx) {
     var price = getPriceVal(r.querySelector('.cprice'));
     var hasSize = (r.querySelector('.mw')?.value || '').trim() !== '' || (r.querySelector('.mh')?.value || '').trim() !== '';
-    if (price > 0) hasProduct = true;
+    if (price > 0 || priceTyped(r.querySelector('.cprice'))) hasProduct = true;
     else if (hasSize) missingPriceRows.push('커튼 ' + (idx + 1) + '번째');
   });
   document.querySelectorAll('#blind-body tr').forEach(function(r, idx) {
     var price = getPriceVal(r.querySelector('.blind-price'));
     var hasSize = (r.querySelector('.mw')?.value || '').trim() !== '' || (r.querySelector('.mh')?.value || '').trim() !== '';
-    if (price > 0) hasProduct = true;
+    if (price > 0 || priceTyped(r.querySelector('.blind-price'))) hasProduct = true;
     else if (hasSize) missingPriceRows.push('블라인드 ' + (idx + 1) + '번째');
   });
   // 2026-09-18(선혜님 - "제품금액을 1개 이상 넣으라고 하면서 저장이
@@ -217,7 +221,7 @@ function validateEstimate() {
   document.querySelectorAll('#other-body tr').forEach(function(r) {
     var price = getPriceVal(r.querySelector('.other-price'));
     var hasName = (r.querySelector('.other-name')?.value || '').trim() !== '';
-    if (price > 0) hasProduct = true;
+    if (price > 0 || priceTyped(r.querySelector('.other-price'))) hasProduct = true;
     else if (hasName) missingPriceRows.push('기타품목 "' + (r.querySelector('.other-name')?.value || '').trim() + '"');
   });
   // 2026-09-18(선혜님 - "코드정리하고 버그 없는지 확인해"로 직접 발견,
@@ -232,7 +236,7 @@ function validateEstimate() {
     if (r.hasAttribute('data-rail-src') || r.hasAttribute('data-railcost-src') || r.hasAttribute('data-svc-type')) return;
     var price = getPriceVal(r.querySelector('.sprice'));
     var hasContent = (r.querySelector('.svc-content')?.value || '').trim() !== '';
-    if (price > 0) hasProduct = true;
+    if (price > 0 || priceTyped(r.querySelector('.sprice'))) hasProduct = true;
     else if (hasContent) missingPriceRows.push('"' + (r.querySelector('.svc-content')?.value || '').trim() + '"');
   });
   if (!hasProduct) {
