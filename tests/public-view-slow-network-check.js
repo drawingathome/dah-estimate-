@@ -23,6 +23,19 @@ const ROOT = path.resolve(__dirname, '..');
   const m = await page.evaluate(() => ({ pub: document.body.classList.contains('public-view-mode'), gate: (() => { const g = document.getElementById('est-auth-gate'); return !!g && getComputedStyle(g).display !== 'none'; })() }));
   ok('느린 망(4G): 공개 보기 모드로 열리고 로그인 화면이 안 뜸', m.pub && !m.gate, JSON.stringify(m));
   ok('느린 망(4G): 화면 오류(JS)가 0건', errs.length === 0, errs.join(' ; '));
+  // N-114④: 공개 링크 한 곳만이 아니라 같은 속도로 '견적서 로그인 화면'과 '대시보드 로그인 화면'도 열어 화면 오류 0을 확인(오류가 생기면 어느 화면인지 이름이 나옴)
+  for (const [nm, url] of [['견적서 편집(로그인) 화면', 'http://localhost:9971/dah-estimate.html'], ['대시보드 로그인 화면', 'http://localhost:9971/dah-dashboard.html']]) {
+    const pg = await browser.newPage(); await pg.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true });
+    const pe = []; pg.on('pageerror', e => pe.push(String(e.message).slice(0, 140)));
+    await pg.setRequestInterception(true);
+    pg.on('request', req => { const u = req.url(); if (u.includes('supabase.co') || u.includes('script.google.com')) return req.abort(); req.continue(); });
+    const c2 = await pg.target().createCDPSession(); await c2.send('Network.enable');
+    await c2.send('Network.emulateNetworkConditions', { offline: false, latency: 150, downloadThroughput: 1.6 * 1024 * 1024 / 8, uploadThroughput: 0.75 * 1024 * 1024 / 8 });
+    await pg.goto(url, { waitUntil: 'load', timeout: 90000 }).catch(e => pe.push('열기 실패: ' + e.message.slice(0, 60)));
+    await new Promise(r => setTimeout(r, 3500));
+    ok('느린 망(4G): ' + nm + ' — 화면 오류(JS)가 0건', pe.length === 0, pe.join(' ; '));
+    await pg.close();
+  }
   await browser.close(); server.kill && server.kill();
   console.log(failed ? '\n❌ 실패 ' + failed + '건' : '\n✅ 전부 통과'); process.exit(failed ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(1); });

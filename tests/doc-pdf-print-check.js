@@ -52,12 +52,16 @@ async function mk(browser, vp, url) {
     await page.emulateMediaType('print'); await new Promise(r => setTimeout(r, 600));
     const p = await page.evaluate(() => {
       const c = document.getElementById('public-view-container'); const t = c.querySelector('.pv-prod-table'); const vw = document.documentElement.clientWidth;
-      const fixedVisible = [...document.querySelectorAll('body *')].filter(e => { const s = getComputedStyle(e); return s.position === 'fixed' && s.display !== 'none' && s.visibility !== 'hidden' && e.getBoundingClientRect().width > 0 && c.contains(e) === false && !!e.offsetParent === false && e.getBoundingClientRect().height > 0; }).map(e => e.id || e.className).slice(0, 5);
+      // 견적서 표의 네 모서리 안쪽·가운데 5곳을 실제로 찍어서, 그 자리에 보이는 요소가 견적서 안의 것인지(다른 것이 위에 겹쳐 있지 않은지) 확인
+      const tr = t ? t.getBoundingClientRect() : { left: 0, top: 0, width: 0, height: 0 };
+      const pts = t ? [[tr.left + 6, tr.top + 6], [tr.left + tr.width - 6, tr.top + 6], [tr.left + 6, tr.top + tr.height - 6], [tr.left + tr.width - 6, tr.top + tr.height - 6], [tr.left + tr.width / 2, tr.top + tr.height / 2]] : [];
+      const covered = pts.filter(([x, y]) => { if (y < 0 || y > window.innerHeight) return false; const el = document.elementFromPoint(x, y); return !el || !c.contains(el); }).map(([x, y]) => Math.round(x) + ',' + Math.round(y));
+      const fixedVisible = covered;
       return { shown: !!t && c.offsetHeight > 200, over: document.documentElement.scrollWidth > vw + 1, sw: document.documentElement.scrollWidth, vw, fixedVisible };
     });
     ok('인쇄 화면: 공개 견적서가 보임', p.shown, JSON.stringify(p));
     ok('인쇄 화면: 가로로 넘치지 않음(A4 폭 794px 기준)', !p.over, JSON.stringify(p));
-    ok('인쇄 화면: 화면 위에 떠 있는 요소(고정 위치)가 견적서를 가리지 않음', p.fixedVisible.length === 0, p.fixedVisible.join(','));
+    ok('인쇄 화면: 견적서 표 위 5곳에 다른 요소가 겹쳐 있지 않음', p.fixedVisible.length === 0, p.fixedVisible.join(' / '));
     ok('인쇄 화면: 화면 오류(JS) 없음', errs.length === 0, errs.join(';'));
     await page.emulateMediaType('screen');
     // ③ 실제 PDF 만들기 (카톡 공유와 같은 html2pdf 방식)
