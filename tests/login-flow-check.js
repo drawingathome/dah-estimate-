@@ -39,7 +39,16 @@ async function run() {
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     await page.setRequestInterception(true);
-    page.on('request', (req) => { const u = req.url(); if (u.includes('supabase.co') || u.includes('script.google.com')) { req.abort(); return; } if (u.startsWith('http://localhost') || u.startsWith('http://127.0.0.1')) { req.continue(); } else { req.abort(); } });
+    // 2026-11-05(N-123): 고정 비밀번호 통로를 없앴으므로, 로그인 성공 검사는 '이메일+비밀번호를 서버가 인증해 준 경우'(가짜 서버 응답)로 한다.
+    let tokenSeen = false;
+    page.on('request', (req) => { const u = req.url();
+      if (req.method() === 'OPTIONS' && u.includes('supabase.co')) { req.respond({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': '*' } }); return; }
+      if (u.includes('/auth/v1/token')) { tokenSeen = true; req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ access_token: 'x.y.z', refresh_token: 'r', expires_in: 3600, user: { id: '280066cc-70f6-438e-ba96-40f262dbbdd9', email: 'master@example.test' } }) }); return; }
+      if (tokenSeen && u.includes('supabase.co') && u.includes('app_settings')) { req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[{"value":{}}]' }); return; }
+      if (u.includes('supabase.co') || u.includes('script.google.com')) { req.abort(); return; }
+      if (u.startsWith('http://localhost') || u.startsWith('http://127.0.0.1')) { req.continue(); return; } req.abort(); });
+    // 앞 화면(모바일)에서 로그인하며 저장된 정보가 PC 화면에 남아 자동 로그인되지 않게 시작 때 비움
+    await page.evaluateOnNewDocument(() => { try { localStorage.clear(); sessionStorage.clear(); } catch (e) {} });
     await page.setViewport({ width, height: 844, isMobile: width < 500, hasTouch: width < 500 });
     await page.goto(`http://localhost:${port}/${file}`, { waitUntil: 'domcontentloaded', timeout: 15000 });
     await new Promise(r => setTimeout(r, 1000));
@@ -47,7 +56,8 @@ async function run() {
     // 마스터 로그인 버튼 클릭 -> 비밀번호 입력창 노출
     await page.evaluate(() => { document.getElementById('btn-master-login').click(); });
     await new Promise(r => setTimeout(r, 300));
-    await page.type('#master-pw-input', 'dah2012');
+    await page.type('#master-email-input', 'master@example.test');
+    await page.type('#master-pw-input', 'test-password-1');
 
     // 확인 버튼이 실제로 화면 안에 있고, 그 좌표를 클릭했을 때 정말 자기 자신이 클릭되는지 확인
     // (문법검사나 존재여부 확인만으로는 "화면 밖으로 밀려남" 버그를 못 잡음 — 실제 좌표 기반 검증 필수)
@@ -57,11 +67,11 @@ async function run() {
       const elAtPoint = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
       return {
         withinViewport: r.left >= 0 && r.right <= window.innerWidth,
-        isTargetElement: elAtPoint === btn
+        isTargetElement: elAtPoint === btn, covered: elAtPoint ? (elAtPoint.tagName + '#' + elAtPoint.id + '.' + elAtPoint.className) : 'null', rect: [r.x, r.y, r.width, r.height].join(',')
       };
     });
     check(`[${label}] 마스터 로그인 확인버튼이 화면 안에 있음`, btnCheck.withinViewport, '버튼이 뷰포트 밖으로 밀려남 — flex 자식 min-width 확인 필요');
-    check(`[${label}] 마스터 확인버튼 좌표 클릭시 정확히 그 버튼이 클릭됨(다른 요소에 가려지지 않음)`, btnCheck.isTargetElement, '해당 좌표를 클릭해도 다른 요소가 클릭됨');
+    check(`[${label}] 마스터 확인버튼 좌표 클릭시 정확히 그 버튼이 클릭됨(다른 요소에 가려지지 않음)`, btnCheck.isTargetElement, '해당 좌표를 클릭해도 다른 요소가 클릭됨: ' + btnCheck.covered + ' @' + btnCheck.rect);
 
     // 실제로 클릭 -> 로그인 성공까지 확인
     await page.evaluate(() => { document.getElementById('btn-master-confirm').click(); });

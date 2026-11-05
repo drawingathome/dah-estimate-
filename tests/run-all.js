@@ -50,6 +50,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['est_archive_filter_check.js', []]);
   scripts.push(['xhr_timeout_check.js', []]);
   scripts.push(['login-flow-check.js', [target]]);
+  scripts.push(['master-login-bypass-check.js', [target]]);
   scripts.push(['role-permission-check.js', [target]]);
   scripts.push(['dashboard-data-check.js', [target]]);
   scripts.push(['multi-device-sync-check.js', [target]]);
