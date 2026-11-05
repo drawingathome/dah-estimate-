@@ -433,9 +433,21 @@ function permanentlyDeleteCustomerFromDb(customer, callback) {
     sbXHR('DELETE', 'customers?' + filter, null, function(err, data) { if(err) console.error('완전삭제 오류:', err.text); if(callback) callback(err, data); });
   };
   if (customer && customer.id) {
-    sbXHR('DELETE', 'estimates?client_id=eq.' + customer.id, null, function(estErr) {
-      if (estErr) console.warn('연결된 견적서 삭제 중 오류(계속 진행):', estErr.text);
-      doDeleteCustomer();
+    // 2026-11-05(N-113): 견적서→고객을 두 번 요청하면 고객 삭제가 막힐 때(발주 기록·권한) 견적서만 사라지는 반쪽 삭제가 생김.
+    // DB 함수(dah_delete_customer)가 있으면 한 번에 처리(실패하면 전부 취소). 함수가 아직 없으면(404) 예전 방식으로 대체.
+    sbXHR('POST', 'rpc/dah_delete_customer', { p_customer_id: customer.id }, function(rpcErr, rpcData) {
+      if (!rpcErr) { if (callback) callback(null, rpcData); return; }
+      var rt = String((rpcErr && rpcErr.text) || '');
+      if (rpcErr.status === 404 || /PGRST202|Could not find the function/.test(rt)) {
+        sbXHR('DELETE', 'estimates?client_id=eq.' + customer.id, null, function(estErr) {
+          if (estErr) console.warn('연결된 견적서 삭제 중 오류(계속 진행):', estErr.text);
+          doDeleteCustomer();
+        });
+        return;
+      }
+      console.error('완전삭제(한 번에) 오류:', rt);
+      rpcErr.atomic = true; // 함수가 전부 취소했으므로 아무것도 지워지지 않았음
+      if (callback) callback(rpcErr, null);
     });
   } else {
     doDeleteCustomer(); // id가 없는 예전 데이터는 이름 매칭이라 견적서 client_id와 못 엮음 - 그대로 진행

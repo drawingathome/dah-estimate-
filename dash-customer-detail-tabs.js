@@ -388,7 +388,14 @@ function permanentlyDeleteCustomer(c) {
   var typed = prompt('정말 삭제하려면 고객명을 정확히 입력해주세요: "' + name + '"');
   if (typed !== name) { showToast('입력한 이름이 정확하지 않아 취소됐어요'); return; }
   permanentlyDeleteCustomerFromDb(c, function(err) {
-    if (err) { showToast('삭제 실패 — 다시 시도해주세요'); return; }
+    if (err) {
+      // N-113: 한 번에 처리하는 함수가 막은 경우엔 '아무것도 지워지지 않았다'고 정확히 알림(반쪽 삭제 없음)
+      var et = String((err && err.text) || '');
+      if (err && err.atomic && /dah_purchase_orders|23503|foreign key/.test(et)) showToast('발주 기록이 있어 지울 수 없어요. 발주를 먼저 정리해 주세요 (아무것도 지워지지 않았어요)');
+      else if (err && err.atomic && (err.status === 403 || /42501|권한|이미 삭제/.test(et))) showToast('삭제 권한이 없거나 이미 삭제된 고객이에요 (아무것도 지워지지 않았어요)');
+      else showToast('삭제 실패 — 다시 시도해주세요');
+      return;
+    }
     var arr = loadCustomers().filter(function(x){ return String(x.id) !== String(c.id); });
     saveCustomers(arr);
     showToast(name + '님 정보가 완전히 삭제됐습니다');
