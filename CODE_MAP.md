@@ -28,7 +28,7 @@
 | 17 | `dash-render-est.js` | 견적서 탭(가견적/확정견적 목록) 렌더링 | 2 |
 | 18 | `dash-render-search.js` | 고객목록(검색) 탭 렌더링 | 1 |
 | 19 | `dash-memo.js` | DAH 대시보드 — 빠른 메모 문구 기능 | 2 |
-| 20 | `dash-chart.js` | DAH 대시보드 — 매출 차트 기능 | 22 |
+| 20 | `dash-chart.js` | DAH 대시보드 — 매출 차트 기능 | 23 |
 | 21 | `dash-calendar.js` | DAH 대시보드 — 일정(캘린더) 기능 | 5 |
 | 22 | `dash-kanban.js` | DAH 대시보드 — 진행현황(칸반) 기능 | 9 |
 | 23 | `dash-pay-history.js` | 고객상세 - 결제 탭의 "입금 내역 보기" (읽기 전용) | 3 |
@@ -321,6 +321,7 @@
 | `findCurrentDetailCustomer` | `dash-customer-detail.js` |
 | `findExistingCustomerByPhone` | `apps-script-survey-to-customer.js` |
 | `findOtherEstimateForAmount` | `dash-extra-pay.js` |
+| `firstDepositDate` | `dash-chart.js` |
 | `firstDepositMonth` | `dash-chart.js` |
 | `fmt` | `dash-utils.js` |
 | `fmtPhone` | `dash-utils.js`, `est-form-controls.js` |
