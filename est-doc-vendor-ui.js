@@ -273,9 +273,26 @@ function printForVendor(categoryFilter) {
     document.body.classList.remove('preview-open');
   };
   closeBtn.style.cssText = 'padding:7px 16px;background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;white-space:nowrap;flex-shrink:0';
+  // 2026-11-07 N-138: 인쇄·완료 전 오발주 점검. 막을 것(미지정·필수 칸 비어 있음)은 막고, 선금이 확인 안 된 경우만 확인창으로 묻는다.
+  function vendorOrderGuard(collected) {
+    var chk = getVendorOrderBlockers(collected.groups);
+    if (chk.errors.length) {
+      var msg = '발주 전에 확인해 주세요 — ' + chk.errors.slice(0, 3).join(' / ') + (chk.errors.length > 3 ? ' 외 ' + (chk.errors.length - 3) + '건' : '');
+      if (typeof showToast === 'function') showToast(msg); else window.alert(msg);
+      return false;
+    }
+    var dep = document.getElementById('deposit-input');
+    var depNum = dep ? Number(String(dep.value || '').replace(/[^0-9.]/g, '')) : 0;
+    var depositOk = !!dep && depNum > 0 && dep.dataset.depositSource === 'real';
+    if (!depositOk) {
+      return window.confirm('선금(계약금) 입금이 확인되지 않은 고객이에요.\n계약 전 고객은 보통 발주하지 않아요. 그래도 발주서를 처리할까요?');
+    }
+    return true;
+  }
   var printBtn = document.createElement('button');
   printBtn.textContent = '인쇄 / PDF 저장';
   printBtn.onclick = function() {
+    if (!vendorOrderGuard(collectVendorGroups(categoryFilter))) return;
     try {
       var collected2 = collectVendorGroups(categoryFilter);
       if (collected2.itemCount > 0) {
@@ -307,6 +324,7 @@ function printForVendor(categoryFilter) {
   doneBtn.onclick = function() {
     var collected3 = collectVendorGroups(categoryFilter);
     if (collected3.itemCount === 0) { if (typeof showToast === 'function') showToast('완료 처리할 항목이 없어요'); return; }
+    if (!vendorOrderGuard(collected3)) return;
     updateOrderStatusFromVendorGroups(collected3.groups);
     if (typeof renderWorkStatusCards === 'function') setTimeout(renderWorkStatusCards, 800);
     doneBtn.textContent = '✓ 완료 처리됨';

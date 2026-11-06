@@ -436,6 +436,25 @@ function applyVendorArrivalDefaults(groups) {
   });
 }
 
+// 2026-11-07 N-138(전문업체 D3·오발주 안전장치): 발주서를 인쇄·완료하기 전에 "이대로 나가면 오발주가 되는 것"을 한 곳에서 판정.
+// errors = 막음(거래처 미지정, 블라인드 사이즈·손잡이 비어 있음, 품명 비어 있음) / 선금 확인은 UI에서 확인창(견적서 앱의 계약금 칸은 '예정 금액'일 수 있어 막지 않고 묻기만 함).
+function getVendorOrderBlockers(groups) {
+  var errors = [];
+  Object.keys(groups || {}).forEach(function(k){
+    var arr = groups[k] || [];
+    if (k.indexOf('미지정') === 0 && arr.length) errors.push('거래처가 정해지지 않은 항목이 ' + arr.length + '개 있어요 (' + k + ')');
+    arr.forEach(function(it){
+      var label = ((it.space && it.space !== '—') ? it.space + ' ' : '') + ((it.product && it.product !== '—') ? it.product : '');
+      label = label || '항목';
+      if (it.orderCategory === 'blind') {
+        if (!it.size || it.size === '—') errors.push(label + ': 사이즈가 비어 있어요');
+        if (!it.handle || it.handle === '—') errors.push(label + ': 손잡이 방향을 골라 주세요');
+      }
+      if (!it.product || it.product === '—') errors.push((it.space && it.space !== '—' ? it.space : '항목') + ': 품명이 비어 있어요');
+    });
+  });
+  return { errors: errors.filter(function(e, i){ return errors.indexOf(e) === i; }) };
+}
 function collectVendorGroups(categoryFilter) {
   var cName  = escHtml(document.getElementById('c-name')?.value||'');
   var cStaff = escHtml(document.getElementById('c-staff')?.value||'장선혜');

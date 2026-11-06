@@ -77,7 +77,7 @@
 | 19 | `est-stale-watch.js` | est-stale-watch.js — 견적서 앱: "내가 열어 둔 화면이 옛날 내용이 됐는지" 미리 알려줌 (2026-10-11 신규) | 7 |
 | 20 | `est-space-order.js` | est-space-order.js | 6 |
 | 21 | `est-doc-customer.js` | DAH 견적서 앱 — 고객용 견적서 문서 생성 | 2 |
-| 22 | `est-doc-vendor.js` | DAH 견적서 앱 — 거래처별 발주서 문서 생성 | 5 |
+| 22 | `est-doc-vendor.js` | DAH 견적서 앱 — 거래처별 발주서 문서 생성 | 6 |
 | 23 | `est-doc-vendor-ui.js` | DAH 견적서 앱 — 발주서: 거래처 정보 입력 모달 + 발주서 선택/인쇄 | 4 |
 | 24 | `est-doc-request.js` | DAH 견적서 앱 — 실측/시공 의뢰서 문서 생성 | 4 |
 | 25 | `est-customer-load.js` | DAH 견적서 앱 — PDF모달 / 고객불러오기 / 계약금계산 | 19 |
@@ -381,6 +381,7 @@
 | `getUnpaidAmount` | `dash-utils.js` |
 | `getVendorInfoIssues` | `est-doc-vendor.js` |
 | `getVendorList` | `dash-api-settings.js` |
+| `getVendorOrderBlockers` | `est-doc-vendor.js` |
 | `goTab` | `dash-core.js` |
 | `guessContextVars` | `dash-customer-alim.js` |
 | `hasCurtainOrBlindItem` | `est-utils.js` |

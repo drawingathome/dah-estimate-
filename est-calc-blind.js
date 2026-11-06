@@ -45,7 +45,7 @@ function addBlindRow() {
       '<option>롤스크린</option><option>더블 롤블라인드</option><option>알루미늄</option><option>우드</option>'+
       '<option>허니콤</option><option>로만쉐이드</option><option>기타</option>'+
     '</select></td>'+
-    '<td data-label="손잡이"><select class="handle-dir" style="'+SEL+'"><option>좌손</option><option>우손</option><option>노코드</option><option>기타</option></select></td>'+
+    '<td data-label="손잡이"><select class="handle-dir" style="'+SEL+'"><option value="">선택</option><option>좌손</option><option>우손</option><option>노코드</option><option>기타</option></select></td>'+
 
     '<td data-label="가로"><input type="text" inputmode="numeric" placeholder="cm" class="bmw" oninput="fmtPrice(this);calcBlindRow(this)" style="'+INP+'"></td>'+
     '<td data-label="높이"><input type="text" inputmode="numeric" placeholder="cm" class="bmh" oninput="fmtPrice(this);calcBlindRow(this)" style="'+INP+'"></td>'+
