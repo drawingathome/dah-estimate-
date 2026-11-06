@@ -140,7 +140,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   var isUnassigned = (!vendor || vendor.indexOf('미지정') === 0);
   // 2026-11-06: 블라인드는 거래처가 정해졌으면 상단 '발주처'와 중복이라 배너를 만들지 않음(미지정일 때만 경고 배너).
   if (!(isBlindDoc && !isUnassigned))
-  out += '<div class="pv-unassigned-banner" style="margin-top:var(--sp-5);padding:8px 14px;background:'+(isUnassigned?'#FBEAE7':'#F5F2EE')+';font-size:13px;font-weight:700;color:'+(isUnassigned?'#C0392B':'#282828')+'">'+(isUnassigned?'⚠️ '+escHtml(vendor||'거래처 미지정')+' — 아래 항목의 거래처를 정해주세요':'거래처: '+escHtml(vendor))+'</div>';
+  out += '<div class="pv-unassigned-banner print-hide" style="margin-top:var(--sp-5);padding:8px 14px;background:'+(isUnassigned?'#FBEAE7':'#F5F2EE')+';font-size:13px;font-weight:700;color:'+(isUnassigned?'#C0392B':'#282828')+'">'+(isUnassigned?'⚠️ '+escHtml(vendor||'거래처 미지정')+' — 아래 항목의 거래처를 정해주세요':'거래처: '+escHtml(vendor))+'</div>';
   // 2026-09-14(선혜님 - "아래 항목의 거래처를 정해달라는데 어떻게
   // 정하는데??"로 발견): 경고 문구는 "정해주세요"라고만 하지, 실제로
   // 어떻게(클릭해서 직접 타이핑) 정하는 건지 이 문서 어디에도 안내가
@@ -238,17 +238,17 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
     // 2026-11-06(선혜님): 표 안 '거래처' 칸은 상단 '발주처'와 중복이라 뺌. 다만 거래처가 아직 '미지정'일 때는 항목별로 정해야 하므로 그때만 표시.
     var showItemVendor = (!vendor || vendor.indexOf('미지정') === 0);
     // 같은 위치(공간)는 한 번만 적고 칸 병합: 처음 나온 순서대로 같은 위치끼리 모아서 보여 줌(idx는 원래 순서 유지 — 거래처 선택 연결용).
-    var _order = [], _seen = {};
+    // N-137⑭(독립 검토): 끼워 넣기(splice)로 순서를 만들면 뒤쪽 위치의 기억 번호가 밀려 거실·안방이 섞여 들어올 때 rowspan이 틀림 → 위치별로 모은 뒤 처음 나온 순서대로 펼치는 방식으로 교체. 위치는 앞뒤 공백을 지우고 비교.
+    var _groups = [], _byKey = {};
     groupItems.forEach(function(it, idx){
       var key = String(it.space == null ? '' : it.space).trim();
-      if (key === '') { _order.push({ idx: idx, key: '' , span: 1, first: true }); return; }
-      if (_seen[key] === undefined) { _seen[key] = _order.length; _order.push({ idx: idx, key: key, span: 1, first: true }); }
-      else {
-        // 같은 위치의 마지막 행 뒤로 끼워 넣음
-        var last = _order.length - 1; while (last >= 0 && _order[last].key !== key) last--;
-        var firstPos = _seen[key]; _order[firstPos].span++;
-        _order.splice(last + 1, 0, { idx: idx, key: key, span: 0, first: false });
-      }
+      if (key === '') { _groups.push({ key: '', idxs: [idx] }); return; }
+      if (_byKey[key] === undefined) { _byKey[key] = _groups.length; _groups.push({ key: key, idxs: [idx] }); }
+      else _groups[_byKey[key]].idxs.push(idx);
+    });
+    var _order = [];
+    _groups.forEach(function(g){
+      g.idxs.forEach(function(idx, n){ _order.push({ idx: idx, span: g.idxs.length, first: n === 0 }); });
     });
     out += '<div class="pv-order-table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch">';
     out += '<table class="pv-blind-table" style="width:100%;border-collapse:collapse;font-size:11px">'

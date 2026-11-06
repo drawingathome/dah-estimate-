@@ -20,7 +20,7 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 60000);
   await new Promise(r => setTimeout(r, 900)); await loginAs(page, 'master'); await new Promise(r => setTimeout(r, 800));
   const r = await page.evaluate(() => {
     function mk(space, product, extra) { return Object.assign({ space: space, product: product, vendor: '윈텍', kind: '콤비', size: '120×200', qty: '1', handle: '우', cordLength: '150', bottomBar: '화이트', comment: '', orderCategory: 'blind' }, extra || {}); }
-    var items = [mk('거실', '버튼'), mk('안방', '화이트'), mk('거실', '그레이'), mk('거실', '베이지'), mk('주방', '화이트')];
+    var items = [mk('거실', '버튼'), mk('안방', '화이트'), mk('거실', '그레이'), mk('안방 ', '블랙'), mk('거실', '베이지'), mk('주방', '화이트')];
     var html = buildVendorDocForOne('윈텍', items, '홍길동', '오지은 실장', null, '2026-11-06', '2026-11-12', '서울 서초구 가공소');
     var box = document.createElement('div'); box.innerHTML = html;
     var tbl = box.querySelector('table.pv-blind-table');
@@ -39,8 +39,8 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 60000);
   });
   ok('1. 표 칸 순서 = 위치/원단명/시스템/사이즈/수량/손잡이방향/끈길이/하단바/코멘트', JSON.stringify(r.heads) === JSON.stringify(['위치','원단명','시스템','사이즈','수량','손잡이방향','끈길이','하단바','코멘트']), JSON.stringify(r.heads));
   ok('2. 표 안에 거래처·고객명 칸이 없음(거래처가 정해진 경우)', r.heads.indexOf('거래처') === -1 && r.heads.indexOf('고객명') === -1, JSON.stringify(r.heads));
-  ok('3. 같은 위치(거실 3개)는 첫 줄에만 위치를 적고 rowspan=3으로 병합', r.spaceCells[0] === '거실|3', JSON.stringify(r.spaceCells));
-  ok('4. 병합된 줄(2·3번째)은 위치 칸이 없고 다른 위치는 각자 표시(안방·주방 rowspan=1)', r.spaceCells.length === 5 && r.spaceCells.filter(function(x){ return x.indexOf('거실') === 0; }).length === 1 && r.spaceCells.indexOf('안방|1') !== -1 && r.spaceCells.indexOf('주방|1') !== -1, JSON.stringify(r.spaceCells));
+  ok('3. 같은 위치(거실 3개, 안방 2개—끝 공백·섞인 순서 포함)는 첫 줄에만 위치를 적고 rowspan으로 병합', r.spaceCells[0] === '거실|3' && r.spaceCells[3] === '안방|2', JSON.stringify(r.spaceCells));
+  ok('4. 병합된 줄(2·3번째)은 위치 칸이 없고 다른 위치는 각자 표시(안방·주방 rowspan=1)', r.spaceCells.length === 6 && r.spaceCells.filter(function(x){ return x.indexOf('거실') === 0; }).length === 1 && r.spaceCells.indexOf('안방|2') !== -1 && r.spaceCells.indexOf('주방|1') !== -1, JSON.stringify(r.spaceCells));
   ok('5. 상단 항목 = 요청일/도착일/업체명/고객명/발주처/도착장소/담당자', JSON.stringify(r.infoLabels) === JSON.stringify(['요청일','도착일','업체명','고객명','발주처','도착장소','담당자']), JSON.stringify(r.infoLabels));
   ok('6. 상단에 고객명·발주처 값이 들어감', r.infoText.indexOf('홍길동') !== -1 && r.infoText.indexOf('윈텍') !== -1 && r.vendorField, r.infoText);
   ok('7. 거래처 정해진 발주서에는 "거래처:" 배너가 없음(발주처와 중복 방지)', r.hasBanner === false);
