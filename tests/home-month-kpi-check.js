@@ -50,13 +50,13 @@ async function run() {
       return { label: el.textContent, num: parseInt(box.children[1].textContent, 10) };
     }
     var scopeTxt = document.getElementById('kpi-consult').parentElement.textContent;
-    return { m: m, scopeTxt: scopeTxt, consult: cardNum('kpi-consult'), contract: cardNum('kpi-newcontract'), prog: cardNum('kpi-inprogress') };
+    return { m: m, scopeTxt: scopeTxt, consult: cardNum('kpi-consult'), contract: cardNum('kpi-newcontract'), progGone: !document.getElementById('kpi-inprogress') && document.body.textContent.indexOf('지금 진행 중') === -1 };
   });
   ok('1. 상담건수 카드 라벨에 월이 들어감', r.consult && r.consult.label === r.m + '월 상담건수', r.consult && r.consult.label);
   ok('2. 상담건수 = 이번달 등록 3명(상담A·B·이번달등록이번달계약)', r.consult && r.consult.num === 3, r.consult && r.consult.num);
   ok('3. 계약건수 카드 라벨에 월이 들어감', r.contract && r.contract.label === r.m + '월 계약건수', r.contract && r.contract.label);
   ok('4. 계약건수 = 이번달 첫 선금 2명(지난달 등록분 포함)', r.contract && r.contract.num === 2, r.contract && r.contract.num);
-  ok('5. 지금 진행 중 카드는 월 표시 없이 누적(시공완료 제외 3명)', r.prog && r.prog.label.indexOf('월') === -1 && r.prog.num === 3, r.prog && (r.prog.label + ' ' + r.prog.num));
+  ok('5. "지금 진행 중" 카드는 홈에 없음(선혜님 요청)', r.progGone === true);
 
   ok('6. 마스터 화면은 카드에 "전체" 범위 표시(N-134⑤)', r.scopeTxt.indexOf('전체') !== -1, r.scopeTxt);
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));

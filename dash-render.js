@@ -167,10 +167,7 @@ function renderHome(skipServerFetch) {
     var lastMonthRev = typeof getMonthPerformanceRevenue === 'function'
       ? getMonthPerformanceRevenue(customers, _prevMonthKey)
       : 0;
-    // 2026-11-06 N-134(독립 검토): 단계만 '선금결제'로 옮기고 입금이 없는 고객은 계약 전이므로 '진행 중'에 넣지 않음(계약 판정은 isContractedCustomer 한 곳).
-    var thisMonthContracts = customers.filter(function(c) {
-      return ['선금결제','실측준비중','확정견적','잔금결제','시공준비중'].indexOf(c.stage) >= 0 && (typeof isContractedCustomer !== 'function' || isContractedCustomer(c));
-    }).length;
+    // 2026-11-07(선혜님: '지금 진행 중' 카드는 없어도 됨) — 카드와 계산 삭제. 상담건수·계약건수만 월 이름과 함께 표시.
     // 2026-08-28(선혜님 지시 - "3번만 지우고 나머지는 살려보자"):
     // getMonthContractCount(이번달 계약일 기준 신규 건수)가 계산은 되는데
     // 화면 어디에도 안 보이던 걸 되살림 - "진행 건수"(현재 스냅샷)와는
@@ -338,11 +335,6 @@ function renderHome(skipServerFetch) {
             '<div id="kpi-newcontract" style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">' + _month + '월 계약건수</div>',
             '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + thisMonthNewContracts + '<span style="font-size:12px;font-weight:400;color:var(--sub)">건</span></div>',
             '<div style="font-size:10px;color:var(--sub);margin-top:2px">' + _month + '월에 선금이 처음 들어온 고객 · ' + _kpiScope + '</div>',
-          '</div>',
-          '<div style="background:#fff;padding:14px 20px">',
-            '<div id="kpi-inprogress" style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">지금 진행 중(누적)</div>',
-            '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + thisMonthContracts + '<span style="font-size:12px;font-weight:400;color:var(--sub)">건</span></div>',
-            '<div style="font-size:10px;color:var(--sub);margin-top:2px">선금 후 시공 끝나기 전 · 월 숫자 아님 · ' + _kpiScope + '</div>',
           '</div>',
           '<div style="background:#fff;padding:14px 20px">',
             '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">전체 고객</div>',
