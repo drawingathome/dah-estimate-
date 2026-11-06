@@ -95,6 +95,7 @@ async function run() {
         return firstChild && firstChild.style.borderRadius === '50%' && firstChild.style.width === '34px';
       });
       if (!todayItem) return null;
+      todayItem.scrollIntoView({ block: 'center' }); // 2026-11-06: 홈 카드가 늘어 일정이 화면 아래로 밀리므로 실제 사용자처럼 스크롤한 뒤 누름
       var r = todayItem.getBoundingClientRect();
       return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
     }, label);
