@@ -274,7 +274,9 @@ function renderHome(skipServerFetch) {
       var paid = typeof isContractedCustomer === 'function' ? isContractedCustomer(c) : true;
       if (paid && c.measureDate === dayStr) return '실측';
       if (paid && c.installDate === dayStr) return '시공';
-      if (c.date === dayStr) return '방문';
+      // 2026-11-06 N-132(선혜님 - "결제 안 한 고객이 계속 오늘의 할일에 뜬다"): 새 고객을 등록하면 '방문 예정일'이 오늘로
+      // 자동 입력돼 상담 단계 고객이 그날 '방문'으로 떴음. 계약 전 고객은 '방문예약' 단계(실제 예약)일 때만 방문 일정으로 올림.
+      if (c.date === dayStr && (paid || c.stage === '방문예약')) return '방문';
       return '';
     };
     var todaySchedule = customers.filter(function(c) { return _schedType(c, todayStr) !== ''; });

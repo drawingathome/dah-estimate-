@@ -59,7 +59,8 @@ async function run() {
     saveCustomers([
       { id: 9960, clientName: '미결제실측고객', phone: '01099990020', stage: '상담', staffName: '오지은 실장', price: 2548000, measureDate: t, installDate: '', addr: '경기 성남시', depositAmount: 0, balanceAmount: 0 },
       { id: 9961, clientName: '결제실측고객', phone: '01099990021', stage: '실측준비중', staffName: '오지은 실장', price: 3000000, measureDate: t, installDate: '', addr: '서울 서초구', depositAmount: 1500000, balanceAmount: 0 },
-      { id: 9962, clientName: '미결제상담방문', phone: '01099990022', stage: '상담', staffName: '오지은 실장', price: 0, date: t, measureDate: '', installDate: '', addr: '서울', depositAmount: 0, balanceAmount: 0 }
+      { id: 9962, clientName: '미결제상담방문', phone: '01099990022', stage: '상담', staffName: '오지은 실장', price: 0, date: t, measureDate: '', installDate: '', addr: '서울', depositAmount: 0, balanceAmount: 0 },
+      { id: 9963, clientName: '방문예약고객', phone: '01099990023', stage: '방문예약', staffName: '오지은 실장', price: 0, date: t, measureDate: '', installDate: '', addr: '서울', depositAmount: 0, balanceAmount: 0 }
     ]);
     localStorage.setItem('dah_saved', JSON.stringify([]));
     goTab('home'); renderHome(true);
@@ -68,7 +69,8 @@ async function run() {
   });
   ok('3. 홈 일정: 결제 전 고객의 실측은 안 뜸', r3.indexOf('미결제실측고객') === -1);
   ok('4. 홈 일정: 결제한 고객의 실측은 정상 표시', r3.indexOf('결제실측고객') !== -1);
-  ok('5. 홈 일정: 결제 전이라도 상담 방문은 표시', r3.indexOf('미결제상담방문') !== -1);
+  ok('5. 홈 일정(N-132): 결제 전 상담 단계 고객은 오늘 등록돼도 안 뜸', r3.indexOf('미결제상담방문') === -1);
+  ok('6. 홈 일정(N-132): 방문예약 단계 고객은 방문 일정으로 표시', r3.indexOf('방문예약고객') !== -1);
 
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));
