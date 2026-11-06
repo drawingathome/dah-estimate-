@@ -175,6 +175,8 @@ function renderHome(skipServerFetch) {
     // 화면 어디에도 안 보이던 걸 되살림 - "진행 건수"(현재 스냅샷)와는
     // 다른 개념(이번달 신규 계약)이라 카드를 새로 안 늘리고 그 아래
     // 작은 글씨로 곁들임.
+    // 2026-11-06 N-133(선혜님 - "11월 상담건수 / 11월 계약건수를 따로, 라벨에 월을 넣어 보여 주기"): 상담건수 = 그달에 등록(방문 예정일)한 고객 수.
+    var thisMonthConsults = customers.filter(function(c) { return c.date && String(c.date).slice(0,7) === _thisMonthKey; }).length;
     var thisMonthNewContracts = typeof getMonthContractCount === 'function'
       ? getMonthContractCount(customers, _thisMonthKey)
       : 0;
@@ -326,9 +328,19 @@ function renderHome(skipServerFetch) {
             '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + Math.round(lastMonthRev).toLocaleString() + '<span style="font-size:12px;font-weight:400;color:var(--sub)">원</span></div>',
           '</div>',
           '<div style="background:#fff;padding:14px 20px">',
-            '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">진행 건수</div>',
+            '<div id="kpi-consult" style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">' + _month + '월 상담건수</div>',
+            '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + thisMonthConsults + '<span style="font-size:12px;font-weight:400;color:var(--sub)">건</span></div>',
+            '<div style="font-size:10px;color:var(--sub);margin-top:2px">' + _month + '월에 등록한 고객</div>',
+          '</div>',
+          '<div style="background:#fff;padding:14px 20px">',
+            '<div id="kpi-newcontract" style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">' + _month + '월 계약건수</div>',
+            '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + thisMonthNewContracts + '<span style="font-size:12px;font-weight:400;color:var(--sub)">건</span></div>',
+            '<div style="font-size:10px;color:var(--sub);margin-top:2px">' + _month + '월에 선금이 처음 들어온 고객</div>',
+          '</div>',
+          '<div style="background:#fff;padding:14px 20px">',
+            '<div id="kpi-inprogress" style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">지금 진행 중(누적)</div>',
             '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + thisMonthContracts + '<span style="font-size:12px;font-weight:400;color:var(--sub)">건</span></div>',
-            '<div style="font-size:10px;color:var(--sub);margin-top:2px">이번달 신규계약(선금 입금 기준) ' + thisMonthNewContracts + '건</div>',
+            '<div style="font-size:10px;color:var(--sub);margin-top:2px">선금 후 시공 끝나기 전 · 월 숫자 아님</div>',
           '</div>',
           '<div style="background:#fff;padding:14px 20px">',
             '<div style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">전체 고객</div>',

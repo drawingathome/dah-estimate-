@@ -686,6 +686,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['zero-price-save-check.js', []]);
   scripts.push(['est-dup-409-check.js', []]);
   scripts.push(['dash-dup-409-check.js', []]);
+  scripts.push(['home-month-kpi-check.js', []]);
   scripts.push(['public-view-id-clean-check.js', []]);
   scripts.push(['public-view-error-msg-check.js', []]);
   scripts.push(['uptime-check-test.js', []]);
