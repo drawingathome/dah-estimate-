@@ -281,7 +281,7 @@ function printForVendor(categoryFilter) {
       if (typeof showToast === 'function') showToast(msg); else window.alert(msg);
       return false;
     }
-    var dep = document.getElementById('deposit-input');
+    var dep = /** @type {HTMLInputElement|null} */ (document.getElementById('deposit-input'));
     var depNum = dep ? Number(String(dep.value || '').replace(/[^0-9.]/g, '')) : 0;
     var depositOk = !!dep && depNum > 0 && dep.dataset.depositSource === 'real';
     if (!depositOk) {
