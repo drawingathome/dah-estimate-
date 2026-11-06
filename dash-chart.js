@@ -561,7 +561,12 @@ function renderChart(period) {
         if (pd >= dateFilterRange.start && pd <= dateFilterRange.end) { curRev += part.revenue; curPerf += part.perf; }
       });
     });
-    curCon = rangeCustomers.filter(function(c){return PRE_CONTRACT_STAGES.indexOf(c.stage) < 0;}).length;
+    // N-134①: 계약 건수 = 첫 선금 입금일이 이 기간에 든 고객(등록일 기준 아님). 전환율 기준 = 계약금 받은 달(선혜님 확정).
+    curCon = customers.filter(function(c) {
+      if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return false;
+      var fd = firstDepositDate(c); if (!fd) return false;
+      var d2 = new Date(fd); return d2 >= dateFilterRange.start && d2 <= dateFilterRange.end;
+    }).length;
     curCons = rangeCustomers.length;
     var filterLabels = {this_month:'이번달', last_month:'지난달', '3months':'최근 3개월', '6months':'최근 6개월'};
     if (summaryLabel && filterLabels[_currentDateFilter]) summaryLabel.textContent = filterLabels[_currentDateFilter] + ' 요약';
@@ -587,7 +592,15 @@ function renderChart(period) {
       if (match) { curRev += part.revenue; curPerf += part.perf; }
     });
   });
-  curCon = currentCustomers.filter(function(c){return PRE_CONTRACT_STAGES.indexOf(c.stage) < 0;}).length;
+  curCon = customers.filter(function(c) {
+    if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return false;
+    var fd = firstDepositDate(c); if (!fd) return false;
+    if (currentChartPeriod === 'daily') return fd === currentKey;
+    if (currentChartPeriod === 'weekly') { var pw2 = periods[periods.length-1]; return fd >= pw2.key && fd <= pw2.endKey; }
+    if (currentChartPeriod === 'monthly') return fd.slice(0,7) === currentKey;
+    if (currentChartPeriod === 'yearly') return fd.slice(0,4) === currentKey;
+    return false;
+  }).length;
   curCons = currentCustomers.length;
   }
   var conv = curCons > 0 ? Math.round(curCon/curCons*100) : 0;
@@ -692,7 +705,9 @@ function renderChartStaffRank(customers, range) {
 // 2026-10-23(계약 수 정의 통일): "계약"은 선금이 처음 입금된 달 기준으로 센다(고객 1명 = 1건).
 // 예전엔 고객 등록일(c.date) 기준이라 등록만 하고 입금 안 한 고객이 섞이거나, 입금한 달과 어긋났음.
 // 선금 입금일이 없으면(이관 데이터 등) 가장 이른 입금일로 대신한다.
-function firstDepositMonth(c) {
+function firstDepositMonth(c) { return firstDepositDate(c).slice(0, 7); }
+// 2026-11-06 N-134①: 매출 탭 요약도 같은 기준(첫 선금 입금일)을 쓰도록 날짜 전체를 돌려주는 함수로 분리.
+function firstDepositDate(c) {
   var first = '';
   getAllEstPays(c).forEach(function(e) {
     if ((Number(e.depositAmount) || 0) > 0 && e.depositDate && (!first || e.depositDate < first)) first = e.depositDate;
@@ -702,7 +717,7 @@ function firstDepositMonth(c) {
       if (!p.isRefund && !p.cancel && p.date && (!first || p.date < first)) first = p.date;
     });
   }
-  return first.slice(0, 7);
+  return first;
 }
 function getMonthContractCount(customers, monthKey) {
   return customers.filter(function(c) {
