@@ -64,6 +64,34 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
       + '<td style="'+valStyle+'"'+(editable2?' contenteditable="true" class="pv-editable-field'+(extraClass2?' '+extraClass2:'')+'"':'')+'>'+val2+'</td>'
       + '</tr>';
   }
+  // 2026-11-06(선혜님 - "블라인드 발주서 상단: 요청일/도착일/업체명/고객명 // 발주처/도착장소/담당자"): 블라인드만 상단 구성을 바꿈.
+  // 고객명은 표 안 맨 끝 칸에서 상단으로 올리고, 거래처는 상단 '발주처' 한 곳만 남김(표 안 거래처 칸은 미지정일 때만 표시).
+  var isBlindDoc = groupItems.length > 0 && groupItems[0].orderCategory === 'blind';
+  if (isBlindDoc) {
+    var _cs = 'padding:7px 8px;border:1px solid #EEE6DC;font-size:12px';
+    var _ls = _cs + ';background:#FAF7F5;color:#8E8078;white-space:nowrap;width:1%';
+    var _vs = _cs + ';font-weight:400';
+    var _vsb = _cs + ';font-weight:700';
+    var _ed = function(v, extra, bold, span) {
+      return '<td style="' + (bold ? _vsb : _vs) + '"' + (span ? ' colspan="' + span + '"' : '') + ' contenteditable="true" class="pv-editable-field' + (extra ? ' ' + extra : '') + '">' + v + '</td>';
+    };
+    // 좁은 화면(모바일)에서는 8칸이 한 줄에 안 들어가 '고객명'이 잘리므로, 두 쌍(라벨+값)씩 줄바꿈되게 함. 인쇄·PC(넓은 화면)는 그대로.
+    out += '<style>@media (max-width:560px){.pv-blind-info,.pv-blind-info tbody{display:block}.pv-blind-info tr{display:grid;grid-template-columns:4.6em 1fr 4.6em 1fr}.pv-blind-info td{width:auto!important;min-width:0;word-break:keep-all;overflow-wrap:anywhere}'
+      + '.pv-blind-info tr:last-child td:nth-child(1){grid-area:1/1}.pv-blind-info tr:last-child td:nth-child(2){grid-area:1/2}'
+      + '.pv-blind-info tr:last-child td:nth-child(5){grid-area:1/3}.pv-blind-info tr:last-child td:nth-child(6){grid-area:1/4}'
+      + '.pv-blind-info tr:last-child td:nth-child(3){grid-area:2/1}.pv-blind-info tr:last-child td:nth-child(4){grid-area:2/2/auto/span 3}}</style>';
+    out += '<table class="pv-blind-info" style="width:100%;border-collapse:collapse;margin-top:var(--sp-6);padding-top:16px">'
+      + '<tr>'
+      + '<td style="' + _ls + '">요청일</td>' + _ed(today, '', false)
+      + '<td style="' + _ls + '">도착일</td>' + _ed(arrivalDate||'협의', '', true)
+      + '<td style="' + _ls + '">업체명</td><td style="' + _vs + '">드로잉엣홈</td>'
+      + '<td style="' + _ls + '">고객명</td>' + _ed(cName||'—', '', true)
+      + '</tr><tr>'
+      + '<td style="' + _ls + '">발주처</td>' + _ed(escHtml(vendor), 'pv-vendor-name-field', false)
+      + '<td style="' + _ls + '">도착장소</td>' + _ed(escHtml(arrivalLocation||'서울 서초구 사평대로 53길 64 1층 드로잉엣홈'), '', true, 3)
+      + '<td style="' + _ls + '">담당자</td><td style="' + _vs + '">' + (cStaff||'—') + '</td>'
+      + '</tr></table>';
+  } else
   out += '<table style="width:100%;border-collapse:collapse;margin-top:var(--sp-6);padding-top:16px">'
       // 2026-09-11(선혜님 지시 - "모든 발주서 요청일자나 도착일자 도착
       // 장소는 기본적으로 수정할 수 있게 해줘"): 요청일만 유일하게 고정
@@ -110,6 +138,8 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   // 수정"): 거래처를 아직 안 정한 항목("미지정")을 화면 전환 없이도
   // 바로 알아챌 수 있도록 경고 색으로 눈에 띄게 표시.
   var isUnassigned = (!vendor || vendor.indexOf('미지정') === 0);
+  // 2026-11-06: 블라인드는 거래처가 정해졌으면 상단 '발주처'와 중복이라 배너를 만들지 않음(미지정일 때만 경고 배너).
+  if (!(isBlindDoc && !isUnassigned))
   out += '<div class="pv-unassigned-banner" style="margin-top:var(--sp-5);padding:8px 14px;background:'+(isUnassigned?'#FBEAE7':'#F5F2EE')+';font-size:13px;font-weight:700;color:'+(isUnassigned?'#C0392B':'#282828')+'">'+(isUnassigned?'⚠️ '+escHtml(vendor||'거래처 미지정')+' — 아래 항목의 거래처를 정해주세요':'거래처: '+escHtml(vendor))+'</div>';
   // 2026-09-14(선혜님 - "아래 항목의 거래처를 정해달라는데 어떻게
   // 정하는데??"로 발견): 경고 문구는 "정해주세요"라고만 하지, 실제로
@@ -205,39 +235,55 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
     // 거부되므로(다른 곳과 동일 규칙), 문서 안에 실제 드롭다운을 그대로
     // 넣어서 등록된 거래처 중에서 바로 고를 수 있게 함.
     var blindVendorOptions = vendorOptionsFor('blind');
+    // 2026-11-06(선혜님): 표 안 '거래처' 칸은 상단 '발주처'와 중복이라 뺌. 다만 거래처가 아직 '미지정'일 때는 항목별로 정해야 하므로 그때만 표시.
+    var showItemVendor = (!vendor || vendor.indexOf('미지정') === 0);
+    // 같은 위치(공간)는 한 번만 적고 칸 병합: 처음 나온 순서대로 같은 위치끼리 모아서 보여 줌(idx는 원래 순서 유지 — 거래처 선택 연결용).
+    var _order = [], _seen = {};
+    groupItems.forEach(function(it, idx){
+      var key = String(it.space == null ? '' : it.space).trim();
+      if (key === '') { _order.push({ idx: idx, key: '' , span: 1, first: true }); return; }
+      if (_seen[key] === undefined) { _seen[key] = _order.length; _order.push({ idx: idx, key: key, span: 1, first: true }); }
+      else {
+        // 같은 위치의 마지막 행 뒤로 끼워 넣음
+        var last = _order.length - 1; while (last >= 0 && _order[last].key !== key) last--;
+        var firstPos = _seen[key]; _order[firstPos].span++;
+        _order.splice(last + 1, 0, { idx: idx, key: key, span: 0, first: false });
+      }
+    });
     out += '<div class="pv-order-table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch">';
-    out += '<table style="width:100%;border-collapse:collapse;font-size:11px">'
+    out += '<table class="pv-blind-table" style="width:100%;border-collapse:collapse;font-size:11px">'
         +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
         +'<th style="text-align:left;padding:6px 4px">위치</th>'
         +'<th style="text-align:left;padding:6px 4px">원단명</th>'
-        +'<th style="text-align:left;padding:6px 4px">거래처</th>'
+        +(showItemVendor ? '<th style="text-align:left;padding:6px 4px">거래처</th>' : '')
         +'<th style="text-align:left;padding:6px 4px">시스템</th>'
         +'<th style="text-align:center;padding:6px 4px">사이즈</th>'
+        +'<th style="text-align:right;padding:6px 4px">수량</th>'
         +'<th style="text-align:center;padding:6px 4px">손잡이방향</th>'
         +'<th style="text-align:center;padding:6px 4px">끈길이</th>'
         +'<th style="text-align:center;padding:6px 4px">하단바</th>'
         +'<th style="text-align:left;padding:6px 4px">코멘트</th>'
-        +'<th style="text-align:right;padding:6px 4px">수량</th>'
-        +'<th style="text-align:left;padding:6px 4px">고객명</th>'
         +'</tr></thead><tbody>';
-    groupItems.forEach(function(it, idx){
-      var vendorCellHtml = buildVendorSelectCell(it, idx, blindVendorOptions);
+    _order.forEach(function(o){
+      var it = groupItems[o.idx], idx = o.idx;
+      var spaceCell = o.first
+        ? '<td class="pv-editable-field" contenteditable="true" rowspan="'+o.span+'" style="padding:6px 4px;vertical-align:middle;font-weight:700;border-right:1px solid #EEE6DC">'+escHtml(it.space)+'</td>'
+        : '';
       out += '<tr style="border-bottom:1px solid #EEE6DC">'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.space)+'</td>'
+          +spaceCell
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.product)+'</td>'
-          +'<td style="padding:6px 4px">'+vendorCellHtml+'</td>'
+          +(showItemVendor ? '<td style="padding:6px 4px">'+buildVendorSelectCell(it, idx, blindVendorOptions)+'</td>' : '')
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.kind)+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.size)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.handle)+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.cordLength)+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.bottomBar)+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.comment)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
           +'</tr>';
     });
     out += '</tbody></table></div>';
-    out += '<div class="print-hide" style="font-size:11px;color:#B0A99F;margin-top:2px">← 표를 옆으로 밀면 나머지 항목(끈길이/하단바/코멘트/수량/고객명)이 보입니다</div>';
+    out += '<div class="print-hide" style="font-size:11px;color:#B0A99F;margin-top:2px">← 표를 옆으로 밀면 나머지 항목(손잡이방향/끈길이/하단바/코멘트)이 보입니다</div>';
   } else {
   // 2026-09-12(선혜님 지적 - "원단명 / 몇 마 정도만 나오면 돼, 품명 사이즈
   // 내용 등이 필요한게 아니야 공간도 필요없어"): 원단 발주서는 material
