@@ -1,0 +1,30 @@
+// N-130 가짜 DB 예행: 마스터/실장/로그인 안 함 × 담당자 본인/마스터/미배정/다른 직원, 되돌리기
+import { PGlite } from '@electric-sql/pglite';
+import fs from 'fs';
+const R = new URL('.', import.meta.url).pathname;
+const db = new PGlite(); const out = []; const ok = (l, c, d) => out.push((c ? '✅ ' : '❌ ') + l + (c ? '' : ' — ' + (d || '')));
+const M = '280066cc-70f6-438e-ba96-40f262dbbdd9', S = 'fff627a9-4f5e-47aa-bdcc-bd814d4db335';
+await db.exec(`
+create schema auth; create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('app.uid', true),'')::uuid $$;
+create role app;
+create table public.staff_profiles(id uuid primary key, display_name text, role text);
+insert into public.staff_profiles values ('${M}','마스터','master'),('${S}','오지은 실장','staff');
+create table public.customers(id bigint generated always as identity primary key, client_name text, phone text, staff_name text);
+alter table public.customers enable row level security; alter table public.customers force row level security;
+grant select, insert on public.customers to app; grant usage on all sequences in schema public to app; grant select on public.staff_profiles to app; grant usage on schema auth to app; grant execute on function auth.uid() to app;
+create policy customers_insert on public.customers for insert with check ((select auth.uid()) is not null);
+create policy customers_select_all on public.customers for select using (true);
+`);
+const ins = async (uid, staff) => { await db.exec(`set role app; select set_config('app.uid','${uid}',false);`); try { await db.exec(`insert into public.customers(client_name,phone,staff_name) values ('시험','01000000000','${staff}')`); await db.exec('reset role;'); return null; } catch (e) { await db.exec('reset role;'); return String(e.message).slice(0, 60); } };
+let e = await ins(S, '마스터'); ok('[적용 전] 실장 계정으로 마스터 담당 고객 생성이 됨(문제 재현)', e === null, e);
+await db.exec(fs.readFileSync(R + '2026-11-06_n130_customers_insert_staff_apply.sql', 'utf8'));
+e = await ins(S, '마스터'); ok('실장이 마스터 담당으로 생성 → 거절', !!e && /row-level security/i.test(e), e);
+e = await ins(S, '오지은 실장'); ok('실장이 본인 담당으로 생성 → 허용', e === null, e);
+e = await ins(S, '미배정'); ok('실장이 미배정으로 생성 → 허용', e === null, e);
+e = await ins(S, '다른직원'); ok('실장이 다른 직원 담당으로 생성 → 거절', !!e, e);
+e = await ins(M, '마스터'); ok('마스터가 마스터 담당으로 생성 → 허용', e === null, e);
+e = await ins(M, '오지은 실장'); ok('마스터가 실장 담당으로 생성 → 허용(배정 업무)', e === null, e);
+e = await ins('', '마스터'); ok('로그인 안 한 요청 → 거절', !!e, e);
+await db.exec(fs.readFileSync(R + '2026-11-06_n130_customers_insert_staff_rollback.sql', 'utf8'));
+e = await ins(S, '마스터'); ok('되돌린 뒤 예전 규칙으로 복원(실장→마스터 담당 다시 가능)', e === null, e);
+console.log(out.join('\n')); const bad = out.some(l => l.startsWith('❌')); console.log(bad ? '\n❌ 실패 있음' : '\n✅ 모두 통과'); process.exit(bad ? 1 : 0);
