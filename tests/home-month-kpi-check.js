@@ -37,6 +37,8 @@ async function run() {
       mk({ id: 9974, clientName: '이번달등록이번달계약', stage: '선금결제', date: thisDay, price: 1000000, depositAmount: 500000, depositDate: thisDay }),
       // 지난달 계약, 지금 진행 중 → 둘 다 아님, 진행 중 누적에만
       mk({ id: 9975, clientName: '지난달계약진행중', stage: '시공준비중', date: older, price: 1000000, depositAmount: 500000, depositDate: older, balanceAmount: 500000, balanceDate: older }),
+      // 단계만 선금결제, 입금 0원 → 진행 중에 넣지 않음(N-134)
+      mk({ id: 9977, clientName: '입금없는선금결제', stage: '선금결제', date: older, price: 1000000 }),
       // 시공완료 → 진행 중 누적에서 빠짐
       mk({ id: 9976, clientName: '완료고객', stage: '시공완료', date: older, price: 1000000, depositAmount: 500000, depositDate: older, balanceAmount: 500000, balanceDate: older })
     ]);

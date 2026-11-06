@@ -167,8 +167,9 @@ function renderHome(skipServerFetch) {
     var lastMonthRev = typeof getMonthPerformanceRevenue === 'function'
       ? getMonthPerformanceRevenue(customers, _prevMonthKey)
       : 0;
+    // 2026-11-06 N-134(독립 검토): 단계만 '선금결제'로 옮기고 입금이 없는 고객은 계약 전이므로 '진행 중'에 넣지 않음(계약 판정은 isContractedCustomer 한 곳).
     var thisMonthContracts = customers.filter(function(c) {
-      return ['선금결제','실측준비중','확정견적','잔금결제','시공준비중'].indexOf(c.stage) >= 0;
+      return ['선금결제','실측준비중','확정견적','잔금결제','시공준비중'].indexOf(c.stage) >= 0 && (typeof isContractedCustomer !== 'function' || isContractedCustomer(c));
     }).length;
     // 2026-08-28(선혜님 지시 - "3번만 지우고 나머지는 살려보자"):
     // getMonthContractCount(이번달 계약일 기준 신규 건수)가 계산은 되는데
@@ -278,7 +279,7 @@ function renderHome(skipServerFetch) {
       if (paid && c.installDate === dayStr) return '시공';
       // 2026-11-06 N-132(선혜님 - "결제 안 한 고객이 계속 오늘의 할일에 뜬다"): 새 고객을 등록하면 '방문 예정일'이 오늘로
       // 자동 입력돼 상담 단계 고객이 그날 '방문'으로 떴음. 계약 전 고객은 '방문예약' 단계(실제 예약)일 때만 방문 일정으로 올림.
-      if (c.date === dayStr && (paid || c.stage === '방문예약')) return '방문';
+      if (c.date === dayStr && c.stage === '방문예약') return '방문'; // N-134: 이미 계약한 고객은 실측·시공만, 방문은 계약 전 '방문예약'만
       return '';
     };
     var todaySchedule = customers.filter(function(c) { return _schedType(c, todayStr) !== ''; });
@@ -330,7 +331,7 @@ function renderHome(skipServerFetch) {
           '<div style="background:#fff;padding:14px 20px">',
             '<div id="kpi-consult" style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">' + _month + '월 상담건수</div>',
             '<div style="font-size:26px;font-weight:700;color:var(--dark);line-height:1">' + thisMonthConsults + '<span style="font-size:12px;font-weight:400;color:var(--sub)">건</span></div>',
-            '<div style="font-size:10px;color:var(--sub);margin-top:2px">' + _month + '월에 등록한 고객</div>',
+            '<div style="font-size:10px;color:var(--sub);margin-top:2px">' + _month + '월에 방문(등록) 예정일이 든 고객</div>',
           '</div>',
           '<div style="background:#fff;padding:14px 20px">',
             '<div id="kpi-newcontract" style="font-size:11px;font-weight:700;color:var(--sub);letter-spacing:0.08em;margin-bottom:6px;text-transform:uppercase">' + _month + '월 계약건수</div>',
