@@ -161,11 +161,12 @@ function saveCustomerToDb(customer, callback) {
       if (typeof isPermanentRejection === 'function' && isPermanentRejection(err)) {
         try {
           var fails = JSON.parse(localStorage.getItem('dah_failed_customer_saves') || '[]');
-          fails.push({ savedAt: new Date().toISOString(), reason: '서버 확정 거절(' + err.status + ')', customerId: customer.id || customer.clientName, payload: row });
+          fails.push({ savedAt: new Date().toISOString(), reason: '서버 확정 거절(' + err.status + ')', customerId: customer.id || null, payload: row }); // 새 고객(POST)은 id가 없으므로 null — 복구 화면이 POST로 다시 보냄 (N-145 M1)
           if (fails.length > 50) fails = fails.slice(-50);
           localStorage.setItem('dah_failed_customer_saves', JSON.stringify(fails));
         } catch (eB) { /* 백업 실패해도 저장 흐름엔 영향 없음 */ }
         if (typeof showToast === 'function' && typeof describeServerRejection === 'function') showToast(describeServerRejection(err));
+        err.rejected = true; // 호출한 화면이 '재시도 대기' 같은 거짓 안내를 덧씌우지 않게 표시 (N-145 M2)
         if (callback) callback(err, data);
         return;
       }

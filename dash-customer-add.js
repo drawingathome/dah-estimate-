@@ -189,7 +189,7 @@ function AddCustomerModal({ editName, registerApi }) {
       var savedTarget = editingCustomerId ? arr.find(function (c) { return c.id === editingCustomerId; }) : arr.find(function (c) { return c.clientName === trimmedName; });
       closeAdd(); renderHome(true); openDetail(trimmedName, savedTarget && savedTarget.id);
       if (savedTarget) {
-        saveCustomerToDb(savedTarget, function (err) { showToast(err ? '⚠️ 고객정보: 로컬엔 저장됨(서버 재시도 대기)' : '고객 정보가 수정됐습니다'); });
+        saveCustomerToDb(savedTarget, function (err) { if (err && err.rejected) return; showToast(err ? '⚠️ 고객정보: 로컬엔 저장됨(서버 재시도 대기)' : '고객 정보가 수정됐습니다'); });
       } else { showToast('고객 정보가 수정됐습니다'); }
     } else {
       var phoneNorm = (finalPhone || '').replace(/\D/g, '');
@@ -254,7 +254,7 @@ function AddCustomerModal({ editName, registerApi }) {
       if (memo.trim()) updated.memo = (localRow.memo ? localRow.memo + '\n' : '') + memo.trim();
       arr = arr.map(function (c) { return c.id === localRow.id ? updated : c; });
       saveCustomers(arr);
-      saveCustomerToDb(updated, function (err) { if (err && typeof showToast === 'function') showToast('⚠️ 고객정보: 로컬엔 저장됨(서버 재시도 대기)'); });
+      saveCustomerToDb(updated, function (err) { if (err && !err.rejected && typeof showToast === 'function') showToast('⚠️ 고객정보: 로컬엔 저장됨(서버 재시도 대기)'); });
       closeAdd(); renderHome(true); openDetail(nm, updated.id);
       showToast('기존 고객 정보를 업데이트했습니다(재구매)');
       return;
@@ -263,7 +263,13 @@ function AddCustomerModal({ editName, registerApi }) {
     if (existing && !localRow) arr = arr.filter(function (c) { return !(c.clientName === nm && (c.phone || '').replace(/\D/g, '') === (ph || '').replace(/\D/g, '')); });
     var newCustomer = { clientName: nm, phone: ph, addr: getCombinedAddr(), addrDetail: addrDetail.trim(), space: space.trim(), price: 0, performanceRevenue: 0, staffName: staffName, stage: stage, date: date, measureDate: measureDate, installDate: installDate, memo: memo.trim(), visitCount: visitCount, createdAt: new Date().toISOString(), branch: '반포점' };
     arr.unshift(newCustomer); saveCustomers(arr);
-    saveCustomerToDb(newCustomer, function (err, data) { if (!err && data && data[0]) { newCustomer.id = data[0].id; saveCustomers(arr); } });
+    saveCustomerToDb(newCustomer, function (err, data) {
+      if (!err && data && data[0]) { newCustomer.id = data[0].id; saveCustomers(arr); return; }
+      // 서버가 확정 거절하면(중복·권한 등) 서버에 없는 고객이 화면에만 남지 않게 목록에서 빼고, 내용은 백업(복구 화면)에 있다 (N-145 M2)
+      if (err && err.rejected) {
+        try { var cur = loadCustomers().filter(function (c) { return c !== newCustomer && !(c.clientName === newCustomer.clientName && !c.id); }); saveCustomers(cur); if (typeof renderHome === 'function') renderHome(true); } catch (eR) {}
+      }
+    });
     closeAdd(); renderHome(true); openDetail(nm, newCustomer.id);
     showToast('고객이 추가됐습니다');
   }

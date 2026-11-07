@@ -68,7 +68,11 @@ function updateSyncBanner() {
 function isPermanentRejection(err) {
   if (!err || typeof err.status !== 'number') return false;
   if (err.zeroRows) return false;
-  return err.status >= 400 && err.status < 500 && err.status !== 401 && err.status !== 408 && err.status !== 429;
+  if (err.status < 400 || err.status >= 500 || err.status === 401 || err.status === 408 || err.status === 429) return false;
+  // 2026-11-07(N-145 M3): 400/404 중에는 DB 구조를 막 바꾼 직후 잠깐 나는 PGRST204/205(스키마 캐시) 같은 일시 오류도 있다.
+  // 그래서 '확정 거절'은 권한(403/42501)·중복(409/23505)·제약 위반(23xxx)·값 형식 오류(22xxx)·DB 규칙이 직접 낸 거절(P0001)로 좁힌다.
+  if (err.status === 403 || err.status === 409) return true;
+  return /"code"\s*:\s*"(23\d{3}|22\w{3}|42501|P0001)"/.test(String(err.text || '')) || /duplicate key/i.test(String(err.text || ''));
 }
 // 서버가 준 한글 거절 이유(예: '마감된 달(2026-09)의 입금 기록은 수정할 수 없습니다...')를 꺼내 사용자에게 보여줄 문장으로.
 function describeServerRejection(err) {
@@ -94,7 +98,7 @@ function retryPendingSync() {
         if (isPermanentRejection(err)) {
           try {
             var fails = JSON.parse(localStorage.getItem('dah_failed_customer_saves') || '[]');
-            fails.push({ savedAt: new Date().toISOString(), reason: '서버 확정 거절(' + err.status + ')', customerId: item.customerKey, payload: item.payload });
+            fails.push({ savedAt: new Date().toISOString(), reason: '서버 확정 거절(' + err.status + ')', customerId: (String(item.path || '').match(/^customers\?id=eq\.([^&]+)/) || [])[1] || null, payload: item.payload });
             if (fails.length > 50) fails = fails.slice(-50);
             localStorage.setItem('dah_failed_customer_saves', JSON.stringify(fails));
           } catch (eB) { /* 백업 실패해도 흐름엔 영향 없음 */ }
