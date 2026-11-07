@@ -67,11 +67,22 @@ function isOrderItemDone(orderStatus, key) {
   return !!v;
 }
 
+// 2026-11-07(N-141b): DB 자동 이동 규칙(dah_target_stage)과 똑같이 — 시공 발주 = 시공일 지정.
+// 시공일이 있고 '미정' 표시가 아니면 '시공 발주'는 완료로 본다(처음부터 시공일을 다 잡는 경우가 적어서, 시공일이 정해지는 순간 끝난 것으로 봄).
+function isInstallDateSet(c) {
+  return !!(c && c.installDate && !c.installDateTbd);
+}
+// 고객 기준의 발주 항목 완료 여부(시공 항목은 시공일로도 완료 처리)
+function isOrderItemDoneFor(c, orderStatus, key) {
+  if (key === 'install' && isInstallDateSet(c)) return true;
+  return isOrderItemDone(orderStatus, key);
+}
+
 // 이 고객에게 아직 안 끝난(관련은 있는데 미체크인) 발주 항목이 있는지
 function hasIncompleteOrder(c) {
   var orderStatus = c.orderStatus || {};
   var items = getRelevantOrderItems(c);
-  return items.some(function(item){ return !isOrderItemDone(orderStatus, item.key); });
+  return items.some(function(item){ return !isOrderItemDoneFor(c, orderStatus, item.key); });
 }
 
 function renderOrderSection(c, orderBody) {
@@ -173,7 +184,7 @@ function renderOrderSection(c, orderBody) {
     ]);
     orderItems.forEach(function(item) {
       var curVal = orderStatus[item.key];
-      var isDone = isOrderItemDone(orderStatus, item.key);
+      var isDone = isOrderItemDoneFor(c, orderStatus, item.key);
       var vendorInfo = (curVal && typeof curVal === 'object') ? curVal : null;
       var vendorSuggestions = getVendorSuggestions(item.key);
       // 도착예정일 기본값: 자재(원단/제작/블라인드/자재)와 시공발주 전부 "시공일"이 기준.
