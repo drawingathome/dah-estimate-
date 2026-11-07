@@ -419,15 +419,21 @@ function archiveEstimate(est, callback) {
   var idx = est.id
     ? all.findIndex(function(x){ return x.id === est.id; })
     : all.findIndex(function(x){ return !x.id && x.no === est.no; });
-  if (idx >= 0) all.splice(idx, 1); // 완전삭제 - 로컬 캐시에서도 그냥 제거(보관 플래그 대신)
-  localStorage.setItem('dah_saved', JSON.stringify(all));
   _lastEstDeleteInfo = null;
-  if (typeof est.id === 'string' && est.id.length > 20) { // UUID면 서버(client_id 있는 정식 견적서)에도 반영
+  var isServerEst = typeof est.id === 'string' && est.id.length > 20;
+  // 2026-11-07(N-144 ⓐ): 서버 견적서는 서버 삭제가 성공한 뒤에만 로컬에서 지운다 (거절돼도 화면에선 사라진 것처럼 보이던 문제).
+  function removeLocal() {
+    if (idx >= 0) all.splice(idx, 1); // 완전삭제 - 로컬 캐시에서도 그냥 제거(보관 플래그 대신)
+    localStorage.setItem('dah_saved', JSON.stringify(all));
+  }
+  if (!isServerEst) removeLocal();
+  if (isServerEst) { // UUID면 서버(client_id 있는 정식 견적서)에도 반영
     // 2026-11-02(N-79 ㉣): 누가·언제·어떤 견적서를 지웠는지 남김(DB 변경기록엔 작업자가 없어 11-02 사고 때 추적이 어려웠음).
     // 개인정보 최소화 — 이름은 안 남기고 견적서·고객 번호와 금액만.
     if (typeof logEvent === 'function') logEvent('estimate_deleted', { estimateId: est.id, no: est.no || null, clientId: est.clientId || est.client_id || null, price: Number(est.price) || 0 });
     sbXHR('DELETE', 'estimates?id=eq.' + est.id, null, function(err){
       if (err) { if (callback) callback(err); return; }
+      removeLocal();
       // 2026-10-13(시험바 사례): 견적서를 지우면 DB가 고객의 매출기준금액·성과매출에서 그 몫을 빼고 수정 시각(잠금값)도 바꿈 -
       // 화면의 고객 캐시도 서버 값으로 맞춰야 낡은 금액이 남거나 다음 저장이 가짜 충돌을 내지 않음. 이 조회가 실패해도 삭제 자체는 성공이므로 그대로 진행.
       var cid = est.clientId || est.client_id;
