@@ -17,7 +17,7 @@
 | 6 | `dash-api-writes.js` | DAH 대시보드 — 고객 DB 쓰기 (저장/선점/보관/삭제/복구/리드보류) | 15 |
 | 7 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 10 |
 | 8 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 5 |
-| 9 | `dash-sync-queue.js` | DAH — 오프라인/네트워크 실패 동기화 큐 (2026-08-05 신규) | 6 |
+| 9 | `dash-sync-queue.js` | DAH — 오프라인/네트워크 실패 동기화 큐 (2026-08-05 신규) | 8 |
 | 10 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 16 |
 | 11 | `dash-realtime.js` | 실시간 동기화 (Supabase Realtime) | 9 |
 | 12 | `dash-ui-helpers.js` | DAH 대시보드 — UI 헬퍼 / 입력값 검증 함수 모음 | 15 |
@@ -260,6 +260,7 @@
 | `delRow` | `est-product-calc.js` |
 | `delSvcRow` | `est-calc-svc.js` |
 | `depositRatioNeedsConfirm` | `dash-utils.js` |
+| `describeServerRejection` | `dash-sync-queue.js` |
 | `dismissFailedSave` | `dash-failed-saves.js` |
 | `displaySurvey` | `est-survey.js` |
 | `div` | `dash-ui-helpers.js` |
@@ -401,6 +402,7 @@
 | `isNoInstallFee` | `est-calc-rules.js` |
 | `isOrderItemDone` | `dash-customer-order.js` |
 | `isOrderItemDoneFor` | `dash-customer-order.js` |
+| `isPermanentRejection` | `dash-sync-queue.js` |
 | `isSoftDeleted` | `dash-utils.js` |
 | `joinCustomerPresence` | `dash-realtime.js` |
 | `labelDiv` | `dash-settings.js` |

@@ -330,6 +330,12 @@ function syncCustomerLocksFromRows(rows) {
       if (!r || !r.id || !r.updated_at) return;
       var t = arr.find(function (c) { return String(c.id) === String(r.id); });
       if (t && t.updatedAt !== r.updated_at) { t.updatedAt = r.updated_at; changed = true; }
+      // 2026-11-07(N-142 ②): DB 자동 이동 규칙이 이 요청 중에 단계를 옮겼으면 캐시도 같은 단계로 맞춘다.
+      // 안 맞추면 다음 '고객정보 수정' 전체 저장이 옛 단계를 서버로 다시 보내 자동 이동을 되돌려 버린다.
+      if (t && r.stage && t.stage !== r.stage) {
+        var movedFrom = t.stage; t.stage = r.stage; changed = true;
+        try { if (typeof showToast === 'function') showToast('단계가 자동으로 "' + r.stage + '"(으)로 이동됐어요 (이전: ' + movedFrom + ')'); } catch (eT) {}
+      }
     });
     if (changed) saveCustomers(arr);
   } catch (e) { /* 캐시 갱신 실패는 저장 흐름에 영향 없게 */ }

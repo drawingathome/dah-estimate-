@@ -687,6 +687,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['zero-price-save-check.js', []]);
   scripts.push(['est-dup-409-check.js', []]);
   scripts.push(['dash-dup-409-check.js', []]);
+  scripts.push(['dash-save-stage-patch-check.js', []]); // 2026-11-07 N-142 ②⑤ 저장 후 서버가 옮긴 단계 반영 + 수정 409 처리
   scripts.push(['home-month-kpi-check.js', []]);
   scripts.push(['vendor-blind-order-check.js', []]);
   scripts.push(['vendor-order-guard-check.js', []]);

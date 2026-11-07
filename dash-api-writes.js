@@ -147,8 +147,25 @@ function saveCustomerToDb(customer, callback) {
       console.error((customer.id?'수정':'추가') + ' 오류:', err.text);
       // 2026-11-06(N-128): 새 고객 등록(POST)이 '같은 번호+같은 이름의 진행 중 고객이 이미 있음'(409/23505)으로 거절되면
       // 같은 요청을 다시 보내도 영원히 거절되므로 재시도 대기열에 넣지 않음 — 안내만 하고 끝냄(무한 재시도·'저장 대기' 배너 방지).
-      if (!customer.id && err && (err.status === 409 || /23505|duplicate key/i.test(String(err.text || '')))) {
-        if (typeof showToast === 'function') showToast('⚠️ 같은 번호·이름의 진행 중 고객이 이미 있어요 — 고객 목록에서 확인해주세요');
+      // 2026-11-07(N-142 ⑤): 새 고객(POST)뿐 아니라 수정(PATCH)도 같은 번호·이름의 진행 중 고객과 겹치면 DB가 거절한다.
+      // 거절을 재시도 대기열에 넣으면 영원히 재시도되므로, 안내만 하고 끝낸다.
+      if (err && (err.status === 409 || /23505|duplicate key/i.test(String(err.text || '')))) {
+        if (typeof showToast === 'function') showToast(customer.id
+          ? '⚠️ 같은 번호·이름의 진행 중 고객이 이미 있어서 저장되지 않았어요 — 이름이나 번호를 확인하거나 고객 목록에서 같은 고객을 찾아주세요'
+          : '⚠️ 같은 번호·이름의 진행 중 고객이 이미 있어요 — 고객 목록에서 확인해주세요');
+        if (callback) callback(err, data);
+        return;
+      }
+      // 2026-11-07(N-142 ⑤): 서버가 확정 거절한 저장(마감월 가드 42501, 입력 규칙 23514 등)은 몇 번을 다시 보내도 같은 이유로 거절된다.
+      // 영구 재시도 + 빨간 '저장 대기' 배너 대신, 서버가 준 이유를 그대로 보여주고 내용은 백업에 남긴다.
+      if (typeof isPermanentRejection === 'function' && isPermanentRejection(err)) {
+        try {
+          var fails = JSON.parse(localStorage.getItem('dah_failed_customer_saves') || '[]');
+          fails.push({ savedAt: new Date().toISOString(), reason: '서버 확정 거절(' + err.status + ')', customerId: customer.id || customer.clientName, payload: row });
+          if (fails.length > 50) fails = fails.slice(-50);
+          localStorage.setItem('dah_failed_customer_saves', JSON.stringify(fails));
+        } catch (eB) { /* 백업 실패해도 저장 흐름엔 영향 없음 */ }
+        if (typeof showToast === 'function' && typeof describeServerRejection === 'function') showToast(describeServerRejection(err));
         if (callback) callback(err, data);
         return;
       }
@@ -164,6 +181,20 @@ function saveCustomerToDb(customer, callback) {
     // 오탐이 날 수 있음.
     if (!err && data && data[0] && data[0].updated_at) {
       customer.updatedAt = data[0].updated_at;
+    }
+    // 2026-11-07(N-142 ②): 서버(DB 자동 이동 규칙)가 이 저장 중에 단계를 옮겼으면(예: 상담→가견적) 화면의 고객 정보도 그 단계로 맞춘다.
+    // 안 맞추면 다음 저장이 옛 단계를 서버로 다시 보내 자동 이동을 되돌려 버린다.
+    if (!err && data && data[0] && data[0].stage && customer && customer.stage !== data[0].stage) {
+      customer.stage = data[0].stage;
+      try {
+        if (customer.id && typeof loadCustomers === 'function' && typeof saveCustomers === 'function') {
+          var _arrS = loadCustomers();
+          for (var _si = 0; _si < _arrS.length; _si++) {
+            if (_arrS[_si] && _arrS[_si].id === customer.id) { _arrS[_si].stage = data[0].stage; break; }
+          }
+          saveCustomers(_arrS);
+        }
+      } catch (eStage) { /* 캐시 갱신 실패해도 저장 흐름엔 영향 없음 */ }
     }
     // 신규 생성(POST)이면 저장 전엔 id를 몰라서 위에서 못 찍었음 - 서버가
     // 응답으로 준 진짜 id로 지금 찍어야 방금 만든 신규 고객도 배너에서 제외됨.
