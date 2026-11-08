@@ -690,6 +690,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['dash-save-stage-patch-check.js', []]); // 2026-11-07 N-142 ②⑤ 저장 후 서버가 옮긴 단계 반영 + 수정 409 처리
   scripts.push(['estimate-delete-rejected-keeps-local-check.js', []]); // 2026-11-07 N-144 ⓐ 서버가 삭제를 거절하면 로컬 목록 유지
   scripts.push(['sync-queue-rejection-check.js', []]); // 2026-11-07 N-145 재시도 대기열: 확정 거절만 제거·일시 오류 유지·백업 id
+  scripts.push(['order-rule-parity-check.js', []]); // 2026-11-09 N-146 ⓖ 화면 발주 판정 == DB 규칙 기대값(572 시나리오; DB 쪽은 db/test/order_rule_parity.js)
   scripts.push(['home-month-kpi-check.js', []]);
   scripts.push(['vendor-blind-order-check.js', []]);
   scripts.push(['vendor-order-guard-check.js', []]);

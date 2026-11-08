@@ -38,6 +38,8 @@ $P -d dah_prodlike_test -f "$tmp" >/dev/null 2>&1
 LEFT=$($P -d dah_prodlike_test -Atc "select (select count(*) from pg_trigger where tgname in ('trg_sync_customer_price','trg_extra_payment_touch_customer','trg_estimates_confirm_guard')) + (select count(*) from information_schema.schemata where schema_name='backup_w1_20261022') + (select count(*) from information_schema.tables where table_name in ('estimate_confirm_log','customer_stage_auto_log'))")
 [ "$LEFT" = "0" ] && echo "PASS 중간 실패 시 전부 취소" || { echo "FAIL 중간 실패 뒤 잔여=$LEFT"; fail=1; }
 rm -f "$tmp"
+echo "=== C. 발주 규칙 DB↔화면 일치 (DB 쪽: 운영 함수 사본으로 시나리오 기대값 확인) ==="
+node test/order_rule_parity.js || { echo "C 실패"; fail=1; }
 $P -d postgres -c "drop database if exists dah_rules_test" -c "drop database if exists dah_prodlike_test" >/dev/null 2>&1
 [ $fail = 0 ] && echo "=== 전체 통과 ===" || echo "=== 실패 있음 ==="
 exit $fail
