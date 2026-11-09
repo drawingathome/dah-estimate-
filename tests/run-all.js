@@ -692,6 +692,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['sync-queue-rejection-check.js', []]); // 2026-11-07 N-145 재시도 대기열: 확정 거절만 제거·일시 오류 유지·백업 id
   scripts.push(['order-rule-parity-check.js', []]); // 2026-11-09 N-146 ⓖ 화면 발주 판정 == DB 규칙 기대값(572 시나리오; DB 쪽은 db/test/order_rule_parity.js)
   scripts.push(['staff-perf-contract-count-check.js', []]); // 2026-11-09 N-149 담당자별 성과 건수 = 홈 계약건수(첫 선금 달 기준)
+  scripts.push(['home-install-overdue-alert-check.js', []]); // 2026-11-09 N-148 홈 처리필요: 시공일 지났는데 시공준비중이면 알림
   scripts.push(['home-month-kpi-check.js', []]);
   scripts.push(['vendor-blind-order-check.js', []]);
   scripts.push(['vendor-order-guard-check.js', []]);

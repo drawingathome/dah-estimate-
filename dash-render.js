@@ -249,6 +249,12 @@ function renderHome(skipServerFetch) {
         // 판단 자체가 불가능한 경우는 별도 이유로 계속 표시해서 놓치지 않게 함.
         else if (typeof hasOrderDataGap === 'function' && hasOrderDataGap(c)) reasons.push('발주정보 확인 필요(견적서 재입력 필요)');
       }
+      var _todayYmd = _today.getFullYear() + '-' + String(_today.getMonth() + 1).padStart(2, '0') + '-' + String(_today.getDate()).padStart(2, '0'); // (이 함수 안에 todayStr 이름의 지역 변수가 있어 공용 함수를 못 씀)
+      // 2026-11-09(N-148): 시공일이 지났는데 아직 '시공준비중'이면 시공완료 처리를 놓쳤을 수 있다(규칙은 시공완료로 자동 이동하지 않음 — 시공 여부는 담당자만 안다).
+      // 시공일이 '미정'이거나 오늘 이후면 안 띄운다.
+      if (c.stage === '시공준비중' && typeof isInstallDateSet === 'function' && isInstallDateSet(c) && String(c.installDate) < _todayYmd) {
+        reasons.push('시공일(' + c.installDate + ') 지남 — 시공이 끝났으면 시공완료로 옮겨 주세요');
+      }
       if (DAH_PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0 && !c.leadParked) {
         // 2026-11-03 N-85: 알림 기준을 '등록일'이 아니라 서버가 계산한 '마지막 활동(견적서 수정)'으로 통일
         // (대기 리드 자동 이동과 같은 기준). 서버값을 못 받았을 때만 예전 방식(등록일)으로 대신함.
@@ -442,6 +448,7 @@ function renderHome(skipServerFetch) {
               var groups = [
                 { title: '결제 처리', test: function(r){ return r.indexOf('선금결제 처리')>=0 || r.indexOf('잔금결제 처리')>=0 || r.indexOf('미수금')>=0 || r.indexOf('완납 단계 확인')>=0; }, tab: 'pay' },
                 { title: '발주 필요', test: function(r){ return r.indexOf('발주 필요')>=0 || r.indexOf('발주정보 확인 필요')>=0; }, tab: 'order' },
+                { title: '시공 확인', test: function(r){ return r.indexOf('시공일(')>=0 && r.indexOf('지남')>=0; }, tab: 'info' },
                 { title: '리드 팔로업', test: function(r){ return r.indexOf('진행없음')>=0; }, tab: 'info', park: true }
               ];
               return groups.map(function(g){
