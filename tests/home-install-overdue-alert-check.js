@@ -11,7 +11,7 @@ async function run() {
   let fail = false; const ok = (l, c, d) => { console.log((c ? '✅' : '❌') + ' ' + l + (d !== undefined ? ' — ' + d : '')); if (!c) fail = true; };
   const res = await page.evaluate(async () => {
     const day = (n) => { const d = new Date(); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
-    const base = { staffName: '마스터', is_archived: false, date: todayStr(), price: 1000000, depositAmount: 500000, balanceAmount: 500000, orderStatus: { fabric: true, production: true, blind: true, material: true, install: true } };
+    const base = { phone: '010-9985-8429', staffName: '마스터', is_archived: false, date: todayStr(), price: 1000000, depositAmount: 500000, balanceAmount: 500000, orderStatus: { fabric: true, production: true, blind: true, material: true, install: true } };
     saveCustomers([
       Object.assign({ id: 901, clientName: '지남A', stage: '시공준비중', installDate: day(-3) }, base),
       Object.assign({ id: 902, clientName: '오늘B', stage: '시공준비중', installDate: day(0) }, base),
@@ -21,7 +21,14 @@ async function run() {
       Object.assign({ id: 906, clientName: '날짜없음F', stage: '시공준비중', installDate: '' }, base),
     ]);
     goTab('home'); renderHome(true); await new Promise(r => setTimeout(r, 600));
-    return Array.from(document.querySelectorAll('[data-cname]')).map(e => ({ n: e.getAttribute('data-cname'), t: e.textContent }));
+    return Array.from(document.querySelectorAll('[data-cname]')).map(e => {
+      // 화면에 실제로 보이는지(이름 칸 폭>0, 사유 글자가 이름·전화 칸과 겹치지 않음) — 2026-11-09 캡처에서 이름이 사라졌던 문제
+      const nameEl = e.querySelector('span'); const nr = nameEl ? nameEl.getBoundingClientRect() : { width: 0 };
+      const kids = Array.from(e.querySelectorAll('div,span')).filter(x => x.children.length === 0 && x.textContent.includes('시공일('));
+      const rr = kids[0] ? kids[0].getBoundingClientRect() : null; const ph = Array.from(e.querySelectorAll('div')).find(x => x.children.length === 0 && /^[0-9-]{9,}$/.test(x.textContent.trim()));
+      const pr = ph ? ph.getBoundingClientRect() : null; if (!pr) return { n: e.getAttribute('data-cname'), t: e.textContent, nameW: nr.width, overlap: null };
+      return { n: e.getAttribute('data-cname'), t: e.textContent, nameW: nr.width, overlap: !!(rr && pr && rr.top < pr.bottom - 1 && rr.bottom > pr.top + 1 && rr.left < pr.right && rr.right > pr.left) };
+    });
   });
   const has = n => res.some(r => r.n === n && r.t.includes('시공일') && r.t.includes('지남'));
   ok('시공일이 3일 지난 시공준비중: 뜸', has('지남A'));
@@ -30,6 +37,9 @@ async function run() {
   ok('시공일 미정 표시: 안 뜸', !has('미정D'));
   ok('이미 시공완료: 안 뜸', !has('완료E'));
   ok('시공일 없음: 안 뜸', !has('날짜없음F'));
+  const a = res.find(r => r.n === '지남A');
+  ok('지남A 이름 칸이 화면에 보임(폭>20px)', a && a.nameW > 20, a && a.nameW);
+  ok('지남A 사유 글자가 전화번호와 겹치지 않음', a && a.overlap === false, String(a && a.overlap));
   ok('JS 에러 없음', errs.length === 0, errs.join('|'));
   await browser.close(); server.close && server.close(); process.exit(fail ? 1 : 0);
 }

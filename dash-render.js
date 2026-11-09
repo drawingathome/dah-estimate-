@@ -421,6 +421,7 @@ function renderHome(skipServerFetch) {
               // 작업이 어려웠음. 한 고객이 여러 사유에 해당하면(예: 선금결제 처리 +
               // 발주 필요 둘 다) 해당하는 그룹에 각각 나타남 — 그룹별로 그 사유만 표시.
               function renderRow(c, reasonText, targetTab, showParkBtn) {
+                var isLongReason = String(reasonText||'').length > 16;
                 var stageColor = (DAH_PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) ? '#8A8378' : (c.stage === '시공완료') ? '#2F6690' : 'var(--terra)';
                 // 2026-08-28(선혜님 지시 - "3번만 지우고 나머지는 살려보자"):
                 // parkLeadFromHome(홈화면에서 바로 리드를 "대기중"으로 보관
@@ -439,8 +440,11 @@ function renderHome(skipServerFetch) {
                       '<span style="font-size:10px;font-weight:700;color:' + stageColor + ';background:' + (stageColor==='var(--terra)'?'var(--bg-org)':'#F0F0F0') + ';padding:1px 6px;border-radius:6px;flex-shrink:0">' + escHtml(getDisplayStageLabel(c)||'') + '</span>' +
                     '</div>' +
                     '<div style="font-size:11px;color:var(--sub);margin-top:2px">' + escHtml(c.phone||'') + '</div>' +
+                    // 2026-11-09: 긴 사유(시공일 지남 안내 등)는 오른쪽 칸에 넣으면 이름 칸이 0폭으로 눌려
+                    // 이름이 사라지고 글자가 겹쳤음(선혜님 화면 캡처) → 이름 아래 줄로 내려 줄바꿈 허용.
+                    (isLongReason ? '<div style="font-size:11px;font-weight:700;color:' + stageColor + ';margin-top:3px;line-height:1.4;word-break:keep-all">' + escHtml(reasonText) + '</div>' : '') +
                   '</div>' +
-                  '<span style="font-size:11px;font-weight:700;color:' + stageColor + ';flex-shrink:0;text-align:right">' + escHtml(reasonText) + '</span>' +
+                  (isLongReason ? '' : '<span style="font-size:11px;font-weight:700;color:' + stageColor + ';flex-shrink:0;text-align:right">' + escHtml(reasonText) + '</span>') +
                   parkBtnHtml +
                   '<span style="color:var(--sub);font-size:14px;flex-shrink:0">›</span>' +
                 '</div>';
