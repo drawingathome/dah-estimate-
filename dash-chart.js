@@ -350,12 +350,16 @@ function getMonthStaffPerformance(customers, monthKey, ignoreClosed) {
     if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return;
     var s = c.staffName || '미지정';
     var counted = false;
+    // 2026-11-09(N-149, 선혜님: 홈 '11월 계약건수 2건'인데 담당자별 성과는 2건+2건): 계약 건수는 홈과 같은 기준 —
+    // '계약금(첫 선금)을 받은 달'에만 센다(선혜님 기준 '전환율·계약은 입금 금액 기준, 계약금을 받은 달'). 금액(rev)은 달별 결제 그대로.
+    // 예전엔 그달에 잔금만 들어온 고객도 건수에 더해져 홈 계약건수와 어긋났다.
+    var isContractMonth = firstDepositMonth(c) === monthKey;
     splitCustomerPayments(c).forEach(function(p) {
       if ((p.date || '').slice(0, 7) === monthKey) {
         if (!byStaff[s]) byStaff[s] = { count: 0, rev: 0 };
         byStaff[s].rev += p.perf;
         if (p.cancel) { byStaff[s].count--; }
-        else if (!p.isRefund && !counted) { byStaff[s].count++; counted = true; }
+        else if (!p.isRefund && !counted && isContractMonth) { byStaff[s].count++; counted = true; }
       }
     });
   });
