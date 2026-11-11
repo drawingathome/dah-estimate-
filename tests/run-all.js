@@ -215,6 +215,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['print-hide-check.js', []]);
   scripts.push(['print-toast-hidden-check.js', []]);
   scripts.push(['home-reason-group-check.js', []]);
+  scripts.push(['kst-date-check.js', []]);
   // 2026-09-18(선혜님 - "다 적어도 이렇게 뜨는데 왜 이래"): 원단
   // 거래처 자동완성에 가공소/블라인드/부자재가 섞여서 실수로 잘못
   // 선택하기 쉽던 문제 - 원단 전용 목록으로 분리해서 근본 해결.

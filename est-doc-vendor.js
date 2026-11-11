@@ -404,7 +404,7 @@ function applyVendorArrivalDefaults(groups) {
     if (!window._vendorArrivalDates[vendor] && meta && meta.defaultArrivalDays) {
       var d = new Date();
       d.setDate(d.getDate() + parseInt(meta.defaultArrivalDays, 10));
-      window._vendorArrivalDates[vendor] = d.toISOString().slice(0, 10);
+      window._vendorArrivalDates[vendor] = dahLocalYmd(d); // 2026-11-12(N-137 ⑩): UTC 말고 한국시간 날짜
     }
     if (!window._vendorArrivalLocations[vendor]) {
       // 2026-09-12(선혜님 지시 - "캔가공소의 도착장소는: 시공팀 시공

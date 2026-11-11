@@ -234,7 +234,7 @@ function renderCouponList() {
   // 스태프가 견적서 앱을 먼저 열 수도 있으므로 여기서도 한 번 더 방어.
   // 아직 시작 안 됐거나(startDate가 미래) 이미 끝난(endDate가 과거) 쿠폰은
   // 체크박스 목록에서 아예 안 보이게 함.
-  var todayStr = new Date().toISOString().slice(0,10);
+  var todayStr = dahLocalYmd(); // 2026-11-12(N-137 ⑩)
   coupons = coupons.filter(function(c) {
     if (c.startDate && c.startDate > todayStr) return false;
     if (c.endDate && c.endDate < todayStr) return false;
@@ -597,7 +597,7 @@ function updateOrderStatus(updates, triesLeft) {
   } catch (e) { console.warn('현황 자동갱신 실패:', e); typeof reportClientError==='function' && reportClientError('업무현황 자동갱신 실패: ' + (e && e.message || e), e && e.stack); }
 }
 function updateOrderStatusFromVendorGroups(groups) {
-  var todayISO = new Date().toISOString().slice(0, 10);
+  var todayISO = dahLocalYmd(); // 2026-11-12(N-137 ⑩): 발주일이 한국시간 0~9시에 하루 전으로 저장되던 문제
   var updates = {};
   // 2026-09-10(전문업체 관점 종합 시뮬레이션으로 발견): 같은 발주
   // 종류(orderCategory)에 거래처가 여러 곳이면(예: 블라인드를 윈텍+

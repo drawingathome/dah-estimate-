@@ -195,6 +195,18 @@ function syncCustomerToSheet(customer) {
   } catch (e) { console.warn('고객명단 동기화 실패:', e); typeof reportClientError==='function' && reportClientError('고객명단 동기화 실패: ' + (e && e.message || e), e && e.stack); }
 }
 
+// 2026-11-12(N-137 ⑩): 한국시간 기준 'YYYY-MM-DD'. new Date().toISOString()은 UTC라서 한국시간 0~9시에는 하루 전 날짜가 나옴
+// (발주일·도착일이 하루 어긋남). 기기 시간대와 무관하게 Asia/Seoul로 계산하고, 실패하면 기기 현지 날짜를 쓴다.
+function dahLocalYmd(d) {
+  d = d || new Date();
+  try {
+    var s = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  } catch (e) {}
+  var m = d.getMonth() + 1, day = d.getDate();
+  return d.getFullYear() + '-' + (m < 10 ? '0' : '') + m + '-' + (day < 10 ? '0' : '') + day;
+}
+
 function showToast(msg) {
   var t = document.getElementById('toast');
   t.textContent = msg;
