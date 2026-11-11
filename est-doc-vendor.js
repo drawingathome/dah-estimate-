@@ -450,6 +450,7 @@ function getVendorOrderBlockers(groups) {
         if (!it.size || it.size === '—') errors.push(label + ': 사이즈가 비어 있어요');
         if (!it.handle || it.handle === '—') errors.push(label + ': 손잡이 방향을 골라 주세요');
       }
+      if (it.orderCategory === 'fabric' && (!it.qty || it.qty === '—')) errors.push(label + ': 원단 마수(수량)가 비어 있어요'); // 2026-11-12(N-137 ⑪)
       if (!it.product || it.product === '—') errors.push((it.space && it.space !== '—' ? it.space : '항목') + ': 품명이 비어 있어요');
     });
   });
@@ -515,7 +516,8 @@ function collectVendorGroups(categoryFilter) {
     var yardageNum = parseFloat(String(yardage).replace(/[^0-9.]/g, ''));
     var unitPriceNum = parseFloat(String(fabricUnitPrice).replace(/[^0-9.]/g, ''));
     var fabricTotal = (yardageNum && unitPriceNum) ? Math.round(yardageNum * unitPriceNum) : null;
-    var qtyDisplay = yardage || (pnum?(pnum+'폭'):'—');
+    // 2026-11-12(N-137 ⑪): 마수가 비었을 때 폭 개수('3폭')를 수량으로 내보내면 원단 거래처에 단위가 다른 수량이 나감 → 비워 두고(—) 아래 오발주 점검이 막는다.
+    var qtyDisplay = yardage || '—';
     if (fabricTotal !== null) qtyDisplay += ' (' + fabricTotal.toLocaleString() + '원)';
     items.push({
       space: space||'—', product: fabric||displayName||'—', color: color||'—',

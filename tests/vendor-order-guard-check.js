@@ -24,13 +24,18 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 60000);
     var noSize = getVendorOrderBlockers({ '윈텍': [it({ size: '—' })] });
     var noHandle = getVendorOrderBlockers({ '윈텍': [it({ handle: '—' })] });
     var noName = getVendorOrderBlockers({ '윈텍': [it({ product: '—' })] });
+    var fabOk = getVendorOrderBlockers({ '디테라': [it({ orderCategory: 'fabric', qty: '12마 (1,200,000원)', size: '—', handle: '—' })] });
+    var fabNoQty = getVendorOrderBlockers({ '디테라': [it({ orderCategory: 'fabric', qty: '—', size: '—', handle: '—' })] });
     var rail = getVendorOrderBlockers({ '덱스터': [it({ orderCategory: 'material', size: '—', handle: '—' })] });
     var before = document.querySelectorAll('#blind-body tr').length;
     addBlindRow();
     var rows = document.querySelectorAll('#blind-body tr'); var sel = rows[rows.length - 1].querySelector('.handle-dir');
-    return { okErr: okRes.errors, un: unassigned.errors, ns: noSize.errors, nh: noHandle.errors, nn: noName.errors, rail: rail.errors,
+    return { okErr: okRes.errors, un: unassigned.errors, ns: noSize.errors, nh: noHandle.errors, nn: noName.errors, fabOk: fabOk.errors, fabNoQty: fabNoQty.errors, rail: rail.errors,
       handleVal: sel ? sel.value : null, firstOpt: sel ? sel.options[0].textContent : null, added: rows.length > before };
   });
+  ok('N-137 ⑪. 원단 마수가 있으면 막히지 않음', r.fabOk.length === 0, JSON.stringify(r.fabOk));
+  ok('N-137 ⑪. 원단 마수가 비면 막힘(수량 칸 폭 대체 없음)', r.fabNoQty.length === 1 && r.fabNoQty[0].indexOf('마수') !== -1, JSON.stringify(r.fabNoQty));
+  ok("N-137 ⑪. 원단 수량이 '폭 개수'로 대체되지 않음(소스)", !/yardage \|\| \(pnum/.test(require('fs').readFileSync(path.resolve(__dirname, '..', 'est-doc-vendor.js'), 'utf8')));
   ok('1. 정상 발주서는 막히지 않음', r.okErr.length === 0, JSON.stringify(r.okErr));
   ok('2. 거래처 미지정이면 막힘', r.un.length >= 1 && r.un[0].indexOf('거래처') !== -1, JSON.stringify(r.un));
   ok('3. 블라인드 사이즈가 비면 막힘', r.ns.some(e => e.indexOf('사이즈') !== -1), JSON.stringify(r.ns));
