@@ -1096,6 +1096,8 @@ body.preview-open #dah-build-badge { display:none!important; }
   .pv-tail-group { break-inside:avoid; page-break-inside:avoid; padding-top:10mm; }
 
   html, body { background:#fff!important; }
+  /* 2026-11-11(선혜님 캡처): 저장 직후 인쇄하면 '저장 완료! (DB+로컬)' 알림이 문서 위에 찍혔음(알림은 화면에 고정된 요소라 쪽마다 반복) → 인쇄에서는 알림을 숨김 */
+  #toast, .toast { display:none!important; }
   .container, .quicknav, .print-hide { display:none!important; }
   /* 2026-09-18(선혜님 - "안되잖아" - 인쇄하면 편집화면의 "제품소계/
      계약금" 요약 카드(#lockable-rail-svc)가 그 아래 실제 견적서

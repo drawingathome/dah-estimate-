@@ -1992,3 +1992,6 @@ button:active:not(:disabled) { filter: brightness(0.9); }
   box-shadow: var(--shadow-card);
   border: none !important;
 }
+
+/* 2026-11-11: 인쇄·PDF에 알림 글자가 찍히지 않게(견적서 앱과 같은 규칙) */
+@media print { #toast, .toast { display:none!important; } }
