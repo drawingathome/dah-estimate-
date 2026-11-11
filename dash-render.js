@@ -455,6 +455,10 @@ function renderHome(skipServerFetch) {
                 { title: '시공 확인', test: function(r){ return r.indexOf('시공일(')>=0 && r.indexOf('지남')>=0; }, tab: 'info' },
                 { title: '리드 팔로업', test: function(r){ return r.indexOf('진행없음')>=0; }, tab: 'info', park: true }
               ];
+              // 2026-11-12(N-150 안전망): 새 사유를 추가하고 그룹을 깜빡하면 '건수만 잡히고 화면엔 안 보이는' 일이 있었음(11-09 시공 확인).
+              // 위 어느 그룹에도 안 맞는 사유는 마지막 '기타 확인' 그룹으로 반드시 보여 준다.
+              var _mainGroups = groups.slice();
+              groups.push({ title: '기타 확인', test: function(r){ return !_mainGroups.some(function(g){ return g.test(r); }); }, tab: 'info' });
               return groups.map(function(g){
                 var rows = [];
                 needAction.forEach(function(item){
