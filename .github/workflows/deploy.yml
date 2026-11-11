@@ -1,15 +1,43 @@
 name: Deploy to Vercel
 
+# 2026-11-12 N-155: 이 단계의 초록이 '운영에 실제로 배포됨'을 뜻하도록 고침.
+# 이전: 배포 훅이 not_found 오류를 돌려줘도(최근 5회) curl -s 가 오류를 무시해 항상 '성공'으로 표시됨.
+# 지금: ①훅 호출 결과는 경고로 남기고(훅이 죽어도 Vercel의 GitHub 연결 배포가 따로 배포함)
+#       ②GitHub 배포 기록으로 운영 두 곳(대시보드·견적서)이 이 커밋을 success로 배포할 때까지 기다리고(최대 60분)
+#       ③실패·시간 초과하면 단계를 빨갛게 하고 이슈를 자동으로 만든다(사람이 기억하지 않아도 알림이 가도록).
 on:
   workflow_run:
     workflows: ["Run Tests"]
     types: [completed]
     branches: [main]
 
+permissions:
+  contents: read
+  deployments: read
+  issues: write
+
 jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 70
     steps:
-      - name: Trigger Vercel Deploy (dah-dashboard)
-        run: curl -s -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_DASHBOARD }}"
+      - uses: actions/checkout@v4
+      - name: Trigger Vercel Deploy Hook (dah-dashboard) — 실패해도 경고만(연결 배포가 따로 함)
+        run: |
+          if ! curl -sS --fail-with-body -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_DASHBOARD }}"; then
+            echo "::warning::배포 훅 호출이 실패했습니다(훅 주소 확인 필요). Vercel GitHub 연결 배포가 대신 진행되는지 아래 단계에서 확인합니다."
+          fi
+      - name: 운영 두 곳 배포 완료까지 대기
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: scripts/wait-vercel-deploy.sh "${{ github.event.workflow_run.head_sha }}" 60
+      - name: 실패 알림(이슈 자동 생성)
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --repo "${{ github.repository }}" \
+            --title "🚨 운영 배포 실패/지연: ${{ github.event.workflow_run.head_sha }}" \
+            --body "Deploy to Vercel 단계가 실패했습니다. 커밋 ${{ github.event.workflow_run.head_sha }}. 실행 기록: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

@@ -9,6 +9,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   verify:
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
@@ -52,3 +56,12 @@ jobs:
         env:
           BASE_URLS: https://dah-dashboard.vercel.app,https://dah-estimate.vercel.app
           VERIFY_WAIT_MIN: "8"
+      # 2026-11-12 N-155: 운영 검증이 실패하면 사람이 기억하지 않아도 알림이 가도록 이슈를 자동으로 만든다.
+      - name: 실패 알림(이슈 자동 생성)
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create --repo "${{ github.repository }}" \
+            --title "🚨 운영 검증 실패: ${{ github.event.workflow_run.head_sha || github.sha }}" \
+            --body "Post-deploy verify 가 실패했습니다. 실행 기록: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
