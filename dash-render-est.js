@@ -183,7 +183,20 @@ function renderEstList() {
     var dateStr = e.savedAt ? e.savedAt.slice(0,10) : (e.date||'');
     if (dateStr) { var s3=el('span',{style:'margin-left:auto'}); s3.textContent=dateStr; bot.appendChild(s3); }
 
+    // 2026-11-12(N-162): 입금은 끝났는데 '잔금결제'에 머무는 이유(안 끝난 발주)를 한 줄로 보여 준다 — 이유를 모르면 오류로 보임.
+    var waitNote = null;
+    if (currentStage === '잔금결제' && typeof getOrderWaitLabels === 'function') {
+      try {
+        var waitCust = loadCustomers().find(function(x){ return e.clientId ? x.id === e.clientId : x.clientName === e.clientName; });
+        var waitLabels = getOrderWaitLabels(waitCust);
+        if (waitLabels.length > 0) {
+          waitNote = el('div', {class:'est-wait-note', style:'font-size:11px;color:var(--terra);margin-top:4px;line-height:1.4'});
+          waitNote.textContent = '입금은 완료 · 시공준비중 대기: ' + waitLabels.join(', ');
+        }
+      } catch(eWait) {}
+    }
     row.appendChild(top); row.appendChild(mid); row.appendChild(bot);
+    if (waitNote) row.appendChild(waitNote);
 
     // 2026-08-10: 견적서의 "내부 메모"(현장 참고용, 예: 이사 날짜)가 저장은
     // 되는데 목록 어디에서도 다시 안 보이던 문제 - 선혜님 요청으로 추가.

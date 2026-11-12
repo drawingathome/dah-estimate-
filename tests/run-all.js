@@ -68,6 +68,7 @@ if (/dah-dashboard/.test(target)) {
   scripts.push(['order-completeness-check.js', [target]]);
   scripts.push(['order-union-check.js', [target]]); // 2026-10-27 H-30 발주 항목 합집합(견적서 여러 건)
   scripts.push(['order-install-date-check.js', [target]]); // 2026-11-07 N-141b 시공일 = 시공 발주 완료(DB 규칙과 화면 일치)
+  scripts.push(['est-list-wait-reason-check.js', [target]]); // 2026-11-12 N-162 견적서 목록 '시공준비중 대기 사유' 표시
   scripts.push(['lead-followup-check.js', [target]]);
   scripts.push(['customer-list-check.js', [target]]);
   scripts.push(['revenue-consistency-check.js', [target]]);

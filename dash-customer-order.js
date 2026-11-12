@@ -85,6 +85,16 @@ function hasIncompleteOrder(c) {
   return items.some(function(item){ return !isOrderItemDoneFor(c, orderStatus, item.key); });
 }
 
+// 2026-11-12(N-162, 선혜님 '입금완료인데 왜 아직 잔금결제냐'): '시공준비중'으로 안 넘어가는 이유(안 끝난 발주 항목)를 이름으로 돌려준다.
+// 판정은 위 hasIncompleteOrder와 같은 규칙(DB dah_order_complete와 동일)을 그대로 쓰고, 화면에는 이유만 보여 준다.
+function getOrderWaitLabels(c) {
+  if (!c) return [];
+  var orderStatus = c.orderStatus || {};
+  return getRelevantOrderItems(c)
+    .filter(function(item){ return !isOrderItemDoneFor(c, orderStatus, item.key); })
+    .map(function(item){ return item.key === 'install' ? '시공일 미정(시공 발주)' : item.label + ' 미기록'; });
+}
+
 function renderOrderSection(c, orderBody) {
   // 2026-08-06 수정: "선금결제 단계부터" 발주현황을 보여주고 있었는데, 그 시점엔
   // 아직 실측 전이라 뭘 발주할지 알 수도 없는 상태 — 홈화면 처리필요 판단 기준과

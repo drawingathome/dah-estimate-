@@ -37,7 +37,7 @@
 | 26 | `dash-whats-new.js` | dash-whats-new.js — "새 소식" 한 줄 안내 (N-69 ②, 2026-11-02) | 3 |
 | 27 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 2 |
 | 28 | `dash-customer-alim.js` | 고객상세 - 소통(알림톡) 탭 렌더링 | 11 |
-| 29 | `dash-customer-order.js` | 고객상세 - 발주 탭 렌더링 | 7 |
+| 29 | `dash-customer-order.js` | 고객상세 - 발주 탭 렌더링 | 8 |
 | 30 | `dash-customer-as.js` | 고객상세 - AS 탭 렌더링 (React 전환 1호) | 2 |
 | 31 | `dash-customer-detail.js` | DAH 대시보드 — 고객상세 모달 기능 | 8 |
 | 32 | `dash-customer-detail-tabs.js` | DAH 대시보드 — 고객상세 모달: 정보탭/할일 + 하단 버튼·단계변경·삭제·복구 | 8 |
@@ -366,6 +366,7 @@
 | `getMonthRevenue` | `dash-chart.js` |
 | `getMonthStaffPerformance` | `dash-chart.js` |
 | `getOrCreateCustomerSheet` | `apps-script-automation-hub.js` |
+| `getOrderWaitLabels` | `dash-customer-order.js` |
 | `getPayStatus` | `dash-utils.js` |
 | `getPendingSyncQueue` | `dash-sync-queue.js` |
 | `getPriceVal` | `est-utils.js` |
