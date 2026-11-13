@@ -85,14 +85,11 @@ function hasIncompleteOrder(c) {
   return items.some(function(item){ return !isOrderItemDoneFor(c, orderStatus, item.key); });
 }
 
-// 2026-11-12(N-162, 선혜님 '입금완료인데 왜 아직 잔금결제냐'): '시공준비중'으로 안 넘어가는 이유(안 끝난 발주 항목)를 이름으로 돌려준다.
-// 판정은 위 hasIncompleteOrder와 같은 규칙(DB dah_order_complete와 동일)을 그대로 쓰고, 화면에는 이유만 보여 준다.
+// 2026-11-12(N-162)·11-13(N-164): '시공준비중'으로 안 넘어가는 이유를 돌려준다.
+// N-164 이후 DB 규칙 = 입금 완료 + 시공일 지정(미정 아님). 원단·제작·자재·블라인드 발주 체크는 단계를 막지 않는 참고 기록이므로 여기 사유에 넣지 않는다.
 function getOrderWaitLabels(c) {
   if (!c) return [];
-  var orderStatus = c.orderStatus || {};
-  return getRelevantOrderItems(c)
-    .filter(function(item){ return !isOrderItemDoneFor(c, orderStatus, item.key); })
-    .map(function(item){ return item.key === 'install' ? '시공일 미정(시공 발주)' : item.label + ' 미기록'; });
+  return isInstallDateSet(c) ? [] : ['시공일 입력 필요'];
 }
 
 function renderOrderSection(c, orderBody) {

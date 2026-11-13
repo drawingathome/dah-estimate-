@@ -54,10 +54,8 @@ async function run() {
     return { out, n: rows.length };
   });
   check('목록에 4건이 그려짐', res.n === 4, 'rows=' + res.n);
-  check('시공일 없는 고객: "시공일 미정" 사유가 보임', /입금은 완료/.test(res.out['시공일없음고객'] || '') && /시공일 미정/.test(res.out['시공일없음고객'] || ''), JSON.stringify(res.out['시공일없음고객']));
-  check('시공일 없는 고객: 이미 끝난 원단은 사유에 안 나옴', !/원단/.test(res.out['시공일없음고객'] || ''), JSON.stringify(res.out['시공일없음고객']));
-  check('원단 기록 없는 고객: "원단 발주 미기록" 사유가 보임', /원단 발주 미기록/.test(res.out['원단기록없음고객'] || ''), JSON.stringify(res.out['원단기록없음고객']));
-  check('원단 기록 없는 고객: 시공일 있으니 시공 사유는 안 나옴', !/시공일/.test(res.out['원단기록없음고객'] || ''), JSON.stringify(res.out['원단기록없음고객']));
+  check('시공일 없는 고객: "시공일 입력 필요" 사유가 보임(N-164 기준)', /입금은 완료/.test(res.out['시공일없음고객'] || '') && /시공일 입력 필요/.test(res.out['시공일없음고객'] || ''), JSON.stringify(res.out['시공일없음고객']));
+  check('원단 기록이 없어도 시공일이 있으면 사유 줄이 없음(발주 체크는 단계를 막지 않음)', res.out['원단기록없음고객'] === null, JSON.stringify(res.out['원단기록없음고객']));
   check('전부 완료한 고객: 사유 줄이 없음', res.out['전부완료고객'] === null, JSON.stringify(res.out['전부완료고객']));
   check('잔금결제가 아닌 단계: 사유 줄이 없음', res.out['확정견적고객'] === null, JSON.stringify(res.out['확정견적고객']));
   await browser.close(); server.close();
