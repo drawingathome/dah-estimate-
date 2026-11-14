@@ -78,9 +78,9 @@
 | 20 | `est-space-order.js` | est-space-order.js | 6 |
 | 21 | `est-doc-customer.js` | DAH 견적서 앱 — 고객용 견적서 문서 생성 | 2 |
 | 22 | `est-doc-vendor.js` | DAH 견적서 앱 — 거래처별 발주서 문서 생성 | 6 |
-| 23 | `est-doc-vendor-ui.js` | DAH 견적서 앱 — 발주서: 거래처 정보 입력 모달 + 발주서 선택/인쇄 | 4 |
+| 23 | `est-doc-vendor-ui.js` | DAH 견적서 앱 — 발주서: 거래처 정보 입력 모달 + 발주서 선택/인쇄 | 5 |
 | 24 | `est-doc-request.js` | DAH 견적서 앱 — 실측/시공 의뢰서 문서 생성 | 4 |
-| 25 | `est-customer-load.js` | DAH 견적서 앱 — PDF모달 / 고객불러오기 / 계약금계산 | 19 |
+| 25 | `est-customer-load.js` | DAH 견적서 앱 — PDF모달 / 고객불러오기 / 계약금계산 | 22 |
 | 26 | `est-misc.js` | DAH 견적서 앱 — 주소검색 / 날짜포맷 / 빈상태 / 공유 / 자동저장 | 8 |
 
 ## 설문지 (survey.html) — 브라우저가 불러오는 순서대로
@@ -116,6 +116,7 @@
 | `_exportEstimatesExcelInner` | `dash-export.js` |
 | `_exportExcelInner` | `dash-export.js` |
 | `_findSameSpaceInsertPoint` | `est-product-calc.js` |
+| `_fitVendorBlocksToPdfs` | `est-customer-load.js` |
 | `_focusCopiedSpace` | `est-product-calc.js` |
 | `_getDragAfterRow` | `est-product-calc.js` |
 | `_getSupabaseRealtimeClient` | `dash-realtime.js` |
@@ -131,6 +132,7 @@
 | `_readSelfLockLedger` | `shared-optimistic-lock.js` |
 | `_reconWon` | `dash-reconcile.js` |
 | `_reRenderVisibleListScreen` | `dash-realtime.js` |
+| `_savedVendorName` | `est-doc-vendor-ui.js` |
 | `_saveEstimateInner` | `est-save.js` |
 | `_savePendingSyncQueue` | `dash-sync-queue.js` |
 | `_saveStage_customers` | `est-save-stages.js` |
@@ -144,6 +146,8 @@
 | `_srvReceivedFor` | `dash-utils.js` |
 | `_srvRowsFor` | `dash-chart.js` |
 | `_srvSum` | `dash-chart.js` |
+| `_vendorBlockName` | `est-customer-load.js` |
+| `_vendorPdfFilename` | `est-customer-load.js` |
 | `_whatsNewMarkSeen` | `dash-whats-new.js` |
 | `_whatsNewSeen` | `dash-whats-new.js` |
 | `addBlindRow` | `est-calc-blind.js` |

@@ -205,6 +205,14 @@ function openVendorOrderPicker() {
   document.body.appendChild(ov);
 }
 
+// 2026-11-14(N-137 ③): 저장할 거래처 이름 = 발주서 상단 '발주처' 칸의 현재 값. 비었거나 '여러 거래처'(항목별로 다를 때 화면용 표시)면 처음 이름표(data-vendor)를 그대로 씀.
+function _savedVendorName(block) {
+  var attr = block.getAttribute('data-vendor') || '';
+  var f = block.querySelector('.pv-vendor-name-field');
+  var t = f ? (f.textContent || '').trim() : '';
+  if (!t || t === '여러 거래처') return attr;
+  return t;
+}
 function printForVendor(categoryFilter) {
   calcTotal();
   // 2026-09-09(선혜님 지적 - "이거는 왜 이렇게 미리 알림으로 띄우는거야??
@@ -297,7 +305,7 @@ function printForVendor(categoryFilter) {
       var collected2 = collectVendorGroups(categoryFilter);
       if (collected2.itemCount > 0) {
         inner.querySelectorAll('[data-vendor]').forEach(function(vendorBlock){
-          var vendor = vendorBlock.getAttribute('data-vendor');
+          var vendor = _savedVendorName(vendorBlock); // 2026-11-14 N-137 ③: 인쇄 중 발주처를 고쳤다면 처음 이름표(미지정/기타) 대신 고친 값으로 저장 이름·폴더를 정함
           saveDocumentToDrive(vendorCategory(vendor), collected2.cName || '미지정고객', vendor, vendorBlock.outerHTML, collected2.cStaff);
         });
         updateOrderStatusFromVendorGroups(collected2.groups);

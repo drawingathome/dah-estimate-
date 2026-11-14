@@ -178,7 +178,58 @@ function confirmPdfPrint() {
   _setPrintTitleAndPrint();
 }
 
+// 2026-11-14(N-137 ①, 선혜님 '모두 진행해 승인'): 발주서에 거래처가 여러 곳이면 예전엔 첫 거래처 문서 한 장만 PDF가 됐음(다른 거래처 발주서는 빠짐).
+// 거래처 문서가 2개 이상이면 거래처마다 PDF를 하나씩 만들어 파일로 내려받게 함(다른 거래처 내용이 한 파일에 섞이지 않도록).
+// 파일 이름: 고객명_발주서_거래처명.pdf. 거래처 이름은 발주서 상단 '발주처' 칸의 현재 값(고쳤다면 고친 값)을 우선 사용.
+function _vendorPdfFilename(custName, vendorName) {
+  var safe = function(x, n) { return String(x || '').replace(/[\\/:*?"<>|]/g, '_').trim().slice(0, n); };
+  var c = safe(custName, 30) || '고객', v = safe(vendorName, 30) || '거래처';
+  return c + '_발주서_' + v + '.pdf';
+}
+function _vendorBlockName(block) {
+  var f = block.querySelector('.pv-vendor-name-field');
+  var name = f ? (f.textContent || '').trim() : '';
+  return name || block.getAttribute('data-vendor') || '';
+}
+function _fitVendorBlocksToPdfs(blocks) {
+  var custName = (document.getElementById('c-name')?.value || '').trim() || '고객';
+  function run() {
+    showToast('발주서 PDF ' + blocks.length + '개 만드는 중...');
+    var PX_TO_MM = 25.4 / 96, okCount = 0, failCount = 0;
+    var chain = Promise.resolve();
+    blocks.forEach(function(block) {
+      chain = chain.then(function() {
+        var ow = block.style.width, om = block.style.maxWidth;
+        block.style.width = '720px'; block.style.maxWidth = '720px'; block.classList.add('pv-pdf-capture');
+        var h = Math.max(Math.ceil(block.scrollHeight * PX_TO_MM) + 5, 200);
+        var filename = _vendorPdfFilename(custName, _vendorBlockName(block));
+        var opt = { margin: 0, filename: filename, image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: [190.5, h], orientation: 'portrait' }, pagebreak: { mode: ['css', 'legacy'] } };
+        return html2pdf().set(opt).from(block).outputPdf('blob').then(function(blob) {
+          var url = URL.createObjectURL(blob), a = document.createElement('a');
+          a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          setTimeout(function() { URL.revokeObjectURL(url); }, 1000);
+          okCount++;
+        }).catch(function(err) { failCount++; console.error('발주서 PDF 생성 실패:', err); })
+          .then(function() { block.style.width = ow; block.style.maxWidth = om; block.classList.remove('pv-pdf-capture'); });
+      });
+    });
+    return chain.then(function() {
+      showToast(failCount ? ('PDF ' + okCount + '개 완료, ' + failCount + '개 실패 — 실패한 거래처는 다시 시도해주세요') : ('거래처별 PDF ' + okCount + '개가 만들어졌어요'));
+    });
+  }
+  if (typeof html2pdf === 'undefined') {
+    showToast('PDF 기능 불러오는 중...');
+    var script = document.createElement('script');
+    script.src = '/html2pdf.bundle.min.js';
+    script.onload = run;
+    script.onerror = function() { showToast('PDF 기능을 불러오지 못했어요. 인터넷 연결을 확인해주세요'); };
+    document.head.appendChild(script);
+  } else { run(); }
+}
 function confirmPdfPrint_fitAsCanvas(contentEl) {
+  var _vendorBlocks = Array.prototype.slice.call(document.querySelectorAll('#pv-overlay .pv-wrap[data-vendor]'));
+  if (_vendorBlocks.length > 1) { _fitVendorBlocksToPdfs(_vendorBlocks); return; }
   // 2026-09-03(선혜님 지시 - "버그를 찾아보자"로 발견, 실제 재현 성공):
   // html2canvas 캡처(비동기, 실측 900ms 이상 소요)가 끝난 뒤 .then() 콜백
   // 안에서 window.open()을 호출하고 있었음 - 클릭 시점으로부터 926ms나
