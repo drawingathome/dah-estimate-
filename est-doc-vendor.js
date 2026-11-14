@@ -432,6 +432,8 @@ function collectVendorGroups(categoryFilter) {
   var cStaff = escHtml(document.getElementById('c-staff')?.value||'장선혜');
 
   var items = [];
+  // 2026-11-14(N-137 ⑦): 커튼 행이 있는데 제작·레일 발주가 조건 때문에 만들어지지 않은 경우를 기록해, 서류에서 조용히 사라지지 않고 이유를 알려 줌.
+  var skipped = { production: false, material: false, productionVendorCount: 0 };
   document.querySelectorAll('#curtain-body tr').forEach(function(tr){
     var fabric = tr.querySelector('.c-fabric')?.value || '';
     var vendor = tr.querySelector('.c-vendor')?.value || '';
@@ -500,6 +502,10 @@ function collectVendorGroups(categoryFilter) {
       sourceRow: tr, vendorField: '.c-vendor'
     });
     var autoProductionVendor = getAutoProductionVendorName();
+    if (!autoProductionVendor) {
+      skipped.production = true;
+      skipped.productionVendorCount = (Array.isArray(window._dahVendorListRaw) ? window._dahVendorListRaw : []).filter(function(v){ return v && Array.isArray(v.categories) && v.categories.indexOf('production') >= 0; }).length;
+    }
     if (autoProductionVendor) {
       // 2026-09-11(선혜님이 실제 캔가공소 발주서 양식 확인해주심): 지금까지
       // "품명" 자리에 원단코드(fabric)를 넣고 있었는데, 실제 양식은 제품명
@@ -537,6 +543,7 @@ function collectVendorGroups(categoryFilter) {
     // 나오게 해서, 캔가공소/블라인드와 동일하게 눈에 띄게 함.
     var hasInstallService = (document.getElementById('c-region')?.value || '') !== '';
     var railVendor = tr.querySelector('.c-rail-vendor')?.value || '';
+    if (!hasInstallService) skipped.material = true;
     if (hasInstallService) {
       // 2026-09-11(선혜님 - "우리가 레일 계산할때 -자 조절레일로 적는거
       // 아니야? 그 내용을 적으면 되잖아"): 발주서에 "레일"이라고만 막연히
@@ -635,9 +642,22 @@ function collectVendorGroups(categoryFilter) {
     });
   });
 
-  return { groups: groups, cName: cName, cStaff: cStaff, itemCount: filteredItems.length };
+  return { groups: groups, cName: cName, cStaff: cStaff, itemCount: filteredItems.length, skipped: skipped };
 }
 
+// 2026-11-14(N-137 ⑦): 만들어지지 않은 발주서(캔가공소 제작·레일)가 있으면 그 이유를 발주서 위에 알림으로 보여 줌(인쇄에는 안 찍힘).
+function getVendorSkippedNotices(skipped, categoryFilter) {
+  if (!skipped) return '';
+  var box = 'class="print-hide" style="max-width:720px;margin:0 auto 10px;padding:10px 14px;background:#FBEAE7;color:#C0392B;font-size:12px;font-weight:700;line-height:1.6;border-radius:6px"';
+  var out = '';
+  if (skipped.production && (!categoryFilter || categoryFilter === 'production')) {
+    out += '<div ' + box + '>⚠️ 캔가공소(제작) 발주서가 만들어지지 않았어요 — 거래처 설정에 "제작" 거래처가 정확히 1곳 등록돼 있어야 자동으로 만들어져요 (지금 ' + skipped.productionVendorCount + '곳)</div>';
+  }
+  if (skipped.material && (!categoryFilter || categoryFilter === 'material')) {
+    out += '<div ' + box + '>⚠️ 레일 발주서가 만들어지지 않았어요 — 견적서에 지역(시공 서비스)이 선택되지 않아 시공 없는 배송 건으로 보고 레일을 뺐어요</div>';
+  }
+  return out;
+}
 function buildVendorHTML(extraNote, arrivalDatesByVendor, arrivalLocationsByVendor, categoryFilter) {
   // 2026-09-17(선혜님 - "쌍둥이 함수 확인" 재점검으로 발견): today()라는
   // 1줄짜리 래퍼(formatKoreanDate()만 그대로 호출)가 est-doc-customer.js와
@@ -645,16 +665,17 @@ function buildVendorHTML(extraNote, arrivalDatesByVendor, arrivalLocationsByVend
   // 각자 안에 있던 내부 헬퍼가 그대로 복사됨) - 내용이 완전히 같고 위험도는
   // 낮았지만, 굳이 감쌀 필요 없이 formatKoreanDate()를 직접 불러 정리.
   var collected = collectVendorGroups(categoryFilter);
+  var skipNotes = getVendorSkippedNotices(collected.skipped, categoryFilter);
 
   if(collected.itemCount === 0) {
     var emptyMsgByCategory = { fabric: '원단', production: '캔가공소(제작)', material: '레일', blind: '블라인드' };
     var emptyMsg = categoryFilter ? (emptyMsgByCategory[categoryFilter] || '해당') + ' 발주가 필요한 항목이 없어요.' : '거래처 또는 원단명이 입력된 항목이 없습니다.<br>커튼/블라인드 입력창의 "거래처" 필드를 채운 후 다시 시도해주세요.';
-    return '<div class="pv-wrap" style="max-width:720px;margin:0 auto;padding:60px 20px;text-align:center;color:#B0A99F;font-size:13px">'+emptyMsg+'</div>';
+    return '<div class="pv-wrap" style="max-width:720px;margin:0 auto;padding:60px 20px;text-align:center;color:#B0A99F;font-size:13px">'+emptyMsg+(skipNotes ? '<div style="margin-top:14px;color:#C0392B;font-weight:700;line-height:1.7">'+skipNotes.replace(/<div[^>]*>/g,'').replace(/<\/div>/g,'<br>')+'</div>' : '')+'</div>';
   }
 
   var todayStr = formatKoreanDate();
   var vendors = Object.keys(collected.groups);
-  var out = '';
+  var out = skipNotes;
   vendors.forEach(function(vendor, i){
     var vendorArrivalRaw = arrivalDatesByVendor ? arrivalDatesByVendor[vendor] : '';
     var vendorArrivalStr = vendorArrivalRaw ? formatKoreanDate(new Date(vendorArrivalRaw+'T00:00:00')) : '';
