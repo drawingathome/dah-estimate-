@@ -22,6 +22,14 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
     }).join('') + '<option value="__custom__">+ 직접 입력</option>';
     return '<select class="pv-item-vendor-select" data-item-idx="'+idx+'" style="font-size:12px;padding:2px;border:1px solid '+(it.vendor?'#EEE6DC':'#E4483A')+';border-radius:4px;color:'+(it.vendor?'#282828':'#C0392B')+'">'+opts+'</select>';
   }
+  // 2026-11-14(N-137 ⑤, N-151 기본값 D3): 색상은 별도 칸 없이 '원단명 (색상)'으로 합쳐 표시. 색상이 비었거나 '—'이면 그대로, 원단명에 이미 색상이 들어 있으면 중복해서 붙이지 않음.
+  function nameWithColor(it) {
+    var name = String(it.product == null ? '' : it.product);
+    var col = String(it.color == null ? '' : it.color).trim();
+    if (!col || col === '—' || col === '-') return name;
+    if (name.indexOf(col) >= 0) return name;
+    return name + ' (' + col + ')';
+  }
   function vendorOptionsFor(category) {
     return (Array.isArray(window._dahVendorListRaw) ? window._dahVendorListRaw : [])
       .filter(function(v){ return v && Array.isArray(v.categories) && v.categories.indexOf(category) >= 0; })
@@ -152,7 +160,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
     groupItems.forEach(function(it){
       out += '<tr style="border-bottom:1px solid #EEE6DC">'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.space)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.product)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(nameWithColor(it))+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center;font-weight:700">'+escHtml(it.fabSize||it.size)+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+(it.shapeProcess?'O':'X')+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.hemType||'—')+'</td>'
@@ -236,7 +244,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         : '';
       out += '<tr style="border-bottom:1px solid #EEE6DC">'
           +spaceCell
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.product)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(nameWithColor(it))+'</td>'
           +(showItemVendor ? '<td style="padding:6px 4px">'+buildVendorSelectCell(it, idx, blindVendorOptions)+'</td>' : '')
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.kind)+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.size)+'</td>'
@@ -280,7 +288,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   groupItems.forEach(function(it, idx){
     var vendorCellHtml = buildVendorSelectCell(it, idx, fabricVendorOptions);
     out += '<tr style="border-bottom:1px solid #EEE6DC">'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.product)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(nameWithColor(it))+'</td>'
         +(isUnassigned ? '<td style="padding:8px 6px">'+vendorCellHtml+'</td>' : '')
         +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
         +'</tr>';

@@ -42,6 +42,24 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 60000);
     ok((i+1) + '-4. ' + cat + ': 미지정이면 경고 배너 있음' + (cat === 'production' ? '' : '·표 안 거래처 칸 있음'), u.banner && (cat === 'production' || u.heads.indexOf('거래처') !== -1), JSON.stringify(u.heads) + ' banner=' + u.banner);
     ok((i+1) + '-5. ' + cat + ': "도착 장소"(띄어쓰기) 표기 없음', d.text.indexOf('도착 장소') === -1);
   });
+  // N-137 ⑤: 색상은 '원단명 (색상)'으로 합쳐 표시(원단·블라인드·캔가공소), 비었거나 이미 들어 있으면 붙이지 않음
+  const c = await page.evaluate(() => {
+    function cell(cat, color, product) {
+      var html = buildVendorDocForOne('윈텍', [{ space: '거실', product: product || '상품A', color: color, vendor: '윈텍', kind: '콤비', size: '120×200', qty: '3마', handle: '우', cordLength: '', bottomBar: '', comment: '', content: '', fabricInfo: '', hemType: '', shapeProcess: false, fabSize: '', orderCategory: cat }], '홍길동', '오지은 실장', null, '2026-11-14', '', '');
+      var box = document.createElement('div'); box.innerHTML = html;
+      var headers = Array.from(box.querySelectorAll('table:not(.pv-doc-info) thead th')).map(function(t){ return t.textContent; });
+      var nameIdx = headers.findIndex(function(h){ return h === '원단명' || h === '원단(품명)'; });
+      var tds = box.querySelectorAll('table:not(.pv-doc-info) tbody tr:first-child td');
+      var rowspanShift = (cat === 'blind') ? 0 : 0;
+      return nameIdx >= 0 ? tds[nameIdx - rowspanShift].textContent : null;
+    }
+    return { fab: cell('fabric', '아이보리'), blind: cell('blind', '베이지'), prod: cell('production', '그레이'), none: cell('fabric', '—'), empty: cell('fabric', ''), dup: cell('fabric', '아이보리', '이븐 아이보리') };
+  });
+  ok('6-1. 원단 발주서: 원단명 (색상)', c.fab === '상품A (아이보리)', c.fab);
+  ok('6-2. 블라인드 발주서: 원단명 (색상)', c.blind === '상품A (베이지)', c.blind);
+  ok('6-3. 캔가공소 발주서: 원단(품명) (색상)', c.prod === '상품A (그레이)', c.prod);
+  ok('6-4. 색상이 비었거나 "—"이면 붙이지 않음', c.none === '상품A' && c.empty === '상품A', JSON.stringify([c.none, c.empty]));
+  ok('6-5. 원단명에 색상이 이미 있으면 중복 안 붙임', c.dup === '이븐 아이보리', c.dup);
   console.log(errs.length ? '❌ JS 에러: ' + errs.join('; ') : '✅ JS 에러 없음'); if (errs.length) fail++;
   await browser.close(); server.kill(); process.exit(fail ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(1); });
