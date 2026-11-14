@@ -702,6 +702,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['vendor-doc-unified-check.js', []]); // 2026-11-14 N-137 ⑬: 발주서 4종 상단·용어·거래처 칸 통일
   scripts.push(['vendor-multi-pdf-check.js', []]); // 2026-11-14 N-137 ①: 거래처 여러 곳이면 거래처별 PDF
   scripts.push(['vendor-save-name-check.js', []]); // 2026-11-14 N-137 ③: 인쇄 중 발주처 수정이 저장 이름에 반영
+  scripts.push(['monthly-sales-table-check.js', []]); // 2026-11-14 N-166⑤·N-167: 월별 영업 실적표
   scripts.push(['vendor-order-guard-check.js', []]);
   scripts.push(['chart-summary-contract-check.js', []]);
   scripts.push(['public-view-id-clean-check.js', []]);

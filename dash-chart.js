@@ -616,6 +616,7 @@ function renderChart(period) {
   // 2026-08-06 신규: PC에서 매출 탭 오른쪽 여백을 채우기 위해 담당자별 매출
   // 순위 카드 추가 (디자인 개선 1단계 — 화면 재사용성 목적)
   if (typeof renderChartStaffRank === 'function') renderChartStaffRank(customers, dateFilterRange);
+  if (typeof renderMonthlySalesTable === 'function') renderMonthlySalesTable(customers);
   if (typeof renderMonthClosePanel === 'function') renderMonthClosePanel();
 }
 
@@ -723,6 +724,72 @@ function firstDepositDate(c) {
   }
   return first;
 }
+// 2026-11-14(N-166 ⑤·N-167, 선혜님 '매월 상담수 / 매월 계약수 / 달성률 자료를 만들자' + '달성률은 선금이 들어오는 대로' + '보류 고객은 없어도 돼'):
+// 월별 영업 실적표 계산(화면과 분리한 순수 함수). 기준은 선혜님이 정한 그대로:
+//  · 상담 = 방문 예정일(c.date)이 그 달인 고객, 보류(leadParked) 고객은 뺌
+//  · 계약 = 첫 선금(계약금)을 받은 달(firstDepositMonth, 홈 계약건수와 같은 함수), 계약 전 단계(방문예약·상담·가견적)는 제외
+//  · 계약률(입금월) = 그 달 계약 ÷ 그 달 상담 — 지난달 상담 고객이 이번 달 입금하면 100%를 넘을 수 있음
+//  · 계약률(상담월) = 그 달 상담 고객 중 지금까지 계약금을 받은 고객 ÷ 그 달 상담
+//  · 성과매출 = getMonthPerformanceRevenue(홈과 같은 함수, 선금이 들어오는 대로 입금 비율만큼 인식)
+//  · 달성률 = 성과매출 ÷ 월 목표(홈 목표와 같은 설정값)
+//  · 계약당 금액 = 그 달 계약 고객의 customers.performanceRevenue 평균
+// 시작 달은 2026-08: 2~7월은 플러그에서 한꺼번에 옮겨 온 시공완료 고객이라 상담 전체가 아니고 입금 기록도 비어 있어 제외(N-166).
+var MONTHLY_SALES_START = '2026-08';
+function getMonthlySalesTable(customers, startKey, endKey, goalAmt) {
+  var rows = [];
+  var y = parseInt(startKey.slice(0, 4), 10), m = parseInt(startKey.slice(5, 7), 10);
+  var endY = parseInt(endKey.slice(0, 4), 10), endM = parseInt(endKey.slice(5, 7), 10);
+  while (y < endY || (y === endY && m <= endM)) {
+    var key = y + '-' + String(m).padStart(2, '0');
+    var consult = customers.filter(function(c) { return !c.leadParked && (c.date || '').slice(0, 7) === key; });
+    var cohortContracts = consult.filter(function(c) { return PRE_CONTRACT_STAGES.indexOf(c.stage) < 0 && !!firstDepositDate(c); }).length;
+    var contractCustomers = customers.filter(function(c) { return PRE_CONTRACT_STAGES.indexOf(c.stage) < 0 && firstDepositMonth(c) === key; });
+    var contracts = contractCustomers.length;
+    var perf = getMonthPerformanceRevenue(customers, key);
+    var sumPerf = contractCustomers.reduce(function(a, c) { return a + (Number(c.performanceRevenue) || 0); }, 0);
+    rows.push({
+      key: key, consults: consult.length, contracts: contracts,
+      rate: consult.length > 0 ? Math.round(contracts / consult.length * 100) : null,
+      cohortContracts: cohortContracts,
+      cohortRate: consult.length > 0 ? Math.round(cohortContracts / consult.length * 100) : null,
+      perf: perf, goal: goalAmt,
+      achieve: goalAmt > 0 ? Math.round(perf / goalAmt * 100) : null,
+      avgPerf: contracts > 0 ? Math.round(sumPerf / contracts) : null
+    });
+    m++; if (m > 12) { m = 1; y++; }
+  }
+  return rows;
+}
+
+function renderMonthlySalesTable(customers) {
+  var wrap = document.getElementById('chart-monthly-sales');
+  if (!wrap) return;
+  var s = typeof getSettings === 'function' ? getSettings() : {};
+  var goalWan = parseInt(String((s && s.monthlyGoal) || '5000').replace(/[^0-9]/g, ''), 10) || 5000;
+  var rows = getMonthlySalesTable(customers, MONTHLY_SALES_START, curMonthKeyLocal(), goalWan * 10000);
+  var won = function(n) { return n === null ? '—' : Math.round(n / 10000).toLocaleString() + '만'; };
+  var pct = function(n) { return n === null ? '—' : n + '%'; };
+  var th = 'padding:6px 4px;text-align:right;font-size:10px;color:var(--sub);font-weight:600;white-space:nowrap';
+  var td = 'padding:8px 4px;text-align:right;font-size:11px;white-space:nowrap;border-top:1px solid var(--border)';
+  var html = '<table style="width:100%;border-collapse:collapse"><thead><tr>' +
+    '<th style="' + th + ';text-align:left">달</th><th style="' + th + '">상담</th><th style="' + th + '">계약</th>' +
+    '<th style="' + th + '">계약률</th><th style="' + th + '">상담월 기준</th><th style="' + th + '">성과매출</th>' +
+    '<th style="' + th + '">달성률</th><th style="' + th + '">계약당</th></tr></thead><tbody>';
+  rows.slice().reverse().forEach(function(r) {
+    var cur = r.key === curMonthKeyLocal();
+    html += '<tr><td style="' + td + ';text-align:left;font-weight:700">' + escHtml(r.key.slice(0, 4) + '.' + r.key.slice(5)) + (cur ? ' <span style="font-weight:400;color:var(--sub)">(진행 중)</span>' : '') + '</td>' +
+      '<td style="' + td + '">' + r.consults + '건</td><td style="' + td + ';font-weight:700">' + r.contracts + '건</td>' +
+      '<td style="' + td + '">' + pct(r.rate) + '</td><td style="' + td + '">' + pct(r.cohortRate) + '</td>' +
+      '<td style="' + td + '">' + won(r.perf) + '</td><td style="' + td + ';font-weight:700">' + pct(r.achieve) + '</td>' +
+      '<td style="' + td + '">' + won(r.avgPerf) + '</td></tr>';
+  });
+  html += '</tbody></table><div style="font-size:10px;color:var(--sub);line-height:1.6;padding:8px 4px 0">' +
+    '상담 = 방문 예정일이 그 달인 고객(보류 제외) · 계약 = 계약금(선금)을 받은 달 · 달성률 = 성과매출 ÷ 월 목표 ' + escHtml(String(goalWan)) + '만원(홈과 같은 목표)<br>' +
+    '"계약률"은 그 달 입금 건수 ÷ 그 달 상담 건수라 100%를 넘을 수 있어요. "상담월 기준"은 그 달 상담 고객 중 지금까지 계약금을 낸 비율이에요.<br>' +
+    '2~7월은 플러그에서 옮겨 온 시공완료 고객이라 상담 전체가 아니어서 8월부터 보여줘요.</div>';
+  wrap.innerHTML = html;
+}
+
 function getMonthContractCount(customers, monthKey) {
   return customers.filter(function(c) {
     if (PRE_CONTRACT_STAGES.indexOf(c.stage) >= 0) return false;
