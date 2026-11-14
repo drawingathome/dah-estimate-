@@ -699,6 +699,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['home-install-overdue-alert-check.js', []]); // 2026-11-09 N-148 홈 처리필요: 시공일 지났는데 시공준비중이면 알림
   scripts.push(['home-month-kpi-check.js', []]);
   scripts.push(['vendor-blind-order-check.js', []]);
+  scripts.push(['vendor-doc-unified-check.js', []]); // 2026-11-14 N-137 ⑬: 발주서 4종 상단·용어·거래처 칸 통일
   scripts.push(['vendor-order-guard-check.js', []]);
   scripts.push(['chart-summary-contract-check.js', []]);
   scripts.push(['public-view-id-clean-check.js', []]);

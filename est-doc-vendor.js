@@ -66,8 +66,10 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   }
   // 2026-11-06(선혜님 - "블라인드 발주서 상단: 요청일/도착일/업체명/고객명 // 발주처/도착장소/담당자"): 블라인드만 상단 구성을 바꿈.
   // 고객명은 표 안 맨 끝 칸에서 상단으로 올리고, 거래처는 상단 '발주처' 한 곳만 남김(표 안 거래처 칸은 미지정일 때만 표시).
+  // 2026-11-14(N-137 ⑬, 선혜님 '모두 진행해 승인'): 이 상단 구성(요청일·도착일·업체명·고객명 // 발주처·도착장소·담당자)을 블라인드뿐 아니라 원단·레일·캔가공소 발주서에도 똑같이 적용(4종 양식·용어 통일).
   var isBlindDoc = groupItems.length > 0 && groupItems[0].orderCategory === 'blind';
-  if (isBlindDoc) {
+  var isAssignedVendorDoc = !(!vendor || vendor.indexOf('미지정') === 0);
+  if (true) {
     var _cs = 'padding:7px 8px;border:1px solid #EEE6DC;font-size:12px';
     var _ls = _cs + ';background:#FAF7F5;color:#8E8078;white-space:nowrap;width:1%';
     var _vs = _cs + ';font-weight:400';
@@ -80,7 +82,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
       + '.pv-blind-info tr:last-child td:nth-child(1){grid-area:1/1}.pv-blind-info tr:last-child td:nth-child(2){grid-area:1/2}'
       + '.pv-blind-info tr:last-child td:nth-child(5){grid-area:1/3}.pv-blind-info tr:last-child td:nth-child(6){grid-area:1/4}'
       + '.pv-blind-info tr:last-child td:nth-child(3){grid-area:2/1}.pv-blind-info tr:last-child td:nth-child(4){grid-area:2/2/auto/span 3}}</style>';
-    out += '<table class="pv-blind-info" style="width:100%;border-collapse:collapse;margin-top:var(--sp-6);padding-top:16px">'
+    out += '<table class="pv-blind-info pv-doc-info" style="width:100%;border-collapse:collapse;margin-top:var(--sp-6);padding-top:16px">'
       + '<tr>'
       + '<td style="' + _ls + '">요청일</td>' + _ed(today, '', false)
       + '<td style="' + _ls + '">도착일</td>' + _ed(arrivalDate||'협의', '', true)
@@ -91,40 +93,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
       + '<td style="' + _ls + '">도착장소</td>' + _ed(escHtml(arrivalLocation||'서울 서초구 사평대로 53길 64 1층 드로잉엣홈'), '', true, 3)
       + '<td style="' + _ls + '">담당자</td><td style="' + _vs + '">' + (cStaff||'—') + '</td>'
       + '</tr></table>';
-  } else
-  out += '<table style="width:100%;border-collapse:collapse;margin-top:var(--sp-6);padding-top:16px">'
-      // 2026-09-11(선혜님 지시 - "모든 발주서 요청일자나 도착일자 도착
-      // 장소는 기본적으로 수정할 수 있게 해줘"): 요청일만 유일하게 고정
-      // 값(editable=false)이었음 - 도착일/도착장소/발주처와 동일하게
-      // 수정 가능하도록 통일.
-      // 2026-09-11(선혜님 지적 - "미지정을 고쳐도 원본엔 저장이 안 된다"):
-      // "발주처" 칸에 pv-vendor-name-field 클래스를 붙여서, 이 칸을 고치면
-      // 실제 견적서 행(원단/레일/블라인드 거래처 칸)까지 값이 반영되도록 함
-      // (printForVendor의 wireVendorNameEdit 참고).
-      // 2026-09-14(선혜님이 발주서 캡처 보여주심 - "요청일/발주처" 칸이
-      // 통째로 두 번 겹쳐 나옴): 리베이스 도중 이 표를 여는 out += 문이
-      // 두 개로 잘못 쪼개져서, 앞쪽(클래스 붙은 버전)은 닫는 태그 없이
-      // 끊기고 뒤쪽(클래스 없는 버전)이 나머지를 이어받고 있었음 -
-      // 화면엔 표가 두 개로 보이는 것도 문제였지만, 더 심각한 건 실제로
-      // 보이는(살아남은) 표의 "발주처" 칸엔 pv-vendor-name-field 클래스가
-      // 없어서 발주처를 고쳐도 원본 견적서에 반영 안 되는 기능이 조용히
-      // 먹통이었다는 것 - 하나로 합치고 클래스도 살아남은 쪽에 되살림.
-      + infoTableRow('요청일', today, true, '발주처', escHtml(vendor), true, false, 'pv-vendor-name-field')
-      // 2026-09-10(선혜님 지적 - "도착일 / 도착 장소가 없어" → "수정이
-      // 되게" → "거래처마다 달라야"): 발주정보 팝업에서 거래처별로
-      // 입력받은 값을 여기 표시(입력 안 하면 "협의" 표시), 클릭해서도
-      // 직접 수정 가능.
-      + infoTableRow('도착일', arrivalDate||'협의', true,
-        // 2026-09-10(선혜님 지적 - "받는곳이라고 하면 헷갈릴꺼 같은데"):
-        // "발주처"(위 칸)와 나란히 두면 둘 다 "어디로 가는지"처럼 헷갈릴
-        // 수 있어 "도착 장소"로 구분.
-        // 2026-09-10(선혜님 지적 - "가공소로 도착되게 해야 해"): 원단은
-        // 저희 회사가 아니라 가공소로 바로 배송되는 경우가 있는 등,
-        // 발주 종류/거래처에 따라 실제 도착지가 달라질 수 있어 고정
-        // 값이 아니라 직접 클릭해서 고칠 수 있게 함.
-        '도착 장소', escHtml(arrivalLocation||'서울 서초구 사평대로 53길 64 1층 드로잉엣홈'), true, true)
-      + infoTableRow('업체명', '드로잉엣홈', false, '담당자', cStaff||'—', false, false)
-      + '</table>';
+  }
 
   out += '<div style="margin-top:10px;font-size:11px;color:#B0A99F">*아래와 같이 발주 합니다.</div>';
   // 2026-09-14(선혜님 - "아래 항목의 거래처를 정해달라는데 어떻게
@@ -139,7 +108,7 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   // 바로 알아챌 수 있도록 경고 색으로 눈에 띄게 표시.
   var isUnassigned = (!vendor || vendor.indexOf('미지정') === 0);
   // 2026-11-06: 블라인드는 거래처가 정해졌으면 상단 '발주처'와 중복이라 배너를 만들지 않음(미지정일 때만 경고 배너).
-  if (!(isBlindDoc && !isUnassigned))
+  if (isUnassigned)
   out += '<div class="pv-unassigned-banner print-hide" style="margin-top:var(--sp-5);padding:8px 14px;background:'+(isUnassigned?'#FBEAE7':'#F5F2EE')+';font-size:13px;font-weight:700;color:'+(isUnassigned?'#C0392B':'#282828')+'">'+(isUnassigned?'⚠️ '+escHtml(vendor||'거래처 미지정')+' — 아래 항목의 거래처를 정해주세요':'거래처: '+escHtml(vendor))+'</div>';
   // 2026-09-14(선혜님 - "아래 항목의 거래처를 정해달라는데 어떻게
   // 정하는데??"로 발견): 경고 문구는 "정해주세요"라고만 하지, 실제로
@@ -178,7 +147,6 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         +'<th style="text-align:center;padding:6px 4px">형상가공</th>'
         +'<th style="text-align:center;padding:6px 4px">하단시접</th>'
         +'<th style="text-align:left;padding:6px 4px">내용</th>'
-        +'<th style="text-align:left;padding:6px 4px">고객</th>'
         +'<th style="text-align:left;padding:6px 4px">원단정보</th>'
         +'</tr></thead><tbody>';
     groupItems.forEach(function(it){
@@ -189,12 +157,11 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+(it.shapeProcess?'O':'X')+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.hemType||'—')+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.content)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.fabricInfo||'—')+'</td>'
           +'</tr>';
     });
     out += '</tbody></table></div>';
-    out += '<div class="print-hide" style="font-size:11px;color:#B0A99F;margin-top:2px">← 표를 옆으로 밀면 나머지 항목(고객/원단정보)이 보입니다</div>';
+    out += '<div class="print-hide" style="font-size:11px;color:#B0A99F;margin-top:2px">← 표를 옆으로 밀면 나머지 항목(원단정보)이 보입니다</div>';
   } else if (isMaterial) {
     // 2026-09-14(선혜님 지적 - "발주처를 직접 안쓰고 선택하게 해야지"):
     // 원단은 거래처가 매번 다양해서 자유 텍스트로 남겼지만, 레일/자재는
@@ -207,18 +174,16 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
         +'<th style="text-align:left;padding:8px 6px">위치</th>'
         +'<th style="text-align:left;padding:8px 6px">품명</th>'
-        +'<th style="text-align:left;padding:8px 6px">거래처</th>'
+        +(isUnassigned ? '<th style="text-align:left;padding:8px 6px">거래처</th>' : '')
         +'<th style="text-align:right;padding:8px 6px">수량</th>'
-        +'<th style="text-align:left;padding:8px 6px">고객명</th>'
         +'</tr></thead><tbody>';
     groupItems.forEach(function(it, idx){
       var vendorCellHtml = buildVendorSelectCell(it, idx, materialVendorOptions);
       out += '<tr style="border-bottom:1px solid #EEE6DC">'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.space)+'</td>'
           +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.product)+'</td>'
-          +'<td style="padding:8px 6px">'+vendorCellHtml+'</td>'
+          +(isUnassigned ? '<td style="padding:8px 6px">'+vendorCellHtml+'</td>' : '')
           +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
           +'</tr>';
     });
     out += '</tbody></table>';
@@ -309,17 +274,15 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   out += '<table style="width:100%;border-collapse:collapse;font-size:12px">'
       +'<thead><tr style="border-bottom:1.5px solid #282828;background:#FAF7F5">'
       +'<th style="text-align:left;padding:8px 6px">원단명</th>'
-      +'<th style="text-align:left;padding:8px 6px">거래처</th>'
+      +(isUnassigned ? '<th style="text-align:left;padding:8px 6px">거래처</th>' : '')
       +'<th style="text-align:right;padding:8px 6px">수량</th>'
-      +'<th style="text-align:left;padding:8px 6px">고객명</th>'
       +'</tr></thead><tbody>';
   groupItems.forEach(function(it, idx){
     var vendorCellHtml = buildVendorSelectCell(it, idx, fabricVendorOptions);
     out += '<tr style="border-bottom:1px solid #EEE6DC">'
         +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(it.product)+'</td>'
-        +'<td style="padding:8px 6px">'+vendorCellHtml+'</td>'
+        +(isUnassigned ? '<td style="padding:8px 6px">'+vendorCellHtml+'</td>' : '')
         +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;font-weight:700;color:#E4483A">'+(cName||'—')+'</td>'
         +'</tr>';
   });
   out += '</tbody></table>';
