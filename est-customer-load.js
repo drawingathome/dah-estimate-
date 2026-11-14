@@ -192,7 +192,8 @@ function _vendorBlockName(block) {
   return name || block.getAttribute('data-vendor') || '';
 }
 function _fitVendorBlocksToPdfs(blocks) {
-  var custName = (document.getElementById('c-name')?.value || '').trim() || '고객';
+  var _cn = /** @type {HTMLInputElement|null} */ (document.getElementById('c-name'));
+  var custName = ((_cn && _cn.value) || '').trim() || '고객';
   function run() {
     showToast('발주서 PDF ' + blocks.length + '개 만드는 중...');
     var PX_TO_MM = 25.4 / 96, okCount = 0, failCount = 0;
