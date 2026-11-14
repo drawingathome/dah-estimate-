@@ -147,6 +147,7 @@ function loadAppSettingsAsync(callback) {
       // 죽은 코드가 되어 제거됨 - 예전 클라우드에 남아있는 master_pw 설정값은
       // 이제 아무 데도 반영 안 되지만, 데이터 자체는 안전하게 그대로 둠.
       else if (row.key === 'staff_goals') { try { Object.keys(row.value||{}).forEach(function(staff){ localStorage.setItem('dah_goal_'+staff, String(row.value[staff])); }); } catch(e){} }
+      else if (row.key === 'staff_goals_monthly') { try { localStorage.setItem('dah_staff_goals_monthly', JSON.stringify(row.value||{})); } catch(e){} }
       else if (row.key === 'master_email') { try { localStorage.setItem('dah_master_email', row.value); } catch(e){} }
       else if (row.key === 'staff_emails') { try { localStorage.setItem('dah_staff_emails', JSON.stringify(row.value||{})); } catch(e){} }
       else if (row.key === 'vendor_list') { try { localStorage.setItem('dah_vendor_list', JSON.stringify(row.value||[])); } catch(e){} }

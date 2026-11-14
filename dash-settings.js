@@ -185,25 +185,37 @@ function renderSettings() {
       '<span style="font-size:11px;color:#8E8078;margin-left:4px">만원</span>' +
     '</div>';
 
-  // ── 담당자별 월 목표 ──
+  // ── 담당자별 월 목표 (2026-11-15 N-169: 달마다 바뀌므로 '달 선택 + 담당자별 입력'으로 교체) ──
+  // 마스터 전체 목표는 위 '월 목표 매출' 한 칸이고, 여기는 실장 본인 화면(홈·월별 영업 실적)의 달성률 기준. 그 달에 입력이 없으면 실장 화면에 '목표 미설정'.
   var staffGoalCard = div('', []);
-  var allStaffs = ['마스터'].concat(getStaffList());
-  allStaffs.forEach(function(staff) {
-    var goalKey = 'dah_goal_'+staff;
-    var curGoal = Number(localStorage.getItem(goalKey)||0);
-    var gRow = div('margin-bottom:10px', [
-      span('font-size:12px;font-weight:700;display:block;margin-bottom:var(--sp-1)', staff)
-    ]);
-    var gInput = el('input', {type:'number', 'data-staff-goal':staff, placeholder:'목표 금액 (원)', value:curGoal>0?String(curGoal):'', style:'width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:10px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box'});
-    (function(k, s) {
+  var _nowD = new Date();
+  var _defMonth = _nowD.getFullYear() + '-' + String(_nowD.getMonth() + 1).padStart(2, '0');
+  var monthRow = div('margin-bottom:10px', [span('font-size:12px;font-weight:700;display:block;margin-bottom:var(--sp-1)', '목표 달 선택')]);
+  var monthInput = el('input', {type:'month', id:'set-staff-goal-month', value:_defMonth, style:'width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:10px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box'});
+  monthRow.appendChild(monthInput);
+  staffGoalCard.appendChild(monthRow);
+  var staffInputsBox = div('', []);
+  staffGoalCard.appendChild(staffInputsBox);
+  function renderStaffMonthInputs() {
+    staffInputsBox.innerHTML = '';
+    var mk = monthInput.value || _defMonth;
+    var staffs = getStaffList();
+    if (!staffs.length) { staffInputsBox.appendChild(span('font-size:11px;color:var(--sub)', '등록된 담당자가 없어요')); return; }
+    staffs.forEach(function(staff) {
+      var cur = getStaffMonthGoal(staff, mk);
+      var gRow = div('margin-bottom:10px', [span('font-size:12px;font-weight:700;display:block;margin-bottom:var(--sp-1)', staff + ' — ' + mk + ' 목표')]);
+      var gInput = el('input', {type:'number', 'data-staff-month-goal':staff, placeholder:'목표 금액 (원, 비우거나 0이면 해제)', value:cur ? String(cur) : '', style:'width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:10px;font-size:11px;font-family:inherit;outline:none;box-sizing:border-box'});
       gInput.addEventListener('change', function() {
-        var v = Number(this.value.replace(/[^0-9]/g,''));
-        if(v>0) { localStorage.setItem(k, String(v)); syncStaffGoalsToCloud(); showToast(s+' 목표 설정됐습니다'); }
+        var v = Number(String(this.value).replace(/[^0-9]/g, '')) || 0;
+        setStaffMonthGoal(staff, monthInput.value || _defMonth, v);
+        showToast(staff + ' ' + (monthInput.value || _defMonth) + ' 목표 ' + (v > 0 ? '설정됐습니다' : '해제됐습니다'));
       });
-    })(goalKey, staff);
-    gRow.appendChild(gInput);
-    staffGoalCard.appendChild(gRow);
-  });
+      gRow.appendChild(gInput);
+      staffInputsBox.appendChild(gRow);
+    });
+  }
+  monthInput.addEventListener('change', renderStaffMonthInputs);
+  renderStaffMonthInputs();
 
 
   // ── 전체 저장 (항상 최상단 고정) ──

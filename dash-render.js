@@ -184,6 +184,9 @@ function renderHome(skipServerFetch) {
     var s = typeof getSettings === 'function' ? getSettings() : {};
     var goalWan = parseInt((s.monthlyGoal || '5000').replace(/[^0-9]/g,'')) || 5000;
     var goalAmt = goalWan * 10000;
+    // 2026-11-15(N-169): 실장은 본인 그 달 목표(없으면 미설정), 마스터는 전체 월 목표 그대로
+    var _goalSet = true;
+    if (typeof getMonthGoalAmount === 'function') { var _g = getMonthGoalAmount(_thisMonthKey); if (_g === null) { _goalSet = false; goalAmt = 0; goalWan = 0; } else { goalAmt = _g; goalWan = Math.round(_g / 10000); } }
     var pct = goalAmt > 0 ? Math.min(Math.round(thisMonthRev / goalAmt * 100), 100) : 0;
     var remain = Math.max(0, goalAmt - thisMonthRev);
     var isOver = thisMonthRev >= goalAmt && goalAmt > 0;
@@ -312,7 +315,7 @@ function renderHome(skipServerFetch) {
         '<div style="padding:12px 20px">',
           '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">',
             '<span style="font-size:12px;font-weight:600;color:var(--sub)">이달 목표 달성률</span>',
-            '<span style="font-size:12px;font-weight:700;color:' + (isOver ? '#2F6690' : 'var(--terra)') + '">' + pct + '% <span style="font-size:12px;font-weight:400;color:var(--sub)">/ ' + goalWan.toLocaleString() + '만원</span></span>',
+            '<span style="font-size:12px;font-weight:700;color:' + (isOver ? '#2F6690' : 'var(--terra)') + '">' + (_goalSet ? pct + '% <span style="font-size:12px;font-weight:400;color:var(--sub)">/ ' + goalWan.toLocaleString() + '만원</span>' : '<span style="font-weight:400;color:var(--sub)">이번 달 목표 미설정 (마스터가 설정에서 입력)</span>') + '</span>',
           '</div>',
           '<div style="background:var(--ivory2);border-radius:6px;height:8px;overflow:hidden">',
             '<div style="height:100%;border-radius:6px;width:' + pct + '%;background:' + (isOver ? 'linear-gradient(90deg,#2F6690,#4A85AC)' : 'linear-gradient(90deg,var(--terra),var(--orange))') + ';transition:width 0.8s cubic-bezier(0.4,0,0.2,1)"></div>',

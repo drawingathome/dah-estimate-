@@ -11,6 +11,37 @@ function getStaffList() {
   try { var list = JSON.parse(localStorage.getItem('dah_staff_list') || '[]'); return list.length > 0 ? list : []; } catch(e) { return []; }
 }
 
+// 2026-11-15(N-169, 선혜님 '오지은 실장의 목표가 매달 바뀔 거야'): 담당자별 '달마다' 월 목표.
+// 저장 모양 = { "2026-11": { "오지은 실장": 20000000 } } (app_settings 'staff_goals_monthly', 마스터만 수정).
+// 그 달 목표가 없으면 null(옛 '담당자별 기본 목표' 값은 쓰지 않음 — 이름 불일치로 검증 안 된 값이라서).
+function _readStaffGoalsMonthly() {
+  try { var o = JSON.parse(localStorage.getItem('dah_staff_goals_monthly') || '{}'); return (o && typeof o === 'object') ? o : {}; } catch(e) { return {}; }
+}
+function getStaffMonthGoal(staff, monthKey) {
+  var m = _readStaffGoalsMonthly()[monthKey];
+  var v = m ? Number(m[staff]) : 0;
+  return v > 0 ? v : null;
+}
+function setStaffMonthGoal(staff, monthKey, amount) {
+  var all = _readStaffGoalsMonthly();
+  var m = all[monthKey] || {};
+  var v = Number(amount) || 0;
+  if (v > 0) m[staff] = v; else delete m[staff];
+  if (Object.keys(m).length) all[monthKey] = m; else delete all[monthKey];
+  try { localStorage.setItem('dah_staff_goals_monthly', JSON.stringify(all)); } catch(e) {}
+  sbSyncSetting('staff_goals_monthly', all);
+}
+// 홈·월별 영업표 공용: 지금 로그인한 사람의 그 달 목표(원). 마스터 = 전체 월 목표, 실장 = 본인 그 달 목표(없으면 null).
+function getMonthGoalAmount(monthKey) {
+  if (typeof isMasterUser === 'function' && isMasterUser()) {
+    var s = typeof getSettings === 'function' ? getSettings() : {};
+    var wan = parseInt(String((s && s.monthlyGoal) || '5000').replace(/[^0-9]/g, ''), 10) || 5000;
+    return wan * 10000;
+  }
+  if (typeof currentUser !== 'undefined' && currentUser && currentUser.name) return getStaffMonthGoal(currentUser.name, monthKey);
+  return null;
+}
+
 // 거래처 목록 관리 (2026-07-31 신규, 2026-08-01 카테고리 추가) — 발주탭 자동완성용.
 // 카테고리: 'fabric'(원단)/'production'(제작)/'blind'(블라인드)/'material'(자재)/
 // 'install'(실측·시공)/''(미분류 — 모든 항목에 다 보임, 안전한 기본값)

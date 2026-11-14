@@ -767,6 +767,8 @@ function renderMonthlySalesTable(customers) {
   var s = typeof getSettings === 'function' ? getSettings() : {};
   var goalWan = parseInt(String((s && s.monthlyGoal) || '5000').replace(/[^0-9]/g, ''), 10) || 5000;
   var rows = getMonthlySalesTable(customers, MONTHLY_SALES_START, curMonthKeyLocal(), goalWan * 10000);
+  // 2026-11-15(N-169): 달마다 그 달 목표 적용(마스터=전체 월 목표, 실장=본인 그 달 목표·없으면 '—')
+  if (typeof getMonthGoalAmount === 'function') rows.forEach(function(r) { var g = getMonthGoalAmount(r.key); r.goal = g; r.achieve = (g > 0) ? Math.round(r.perf / g * 100) : null; });
   var won = function(n) { return n === null ? '—' : Math.round(n / 10000).toLocaleString() + '만'; };
   var pct = function(n) { return n === null ? '—' : n + '%'; };
   var th = 'padding:6px 4px;text-align:right;font-size:10px;color:var(--sub);font-weight:600;white-space:nowrap';
@@ -784,7 +786,7 @@ function renderMonthlySalesTable(customers) {
       '<td style="' + td + '">' + won(r.avgPerf) + '</td></tr>';
   });
   html += '</tbody></table><div style="font-size:10px;color:var(--sub);line-height:1.6;padding:8px 4px 0">' +
-    '상담 = 방문 예정일이 그 달인 고객(보류 제외) · 계약 = 계약금(선금)을 받은 달 · 달성률 = 성과매출 ÷ 월 목표 ' + escHtml(String(goalWan)) + '만원(홈과 같은 목표)<br>' +
+    '상담 = 방문 예정일이 그 달인 고객(보류 제외) · 계약 = 계약금(선금)을 받은 달 · 달성률 = 성과매출 ÷ 그 달 목표(마스터 = 전체 월 목표 ' + escHtml(String(goalWan)) + '만원, 실장 = 마스터가 설정한 본인 달별 목표 · 미설정이면 —)<br>' +
     '"계약률"은 그 달 입금 건수 ÷ 그 달 상담 건수라 100%를 넘을 수 있어요. "상담월 기준"은 그 달 상담 고객 중 지금까지 계약금을 낸 비율이에요.<br>' +
     '2~7월은 플러그에서 옮겨 온 시공완료 고객이라 상담 전체가 아니어서 8월부터 보여줘요.</div>';
   wrap.innerHTML = html;

@@ -12,7 +12,7 @@
 | 1 | `shared-staging-guard.js` | DAH 공용 — 스테이징 환경 쓰기 차단 안전장치 | 0 |
 | 2 | `dash-utils.js` | DAH 대시보드 — 순수 유틸리티 함수 모음 | 29 |
 | 3 | `dash-api.js` | DAH 대시보드 — 데이터 접근 계층 (Supabase / localStorage) | 5 |
-| 4 | `dash-api-settings.js` | DAH 대시보드 — 설정 접근자 (담당자/거래처/리드기준/지역비/쿠폰/담당자 이메일) | 13 |
+| 4 | `dash-api-settings.js` | DAH 대시보드 — 설정 접근자 (담당자/거래처/리드기준/지역비/쿠폰/담당자 이메일) | 17 |
 | 5 | `dash-api-data.js` | DAH 대시보드 — 데이터 변환·로딩 (DB행↔화면 객체, 고객/견적 불러오기) | 9 |
 | 6 | `dash-api-writes.js` | DAH 대시보드 — 고객 DB 쓰기 (저장/선점/보관/삭제/복구/리드보류) | 15 |
 | 7 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 11 |
@@ -130,6 +130,7 @@
 | `_openAlimtalkPreview` | `dash-customer-alim.js` |
 | `_openPdfModalNow` | `est-customer-load.js` |
 | `_readSelfLockLedger` | `shared-optimistic-lock.js` |
+| `_readStaffGoalsMonthly` | `dash-api-settings.js` |
 | `_reconWon` | `dash-reconcile.js` |
 | `_reRenderVisibleListScreen` | `dash-realtime.js` |
 | `_savedVendorName` | `est-doc-vendor-ui.js` |
@@ -366,6 +367,7 @@
 | `getMasterEmail` | `dash-supabase-auth.js` |
 | `getMempoPhrases` | `dash-memo.js` |
 | `getMonthContractCount` | `dash-chart.js` |
+| `getMonthGoalAmount` | `dash-api-settings.js` |
 | `getMonthlySalesTable` | `dash-chart.js` |
 | `getMonthPerformanceRevenue` | `dash-chart.js` |
 | `getMonthRevenue` | `dash-chart.js` |
@@ -386,6 +388,7 @@
 | `getStaffEmail` | `dash-api-settings.js` |
 | `getStaffEmailMap` | `dash-api-settings.js` |
 | `getStaffList` | `dash-api-settings.js` |
+| `getStaffMonthGoal` | `dash-api-settings.js` |
 | `getUnpaidAmount` | `dash-utils.js` |
 | `getVendorInfoIssues` | `est-doc-vendor.js` |
 | `getVendorList` | `dash-api-settings.js` |
@@ -585,6 +588,7 @@
 | `setRegionFees` | `dash-api-settings.js` |
 | `setSort` | `dash-kanban.js` |
 | `setStaffEmail` | `dash-api-settings.js` |
+| `setStaffMonthGoal` | `dash-api-settings.js` |
 | `setStageFilter` | `dash-kanban.js` |
 | `setStatus` | `est-form-controls.js` |
 | `setupRowDragReorder` | `est-product-calc.js` |
