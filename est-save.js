@@ -464,9 +464,12 @@ function estMissingInstallRows() {
 function estFabricVendorMissingSpaces() {
   var out = [];
   document.querySelectorAll('#curtain-body tr').forEach(function(tr, i){
-    var fabric = (tr.querySelector('.c-fabric') || {}).value || '';
-    var vendor = (tr.querySelector('.c-vendor') || {}).value || '';
-    if (String(fabric).trim() && !String(vendor).trim()) out.push(((tr.querySelector('.space-inp') || {}).value || '').trim() || ((i + 1) + '번째 행'));
+    var fabricEl = /** @type {HTMLInputElement|null} */ (tr.querySelector('.c-fabric'));
+    var vendorEl = /** @type {HTMLInputElement|null} */ (tr.querySelector('.c-vendor'));
+    var spaceEl = /** @type {HTMLInputElement|null} */ (tr.querySelector('.space-inp'));
+    var fabric = fabricEl ? fabricEl.value : '';
+    var vendor = vendorEl ? vendorEl.value : '';
+    if (String(fabric).trim() && !String(vendor).trim()) out.push((spaceEl ? spaceEl.value : '').trim() || ((i + 1) + '번째 행'));
   });
   return out;
 }
