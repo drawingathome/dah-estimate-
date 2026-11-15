@@ -31,10 +31,10 @@ function getRelevantOrderItems(c) {
   });
   if (!estHasData) { hasCurtain = true; hasBlind = true; }
   var allOrderItems = [
-    { key: 'fabric', label: '원단 발주', relevant: hasCurtain },
-    { key: 'production', label: '제작 발주', relevant: hasCurtain },
-    { key: 'blind', label: '블라인드 발주', relevant: hasBlind },
-    { key: 'material', label: '자재 발주', relevant: hasCurtain },
+    { key: 'fabric', label: dahOrderField('fabric', 'statusName', '원단') + ' 발주', relevant: hasCurtain },
+    { key: 'production', label: dahOrderField('production', 'statusName', '제작') + ' 발주', relevant: hasCurtain },
+    { key: 'blind', label: dahOrderField('blind', 'statusName', '블라인드') + ' 발주', relevant: hasBlind },
+    { key: 'material', label: dahOrderField('material', 'statusName', '자재') + ' 발주', relevant: hasCurtain }, // 2026-11-15 N-165 P3: 이름은 shared-order-defs.js 한 곳
     { key: 'install', label: '시공 발주', relevant: hasCurtain || hasBlind }
   ];
   return allOrderItems.filter(function(item){ return item.relevant; });

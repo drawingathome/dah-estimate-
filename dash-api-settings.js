@@ -58,12 +58,12 @@ function getMonthGoalAmount(monthKey) {
 // 카테고리: 'fabric'(원단)/'production'(제작)/'blind'(블라인드)/'material'(자재)/
 // 'install'(실측·시공)/''(미분류 — 모든 항목에 다 보임, 안전한 기본값)
 var VENDOR_CATEGORIES = [
-  { key: 'fabric', label: '원단' },
-  { key: 'production', label: '제작' },
-  { key: 'blind', label: '블라인드' },
-  { key: 'material', label: '자재' },
+  { key: 'fabric', label: dahOrderField('fabric', 'vendorLabel', '원단') },
+  { key: 'production', label: dahOrderField('production', 'vendorLabel', '제작') },
+  { key: 'blind', label: dahOrderField('blind', 'vendorLabel', '블라인드') },
+  { key: 'material', label: dahOrderField('material', 'vendorLabel', '자재') },
   { key: 'install', label: '실측·시공' }
-];
+]; // 2026-11-15 N-165 P3: 이름은 shared-order-defs.js 한 곳
 var DEFAULT_VENDOR_LIST = ['캔가공소','디테라','아이엔티','예원','크바드라트','이지패브릭','리더스','유니밋','지오데코','윈텍','덱스터','헌터더글라스','솜피','목성']
   .map(function(name) { return { name: name, categories: [] }; });
 function getVendorList() {

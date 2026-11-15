@@ -616,7 +616,7 @@ function collectVendorGroups(categoryFilter) {
   // 그룹의 첫 항목 orderCategory 하나로만 표 형태를 정하기 때문에 섞이면
   // 한쪽 항목이 엉뚱한 칸 구성으로 깨져 보임 - 카테고리별로 별도의
   // "미지정(카테고리)" 그룹으로 분리.
-  var CATEGORY_LABEL = { production: '제작', material: '레일', blind: '블라인드', fabric: '원단' };
+  var CATEGORY_LABEL = dahOrderMap('noticeName'); // 2026-11-15 N-165 P3: shared-order-defs.js 한 곳
   // 2026-09-11(선혜님 지시 - "발주 하는 이 부분이 정말 신경이 많이 쓰이는데
   // 이 방법이 최선인지는 모르겠어" + 대시보드 "발주 현황" 체크리스트 캡처
   // 보여주심): 원단/제작/블라인드/자재(레일)를 한 번에 다 쏟아내는 대신,
@@ -668,7 +668,7 @@ function buildVendorHTML(extraNote, arrivalDatesByVendor, arrivalLocationsByVend
   var skipNotes = getVendorSkippedNotices(collected.skipped, categoryFilter);
 
   if(collected.itemCount === 0) {
-    var emptyMsgByCategory = { fabric: '원단', production: '캔가공소(제작)', material: '레일', blind: '블라인드' };
+    var emptyMsgByCategory = dahOrderMap('emptyName'); // 2026-11-15 N-165 P3
     var emptyMsg = categoryFilter ? (emptyMsgByCategory[categoryFilter] || '해당') + ' 발주가 필요한 항목이 없어요.' : '거래처 또는 원단명이 입력된 항목이 없습니다.<br>커튼/블라인드 입력창의 "거래처" 필드를 채운 후 다시 시도해주세요.';
     return '<div class="pv-wrap" style="max-width:720px;margin:0 auto;padding:60px 20px;text-align:center;color:#B0A99F;font-size:13px">'+emptyMsg+(skipNotes ? '<div style="margin-top:14px;color:#C0392B;font-weight:700;line-height:1.7">'+skipNotes.replace(/<div[^>]*>/g,'').replace(/<\/div>/g,'<br>')+'</div>' : '')+'</div>';
   }

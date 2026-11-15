@@ -495,7 +495,7 @@ function renderWorkStatusCards() {
     var installEl = document.getElementById('work-install-status');
 
     if (orderEl) {
-      var orderCats = ['fabric', 'production', 'material', 'blind'].filter(function(c){ return status[c] && status[c].done; });
+      var orderCats = dahOrderKeys().filter(function(c){ return status[c] && status[c].done; });
       if (orderCats.length > 0) {
         orderEl.textContent = orderCats.length + '건 완료';
         orderEl.style.color = '#2F6690';
@@ -567,7 +567,7 @@ function updateOrderStatus(updates, triesLeft) {
       });
       // 2026-11-15(N-159 ⑨): 이미 '완료'로 기록된 발주를 다시 처리해도 처음 발주일을 지우지 않음(발주 경과일·시공 준비 판단이 틀어지는 것 방지). 거래처 등 나머지는 최신으로 갱신.
       var keptDates = [];
-      var ORDER_CATS = { fabric: '원단', production: '제작', material: '자재', blind: '블라인드' };
+      var ORDER_CATS = dahOrderMap('statusName'); // 2026-11-15 N-165 P3
       Object.keys(updates).forEach(function(cat){
         var cur = current[cat];
         if (ORDER_CATS[cat] && cur && typeof cur === 'object' && cur.done && cur.orderDate && updates[cat] && updates[cat].done && updates[cat].orderDate && updates[cat].orderDate !== cur.orderDate) {

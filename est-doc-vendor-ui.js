@@ -180,13 +180,8 @@ function openVendorOrderPicker() {
   var sheet = document.createElement('div');
   sheet.style.cssText = 'background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:20px;box-sizing:border-box';
   sheet.innerHTML = '<div style="font-size:15px;font-weight:700;margin-bottom:14px">어떤 발주서를 보시겠어요?</div>';
-  var options = [
-    { key: 'fabric', label: '원단 발주서' },
-    { key: 'production', label: '캔가공소(제작) 발주서' },
-    { key: 'material', label: '레일·자재 발주서' },
-    { key: 'blind', label: '블라인드 발주서' },
-    { key: null, label: '전체 보기 (다 같이)' }
-  ];
+  var options = DAH_ORDER_DEFS.map(function(d){ return { key: d.key, label: d.docTitle }; }); // 2026-11-15 N-165 P3: 이름은 shared-order-defs.js 한 곳
+  options.push({ key: null, label: '전체 보기 (다 같이)' });
   options.forEach(function(opt){
     var btn = document.createElement('button');
     btn.type = 'button';
@@ -268,7 +263,7 @@ function printForVendor(categoryFilter) {
     'height:52px;flex-shrink:0'
   ].join(';');
   var navLabel = document.createElement('span');
-  var CATEGORY_TITLE = { fabric: '원단 발주서', production: '캔가공소(제작) 발주서', material: '레일·자재 발주서', blind: '블라인드 발주서' };
+  var CATEGORY_TITLE = dahOrderMap('docTitle'); // 2026-11-15 N-165 P3: shared-order-defs.js 한 곳
   navLabel.textContent = categoryFilter ? (CATEGORY_TITLE[categoryFilter] || '발주서') : '발주서 — 거래처별 원단 발주 목록';
   navLabel.style.cssText = 'color:rgba(255,255,255,0.6);font-size:11px;font-weight:600;letter-spacing:0.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto;margin-right:8px';
   var navBtns = document.createElement('div');

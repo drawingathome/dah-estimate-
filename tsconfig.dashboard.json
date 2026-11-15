@@ -13,6 +13,7 @@
   "files": [
     "global.d.ts",
     "shared-common-utils.js",
+    "shared-order-defs.js",
     "shared-optimistic-lock.js",
     "shared-staging-guard.js",
     "dash-api.js",
