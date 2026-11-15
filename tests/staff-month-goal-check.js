@@ -40,6 +40,12 @@ async function run() {
     var mi = document.getElementById('set-staff-goal-month');
     out.hasMonthInput = !!mi;
     if (mi) { mi.value = '2026-12'; mi.dispatchEvent(new Event('change')); }
+    // N-172 ⑧: 설정 '전체 저장'을 눌러도 옛 'staff_goals'(담당자별 목표)를 서버에 다시 쓰지 않는다
+    delete SERVER['staff_goals'];
+    var _saveAll = Array.from(document.querySelectorAll('button')).find(function(b){ return (b.textContent || '').trim() === '전체 저장'; });
+    out.saveAllFound = !!_saveAll;
+    if (_saveAll) { try { _saveAll.click(); } catch (e) { out.saveAllErr = String(e); } }
+    out.noOldGoalWrite = !('staff_goals' in SERVER) && typeof syncStaffGoalsToCloud === 'undefined';
     var inp = document.querySelector('[data-staff-month-goal="오지은 실장"]');
     out.inputEmpty12 = inp ? inp.value === '' : null;
     if (inp) { inp.value = '30000000'; inp.dispatchEvent(new Event('change')); }
@@ -110,6 +116,7 @@ async function run() {
   ok('14. 홈 상담건수는 보류 고객을 뺀다(이번 달 방문 예정 3명 중 보류 1명 → 2건)', r.homeConsult === '2건', String(r.homeConsult));
   ok('10. 새 기기(달별 목표 비어 있음): 처음엔 목표 미설정 → 서버 설정을 불러온 뒤 홈이 다시 그려져 목표가 보임', r.coldBefore === true && r.coldAfter === true, JSON.stringify([r.coldBefore, r.coldAfter]));
   ok('11. 새 로그인·저장된 로그인 두 경로 모두 설정을 불러온 뒤 홈을 다시 그리도록 연결(관찰형: 코드 연결 확인)', r.wiredLogin && r.wiredSaved, JSON.stringify([r.wiredLogin, r.wiredSaved]));
+  ok('15. [N-172 ⑧] 설정 전체 저장 버튼을 눌러도 옛 staff_goals를 서버에 다시 쓰지 않음', r.saveAllFound === true && r.noOldGoalWrite === true, JSON.stringify({ f: r.saveAllFound, n: r.noOldGoalWrite, e: r.saveAllErr }));
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
   log.forEach(l => console.log(l));
   const failed = log.filter(l => l.startsWith('❌'));

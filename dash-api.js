@@ -125,16 +125,6 @@ function sbSyncSetting(key, value) {
   xhr.send(JSON.stringify({ key: key, value: value, updated_at: new Date().toISOString() }));
 }
 
-function syncStaffGoalsToCloud() {
-  var allStaffs = ['마스터'].concat(getStaffList());
-  var goals = {};
-  allStaffs.forEach(function(staff) {
-    var v = Number(localStorage.getItem('dah_goal_'+staff)||0);
-    if (v > 0) goals[staff] = v;
-  });
-  sbSyncSetting('staff_goals', goals);
-}
-
 function loadAppSettingsAsync(callback) {
   sbXHR('GET', 'app_settings?select=*', null, function(err, rows) {
     if (err || !rows) { if (callback) callback(); return; }
@@ -177,7 +167,6 @@ function loadAppSettingsAsync(callback) {
     // 2026-10-25(전수표 T-19): 예전엔 여기서 마스터 비밀번호를 서버 설정표에 올려줬음 → 로그인한 누구나(실장 포함) 읽을 수 있는 표라 제거. 비밀번호는 Supabase 로그인이 관리함.
     if (!found.master_email) { try { var me = localStorage.getItem('dah_master_email'); if (me) sbSyncSetting('master_email', me); } catch(e){} }
     if (!found.staff_emails) { try { var se = JSON.parse(localStorage.getItem('dah_staff_emails')||'{}'); if (Object.keys(se).length) sbSyncSetting('staff_emails', se); } catch(e){} }
-    if (!found.staff_goals) { syncStaffGoalsToCloud(); }
     if (!found.vendor_list) { try { var vl = getVendorList(); if (vl.length) sbSyncSetting('vendor_list', vl); } catch(e){} }
     if (!found.memo_phrases) { try { var mp2 = getMempoPhrases(); if (mp2.length) sbSyncSetting('memo_phrases', mp2); } catch(e){} }
     if (!found.lead_stale_days) { try { sbSyncSetting('lead_stale_days', getLeadStaleDays()); } catch(e){} }

@@ -221,11 +221,7 @@ function renderSettings() {
   // ── 전체 저장 (항상 최상단 고정) ──
   var saveAllBtn = btn('width:100%;padding:14px;background:var(--terra);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:10px', '전체 저장', function() {
     saveSettings();
-    document.querySelectorAll('[data-staff-goal]').forEach(function(inp) {
-      var v = Number(inp.value.replace(/[^0-9]/g,''));
-      if (v > 0) { try { localStorage.setItem('dah_goal_'+inp.getAttribute('data-staff-goal'), String(v)); } catch(e){} }
-    });
-    syncStaffGoalsToCloud();
+    // 2026-11-15 N-172 ⑧: 옛 '담당자별 목표' 저장(data-staff-goal·staff_goals 서버 쓰기)은 달별 목표(staff_goals_monthly)로 대체돼 제거 — 화면에 그 입력칸이 없는데 저장 때마다 옛 값을 서버에 다시 쓰던 부분
     var wh = document.getElementById('set-webhook-url');
     if (wh) {
       var url = wh.value.trim();

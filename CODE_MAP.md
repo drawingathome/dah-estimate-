@@ -12,7 +12,7 @@
 | 1 | `shared-staging-guard.js` | DAH 공용 — 스테이징 환경 쓰기 차단 안전장치 | 0 |
 | 2 | `shared-order-defs.js` | shared-order-defs.js — 발주 종류 '정의 한 곳' (두 앱 공용: dah-dashboard.html / dah-estimate.html) | 3 |
 | 3 | `dash-utils.js` | DAH 대시보드 — 순수 유틸리티 함수 모음 | 29 |
-| 4 | `dash-api.js` | DAH 대시보드 — 데이터 접근 계층 (Supabase / localStorage) | 5 |
+| 4 | `dash-api.js` | DAH 대시보드 — 데이터 접근 계층 (Supabase / localStorage) | 4 |
 | 5 | `dash-api-settings.js` | DAH 대시보드 — 설정 접근자 (담당자/거래처/리드기준/지역비/쿠폰/담당자 이메일) | 18 |
 | 6 | `dash-api-data.js` | DAH 대시보드 — 데이터 변환·로딩 (DB행↔화면 객체, 고객/견적 불러오기) | 9 |
 | 7 | `dash-api-writes.js` | DAH 대시보드 — 고객 DB 쓰기 (저장/선점/보관/삭제/복구/리드보류) | 15 |
@@ -638,7 +638,6 @@
 | `syncCustomerPriceFromPaidEstimates` | `dash-customer-pay.js` |
 | `syncCustomerRow` | `apps-script-automation-hub.js` |
 | `syncCustomerToSheet` | `shared-common-utils.js` |
-| `syncStaffGoalsToCloud` | `dash-api.js` |
 | `taxBuildMonthRows` | `dash-tax-export.js` |
 | `taxRowsToCsv` | `dash-tax-export.js` |
 | `testInsert` | `apps-script-survey-to-customer.js` |
