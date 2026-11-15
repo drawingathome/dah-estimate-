@@ -401,7 +401,7 @@
 | `getStaffList` | `dash-api-settings.js` |
 | `getStaffMonthGoal` | `dash-api-settings.js` |
 | `getUnpaidAmount` | `dash-utils.js` |
-| `getUrgentOrderReason` | `dash-customer-order.js` |
+| `getUrgentOrderInfo` | `dash-customer-order.js` |
 | `getVendorInfoIssues` | `est-doc-vendor.js` |
 | `getVendorList` | `dash-api-settings.js` |
 | `getVendorOrderBlockers` | `est-doc-vendor.js` |
