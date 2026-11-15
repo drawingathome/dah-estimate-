@@ -540,8 +540,13 @@ function getCustomerOrderStatus(callback) {
 // 예전엔 select에 updated_at이 없어 잠금값이 항상 비어 있었고, 조건 없이 덮어썼음.
 function updateOrderStatus(updates, triesLeft) {
   if (triesLeft === undefined) triesLeft = 1;
-  if (!window._estEditState.estSaveCustomerId || typeof SUPABASE_URL === 'undefined') return;
   if (!updates || Object.keys(updates).length === 0) return;
+  // 2026-11-15(N-159 ⑨): 고객이 아직 저장 전이라 고객 번호가 없으면 예전엔 아무 말 없이 건너뛰어, 발주서를 처리했는데 업무 현황판에는 기록이 안 남았음 → 이유를 알려 줌
+  if (!window._estEditState.estSaveCustomerId) {
+    if (typeof showToast === 'function') showToast('⚠️ 고객이 아직 저장되지 않아 업무 현황판에 발주 기록이 안 남았어요 — 견적서를 먼저 저장한 뒤 다시 눌러 주세요');
+    return;
+  }
+  if (typeof SUPABASE_URL === 'undefined') return;
   try {
     var xhrGet = new XMLHttpRequest();
     xhrGet.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estEditState.estSaveCustomerId) + '&select=order_status,updated_at', true);
@@ -558,6 +563,16 @@ function updateOrderStatus(updates, triesLeft) {
       Object.keys(updates).forEach(function(cat){
         if (current[cat] && typeof current[cat] === 'object' && current[cat].dueDate) {
           updates[cat].dueDate = current[cat].dueDate;
+        }
+      });
+      // 2026-11-15(N-159 ⑨): 이미 '완료'로 기록된 발주를 다시 처리해도 처음 발주일을 지우지 않음(발주 경과일·시공 준비 판단이 틀어지는 것 방지). 거래처 등 나머지는 최신으로 갱신.
+      var keptDates = [];
+      var ORDER_CATS = { fabric: '원단', production: '제작', material: '자재', blind: '블라인드' };
+      Object.keys(updates).forEach(function(cat){
+        var cur = current[cat];
+        if (ORDER_CATS[cat] && cur && typeof cur === 'object' && cur.done && cur.orderDate && updates[cat] && updates[cat].done && updates[cat].orderDate && updates[cat].orderDate !== cur.orderDate) {
+          keptDates.push(ORDER_CATS[cat] + ' ' + cur.orderDate);
+          updates[cat].orderDate = cur.orderDate;
         }
       });
       var merged = Object.assign({}, current, updates);
@@ -586,7 +601,7 @@ function updateOrderStatus(updates, triesLeft) {
             }
           } catch (eLedger) { /* 기록 실패는 흐름에 영향 없게 */ }
           if (xhrPatch.status < 300 && typeof showToast === 'function') {
-            showToast('📋 업무 현황판에도 자동으로 기록됐어요');
+            showToast(keptDates.length ? ('📋 이미 발주 기록이 있어요(' + keptDates.join(', ') + ') — 발주일은 그대로 두고 거래처만 갱신했어요') : '📋 업무 현황판에도 자동으로 기록됐어요');
           }
         };
         xhrPatch.send(JSON.stringify({ order_status: merged }));

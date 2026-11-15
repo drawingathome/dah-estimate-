@@ -704,6 +704,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['vendor-save-name-check.js', []]); // 2026-11-14 N-137 ③: 인쇄 중 발주처 수정이 저장 이름에 반영
   scripts.push(['monthly-sales-table-check.js', []]); // 2026-11-14 N-166⑤·N-167: 월별 영업 실적표
   scripts.push(['staff-month-goal-check.js', []]); // 2026-11-15 N-169: 실장 달별 목표(홈·월별표·설정)
+  scripts.push(['order-status-reprint-check.js', []]); // 2026-11-15 N-159 ⑨: 발주 재처리 시 발주일 유지·고객 번호 없음 안내
   scripts.push(['vendor-skipped-notice-check.js', []]); // 2026-11-14 N-137 ⑦: 제작·레일 발주서가 빠질 때 이유 안내
   scripts.push(['vendor-order-guard-check.js', []]);
   scripts.push(['chart-summary-contract-check.js', []]);
