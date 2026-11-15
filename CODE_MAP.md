@@ -10,47 +10,48 @@
 | # | 파일 | 역할 | 함수 수 |
 |---|---|---|---|
 | 1 | `shared-staging-guard.js` | DAH 공용 — 스테이징 환경 쓰기 차단 안전장치 | 0 |
-| 2 | `dash-utils.js` | DAH 대시보드 — 순수 유틸리티 함수 모음 | 29 |
-| 3 | `dash-api.js` | DAH 대시보드 — 데이터 접근 계층 (Supabase / localStorage) | 5 |
-| 4 | `dash-api-settings.js` | DAH 대시보드 — 설정 접근자 (담당자/거래처/리드기준/지역비/쿠폰/담당자 이메일) | 18 |
-| 5 | `dash-api-data.js` | DAH 대시보드 — 데이터 변환·로딩 (DB행↔화면 객체, 고객/견적 불러오기) | 9 |
-| 6 | `dash-api-writes.js` | DAH 대시보드 — 고객 DB 쓰기 (저장/선점/보관/삭제/복구/리드보류) | 15 |
-| 7 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 11 |
-| 8 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 5 |
-| 9 | `dash-sync-queue.js` | DAH — 오프라인/네트워크 실패 동기화 큐 (2026-08-05 신규) | 8 |
-| 10 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 16 |
-| 11 | `dash-realtime.js` | 실시간 동기화 (Supabase Realtime) | 9 |
-| 12 | `dash-ui-helpers.js` | DAH 대시보드 — UI 헬퍼 / 입력값 검증 함수 모음 | 15 |
-| 13 | `dash-core.js` | DAH 대시보드 — 앱 핵심 진입점 함수 | 1 |
-| 14 | `dash-render.js` | DAH 대시보드 — 홈/견적목록/고객검색 화면 렌더링 | 6 |
-| 15 | `dash-failed-saves.js` | DAH 대시보드 — 저장 실패 백업 확인/복구 화면 | 6 |
-| 16 | `dash-integrity-watch.js` | 데이터 점검 카드 (2026-10-11, 선혜님 "전문업체 기준 보완" 요청) | 6 |
-| 17 | `dash-render-est.js` | 견적서 탭(가견적/확정견적 목록) 렌더링 | 2 |
-| 18 | `dash-render-search.js` | 고객목록(검색) 탭 렌더링 | 1 |
-| 19 | `dash-memo.js` | DAH 대시보드 — 빠른 메모 문구 기능 | 2 |
-| 20 | `dash-chart.js` | DAH 대시보드 — 매출 차트 기능 | 25 |
-| 21 | `dash-calendar.js` | DAH 대시보드 — 일정(캘린더) 기능 | 5 |
-| 22 | `dash-kanban.js` | DAH 대시보드 — 진행현황(칸반) 기능 | 9 |
-| 23 | `dash-pay-history.js` | 고객상세 - 결제 탭의 "입금 내역 보기" (읽기 전용) | 3 |
-| 24 | `dash-refund.js` | 고객상세 - 결제 탭의 "환불" 영역 (2026-10-14) | 4 |
-| 25 | `dash-extra-pay.js` | 고객상세 - 결제 탭의 "추가 결제" 영역 (2026-10-19) | 5 |
-| 26 | `dash-whats-new.js` | dash-whats-new.js — "새 소식" 한 줄 안내 (N-69 ②, 2026-11-02) | 3 |
-| 27 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 2 |
-| 28 | `dash-customer-alim.js` | 고객상세 - 소통(알림톡) 탭 렌더링 | 11 |
-| 29 | `dash-customer-order.js` | 고객상세 - 발주 탭 렌더링 | 8 |
-| 30 | `dash-customer-as.js` | 고객상세 - AS 탭 렌더링 (React 전환 1호) | 2 |
-| 31 | `dash-customer-detail.js` | DAH 대시보드 — 고객상세 모달 기능 | 8 |
-| 32 | `dash-customer-detail-tabs.js` | DAH 대시보드 — 고객상세 모달: 정보탭/할일 + 하단 버튼·단계변경·삭제·복구 | 8 |
-| 33 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 10 |
-| 34 | `dash-customer-add.js` | 고객 추가/수정 모달 (React 전환 2호) | 3 |
-| 35 | `dash-auth.js` | DAH 대시보드 — 로그인/세션/권한 기능 | 5 |
-| 36 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 8 |
-| 37 | `dash-settings-sections.js` | DAH 대시보드 — 설정 화면 구역별 렌더링 (거래처/메모/지역비/쿠폰/연동/데이터) | 6 |
-| 38 | `dash-reconcile.js` | dash-reconcile.js | 11 |
-| 39 | `dash-tax-export.js` | dash-tax-export.js | 3 |
-| 40 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
-| 41 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
-| 42 | `dash-stale-code.js` | dash-stale-code.js — 대시보드: "열어 둔 화면의 프로그램(코드)이 옛 버전인지" 알려줌 (2026-10-18 신규) | 5 |
+| 2 | `shared-order-defs.js` | shared-order-defs.js — 발주 종류 '정의 한 곳' (두 앱 공용: dah-dashboard.html / dah-estimate.html) | 3 |
+| 3 | `dash-utils.js` | DAH 대시보드 — 순수 유틸리티 함수 모음 | 29 |
+| 4 | `dash-api.js` | DAH 대시보드 — 데이터 접근 계층 (Supabase / localStorage) | 5 |
+| 5 | `dash-api-settings.js` | DAH 대시보드 — 설정 접근자 (담당자/거래처/리드기준/지역비/쿠폰/담당자 이메일) | 18 |
+| 6 | `dash-api-data.js` | DAH 대시보드 — 데이터 변환·로딩 (DB행↔화면 객체, 고객/견적 불러오기) | 9 |
+| 7 | `dash-api-writes.js` | DAH 대시보드 — 고객 DB 쓰기 (저장/선점/보관/삭제/복구/리드보류) | 15 |
+| 8 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 11 |
+| 9 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 5 |
+| 10 | `dash-sync-queue.js` | DAH — 오프라인/네트워크 실패 동기화 큐 (2026-08-05 신규) | 8 |
+| 11 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 16 |
+| 12 | `dash-realtime.js` | 실시간 동기화 (Supabase Realtime) | 9 |
+| 13 | `dash-ui-helpers.js` | DAH 대시보드 — UI 헬퍼 / 입력값 검증 함수 모음 | 15 |
+| 14 | `dash-core.js` | DAH 대시보드 — 앱 핵심 진입점 함수 | 1 |
+| 15 | `dash-render.js` | DAH 대시보드 — 홈/견적목록/고객검색 화면 렌더링 | 6 |
+| 16 | `dash-failed-saves.js` | DAH 대시보드 — 저장 실패 백업 확인/복구 화면 | 6 |
+| 17 | `dash-integrity-watch.js` | 데이터 점검 카드 (2026-10-11, 선혜님 "전문업체 기준 보완" 요청) | 6 |
+| 18 | `dash-render-est.js` | 견적서 탭(가견적/확정견적 목록) 렌더링 | 2 |
+| 19 | `dash-render-search.js` | 고객목록(검색) 탭 렌더링 | 1 |
+| 20 | `dash-memo.js` | DAH 대시보드 — 빠른 메모 문구 기능 | 2 |
+| 21 | `dash-chart.js` | DAH 대시보드 — 매출 차트 기능 | 25 |
+| 22 | `dash-calendar.js` | DAH 대시보드 — 일정(캘린더) 기능 | 5 |
+| 23 | `dash-kanban.js` | DAH 대시보드 — 진행현황(칸반) 기능 | 9 |
+| 24 | `dash-pay-history.js` | 고객상세 - 결제 탭의 "입금 내역 보기" (읽기 전용) | 3 |
+| 25 | `dash-refund.js` | 고객상세 - 결제 탭의 "환불" 영역 (2026-10-14) | 4 |
+| 26 | `dash-extra-pay.js` | 고객상세 - 결제 탭의 "추가 결제" 영역 (2026-10-19) | 5 |
+| 27 | `dash-whats-new.js` | dash-whats-new.js — "새 소식" 한 줄 안내 (N-69 ②, 2026-11-02) | 3 |
+| 28 | `dash-customer-pay.js` | 고객상세 - 결제(선금/잔금) 탭 렌더링 | 2 |
+| 29 | `dash-customer-alim.js` | 고객상세 - 소통(알림톡) 탭 렌더링 | 11 |
+| 30 | `dash-customer-order.js` | 고객상세 - 발주 탭 렌더링 | 8 |
+| 31 | `dash-customer-as.js` | 고객상세 - AS 탭 렌더링 (React 전환 1호) | 2 |
+| 32 | `dash-customer-detail.js` | DAH 대시보드 — 고객상세 모달 기능 | 8 |
+| 33 | `dash-customer-detail-tabs.js` | DAH 대시보드 — 고객상세 모달: 정보탭/할일 + 하단 버튼·단계변경·삭제·복구 | 8 |
+| 34 | `dash-customer-estimates.js` | DAH 대시보드 — 고객상세: 견적서 탭 · 견적서 이력/열기/불러오기 | 10 |
+| 35 | `dash-customer-add.js` | 고객 추가/수정 모달 (React 전환 2호) | 3 |
+| 36 | `dash-auth.js` | DAH 대시보드 — 로그인/세션/권한 기능 | 5 |
+| 37 | `dash-settings.js` | DAH 대시보드 — 설정 화면 기능 | 8 |
+| 38 | `dash-settings-sections.js` | DAH 대시보드 — 설정 화면 구역별 렌더링 (거래처/메모/지역비/쿠폰/연동/데이터) | 6 |
+| 39 | `dash-reconcile.js` | dash-reconcile.js | 11 |
+| 40 | `dash-tax-export.js` | dash-tax-export.js | 3 |
+| 41 | `dash-export.js` | DAH 대시보드 — 백업 / 엑셀 내보내기 기능 | 6 |
+| 42 | `dash-search.js` | DAH 대시보드 — 검색 / 날짜필터 기능 | 4 |
+| 43 | `dash-stale-code.js` | dash-stale-code.js — 대시보드: "열어 둔 화면의 프로그램(코드)이 옛 버전인지" 알려줌 (2026-10-18 신규) | 5 |
 
 ## 견적서 앱 (dah-estimate.html) — 브라우저가 불러오는 순서대로
 
@@ -60,28 +61,29 @@
 | 2 | `est-public-view.js` | DAH 견적서 앱 — 고객용 공개보기 모드 | 5 |
 | 3 | `est-utils.js` | DAH 견적서 앱 — 유틸함수 + API 설정 | 21 |
 | 4 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 11 |
-| 5 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 5 |
-| 6 | `est-sync-queue.js` | DAH 견적서 앱 — 오프라인/네트워크 실패 재시도 큐 (2026-08-05 신규) | 8 |
-| 7 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 16 |
-| 8 | `est-form-controls.js` | DAH 견적서 앱 — 폼 상태/타입 제어 | 16 |
-| 9 | `est-calc-rules.js` | DAH 견적서 앱 — 계산 규칙 (순수 함수: 화면/저장소를 전혀 안 만짐) | 23 |
-| 10 | `est-product-calc.js` | DAH 견적서 앱 — 공통 계산: 합계(calcTotal)/얼림 금액/행 삭제/드래그 정렬 | 11 |
-| 11 | `est-calc-curtain.js` | DAH 견적서 앱 — 커튼 행 계산 (추가/폭수·금액 계산/레일 자동/복사) | 4 |
-| 12 | `est-calc-blind.js` | DAH 견적서 앱 — 블라인드 행 계산 (추가/최소면적/옵션 추가금/부자재 자동/복사) | 7 |
-| 13 | `est-calc-svc.js` | DAH 견적서 앱 — 기타품목 · 부자재/서비스(실측비·시공비·레일) 행 계산과 요약 | 12 |
-| 14 | `est-survey.js` | DAH 견적서 앱 — 설문지 연동 | 2 |
-| 15 | `est-save.js` | DAH 견적서 앱 — 저장/검증/토스트 | 21 |
-| 16 | `est-click-watch.js` | est-click-watch.js — 견적서 앱: 저장 버튼 "눌림 관측" (2026-10-07 신규) | 0 |
-| 17 | `est-save-diff.js` | est-save-diff.js | 2 |
-| 18 | `est-save-stages.js` | DAH 견적서 앱 — 저장 단계 함수 4개 (고객 저장 → 견적서 저장 → 로컬 저장) | 5 |
-| 19 | `est-stale-watch.js` | est-stale-watch.js — 견적서 앱: "내가 열어 둔 화면이 옛날 내용이 됐는지" 미리 알려줌 (2026-10-11 신규) | 7 |
-| 20 | `est-space-order.js` | est-space-order.js | 6 |
-| 21 | `est-doc-customer.js` | DAH 견적서 앱 — 고객용 견적서 문서 생성 | 2 |
-| 22 | `est-doc-vendor.js` | DAH 견적서 앱 — 거래처별 발주서 문서 생성 | 7 |
-| 23 | `est-doc-vendor-ui.js` | DAH 견적서 앱 — 발주서: 거래처 정보 입력 모달 + 발주서 선택/인쇄 | 5 |
-| 24 | `est-doc-request.js` | DAH 견적서 앱 — 실측/시공 의뢰서 문서 생성 | 4 |
-| 25 | `est-customer-load.js` | DAH 견적서 앱 — PDF모달 / 고객불러오기 / 계약금계산 | 22 |
-| 26 | `est-misc.js` | DAH 견적서 앱 — 주소검색 / 날짜포맷 / 빈상태 / 공유 / 자동저장 | 8 |
+| 5 | `shared-order-defs.js` | shared-order-defs.js — 발주 종류 '정의 한 곳' (두 앱 공용: dah-dashboard.html / dah-estimate.html) | 3 |
+| 6 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 5 |
+| 7 | `est-sync-queue.js` | DAH 견적서 앱 — 오프라인/네트워크 실패 재시도 큐 (2026-08-05 신규) | 8 |
+| 8 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 16 |
+| 9 | `est-form-controls.js` | DAH 견적서 앱 — 폼 상태/타입 제어 | 16 |
+| 10 | `est-calc-rules.js` | DAH 견적서 앱 — 계산 규칙 (순수 함수: 화면/저장소를 전혀 안 만짐) | 23 |
+| 11 | `est-product-calc.js` | DAH 견적서 앱 — 공통 계산: 합계(calcTotal)/얼림 금액/행 삭제/드래그 정렬 | 11 |
+| 12 | `est-calc-curtain.js` | DAH 견적서 앱 — 커튼 행 계산 (추가/폭수·금액 계산/레일 자동/복사) | 4 |
+| 13 | `est-calc-blind.js` | DAH 견적서 앱 — 블라인드 행 계산 (추가/최소면적/옵션 추가금/부자재 자동/복사) | 7 |
+| 14 | `est-calc-svc.js` | DAH 견적서 앱 — 기타품목 · 부자재/서비스(실측비·시공비·레일) 행 계산과 요약 | 12 |
+| 15 | `est-survey.js` | DAH 견적서 앱 — 설문지 연동 | 2 |
+| 16 | `est-save.js` | DAH 견적서 앱 — 저장/검증/토스트 | 21 |
+| 17 | `est-click-watch.js` | est-click-watch.js — 견적서 앱: 저장 버튼 "눌림 관측" (2026-10-07 신규) | 0 |
+| 18 | `est-save-diff.js` | est-save-diff.js | 2 |
+| 19 | `est-save-stages.js` | DAH 견적서 앱 — 저장 단계 함수 4개 (고객 저장 → 견적서 저장 → 로컬 저장) | 5 |
+| 20 | `est-stale-watch.js` | est-stale-watch.js — 견적서 앱: "내가 열어 둔 화면이 옛날 내용이 됐는지" 미리 알려줌 (2026-10-11 신규) | 7 |
+| 21 | `est-space-order.js` | est-space-order.js | 6 |
+| 22 | `est-doc-customer.js` | DAH 견적서 앱 — 고객용 견적서 문서 생성 | 2 |
+| 23 | `est-doc-vendor.js` | DAH 견적서 앱 — 거래처별 발주서 문서 생성 | 7 |
+| 24 | `est-doc-vendor-ui.js` | DAH 견적서 앱 — 발주서: 거래처 정보 입력 모달 + 발주서 선택/인쇄 | 10 |
+| 25 | `est-doc-request.js` | DAH 견적서 앱 — 실측/시공 의뢰서 문서 생성 | 4 |
+| 26 | `est-customer-load.js` | DAH 견적서 앱 — PDF모달 / 고객불러오기 / 계약금계산 | 22 |
+| 27 | `est-misc.js` | DAH 견적서 앱 — 주소검색 / 날짜포맷 / 빈상태 / 공유 / 자동저장 | 8 |
 
 ## 설문지 (survey.html) — 브라우저가 불러오는 순서대로
 
@@ -236,14 +238,20 @@
 | `curMonthKeyLocal` | `dash-chart.js` |
 | `curtainHeightFeeWarning` | `est-calc-rules.js` |
 | `customerToDbRow` | `dash-api-data.js` |
+| `dahBlindFieldRules` | `est-doc-vendor-ui.js` |
+| `dahBlindFieldToSource` | `est-doc-vendor-ui.js` |
 | `dahCheckClientErrors` | `apps-script-daily-backup.js` |
 | `dahCheckCustomerPaymentMismatch` | `apps-script-daily-backup.js` |
 | `dahCleanupTestData` | `apps-script-daily-backup.js` |
+| `dahCountDiffCells` | `est-doc-vendor-ui.js` |
 | `dahDailyBackup` | `apps-script-daily-backup.js` |
 | `dahDataIntegrityScanOnly` | `apps-script-daily-backup.js` |
 | `dahDiagnoseSchema` | `apps-script-daily-backup.js` |
 | `dahDuplicateScanOnly` | `apps-script-daily-backup.js` |
 | `dahLocalYmd` | `shared-common-utils.js` |
+| `dahOrderField` | `shared-order-defs.js` |
+| `dahOrderKeys` | `shared-order-defs.js` |
+| `dahOrderMap` | `shared-order-defs.js` |
 | `dahPeekBackup` | `apps-script-daily-backup.js` |
 | `dahPeekRawName` | `apps-script-daily-backup.js` |
 | `dahRestoreDrill` | `apps-script-daily-backup.js` |
@@ -255,6 +263,7 @@
 | `dahScanForMissingTriggers` | `apps-script-daily-backup.js` |
 | `dahScanScriptVersion` | `apps-script-daily-backup.js` |
 | `dahScanWeeklySaveFailures` | `apps-script-daily-backup.js` |
+| `dahShowVendorSavedToast` | `est-doc-vendor-ui.js` |
 | `dashCheckCodeStale` | `dash-stale-code.js` |
 | `dashCollectScriptVersions` | `dash-stale-code.js` |
 | `dashFindStaleScripts` | `dash-stale-code.js` |
@@ -659,4 +668,5 @@
 | `vendorCategory` | `est-utils.js` |
 | `verifyBeforeClose` | `dash-chart.js` |
 | `verifyRecoveryCode` | `dash-supabase-auth.js` |
+| `wireVendorFieldEdit` | `est-doc-vendor-ui.js` |
 | `wireVendorNameEdit` | `est-doc-vendor-ui.js` |

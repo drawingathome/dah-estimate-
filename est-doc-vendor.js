@@ -244,15 +244,15 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
         : '';
       out += '<tr style="border-bottom:1px solid #EEE6DC">'
           +spaceCell
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(nameWithColor(it))+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" data-ed="name" data-ed-idx="'+idx+'" style="padding:6px 4px">'+escHtml(nameWithColor(it))+'</td>'
           +(showItemVendor ? '<td style="padding:6px 4px">'+buildVendorSelectCell(it, idx, blindVendorOptions)+'</td>' : '')
           +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.kind)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.size)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.handle)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.cordLength)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px;text-align:center">'+escHtml(it.bottomBar)+'</td>'
-          +'<td class="pv-editable-field" contenteditable="true" style="padding:6px 4px">'+escHtml(it.comment)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" data-ed="size" data-ed-idx="'+idx+'" style="padding:6px 4px;text-align:center">'+escHtml(it.size)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" data-ed="qty" data-ed-idx="'+idx+'" style="padding:6px 4px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" data-ed="handle" data-ed-idx="'+idx+'" style="padding:6px 4px;text-align:center">'+escHtml(it.handle)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" data-ed="cord" data-ed-idx="'+idx+'" style="padding:6px 4px;text-align:center">'+escHtml(it.cordLength)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" data-ed="bar" data-ed-idx="'+idx+'" style="padding:6px 4px;text-align:center">'+escHtml(it.bottomBar)+'</td>'
+          +'<td class="pv-editable-field" contenteditable="true" data-ed="comment" data-ed-idx="'+idx+'" style="padding:6px 4px">'+escHtml(it.comment)+'</td>'
           +'</tr>';
     });
     out += '</tbody></table></div>';
@@ -603,6 +603,8 @@ function collectVendorGroups(categoryFilter) {
       bottomBar: bottomBar||'—',
       comment: [opt, comment].filter(Boolean).join(' / ')||'—',
       qty: '1개',
+      // 2026-11-15 N-159 ④: 발주서에서 고친 손잡이·끈길이·하단바·코멘트를 원본 행에 되돌려 쓰기 위한 처음 값(충돌 확인용)
+      rawHandle: handle, rawCord: cordLength, rawBar: bottomBar, rawComment: comment, rawOpt: opt,
       vendor: vendor,
       orderCategory: 'blind',
       sourceRow: tr, vendorField: '.b-vendor', vendorIsSelect: true

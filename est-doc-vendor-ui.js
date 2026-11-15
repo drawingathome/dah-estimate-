@@ -271,6 +271,8 @@ function printForVendor(categoryFilter) {
   var closeBtn = document.createElement('button');
   closeBtn.textContent = '✕ 닫기';
   closeBtn.onclick = function(){
+    var _diffN = dahCountDiffCells(document.getElementById('pv-overlay'));
+    if (_diffN > 0 && !window.confirm('원본(견적서)과 다르게 인쇄될 칸이 ' + _diffN + '개 있어요(노란 칸).\n사이즈·수량·원단명 같은 칸은 견적서에 저장되지 않아요.\n그래도 닫을까요?')) return;
     document.getElementById('pv-overlay').remove();
     document.body.style.overflow = '';
     document.body.classList.remove('preview-open');
@@ -374,6 +376,7 @@ function printForVendor(categoryFilter) {
   // 거래처 선택칸)까지 값이 반영되도록 연결. 이래야 다음에 다시 열어도
   // "미지정"으로 되돌아가지 않음.
   wireVendorNameEdit(inner, precollected.groups);
+  wireVendorFieldEdit(inner, precollected.groups); // 2026-11-15 N-159 ④
 
   ov.appendChild(nav);
   ov.appendChild(content);
@@ -390,6 +393,123 @@ function printForVendor(categoryFilter) {
 // 나오는 원인이었음. groups(collectVendorGroups가 만든, 각 항목의
 // 원본 행(sourceRow)까지 담고 있는 객체)를 받아서, "발주처" 칸을 실제로
 // 고치면 그 그룹에 속한 모든 항목의 원본 행까지 값을 밀어넣어줌.
+// 2026-11-15 N-159 ④(선혜님 결정 2: "직접 닫을 때까지 유지"): "지금 저장" 알림은 6초 뒤 저절로 사라지면
+// 저장을 깜빡하기 쉬워서, 선혜님이 ✕나 "지금 저장"을 누를 때까지 유지. 한 번에 하나만 보이게 같은 자리 재사용.
+function dahShowVendorSavedToast(msg) {
+  var old = document.getElementById('pv-saved-toast');
+  if (old) old.remove();
+  var toast = document.createElement('div');
+  toast.id = 'pv-saved-toast';
+  toast.className = 'print-hide';
+  toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#282828;color:#fff;padding:10px 16px;border-radius:20px;font-size:12px;z-index:10001;display:flex;align-items:center;gap:10px;max-width:92vw;box-shadow:0 4px 14px rgba(0,0,0,0.25)';
+  var msgSpan = document.createElement('span');
+  msgSpan.textContent = msg;
+  var saveBtn = document.createElement('button');
+  saveBtn.textContent = '지금 저장';
+  saveBtn.style.cssText = 'background:#fff;color:#282828;border:none;border-radius:14px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap';
+  saveBtn.onclick = function(){
+    toast.remove();
+    if (typeof saveEstimate === 'function') saveEstimate();
+  };
+  var xBtn = document.createElement('button');
+  xBtn.textContent = '✕';
+  xBtn.setAttribute('aria-label', '알림 닫기');
+  xBtn.style.cssText = 'background:none;color:#fff;border:none;font-size:13px;cursor:pointer;padding:2px 4px;font-family:inherit';
+  xBtn.onclick = function(){ toast.remove(); };
+  toast.appendChild(msgSpan);
+  toast.appendChild(saveBtn);
+  toast.appendChild(xBtn);
+  document.body.appendChild(toast);
+}
+
+// 2026-11-15 N-159 ④: 블라인드 발주서에서 고친 칸의 처리 규칙(선혜님 결정 1: "A만 저장·B는 표시만").
+//  A(원본에 저장): 손잡이·끈길이·하단바·코멘트 — 값이 가격에 영향 없는 칸. 열었을 때의 원본 값이 그대로일 때만 씀(그 사이 견적서가 바뀌었으면 건드리지 않음).
+//  B(저장 안 함, 표시만): 사이즈·수량·원단명 — 가격이 바뀔 수 있어 견적서 본문에서만 고치게 함. 고치면 노란 표시 + 닫을 때 경고.
+//  C(그 외 칸): 인쇄용 문구일 뿐이라 원래대로 둠.
+function dahBlindFieldRules() {
+  var A = {
+    handle: { sel: '.handle-dir', raw: 'rawHandle' },
+    cord:   { sel: '.b-cord-length', raw: 'rawCord' },
+    bar:    { sel: '.b-bottom-bar', raw: 'rawBar' },
+    comment:{ sel: '.b-comment', raw: 'rawComment' }
+  };
+  return A;
+}
+// 화면 글자 → 원본에 넣을 값. null이면 "되돌려 쓸 수 없는 글자"(표시만).
+function dahBlindFieldToSource(field, text, item) {
+  var t = String(text == null ? '' : text).replace(/\s+/g, ' ').trim();
+  if (t === '—') t = '';
+  if (field === 'handle') {
+    if (t === '') return '';
+    var base = (t === '기타' || t === '노코드') ? t : t.replace(/잡이$/, '');
+    return (['좌손', '우손', '노코드', '기타'].indexOf(base) >= 0) ? base : null;
+  }
+  if (field === 'comment') {
+    var opt = String(item.rawOpt || '').trim();
+    if (!opt) return t;
+    if (t === opt) return '';
+    if (t.indexOf(opt + ' / ') === 0) return t.slice(opt.length + 3);
+    return null; // 옵션 글자를 지웠거나 바꿨으면 어디에 저장할지 알 수 없음 → 표시만
+  }
+  return t; // cord / bar
+}
+function wireVendorFieldEdit(container, groups) {
+  var RULES = dahBlindFieldRules();
+  var B_FIELDS = { name: 1, size: 1, qty: 1 };
+  if (!document.getElementById('pv-diff-style')) {
+    var st = document.createElement('style');
+    st.id = 'pv-diff-style';
+    st.textContent = '@media screen{td[data-diff]{background:#FFF3BF !important;outline:1px dashed #C99700}}';
+    document.head.appendChild(st);
+  }
+  function markDiff(td, on, why) {
+    if (on) { td.setAttribute('data-diff', '1'); td.title = why; }
+    else { td.removeAttribute('data-diff'); td.removeAttribute('title'); }
+  }
+  container.querySelectorAll('td[data-ed]').forEach(function(td){
+    td.setAttribute('data-orig', td.textContent || '');
+    td.addEventListener('focusout', function(){
+      var block = td.closest('[data-vendor]');
+      if (!block) return;
+      var groupItems = groups[block.getAttribute('data-vendor')];
+      var item = groupItems && groupItems[parseInt(td.getAttribute('data-ed-idx'), 10)];
+      var field = td.getAttribute('data-ed');
+      var now = td.textContent || '';
+      var orig = td.getAttribute('data-orig') || '';
+      if (!item) return;
+      if (B_FIELDS[field]) {
+        markDiff(td, now.trim() !== orig.trim(), '견적서 원본과 다르게 인쇄돼요 (저장 안 됨) — 사이즈·수량·원단명은 견적서에서 고쳐 주세요');
+        return;
+      }
+      var rule = RULES[field];
+      if (!rule || !item.sourceRow) return;
+      if (now.trim() === orig.trim()) { markDiff(td, false); return; }
+      var val = dahBlindFieldToSource(field, now, item);
+      if (val === null) { markDiff(td, true, '이 글자는 견적서에 되돌려 저장할 수 없어요 — 인쇄용으로만 바뀝니다'); return; }
+      var input = item.sourceRow.querySelector(rule.sel);
+      if (!input) { markDiff(td, true, '원본 칸을 찾지 못해 저장하지 못했어요 — 인쇄용으로만 바뀝니다'); return; }
+      if (String(input.value || '') !== String(item[rule.raw] || '')) {
+        markDiff(td, true, '그 사이 견적서의 값이 바뀌어서 덮어쓰지 않았어요 — 인쇄용으로만 바뀝니다');
+        dahShowVendorSavedToast('⚠️ 견적서의 값이 그 사이 바뀌어서 이 칸은 원본에 저장하지 않았어요(인쇄용으로만 바뀜).');
+        return;
+      }
+      if (input.tagName === 'SELECT' && val !== '' && !Array.from(input.options).some(function(o){ return o.value === val; })) {
+        markDiff(td, true, '견적서 선택칸에 없는 값이라 저장하지 못했어요 — 인쇄용으로만 바뀝니다');
+        return;
+      }
+      input.value = val;
+      item[rule.raw] = val;
+      td.setAttribute('data-orig', now);
+      markDiff(td, false);
+      dahShowVendorSavedToast('✅ "' + (item.space || '') + '" 항목을 견적서에 반영했어요. 저장을 눌러야 확정돼요.');
+    });
+  });
+}
+// 닫을 때 쓰는 경고용: 원본과 다르게 인쇄될 칸 수
+function dahCountDiffCells(container) {
+  return container ? container.querySelectorAll('td[data-diff]').length : 0;
+}
+
 function wireVendorNameEdit(container, groups) {
   // 2026-09-14(선혜님 - "블라인드는 한번 수정해도 다시 초기화 해버리네"로
   // 발견): 재현해보니 편집 자체는 문제없이 반영되고 있었음 - 진짜 원인은
@@ -399,24 +519,7 @@ function wireVendorNameEdit(container, groups) {
   // 서버에서 새로 불러오므로) 당연히 저장 안 된 예전 값(미지정)으로
   // "초기화된 것처럼" 보임 - 이 토스트에 "지금 저장" 버튼을 바로 붙여서
   // 그 자리에서 바로 저장까지 끝낼 수 있게 함.
-  function showVendorSavedToast(msg) {
-    var toast = document.createElement('div');
-    toast.className = 'print-hide';
-    toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#282828;color:#fff;padding:10px 16px;border-radius:20px;font-size:12px;z-index:10001;display:flex;align-items:center;gap:10px';
-    var msgSpan = document.createElement('span');
-    msgSpan.textContent = msg;
-    var saveBtn = document.createElement('button');
-    saveBtn.textContent = '지금 저장';
-    saveBtn.style.cssText = 'background:#fff;color:#282828;border:none;border-radius:14px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap';
-    saveBtn.onclick = function(){
-      toast.remove();
-      if (typeof saveEstimate === 'function') saveEstimate();
-    };
-    toast.appendChild(msgSpan);
-    toast.appendChild(saveBtn);
-    document.body.appendChild(toast);
-    setTimeout(function(){ toast.remove(); }, 6000);
-  }
+  var showVendorSavedToast = dahShowVendorSavedToast; // 2026-11-15 N-159 ④: 6초 뒤 사라지던 토스트를 직접 닫을 때까지 유지(위 최상위 함수)
   // 2026-09-15(선혜님 - "미지정을 지정해도 계속 뜨잖아... 다단다에서는
   // 블라인드 업체명이 보이는데" 로 발견 — 실제로는 데이터는 정확히
   // 저장되고 있었음(시공의뢰서엔 이미 정확히 나오고 있었던 게 그 증거).
