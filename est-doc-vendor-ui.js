@@ -401,7 +401,7 @@ function dahShowVendorSavedToast(msg) {
   var toast = document.createElement('div');
   toast.id = 'pv-saved-toast';
   toast.className = 'print-hide';
-  toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#282828;color:#fff;padding:10px 16px;border-radius:20px;font-size:12px;z-index:10001;display:flex;align-items:center;gap:10px;max-width:92vw;box-shadow:0 4px 14px rgba(0,0,0,0.25)';
+  toast.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#282828;color:#fff;padding:10px 16px;border-radius:20px;font-size:12px;z-index:10001;display:flex;align-items:center;gap:10px;width:max-content;max-width:calc(100vw - 24px);box-sizing:border-box;box-shadow:0 4px 14px rgba(0,0,0,0.25)';
   var msgSpan = document.createElement('span');
   msgSpan.textContent = msg;
   var saveBtn = document.createElement('button');
