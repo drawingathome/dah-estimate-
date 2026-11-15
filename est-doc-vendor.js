@@ -86,10 +86,10 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
       return '<td style="' + (bold ? _vsb : _vs) + '"' + (span ? ' colspan="' + span + '"' : '') + ' contenteditable="true" class="pv-editable-field' + (extra ? ' ' + extra : '') + '">' + v + '</td>';
     };
     // 좁은 화면(모바일)에서는 8칸이 한 줄에 안 들어가 '고객명'이 잘리므로, 두 쌍(라벨+값)씩 줄바꿈되게 함. 인쇄·PC(넓은 화면)는 그대로.
-    out += '<style>@media (max-width:560px){.pv-blind-info,.pv-blind-info tbody{display:block}.pv-blind-info tr{display:grid;grid-template-columns:4.6em 1fr 4.6em 1fr}.pv-blind-info td{width:auto!important;min-width:0;word-break:keep-all;overflow-wrap:anywhere}'
-      + '.pv-blind-info tr:last-child td:nth-child(1){grid-area:1/1}.pv-blind-info tr:last-child td:nth-child(2){grid-area:1/2}'
-      + '.pv-blind-info tr:last-child td:nth-child(5){grid-area:1/3}.pv-blind-info tr:last-child td:nth-child(6){grid-area:1/4}'
-      + '.pv-blind-info tr:last-child td:nth-child(3){grid-area:2/1}.pv-blind-info tr:last-child td:nth-child(4){grid-area:2/2/auto/span 3}}</style>';
+    out += '<style>@media (max-width:560px){.pv-wrap:not(.pv-pdf-capture) .pv-blind-info,.pv-wrap:not(.pv-pdf-capture) .pv-blind-info tbody{display:block}.pv-wrap:not(.pv-pdf-capture) .pv-blind-info tr{display:grid;grid-template-columns:4.6em 1fr 4.6em 1fr}.pv-wrap:not(.pv-pdf-capture) .pv-blind-info td{width:auto!important;min-width:0;word-break:keep-all;overflow-wrap:anywhere}'
+      + '.pv-wrap:not(.pv-pdf-capture) .pv-blind-info tr:last-child td:nth-child(1){grid-area:1/1}.pv-wrap:not(.pv-pdf-capture) .pv-blind-info tr:last-child td:nth-child(2){grid-area:1/2}'
+      + '.pv-wrap:not(.pv-pdf-capture) .pv-blind-info tr:last-child td:nth-child(5){grid-area:1/3}.pv-wrap:not(.pv-pdf-capture) .pv-blind-info tr:last-child td:nth-child(6){grid-area:1/4}'
+      + '.pv-wrap:not(.pv-pdf-capture) .pv-blind-info tr:last-child td:nth-child(3){grid-area:2/1}.pv-wrap:not(.pv-pdf-capture) .pv-blind-info tr:last-child td:nth-child(4){grid-area:2/2/auto/span 3}}</style>';
     out += '<table class="pv-blind-info pv-doc-info" style="width:100%;border-collapse:collapse;margin-top:var(--sp-6);padding-top:16px">'
       + '<tr>'
       + '<td style="' + _ls + '">요청일</td>' + _ed(today, '', false)

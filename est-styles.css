@@ -1255,6 +1255,8 @@ body.preview-open #dah-build-badge { display:none!important; }
 .cprice{text-align:right}
 
 .print-hide{}
+/* (미디어쿼리 밖 — PC·폰 공통)  2026-11-15 N-173: 화면 전용 안내 문구("클릭하면 고칠 수 있어요", "표를 옆으로 밀면…")가 PDF 이미지에 찍히던 것 숨김 */
+.pv-pdf-capture .print-hide{display:none!important}
 
  
 #pdf-size-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99999;display:none;align-items:center;justify-content:center}
