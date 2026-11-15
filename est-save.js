@@ -460,6 +460,16 @@ function estMissingInstallRows() {
   } catch (e) { return false; }
 }
 
+// 2026-11-15 N-165 P2: 원단명이 적힌 커튼 행 중 원단 거래처 칸이 빈 행의 공간 이름 목록(없으면 빈 배열). 원단명이 비어 있는 행은 아직 안 채운 행이라 제외.
+function estFabricVendorMissingSpaces() {
+  var out = [];
+  document.querySelectorAll('#curtain-body tr').forEach(function(tr, i){
+    var fabric = (tr.querySelector('.c-fabric') || {}).value || '';
+    var vendor = (tr.querySelector('.c-vendor') || {}).value || '';
+    if (String(fabric).trim() && !String(vendor).trim()) out.push(((tr.querySelector('.space-inp') || {}).value || '').trim() || ((i + 1) + '번째 행'));
+  });
+  return out;
+}
 function saveEstimate() {
   logSaveAttempt();
   logSaveStage('시작');
@@ -505,6 +515,10 @@ function saveEstimate() {
   }
   // 2026-10-08: 시공이 있는 지역인데 실측비·시공비 행이 하나도 없으면 같은 확인창에 함께 안내(막지는 않음 — 레일만 시공 등 정당한 경우 있음)
   if (estMissingInstallRows()) missing.push('실측비·시공비 행(지역은 ' + ((/** @type {any} */ (document.getElementById('c-region')) || {}).value || '') + '인데 시공 항목이 없어요 — 금액에 시공비가 빠질 수 있어요)');
+  // 2026-11-15 N-165 P2(N-163 처방 ②): 원단 거래처가 빈 커튼 행이 있으면 저장 때 함께 알려 줌(막지는 않음). 비어 있으면 발주서가 '미지정'으로 나와
+  // 완료 기록이 안 남고, 민지성·이상옥 때처럼 '발주했는데 기록이 없는' 일이 생김.
+  var _noFabricVendor = estFabricVendorMissingSpaces();
+  if (_noFabricVendor.length) missing.push('원단 거래처(' + _noFabricVendor.slice(0, 4).join(', ') + (_noFabricVendor.length > 4 ? ' 외 ' + (_noFabricVendor.length - 4) + '곳' : '') + ')');
   logSaveStage('필수항목검증완료', { missing: missing, hasCurtainOrBlind: hasCurtainOrBlind, svc: estSvcState() });
   if (missing.length > 0) {
     var okToProceed = window.confirm('다음 항목이 비어있어요: ' + missing.join(', ') + '\n\n그래도 저장하시겠어요?');

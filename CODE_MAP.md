@@ -72,7 +72,7 @@
 | 13 | `est-calc-blind.js` | DAH 견적서 앱 — 블라인드 행 계산 (추가/최소면적/옵션 추가금/부자재 자동/복사) | 7 |
 | 14 | `est-calc-svc.js` | DAH 견적서 앱 — 기타품목 · 부자재/서비스(실측비·시공비·레일) 행 계산과 요약 | 12 |
 | 15 | `est-survey.js` | DAH 견적서 앱 — 설문지 연동 | 2 |
-| 16 | `est-save.js` | DAH 견적서 앱 — 저장/검증/토스트 | 21 |
+| 16 | `est-save.js` | DAH 견적서 앱 — 저장/검증/토스트 | 22 |
 | 17 | `est-click-watch.js` | est-click-watch.js — 견적서 앱: 저장 버튼 "눌림 관측" (2026-10-07 신규) | 0 |
 | 18 | `est-save-diff.js` | est-save-diff.js | 2 |
 | 19 | `est-save-stages.js` | DAH 견적서 앱 — 저장 단계 함수 4개 (고객 저장 → 견적서 저장 → 로컬 저장) | 5 |
@@ -297,6 +297,7 @@
 | `estDeleteDoneText` | `dash-api-writes.js` |
 | `estDropPendingForDb` | `est-sync-queue.js` |
 | `estDropUnchangedColumns` | `est-save-diff.js` |
+| `estFabricVendorMissingSpaces` | `est-save.js` |
 | `estFindStaleScripts` | `est-stale-watch.js` |
 | `estFloorRankFromText` | `est-space-order.js` |
 | `estFlushReceiptQueue` | `est-save.js` |
