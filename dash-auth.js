@@ -32,6 +32,8 @@ function loginAs(who) {
   // skipServerFetch=true로 명시 호출해 재요청 없이 바로 렌더링.
   // 2026-10-10: 마스터는 월 마감값(monthly_close)을 먼저 불러온 뒤 홈을 그려서, 지난달 매출이 마감값으로 보이게 함(직원은 즉시 통과).
   loadCustomersAsync(function(){ loadMonthClose(function(){ renderHome(true); }); });
+  // 2026-11-15(N-169 점검에서 발견): 새 기기·처음 로그인한 실장은 로그인 전에는 서버 설정을 못 읽어(로그인 필요) 달별 목표가 비어 있음 → 로그인 직후 설정을 불러온 뒤 홈을 한 번 더 그려 '목표 미설정'이 잘못 보이지 않게 함.
+  if (typeof loadAppSettingsAsync === 'function') loadAppSettingsAsync(function(){ renderHome(true); });
 }
 
 function applyPermissions() {

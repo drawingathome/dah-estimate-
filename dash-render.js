@@ -302,7 +302,9 @@ function renderHome(skipServerFetch) {
         '</div>',
         '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px">',
           '<div style="font-size:36px;font-weight:700;color:var(--dark);min-width:0;flex:1">',
-            isOver
+            !_goalSet
+              ? _month + '월 목표가 아직 설정되지 않았어요'
+              : isOver
               ? '🎉 ' + _month + '월 목표 달성!'
               : _month + '월, 목표까지 <span style="color:var(--terra)">' + Math.round(remain/10000).toLocaleString() + '만원</span> 남았어요',
           '</div>',

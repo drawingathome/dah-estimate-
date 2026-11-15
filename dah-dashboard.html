@@ -44,7 +44,7 @@
 
 <script src="/dash-ui-helpers.js?v=e0de91a7a0c2"></script>
 <script src="/dash-core.js?v=ec98338fb51c"></script>
-<script src="/dash-render.js?v=eaf48154e522"></script>
+<script src="/dash-render.js?v=bf4304079ee0"></script>
 <script src="/dash-failed-saves.js?v=8797a3d95f36"></script>
 <script src="/dash-integrity-watch.js?v=0b7f0ebdc1c1"></script>
 <script src="/dash-render-est.js?v=0b8e24a917b3"></script>
@@ -67,7 +67,7 @@
 <script src="/dash-customer-detail-tabs.js?v=f6f28cead2f2"></script>
 <script src="/dash-customer-estimates.js?v=a68a5b52649b"></script>
 <script src="/dash-customer-add.js?v=5eb8c46b1254"></script>
-<script src="/dash-auth.js?v=262fcbfef19c"></script>
+<script src="/dash-auth.js?v=7f37417b68bd"></script>
 <script src="/dash-settings.js?v=2fdd71acfa05"></script>
 <script src="/dash-settings-sections.js?v=8b117191c595"></script>
 <script src="/dash-reconcile.js?v=da92ff51b5a6"></script>
@@ -930,7 +930,7 @@ document.getElementById('detail-overlay').addEventListener('click', function(e) 
         var mobFab = document.querySelector('.mob-fab');
         if (mobFab) { mobFab.style.display = isMobileWidth ? 'flex' : 'none'; }
         applyPermissions(); loadCustomersAsync(function(){ renderHome(true); });
-        loadAppSettingsAsync();
+        loadAppSettingsAsync(function(){ renderHome(true); }); // 2026-11-15(N-169): 설정(실장 달별 목표)이 홈보다 늦게 도착해도 홈을 다시 그림
         return;
       }
     }
