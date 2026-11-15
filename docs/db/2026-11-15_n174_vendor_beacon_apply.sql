@@ -3,12 +3,13 @@
 -- 안전장치: 이미 '비콘'이 있으면 아무것도 안 함. 적용 뒤 개수가 15→16이 아니면 전체 취소.
 begin;
 update public.app_settings
-   set value = ((value::jsonb) || '[{"name":"비콘","categories":["fabric"]}]'::jsonb)::text,
+   set value = value || '[{"name":"비콘","categories":["fabric"]}]'::jsonb,
        updated_at = now()
  where key = 'vendor_list'
-   and not exists (select 1 from jsonb_array_elements(value::jsonb) e where e->>'name' = '비콘');
+   and not exists (select 1 from jsonb_array_elements(value) e where e->>'name' = '비콘');
 do $$ declare n int; begin
-  select jsonb_array_length(value::jsonb) into n from public.app_settings where key = 'vendor_list';
+  select jsonb_array_length(value) into n from public.app_settings where key = 'vendor_list';
   if n <> 16 then raise exception '검증 실패: 거래처 수 % (16이어야 함) — 전체 취소', n; end if;
 end $$;
 commit;
+-- [11-15 적용 기록] 첫 시도는 value가 jsonb 열인데 text로 바꿔 넣어 오류(변경 없음) → 위 수정본으로 재실행 성공, 읽기 검증 완료.

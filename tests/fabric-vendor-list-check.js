@@ -51,7 +51,7 @@ async function run() {
   const excluded = ['캔가공소', '윈텍', '덱스터', '헌터더글라스', '솜피', '목성'];
   const leaked = excluded.filter(name => fabricListCheck && fabricListCheck.includes(name));
   ok('2. 원단전용 목록에 가공소/블라인드/부자재 이름이 하나도 안 섞임', leaked.length === 0, JSON.stringify({ fabricListCheck, leaked }));
-  ok('3. 원단전용 목록에 실제 원단 거래처는 정상적으로 있음', fabricListCheck && fabricListCheck.includes('예원') && fabricListCheck.includes('디테라'), JSON.stringify(fabricListCheck));
+  ok('3. 원단전용 목록에 실제 원단 거래처(비콘 포함, N-174)는 정상적으로 있음', fabricListCheck && fabricListCheck.includes('예원') && fabricListCheck.includes('디테라') && fabricListCheck.includes('비콘'), JSON.stringify(fabricListCheck));
 
   // 3) 발주정보 입력 팝업에서도 동일하게 fabric-vendor-list를 쓰는지
   await page.evaluate(() => {
