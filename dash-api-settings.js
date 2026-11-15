@@ -22,14 +22,26 @@ function getStaffMonthGoal(staff, monthKey) {
   var v = m ? Number(m[staff]) : 0;
   return v > 0 ? v : null;
 }
-function setStaffMonthGoal(staff, monthKey, amount) {
-  var all = _readStaffGoalsMonthly();
+function _applyStaffGoalChange(all, staff, monthKey, v) {
   var m = all[monthKey] || {};
-  var v = Number(amount) || 0;
   if (v > 0) m[staff] = v; else delete m[staff];
   if (Object.keys(m).length) all[monthKey] = m; else delete all[monthKey];
-  try { localStorage.setItem('dah_staff_goals_monthly', JSON.stringify(all)); } catch(e) {}
-  sbSyncSetting('staff_goals_monthly', all);
+  return all;
+}
+// 2026-11-15(N-172 ③, 독립 점검): 저장 전에 서버의 최신 값을 읽어 이번 변경 1건만 얹어서 저장 — 낡은 기기(다른 기기에서 입력한 달이 안 보이는 상태)가 서버를 통째로 덮어써 앞 입력이 사라지지 않게 함.
+// 서버 값을 못 읽으면(네트워크·로그인 문제) 저장하지 않고 알림(옛 값으로 덮어쓰는 것보다 안전).
+function setStaffMonthGoal(staff, monthKey, amount) {
+  var v = Number(amount) || 0;
+  sbXHR('GET', 'app_settings?key=eq.staff_goals_monthly&select=value', null, function(err, rows) {
+    if (err || !Array.isArray(rows)) {
+      if (typeof showToast === 'function') showToast('⚠️ 서버 목표를 확인하지 못해 저장하지 않았어요 — 다시 시도해주세요');
+      return;
+    }
+    var base = (rows[0] && rows[0].value && typeof rows[0].value === 'object') ? rows[0].value : {};
+    var merged = _applyStaffGoalChange(base, staff, monthKey, v);
+    try { localStorage.setItem('dah_staff_goals_monthly', JSON.stringify(merged)); } catch(e) {}
+    sbSyncSetting('staff_goals_monthly', merged);
+  });
 }
 // 홈·월별 영업표 공용: 지금 로그인한 사람의 그 달 목표(원). 마스터 = 전체 월 목표, 실장 = 본인 그 달 목표(없으면 null).
 function getMonthGoalAmount(monthKey) {

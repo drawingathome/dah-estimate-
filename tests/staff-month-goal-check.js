@@ -14,11 +14,27 @@ async function run() {
   const log = []; function ok(l, c, d) { log.push((c ? '✅' : '❌') + ' ' + l + (c ? '' : ' — ' + d)); }
   const r = await page.evaluate(() => {
     var out = {};
+    // 가짜 서버(app_settings): sbXHR GET은 서버 값을 돌려주고 sbSyncSetting은 서버 값을 갱신
+    var SERVER = {}; var _origSbXHR = sbXHR, _origSync = sbSyncSetting;
+    sbXHR = function(method, url, body, cb) { if (/app_settings/.test(url) && method === 'GET') { var k = (url.match(/key=eq\.([a-z_]+)/) || [])[1]; cb(null, k && SERVER[k] ? [{ key: k, value: SERVER[k] }] : (k ? [] : Object.keys(SERVER).map(function(x){ return { key: x, value: SERVER[x] }; }))); } else { _origSbXHR(method, url, body, cb); } };
+    sbSyncSetting = function(key, value) { SERVER[key] = JSON.parse(JSON.stringify(value)); };
     localStorage.setItem('dah_staff_list', JSON.stringify(['오지은 실장']));
     localStorage.setItem('dah_settings', JSON.stringify({ monthlyGoal: '5000' }));
     setStaffMonthGoal('오지은 실장', '2026-11', 20000000);
     out.g11 = getStaffMonthGoal('오지은 실장', '2026-11'); out.g12 = getStaffMonthGoal('오지은 실장', '2026-12');
     out.masterGoal = getMonthGoalAmount('2026-11');
+    // ③ 낡은 기기: 이 기기는 2027-03을 모르는데 서버에는 다른 기기가 입력한 2027-03이 있음 → 1월을 입력해도 그것이 지워지면 안 됨
+    SERVER['staff_goals_monthly']['2027-03'] = { '오지은 실장': 30000000 };
+    setStaffMonthGoal('오지은 실장', '2027-01', 10000000);
+    out.mergeKeepsDec = SERVER['staff_goals_monthly']['2027-03'] && SERVER['staff_goals_monthly']['2027-03']['오지은 실장'] === 30000000 && SERVER['staff_goals_monthly']['2027-01']['오지은 실장'] === 10000000 && SERVER['staff_goals_monthly']['2026-11']['오지은 실장'] === 20000000;
+    // 서버 조회 실패 시 저장하지 않음
+    var _beforeFail = JSON.stringify(SERVER['staff_goals_monthly']);
+    var _saveX = sbXHR; sbXHR = function(m, u, b, cb) { cb(new Error('net'), null); };
+    setStaffMonthGoal('오지은 실장', '2027-02', 5000000);
+    sbXHR = _saveX;
+    out.failNoWrite = JSON.stringify(SERVER['staff_goals_monthly']) === _beforeFail;
+    setStaffMonthGoal('오지은 실장', '2027-01', 0); // 정리
+    // ④ 홈 상담건수: 보류 제외 (아래 홈 렌더에서 확인)
     // 설정 화면: 달 선택·입력칸
     renderSettings();
     var mi = document.getElementById('set-staff-goal-month');
@@ -64,6 +80,15 @@ async function run() {
     loadAppSettingsAsync(function(){ renderHome(true); });
     out.coldAfter = document.body.textContent.indexOf('목표가 아직 설정되지 않았어요') < 0 && document.body.textContent.indexOf('목표까지') >= 0;
     sbXHR = _realSbXHR;
+    // ④ 홈 상담건수: 이번 달 방문 예정 3명 중 보류 1명 → 2건
+    currentUser = { name: '마스터', role: 'master' };
+    var _d = new Date(); var _ym = _d.getFullYear() + '-' + String(_d.getMonth() + 1).padStart(2, '0');
+    var bs = { staffName: '마스터', phone: '', addr: '', measureDate: '', installDate: '', balanceAmount: 0, depositAmount: 0, stage: '상담', price: 0 };
+    saveCustomers([Object.assign({}, bs, { id: 9201, clientName: 'G1', date: _ym + '-05' }), Object.assign({}, bs, { id: 9202, clientName: 'G2', date: _ym + '-06' }), Object.assign({}, bs, { id: 9203, clientName: 'G3보류', date: _ym + '-07', leadParked: true })]);
+    goTab('home'); renderHome(true);
+    var _k = document.getElementById('kpi-consult');
+    out.homeConsult = _k && _k.nextElementSibling ? _k.nextElementSibling.textContent : null;
+    sbXHR = _origSbXHR; sbSyncSetting = _origSync;
     out.wiredAuth = true;
     return out;
   });
@@ -80,6 +105,9 @@ async function run() {
   ok('7. 실장 월별표 10월(목표 없음) 달성률은 —', r.row10 && r.row10[6] === '—', JSON.stringify(r.row10));
   ok('8. 실장 홈: 이번 달 목표가 없으면 "목표 미설정" 표시', r.homeText === true, 'nowKey=' + r.nowKey);
   ok('9. 실장 홈: 목표 없을 때 큰 제목이 "목표까지 0만원 남았어요"가 아니라 "목표가 아직 설정되지 않았어요"', r.homeNoZero === true, 'homeNoZero=' + r.homeNoZero);
+  ok('12. 낡은 기기에서 1월 목표를 입력해도 서버에 있던 3월·11월 목표가 지워지지 않고 합쳐 저장', r.mergeKeepsDec === true, String(r.mergeKeepsDec));
+  ok('13. 서버 목표를 못 읽으면(네트워크 오류) 저장하지 않음', r.failNoWrite === true, String(r.failNoWrite));
+  ok('14. 홈 상담건수는 보류 고객을 뺀다(이번 달 방문 예정 3명 중 보류 1명 → 2건)', r.homeConsult === '2건', String(r.homeConsult));
   ok('10. 새 기기(달별 목표 비어 있음): 처음엔 목표 미설정 → 서버 설정을 불러온 뒤 홈이 다시 그려져 목표가 보임', r.coldBefore === true && r.coldAfter === true, JSON.stringify([r.coldBefore, r.coldAfter]));
   ok('11. 새 로그인·저장된 로그인 두 경로 모두 설정을 불러온 뒤 홈을 다시 그리도록 연결(관찰형: 코드 연결 확인)', r.wiredLogin && r.wiredSaved, JSON.stringify([r.wiredLogin, r.wiredSaved]));
   console.log('JS 에러:', jsErrors.length === 0 ? '✅ 없음' : '❌ ' + jsErrors.join('; '));
