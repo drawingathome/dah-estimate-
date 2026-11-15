@@ -85,6 +85,22 @@ function hasIncompleteOrder(c) {
   return items.some(function(item){ return !isOrderItemDoneFor(c, orderStatus, item.key); });
 }
 
+// 2026-11-15 N-165 P2(N-163 처방 ①·N-164 ④): 시공일이 오늘부터 7일 안인데 발주(시공 제외)가 아직 안 끝난 고객이면 "시공 D-3일 · 발주 미기록: 원단 발주, …" 문구를 돌려준다(아니면 '').
+// 이유: 발주를 해도 앱에 체크가 안 남으면 단계가 조용히 멈추거나(이상옥·민지성 사례) 시공 직전까지 아무도 모름 → 시공이 가까울수록 눈에 띄게.
+// todayYmd = 'YYYY-MM-DD'(한국 날짜). 시공일이 오늘 이전이면 '시공일 지남' 안내가 따로 있어 여기서는 안 다룸.
+function getUrgentOrderReason(c, todayYmd) {
+  if (!c || ['확정견적', '잔금결제', '시공준비중'].indexOf(c.stage) < 0) return '';
+  if (!isInstallDateSet(c) || !/^\d{4}-\d{2}-\d{2}$/.test(String(c.installDate)) || !/^\d{4}-\d{2}-\d{2}$/.test(String(todayYmd || ''))) return '';
+  var DAY = 86400000;
+  var days = Math.round((Date.parse(c.installDate + 'T00:00:00Z') - Date.parse(todayYmd + 'T00:00:00Z')) / DAY);
+  if (!(days >= 0 && days <= 7)) return '';
+  var orderStatus = c.orderStatus || {};
+  var missing = getRelevantOrderItems(c).filter(function(item){ return item.key !== 'install' && !isOrderItemDoneFor(c, orderStatus, item.key); })
+    .map(function(item){ return item.label; });
+  if (!missing.length) return '';
+  return '시공 ' + (days === 0 ? '오늘' : 'D-' + days + '일') + ' · 발주 미기록: ' + missing.join(', ');
+}
+
 // 2026-11-12(N-162)·11-13(N-164): '시공준비중'으로 안 넘어가는 이유를 돌려준다.
 // N-164 이후 DB 규칙 = 입금 완료 + 시공일 지정(미정 아님). 원단·제작·자재·블라인드 발주 체크는 단계를 막지 않는 참고 기록이므로 여기 사유에 넣지 않는다.
 function getOrderWaitLabels(c) {
