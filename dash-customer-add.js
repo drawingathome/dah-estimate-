@@ -57,7 +57,7 @@ function closeAdd() {
 // 오버레이 배경(자기 자신) 클릭시 닫기 - 예전엔 dah-dashboard.html의 document 리스너가 담당
 document.addEventListener('DOMContentLoaded', function () {
   var ov = document.getElementById('add-overlay');
-  if (ov) ov.addEventListener('click', function (e) { if (e.target === ov) closeAdd(); });
+  if (ov) ov.addEventListener('click', function (e) { if (dahIsBackdropClick(e, ov)) closeAdd(); });
 });
 
 function AddCustomerModal({ editName, registerApi }) {

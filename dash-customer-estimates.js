@@ -361,7 +361,7 @@ function showEstimatePickerModal(rows, clientName) {
   overlay.appendChild(box);
   document.body.appendChild(overlay);
   document.getElementById('est-picker-close-btn').addEventListener('click', function(){ overlay.remove(); });
-  overlay.addEventListener('click', function(e){ if (e.target === overlay) overlay.remove(); });
+  overlay.addEventListener('click', function(e){ if (dahIsBackdropClick(e, overlay)) overlay.remove(); });
 
   var listEl = document.getElementById('est-picker-list');
   rows.forEach(function(r) {

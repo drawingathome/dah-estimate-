@@ -37,7 +37,7 @@
 <script src="/dash-api-settings.js?v=19c216d70fc2"></script>
 <script src="/dash-api-data.js?v=761160a536c3"></script>
 <script src="/dash-api-writes.js?v=c7ea8be94840"></script>
-<script src="/shared-common-utils.js?v=3846c24ba72a"></script>
+<script src="/shared-common-utils.js?v=90907a7a2a53"></script>
 <script src="/shared-optimistic-lock.js?v=6937130d3492"></script>
 <script src="/dash-sync-queue.js?v=61a228ae8a8c"></script>
 <script src="/dash-supabase-auth.js?v=70d0fe31c31d"></script>
@@ -66,8 +66,8 @@
 <script src="/dash-customer-as.js?v=0969c3514dda"></script>
 <script src="/dash-customer-detail.js?v=2eb4f3db3351"></script>
 <script src="/dash-customer-detail-tabs.js?v=f6f28cead2f2"></script>
-<script src="/dash-customer-estimates.js?v=a68a5b52649b"></script>
-<script src="/dash-customer-add.js?v=5eb8c46b1254"></script>
+<script src="/dash-customer-estimates.js?v=f53dbf60dcb8"></script>
+<script src="/dash-customer-add.js?v=859eadd1b04b"></script>
 <script src="/dash-auth.js?v=7f37417b68bd"></script>
 <script src="/dash-settings.js?v=0e3c35ef89ab"></script>
 <script src="/dash-settings-sections.js?v=8b117191c595"></script>
@@ -899,7 +899,7 @@ document.addEventListener('click', function(e) {
   }
 });
 document.getElementById('cust-search').addEventListener('input', renderSearch);
-document.getElementById('detail-overlay').addEventListener('click', function(e) { if (e.target === this) closeDetail(); });
+document.getElementById('detail-overlay').addEventListener('click', function(e) { if (dahIsBackdropClick(e, this)) closeDetail(); });
 // (2026-09-29 React 전환으로 오버레이 배경클릭 리스너 제거)
 
 (function() {

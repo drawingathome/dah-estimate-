@@ -148,7 +148,7 @@ function pickSpace(btn) {
 }
 
 function closeSpacePicker(e) {
-  if(e.target === document.getElementById('space-picker'))
+  if(dahIsBackdropClick(e, document.getElementById('space-picker')))
     document.getElementById('space-picker').style.display = 'none';
 }
 

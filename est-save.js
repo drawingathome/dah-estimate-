@@ -803,7 +803,7 @@ function runSelfDiagnosis() {
       modal = document.createElement('div');
       modal.id = 'self-diag-modal';
       modal.style.cssText = 'position:fixed;inset:0;z-index:9999999;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;';
-      modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
+      modal.onclick = function(e) { if (dahIsBackdropClick(e, modal)) modal.remove(); };
       document.body.appendChild(modal);
     }
     var rows = results.map(function(r) {

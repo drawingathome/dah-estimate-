@@ -706,6 +706,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['staff-month-goal-check.js', []]); // 2026-11-15 N-169: 실장 달별 목표(홈·월별표·설정)
   scripts.push(['order-status-reprint-check.js', []]); // 2026-11-15 N-159 ⑨: 발주 재처리 시 발주일 유지·고객 번호 없음 안내
   scripts.push(['vendor-doc-field-writeback-check.js', []]); // 2026-11-15 N-159 ④: 블라인드 발주서 A칸 원본 저장·B칸 표시만·안내 유지
+  scripts.push(['backdrop-drag-close-check.js', []]); // 2026-11-17 N-178: 창 안에서 글자를 끌어 선택하다 밖에서 떼면 창이 닫히던 문제(공간 선택·고객 추가·고객 상세)
   scripts.push(['vendor-doc-pdf-pc-mobile-check.js', []]); // 2026-11-15 N-173: 발주서 PDF 캡처가 PC·폰에서 같은지
   scripts.push(['save-fabric-vendor-warn-check.js', []]); // 2026-11-15 N-165 P2: 저장 때 원단 거래처 빈칸 안내
   scripts.push(['home-order-urgent-check.js', []]); // 2026-11-15 N-165 P2: 시공 7일 안 발주 미기록 홈 경고

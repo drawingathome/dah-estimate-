@@ -271,3 +271,19 @@ function closedMonthRejectMessage(status, text) {
     return msg.slice(0, 200);
   } catch (e) { return ''; }
 }
+
+// ── 창(오버레이) 배경 클릭 판정 ──────────────────────────────────
+// 2026-11-17(선혜님 발견: 견적서에서 위치(방)를 직접 적었다가 고치려고 클릭하면 창이 닫힘): 창 안 입력칸에서 글자를 마우스로
+// 끌어 선택하다 창 밖(어두운 배경)에서 손을 떼면 브라우저가 '배경에 클릭이 났다'고 알려 줘서 창이 통째로 닫혔다
+// (고객 추가 창은 쓰던 내용도 사라질 수 있었음). 그래서 '누르기(pointerdown)도 배경에서 시작한' 클릭만 배경 클릭으로 본다.
+// 누르기 기록이 없는 클릭(코드의 .click(), 키보드)은 예전처럼 배경 클릭으로 본다.
+var _dahPtrDownTarget = null;
+if (typeof document !== 'undefined' && document.addEventListener) {
+  document.addEventListener('pointerdown', function (e) { _dahPtrDownTarget = e.target; }, true);
+  document.addEventListener('click', function () { _dahPtrDownTarget = null; });
+}
+/** @param {any} e 클릭 이벤트  @param {any} el 배경(오버레이) 요소  @returns {boolean} */
+function dahIsBackdropClick(e, el) {
+  if (!e || !el || e.target !== el) return false;
+  return !_dahPtrDownTarget || _dahPtrDownTarget === el;
+}

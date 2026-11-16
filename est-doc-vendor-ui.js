@@ -176,7 +176,7 @@ function openVendorOrderPicker() {
   var ov = document.createElement('div');
   ov.id = 'vendor-order-picker';
   ov.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:9998;display:flex;align-items:flex-end;justify-content:center';
-  ov.onclick = function(e){ if (e.target === ov) ov.remove(); };
+  ov.onclick = function(e){ if (dahIsBackdropClick(e, ov)) ov.remove(); };
   var sheet = document.createElement('div');
   sheet.style.cssText = 'background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:20px;box-sizing:border-box';
   sheet.innerHTML = '<div style="font-size:15px;font-weight:700;margin-bottom:14px">어떤 발주서를 보시겠어요?</div>';
