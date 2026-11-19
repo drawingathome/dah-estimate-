@@ -278,13 +278,51 @@ function renderEstList() {
             } catch (eSame) { /* 조회 실패는 새로 만드는 기존 흐름으로 */ }
           }
           if (knownId) { linkAndOpen(knownId); return; }
-          sbXHR('POST', 'customers', payload, function(err, rows){
-            entry._registeringAsCustomer = false;
-            if (err && (err.status === 409 || /23505|duplicate key/i.test(String(err.text || '')))) { showToast('⚠️ 같은 번호·이름의 진행 중 고객이 이미 있어요 — 고객 목록에서 확인해주세요'); return; }
-            if (err || !rows || !rows[0]) { showToast('고객 등록 실패 — 다시 시도해주세요'); return; }
-            /** @type {any} */ (window)._estCreatedCustomerByEstId[entry.id] = rows[0].id;
-            linkAndOpen(rows[0].id);
-          });
+          // 2026-11-19(N-185①, N-186 규칙): 이 기기 목록에 없어도 서버에 같은 연락처 고객(다른 담당자·시공완료 포함)이 있을 수 있음 →
+          // 진행 중인 같은 고객이면 새로 만들지 않고 막음(임현정형), 시공완료 고객이면 알림+확인 뒤 새 건(소지선형), 이름이 다르면 가족 확인.
+          // v2 함수(단계 포함) → 없으면(404) 이름 포함 옛 함수 → 번호만 옛 함수. 확인 실패 시 본인에게 물어봄.
+          function createCustomerNow() {
+            sbXHR('POST', 'customers', payload, function(err, rows){
+              entry._registeringAsCustomer = false;
+              if (err && (err.status === 409 || /23505|duplicate key/i.test(String(err.text || '')))) { showToast('⚠️ 같은 번호·이름의 진행 중 고객이 이미 있어요 — 고객 목록에서 확인해주세요'); return; }
+              if (err || !rows || !rows[0]) { showToast('고객 등록 실패 — 다시 시도해주세요'); return; }
+              /** @type {any} */ (window)._estCreatedCustomerByEstId[entry.id] = rows[0].id;
+              linkAndOpen(rows[0].id);
+            });
+          }
+          var phoneDigits = String(entry.phone || '').replace(/\D/g, '');
+          if (phoneDigits && typeof sbXHR === 'function') {
+            var askDup = function (level, done) {
+              var fn = level === 0 ? 'check_phone_duplicate_v2' : 'check_phone_duplicate';
+              var body = level <= 1 ? { phone_input: entry.phone, name_input: entry.clientName } : { phone_input: entry.phone };
+              sbXHR('POST', 'rpc/' + fn, body, function (e, r) {
+                if (e && level < 2 && /404|PGRST202/.test(String((e && (e.status || e.message || e.text)) || '') + JSON.stringify(e || ''))) { askDup(level + 1, done); return; }
+                done(e, r);
+              });
+            };
+            askDup(0, function (dupErr, dupRows) {
+              if (dupErr) {
+                if (!confirm('같은 연락처 고객이 이미 있는지 서버에서 확인하지 못했어요.\n그래도 새 고객으로 등록할까요? (이미 있는 고객이면 중복이 생길 수 있어요)')) { entry._registeringAsCustomer = false; return; }
+                createCustomerNow(); return;
+              }
+              var hit = (Array.isArray(dupRows) && dupRows[0] && dupRows[0].exists_flag) ? dupRows[0] : null;
+              if (!hit) { createCustomerNow(); return; }
+              var owner = hit.staff_name || '다른 담당자';
+              if (typeof hit.same_name === 'boolean' && hit.same_name === false) {
+                if (!confirm('같은 연락처(' + entry.phone + ')로 이미 ' + owner + ' 담당 고객이 등록돼 있어요. 그런데 등록된 이름이 "' + entry.clientName + '"님과 달라요.\n가족이거나 같은 번호를 쓰는 다른 분일 수 있어요.\n\n"' + entry.clientName + '"님을 별도의 새 고객으로 등록할까요?\n(같은 분이라면 \'취소\'를 누르고 ' + owner + '에게 확인하세요)')) { entry._registeringAsCustomer = false; return; }
+                createCustomerNow(); return;
+              }
+              if (hit.in_progress === false) {
+                if (!confirm('"' + entry.clientName + '"(' + entry.phone + ') 고객은 이미 ' + owner + ' 담당으로 등록돼 있어요(이전에 시공한 고객이에요).\n\n같은 분의 재구매라면 [확인]을 눌러 새 건으로 등록하세요.\n지금 진행 중인 같은 고객이라면 [취소]하고 ' + owner + '에게 확인하세요.')) { entry._registeringAsCustomer = false; return; }
+                createCustomerNow(); return;
+              }
+              entry._registeringAsCustomer = false;
+              alert('"' + entry.clientName + '"(' + entry.phone + ') 고객은 이미 ' + owner + ' 담당으로 등록돼 있어요.\n새로 또 만들면 같은 고객이 둘이 되므로 등록하지 않았어요. 담당자에게 확인하거나 마스터에게 담당 변경을 요청해 주세요.');
+            });
+            return;
+          }
+          createCustomerNow();
+          return;
         }
         return;
       }
