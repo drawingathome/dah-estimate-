@@ -175,8 +175,8 @@ function renderHome(skipServerFetch) {
     // 작은 글씨로 곁들임.
     // 2026-11-06 N-133(선혜님 - "11월 상담건수 / 11월 계약건수를 따로, 라벨에 월을 넣어 보여 주기"): 상담건수 = 그달에 등록(방문 예정일)한 고객 수.
     var _kpiScope = (typeof isMasterUser === 'function' && isMasterUser()) ? '전체' : '내 담당'; // N-134⑤: 마스터=전체(미배정 포함), 실장=본인 담당만이라 숫자 범위가 다름을 표시
-    // 2026-11-15(N-172 ④, 선혜님 11-14 '보류 고객은 없어도 돼'): 월별 영업표와 같은 기준 — 방문 예정일이 이번 달이고 보류(leadParked)가 아닌 고객
-    var thisMonthConsults = customers.filter(function(c) { return !c.leadParked && c.date && String(c.date).slice(0,7) === _thisMonthKey; }).length;
+    // 2026-11-15(N-172 ④) → 2026-11-19(선혜님 '보류를 한 것도 상담을 한 거면 쳐야지', F-19로 변경): 월별 영업표와 같은 기준 — 방문 예정일이 이번 달인 고객(보류 포함)
+    var thisMonthConsults = customers.filter(function(c) { return c.date && String(c.date).slice(0,7) === _thisMonthKey; }).length;
     var thisMonthNewContracts = typeof getMonthContractCount === 'function'
       ? getMonthContractCount(customers, _thisMonthKey)
       : 0;

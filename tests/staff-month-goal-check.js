@@ -34,7 +34,7 @@ async function run() {
     sbXHR = _saveX;
     out.failNoWrite = JSON.stringify(SERVER['staff_goals_monthly']) === _beforeFail;
     setStaffMonthGoal('오지은 실장', '2027-01', 0); // 정리
-    // ④ 홈 상담건수: 보류 제외 (아래 홈 렌더에서 확인)
+    // ④ 홈 상담건수: 보류 포함 (아래 홈 렌더에서 확인)
     // 설정 화면: 달 선택·입력칸
     renderSettings();
     var mi = document.getElementById('set-staff-goal-month');
@@ -86,7 +86,7 @@ async function run() {
     loadAppSettingsAsync(function(){ renderHome(true); });
     out.coldAfter = document.body.textContent.indexOf('목표가 아직 설정되지 않았어요') < 0 && document.body.textContent.indexOf('목표까지') >= 0;
     sbXHR = _realSbXHR;
-    // ④ 홈 상담건수: 이번 달 방문 예정 3명 중 보류 1명 → 2건
+    // ④ 홈 상담건수: 이번 달 방문 예정 3명(보류 1명 포함) → 3건
     currentUser = { name: '마스터', role: 'master' };
     var _d = new Date(); var _ym = _d.getFullYear() + '-' + String(_d.getMonth() + 1).padStart(2, '0');
     var bs = { staffName: '마스터', phone: '', addr: '', measureDate: '', installDate: '', balanceAmount: 0, depositAmount: 0, stage: '상담', price: 0 };
@@ -113,7 +113,7 @@ async function run() {
   ok('9. 실장 홈: 목표 없을 때 큰 제목이 "목표까지 0만원 남았어요"가 아니라 "목표가 아직 설정되지 않았어요"', r.homeNoZero === true, 'homeNoZero=' + r.homeNoZero);
   ok('12. 낡은 기기에서 1월 목표를 입력해도 서버에 있던 3월·11월 목표가 지워지지 않고 합쳐 저장', r.mergeKeepsDec === true, String(r.mergeKeepsDec));
   ok('13. 서버 목표를 못 읽으면(네트워크 오류) 저장하지 않음', r.failNoWrite === true, String(r.failNoWrite));
-  ok('14. 홈 상담건수는 보류 고객을 뺀다(이번 달 방문 예정 3명 중 보류 1명 → 2건)', r.homeConsult === '2건', String(r.homeConsult));
+  ok('14. 홈 상담건수는 보류 고객도 센다(이번 달 방문 예정 3명 중 보류 1명 포함 → 3건)', r.homeConsult === '3건', String(r.homeConsult));
   ok('10. 새 기기(달별 목표 비어 있음): 처음엔 목표 미설정 → 서버 설정을 불러온 뒤 홈이 다시 그려져 목표가 보임', r.coldBefore === true && r.coldAfter === true, JSON.stringify([r.coldBefore, r.coldAfter]));
   ok('11. 새 로그인·저장된 로그인 두 경로 모두 설정을 불러온 뒤 홈을 다시 그리도록 연결(관찰형: 코드 연결 확인)', r.wiredLogin && r.wiredSaved, JSON.stringify([r.wiredLogin, r.wiredSaved]));
   ok('15. [N-172 ⑧] 설정 전체 저장 버튼을 눌러도 옛 staff_goals를 서버에 다시 쓰지 않음', r.saveAllFound === true && r.noOldGoalWrite === true, JSON.stringify({ f: r.saveAllFound, n: r.noOldGoalWrite, e: r.saveAllErr }));

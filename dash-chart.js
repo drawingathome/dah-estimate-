@@ -726,7 +726,7 @@ function firstDepositDate(c) {
 }
 // 2026-11-14(N-166 ⑤·N-167, 선혜님 '매월 상담수 / 매월 계약수 / 달성률 자료를 만들자' + '달성률은 선금이 들어오는 대로' + '보류 고객은 없어도 돼'):
 // 월별 영업 실적표 계산(화면과 분리한 순수 함수). 기준은 선혜님이 정한 그대로:
-//  · 상담 = 방문 예정일(c.date)이 그 달인 고객, 보류(leadParked) 고객은 뺌
+//  · 상담 = 방문 예정일(c.date)이 그 달인 고객. 2026-11-19(선혜님 '보류를 한 것도 상담을 한 거면 쳐야지', 11-14 결정 변경 F-19): 보류(leadParked) 고객도 상담으로 센다
 //  · 계약 = 첫 선금(계약금)을 받은 달(firstDepositMonth, 홈 계약건수와 같은 함수), 계약 전 단계(방문예약·상담·가견적)는 제외
 //  · 계약률(입금월) = 그 달 계약 ÷ 그 달 상담 — 지난달 상담 고객이 이번 달 입금하면 100%를 넘을 수 있음
 //  · 계약률(상담월) = 그 달 상담 고객 중 지금까지 계약금을 받은 고객 ÷ 그 달 상담
@@ -741,7 +741,7 @@ function getMonthlySalesTable(customers, startKey, endKey, goalAmt) {
   var endY = parseInt(endKey.slice(0, 4), 10), endM = parseInt(endKey.slice(5, 7), 10);
   while (y < endY || (y === endY && m <= endM)) {
     var key = y + '-' + String(m).padStart(2, '0');
-    var consult = customers.filter(function(c) { return !c.leadParked && (c.date || '').slice(0, 7) === key; });
+    var consult = customers.filter(function(c) { return (c.date || '').slice(0, 7) === key; });
     var cohortContracts = consult.filter(function(c) { return PRE_CONTRACT_STAGES.indexOf(c.stage) < 0 && !!firstDepositDate(c); }).length;
     var contractCustomers = customers.filter(function(c) { return PRE_CONTRACT_STAGES.indexOf(c.stage) < 0 && firstDepositMonth(c) === key; });
     var contracts = contractCustomers.length;
@@ -786,7 +786,7 @@ function renderMonthlySalesTable(customers) {
       '<td style="' + td + '">' + won(r.avgPerf) + '</td></tr>';
   });
   html += '</tbody></table><div style="font-size:10px;color:var(--sub);line-height:1.6;padding:8px 4px 0">' +
-    '상담 = 방문 예정일이 그 달인 고객(보류 제외) · 계약 = 계약금(선금)을 받은 달 · 달성률 = 성과매출 ÷ 그 달 목표(마스터 = 전체 월 목표 ' + escHtml(String(goalWan)) + '만원, 실장 = 마스터가 설정한 본인 달별 목표 · 미설정이면 —)<br>' +
+    '상담 = 방문 예정일이 그 달인 고객(보류 포함) · 계약 = 계약금(선금)을 받은 달 · 달성률 = 성과매출 ÷ 그 달 목표(마스터 = 전체 월 목표 ' + escHtml(String(goalWan)) + '만원, 실장 = 마스터가 설정한 본인 달별 목표 · 미설정이면 —)<br>' +
     '"계약률"은 그 달 입금 건수 ÷ 그 달 상담 건수라 100%를 넘을 수 있어요. "상담월 기준"은 그 달 상담 고객 중 지금까지 계약금을 낸 비율이에요.<br>' +
     '2~7월은 플러그에서 옮겨 온 시공완료 고객이라 상담 전체가 아니어서 8월부터 보여줘요.</div>';
   wrap.innerHTML = html;
