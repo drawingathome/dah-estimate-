@@ -195,17 +195,19 @@ function AddCustomerModal({ editName, registerApi }) {
       var phoneNorm = (finalPhone || '').replace(/\D/g, '');
       if (typeof sbXHR === 'function' && phoneNorm) {
         // 2026-11-05(N-105②): 새 DB 함수(이름 비교 포함)가 아직 없으면 서버가 '그런 함수 없음'(404/PGRST202)이라 답함 → 예전 방식(번호만)으로 한 번 더 물어봄.
-        var _askDup = function (withName, done) {
-          var body = withName ? { phone_input: finalPhone, name_input: trimmedName } : { phone_input: finalPhone };
-          sbXHR('POST', 'rpc/check_phone_duplicate', body, function (e, r) {
-            if (e && withName && /404|PGRST202/.test(String((e && (e.status || e.message || e.text)) || '') + JSON.stringify(e || ''))) { _askDup(false, done); return; }
+        // 2026-11-19(N-186): 1순위=v2 함수(단계·진행 중 여부까지 알려 줌) → 없으면(404) 2번째 함수 → 그것도 없으면 번호만 묻는 예전 함수.
+        var _askDup = function (level, done) {
+          var fn = level === 0 ? 'check_phone_duplicate_v2' : 'check_phone_duplicate';
+          var body = level <= 1 ? { phone_input: finalPhone, name_input: trimmedName } : { phone_input: finalPhone };
+          sbXHR('POST', 'rpc/' + fn, body, function (e, r) {
+            if (e && level < 2 && /404|PGRST202/.test(String((e && (e.status || e.message || e.text)) || '') + JSON.stringify(e || ''))) { _askDup(level + 1, done); return; }
             done(e, r);
           });
         };
-        _askDup(true, function (err, rows) {
+        _askDup(0, function (err, rows) {
           // 2026-11-04(N-105): 중복 확인을 못 한 채(서버 오류·끊김) 조용히 등록하면 같은 고객이 둘이 될 수 있어 본인에게 물어봄.
           if (err && !confirm('같은 연락처 고객이 이미 있는지 서버에서 확인하지 못했어요.\n그래도 새 고객으로 등록할까요? (이미 있는 고객이면 중복이 생길 수 있어요)')) { setSaving(false); return; }
-          var serverMatch = (!err && Array.isArray(rows) && rows[0] && rows[0].exists_flag) ? { client_name: trimmedName, nameKnown: typeof rows[0].same_name === 'boolean', sameName: rows[0].same_name !== false, phone: finalPhone, staff_name: rows[0].staff_name } : null;
+          var serverMatch = (!err && Array.isArray(rows) && rows[0] && rows[0].exists_flag) ? { client_name: trimmedName, nameKnown: typeof rows[0].same_name === 'boolean', sameName: rows[0].same_name !== false, phone: finalPhone, staff_name: rows[0].staff_name, inProgress: typeof rows[0].in_progress === 'boolean' ? rows[0].in_progress : null } : null;
           saveNewCustomerActual(trimmedName, finalPhone, arr, serverMatch);
         });
         return;
@@ -227,6 +229,13 @@ function AddCustomerModal({ editName, registerApi }) {
     var sameNameDiffPhone = !samePersonExisting && arr.find(function (c) { return !c.is_archived && c.clientName === nm; });
     // 2026-11-04(선혜님 - 임현정이 마스터/오지은 둘로 등록됨): 서버에만 있고 내 화면에는 없는 고객(= 다른 담당자 소유)은
     // 새 행을 또 만들지 않고 막음. 예전엔 '재구매로 업데이트할까요?'에서 예를 눌러도 새 행이 하나 더 생겼음.
+    // 2026-11-19(N-186, 선혜님 '소지선은 둘 다 구매'): 서버가 '시공완료'라고 확실히 알려 준 경우(inProgress===false)만 재구매로 보고 알림+확인 뒤 새 건으로 진행.
+    // 진행 중이거나 모르면(예전 함수) 지금처럼 막음(임현정형 중복 보호 유지).
+    if (serverMatch && serverMatch.inProgress === false && !arr.find(function (c) { return !c.is_archived && (c.phone || '').replace(/\D/g, '') === (ph || '').replace(/\D/g, ''); })) {
+      if (!confirm('"' + nm + '"(' + ph + ') 고객은 이미 ' + (serverMatch.staff_name || '다른 담당자') + ' 담당으로 등록돼 있어요(이전에 시공한 고객이에요).\n\n같은 분의 재구매라면 [확인]을 눌러 새 건으로 등록하세요.\n지금 진행 중인 같은 고객이라면 [취소]하고 ' + (serverMatch.staff_name || '담당자') + '에게 확인하세요.')) { setSaving(false); return; }
+      serverMatch = null; samePersonExisting = null;
+      sameNameDiffPhone = arr.find(function (c) { return !c.is_archived && c.clientName === nm; });
+    }
     if (serverMatch && !arr.find(function (c) { return !c.is_archived && (c.phone || '').replace(/\D/g, '') === (ph || '').replace(/\D/g, ''); })) {
       alert('"' + nm + '"(' + ph + ') 고객은 이미 ' + (serverMatch.staff_name || '다른 담당자') + ' 담당으로 등록돼 있어요.\n새로 또 만들면 같은 고객이 둘이 되므로 등록하지 않았어요. 담당자에게 확인하거나 마스터에게 담당 변경을 요청해 주세요.');
       setSaving(false); return;

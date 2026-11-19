@@ -28,7 +28,7 @@ async function scenario(idx, rpcRow, typedName, accept) {
     const p = new URL(url).pathname + new URL(url).search;
     if (p.includes('/rest/v1/app_settings')) { req.respond({ status: 200, contentType: 'application/json', headers: CORS, body: '[]' }); return; }
     let body = null; try { body = JSON.parse(req.postData() || 'null'); } catch (e) {}
-    if (p.includes('rpc/check_phone_duplicate')) { rec.dupCalls = (rec.dupCalls || []); rec.dupCalls.push(body); if (rpcRow && rpcRow.__oldFn && body && 'name_input' in body) { req.respond({ status: 404, contentType: 'application/json', headers: CORS, body: json({ code: 'PGRST202', message: 'Could not find the function public.check_phone_duplicate(name_input, phone_input) in the schema cache' }) }); return; } req.respond({ status: 200, contentType: 'application/json', headers: CORS, body: json([{ exists_flag: rpcRow.exists_flag, staff_name: rpcRow.staff_name, ...(rpcRow.same_name === undefined ? {} : { same_name: rpcRow.same_name }) }]) }); return; }
+    if (p.includes('rpc/check_phone_duplicate')) { rec.dupCalls = (rec.dupCalls || []); rec.dupCalls.push(body); (rec.dupPaths = rec.dupPaths || []).push(p); if (rpcRow && rpcRow.__v2missing && p.includes('check_phone_duplicate_v2')) { req.respond({ status: 404, contentType: 'application/json', headers: CORS, body: json({ code: 'PGRST202', message: 'Could not find the function public.check_phone_duplicate_v2' }) }); return; } if (rpcRow && rpcRow.__oldFn && body && 'name_input' in body) { req.respond({ status: 404, contentType: 'application/json', headers: CORS, body: json({ code: 'PGRST202', message: 'Could not find the function public.check_phone_duplicate(name_input, phone_input) in the schema cache' }) }); return; } req.respond({ status: 200, contentType: 'application/json', headers: CORS, body: json([{ exists_flag: rpcRow.exists_flag, staff_name: rpcRow.staff_name, ...(rpcRow.same_name === undefined ? {} : { same_name: rpcRow.same_name }), ...(rpcRow.in_progress === undefined ? {} : { in_progress: rpcRow.in_progress, stage: rpcRow.in_progress ? '가견적' : '시공완료' }) }]) }); return; }
     if (p.includes('/rest/v1/customers')) { rec.reqs.push({ method, p, body }); req.respond({ status: method === 'POST' ? 201 : 200, contentType: 'application/json', headers: CORS, body: json([{ id: 778, ...(body || {}), updated_at: '2026-11-05T00:00:00Z' }]) }); return; }
     req.respond({ status: 200, contentType: 'application/json', headers: CORS, body: '[]' });
   });
@@ -63,8 +63,18 @@ async function scenario(idx, rpcRow, typedName, accept) {
   // F4: 예전 DB 함수(이름을 안 돌려줌)에서는 이름이 달라도 기존처럼 차단 — 앱이 먼저 배포돼도 안전
   const F4 = await scenario(4, { exists_flag: true, staff_name: '오지은 실장', __oldFn: true }, '다른가족', true);
   ok('F4. 예전 함수(이름 비교 정보 없음)에서는 기존처럼 차단(DB를 아직 안 바꿔도 안전)', F4.rec.dialogs.some(m => /이미 .*담당으로 등록/.test(m)) && F4.rec.reqs.filter(r => r.method === 'POST').length === 0, { d: F4.rec.dialogs, r: F4.rec.reqs.length });
-  ok('F4-2. 예전 함수가 이름 인자를 몰라 404를 주면 번호만으로 다시 물어봄(첫 호출 이름 포함, 두 번째 번호만)', (F4.rec.dupCalls || []).length === 2 && 'name_input' in F4.rec.dupCalls[0] && !('name_input' in F4.rec.dupCalls[1]), F4.rec.dupCalls);
+  ok('F4-2. 예전 함수가 이름 인자를 몰라 404를 주면 번호만으로 다시 물어봄(v2 → 이름 포함 옛 함수 → 번호만 순서)', (F4.rec.dupCalls || []).length === 3 && 'name_input' in F4.rec.dupCalls[0] && 'name_input' in F4.rec.dupCalls[1] && !('name_input' in F4.rec.dupCalls[2]) && /check_phone_duplicate_v2/.test(F4.rec.dupPaths[0]), F4.rec.dupCalls);
   ok('F4-3. 그 경우 "확인하지 못했어요" 창이 뜨지 않음(중복 확인이 정상 작동)', !F4.rec.dialogs.some(m => /확인하지 못했어요/.test(m)), F4.rec.dialogs);
-  ok('JS 오류 없음', [F1, F2, F3, F4].every(s => s.rec.errs.length === 0), [F1, F2, F3, F4].map(s => s.rec.errs));
+  // 2026-11-19(N-186): v2 함수가 '시공완료'라고 알려 주면 재구매(소지선형)로 보고 알림+확인 뒤 새 건 등록, 진행 중(임현정형)·정보 없음은 계속 막음
+  const F5 = await scenario(5, { exists_flag: true, staff_name: '마스터', same_name: true, in_progress: false }, '소지선', true);
+  ok('F5-1. 시공완료 고객과 같은 번호·같은 이름(v2): "이전에 시공한 고객" 확인창이 뜸(막지 않음)', F5.rec.dialogs.some(m => /이전에 시공한/.test(m) && /마스터/.test(m)) && !F5.rec.dialogs.some(m => /등록하지 않았어요/.test(m)), F5.rec.dialogs);
+  ok('F5-2. 확인 → 새 건 등록(POST 1건, 화면에도 추가)', F5.rec.reqs.filter(r => r.method === 'POST').length === 1 && F5.names.includes('소지선'), { reqs: F5.rec.reqs.length, names: F5.names });
+  const F6 = await scenario(6, { exists_flag: true, staff_name: '마스터', same_name: true, in_progress: false }, '소지선', false);
+  ok('F6. 시공완료 재구매 확인창에서 취소 → 등록 안 됨(POST 0건)', F6.rec.reqs.filter(r => r.method === 'POST').length === 0 && !F6.names.includes('소지선'), { reqs: F6.rec.reqs.length, names: F6.names });
+  const F7 = await scenario(7, { exists_flag: true, staff_name: '마스터', same_name: true, in_progress: true }, '임현정', true);
+  ok('F7. 진행 중인 같은 고객(임현정형, v2)은 계속 막음(안내문, POST 0건, 재구매 확인창 없음)', F7.rec.dialogs.some(m => /이미 .*담당으로 등록/.test(m)) && !F7.rec.dialogs.some(m => /이전에 시공한/.test(m)) && F7.rec.reqs.filter(r => r.method === 'POST').length === 0, { d: F7.rec.dialogs, r: F7.rec.reqs.length });
+  const F8 = await scenario(8, { exists_flag: true, staff_name: '마스터', same_name: true, __v2missing: true }, '임현정', true);
+  ok('F8. v2가 없으면(404) 이름 포함 옛 함수로 대체해 계속 막음(단계 모르면 안전하게 차단)', (F8.rec.dupPaths || []).length === 2 && /_v2/.test(F8.rec.dupPaths[0]) && !/_v2/.test(F8.rec.dupPaths[1]) && F8.rec.dialogs.some(m => /이미 .*담당으로 등록/.test(m)) && F8.rec.reqs.filter(r => r.method === 'POST').length === 0, { p: F8.rec.dupPaths, d: F8.rec.dialogs });
+  ok('JS 오류 없음', [F1, F2, F3, F4, F5, F6, F7, F8].every(s => s.rec.errs.length === 0), [F1, F2, F3, F4, F5, F6, F7, F8].map(s => s.rec.errs));
   console.log(log.join('\n')); const bad = log.some(l => l.startsWith('❌')); console.log(bad ? '\n❌ 실패 있음' : '\n✅ 모두 통과'); process.exit(bad ? 1 : 0);
 })();
