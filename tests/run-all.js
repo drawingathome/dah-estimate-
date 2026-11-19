@@ -707,6 +707,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['order-status-reprint-check.js', []]); // 2026-11-15 N-159 ⑨: 발주 재처리 시 발주일 유지·고객 번호 없음 안내
   scripts.push(['vendor-doc-field-writeback-check.js', []]); // 2026-11-15 N-159 ④: 블라인드 발주서 A칸 원본 저장·B칸 표시만·안내 유지
   scripts.push(['backdrop-drag-close-check.js', []]); // 2026-11-17 N-178: 창 안에서 글자를 끌어 선택하다 밖에서 떼면 창이 닫히던 문제(공간 선택·고객 추가·고객 상세)
+  scripts.push(['est-new-customer-dup-guard-check.js', []]); // 2026-11-19 N-183: 견적서 앱이 새 고객을 만들기 전에 같은 연락처 고객(다른 담당자·시공완료 포함)을 서버에 확인 — 마스터 고객을 실장이 다시 등록해도 경고 없이 두 줄 되던 구멍
   scripts.push(['vendor-doc-pdf-pc-mobile-check.js', []]); // 2026-11-15 N-173: 발주서 PDF 캡처가 PC·폰에서 같은지
   scripts.push(['save-fabric-vendor-warn-check.js', []]); // 2026-11-15 N-165 P2: 저장 때 원단 거래처 빈칸 안내
   scripts.push(['home-order-urgent-check.js', []]); // 2026-11-15 N-165 P2: 시공 7일 안 발주 미기록 홈 경고

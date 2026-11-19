@@ -75,7 +75,7 @@
 | 16 | `est-save.js` | DAH 견적서 앱 — 저장/검증/토스트 | 22 |
 | 17 | `est-click-watch.js` | est-click-watch.js — 견적서 앱: 저장 버튼 "눌림 관측" (2026-10-07 신규) | 0 |
 | 18 | `est-save-diff.js` | est-save-diff.js | 2 |
-| 19 | `est-save-stages.js` | DAH 견적서 앱 — 저장 단계 함수 4개 (고객 저장 → 견적서 저장 → 로컬 저장) | 5 |
+| 19 | `est-save-stages.js` | DAH 견적서 앱 — 저장 단계 함수 4개 (고객 저장 → 견적서 저장 → 로컬 저장) | 7 |
 | 20 | `est-stale-watch.js` | est-stale-watch.js — 견적서 앱: "내가 열어 둔 화면이 옛날 내용이 됐는지" 미리 알려줌 (2026-10-11 신규) | 7 |
 | 21 | `est-space-order.js` | est-space-order.js | 6 |
 | 22 | `est-doc-customer.js` | DAH 견적서 앱 — 고객용 견적서 문서 생성 | 2 |
@@ -112,7 +112,9 @@
 | `_deliveryOnlyMapFromEstimates` | `dash-utils.js` |
 | `_doRetryEstPendingSync` | `est-sync-queue.js` |
 | `_doShareEstimatePDF` | `est-customer-load.js` |
+| `_estAskPhoneDuplicate` | `est-save-stages.js` |
 | `_estCheckAlreadySaved` | `est-sync-queue.js` |
+| `_estFindVisibleActiveCustomer` | `est-save-stages.js` |
 | `_estPostReceipt` | `est-save.js` |
 | `_estQueueReceipt` | `est-save.js` |
 | `_estStable` | `est-sync-queue.js` |

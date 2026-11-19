@@ -20,7 +20,96 @@
 // 이 고객의 다른 견적서들(현재 편집 중인 이 건 제외)을 먼저 조회해서
 // 합계를 구한 뒤, 그 합계 + 이번 견적서 금액을 최종 총액으로 반영.
 // 신규 고객은 다른 견적서가 있을 수 없으니 조회 없이 바로 진행.
+// 2026-11-19(N-183, 선혜님 '소지선 — 마스터가 입력한 고객인데 오지은 실장 쪽에서 중복을 못 잡아준다', 황남주·임현정·소지선으로 같은 신고가 반복됨):
+// 견적서 앱이 '새 고객'을 만들기 직전에 서버(check_phone_duplicate, 담당자와 상관없이 같은 연락처 고객을 찾는 보안 함수)에 먼저 물어본다.
+// 이전엔 이 물음이 없어서, 실장 계정은 마스터 담당 고객이 조회되지 않고 DB 잠금은 시공완료 고객을 빼기 때문에 경고 없이 같은 사람이 두 줄이 됐음.
+// 결과: 'go'(저장 계속) / 'dup'(같은 연락처·같은 이름 고객이 이미 있음 → 저장 중단, 담당자 안내) / 'cancel'(본인이 취소)
+function _estAskPhoneDuplicate(name, phone, cb) {
+  var digits = String(phone || '').replace(/\D/g, '');
+  if (digits.length < 10 || typeof SUPABASE_URL === 'undefined') { cb('go'); return; }
+  var finished = false;
+  function done(v, hit) { if (finished) return; finished = true; cb(v, hit); }
+  function fail() {
+    logSaveStage('중복확인-서버확인실패', null);
+    done(window.confirm('같은 연락처 고객이 이미 있는지 서버에서 확인하지 못했어요.\n그래도 새 고객으로 저장할까요? (이미 있는 고객이면 중복이 생길 수 있어요)') ? 'go' : 'cancel');
+  }
+  function ask(withName) {
+    var x = new XMLHttpRequest();
+    x.open('POST', SUPABASE_URL + '/rest/v1/rpc/check_phone_duplicate', true);
+    x.timeout = 8000;
+    x.setRequestHeader('apikey', SUPABASE_KEY);
+    x.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.onload = function () {
+      // 새 DB 함수(이름 비교 포함)가 아직 없으면 예전 방식(번호만)으로 한 번 더 물어봄(대시보드 고객 추가와 같은 규칙)
+      if (withName && (x.status === 404 || /PGRST202/.test(x.responseText || ''))) { ask(false); return; }
+      if (x.status < 200 || x.status >= 300) { fail(); return; }
+      var rows = null; try { rows = JSON.parse(x.responseText || '[]'); } catch (eP) { fail(); return; }
+      var r = Array.isArray(rows) ? rows[0] : null;
+      if (!r || !r.exists_flag) { done('go'); return; }
+      var owner = r.staff_name || '다른 담당자';
+      logSaveStage('중복확인-같은연락처있음', { sameName: r.same_name, owner: owner });
+      if (r.same_name === false) {
+        // 같은 번호인데 이름이 다름 = 가족·같은 번호 사용자일 수 있음 → 막지 않고 본인에게 물음(대시보드 고객 추가와 같은 규칙)
+        done(window.confirm('같은 연락처(' + phone + ')로 이미 ' + owner + ' 담당 고객이 등록돼 있어요. 그런데 등록된 이름이 "' + name + '"님과 달라요.\n가족이거나 같은 번호를 쓰는 다른 분일 수 있어요.\n\n"' + name + '"님을 별도의 새 고객으로 저장할까요?\n(같은 분이라면 \'취소\'를 누르고 ' + owner + '에게 확인하세요)') ? 'go' : 'cancel');
+        return;
+      }
+      // 같은 번호·같은 이름: 내가 볼 수 있는(내 담당·미배정·마스터) '시공완료가 아닌' 고객이면 그 고객에 이어서 저장(DB 잠금 409 때와 같은 규칙).
+      // 못 찾으면(다른 담당자 고객이거나 시공완료 고객 — 소지선 112처럼) 새로 만들지 않고 저장을 멈춤.
+      _estFindVisibleActiveCustomer(name, digits, function (hit) {
+        if (hit) { logSaveStage('중복확인-내고객에이어저장', { id: hit.id }); done('go', hit); return; }
+        window.alert('"' + name + '"(' + phone + ') 고객은 이미 ' + owner + ' 담당으로 등록돼 있어요.\n새로 저장하면 같은 고객이 둘이 되므로 저장하지 않았어요.\n고객 목록에서 그 고객을 열어 견적서를 이어서 만들거나, 담당자에게 확인해 주세요.\n(입력하신 내용은 이 화면에 그대로 남아 있어요)');
+        done('dup');
+      });
+    };
+    x.onerror = fail; x.ontimeout = fail;
+    x.send(JSON.stringify(withName ? { phone_input: phone, name_input: name } : { phone_input: phone }));
+  }
+  ask(true);
+}
+
+// 내 화면(조회 규칙)에서 보이는, 같은 이름·같은 연락처의 보관 안 된 '시공완료가 아닌' 고객 1명을 찾음. 없거나 조회 실패면 null.
+function _estFindVisibleActiveCustomer(name, digits, cb) {
+  try {
+    var gx = new XMLHttpRequest();
+    gx.open('GET', SUPABASE_URL + '/rest/v1/customers?select=id,client_name,phone,stage&is_archived=eq.false&client_name=eq.' + encodeURIComponent(name), true);
+    gx.timeout = 10000;
+    gx.setRequestHeader('apikey', SUPABASE_KEY);
+    gx.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+    var once = false; function fin(h) { if (once) return; once = true; cb(h); }
+    gx.onload = function () {
+      var rows = []; try { rows = JSON.parse(gx.responseText || '[]'); } catch (eG) {}
+      var hit = (gx.status >= 200 && gx.status < 300 && Array.isArray(rows) ? rows : []).filter(function (r) { return String(r.phone || '').replace(/\D/g, '') === digits && r.stage !== '시공완료'; })[0];
+      fin(hit && hit.id ? hit : null);
+    };
+    gx.onerror = function () { fin(null); }; gx.ontimeout = function () { fin(null); };
+    gx.send();
+  } catch (eF) { cb(null); }
+}
+
 function _saveStage_customers(ctx) {
+  // 2026-11-19(N-183): 새 고객을 만들기 전(아직 고객 번호를 모름)에 같은 연락처 고객이 이미 있는지 서버에 먼저 확인
+  if (!window._estEditState.estSaveCustomerId && !ctx._dupAsked) {
+    ctx._dupAsked = true;
+    _estAskPhoneDuplicate(ctx.name, ctx.phone, function (verdict, hit) {
+      if (verdict === 'go' && hit) {
+        // 내가 볼 수 있는 같은 고객에 이어서 저장 — 새 고객을 만들지 않음(409 복구와 같은 방식으로 이 기기 고객 목록에도 넣음)
+        window._estEditState.estSaveCustomerId = hit.id;
+        try {
+          var arrAd = JSON.parse(localStorage.getItem('dah_customers') || '[]').filter(function (c) { return c.id || c.clientName !== ctx.name; });
+          if (!arrAd.some(function (c) { return String(c.id) === String(hit.id); })) arrAd.unshift({ id: hit.id, clientName: ctx.name, phone: ctx.phone, stage: hit.stage || '상담', price: 0 });
+          localStorage.setItem('dah_customers', JSON.stringify(arrAd));
+        } catch (eAd) {}
+        showToast('이미 같은 고객이 있어서 그 고객에 이어서 저장할게요');
+        _saveStage_customers(ctx); return;
+      }
+      if (verdict === 'go') { _saveStage_customers(ctx); return; }
+      logSaveStage('중복확인-저장중단', { verdict: verdict });
+      if (typeof estSendReceipt === 'function') estSendReceipt('save', 'invalid', { phase: 'end', reason: verdict === 'dup' ? '같은 연락처 고객이 이미 있어 저장 중단' : '중복 확인에서 취소' });
+      ctx.onDone('invalid');
+    });
+    return;
+  }
   // ctx에서 꺼낸 값들 - 예전엔 바깥 함수(_saveEstimateInner)의 변수를 몰래 같이 쓰던 것들
   var name = ctx.name, phone = ctx.phone, addr = ctx.addr, addr2 = ctx.addr2, staffName = ctx.staffName, custMemo = ctx.custMemo, grand = ctx.grand, perf = ctx.perf;
   var existingCustIdForSum = window._estEditState.estSaveCustomerId;

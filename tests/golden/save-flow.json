@@ -172,6 +172,14 @@
    },
    {
     "body": {
+     "name_input": "골든고객",
+     "phone_input": "01012345678"
+    },
+    "method": "POST",
+    "path": "/rest/v1/rpc/check_phone_duplicate"
+   },
+   {
+    "body": {
      "app_version": "HASH",
      "customer_name": "골든고객",
      "detail": {
