@@ -27,18 +27,22 @@ jobs:
           node-version: 20
       # 2026-10-27(H-7, F-9 재발: 이 설치 단계가 25분 제한까지 멈춰 취소된 일이 2번 있었음): 단계마다 시간 제한을 두고,
       # 설치는 한 번 멈추면 끊고 한 번 더 시도하며, 진행 상황이 로그에 보이게 한다(멈춘 지점을 알 수 있게).
+      # 2026-11-19(N-182 ⑤, 0f691e1 Post-deploy 실패 2회): 1차 시도가 5분 제한에 끊겨도 그 안의 apt-get은 계속 살아 있어, 2차 시도가
+      # 'dpkg 잠금을 다른 프로세스가 잡고 있음'(E: Could not get lock)으로 실패했음. → apt가 잠금을 최대 5분 기다리게 하고,
+      # 시도당 제한을 7분, 단계 제한을 20분으로 늘림(시도 2번 합쳐도 단계 제한 안).
       - name: Playwright 설치(크롬 + 사파리 엔진)
-        timeout-minutes: 12
+        timeout-minutes: 20
         run: |
           set -x
           mkdir -p ci-logs
+          echo 'DPkg::Lock::Timeout "300";' | sudo tee /etc/apt/apt.conf.d/99-lock-timeout
           {
             echo "playwright 설치 시작 $(date -u +%FT%TZ)"; node -v; npm -v
             npm install --no-save playwright@latest
             node -p "'playwright ' + require('playwright/package.json').version"
             for i in 1 2; do
-              if DEBUG=pw:install timeout 300 npx playwright install --with-deps chromium webkit; then echo "설치 성공(시도 $i)"; break; fi
-              echo "설치 시도 $i 실패 또는 5분 초과 — 재시도 $(date -u +%FT%TZ)"; [ "$i" = 2 ] && exit 1
+              if DEBUG=pw:install timeout 420 npx playwright install --with-deps chromium webkit; then echo "설치 성공(시도 $i)"; break; fi
+              echo "설치 시도 $i 실패 또는 7분 초과 — 재시도 $(date -u +%FT%TZ)"; [ "$i" = 2 ] && exit 1
             done
           } 2>&1 | tee ci-logs/install.log
           exit ${PIPESTATUS[0]}
