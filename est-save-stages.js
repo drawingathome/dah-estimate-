@@ -23,7 +23,7 @@
 // 2026-11-19(N-183, 선혜님 '소지선 — 마스터가 입력한 고객인데 오지은 실장 쪽에서 중복을 못 잡아준다', 황남주·임현정·소지선으로 같은 신고가 반복됨):
 // 견적서 앱이 '새 고객'을 만들기 직전에 서버(check_phone_duplicate, 담당자와 상관없이 같은 연락처 고객을 찾는 보안 함수)에 먼저 물어본다.
 // 이전엔 이 물음이 없어서, 실장 계정은 마스터 담당 고객이 조회되지 않고 DB 잠금은 시공완료 고객을 빼기 때문에 경고 없이 같은 사람이 두 줄이 됐음.
-// 결과: 'go'(저장 계속) / 'dup'(같은 연락처·같은 이름 고객이 이미 있음 → 저장 중단, 담당자 안내) / 'cancel'(본인이 취소)
+// 결과: 'go'(저장 계속) / 'cancel'(본인이 확인창에서 취소). 같은 연락처 고객이 이미 있으면 담당자를 알리고 확인을 받음(재구매일 수 있어 막지는 않음)
 function _estAskPhoneDuplicate(name, phone, cb) {
   var digits = String(phone || '').replace(/\D/g, '');
   if (digits.length < 10 || typeof SUPABASE_URL === 'undefined') { cb('go'); return; }
@@ -55,11 +55,12 @@ function _estAskPhoneDuplicate(name, phone, cb) {
         return;
       }
       // 같은 번호·같은 이름: 내가 볼 수 있는(내 담당·미배정·마스터) '시공완료가 아닌' 고객이면 그 고객에 이어서 저장(DB 잠금 409 때와 같은 규칙).
-      // 못 찾으면(다른 담당자 고객이거나 시공완료 고객 — 소지선 112처럼) 새로 만들지 않고 저장을 멈춤.
+      // 못 찾으면(다른 담당자 고객이거나 시공완료 고객 — 소지선 112처럼 이전에 시공한 고객의 재구매일 수 있음) 조용히 새로 만들지 않고
+      // 본인에게 '이미 ○○ 담당으로 등록된 고객'임을 알리고 확인을 받음(확인=재구매로 새 건 저장, 취소=저장 안 함).
+      // (진행 중인 같은 고객이면 확인 뒤 저장 때 DB 잠금이 409로 막고 기존 안내가 나옴)
       _estFindVisibleActiveCustomer(name, digits, function (hit) {
         if (hit) { logSaveStage('중복확인-내고객에이어저장', { id: hit.id }); done('go', hit); return; }
-        window.alert('"' + name + '"(' + phone + ') 고객은 이미 ' + owner + ' 담당으로 등록돼 있어요.\n새로 저장하면 같은 고객이 둘이 되므로 저장하지 않았어요.\n고객 목록에서 그 고객을 열어 견적서를 이어서 만들거나, 담당자에게 확인해 주세요.\n(입력하신 내용은 이 화면에 그대로 남아 있어요)');
-        done('dup');
+        done(window.confirm('"' + name + '"(' + phone + ') 고객은 이미 ' + owner + ' 담당으로 등록돼 있어요(이전에 시공한 고객일 수 있어요).\n\n같은 분의 재구매라면 [확인]을 눌러 새 건으로 저장하세요.\n지금 진행 중인 같은 고객이라면 [취소]하고 ' + owner + '에게 확인하세요.\n(취소해도 입력하신 내용은 화면에 그대로 남아 있어요)') ? 'go' : 'cancel');
       });
     };
     x.onerror = fail; x.ontimeout = fail;
@@ -105,7 +106,7 @@ function _saveStage_customers(ctx) {
       }
       if (verdict === 'go') { _saveStage_customers(ctx); return; }
       logSaveStage('중복확인-저장중단', { verdict: verdict });
-      if (typeof estSendReceipt === 'function') estSendReceipt('save', 'invalid', { phase: 'end', reason: verdict === 'dup' ? '같은 연락처 고객이 이미 있어 저장 중단' : '중복 확인에서 취소' });
+      if (typeof estSendReceipt === 'function') estSendReceipt('save', 'invalid', { phase: 'end', reason: '같은 연락처 고객 확인에서 취소' });
       ctx.onDone('invalid');
     });
     return;

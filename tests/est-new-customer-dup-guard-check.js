@@ -2,7 +2,7 @@
 // N-183(2026-11-19, 선혜님 '소지선 — 마스터가 입력한 고객인데 오지은 실장 쪽에서 중복을 못 잡아준다'):
 // 견적서 앱이 '새 고객'을 만들기 직전에 서버(check_phone_duplicate)에 같은 연락처 고객이 있는지 물어보는지 확인한다.
 // 배경: DB 잠금은 시공완료 고객을 제외하고, 실장 계정은 마스터 담당 고객이 조회되지 않아서, 서버에 묻지 않으면 경고 없이 같은 사람이 두 줄이 된다.
-//  A) 서버가 '같은 번호·같은 이름 고객이 이미 있다(마스터 담당)'고 하면: 새 고객 POST 0번·견적서 POST 0번, 안내(담당자 이름 포함), 저장 버튼 풀림
+//  A) 서버가 '같은 번호·같은 이름 고객이 이미 있다(마스터 담당)'고 하면: 담당자 이름이 든 확인창이 뜨고, 취소=새 고객·견적서 저장 안 함 / 확인=재구매로 새 건 저장(소지선은 둘 다 실제 구매 — 막지 않고 알림)
 //  B) 서버가 '같은 번호지만 이름이 다르다(가족)'고 하면: 확인창이 뜨고, 취소=저장 안 함 / 확인=새 고객으로 저장
 //  C) 서버가 '없다'고 하면: 예전처럼 새 고객·견적서가 저장됨(회귀 없음)
 //  D) 서버 확인이 실패하면(오류): '확인하지 못했어요' 확인창, 확인=저장 / 취소=저장 안 함
@@ -62,13 +62,15 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 120000)
     await page.close(); return { cap, dialogs, st, errs };
   }
 
-  // A. 마스터 담당 같은 이름·같은 번호 고객이 이미 있음
-  let r = await scenario({ status: 200, body: [{ exists_flag: true, staff_name: '마스터', same_name: true }] }, true);
-  ok('A. 서버에 같은 연락처 고객 확인을 물어봄', r.cap.rpc >= 1, JSON.stringify(r.cap));
-  ok('A. 새 고객 등록(POST)을 하지 않음', r.cap.postCust === 0, JSON.stringify(r.cap));
-  ok('A. 견적서도 저장하지 않음(같은 사람이 두 줄 되는 것 방지)', r.cap.postEst === 0, JSON.stringify(r.cap));
-  ok('A. 안내에 담당자(마스터)가 나옴', r.dialogs.some(d => /마스터/.test(d.msg) && /이미/.test(d.msg)), JSON.stringify(r.dialogs));
-  ok('A. 화면 오류(JS) 없음', r.errs.length === 0, r.errs.join(';'));
+  // A. 마스터 담당 같은 이름·같은 번호 고객이 이미 있음(내 화면에는 안 보임) — 취소 / 확인(재구매)
+  let r = await scenario({ status: 200, body: [{ exists_flag: true, staff_name: '마스터', same_name: true }] }, false);
+  ok('A-취소. 서버에 같은 연락처 고객 확인을 물어봄', r.cap.rpc >= 1, JSON.stringify(r.cap));
+  ok('A-취소. 담당자(마스터)가 든 확인창이 뜸', r.dialogs.some(d => d.type === 'confirm' && /마스터/.test(d.msg) && /이미/.test(d.msg)), JSON.stringify(r.dialogs));
+  ok('A-취소. 취소하면 새 고객·견적서 저장 안 함', r.cap.postCust === 0 && r.cap.postEst === 0, JSON.stringify(r.cap));
+  ok('A-취소. 화면 오류(JS) 없음', r.errs.length === 0, r.errs.join(';'));
+  r = await scenario({ status: 200, body: [{ exists_flag: true, staff_name: '마스터', same_name: true }] }, true);
+  ok('A-확인. 재구매로 확인하면 새 건(고객 1·견적서 1)으로 저장됨 — 둘 다 구매한 고객을 막지 않음', r.cap.postCust === 1 && r.cap.postEst >= 1, JSON.stringify(r.cap));
+  ok('A-확인. 기존 고객에 덮어쓰기(PATCH) 없음', r.cap.patchCust === 0, JSON.stringify(r.cap));
 
   // B. 같은 번호·이름 다름(가족) — 취소 / 확인
   r = await scenario({ status: 200, body: [{ exists_flag: true, staff_name: '마스터', same_name: false }] }, false);
@@ -100,12 +102,12 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 120000)
   r = await scenario({ status: 200, body: [{ exists_flag: true, staff_name: '오지은 실장', same_name: true }] }, true, null, [{ id: 555, client_name: '소지선', phone: '01062588804', stage: '가견적' }]);
   ok('F. 내 진행 중 고객이면 새 고객 POST 없음', r.cap.postCust === 0, JSON.stringify(r.cap));
   ok('F. 그 고객에 이어서 저장(PATCH)·견적서 저장', r.cap.patchCust >= 1 && r.cap.postEst >= 1, JSON.stringify(r.cap));
-  ok('F. 중단 안내(alert)는 없음', !r.dialogs.some(d => d.type === 'alert'), JSON.stringify(r.dialogs));
-  // G. 보이는 것이 시공완료 고객뿐 — 새로 만들지 않고 저장 중단(소지선 112와 같은 상황)
+  ok('F. 안내·확인창 없이 이어서 저장', r.dialogs.length === 0, JSON.stringify(r.dialogs));
+  // G. 보이는 것이 시공완료 고객뿐(마스터 화면 등) — 그 고객에 덮어쓰지 않고, 알린 뒤 확인하면 재구매 새 건으로 저장
   r = await scenario({ status: 200, body: [{ exists_flag: true, staff_name: '마스터', same_name: true }] }, true, null, [{ id: 112, client_name: '소지선', phone: '01062588804', stage: '시공완료' }]);
-  ok('G. 시공완료 고객뿐이면 새 고객·견적서 저장 안 함', r.cap.postCust === 0 && r.cap.postEst === 0, JSON.stringify(r.cap));
   ok('G. 시공완료 고객에 덮어쓰지 않음(PATCH 없음)', r.cap.patchCust === 0, JSON.stringify(r.cap));
-  ok('G. 담당자 안내가 나옴', r.dialogs.some(d => d.type === 'alert' && /마스터/.test(d.msg)), JSON.stringify(r.dialogs));
+  ok('G. 담당자 안내 확인창이 뜸', r.dialogs.some(d => d.type === 'confirm' && /마스터/.test(d.msg)), JSON.stringify(r.dialogs));
+  ok('G. 확인하면 새 건으로 저장(고객 1·견적서 1)', r.cap.postCust === 1 && r.cap.postEst >= 1, JSON.stringify(r.cap));
 
   await browser.close(); server.close && server.close();
   console.log(fail ? '❌ 실패 ' + fail + '건' : '✅ 모두 통과'); process.exit(fail ? 1 : 0);
