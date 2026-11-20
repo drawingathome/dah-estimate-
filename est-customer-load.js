@@ -424,6 +424,24 @@ function parseProductString(str) {
   }).filter(Boolean);
 }
 
+// 2026-11-20(N-202, 선혜님 '레일 2개인데 3개로 왜 뜨지??'): 저장된 레일/레일시공비 행을 열 때 커튼 행에 다시 붙이는 짝 찾기.
+// 예전엔 공간 이름이 같은 '첫' 커튼 행을 골라서, 같은 이름 커튼이 2줄 이상이면 레일 행들이 모두 첫 줄에 붙고 나머지 줄은 레일이 없는 줄로 취급돼
+// 그 줄을 고치면 레일·레일시공비 행이 하나 더 생겼음. 이제 같은 종류(레일/레일시공비) 행이 아직 안 붙은 같은 이름 커튼 행을 골라 1:1로 붙임.
+// 짝이 없으면 null(붙이지 않음 — 직접 넣은 행처럼 금액만 유지).
+function estPickCurtainRowForRailItem(space, autoType) {
+  if (!space) return null;
+  var attr = autoType === 'rail' ? 'data-rail-src' : 'data-railcost-src';
+  var claimed = {};
+  document.querySelectorAll('#svc-body [' + attr + ']').forEach(function (r) { claimed[r.getAttribute(attr)] = true; });
+  var rows = Array.from(document.querySelectorAll('#curtain-body tr')).filter(function (ctr) {
+    return (ctr.querySelector('.space-inp')?.value || '') === space;
+  });
+  for (var i = 0; i < rows.length; i++) {
+    var uid = /** @type {any} */ (rows[i]).dataset.rowUid;
+    if (!uid || !claimed[uid]) return rows[i];
+  }
+  return null;
+}
 function restoreLineItemsToForm(lineItems, fallbackProductStr) {
   if ((!lineItems || lineItems.length === 0) && fallbackProductStr) {
     var parsed = parseProductString(fallbackProductStr);
@@ -513,9 +531,8 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
           // 예전 저장분은 autoType이 있으면 곧 사용자가 고친 값이었으므로 예전처럼 취급.
           if (it.override !== false) str.dataset.manualOverride = '1';
           if (it.autoType === 'rail' || it.autoType === 'railcost') {
-            var matchedCurtainTr = Array.from(document.querySelectorAll('#curtain-body tr')).find(function(ctr) {
-              return (ctr.querySelector('.space-inp')?.value || '') === (it.space || '') && it.space;
-            });
+            // 2026-11-20(N-202): '공간 이름이 같은 첫 커튼 행'이 아니라 아직 레일이 안 붙은 같은 이름 커튼 행에 1:1로 붙임(같은 이름 커튼이 2줄 이상일 때 레일이 늘어나던 문제)
+            var matchedCurtainTr = estPickCurtainRowForRailItem(it.space, it.autoType);
             if (matchedCurtainTr) {
               if (!matchedCurtainTr.dataset.rowUid) {
                 window._curtainRowSeq = (window._curtainRowSeq || 0) + 1;

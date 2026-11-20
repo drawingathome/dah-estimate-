@@ -417,9 +417,7 @@ function loadDraft() {
             if (item.autoType) {
               if (item.override !== false) str.dataset.manualOverride = '1';
               if (item.autoType === 'rail' || item.autoType === 'railcost') {
-                var matchedCurtainTrDraft = Array.from(document.querySelectorAll('#curtain-body tr')).find(function(ctr) {
-                  return (ctr.querySelector('.space-inp')?.value || '') === (item.space || '') && item.space;
-                });
+                var matchedCurtainTrDraft = estPickCurtainRowForRailItem(item.space, item.autoType); // 2026-11-20(N-202): 같은 이름 커튼 행에 1:1로 붙임(est-customer-load.js)
                 if (matchedCurtainTrDraft) {
                   if (!matchedCurtainTrDraft.dataset.rowUid) {
                     window._curtainRowSeq = (window._curtainRowSeq || 0) + 1;

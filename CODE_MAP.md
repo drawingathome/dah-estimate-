@@ -82,7 +82,7 @@
 | 23 | `est-doc-vendor.js` | DAH 견적서 앱 — 거래처별 발주서 문서 생성 | 7 |
 | 24 | `est-doc-vendor-ui.js` | DAH 견적서 앱 — 발주서: 거래처 정보 입력 모달 + 발주서 선택/인쇄 | 10 |
 | 25 | `est-doc-request.js` | DAH 견적서 앱 — 실측/시공 의뢰서 문서 생성 | 4 |
-| 26 | `est-customer-load.js` | DAH 견적서 앱 — PDF모달 / 고객불러오기 / 계약금계산 | 22 |
+| 26 | `est-customer-load.js` | DAH 견적서 앱 — PDF모달 / 고객불러오기 / 계약금계산 | 23 |
 | 27 | `est-misc.js` | DAH 견적서 앱 — 주소검색 / 날짜포맷 / 빈상태 / 공유 / 자동저장 | 8 |
 
 ## 설문지 (survey.html) — 브라우저가 불러오는 순서대로
@@ -313,6 +313,7 @@
 | `estNormForDiff` | `est-save-diff.js` |
 | `estPayBadge` | `dash-customer-estimates.js` |
 | `estPersistConfirmState` | `est-form-controls.js` |
+| `estPickCurtainRowForRailItem` | `est-customer-load.js` |
 | `estRenderMismatchBanner` | `est-save.js` |
 | `estRoomRank` | `est-space-order.js` |
 | `estSavedAtFromRow` | `dash-api-data.js` |
