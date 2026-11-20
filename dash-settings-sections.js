@@ -259,7 +259,7 @@ function renderSettingsCouponGroup(wrap, makeGroup) {
   // 안전함 — 삭제된 쿠폰의 과거 적용 금액은 이미 만든 보정장치
   // (restoreAppliedDiscounts의 missingAmount 자동채움)로 옛 견적서 금액이
   // 그대로 유지되므로.
-  var todayStr = new Date().toISOString().slice(0,10);
+  var todayStr = dahLocalYmd(); // N-198: 한국시간 오늘(쿠폰 만료 비교)
   var allCouponsRaw = (typeof getDiscountCoupons === 'function') ? getDiscountCoupons() : [];
   var expiredNames = [];
   var curCoupons = allCouponsRaw.filter(function(c) {

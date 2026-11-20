@@ -122,7 +122,8 @@ function newEstimate() {
   document.getElementById('c-installer-name').value='';
   document.getElementById('c-installer-phone').value='';
   var d=new Date();
-  document.getElementById('c-date').value=d.toISOString().slice(0,10);
+  // 2026-11-20(N-198): 세계표준시 날짜를 쓰면 한국시간 0~9시에 견적일이 하루 전으로 찍힘 → 한국시간 날짜
+  document.getElementById('c-date').value=dahLocalYmd(d);
   // 견적번호 안전한 순번 채번
   (function(){
     var p2 = function(n){ return String(n).padStart(2,'0'); };

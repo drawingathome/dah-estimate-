@@ -897,7 +897,7 @@ function _saveStage_localStorage(ctx) {
         performanceRevenue: entry.performanceRevenue,
         staffName: entry.staffName,
         stage: entry.contractStatus === 'contracted' ? '확정견적' : '가견적',
-        date: entry.date || new Date().toISOString().slice(0,10),
+        date: entry.date || dahLocalYmd(), // N-198: 한국시간 날짜
         measureDate: document.getElementById('c-measure')?.value || '',
         installDate: entry.installDate || '',
         memo: entry.memo || '',

@@ -601,7 +601,7 @@ function _showRequestPreview(kind, label, extraNote) {
       // order_status의 카테고리 키가 됨(기존 install 카테고리 이름과 일치).
       var installerNameForStatus = document.getElementById('c-installer-name')?.value || '';
       var statusUpdate = {};
-      statusUpdate[kind] = { done: true, vendor: installerNameForStatus, orderDate: new Date().toISOString().slice(0, 10) };
+      statusUpdate[kind] = { done: true, vendor: installerNameForStatus, orderDate: dahLocalYmd() }; // N-198: 한국시간 날짜
       if (typeof updateOrderStatus === 'function') updateOrderStatus(statusUpdate);
       // 2026-09-10: 발주와 동일하게, 실측/시공 완료 직후에도 업무처리
       // 카드를 다시 그려서 새로고침 없이 바로 반영되게 함.
