@@ -498,7 +498,9 @@ function collectVendorGroups(categoryFilter) {
     // 2026-11-12(N-137 ⑪): 마수가 비었을 때 폭 개수('3폭')를 수량으로 내보내면 원단 거래처에 단위가 다른 수량이 나감 → 비워 두고(—) 아래 오발주 점검이 막는다.
     var qtyDisplay = yardage || '—';
     if (fabricTotal !== null) qtyDisplay += ' (' + fabricTotal.toLocaleString() + '원)';
-    items.push({
+    // 2026-11-20(N-199, 선혜님 결정 "레일만 행은 원단·제작 발주에서 빼기"): 품명이 '레일만'이고 원단 코드가 없는 행은 레일만 주문하는 행이라 원단·제작 발주 대상이 아님(레일 발주는 아래에서 그대로 만들어짐).
+    var railOnlyRow = !fabric && String(displayName).replace(/\s/g, '') === '레일만';
+    if (!railOnlyRow) items.push({
       space: space||'—', product: fabric||displayName||'—', color: color||'—',
       size: '—', fabSize: null,
       content:[pleat, open].filter(Boolean).join(' ')||'—',
@@ -508,11 +510,11 @@ function collectVendorGroups(categoryFilter) {
       sourceRow: tr, vendorField: '.c-vendor'
     });
     var autoProductionVendor = getAutoProductionVendorName();
-    if (!autoProductionVendor) {
+    if (!autoProductionVendor && !railOnlyRow) {
       skipped.production = true;
       skipped.productionVendorCount = (Array.isArray(window._dahVendorListRaw) ? window._dahVendorListRaw : []).filter(function(v){ return v && Array.isArray(v.categories) && v.categories.indexOf('production') >= 0; }).length;
     }
-    if (autoProductionVendor) {
+    if (autoProductionVendor && !railOnlyRow) {
       // 2026-09-11(선혜님이 실제 캔가공소 발주서 양식 확인해주심): 지금까지
       // "품명" 자리에 원단코드(fabric)를 넣고 있었는데, 실제 양식은 제품명
       // (displayName)이 들어가야 함 - 원단코드는 거래처+마수와 함께 별도
