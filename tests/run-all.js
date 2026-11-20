@@ -651,6 +651,8 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['svc-rows-persist-check.js', []]);
   scripts.push(['rail-same-space-reopen-check.js', []]); // 2026-11-20 N-202: 같은 공간 이름 커튼이 2줄 이상일 때 다시 열면 레일·레일시공비 행이 늘어나던 것
   scripts.push(['kst-date-sweep-check.js', []]); // 2026-11-20 N-198: 견적일·발주 처리일·쿠폰 만료 비교가 세계표준시라 한국시간 0~9시에 하루 전으로 찍히던 것
+  scripts.push(['vendor-order-blank-check.js', []]); // 2026-11-20 N-199: 제작 사이즈·폭수, 레일 가로가 비어 있는 발주서 막기
+  scripts.push(['open-edit-before-check.js', []]); // 2026-11-20 N-205: 연 직후 사람이 고친 것을 '열 때 금액 차이'로 기록·경고하던 것
   scripts.push(['confirm-saves-first-check.js', []]); // 2026-11-20 N-204: 확정 전 저장·서버 금액 대조(수정이 저장 안 된 채 확정되던 것)
   scripts.push(['region-fee-missing-guard-check.js', []]); // 2026-11-20 N-195: 지역 실측비·시공비 행 빠짐 경고(블라인드 시공비 행을 지역 행으로 잘못 세던 것)
   // 2026-09-08(선혜님 지적 - "얼렁뚱땅 넘어가지 마... 이래서 너를

@@ -422,6 +422,12 @@ function getVendorOrderBlockers(groups) {
         if (!it.handle || it.handle === '—') errors.push(label + ': 손잡이 방향을 골라 주세요');
       }
       if (it.orderCategory === 'fabric' && (!it.qty || it.qty === '—')) errors.push(label + ': 원단 마수(수량)가 비어 있어요'); // 2026-11-12(N-137 ⑪)
+      // 2026-11-20(N-199): 제작(캔가공소) 발주에 가로×세로·폭수가 비어 있거나, 레일 발주에 자 수가 없으면(가로 미입력) 그대로 나가던 것을 막음
+      if (it.orderCategory === 'production') {
+        if (!it.size || it.size === '—') errors.push(label + ': 제작 사이즈(가로×세로)가 비어 있어요');
+        if (!it.qty || it.qty === '—') errors.push(label + ': 제작 폭수가 비어 있어요');
+      }
+      if (it.orderCategory === 'material' && /조절레일/.test(it.product || '') && !/\d+자/.test(it.product || '')) errors.push(label + ': 레일 가로 길이가 비어 있어 몇 자인지 알 수 없어요');
       if (!it.product || it.product === '—') errors.push((it.space && it.space !== '—' ? it.space : '항목') + ': 품명이 비어 있어요');
     });
   });

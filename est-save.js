@@ -726,6 +726,19 @@ function estRenderMismatchBanner() {
 }
 // 견적서를 연 뒤 저장된 금액과 화면 금액이 다르면 기록하고 저장 전에 확인하라고 경고(예: 저장 7,968,000원인데 열면 7,544,000원).
 var _estMmState = { tries: 0, last: -1, stable: 0 };
+// 2026-11-20(N-205): 열고 약 3.5~23초 동안 검사가 화면이 안정되길 기다리는데, 그 사이 사람이 '+ 블라인드 추가' 등을 누르면 그 변화가 '열 때 생긴 차이'로 기록·경고되던 것.
+// 사람의 실제 입력(isTrusted input/change/버튼 클릭)이 열린 뒤에 있었는지 기억해 두고, 있으면 '열 때 차이'가 아니라 '열고 직접 고침'으로 구분한다.
+/** @type {any} */ (window)._estEditTouchAt = 0;
+['input', 'change', 'click'].forEach(function (ev) {
+  document.addEventListener(ev, function (e) {
+    try {
+      if (!e.isTrusted) return;
+      var t = /** @type {any} */ (e.target);
+      if (ev === 'click' && !(t && t.closest && t.closest('button'))) return;
+      /** @type {any} */ (window)._estEditTouchAt = Date.now();
+    } catch (x) {}
+  }, true);
+});
 function estCheckOpenMismatch(source) {
   try {
     var row = window._estLoadedRow; if (!row) return;
@@ -744,8 +757,12 @@ function estCheckOpenMismatch(source) {
     }
     _estMmState = { tries: 0, last: -1, stable: 0 };
     var stored = Number(row.price) || 0;
-    var mismatch = stored > 0 && shown > 0 && shown !== stored;
-    estSendReceipt('open', mismatch ? 'mismatch' : 'ok', { source: source, stored_price: stored, shown_total: shown, stored_final: row.price_breakdown && row.price_breakdown.finalTotal, stored_region: row.region || null, stored_install_tbd: row.install_date_tbd, stored_manual_discount: (row.applied_discounts && row.applied_discounts.manual) || null });
+    var rawMismatch = stored > 0 && shown > 0 && shown !== stored;
+    var W = /** @type {any} */ (window);
+    var touched = !!(W._estEditTouchAt && W._estEditTouchAt > (W._estOpenStartAt || 0));
+    var mismatch = rawMismatch && !touched; // 열고 사람이 직접 고쳤다면 '열 때 차이' 경고 대상이 아님
+    var openRows = { curtain_rows: document.querySelectorAll('#curtain-body tr').length, blind_rows: document.querySelectorAll('#blind-body tr').length, svc_rows: document.querySelectorAll('#svc-body tr').length };
+    estSendReceipt('open', mismatch ? 'mismatch' : (rawMismatch ? 'edited-before-check' : 'ok'), Object.assign({ user_touched: touched }, openRows, { source: source, stored_price: stored, shown_total: shown, stored_final: row.price_breakdown && row.price_breakdown.finalTotal, stored_region: row.region || null, stored_install_tbd: row.install_date_tbd, stored_manual_discount: (row.applied_discounts && row.applied_discounts.manual) || null }));
     // 2026-10-09(선혜님 - 시험차: 예전 형식 견적서를 열면 저장 1,361,000원이 1,411,000원으로 바뀌는데 알림이 3.5초 뒤 잠깐 떴다 사라져 놓치기 쉬움):
     // 잠깐 뜨는 알림 대신 화면에 계속 남는 안내를 띄우고, 저장 직전에도 한 번 더 확인함(saveEstimate).
     window._estOpenMismatch = mismatch ? { stored: stored, shown: shown } : null;
