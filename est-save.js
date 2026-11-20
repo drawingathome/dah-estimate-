@@ -439,7 +439,11 @@ function estSvcState() {
       var content = (contentEl && contentEl.value) || '';
       var t = tr.getAttribute('data-svc-type') || (tr.hasAttribute('data-rail-src') ? '레일' : (tr.hasAttribute('data-railcost-src') ? '레일시공' : '수동'));
       types.push(t + ':' + kind);
-      if (kind === '실측비' || kind === '시공비' || /실측|시공/.test(content)) hasFeeRow = true;
+      // 2026-11-20(N-195, 선혜님 '오월 실장님' 건 — 서울인데 실측비·시공비 행이 없는데도 저장 때 경고가 안 떴음):
+      // 예전엔 '블라인드 시공비'·'레일 시공비' 행(종류가 같은 '시공비')도 지역 실측비·시공비 행으로 세서, 진짜 지역 행이 없어도 경고가 꺼졌음.
+      // 블라인드·레일 행은 제외하고, 지역 행(자동) 또는 직접 넣은 실측비·시공비 행만 센다.
+      var isOwnedByItem = (t === '블라인드시공' || t === '레일' || t === '레일시공' || tr.hasAttribute('data-rail-src') || tr.hasAttribute('data-railcost-src'));
+      if (!isOwnedByItem && (kind === '실측비' || kind === '시공비' || /실측/.test(content))) hasFeeRow = true;
       sum += (getPriceVal(tr.querySelector('.sprice')) || 0) * (parseFloat((qtyEl && qtyEl.value) || '') || 1);
     });
   } catch (e) { /* 요약 실패는 저장에 영향 없음 */ }

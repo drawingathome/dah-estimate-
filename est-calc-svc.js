@@ -163,6 +163,7 @@ function autoAddSvcFee() {
     if (hint) hint.textContent = isNoInstallFee(prices) ? NO_INSTALL_HINT : regionFeeHint(prices);
     return;
   }
+  if (hint) { hint.removeAttribute('data-warn'); hint.removeAttribute('data-normal'); }
   var rows = svcBody.querySelectorAll('[data-svc-type="실측비"],[data-svc-type="시공비"]');
   // 2026-09-19(선혜님 - "다시 열어보니 실측+레일비가... 이게 말이
   // 되니?????????"): 실측비/시공비는 레일과 달리 "기존 행을 찾아
@@ -184,7 +185,7 @@ function autoAddSvcFee() {
       var type=r.querySelector('select')?.value||'';
       if(type==='실측비'||type==='시공비'||type==='레일') r.remove();
     });
-    if(hint) hint.textContent=NO_INSTALL_HINT;
+    if(hint) { hint.removeAttribute('data-warn'); hint.removeAttribute('data-normal'); hint.textContent=NO_INSTALL_HINT; }
     calcTotal(); return;
   }
   ['실측비','시공비'].forEach(function(type) {
@@ -206,7 +207,7 @@ function autoAddSvcFee() {
     var qinp=row.querySelector('.sqty'); if(qinp) qinp.value=1;
     calcSvcRow(pinp);
   });
-  if(hint) hint.textContent=regionFeeHint(prices);
+  if(hint) { hint.removeAttribute('data-warn'); hint.removeAttribute('data-normal'); hint.textContent=regionFeeHint(prices); }
   // 2026-08-14: 블라인드를 먼저 입력하고 나중에 지역을 선택하면 블라인드
   // 시공비(10,000원×개수)가 통째로 누락되던 버그 수정(실장님 실사용에서 발견,
   // 재현으로 확인). 지역 미선택 상태에선 autoAddBlindSvc()가 시공비 행을
@@ -286,7 +287,38 @@ function categorizeSvcRow(tr) {
 // - 레일 자재비: 레일 자재 + 레일 시공비를 합쳐서 표시, 괄호안에 세부 내역 나열
 // - 전동 옵션: 구분이 '전동'인 항목
 // - 기타: 위 세 그룹에 안 속하는 나머지(부자재, 블라인드시공, 직접입력한 기타 등)
+// 2026-11-20(N-195, 선혜님 '오월 실장님' 건 — 지역은 서울인데 실측비·시공비 행이 빠진 채 저장됨, 원인 재현 불가·10-08에도 같은 일):
+// 저장 때만 경고하던 것을 화면에서 바로 보이게 함. 지역 옆 안내 자리에 빨간 경고와 '자동으로 넣기' 버튼을 띄우고(누르면 지역 선택과 똑같이 실측비·시공비를 다시 만듦),
+// 행이 다시 생기면 원래 안내 문구로 되돌림. 막지는 않음(레일만 시공 등 정당한 경우 있음).
+function refreshRegionMissingWarning() {
+  try {
+    var hint = document.getElementById('region-hint');
+    if (!hint || typeof estMissingInstallRows !== 'function') return;
+    if (estMissingInstallRows()) {
+      if (hint.getAttribute('data-warn') !== '1') {
+        hint.setAttribute('data-normal', hint.textContent || '');
+        hint.setAttribute('data-warn', '1');
+        hint.innerHTML = '';
+        var msg = document.createElement('span');
+        msg.style.cssText = 'color:#C0392B;font-weight:700';
+        msg.textContent = '⚠️ 실측비·시공비가 빠져 있어요 ';
+        var btn = document.createElement('button');
+        btn.type = 'button'; btn.id = 'region-fee-readd';
+        btn.textContent = '자동으로 넣기';
+        btn.style.cssText = 'min-height:32px;padding:0 10px;border:1px solid #C0392B;background:#fff;color:#C0392B;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer';
+        btn.onclick = function() { autoAddSvcFee(); };
+        hint.appendChild(msg); hint.appendChild(btn);
+      }
+    } else if (hint.getAttribute('data-warn') === '1') {
+      var normal = hint.getAttribute('data-normal') || '';
+      hint.removeAttribute('data-warn'); hint.removeAttribute('data-normal');
+      hint.textContent = normal;
+    }
+  } catch (e) { /* 안내 실패는 계산에 영향 없음 */ }
+}
+
 function renderSvcSummary() {
+  refreshRegionMissingWarning();
   var card = document.getElementById('svc-summary-card');
   if (!card) return;
   var rows = Array.from(document.querySelectorAll('#svc-body tr'));

@@ -70,7 +70,7 @@
 | 11 | `est-product-calc.js` | DAH 견적서 앱 — 공통 계산: 합계(calcTotal)/얼림 금액/행 삭제/드래그 정렬 | 11 |
 | 12 | `est-calc-curtain.js` | DAH 견적서 앱 — 커튼 행 계산 (추가/폭수·금액 계산/레일 자동/복사) | 4 |
 | 13 | `est-calc-blind.js` | DAH 견적서 앱 — 블라인드 행 계산 (추가/최소면적/옵션 추가금/부자재 자동/복사) | 7 |
-| 14 | `est-calc-svc.js` | DAH 견적서 앱 — 기타품목 · 부자재/서비스(실측비·시공비·레일) 행 계산과 요약 | 12 |
+| 14 | `est-calc-svc.js` | DAH 견적서 앱 — 기타품목 · 부자재/서비스(실측비·시공비·레일) 행 계산과 요약 | 13 |
 | 15 | `est-survey.js` | DAH 견적서 앱 — 설문지 연동 | 2 |
 | 16 | `est-save.js` | DAH 견적서 앱 — 저장/검증/토스트 | 22 |
 | 17 | `est-click-watch.js` | est-click-watch.js — 견적서 앱: 저장 버튼 "눌림 관측" (2026-10-07 신규) | 0 |
@@ -504,6 +504,7 @@
 | `refreshAuthSessionForce` | `dash-supabase-auth.js` |
 | `refreshAuthSessionIfNeeded` | `dash-supabase-auth.js` |
 | `refreshBlindVendorOptions` | `est-calc-blind.js` |
+| `refreshRegionMissingWarning` | `est-calc-svc.js` |
 | `refreshServerMoney` | `dash-utils.js` |
 | `refreshServerMonthDetail` | `dash-chart.js` |
 | `refreshStaleLeadMap` | `dash-render.js` |
