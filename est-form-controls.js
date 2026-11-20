@@ -320,6 +320,35 @@ function estPersistConfirmState(newConfirmedAt, onDone, unconfirmReason) {
   }
   send(true);
 }
+// 2026-11-20(N-204, 선혜님 '확정을 눌러도 금액이 바뀌는 게 말이 안 돼'): 확정하기 직전에 서버에 저장된 금액(estimates.price)을 다시 읽어 화면 합계와 같은지 확인.
+// 다르면 확정하지 않고 알려 줌(확정이 '저장돼 있던 다른 금액'을 고정해 버리는 일을 막음). 서버 금액을 못 읽어도 확정하지 않음.
+function estVerifyStoredTotalThen(proceed, rc) {
+  var id = window._estEditState && window._estEditState.editingEstDbId;
+  var screenTotal = Number(String((document.getElementById('sum-total') || {}).textContent || '').replace(/[^0-9]/g, ''));
+  if (!id) { proceed(); return; }
+  var done = false;
+  function finish(fn) { if (done) return; done = true; fn(); }
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', SUPABASE_URL + '/rest/v1/estimates?id=eq.' + encodeURIComponent(id) + '&select=price', true);
+    x.setRequestHeader('apikey', SUPABASE_KEY);
+    x.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+    x.timeout = 15000;
+    x.onload = function () {
+      var rows = null; try { rows = JSON.parse(x.responseText); } catch (e) { rows = null; }
+      if (!(x.status >= 200 && x.status < 300) || !Array.isArray(rows) || rows.length === 0) { finish(function () { rc('verify-failed', {}); showToast('⚠️ 서버에 저장된 금액을 확인하지 못해 확정하지 않았어요 — 네트워크를 확인하고 다시 시도해주세요'); }); return; }
+      var stored = Number(rows[0].price);
+      if (!isNaN(stored) && stored !== screenTotal) {
+        finish(function () { rc('blocked-total-mismatch', { screen_total: screenTotal, stored_total: stored }); showToast('⚠️ 화면 합계(' + screenTotal.toLocaleString() + '원)와 서버에 저장된 금액(' + stored.toLocaleString() + '원)이 달라서 확정하지 않았어요 — 저장 버튼을 먼저 누른 뒤 다시 확정해 주세요'); });
+        return;
+      }
+      finish(proceed);
+    };
+    x.onerror = function () { finish(function () { rc('verify-failed', {}); showToast('⚠️ 서버에 저장된 금액을 확인하지 못해 확정하지 않았어요 — 네트워크를 확인하고 다시 시도해주세요'); }); };
+    x.ontimeout = x.onerror;
+    x.send();
+  } catch (e) { finish(function () { rc('verify-failed', {}); showToast('⚠️ 서버에 저장된 금액을 확인하지 못해 확정하지 않았어요'); }); }
+}
 function toggleConfirmEstimate() {
   if (window._estEditState.estimateConfirmedAt) {
     var lr = /** @type {any} */ (window._estLoadedRow) || {};
@@ -352,25 +381,45 @@ function toggleConfirmEstimate() {
     var _rc = function (o, extra) { try { if (typeof estSendReceipt === 'function') estSendReceipt('confirm', o, extra || {}); } catch (e) {} };
     _rc('click', { tab: (typeof currentTab !== 'undefined' ? currentTab : null), edit_id: !!window._estEditState.editingEstDbId });
     if (!confirm('이 견적 내용(사이즈·금액)을 확정할까요?\n확정하면 수정할 수 없게 잠깁니다. 다시 수정하려면 확정을 한번 더 눌러 해제하세요.')) { _rc('dialog-cancel'); return; }
-    var newAt = new Date().toISOString();
-    window._estEditState.estimateConfirmedAt = newAt;
-    lockEstimateForm(true);
-    estPersistConfirmState(newAt, function (res) {
-      _rc('result-' + res);
-      if (res === 'ok') {
-        showToast('견적이 확정·저장됐습니다 — 수정하려면 확정을 다시 눌러 해제하세요');
-      } else if (res === 'unsaved') {
-        showToast('⚠️ 아직 저장 전이에요 — 아래 저장 버튼을 눌러야 확정이 반영됩니다');
-      } else {
-        window._estEditState.estimateConfirmedAt = null;
-        lockEstimateForm(false);
-        renderConfirmBadge();
-        if (typeof calcTotal === 'function') calcTotal();
-        showToast(res === 'conflict'
-          ? '⚠️ 그 사이 다른 곳에서 이 견적서가 먼저 수정됐어요 — 새로고침해서 최신 상태를 확인한 뒤 다시 확정해주세요'
-          : '⚠️ 확정을 서버에 저장하지 못했어요 — 네트워크를 확인하고 다시 시도해주세요(확정되지 않았습니다)');
-      }
-    });
+    var _persistConfirm = function () {
+      var newAt = new Date().toISOString();
+      window._estEditState.estimateConfirmedAt = newAt;
+      lockEstimateForm(true);
+      estPersistConfirmState(newAt, function (res) {
+        _rc('result-' + res);
+        if (res === 'ok') {
+          showToast('견적이 확정·저장됐습니다 — 수정하려면 확정을 다시 눌러 해제하세요');
+        } else if (res === 'unsaved') {
+          showToast('⚠️ 아직 저장 전이에요 — 아래 저장 버튼을 눌러야 확정이 반영됩니다');
+        } else {
+          window._estEditState.estimateConfirmedAt = null;
+          lockEstimateForm(false);
+          renderConfirmBadge();
+          if (typeof calcTotal === 'function') calcTotal();
+          showToast(res === 'conflict'
+            ? '⚠️ 그 사이 다른 곳에서 이 견적서가 먼저 수정됐어요 — 새로고침해서 최신 상태를 확인한 뒤 다시 확정해주세요'
+            : '⚠️ 확정을 서버에 저장하지 못했어요 — 네트워크를 확인하고 다시 시도해주세요(확정되지 않았습니다)');
+        }
+      });
+      renderConfirmBadge();
+      if (typeof calcTotal === 'function') calcTotal();
+    };
+    // 2026-11-20(N-204): 확정 표시는 '확정 시각·상태'만 서버에 보내서, 화면에서 고친 내용(행·금액)이 저장 안 된 채 확정돼 열면 옛 금액이 보였음.
+    // 저장된 견적에서 수정이 남아 있으면 먼저 저장 → 서버에 저장된 금액이 화면 합계와 같은지 확인 → 같을 때만 확정.
+    if (window._estEditState.editingEstDbId && typeof estimateNeedsSave === 'function' && estimateNeedsSave()) {
+      showToast('저장하고 확정할게요…');
+      window._estAfterSave = function (outcome) {
+        if (outcome === 'server') { _rc('saved-then-confirm'); estVerifyStoredTotalThen(_persistConfirm, _rc); return; }
+        if (outcome === 'invalid') { _rc('blocked-invalid'); return; } // 저장 쪽에서 이미 안내가 떴음 — 고치고 다시 누르면 됨
+        _rc('save-failed');
+        showToast('⚠️ 저장하지 못해 확정하지 않았어요 — 네트워크를 확인하고 다시 시도해주세요');
+      };
+      saveEstimate();
+      return;
+    }
+    if (window._estEditState.editingEstDbId) { estVerifyStoredTotalThen(_persistConfirm, _rc); return; }
+    _persistConfirm();
+    return;
   }
   renderConfirmBadge();
   if (typeof calcTotal === 'function') calcTotal(); // 저장 전이라도 상태를 즉시 반영

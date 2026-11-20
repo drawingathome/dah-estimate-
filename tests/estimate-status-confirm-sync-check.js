@@ -17,6 +17,8 @@ async function run() {
     const method = req.method();
     if (url.includes('supabase.co')) {
       if (method === 'OPTIONS') { req.respond({ status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Allow-Headers': '*' } }); return; }
+      // 2026-11-20(N-204): 확정 직전에 서버에 저장된 금액(select=price)을 다시 읽음 — 실제 서버처럼 '지금 화면 합계'와 같은 금액을 돌려줌(시험이 다루는 대상은 이게 아니므로 일치 상태로 둠)
+      if (method === 'GET' && url.includes('select=price')) { page.evaluate(() => Number(String((document.getElementById('sum-total') || {}).textContent || '').replace(/[^0-9]/g, ''))).then(v => req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify([{ price: v }]) })).catch(() => req.respond({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: '[]' })); return; }
       if (url.includes('/customers') && method === 'POST') { req.respond({ status: 201, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify([{ id: 'new-cust-1' }]) }); return; }
       if (url.includes('/estimates') && (method === 'POST' || method === 'PATCH')) {
         try { capturedPayloads.push(JSON.parse(req.postData())); } catch (e) {}

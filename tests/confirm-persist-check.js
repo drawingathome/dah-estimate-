@@ -31,6 +31,8 @@ async function run() {
       if (method === 'OPTIONS') { req.respond({ status: 204, headers: Object.assign({ 'Access-Control-Allow-Methods': 'GET,POST,PATCH,DELETE,OPTIONS', 'Access-Control-Allow-Headers': '*' }, H) }); return; }
       let body = null; try { body = JSON.parse(req.postData() || 'null'); } catch (e) { body = null; }
       const u = new URL(url); const p = u.pathname + u.search;
+      // 2026-11-20(N-204): 확정 직전에 서버에 저장된 금액(select=price)을 다시 읽음 — 실제 서버처럼 '지금 화면 합계'와 같은 금액을 돌려줌(시험이 다루는 대상은 이게 아니므로 일치 상태로 둠)
+      if (method === 'GET' && url.includes('select=price')) { page.evaluate(() => Number(String((document.getElementById('sum-total') || {}).textContent || '').replace(/[^0-9]/g, ''))).then(v => req.respond({ status: 200, contentType: 'application/json', headers: H, body: JSON.stringify([{ price: v }]) })).catch(() => req.respond({ status: 200, contentType: 'application/json', headers: H, body: '[]' })); return; }
       if (p.includes('/save_receipts') && method === 'POST') { ctl.receipts.push(Array.isArray(body) ? body[0] : body); req.respond({ status: 201, contentType: 'application/json', headers: H, body: '[]' }); return; }
       if (method === 'PATCH' && p.includes('/rest/v1/estimates')) {
         const isConfirmPatch = body && Object.keys(body).every(k => k === 'confirmed_at' || k === 'estimate_status' || k === 'unconfirm_reason');

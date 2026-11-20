@@ -649,6 +649,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['field-partial-patch-check.js', []]);
   // 2026-10-08(선혜님 - 시험마 "시공비 이상하네 … 여러번 말했어"): 자동 시공 행(실측/시공/블라인드시공/레일)을 저장하고 열 때 그대로 복원(재계산 중복·빠짐 방지), 임시 초안 중복 방지, 시공비 없이 저장 시 경고.
   scripts.push(['svc-rows-persist-check.js', []]);
+  scripts.push(['confirm-saves-first-check.js', []]); // 2026-11-20 N-204: 확정 전 저장·서버 금액 대조(수정이 저장 안 된 채 확정되던 것)
   scripts.push(['region-fee-missing-guard-check.js', []]); // 2026-11-20 N-195: 지역 실측비·시공비 행 빠짐 경고(블라인드 시공비 행을 지역 행으로 잘못 세던 것)
   // 2026-09-08(선혜님 지적 - "얼렁뚱땅 넘어가지 마... 이래서 너를
   // 믿겠니??"로 발견된 신뢰 문제 해결): 같은 종류의 select값 유실
