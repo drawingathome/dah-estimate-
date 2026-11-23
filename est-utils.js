@@ -286,6 +286,9 @@ function restoreAppliedDiscounts(applied, attempt, onComplete) {
   // 호출부가 알 수 있도록 완료 콜백을 추가 - 아래 다시보기(autoDoc) 흐름이
   // 항상 최악의 경우(8초)만큼 고정으로 기다리는 대신, 실제로 끝나는
   // 즉시 다음 단계로 넘어갈 수 있게 함.
+  // N-210: 끝자리 처리 복원(저장 안 된 옛 견적·새 견적은 기본 '1,000원 단위 절사')
+  var truncSel = /** @type {HTMLSelectElement|null} */ (document.getElementById('trunc-mode'));
+  if (truncSel) truncSel.value = (applied && (applied.truncMode === 'h' || applied.truncMode === 'none')) ? applied.truncMode : 'k';
   if (!applied) { if (typeof onComplete === 'function') onComplete(); return; }
   attempt = attempt || 0;
   var wrap = document.getElementById('coupon-list');

@@ -99,6 +99,7 @@ function newEstimate() {
   document.getElementById('c-memo').value='';
   document.getElementById('c-region').value='';
   document.getElementById('discount').value=0;
+  var truncSelNew=/** @type {HTMLSelectElement|null} */ (document.getElementById('trunc-mode')); if(truncSelNew) truncSelNew.value='k'; // N-210
   var depInp=document.getElementById('deposit-input');
   if(depInp){depInp.value='';depInp.removeAttribute('data-raw');}
   document.getElementById('sum-balance').textContent='0원';

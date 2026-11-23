@@ -28,7 +28,7 @@ const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const ctx = vm.createContext(Object.create(null));
 vm.runInContext(src, ctx);
 const R = ctx;
-const names = ['classifySvcRow', 'summarizeSvcGroups', 'summarizeSvcDetails', 'summarizeBlindOptionExtras', 'blindInstallSpec', 'resolveRegionPrices', 'isNoInstallFee', 'regionFeeContent', 'regionFeeHint', 'calcRailJa', 'railMaterialSpec', 'railInstallSpec', 'calcSuggestedPanels', 'curtainHeightFeeWarning', 'getBlindMinSqm', 'calcBlindBillableSqm', 'applyDiscountItems', 'calcGrandBeforeTruncation', 'truncateToThousand', 'calcDepositRatio', 'calcAutoDeposit', 'calcDepositAndBalance', 'calcPerformanceRevenue'];
+const names = ['classifySvcRow', 'summarizeSvcGroups', 'summarizeSvcDetails', 'summarizeBlindOptionExtras', 'blindInstallSpec', 'resolveRegionPrices', 'isNoInstallFee', 'regionFeeContent', 'regionFeeHint', 'calcRailJa', 'railMaterialSpec', 'railInstallSpec', 'calcSuggestedPanels', 'curtainHeightFeeWarning', 'getBlindMinSqm', 'calcBlindBillableSqm', 'applyDiscountItems', 'calcGrandBeforeTruncation', 'truncateToThousand', 'truncateByMode', 'calcDepositRatio', 'calcAutoDeposit', 'calcDepositAndBalance', 'calcPerformanceRevenue'];
 names.forEach(n => ok(typeof R[n] === 'function', '함수 존재: ' + n));
 
 // ── 2) 커튼 폭수 추천 (가로 × 배율 ÷ 130, 허용 소수점: 민자형 0.2 / 나비주름형 0.1)
@@ -101,6 +101,13 @@ eq(R.truncateToThousand(1234567), { grand: 1234000, truncAmt: 567 }, '절사: 1,
 eq(R.truncateToThousand(1000), { grand: 1000, truncAmt: 0 }, '절사: 1,000은 그대로');
 eq(R.truncateToThousand(999), { grand: 0, truncAmt: 999 }, '절사: 999 → 0 (999원 절사)');
 eq(R.truncateToThousand(0), { grand: 0, truncAmt: 0 }, '절사: 0은 그대로');
+// N-210(2026-11-23): 끝자리 처리 선택 — 기본('k')은 기존과 동일, 'h'=100원, 'none'=절사 없음
+eq(R.truncateByMode(1008150, 'k'), { grand: 1008000, truncAmt: 150 }, 'N-210: 기본 k = 1,000원 절사(기존과 동일)');
+eq(R.truncateByMode(1008150, undefined), { grand: 1008000, truncAmt: 150 }, 'N-210: 모드 없음 = 기본 1,000원 절사');
+eq(R.truncateByMode(1008150, '엉뚱한값'), { grand: 1008000, truncAmt: 150 }, 'N-210: 모르는 값 = 기본 1,000원 절사(금액 안 바뀜)');
+eq(R.truncateByMode(1008150, 'h'), { grand: 1008100, truncAmt: 50 }, 'N-210: h = 100원 단위 절사');
+eq(R.truncateByMode(1008150, 'none'), { grand: 1008150, truncAmt: 0 }, 'N-210: none = 절사 안 함');
+eq(R.truncateByMode(0, 'h'), { grand: 0, truncAmt: 0 }, 'N-210: 0은 그대로');
 eq(R.calcDepositRatio(true), 0.5, '계약금 비율: 커튼/블라인드 있으면 50%');
 eq(R.calcDepositRatio(false), 1, '계약금 비율: 침구/러그만이면 100%(2026-09-18 선혜님)');
 eq(R.calcAutoDeposit(1234000, 0.5), 617000, '자동 계약금: 1,234,000의 50% = 617,000');

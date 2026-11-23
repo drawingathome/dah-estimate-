@@ -167,8 +167,9 @@ function calcTotal() {
   var grand = calcGrandBeforeTruncation(curtainTotal, discount, svcTotal);
   // 최종 견적금액 천원단위 절사(내림, 2026-08-12 선혜님 확인)와 그 이유는 est-calc-rules.js의 truncateToThousand에 있음.
   // 절사분은 할인 내역에 "끝자리 절사" 줄로 명시(2026-08-14 선혜님 확인).
+  var truncMode = /** @type {HTMLSelectElement|null} */ (document.getElementById('trunc-mode'))?.value || 'k';
   if (grand > 0) {
-    var trunc = truncateToThousand(grand);
+    var trunc = truncateByMode(grand, truncMode);
     if (trunc.truncAmt > 0) {
       discountBreakdown.push({ label: '끝자리 절사', amount: trunc.truncAmt });
       discount += trunc.truncAmt; // sum-discount(할인 총액) 표시에도 절사분 반영
@@ -176,7 +177,9 @@ function calcTotal() {
     grand = trunc.grand;
   }
   window._estEditState.lastDiscountBreakdown = discountBreakdown; // 영수증 표시용
-  window._estEditState.lastAppliedDiscounts = { coupons: appliedCoupons, manual: manualDiscount }; // 저장용(쿠폰ID 포함) - 절사는 매번 계산되므로 저장 불필요
+  window._estEditState.lastAppliedDiscounts = { coupons: appliedCoupons, manual: manualDiscount }; // 저장용(쿠폰ID 포함)
+  // N-210: 끝자리 처리가 기본(1,000원 절사)이 아닐 때만 저장 → 기존 견적 저장 형태는 그대로
+  if (truncMode !== 'k') window._estEditState.lastAppliedDiscounts.truncMode = truncMode;
   var breakdownEl = document.getElementById('discount-breakdown');
   if (breakdownEl) {
     breakdownEl.innerHTML = discountBreakdown.map(function(d){

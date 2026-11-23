@@ -131,8 +131,16 @@ function calcGrandBeforeTruncation(curtainTotal, discount, svcTotal) {
 // (선혜님 확인: 반올림이 아니라 절사, 천원단위). 계약금/잔금은 이 절사된
 // 금액을 기준으로 계산되므로 자연히 깔끔한 값이 됨. 총액이 0 이하면 그대로.
 function truncateToThousand(grand) {
+  return truncateByMode(grand, 'k');
+}
+// 2026-11-23(N-210, 선혜님 '끝자리 절사가 무조건이라 끝자리 맞추기 어려울 때가 있어' → A안 선택):
+// 견적마다 끝자리 처리를 고를 수 있게 함. 'k'=1,000원 단위 절사(기본·지금과 동일),
+// 'h'=100원 단위 절사, 'none'=절사 안 함. 모르는 값은 기본('k')으로 처리해 금액이 바뀌지 않게 함.
+function truncateByMode(grand, mode) {
   if (!(grand > 0)) return { grand: grand, truncAmt: 0 };
-  var flooredGrand = Math.floor(grand/1000)*1000;
+  if (mode === 'none') return { grand: grand, truncAmt: 0 };
+  var unit = (mode === 'h') ? 100 : 1000;
+  var flooredGrand = Math.floor(grand/unit)*unit;
   return { grand: flooredGrand, truncAmt: grand - flooredGrand };
 }
 
