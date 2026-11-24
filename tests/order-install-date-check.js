@@ -31,10 +31,10 @@ async function run() {
     const base = { phone: '01000000031', addr: '서울', stage: '시공준비중', staffName: '마스터', date: '2026-10-01', orderStatus: done4 };
     const mk = (id, name, extra) => Object.assign({}, base, { id, clientName: name }, extra);
     saveCustomers([
-      mk(9301, '시공일있음', { installDate: '2026-11-20', installDateTbd: false }),
-      mk(9302, '시공일미정', { installDate: '2026-11-20', installDateTbd: true }),
+      mk(9301, '시공일있음', { installDate: '2099-12-31', installDateTbd: false }),
+      mk(9302, '시공일미정', { installDate: '2099-12-31', installDateTbd: true }),
       mk(9303, '시공일없음', { installDate: '', installDateTbd: false }),
-      mk(9304, '원단빠짐', { installDate: '2026-11-20', installDateTbd: false, orderStatus: { fabric: false, production: true, blind: true, material: true, install: false } })
+      mk(9304, '원단빠짐', { installDate: '2099-12-31', installDateTbd: false, orderStatus: { fabric: false, production: true, blind: true, material: true, install: false } })
     ]);
     localStorage.setItem('dah_saved', JSON.stringify(
       [9301, 9302, 9303, 9304].map((id, i) => ({ clientId: id, clientName: ['시공일있음','시공일미정','시공일없음','원단빠짐'][i], no: 'A-' + id, curtainCount: 2, blindCount: 1, savedAt: '2026-10-01' }))
