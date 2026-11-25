@@ -1108,6 +1108,20 @@ var currentTab = 'ga';
               var estFetchFailed = !Array.isArray(erows);
               if (estFetchFailed) { try { showToast('⚠️ 견적 정보를 불러오지 못했어요 — 계약금은 비워 둡니다. 새로고침 후 다시 열어 주세요'); } catch (eT) {} }
               var e = erows && erows[0];
+              // 2026-11-24 N-211(선혜님 '강미진은 왜 견적서가 두개로 만들어진거지'): 이 경로(loadCustId)는 '견적이 아직 없는 고객'용인데,
+              // 첫 저장 뒤 같은 주소를 새로고침·되돌아가기·앱 업데이트 재시작으로 다시 열면 기존 견적 내용만 채우고 '수정 중인 견적 번호'는
+              // 잡지 않아 저장이 새 견적(POST)을 하나 더 만들었음(강미진 11-23 17:07). 견적이 이미 있으면 '이어서 수정' 경로로 바꿔서 연다.
+              if (e && e.id && !e.is_archived && !estFetchFailed && !window._estCustPathRedirected) {
+                window._estCustPathRedirected = true;
+                try {
+                  var _np = new URLSearchParams(location.search);
+                  _np.delete('loadCustId'); _np.delete('loadCustName');
+                  _np.set('loadEstDbId', e.id); _np.set('mode', 'edit');
+                  try { if (typeof estSendReceipt === 'function') estSendReceipt('open', 'redirect-existing', { est: e.id }); } catch (eR) {}
+                  location.replace(location.pathname + '?' + _np.toString());
+                  return;
+                } catch (eRd) { /* 전환 실패 시 아래 기존 흐름으로 계속(막히지 않게) */ }
+              }
               window._estLoadedRow = e || null; window._estOpenStartAt = Date.now(); setTimeout(function(){ estCheckOpenMismatch('customer'); }, 3500); // 2026-10-06: 열기 영수증
               var loadedItems = false;
               if (e && e.line_items && typeof restoreLineItemsToForm === 'function') {
