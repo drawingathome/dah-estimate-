@@ -488,7 +488,8 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       var bmh = tr.querySelector('.bmh'); if (bmh) bmh.value = it.bmh || '';
       var optEl = tr.querySelector('.blind-opt'); if (optEl) optEl.value = it.opt || '';
       var extraEl = tr.querySelector('.blind-extra'); if (extraEl && it.extra) { extraEl.value = it.extra; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(extraEl); }
-      var priceEl = tr.querySelector('.blind-price'); if (priceEl && it.price) { priceEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(priceEl); }
+      var priceEl = tr.querySelector('.blind-price'); if (priceEl && (it.price || it.price === 0)) { // N-212b 단가 0 복원
+         priceEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(priceEl); }
       if (typeof calcBlindRow === 'function' && bmw) calcBlindRow(bmw);
     } else if (it.type === 'svc' || it.type === 'service') {
       // 2026-08-24(선혜님 발견 — 시공서비스 항목이 커튼 표 맨 위에 잘못 끼어있던
@@ -513,7 +514,8 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
         // 추가 - 안 그러면 저장은 돼도 다시 열 때 위치가 사라짐.
         var svcSpaceEl = str.querySelector('.svc-space'); if (svcSpaceEl) svcSpaceEl.value = it.space || '';
         var svcContentEl = str.querySelector('.svc-content'); if (svcContentEl) svcContentEl.value = it.content || it.displayName || it.space || '';
-        var svcPriceEl = str.querySelector('.sprice'); if (svcPriceEl && it.price) { svcPriceEl.setAttribute('data-raw', String(it.price)); svcPriceEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(svcPriceEl); }
+        var svcPriceEl = str.querySelector('.sprice'); if (svcPriceEl && (it.price || (it.price === 0 && !it.autoType))) { // N-212b 직접 넣은 무상(0원) 줄 복원
+         svcPriceEl.setAttribute('data-raw', String(it.price)); svcPriceEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(svcPriceEl); }
         var svcQtyEl = str.querySelector('.sqty'); if (svcQtyEl) svcQtyEl.value = it.qty || it.pnum || '1';
         // 2026-09-19(선혜님 - "다시 열어보니 실측+레일비가... 이게 말이
         // 되니?????????"): 실측비/시공비/레일 등 자동계산 항목의 단가를
@@ -564,7 +566,8 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       var osEl = otr.querySelector('.other-size'); if (osEl) osEl.value = it.size || '';
       var oqEl = otr.querySelector('.other-qty'); if (oqEl) oqEl.value = it.qty || '1';
       var ontEl = otr.querySelector('.other-note'); if (ontEl) ontEl.value = it.note || '';
-      var opEl = otr.querySelector('.other-price'); if (opEl && it.price) { opEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(opEl); }
+      var opEl = otr.querySelector('.other-price'); if (opEl && (it.price || it.price === 0)) { // N-212b 단가 0 복원
+         opEl.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(opEl); }
       if (typeof calcOtherItemRow === 'function' && opEl) calcOtherItemRow(opEl);
     } else {
       addCurtainRow();
@@ -610,7 +613,8 @@ function restoreLineItemsToForm(lineItems, fallbackProductStr) {
       // 열 때마다(재구매 불러오기 포함) 저장된 정확한 폭수가 조용히
       // 자동계산값으로 바뀌는 심각한 버그였음(재현: pnum=5로 저장했는데
       // 다시 열면 7로 바뀜). manual 플래그를 함께 설정해 방지.
-      var cp = ctr.querySelector('.cprice'); if (cp && it.price) { cp.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(cp); }
+      var cp = ctr.querySelector('.cprice'); if (cp && (it.price || it.price === 0)) { // N-212b: 단가 0(무상·'레일만' 줄)도 복원 — 안 그러면 다시 열 때 빈칸이 돼 '단가누락'으로 저장·확정이 막힘(조은창 11-26)
+         cp.value = it.price; if (typeof fmtPriceBlur === 'function') fmtPriceBlur(cp); }
       if (typeof calcCurtainRow === 'function') calcCurtainRow(mw, true);
     }
   });
