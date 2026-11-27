@@ -288,9 +288,9 @@ function buildVendorDocForOne(vendor, groupItems, cName, cStaff, extraNote, toda
   groupItems.forEach(function(it, idx){
     var vendorCellHtml = buildVendorSelectCell(it, idx, fabricVendorOptions);
     out += '<tr style="border-bottom:1px solid #EEE6DC">'
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px">'+escHtml(nameWithColor(it))+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true"'+(it.yardageField ? ' data-ed="fname" data-ed-idx="'+idx+'"' : '')+' style="padding:8px 6px">'+escHtml(nameWithColor(it))+'</td>'
         +(isUnassigned ? '<td style="padding:8px 6px">'+vendorCellHtml+'</td>' : '')
-        +'<td class="pv-editable-field" contenteditable="true" style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
+        +'<td class="pv-editable-field" contenteditable="true"'+(it.yardageField ? ' data-ed="fqty" data-ed-idx="'+idx+'"' : '')+' style="padding:8px 6px;text-align:right;font-weight:700">'+escHtml(it.qty)+'</td>'
         +'</tr>';
   });
   out += '</tbody></table>';
@@ -507,7 +507,9 @@ function collectVendorGroups(categoryFilter) {
       qty: qtyDisplay,
       vendor: vendor,
       orderCategory: 'fabric',
-      sourceRow: tr, vendorField: '.c-vendor'
+      sourceRow: tr, vendorField: '.c-vendor',
+      // 2026-11-28 N-218: 발주서 원단 표의 마수·원단코드를 고치면 견적서의 '원단량'·'원단코드' 칸에 되돌려 쓰기 위한 원본 값(그 사이 바뀌었는지 비교용)
+      rawYardage: yardage, rawFabric: fabric, yardageField: '.c-yardage', codeField: '.c-fabric'
     });
     var autoProductionVendor = getAutoProductionVendorName();
     if (!autoProductionVendor && !railOnlyRow) {

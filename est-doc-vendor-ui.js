@@ -306,6 +306,7 @@ function printForVendor(categoryFilter) {
           saveDocumentToDrive(vendorCategory(vendor), collected2.cName || '미지정고객', vendor, vendorBlock.outerHTML, collected2.cStaff);
         });
         updateOrderStatusFromVendorGroups(collected2.groups);
+        dahSaveEstimateIfVendorEdited(); // 2026-11-28 N-218
         // 2026-09-10(선혜님 - "예상되는 부분을 좀 더 파볼까??"로 발견):
         // 발주를 실제로 완료해도 화면의 "업무처리" 카드가 페이지를
         // 새로고침하기 전까지 "아직 없음"으로 그대로 남아있었음 -
@@ -331,6 +332,7 @@ function printForVendor(categoryFilter) {
     if (collected3.itemCount === 0) { if (typeof showToast === 'function') showToast('완료 처리할 항목이 없어요'); return; }
     if (!vendorOrderGuard(collected3)) return;
     updateOrderStatusFromVendorGroups(collected3.groups);
+    dahSaveEstimateIfVendorEdited(); // 2026-11-28 N-218: 발주서에서 고친 값(마수·원단코드·손잡이 등)이 있으면 견적서도 저장
     if (typeof renderWorkStatusCards === 'function') setTimeout(renderWorkStatusCards, 800);
     doneBtn.textContent = '✓ 완료 처리됨';
     doneBtn.disabled = true;
@@ -395,6 +397,14 @@ function printForVendor(categoryFilter) {
 // 고치면 그 그룹에 속한 모든 항목의 원본 행까지 값을 밀어넣어줌.
 // 2026-11-15 N-159 ④(선혜님 결정 2: "직접 닫을 때까지 유지"): "지금 저장" 알림은 6초 뒤 저절로 사라지면
 // 저장을 깜빡하기 쉬워서, 선혜님이 ✕나 "지금 저장"을 누를 때까지 유지. 한 번에 하나만 보이게 같은 자리 재사용.
+// 2026-11-28 N-218(선혜님: "발주 때 고친 값은 저장되어야 해"): 발주서에서 견적서로 되돌려 쓴 값이 있으면((/** @type {any} */ (window))._dahVendorPendingWrites) 발주완료 때 견적서 저장을 함께 실행. 한 번 저장하면 카운트를 비움.
+function dahSaveEstimateIfVendorEdited() {
+  var n = (/** @type {any} */ (window))._dahVendorPendingWrites || 0;
+  if (n <= 0) return false;
+  (/** @type {any} */ (window))._dahVendorPendingWrites = 0;
+  if (typeof saveEstimate === 'function') { try { saveEstimate(); return true; } catch (e) { console.warn('발주완료 때 견적서 저장 실패:', e); } }
+  return false;
+}
 function dahShowVendorSavedToast(msg) {
   var old = document.getElementById('pv-saved-toast');
   if (old) old.remove();
@@ -477,6 +487,34 @@ function wireVendorFieldEdit(container, groups) {
       var now = td.textContent || '';
       var orig = td.getAttribute('data-orig') || '';
       if (!item) return;
+      // 2026-11-28 N-218(선혜님: "마수·원단코드는 발주 때마다 고치는데 저장은 되어야 해"): 원단 발주서 표의 마수(수량)·원단코드(원단명)는 견적서의 '원단량'·'원단코드' 칸에 되돌려 씀. 폭수(견적 수량)·금액 계산과 무관한 칸.
+      if (field === 'fname' || field === 'fqty') {
+        var fIsQty = field === 'fqty';
+        var fInput = /** @type {HTMLInputElement|null} */ (item.sourceRow && item.sourceRow.querySelector(fIsQty ? item.yardageField : item.codeField));
+        var fRaw = String((fIsQty ? item.rawYardage : item.rawFabric) == null ? '' : (fIsQty ? item.rawYardage : item.rawFabric));
+        var fNow = String(now).replace(/\s+/g, ' ').trim();
+        if (fIsQty) { fNow = fNow.replace(/\s*\([\d,]+원\)\s*$/, '').trim(); if (fNow === '—') fNow = ''; }
+        else {
+          var fCol = String(item.color == null ? '' : item.color).trim();
+          if (fCol && fCol !== '—' && fCol !== '-' && fNow.slice(-(fCol.length + 3)) === ' (' + fCol + ')') fNow = fNow.slice(0, fNow.length - fCol.length - 3).trim();
+        }
+        var fOrigText = String(orig).replace(/\s+/g, ' ').trim();
+        if (now.trim() === orig.trim()) { markDiff(td, false); return; }
+        if (!fInput) { markDiff(td, true, '원본 칸을 찾지 못해 저장하지 못했어요 — 인쇄용으로만 바뀝니다'); return; }
+        if (!fIsQty && fNow === '') { markDiff(td, true, '원단코드를 비우면 견적서에 되돌려 쓸 수 없어요 — 인쇄용으로만 바뀝니다'); return; }
+        if (String(fInput.value || '') !== fRaw) {
+          markDiff(td, true, '그 사이 견적서의 값이 바뀌어서 덮어쓰지 않았어요 — 인쇄용으로만 바뀝니다');
+          dahShowVendorSavedToast('⚠️ 견적서의 값이 그 사이 바뀌어서 이 칸은 원본에 저장하지 않았어요(인쇄용으로만 바뀜).');
+          return;
+        }
+        fInput.value = fNow;
+        if (fIsQty) item.rawYardage = fNow; else item.rawFabric = fNow;
+        td.setAttribute('data-orig', now);
+        markDiff(td, false);
+        (/** @type {any} */ (window))._dahVendorPendingWrites = ((/** @type {any} */ (window))._dahVendorPendingWrites || 0) + 1;
+        dahShowVendorSavedToast('✅ "' + (item.space || '') + '" 원단 ' + (fIsQty ? '마수' : '원단코드') + '를 견적서에 반영했어요. 저장을 눌러야 확정돼요.');
+        return;
+      }
       if (B_FIELDS[field]) {
         markDiff(td, now.trim() !== orig.trim(), '견적서 원본과 다르게 인쇄돼요 (저장 안 됨) — 사이즈·수량·원단명은 견적서에서 고쳐 주세요');
         return;
@@ -501,6 +539,7 @@ function wireVendorFieldEdit(container, groups) {
       item[rule.raw] = val;
       td.setAttribute('data-orig', now);
       markDiff(td, false);
+      (/** @type {any} */ (window))._dahVendorPendingWrites = ((/** @type {any} */ (window))._dahVendorPendingWrites || 0) + 1; // N-218: 발주완료 누를 때 견적서 저장 여부 판단용
       dahShowVendorSavedToast('✅ "' + (item.space || '') + '" 항목을 견적서에 반영했어요. 저장을 눌러야 확정돼요.');
     });
   });

@@ -80,7 +80,7 @@
 | 21 | `est-space-order.js` | est-space-order.js | 6 |
 | 22 | `est-doc-customer.js` | DAH 견적서 앱 — 고객용 견적서 문서 생성 | 2 |
 | 23 | `est-doc-vendor.js` | DAH 견적서 앱 — 거래처별 발주서 문서 생성 | 7 |
-| 24 | `est-doc-vendor-ui.js` | DAH 견적서 앱 — 발주서: 거래처 정보 입력 모달 + 발주서 선택/인쇄 | 10 |
+| 24 | `est-doc-vendor-ui.js` | DAH 견적서 앱 — 발주서: 거래처 정보 입력 모달 + 발주서 선택/인쇄 | 11 |
 | 25 | `est-doc-request.js` | DAH 견적서 앱 — 실측/시공 의뢰서 문서 생성 | 4 |
 | 26 | `est-customer-load.js` | DAH 견적서 앱 — PDF모달 / 고객불러오기 / 계약금계산 | 23 |
 | 27 | `est-misc.js` | DAH 견적서 앱 — 주소검색 / 날짜포맷 / 빈상태 / 공유 / 자동저장 | 8 |
@@ -259,6 +259,7 @@
 | `dahPeekRawName` | `apps-script-daily-backup.js` |
 | `dahRestoreDrill` | `apps-script-daily-backup.js` |
 | `dahSafeScan` | `apps-script-daily-backup.js` |
+| `dahSaveEstimateIfVendorEdited` | `est-doc-vendor-ui.js` |
 | `dahScanClosedMonthDrift` | `apps-script-daily-backup.js` |
 | `dahScanDbIntegrityView` | `apps-script-daily-backup.js` |
 | `dahScanForDataIntegrity` | `apps-script-daily-backup.js` |
