@@ -273,7 +273,7 @@ function renderEstList() {
           var knownId = /** @type {any} */ (window)._estCreatedCustomerByEstId[entry.id];
           if (!knownId && entry.phone) {
             try {
-              var same = (typeof loadCustomers === 'function' ? loadCustomers() : []).filter(function(c){ return !c.is_archived && c.clientName === entry.clientName && c.phone && c.phone === entry.phone; });
+              var same = (typeof loadCustomers === 'function' ? loadCustomers() : []).filter(function(c){ return !c.is_archived && c.stage !== '시공완료' && c.clientName === entry.clientName && c.phone && c.phone === entry.phone; }); // 2026-11-28 N-227: 시공완료 고객은 이름+번호로 고르지 않음(재구매는 새 고객 줄, 11-19 규칙 ②)
               if (same.length === 1) knownId = same[0].id;
             } catch (eSame) { /* 조회 실패는 새로 만드는 기존 흐름으로 */ }
           }

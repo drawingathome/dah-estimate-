@@ -224,9 +224,15 @@ function AddCustomerModal({ editName, registerApi }) {
       if (!confirm('같은 연락처(' + ph + ')로 이미 ' + (serverMatch.staff_name || '다른 담당자') + ' 담당 고객이 등록돼 있어요. 그런데 등록된 이름이 "' + nm + '"님과 달라요.\n가족이거나 같은 번호를 쓰는 다른 분일 수 있어요.\n\n"' + nm + '"님을 별도의 새 고객으로 등록할까요?\n(같은 분이라면 \'취소\'를 누르고 ' + (serverMatch.staff_name || '담당자') + '에게 확인하세요)')) { setSaving(false); return; }
       serverMatch = null;
     }
-    var samePersonExisting = arr.find(function (c) { return !c.is_archived && c.clientName === nm && (c.phone || '').replace(/\D/g, '') === (ph || '').replace(/\D/g, ''); })
+    // 2026-11-28 N-227(11-19 규칙 ②): '시공완료' 고객은 '재구매 업데이트'로 옛 줄을 고치지 않음 — 확인 뒤 새 고객 줄로 등록(옛 줄의 금액·단계·기록 유지)
+    var _phDigits = (ph || '').replace(/\D/g, '');
+    var completedSame = arr.find(function (c) { return !c.is_archived && c.stage === '시공완료' && c.clientName === nm && (c.phone || '').replace(/\D/g, '') === _phDigits; });
+    var samePersonExisting = arr.find(function (c) { return !c.is_archived && c.stage !== '시공완료' && c.clientName === nm && (c.phone || '').replace(/\D/g, '') === (ph || '').replace(/\D/g, ''); })
       || (serverMatch ? { clientName: serverMatch.client_name, phone: serverMatch.phone, staffName: serverMatch.staff_name, visitCount: 1 } : null);
-    var sameNameDiffPhone = !samePersonExisting && arr.find(function (c) { return !c.is_archived && c.clientName === nm; });
+    var sameNameDiffPhone = !samePersonExisting && !completedSame && arr.find(function (c) { return !c.is_archived && c.clientName === nm; });
+    if (completedSame && !samePersonExisting) {
+      if (!confirm('"' + nm + '"(' + ph + ') 고객은 이전에 시공한 고객이에요(시공완료).\n\n같은 분의 새 구매(재구매)로 보고, 옛 기록은 그대로 두고 새 고객 줄로 등록할까요?')) { setSaving(false); return; }
+    }
     // 2026-11-04(선혜님 - 임현정이 마스터/오지은 둘로 등록됨): 서버에만 있고 내 화면에는 없는 고객(= 다른 담당자 소유)은
     // 새 행을 또 만들지 않고 막음. 예전엔 '재구매로 업데이트할까요?'에서 예를 눌러도 새 행이 하나 더 생겼음.
     // 2026-11-19(N-186, 선혜님 '소지선은 둘 다 구매'): 서버가 '시공완료'라고 확실히 알려 준 경우(inProgress===false)만 재구매로 보고 알림+확인 뒤 새 건으로 진행.
