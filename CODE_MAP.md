@@ -78,7 +78,7 @@
 | 19 | `est-save-stages.js` | DAH 견적서 앱 — 저장 단계 함수 4개 (고객 저장 → 견적서 저장 → 로컬 저장) | 7 |
 | 20 | `est-stale-watch.js` | est-stale-watch.js — 견적서 앱: "내가 열어 둔 화면이 옛날 내용이 됐는지" 미리 알려줌 (2026-10-11 신규) | 7 |
 | 21 | `est-space-order.js` | est-space-order.js | 6 |
-| 22 | `est-doc-customer.js` | DAH 견적서 앱 — 고객용 견적서 문서 생성 | 2 |
+| 22 | `est-doc-customer.js` | DAH 견적서 앱 — 고객용 견적서 문서 생성 | 3 |
 | 23 | `est-doc-vendor.js` | DAH 견적서 앱 — 거래처별 발주서 문서 생성 | 7 |
 | 24 | `est-doc-vendor-ui.js` | DAH 견적서 앱 — 발주서: 거래처 정보 입력 모달 + 발주서 선택/인쇄 | 11 |
 | 25 | `est-doc-request.js` | DAH 견적서 앱 — 실측/시공 의뢰서 문서 생성 | 4 |
@@ -249,6 +249,7 @@
 | `dahCheckCustomerPaymentMismatch` | `apps-script-daily-backup.js` |
 | `dahCleanupTestData` | `apps-script-daily-backup.js` |
 | `dahCountDiffCells` | `est-doc-vendor-ui.js` |
+| `dahCustomerDiscountRowsHtml` | `est-doc-customer.js` |
 | `dahDailyBackup` | `apps-script-daily-backup.js` |
 | `dahDataIntegrityScanOnly` | `apps-script-daily-backup.js` |
 | `dahDiagnoseSchema` | `apps-script-daily-backup.js` |

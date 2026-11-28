@@ -632,6 +632,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['est-editing-state-reset-check.js', [target]]);
   scripts.push(['est-final-tab-unconfirmed-check.js', [target]]);
   scripts.push(['customer-doc-svc-lines-sum-check.js', [target]]);
+  scripts.push(['customer-doc-discount-detail-check.js', []]); // 2026-11-28 N-225: 고객용 견적서 할인 항목별 표시
   scripts.push(['blind-opt-numeric-auto-check.js', [target]]);
   scripts.push(['est-addr-detail-select-check.js', []]);
   scripts.push(['pleat-width-rounding-check.js', [target]]);

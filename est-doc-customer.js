@@ -9,6 +9,31 @@
    부르는 쪽 코드는 하나도 안 바뀜 - 파일만 나뉨.
    ══════════════════════════════════════════════════ */
 
+// 2026-11-28 N-225(선혜님 '할인을 제일 많이 보는데, 할인한 게 안 남으면 안 되지' → '그러자'): 고객용 견적서의 할인을 한 줄 합계가 아니라
+// 항목별(쿠폰 이름·추가 할인·끝자리 조정)로 보여 줌. 항목 합이 화면의 할인 합계와 다르면(안전장치) 예전처럼 합계 한 줄만 보여 금액이 틀려 보이는 일을 막음.
+// 고객에게 보이는 이름: 직접입력→추가 할인, 끝자리 절사→끝자리 조정(내부 용어를 그대로 노출하지 않음).
+function dahCustomerDiscountRowsHtml(sumDisc) {
+  var total = parseInt(String(sumDisc).replace(/[^0-9]/g, ''), 10) || 0;
+  var bd = (window._estEditState && window._estEditState.lastDiscountBreakdown) || [];
+  var items = Array.isArray(bd) ? bd.filter(function(d){ return d && d.amount > 0; }) : [];
+  var sum = items.reduce(function(a, d){ return a + d.amount; }, 0);
+  var single = '<tr><td class="sum-lbl">할인</td><td class="sum-val" style="color:#282828">' + sumDisc + '</td></tr>';
+  if (!items.length || sum !== total) return single;
+  function nice(l) {
+    var t = String(l || '');
+    if (t.indexOf('직접입력') === 0) return '추가 할인';
+    if (t.indexOf('끝자리 절사') === 0) return '끝자리 조정';
+    return t;
+  }
+  if (items.length === 1) {
+    return '<tr><td class="sum-lbl">할인 <span style="font-size:11px;color:#8A7F76">· ' + escHtml(nice(items[0].label)) + '</span></td><td class="sum-val" style="color:#282828">' + sumDisc + '</td></tr>';
+  }
+  var out = single;
+  items.forEach(function(d){
+    out += '<tr class="pv-disc-detail"><td class="sum-lbl" style="font-size:11px;color:#8A7F76;padding-left:14px">· ' + escHtml(nice(d.label)) + '</td><td class="sum-val" style="font-size:11px;color:#8A7F76">-' + d.amount.toLocaleString() + '원</td></tr>';
+  });
+  return out;
+}
 function buildCustomerHTML() {
   var cName       = escHtml(document.getElementById('c-name')?.value||'');
   var cPhone      = escHtml(document.getElementById('c-phone')?.value||'');
@@ -409,7 +434,7 @@ function buildCustomerHTML() {
   out += '<colgroup><col style="width:70%"><col style="width:30%"></colgroup>';
   out += '<tr><td class="sum-lbl">제품 소계</td><td class="sum-val">'+sumCurtain+'</td></tr>';
   if(svcRows.length) out += '<tr><td class="sum-lbl">시공 자재</td><td class="sum-val">'+sumSvc+'</td></tr>';
-  if(sumDisc && sumDisc !== '-0원' && sumDisc !== '') out += '<tr><td class="sum-lbl">할인</td><td class="sum-val" style="color:#282828">'+sumDisc+'</td></tr>';
+  if(sumDisc && sumDisc !== '-0원' && sumDisc !== '') out += dahCustomerDiscountRowsHtml(sumDisc);
   out += '</table>';
 
   // 2026-08-15: "최종 견적"을 표 행에서 완전히 분리 — 그동안 모든 섹션이
