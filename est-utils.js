@@ -701,6 +701,8 @@ function dahMergeOrderSnap(current, patch, now) {
     var rec = { round: round, at: at, by: by, lines: lines, installDate: (patch.dates && patch.dates.install) || '', measureDate: (patch.dates && patch.dates.measure) || '', dueDate: cur.dueDate || '', ack: null };
     snap[cat] = rec;
   });
+  // 2026-11-28 N-233: 발주서 미리보기에서 직접 고친 칸(글자만) — 통째로 교체(고친 게 없으면 빈 목록으로 비움)
+  if (patch && patch.docEdits) snap.docEdits = Object.assign({ at: at, by: by }, patch.docEdits);
   if (patch && patch.request) {
     snap.request = Object.assign({}, snap.request || {});
     Object.keys(patch.request).forEach(function(k){ snap.request[k] = Object.assign({ at: at }, patch.request[k]); });

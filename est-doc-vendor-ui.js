@@ -272,7 +272,9 @@ function printForVendor(categoryFilter) {
   closeBtn.textContent = '✕ 닫기';
   closeBtn.onclick = function(){
     var _diffN = dahCountDiffCells(document.getElementById('pv-overlay'));
-    if (_diffN > 0 && !window.confirm('원본(견적서)과 다르게 인쇄될 칸이 ' + _diffN + '개 있어요(노란 칸).\n사이즈·수량·원단명 같은 칸은 견적서에 저장되지 않아요.\n그래도 닫을까요?')) return;
+    if (_diffN > 0 && !window.confirm('원본(견적서)과 다르게 인쇄될 칸이 ' + _diffN + '개 있어요(노란 칸).\n사이즈·수량·원단명 같은 칸은 견적서에는 반영되지 않고, 이 발주서를 다시 열 때 고친 내용만 불러와요.\n닫을까요?')) return;
+    dahVendorSaveDocEdits(inner); // 2026-11-28 N-233: 고친 칸 저장
+    dahSaveEstimateIfVendorEdited(); // 2026-11-28 N-233: 견적서로 되돌려 쓴 칸이 있으면 견적서도 저장
     document.getElementById('pv-overlay').remove();
     document.body.style.overflow = '';
     document.body.classList.remove('preview-open');
@@ -306,6 +308,7 @@ function printForVendor(categoryFilter) {
           saveDocumentToDrive(vendorCategory(vendor), collected2.cName || '미지정고객', vendor, vendorBlock.outerHTML, collected2.cStaff);
         });
         updateOrderStatusFromVendorGroups(collected2.groups);
+        dahVendorSaveDocEdits(inner); // 2026-11-28 N-233
         dahSaveEstimateIfVendorEdited(); // 2026-11-28 N-218
         // 2026-09-10(선혜님 - "예상되는 부분을 좀 더 파볼까??"로 발견):
         // 발주를 실제로 완료해도 화면의 "업무처리" 카드가 페이지를
@@ -332,6 +335,7 @@ function printForVendor(categoryFilter) {
     if (collected3.itemCount === 0) { if (typeof showToast === 'function') showToast('완료 처리할 항목이 없어요'); return; }
     if (!vendorOrderGuard(collected3)) return;
     updateOrderStatusFromVendorGroups(collected3.groups);
+    dahVendorSaveDocEdits(inner); // 2026-11-28 N-233
     dahSaveEstimateIfVendorEdited(); // 2026-11-28 N-218: 발주서에서 고친 값(마수·원단코드·손잡이 등)이 있으면 견적서도 저장
     if (typeof renderWorkStatusCards === 'function') setTimeout(renderWorkStatusCards, 800);
     doneBtn.textContent = '✓ 완료 처리됨';
@@ -379,6 +383,7 @@ function printForVendor(categoryFilter) {
   // "미지정"으로 되돌아가지 않음.
   wireVendorNameEdit(inner, precollected.groups);
   wireVendorFieldEdit(inner, precollected.groups); // 2026-11-15 N-159 ④
+  dahVendorMarkBase(inner); (/** @type {any} */ (window))._dahVendorSavedEditCount = 0; dahVendorRestoreEdits(inner, content); // 2026-11-28 N-233
 
   ov.appendChild(nav);
   ov.appendChild(content);
@@ -397,6 +402,68 @@ function printForVendor(categoryFilter) {
 // 고치면 그 그룹에 속한 모든 항목의 원본 행까지 값을 밀어넣어줌.
 // 2026-11-15 N-159 ④(선혜님 결정 2: "직접 닫을 때까지 유지"): "지금 저장" 알림은 6초 뒤 저절로 사라지면
 // 저장을 깜빡하기 쉬워서, 선혜님이 ✕나 "지금 저장"을 누를 때까지 유지. 한 번에 하나만 보이게 같은 자리 재사용.
+// 2026-11-28 N-233(선혜님: "모든 발주서는 직접 열어서 수정하고 있는데 수정완료 저장이 제대로 안 되어 있는 거 같은데"): 발주서에서 직접 고친 칸을
+// 닫기·인쇄·발주완료 때 customers.order_status.orderSnap.docEdits에 저장(글자만, 금액 없음)하고, 다시 열면 복원.
+// 칸 위치(번호)+처음 글자(b)가 같을 때만 자동 복원 — 견적이 바뀐 칸은 덮지 않고 '이전에 고친 내용 불러오기' 안내만.
+function dahVendorEditCells(root) {
+  return Array.prototype.slice.call(root.querySelectorAll('[data-vendor] [contenteditable="true"]'));
+}
+function dahVendorMarkBase(root) {
+  dahVendorEditCells(root).forEach(function(el){ /** @type {any} */ (el)._pvBase = String(el.innerText || '').trim(); });
+}
+function dahVendorCollectEdits(root) {
+  var items = [];
+  dahVendorEditCells(root).forEach(function(el, i){
+    var b = /** @type {any} */ (el)._pvBase; var v = String(el.innerText || '').trim();
+    if (typeof b === 'string' && v !== b && v.length <= 2000) items.push({ i: i, b: b, v: v });
+  });
+  return items;
+}
+function dahVendorSaveDocEdits(root) {
+  try {
+    var items = dahVendorCollectEdits(root);
+    var had = (/** @type {any} */ (window))._dahVendorSavedEditCount || 0;
+    if (items.length === 0 && had === 0) return;
+    (/** @type {any} */ (window))._dahVendorSavedEditCount = items.length;
+    if (typeof updateOrderStatus === 'function') updateOrderStatus({}, undefined, { docEdits: { kind: 'vendor', items: items.slice(0, 200) } });
+  } catch (e) { typeof reportClientError==='function' && reportClientError('발주서 고친 칸 저장 실패: ' + (e && e.message || e)); }
+}
+function dahVendorRestoreEdits(root, content) {
+  var cid = window._estEditState && window._estEditState.estSaveCustomerId;
+  if (!cid || typeof SUPABASE_URL === 'undefined') return;
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(cid) + '&select=order_status', true);
+    x.timeout = 6000;
+    x.setRequestHeader('apikey', SUPABASE_KEY);
+    x.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+    x.onload = function () {
+      try {
+        var rows = JSON.parse(x.responseText || '[]'); var os = rows && rows[0] && rows[0].order_status;
+        var de = os && os.orderSnap && os.orderSnap.docEdits; var items = de && de.items;
+        if (!items || !items.length || !root.isConnected) return;
+        (/** @type {any} */ (window))._dahVendorSavedEditCount = items.length;
+        var cells = dahVendorEditCells(root); var stale = [];
+        items.forEach(function(it){
+          var el = cells[it.i]; var cur = el ? String(el.innerText || '').trim() : null;
+          if (el && cur === it.b) { if (String(el.innerText || '').trim() === /** @type {any} */ (el)._pvBase) el.innerText = it.v; }
+          else stale.push(it);
+        });
+        if (stale.length) {
+          var bar = document.createElement('div');
+          bar.style.cssText = 'width:100%;max-width:640px;background:#FFF8E1;border:1px solid #E0B94A;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#7A5B00;line-height:1.6';
+          bar.appendChild(document.createTextNode('이전에 고친 내용 ' + stale.length + '건은 견적이 바뀌어 자동으로 넣지 않았어요. '));
+          var btn = document.createElement('button'); btn.textContent = '이전에 고친 내용 불러오기';
+          btn.style.cssText = 'padding:4px 10px;border:1px solid #C99700;background:#fff;border-radius:4px;cursor:pointer;font-size:12px';
+          btn.onclick = function(){ var cs = dahVendorEditCells(root); stale.forEach(function(it){ if (cs[it.i]) cs[it.i].innerText = it.v; }); bar.remove(); };
+          bar.appendChild(btn);
+          content.insertBefore(bar, content.firstChild);
+        }
+      } catch (e) {}
+    };
+    x.send();
+  } catch (e) {}
+}
 // 2026-11-28 N-218(선혜님: "발주 때 고친 값은 저장되어야 해"): 발주서에서 견적서로 되돌려 쓴 값이 있으면((/** @type {any} */ (window))._dahVendorPendingWrites) 발주완료 때 견적서 저장을 함께 실행. 한 번 저장하면 카운트를 비움.
 function dahSaveEstimateIfVendorEdited() {
   var n = (/** @type {any} */ (window))._dahVendorPendingWrites || 0;
