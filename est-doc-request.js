@@ -6,6 +6,68 @@
    상단 설명 참고).
    ══════════════════════════════════════════════════ */
 
+// ══════════════════════════════════════════════════
+// 2026-11-28(N-231, 선혜님 '실측요청서는 저장이 안 되네, 메모 자체가 다 날아갔는데'):
+// 의뢰서 미리보기에서 직접 고친 내용(공간/제품 줄)과 담당자 팝업의 '비고'는 인쇄·PDF에만 나가고 어디에도 저장되지 않아,
+// 다시 열면 견적서 값으로 새로 만들어져 사라졌음. 글자만(금액·단가 없음) customers.order_status.orderSnap.request.<종류>에 저장하고 다시 열 때 복원.
+// base = 견적 내용에서 자동으로 만든 원래 줄들의 지문 — 견적이 바뀌었으면 옛 고친 내용을 자동 적용하지 않고 '불러오기' 안내만 보임.
+// ══════════════════════════════════════════════════
+function dahReqHash(str) { var h = 5381; str = String(str || ''); for (var i = 0; i < str.length; i++) { h = ((h << 5) + h + str.charCodeAt(i)) | 0; } return String(h); }
+// 저장본을 화면에 넣기 전 안전하게 정리(스크립트·이벤트 속성 제거)
+function dahReqSanitizeHtml(html) {
+  var t = document.createElement('template'); t.innerHTML = String(html || '');
+  Array.prototype.slice.call(t.content.querySelectorAll('script,style,iframe,object,embed,link,meta')).forEach(function (n) { n.remove(); });
+  Array.prototype.slice.call(t.content.querySelectorAll('*')).forEach(function (n) {
+    Array.prototype.slice.call(n.attributes).forEach(function (a) { if (/^on/i.test(a.name) || /javascript:/i.test(a.value)) n.removeAttribute(a.name); });
+  });
+  return t.innerHTML;
+}
+// 서버에 저장된 이 고객의 의뢰서 기록을 읽음(없거나 6초 안에 응답이 없으면 null — 의뢰서 열기를 막지 않음)
+function dahRequestSavedLoad(kind, cb) {
+  var done = false; function fin(v) { if (done) return; done = true; try { cb(v); } catch (e) { console.warn('의뢰서 저장본 처리 실패', e); } }
+  var cid = window._estEditState && window._estEditState.estSaveCustomerId;
+  if (!cid || typeof SUPABASE_URL === 'undefined') { fin(null); return; }
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(cid) + '&select=order_status', true);
+    x.timeout = 6000;
+    x.setRequestHeader('apikey', SUPABASE_KEY);
+    x.setRequestHeader('Authorization', 'Bearer ' + (typeof getAuthToken === 'function' ? getAuthToken() : SUPABASE_KEY));
+    x.onload = function () {
+      try {
+        var rows = JSON.parse(x.responseText || '[]'); var os = rows && rows[0] && rows[0].order_status;
+        var rec = os && os.orderSnap && os.orderSnap.request && os.orderSnap.request[kind];
+        fin(rec && typeof rec === 'object' ? rec : null);
+      } catch (e) { fin(null); }
+    };
+    x.onerror = function () { fin(null); }; x.ontimeout = function () { fin(null); };
+    x.send();
+  } catch (e) { fin(null); }
+  setTimeout(function () { fin(null); }, 6500);
+}
+// 지금 미리보기 화면에서 저장할 값(비고·고친 줄·원래 줄 지문)을 모음. 고치지 않았으면 edited는 빈 글자(저장본을 비움).
+function dahReqCollect(kind) {
+  var ed = document.getElementById('pv-request-editable'); var noteEl = document.getElementById('pv-request-note-editable');
+  var meta = (/** @type {any} */ (window)._dahReqBase && /** @type {any} */ (window)._dahReqBase[kind]) || {};
+  var cur = ed ? ed.innerHTML : '';
+  var changed = !!ed && !!meta.baseHtml && cur !== meta.baseHtml;
+  var edited = changed ? cur : '';
+  if (edited.length > 30000) edited = '';
+  return { note: noteEl ? String(noteEl.innerText || '').trim() : (meta.note || ''), edited: edited, base: meta.baseHash || '', changed: changed && edited !== '', tooBig: changed && cur.length > 30000 };
+}
+// 닫을 때 저장(인쇄·PDF 버튼은 아래 reqPatch에 같은 값을 넣음). 바뀐 게 없으면 서버에 쓰지 않음.
+function dahRequestSaveEdits(kind) {
+  var c = dahReqCollect(kind); var meta = (/** @type {any} */ (window)._dahReqBase && /** @type {any} */ (window)._dahReqBase[kind]) || {};
+  var saved = meta.saved || {};
+  if (c.tooBig && typeof showToast === 'function') showToast('⚠️ 고친 내용이 너무 길어서 저장하지 못했어요');
+  if (!c.changed && !(saved.edited) && (c.note || '') === (saved.note || '')) return;
+  var installerNameEl = /** @type {HTMLInputElement|null} */ (document.getElementById('c-installer-name'));
+  var dateEl = /** @type {HTMLInputElement|null} */ (document.getElementById(kind === 'install' ? 'c-install' : 'c-measure'));
+  var patch = { request: {} };
+  patch.request[kind] = { date: dateEl && dateEl.value ? String(dateEl.value) : '', installer: installerNameEl ? installerNameEl.value : '', note: c.note, edited: c.edited, base: c.base };
+  if (typeof updateOrderStatus === 'function') updateOrderStatus({}, undefined, patch);
+}
+
 function buildRequestHTML(kind, extraNote) {
   // kind: 'measure' (실측 의뢰서) or 'install' (시공 의뢰서)
   function infoRow(label, val) {
@@ -448,23 +510,28 @@ function printRequest(kind, skipPrompts) {
   // 교체. 실제 미리보기 표시 로직은 _showRequestPreview()로 분리해서,
   // 팝업의 "확인" 콜백에서 호출하도록 함(skipPrompts 경로는 팝업 없이
   // 바로 호출).
-  if (!skipPrompts) {
-    openInstallerInfoModal(label, currentInstallerName, currentInstallerPhone, function(name, phone, note) {
-      if (installerNameEl) installerNameEl.value = name;
-      if (installerPhoneEl) installerPhoneEl.value = phone;
-      _showRequestPreview(kind, label, note);
-    });
-    return;
-  }
-  if (installerNameEl) installerNameEl.value = currentInstallerName;
-  if (installerPhoneEl) installerPhoneEl.value = currentInstallerPhone;
-  _showRequestPreview(kind, label, '');
+  // 2026-11-28(N-231): 열기 전에 서버에 저장된 비고·고친 내용을 읽어 둠(응답이 없으면 6초 뒤 없는 것으로 보고 그대로 엶)
+  /** @type {any} */ (window)._dahReqSaved = /** @type {any} */ (window)._dahReqSaved || {};
+  dahRequestSavedLoad(kind, function(rec) {
+    /** @type {any} */ (window)._dahReqSaved[kind] = rec || null;
+    if (!skipPrompts) {
+      openInstallerInfoModal(label, currentInstallerName, currentInstallerPhone, function(name, phone, note) {
+        if (installerNameEl) installerNameEl.value = name;
+        if (installerPhoneEl) installerPhoneEl.value = phone;
+        _showRequestPreview(kind, label, note);
+      }, (rec && rec.note) || '');
+      return;
+    }
+    if (installerNameEl) installerNameEl.value = currentInstallerName;
+    if (installerPhoneEl) installerPhoneEl.value = currentInstallerPhone;
+    _showRequestPreview(kind, label, (rec && rec.note) || '');
+  });
 }
 
 // 2026-09-09: 설치기사명/연락처/비고를 한 화면에서 입력받는 팝업 -
 // 발주정보 입력 팝업과 같은 스타일. 확인을 누르면 onConfirm(name, phone,
 // note)를 호출하고, 취소/닫기를 누르면 아무 것도 안 하고 닫힘.
-function openInstallerInfoModal(label, currentName, currentPhone, onConfirm) {
+function openInstallerInfoModal(label, currentName, currentPhone, onConfirm, initialNote) {
   var existing = document.getElementById('installer-info-modal');
   if (existing) existing.remove();
 
@@ -514,6 +581,7 @@ function openInstallerInfoModal(label, currentName, currentPhone, onConfirm) {
   noteLbl.style.cssText = 'font-size:12px;font-weight:700;color:#282828;margin-bottom:6px';
   var noteInput = document.createElement('textarea');
   noteInput.placeholder = '담당자에게 남길 메모가 있으면 입력하세요';
+  noteInput.value = initialNote || ''; // 2026-11-28(N-231): 이전에 저장한 비고를 미리 채움
   noteInput.style.cssText = 'width:100%;min-height:80px;padding:11px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box;resize:vertical';
   wrap.appendChild(noteLbl); wrap.appendChild(noteInput);
 
@@ -571,6 +639,7 @@ function _showRequestPreview(kind, label, extraNote) {
   var closeBtn = document.createElement('button');
   closeBtn.textContent = '✕ 닫기';
   closeBtn.onclick = function(){
+    try { dahRequestSaveEdits(kind); } catch (eSv) { typeof reportClientError==='function' && reportClientError('의뢰서 고친 내용 저장 실패: ' + (eSv && eSv.message || eSv)); }
     document.getElementById('pv-overlay').remove();
     document.body.style.overflow = '';
     document.body.classList.remove('preview-open');
@@ -607,7 +676,8 @@ function _showRequestPreview(kind, label, extraNote) {
       try {
         var reqDateEl = /** @type {HTMLInputElement|null} */ (document.getElementById(kind === 'install' ? 'c-install' : 'c-measure'));
         reqPatch = { request: {} };
-        reqPatch.request[kind] = { date: reqDateEl && reqDateEl.value ? String(reqDateEl.value) : '', installer: installerNameForStatus };
+        var reqSave = dahReqCollect(kind);
+        reqPatch.request[kind] = { date: reqDateEl && reqDateEl.value ? String(reqDateEl.value) : '', installer: installerNameForStatus, note: reqSave.note, edited: reqSave.edited, base: reqSave.base }; // N-231: 비고·고친 내용도 함께 저장
       } catch (eReq) { reqPatch = null; }
       if (typeof updateOrderStatus === 'function') updateOrderStatus(statusUpdate, undefined, reqPatch);
       // 2026-09-10: 발주와 동일하게, 실측/시공 완료 직후에도 업무처리
@@ -650,6 +720,28 @@ function _showRequestPreview(kind, label, extraNote) {
   var inner = document.createElement('div');
   inner.style.cssText = 'width:100%;max-width:640px';
   inner.innerHTML = html;
+  // 2026-11-28(N-231): 원래 줄의 지문을 기억해 두고, 저장본이 있으면 복원(견적이 그대로일 때) 또는 불러오기 안내(바뀌었을 때)
+  try {
+    /** @type {any} */ (window)._dahReqBase = /** @type {any} */ (window)._dahReqBase || {};
+    var edEl = inner.querySelector('#pv-request-editable');
+    var savedRec = (/** @type {any} */ (window)._dahReqSaved && /** @type {any} */ (window)._dahReqSaved[kind]) || null;
+    var baseHtml = edEl ? edEl.innerHTML : '';
+    /** @type {any} */ (window)._dahReqBase[kind] = { baseHtml: baseHtml, baseHash: dahReqHash(baseHtml), saved: savedRec || {}, note: extraNote || '' };
+    if (edEl && savedRec && savedRec.edited) {
+      var safeEdited = dahReqSanitizeHtml(savedRec.edited);
+      if (savedRec.base && savedRec.base === /** @type {any} */ (window)._dahReqBase[kind].baseHash) {
+        edEl.innerHTML = safeEdited;
+      } else {
+        var nb = document.createElement('div'); nb.className = 'print-hide';
+        nb.style.cssText = 'margin:8px 0;padding:8px 10px;background:#FFF6E5;border:1px solid #F0D9A8;border-radius:8px;font-size:12px;text-align:center';
+        nb.appendChild(document.createTextNode('견적 내용이 바뀌어서 이전에 고친 내용은 자동으로 넣지 않았어요. '));
+        var lb = document.createElement('button'); lb.type = 'button'; lb.textContent = '이전에 고친 내용 불러오기';
+        lb.style.cssText = 'margin-left:6px;padding:4px 10px;border:1px solid #282828;border-radius:6px;background:#fff;cursor:pointer;font-size:12px;font-family:inherit';
+        lb.onclick = function () { edEl.innerHTML = safeEdited; nb.remove(); };
+        nb.appendChild(lb); edEl.parentNode.insertBefore(nb, edEl);
+      }
+    }
+  } catch (eRs) { typeof reportClientError==='function' && reportClientError('의뢰서 저장본 복원 실패: ' + (eRs && eRs.message || eRs)); }
   content.appendChild(inner);
 
   ov.appendChild(nav);

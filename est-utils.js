@@ -543,7 +543,8 @@ function getCustomerOrderStatus(callback) {
 // 예전엔 select에 updated_at이 없어 잠금값이 항상 비어 있었고, 조건 없이 덮어썼음.
 function updateOrderStatus(updates, triesLeft, snapPatch) {
   if (triesLeft === undefined) triesLeft = 1;
-  if (!updates || Object.keys(updates).length === 0) return;
+  // 2026-11-28(N-231): 의뢰서에서 고친 내용만 저장할 땐 발주 상태(updates)가 비어 있고 snapPatch만 있음 — 그 경우도 저장함
+  if (!updates || (Object.keys(updates).length === 0 && !snapPatch)) return;
   // 2026-11-15(N-159 ⑨): 고객이 아직 저장 전이라 고객 번호가 없으면 예전엔 아무 말 없이 건너뛰어, 발주서를 처리했는데 업무 현황판에는 기록이 안 남았음 → 이유를 알려 줌
   if (!window._estEditState.estSaveCustomerId) {
     if (typeof showToast === 'function') showToast('⚠️ 고객이 아직 저장되지 않아 업무 현황판에 발주 기록이 안 남았어요 — 견적서를 먼저 저장한 뒤 다시 눌러 주세요');
