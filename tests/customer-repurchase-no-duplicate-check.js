@@ -53,13 +53,15 @@ async function scenario(name, idx, serverDup, noId, rpcFail) {
   const log = []; const ok = (l, c, d) => log.push((c ? '✅ ' : '❌ ') + l + (d !== undefined && !c ? ' — ' + JSON.stringify(d) : ''));
   const A = await scenario('A', 1, false);
   const posts = A.rec.reqs.filter(r => r.method === 'POST');
-  ok('A1. 재구매 확인 후 새 행(POST)이 만들어지지 않음', posts.length === 0, A.rec.reqs);
-  ok('A2. 내 화면에 같은 전화번호 고객이 1명뿐', A.state.length === 1, A.state);
-  ok('A3. 기존 고객 id(701)와 금액·단계가 그대로', A.state[0] && A.state[0].id === 701 && A.state[0].price === 1000000 && A.state[0].stage === '시공완료' && A.state[0].deposit === 500000, A.state);
-  ok('A4. 방문횟수가 2로 올라감', A.state[0] && A.state[0].visitCount === 2, A.state);
-  ok('A5. 기존 행(701) 갱신 요청(PATCH)이 나감', A.rec.reqs.some(r => r.method === 'PATCH' && /701/.test(r.p)), A.rec.reqs);
+  // 2026-11-28 N-227: 11-19 규칙 ②(시공완료=알림+확인 뒤 새 건)에 맞춰 기대값 변경 — 예전(11-04)엔 옛 시공완료 줄을 '재구매 업데이트'로 갱신했지만, 새 구매는 새 고객 줄이어야 함
+  const oldRow = A.state.find(r => r.id === 701); const newRow = A.state.find(r => r.id !== 701);
+  ok('A1. 재구매 확인 후 새 행(POST)이 1건 만들어짐', posts.length === 1, A.rec.reqs);
+  ok('A2. 내 화면에 같은 전화번호 고객이 2명(옛 줄+새 줄)', A.state.length === 2, A.state);
+  ok('A3. 옛 고객 id(701)의 금액·단계·입금이 그대로', oldRow && oldRow.price === 1000000 && oldRow.stage === '시공완료' && oldRow.deposit === 500000, A.state);
+  ok('A4. 옛 줄 방문횟수는 1 그대로, 새 줄은 1', oldRow && oldRow.visitCount === 1 && newRow && newRow.visitCount === 1, A.state);
+  ok('A5. 옛 행(701)을 갱신하는 요청(PATCH)은 나가지 않음', !A.rec.reqs.some(r => r.method === 'PATCH' && /701/.test(r.p)), A.rec.reqs);
   ok('A6. 화면 오류 없음', A.rec.errs.length === 0, A.rec.errs);
-  ok('A7. 기존 메모는 유지(이어 붙임), 기존 상담일은 덮어쓰지 않음', A.state[0] && String(A.state[0].memo).indexOf('기존메모') !== -1 && A.state[0].date === '2026-10-01', A.state);
+  ok('A7. 옛 줄의 메모·상담일은 그대로', oldRow && String(oldRow.memo) === '기존메모' && oldRow.date === '2026-10-01', A.state);
   const C = await scenario('C', 3, false, true);
   ok('C1. 서버에 안 올라간(id 없는) 같은 사람 행이 있어도 내 화면에 1명만 남음', C.state.length === 1, C.state);
   const D = await scenario('D', 4, false, false, true);

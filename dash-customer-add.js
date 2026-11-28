@@ -226,8 +226,8 @@ function AddCustomerModal({ editName, registerApi }) {
     }
     // 2026-11-28 N-227(11-19 규칙 ②): '시공완료' 고객은 '재구매 업데이트'로 옛 줄을 고치지 않음 — 확인 뒤 새 고객 줄로 등록(옛 줄의 금액·단계·기록 유지)
     var _phDigits = (ph || '').replace(/\D/g, '');
-    var completedSame = arr.find(function (c) { return !c.is_archived && c.stage === '시공완료' && c.clientName === nm && (c.phone || '').replace(/\D/g, '') === _phDigits; });
-    var samePersonExisting = arr.find(function (c) { return !c.is_archived && c.stage !== '시공완료' && c.clientName === nm && (c.phone || '').replace(/\D/g, '') === (ph || '').replace(/\D/g, ''); })
+    var completedSame = arr.find(function (c) { return !c.is_archived && c.id && c.stage === '시공완료' && c.clientName === nm && (c.phone || '').replace(/\D/g, '') === _phDigits; });
+    var samePersonExisting = arr.find(function (c) { return !c.is_archived && !(c.id && c.stage === '시공완료') && c.clientName === nm && (c.phone || '').replace(/\D/g, '') === (ph || '').replace(/\D/g, ''); })
       || (serverMatch ? { clientName: serverMatch.client_name, phone: serverMatch.phone, staffName: serverMatch.staff_name, visitCount: 1 } : null);
     var sameNameDiffPhone = !samePersonExisting && !completedSame && arr.find(function (c) { return !c.is_archived && c.clientName === nm; });
     if (completedSame && !samePersonExisting) {
