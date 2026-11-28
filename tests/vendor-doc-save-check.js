@@ -100,7 +100,7 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 170000)
 
   // 7·8) N-236①: '발주완료 표시'·'인쇄 / PDF 저장' 버튼 경로에서도 고친 칸이 저장됨
   async function editThenClick(label, mark) {
-    db.order_status = {}; db.updated_at = 'Tx'; await open(); await wait(1600);
+    db.order_status = {}; db.updated_at = 'Tx'; await open(); await wait(1600); const p0 = patches;
     await page.evaluate((mark) => {
       window.print = function () {}; window.open = function () { return null; }; window.__toast = []; window.showToast = function (m) { window.__toast.push(m); };
       var list = Array.from(document.querySelectorAll('#pv-overlay [data-vendor] [contenteditable="true"]'));
@@ -108,7 +108,8 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 170000)
     }, mark);
     await page.evaluate((label) => { var o = document.getElementById('pv-overlay'); var b = Array.from(o.querySelectorAll('button')).find(x => x.textContent.indexOf(label) >= 0); b && b.click(); }, label);
     await wait(2200);
-    const saved = JSON.stringify((db.order_status.orderSnap || {}).docEdits || {}).includes(mark);
+    const saved = JSON.stringify((db.order_status.orderSnap || {}).docEdits || {}).includes(mark) && (patches - p0) === 1; // N-236: 발주 기록과 고친 칸이 '한 번의 저장'이어야 서로 덮지 않음
+    if (patches - p0 !== 1) console.log('   (진단) 저장 횟수=', patches - p0);
     if (!saved) console.log('   (진단) toast=', JSON.stringify(await page.evaluate(() => window.__toast)).slice(0, 300), 'db=', JSON.stringify(db.order_status).slice(0, 200));
     await closePv(); await wait(800); return saved;
   }

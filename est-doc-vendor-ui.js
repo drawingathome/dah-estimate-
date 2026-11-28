@@ -307,8 +307,7 @@ function printForVendor(categoryFilter) {
           var vendor = _savedVendorName(vendorBlock); // 2026-11-14 N-137 ③: 인쇄 중 발주처를 고쳤다면 처음 이름표(미지정/기타) 대신 고친 값으로 저장 이름·폴더를 정함
           saveDocumentToDrive(vendorCategory(vendor), collected2.cName || '미지정고객', vendor, vendorBlock.outerHTML, collected2.cStaff);
         });
-        updateOrderStatusFromVendorGroups(collected2.groups);
-        dahVendorSaveDocEdits(inner); // 2026-11-28 N-233
+        updateOrderStatusFromVendorGroups(collected2.groups, dahVendorDocEditsPatch(inner)); // 2026-11-28 N-233·N-236: 고친 칸도 같은 저장에 실음
         dahSaveEstimateIfVendorEdited(); // 2026-11-28 N-218
         // 2026-09-10(선혜님 - "예상되는 부분을 좀 더 파볼까??"로 발견):
         // 발주를 실제로 완료해도 화면의 "업무처리" 카드가 페이지를
@@ -334,8 +333,7 @@ function printForVendor(categoryFilter) {
     var collected3 = collectVendorGroups(categoryFilter);
     if (collected3.itemCount === 0) { if (typeof showToast === 'function') showToast('완료 처리할 항목이 없어요'); return; }
     if (!vendorOrderGuard(collected3)) return;
-    updateOrderStatusFromVendorGroups(collected3.groups);
-    dahVendorSaveDocEdits(inner); // 2026-11-28 N-233
+    updateOrderStatusFromVendorGroups(collected3.groups, dahVendorDocEditsPatch(inner)); // 2026-11-28 N-233·N-236
     dahSaveEstimateIfVendorEdited(); // 2026-11-28 N-218: 발주서에서 고친 값(마수·원단코드·손잡이 등)이 있으면 견적서도 저장
     if (typeof renderWorkStatusCards === 'function') setTimeout(renderWorkStatusCards, 800);
     doneBtn.textContent = '✓ 완료 처리됨';
@@ -419,13 +417,20 @@ function dahVendorCollectEdits(root) {
   });
   return items;
 }
-function dahVendorSaveDocEdits(root) {
+// 고친 칸 저장용 patch를 만든다(없으면 null). 발주완료·인쇄 버튼은 이 patch를 발주 기록과 '한 번에' 저장(2026-11-28 N-236: 두 번 나눠 쓰면 서로 덮을 수 있음)
+function dahVendorDocEditsPatch(root) {
   try {
     var items = dahVendorCollectEdits(root);
     var had = (/** @type {any} */ (window))._dahVendorSavedEditCount || 0;
-    if (items.length === 0 && had === 0) return;
+    if (items.length === 0 && had === 0) return null;
     (/** @type {any} */ (window))._dahVendorSavedEditCount = items.length;
-    if (typeof updateOrderStatus === 'function') updateOrderStatus({}, undefined, { docEdits: { kind: 'vendor', items: items.slice(0, 200) } });
+    return { docEdits: { kind: 'vendor', items: items.slice(0, 200) } };
+  } catch (e) { typeof reportClientError==='function' && reportClientError('발주서 고친 칸 모으기 실패: ' + (e && e.message || e)); return null; }
+}
+function dahVendorSaveDocEdits(root) {
+  try {
+    var patch = dahVendorDocEditsPatch(root);
+    if (patch && typeof updateOrderStatus === 'function') updateOrderStatus({}, undefined, patch);
   } catch (e) { typeof reportClientError==='function' && reportClientError('발주서 고친 칸 저장 실패: ' + (e && e.message || e)); }
 }
 function dahVendorRestoreEdits(root, content) {

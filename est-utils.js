@@ -620,7 +620,7 @@ function updateOrderStatus(updates, triesLeft, snapPatch) {
     xhrGet.send();
   } catch (e) { console.warn('현황 자동갱신 실패:', e); typeof reportClientError==='function' && reportClientError('업무현황 자동갱신 실패: ' + (e && e.message || e), e && e.stack); }
 }
-function updateOrderStatusFromVendorGroups(groups) {
+function updateOrderStatusFromVendorGroups(groups, extraSnapPatch) {
   var todayISO = dahLocalYmd(); // 2026-11-12(N-137 ⑩): 발주일이 한국시간 0~9시에 하루 전으로 저장되던 문제
   var updates = {};
   // 2026-09-10(전문업체 관점 종합 시뮬레이션으로 발견): 같은 발주
@@ -652,6 +652,7 @@ function updateOrderStatusFromVendorGroups(groups) {
   });
   var snapPatch = null;
   try { snapPatch = dahBuildOrderSnapPatch(groups, Object.keys(updates)); } catch (eBuild) { typeof reportClientError==='function' && reportClientError('발주 당시 값 만들기 실패: ' + (eBuild && eBuild.message || eBuild)); }
+  if (extraSnapPatch) snapPatch = Object.assign({}, snapPatch || {}, extraSnapPatch); // 2026-11-28 N-236: 발주서에서 고친 칸을 발주 기록과 한 번에 저장
   updateOrderStatus(updates, undefined, snapPatch);
 }
 
