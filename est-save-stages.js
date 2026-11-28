@@ -781,6 +781,16 @@ function _saveStage_estimatesActual(ctx) {
     onDone('failed'); // 2026-10-06: 서버에 못 올라간 경우 - 바깥에서 "저장됨"으로 착각하지 않게 결과를 알림
   }
 }
+// 2026-11-28(N-226, 선혜님 '권재호 견적서를 만들었는데 정보가 안 뜬다 — 재구매 고객'): 이 기기 캐시(dah_customers)에서 이름+번호로 고객을 찾을 때
+// 이미 '시공완료'인 옛 고객은 고르지 않음 — 골라 버리면 재구매 새 견적이 옛 고객(53번)에 붙어 단계·금액이 그대로 시공완료로 보였음(11-19 규칙 ②: 재구매는 새 고객 줄).
+// 고객 번호를 이미 알면(열어서 수정) 그 고객을 그대로 씀.
+function dahPickCachedCustomerIndex(customers, knownId, name, phone) {
+  var norm = function (p) { return String(p || '').replace(/\D/g, ''); };
+  if (knownId) return customers.findIndex(function (c) { return String(c.id) === String(knownId); });
+  return customers.findIndex(function (c) {
+    return c.clientName === name && norm(c.phone) === norm(phone) && c.stage !== '시공완료';
+  });
+}
 function _saveStage_localStorage(ctx) {
   // ctx에서 꺼낸 값들 - 예전엔 바깥 함수(_saveEstimateInner)의 변수를 몰래 같이 쓰던 것들
   var name = ctx.name, phone = ctx.phone, addr = ctx.addr, addr2 = ctx.addr2, staffName = ctx.staffName, custMemo = ctx.custMemo, grand = ctx.grand, perf = ctx.perf, spaceStr = ctx.spaceStr, fabricStr = ctx.fabricStr, lineItems = ctx.lineItems;
@@ -879,11 +889,7 @@ function _saveStage_localStorage(ctx) {
       // "수정"으로 처리되게 함 — 이름+전화번호 매칭은 그 id를 모를 때(진짜
       // 신규/다른 고객 가능성)만 보조적으로 사용.
       var knownId = window._estEditState.estSaveCustomerId || null;
-      var cidx = knownId
-        ? customers.findIndex(function(c){ return String(c.id) === String(knownId); })
-        : customers.findIndex(function(c){
-            return c.clientName === entry.clientName && normPhone(c.phone) === normPhone(entry.phone);
-          });
+      var cidx = dahPickCachedCustomerIndex(customers, knownId, entry.clientName, entry.phone);
       var existingId = cidx >= 0 ? customers[cidx].id : null;
       entry.clientId = existingId; // dah_saved(견적이력)에도 고객 고유번호 반영
       localStorage.setItem('dah_saved', JSON.stringify(saved));
