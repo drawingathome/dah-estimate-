@@ -47,7 +47,7 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 170000)
     tr.querySelector('.mw').value = 200; calcCurtainRow(tr.querySelector('.mw')); tr.querySelector('.mh').value = 240; calcCurtainRow(tr.querySelector('.mh'));
     tr.querySelector('.cprice').value = 50000; calcCurtainRow(tr.querySelector('.cprice'));
     var f = tr.querySelector('.c-fabric'); if (f) f.value = 'AB-1001'; var v = tr.querySelector('.c-vendor'); if (v) v.value = '한솔';
-    var y = tr.querySelector('.c-yardage'); if (y) y.value = '10마';
+    var y = tr.querySelector('.c-yardage'); if (y) y.value = '10마'; var rv = tr.querySelector('.c-rail-vendor'); if (rv) rv.value = '목성'; var dep = document.getElementById('deposit-input'); if (dep) { dep.value = '100000'; dep.dataset.depositSource = 'real'; }
   });
   const open = () => page.evaluate(() => printForVendor());
   const closePv = () => page.evaluate(() => { var o = document.getElementById('pv-overlay'); var b = o && Array.from(o.querySelectorAll('button')).find(x => /닫기/.test(x.textContent)); b && b.click(); });
@@ -97,6 +97,23 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 170000)
   await closePv(); await wait(1500);
   const after = await page.evaluate(() => window._saveCalls);
   ok('3. 견적서로 되돌려 쓰는 칸을 고친 뒤 닫으면 견적서 저장도 실행됨', after === before + 1, JSON.stringify({ before, after }));
+
+  // 7·8) N-236①: '발주완료 표시'·'인쇄 / PDF 저장' 버튼 경로에서도 고친 칸이 저장됨
+  async function editThenClick(label, mark) {
+    db.order_status = {}; db.updated_at = 'Tx'; await open(); await wait(1600);
+    await page.evaluate((mark) => {
+      window.print = function () {}; window.open = function () { return null; }; window.__toast = []; window.showToast = function (m) { window.__toast.push(m); };
+      var list = Array.from(document.querySelectorAll('#pv-overlay [data-vendor] [contenteditable="true"]'));
+      var plain = list.find(e => !e.hasAttribute('data-ed') && /안방/.test(e.innerText)); if (plain) plain.innerText = mark;
+    }, mark);
+    await page.evaluate((label) => { var o = document.getElementById('pv-overlay'); var b = Array.from(o.querySelectorAll('button')).find(x => x.textContent.indexOf(label) >= 0); b && b.click(); }, label);
+    await wait(2200);
+    const saved = JSON.stringify((db.order_status.orderSnap || {}).docEdits || {}).includes(mark);
+    if (!saved) console.log('   (진단) toast=', JSON.stringify(await page.evaluate(() => window.__toast)).slice(0, 300), 'db=', JSON.stringify(db.order_status).slice(0, 200));
+    await closePv(); await wait(800); return saved;
+  }
+  ok('7. "발주완료 표시"를 눌러도 고친 칸이 orderSnap.docEdits에 저장됨', await editThenClick('발주완료', '안방(완료고침QQ)'));
+  ok('8. "인쇄 / PDF 저장"을 눌러도 고친 칸이 orderSnap.docEdits에 저장됨', await editThenClick('인쇄', '안방(인쇄고침WW)'));
 
   // 5) 서버 무응답
   hang = true; await open(); await wait(9000);
