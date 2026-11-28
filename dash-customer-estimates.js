@@ -397,6 +397,15 @@ function openEstimate(name, id) {
   // 같은 경로로 생겼을 가능성이 높음). 고객에게 이미 견적이 있으면
   // loadEstDbId+mode=edit로 열어서 "이어서 수정"이 되도록, 없으면(진짜 신규
   // 고객) 기존처럼 loadCustId로 열리도록 분기함.
+  // 2026-11-28(N-229, 선혜님 '한 고객이 이후에 제품을 또 구매할 때 같은 문제가 안 생겨야 해'): 시공완료 고객은 '이전 견적 보기'와 '재구매 새 견적'이 다름.
+  // 예전엔 구분이 없어서 마지막 견적을 수정 모드로 열거나(저장하면 옛 견적을 덮어씀) 옛 고객 번호로 새 견적이 붙었음.
+  // 재구매면 고객 번호를 넘기지 않고 정보만 채워 열어서, 저장 때 재구매 확인 뒤 새 고객 줄이 만들어지게 함.
+  if (useId && typeof getCustomerCurrentStage === 'function' && getCustomerCurrentStage(name, useId) === '시공완료') {
+    if (confirm('이 고객은 이미 시공이 끝난 고객이에요.\n\n같은 분이 새로 구매하시는 건가요?\n[확인] = 재구매 새 견적 만들기(새 고객 줄로 저장돼요)\n[취소] = 이전 견적 보기')) {
+      window.location.href = 'dah-estimate.html?loadCustId=' + encodeURIComponent(useId) + '&rebuy=1';
+      return;
+    }
+  }
   if (useId) {
     // 2026-09-21(선혜님 - "견적서 확인을 누르면 2개의 견적서를 선택하는게
     // 아니라 그 중 제일 마지막 견적만 확인이 되고 있어" - 시험가 고객
