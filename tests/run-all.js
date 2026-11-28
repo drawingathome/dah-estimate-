@@ -634,6 +634,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['customer-doc-svc-lines-sum-check.js', [target]]);
   scripts.push(['customer-doc-discount-detail-check.js', []]); // 2026-11-28 N-225: 고객용 견적서 할인 항목별 표시
   scripts.push(['rebuy-cache-match-check.js', []]); // 2026-11-28 N-226: 재구매가 옛 시공완료 고객에 붙지 않게
+  scripts.push(['rebuy-save-flow-check.js', []]); // 2026-11-28 N-226: 재구매 저장 흐름 재현(옛 코드 PATCH→새 코드 새 고객)
   scripts.push(['blind-opt-numeric-auto-check.js', [target]]);
   scripts.push(['est-addr-detail-select-check.js', []]);
   scripts.push(['pleat-width-rounding-check.js', [target]]);
