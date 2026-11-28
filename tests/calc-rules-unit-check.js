@@ -28,7 +28,7 @@ const code = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
 const ctx = vm.createContext(Object.create(null));
 vm.runInContext(src, ctx);
 const R = ctx;
-const names = ['classifySvcRow', 'summarizeSvcGroups', 'summarizeSvcDetails', 'summarizeBlindOptionExtras', 'blindInstallSpec', 'resolveRegionPrices', 'isNoInstallFee', 'regionFeeContent', 'regionFeeHint', 'calcRailJa', 'railMaterialSpec', 'railInstallSpec', 'calcSuggestedPanels', 'curtainHeightFeeWarning', 'getBlindMinSqm', 'calcBlindBillableSqm', 'applyDiscountItems', 'calcGrandBeforeTruncation', 'truncateToThousand', 'truncateByMode', 'calcDepositRatio', 'calcAutoDeposit', 'calcDepositAndBalance', 'calcPerformanceRevenue'];
+const names = ['classifySvcRow', 'summarizeSvcGroups', 'summarizeSvcDetails', 'summarizeBlindOptionExtras', 'blindInstallSpec', 'resolveRegionPrices', 'isNoInstallFee', 'regionFeeContent', 'regionFeeHint', 'calcRailJa', 'railMaterialSpec', 'railInstallSpec', 'calcSuggestedPanels', 'curtainHeightFeeWarning', 'getBlindMinSqm', 'calcBlindBillableSqm', 'applyDiscountItems', 'calcGrandBeforeTruncation', 'truncateToThousand', 'truncateByMode', 'calcDepositRatio', 'calcAutoDeposit', 'calcDepositAndBalance', 'calcPerformanceRevenue', 'calcManualDiscountForTarget'];
 names.forEach(n => ok(typeof R[n] === 'function', '함수 존재: ' + n));
 
 // ── 2) 커튼 폭수 추천 (가로 × 배율 ÷ 130, 허용 소수점: 민자형 0.2 / 나비주름형 0.1)
@@ -104,6 +104,15 @@ eq(R.truncateToThousand(0), { grand: 0, truncAmt: 0 }, '절사: 0은 그대로')
 // N-210(2026-11-23): 끝자리 처리 선택 — 기본('k')은 기존과 동일, 'h'=100원, 'none'=절사 없음
 eq(R.truncateByMode(1008150, 'k'), { grand: 1008000, truncAmt: 150 }, 'N-210: 기본 k = 1,000원 절사(기존과 동일)');
 eq(R.truncateByMode(1008150, undefined), { grand: 1008000, truncAmt: 150 }, 'N-210: 모드 없음 = 기본 1,000원 절사');
+// N-224: 목표 금액에서 직접입력 할인(원) 거꾸로 구하기 — 기대값은 손계산(제품 625,000 + 시공비 137,400 = 762,400, 쿠폰 인테리어 15% = 93,750)
+const _cp15 = [{ source: 'coupon', type: 'pct', value: 15, label: '인테리어 업체' }];
+eq(R.calcManualDiscountForTarget(625000, 137400, 600000, [], 'k'), { status: 'ok', manual: 162400, final: 600000 }, 'N-224: 쿠폰 없이 최종 600,000 → 직접입력 162,400원');
+eq(R.calcManualDiscountForTarget(625000, 137400, 600000, _cp15, 'k'), { status: 'ok', manual: 80765, final: 600000 }, 'N-224: 쿠폰 15% 유지하고 최종 600,000 → 직접입력 80,765원(원 할인이 먼저 빠지고 그 나머지에 15%가 붙음: 80,765 + 544,235×15%=81,635 = 162,400)');
+eq(R.calcManualDiscountForTarget(625000, 137400, 762000, [], 'k').status, 'same', 'N-224: 할인 0원으로 이미 그 금액(절사 후 762,000)이면 same');
+eq(R.calcManualDiscountForTarget(625000, 137400, 800000, [], 'k').status, 'higher', 'N-224: 목표가 할인 없는 금액보다 높으면 higher(올릴 수 없음)');
+eq(R.calcManualDiscountForTarget(625000, 137400, 100000, [], 'k'), { status: 'floor', manual: 625000, final: 137000 }, 'N-224: 시공비 때문에 목표 아래로 못 내리면 floor(가능한 최저 137,000)');
+eq(R.calcManualDiscountForTarget(625000, 137400, 600000, [], 'none'), { status: 'ok', manual: 162400, final: 600000 }, 'N-224: 절사 안 함 모드에서도 정확히 맞음');
+eq(R.calcManualDiscountForTarget(625000, 137400, 0, [], 'k').status, 'invalid', 'N-224: 0원 이하 목표는 invalid');
 eq(R.truncateByMode(1008150, '엉뚱한값'), { grand: 1008000, truncAmt: 150 }, 'N-210: 모르는 값 = 기본 1,000원 절사(금액 안 바뀜)');
 eq(R.truncateByMode(1008150, 'h'), { grand: 1008100, truncAmt: 50 }, 'N-210: h = 100원 단위 절사');
 eq(R.truncateByMode(1008150, 'none'), { grand: 1008150, truncAmt: 0 }, 'N-210: none = 절사 안 함');

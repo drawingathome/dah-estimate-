@@ -109,6 +109,30 @@ function applyFrozenBreakdown(bd) {
   window._estEditState.lastCalcBreakdown = bd; // 이 상태로 저장(재저장)해도 같은 스냅샷 유지
 }
 
+// 2026-11-28(N-224, 선혜님 '가격을 60만원으로 만들어야 한다면' → '만들자'): 원하는 최종 금액을 넣고 '맞추기'를 누르면
+// 선택된 쿠폰·끝자리 절사 설정은 그대로 두고 직접입력 할인(원)만 자동으로 구해 넣음. 계산 규칙은 est-calc-rules.js calcManualDiscountForTarget 한 곳.
+function applyTargetTotal() {
+  var tEl = /** @type {HTMLInputElement|null} */ (document.getElementById('target-total'));
+  var target = parseFloat(tEl ? tEl.value : '');
+  calcTotal(); // 최신 재료로 갱신
+  var inp = window._estEditState && window._estEditState.lastCalcInputs;
+  var say = function(m){ if (typeof showToast === 'function') showToast(m); };
+  if (!inp || !(target > 0)) { say('최종 금액(0원보다 큰 숫자)을 입력해 주세요'); return; }
+  var tm = /** @type {HTMLSelectElement|null} */ (document.getElementById('trunc-mode'));
+  var r = calcManualDiscountForTarget(inp.base, inp.svc, target, inp.coupons, (tm && tm.value) || 'k');
+  if (r.status === 'invalid') { say('최종 금액(0원보다 큰 숫자)을 입력해 주세요'); return; }
+  if (r.status === 'higher') { say('할인 없이도 최종 금액이 ' + r.final.toLocaleString() + '원이라 목표(' + Math.round(target).toLocaleString() + '원)보다 낮아요 — 할인으로는 올릴 수 없어요'); return; }
+  var dt = /** @type {HTMLSelectElement|null} */ (document.getElementById('discount-type'));
+  var di = /** @type {HTMLInputElement|null} */ (document.getElementById('discount'));
+  if (dt) dt.value = 'won';
+  if (di) di.value = r.manual > 0 ? String(r.manual) : '';
+  calcTotal();
+  if (r.status === 'ok') say('✅ 직접입력 할인 ' + r.manual.toLocaleString() + '원으로 맞췄어요 → 최종 ' + r.final.toLocaleString() + '원');
+  else if (r.status === 'same') say('이미 할인 없이 최종 ' + r.final.toLocaleString() + '원이에요(끝자리 절사 반영)');
+  else if (r.status === 'floor') say('시공비 때문에 ' + r.final.toLocaleString() + '원까지만 낮출 수 있어요(직접입력 ' + r.manual.toLocaleString() + '원)');
+  else say('쿠폰 % 반올림 때문에 정확히 ' + Math.round(target).toLocaleString() + '원은 만들 수 없어요 → 가장 가까운 ' + r.final.toLocaleString() + '원으로 맞췄어요');
+}
+
 function calcTotal() {
   var curtainTotal = 0;
   document.querySelectorAll('#curtain-body tr').forEach(function(tr){
@@ -158,6 +182,8 @@ function calcTotal() {
   if (discInput > 0) {
     items.push({ source:'manual', type: discType, value: discInput, label: '직접입력' });
   }
+  // N-224: '최종 금액으로 맞추기'가 쓰는 현재 계산 재료(쿠폰은 그대로 두고 직접입력만 새로 구함)
+  window._estEditState.lastCalcInputs = { base: curtainTotal, svc: svcTotal, coupons: items.filter(function(it){ return it.source === 'coupon'; }) };
   var discountResult = applyDiscountItems(curtainTotal, items);
   var totalDiscount = discountResult.totalDiscount;
   var discountBreakdown = discountResult.discountBreakdown;

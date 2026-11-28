@@ -655,6 +655,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['vendor-order-blank-check.js', []]); // 2026-11-20 N-199: 제작 사이즈·폭수, 레일 가로가 비어 있는 발주서 막기
   scripts.push(['vendor-rail-only-row-check.js', []]); // 2026-11-20 N-199: '레일만' 커튼 행은 원단·제작 발주에서 제외(선혜님 결정)
   scripts.push(['trunc-mode-check.js', []]); // 2026-11-23 N-210: 견적마다 끝자리 처리 선택(1,000원 절사 기본/100원/없음)
+  scripts.push(['target-total-check.js', []]); // 2026-11-28 N-224: 최종 금액으로 맞추기(직접입력 할인 자동 계산)
   scripts.push(['cust-open-existing-estimate-check.js', []]); // 2026-11-24 N-211: 고객 불러오기 주소로 열어도 기존 견적이 있으면 이어서 수정(견적 중복 생성 방지)
   scripts.push(['zero-price-restore-check.js', []]); // 2026-11-26 N-212b: 단가 0원 줄(레일만·무상)을 다시 열면 0이 복원돼 저장·확정이 막히지 않음
   scripts.push(['open-edit-before-check.js', []]); // 2026-11-20 N-205: 연 직후 사람이 고친 것을 '열 때 금액 차이'로 기록·경고하던 것

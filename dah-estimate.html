@@ -731,6 +731,11 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
           </select>
           <input type="number" id="discount" value="0" min="0" oninput="calcTotal()" placeholder="직접입력">
         </span>
+        <!-- 2026-11-28(N-224): 원하는 최종 금액을 넣으면 직접입력 할인(원)을 자동 계산. 선택된 쿠폰·끝자리 절사 설정은 그대로 반영 -->
+        <span class="discount-wrap" style="font-size:11px;color:var(--sub)">최종 금액으로 맞추기
+          <input type="number" id="target-total" min="0" placeholder="예: 600000" style="width:110px">
+          <button type="button" id="btn-target-total" onclick="applyTargetTotal()" style="padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:11px;font-weight:700;cursor:pointer">맞추기</button>
+        </span>
         <!-- 2026-11-23(N-210): 끝자리 처리 선택. 기본=1,000원 단위 절사(지금까지와 동일) -->
         <span class="discount-wrap" style="font-size:11px;color:var(--sub)">끝자리
           <select id="trunc-mode" onchange="calcTotal()">
@@ -932,8 +937,8 @@ body.public-view-mode #public-view-container { display: block; background:#F5F2E
 <script src="/est-sync-queue.js?v=1c92640d5273"></script>
 <script src="/dash-supabase-auth.js?v=70d0fe31c31d"></script>
 <script src="/est-form-controls.js?v=8d87095444f5"></script>
-<script src="/est-calc-rules.js?v=30e752198198"></script>
-<script src="/est-product-calc.js?v=4858d7016667"></script>
+<script src="/est-calc-rules.js?v=feb384a5c006"></script>
+<script src="/est-product-calc.js?v=95a76af05118"></script>
 <script src="/est-calc-curtain.js?v=d1ece64ca605"></script>
 <script src="/est-calc-blind.js?v=08f171bdbbc1"></script>
 <script src="/est-calc-svc.js?v=ce0f5bb387f9"></script>

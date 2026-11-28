@@ -144,6 +144,36 @@ function truncateByMode(grand, mode) {
   return { grand: flooredGrand, truncAmt: grand - flooredGrand };
 }
 
+// 2026-11-28(N-224, 선혜님 '가격을 60만원으로 만들어야 한다면' → '만들자'): 원하는 최종 금액(targetTotal)에서 거꾸로
+// '직접입력 할인(원)'을 구함. 쿠폰은 지금 선택된 그대로 두고(couponItems), 끝자리 절사 설정(truncMode)도 그대로 반영.
+// 결과 status: 'ok'(정확히 맞음) | 'same'(할인 0원으로 이미 그 금액) | 'higher'(할인 없이도 목표보다 낮음 → 할인으로 올릴 수 없음)
+//   | 'floor'(시공비 등 때문에 목표까지 못 내림 → 가능한 최저) | 'inexact'(쿠폰 % 반올림 때문에 정확히 못 맞춤 → 목표 이상 중 가장 가까운 금액) | 'invalid'
+// 가장 큰 x(직접입력 원)를 골라 절사 전 금액이 목표에 가장 가깝게(절사 줄이 안 생기게) 맞춤.
+function calcManualDiscountForTarget(baseTotal, svcTotal, targetTotal, couponItems, truncMode) {
+  var T = Math.round(Number(targetTotal));
+  if (!(T > 0) || !isFinite(T)) return { status: 'invalid', manual: 0, final: 0 };
+  var coupons = (couponItems || []).slice();
+  function finalFor(x) {
+    var items = coupons.slice();
+    if (x > 0) items.push({ source: 'manual', type: 'won', value: x, label: '직접입력' });
+    var d = applyDiscountItems(baseTotal, items).totalDiscount;
+    return truncateByMode(calcGrandBeforeTruncation(baseTotal, d, svcTotal), truncMode).grand;
+  }
+  var f0 = finalFor(0);
+  if (f0 === T) return { status: 'same', manual: 0, final: f0 };
+  if (f0 < T) return { status: 'higher', manual: 0, final: f0 };
+  var lo = 0, hi = Math.max(0, Math.round(baseTotal)); // f(lo) >= T 유지
+  if (finalFor(hi) >= T) {
+    return { status: finalFor(hi) === T ? 'ok' : 'floor', manual: hi, final: finalFor(hi) };
+  }
+  while (hi - lo > 1) {
+    var mid = Math.floor((lo + hi) / 2);
+    if (finalFor(mid) >= T) lo = mid; else hi = mid;
+  }
+  var fl = finalFor(lo);
+  return { status: fl === T ? 'ok' : 'inexact', manual: lo, final: fl };
+}
+
 // 2026-09-18(선혜님 - "침구 러그는 결제가 50%가 아니라 100% 결제로
 // 해야하는데"): 커튼/블라인드는 시공이 남아있어서 계약금 50%+잔금
 // 50%가 맞지만, 침구/러그는 시공 자체가 없어 배송 시점에 전액을

@@ -66,8 +66,8 @@
 | 7 | `est-sync-queue.js` | DAH 견적서 앱 — 오프라인/네트워크 실패 재시도 큐 (2026-08-05 신규) | 8 |
 | 8 | `dash-supabase-auth.js` | DAH 대시보드 — Supabase Auth 연동 | 16 |
 | 9 | `est-form-controls.js` | DAH 견적서 앱 — 폼 상태/타입 제어 | 17 |
-| 10 | `est-calc-rules.js` | DAH 견적서 앱 — 계산 규칙 (순수 함수: 화면/저장소를 전혀 안 만짐) | 24 |
-| 11 | `est-product-calc.js` | DAH 견적서 앱 — 공통 계산: 합계(calcTotal)/얼림 금액/행 삭제/드래그 정렬 | 11 |
+| 10 | `est-calc-rules.js` | DAH 견적서 앱 — 계산 규칙 (순수 함수: 화면/저장소를 전혀 안 만짐) | 25 |
+| 11 | `est-product-calc.js` | DAH 견적서 앱 — 공통 계산: 합계(calcTotal)/얼림 금액/행 삭제/드래그 정렬 | 12 |
 | 12 | `est-calc-curtain.js` | DAH 견적서 앱 — 커튼 행 계산 (추가/폭수·금액 계산/레일 자동/복사) | 4 |
 | 13 | `est-calc-blind.js` | DAH 견적서 앱 — 블라인드 행 계산 (추가/최소면적/옵션 추가금/부자재 자동/복사) | 7 |
 | 14 | `est-calc-svc.js` | DAH 견적서 앱 — 기타품목 · 부자재/서비스(실측비·시공비·레일) 행 계산과 요약 | 13 |
@@ -173,6 +173,7 @@
 | `applyFrozenBreakdown` | `est-product-calc.js` |
 | `applyPermissions` | `dash-auth.js` |
 | `applyRealDepositToForm` | `est-utils.js` |
+| `applyTargetTotal` | `est-product-calc.js` |
 | `applyVendorArrivalDefaults` | `est-doc-vendor.js` |
 | `archiveEstimate` | `dash-api-writes.js` |
 | `ASSection` | `dash-customer-as.js` |
@@ -196,6 +197,7 @@
 | `calcDepositAndBalance` | `est-calc-rules.js` |
 | `calcDepositRatio` | `est-calc-rules.js` |
 | `calcGrandBeforeTruncation` | `est-calc-rules.js` |
+| `calcManualDiscountForTarget` | `est-calc-rules.js` |
 | `calcOtherItemRow` | `est-calc-svc.js` |
 | `calcPerformanceRevenue` | `est-calc-rules.js` |
 | `calcRailJa` | `est-calc-rules.js` |
