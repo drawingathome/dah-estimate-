@@ -582,6 +582,7 @@ scripts.push(['no-public-repo-url-check.js', []]); // 2026-10-29 N-39 화면·�
   scripts.push(['estimate-row-workflow-check.js', []]); // 2026-10-26 P-1 견적서 작성 업무 흐름(불러오기→복사→이동→이름수정→저장목록→다시불러오기→문서순서→삭제) 한 번에 재생
   scripts.push(['settings-seed-master-only-check.js', ['dah-dashboard.html']]); // 2026-10-25 설정표 최초 올리기는 마스터 화면만(전수표 T-04)
   scripts.push(['order-status-concurrent-check.js', []]); // 2026-10-25 발주 현황 동시편집 충돌방지(전수표 T-01)
+  scripts.push(['order-snapshot-write-check.js', []]); // 2026-11-28 N-223 1단계: 발주완료·의뢰서 인쇄 때 발주 당시 값(orderSnap) 기록
   scripts.push(['est-order-status-lock-check.js', []]); // 2026-10-25 견적서 앱 발주 현황 잠금(전수표 T-01)
   scripts.push(['price-override-concurrent-check.js', []]); // 2026-10-16 금액 수동확정 동시편집
   scripts.push(['refund-redeposit-check.js', []]); // 2026-10-16 환불 후 재결제(임시저장 삭제·완납 확인창)

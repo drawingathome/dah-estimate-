@@ -541,7 +541,7 @@ function getCustomerOrderStatus(callback) {
 
 // 2026-10-25 전수표 T-01: 읽을 때 수정 시각(updated_at)도 가져와 PATCH 조건에 넣음(그 사이 다른 기기가 저장했으면 0건 → 다시 읽어 합쳐 1회 재시도).
 // 예전엔 select에 updated_at이 없어 잠금값이 항상 비어 있었고, 조건 없이 덮어썼음.
-function updateOrderStatus(updates, triesLeft) {
+function updateOrderStatus(updates, triesLeft, snapPatch) {
   if (triesLeft === undefined) triesLeft = 1;
   if (!updates || Object.keys(updates).length === 0) return;
   // 2026-11-15(N-159 ⑨): 고객이 아직 저장 전이라 고객 번호가 없으면 예전엔 아무 말 없이 건너뛰어, 발주서를 처리했는데 업무 현황판에는 기록이 안 남았음 → 이유를 알려 줌
@@ -579,6 +579,11 @@ function updateOrderStatus(updates, triesLeft) {
         }
       });
       var merged = Object.assign({}, current, updates);
+      // 2026-11-28 N-223 1단계: 발주 당시 값(orderSnap)은 카테고리 객체 안이 아니라 맨 위 별도 키에 둠(카테고리 객체는 대시보드·인쇄가 통째로 덮어써서 안에 두면 사라짐).
+      // 서버에서 방금 읽은 current.orderSnap에 합쳐서 다른 기기가 남긴 기록을 지우지 않음. 기록 실패는 발주 흐름을 막지 않음.
+      try {
+        if (snapPatch && typeof dahMergeOrderSnap === 'function') merged.orderSnap = dahMergeOrderSnap(current, snapPatch, new Date());
+      } catch (eSnap) { typeof reportClientError==='function' && reportClientError('발주 당시 값 기록 실패: ' + (eSnap && eSnap.message || eSnap)); }
       try {
         var xhrPatch = new XMLHttpRequest();
         xhrPatch.open('PATCH', SUPABASE_URL + '/rest/v1/customers?id=eq.' + encodeURIComponent(window._estEditState.estSaveCustomerId) + (lockBefore ? '&updated_at=eq.' + encodeURIComponent(lockBefore) : ''), true);
@@ -590,7 +595,7 @@ function updateOrderStatus(updates, triesLeft) {
           // 0건 반영(그 사이 다른 기기가 먼저 저장): 다시 읽어 합쳐 1회 재시도
           try {
             if (lockBefore && xhrPatch.status < 300 && JSON.parse(xhrPatch.responseText || '[]').length === 0) {
-              if (triesLeft > 0) { updateOrderStatus(updates, triesLeft - 1); return; }
+              if (triesLeft > 0) { updateOrderStatus(updates, triesLeft - 1, snapPatch); return; }
               typeof reportClientError==='function' && reportClientError('업무현황 자동갱신 충돌(재시도 후에도 0건)');
               if (typeof showToast === 'function') showToast('⚠️ 업무 현황판 발주 기록이 다른 곳에서 동시에 바뀌어 저장되지 않았어요 — 대시보드에서 확인해주세요');
               return;
@@ -644,7 +649,62 @@ function updateOrderStatusFromVendorGroups(groups) {
   Object.keys(updates).forEach(function(cat){
     updates[cat].vendor = updates[cat].vendors.join(', ');
   });
-  updateOrderStatus(updates);
+  var snapPatch = null;
+  try { snapPatch = dahBuildOrderSnapPatch(groups, Object.keys(updates)); } catch (eBuild) { typeof reportClientError==='function' && reportClientError('발주 당시 값 만들기 실패: ' + (eBuild && eBuild.message || eBuild)); }
+  updateOrderStatus(updates, undefined, snapPatch);
+}
+
+// 2026-11-28 N-223 1단계(선혜님 '추천대로'): 발주를 보낸 순간의 값을 order_status.orderSnap에 남김(이후 '발주 후 바뀜' 알림의 기준).
+//  남기는 것: 줄마다 공간·품명(원단코드)·색상·사이즈·수량(마수, '(금액원)' 꼬리 제거)·원단정보·손잡이·끈길이·하단바·코멘트·거래처 + 시공일·실측일.
+//  남기지 않는 것: 금액·단가(돈 데이터). 옛 발주에 소급해서 만들지 않음.
+function dahSnapClean(v) {
+  var t = String(v == null ? '' : v).replace(/\s*\([\d,]+원\)\s*$/, '').replace(/\s+/g, ' ').trim();
+  return (t === '—' || t === '-') ? '' : t;
+}
+function dahBuildOrderSnapPatch(groups, cats) {
+  var out = { cats: {}, dates: { install: '', measure: '' } };
+  var inst = /** @type {HTMLInputElement|null} */ (document.getElementById('c-install')), meas = /** @type {HTMLInputElement|null} */ (document.getElementById('c-measure'));
+  out.dates.install = inst && inst.value ? String(inst.value) : '';
+  out.dates.measure = meas && meas.value ? String(meas.value) : '';
+  Object.keys(groups || {}).forEach(function(vendor){
+    if (vendor === '미지정' || vendor.indexOf('미지정(') === 0) return;
+    (groups[vendor] || []).forEach(function(it){
+      var cat = it && it.orderCategory;
+      if (!cat || cats.indexOf(cat) < 0) return;
+      var line = { s: dahSnapClean(it.space), p: dahSnapClean(it.product), c: dahSnapClean(it.color), sz: dahSnapClean(it.size), v: vendor };
+      var q = (cat === 'fabric' && it.rawYardage != null) ? it.rawYardage : it.qty;
+      line.q = dahSnapClean(q);
+      if (it.fabricInfo) line.i = dahSnapClean(it.fabricInfo);
+      if (it.handle) line.h = dahSnapClean(it.handle);
+      if (it.cordLength) line.cd = dahSnapClean(it.cordLength);
+      if (it.bottomBar) line.b = dahSnapClean(it.bottomBar);
+      if (it.comment) line.cm = dahSnapClean(it.comment);
+      Object.keys(line).forEach(function(k){ if (line[k] === '') delete line[k]; });
+      if (!out.cats[cat]) out.cats[cat] = [];
+      out.cats[cat].push(line);
+    });
+  });
+  return out;
+}
+// current = 서버에서 방금 읽은 order_status. 결과 = 새 orderSnap(다른 카테고리·의뢰서 기록은 그대로 둠).
+function dahMergeOrderSnap(current, patch, now) {
+  var snap = Object.assign({}, (current && current.orderSnap && typeof current.orderSnap === 'object') ? current.orderSnap : {});
+  var at = (typeof dahLocalYmd === 'function' ? dahLocalYmd(now) : '') + 'T' + String(now.toISOString()).slice(11, 16);
+  var by = '';
+  try { by = (window._estCurrentUser && window._estCurrentUser.name) || (typeof currentUser !== 'undefined' && currentUser && currentUser.name) || ''; } catch (e) {}
+  if (patch && patch.cats) Object.keys(patch.cats).forEach(function(cat){
+    var prev = snap[cat] && typeof snap[cat] === 'object' ? snap[cat] : null;
+    var round = (prev && prev.round > 0) ? prev.round + 1 : 1;
+    var cur = current && current[cat] && typeof current[cat] === 'object' ? current[cat] : {};
+    var lines = patch.cats[cat].map(function(l){ var c = Object.assign({}, l); c.r = round; return c; });
+    var rec = { round: round, at: at, by: by, lines: lines, installDate: (patch.dates && patch.dates.install) || '', measureDate: (patch.dates && patch.dates.measure) || '', dueDate: cur.dueDate || '', ack: null };
+    snap[cat] = rec;
+  });
+  if (patch && patch.request) {
+    snap.request = Object.assign({}, snap.request || {});
+    Object.keys(patch.request).forEach(function(k){ snap.request[k] = Object.assign({ at: at }, patch.request[k]); });
+  }
+  return snap;
 }
 
 // 구글드라이브에 문서 저장 (실패해도 조용히 무시 — 화면 흐름을 절대 막지 않음)

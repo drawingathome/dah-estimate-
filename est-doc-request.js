@@ -602,7 +602,14 @@ function _showRequestPreview(kind, label, extraNote) {
       var installerNameForStatus = document.getElementById('c-installer-name')?.value || '';
       var statusUpdate = {};
       statusUpdate[kind] = { done: true, vendor: installerNameForStatus, orderDate: dahLocalYmd() }; // N-198: 한국시간 날짜
-      if (typeof updateOrderStatus === 'function') updateOrderStatus(statusUpdate);
+      // 2026-11-28 N-223 1단계: 의뢰서를 보낸 순간의 일정도 orderSnap.request에 남김(이후 '일정 바뀜' 알림의 기준)
+      var reqPatch = null;
+      try {
+        var reqDateEl = /** @type {HTMLInputElement|null} */ (document.getElementById(kind === 'install' ? 'c-install' : 'c-measure'));
+        reqPatch = { request: {} };
+        reqPatch.request[kind] = { date: reqDateEl && reqDateEl.value ? String(reqDateEl.value) : '', installer: installerNameForStatus };
+      } catch (eReq) { reqPatch = null; }
+      if (typeof updateOrderStatus === 'function') updateOrderStatus(statusUpdate, undefined, reqPatch);
       // 2026-09-10: 발주와 동일하게, 실측/시공 완료 직후에도 업무처리
       // 카드를 다시 그려서 새로고침 없이 바로 반영되게 함.
       if (typeof renderWorkStatusCards === 'function') setTimeout(renderWorkStatusCards, 800);

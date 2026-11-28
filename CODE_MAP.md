@@ -59,7 +59,7 @@
 |---|---|---|---|
 | 1 | `shared-staging-guard.js` | DAH 공용 — 스테이징 환경 쓰기 차단 안전장치 | 0 |
 | 2 | `est-public-view.js` | DAH 견적서 앱 — 고객용 공개보기 모드 | 5 |
-| 3 | `est-utils.js` | DAH 견적서 앱 — 유틸함수 + API 설정 | 21 |
+| 3 | `est-utils.js` | DAH 견적서 앱 — 유틸함수 + API 설정 | 24 |
 | 4 | `shared-common-utils.js` | DAH 공용 — 두 앱(대시보드/견적서)에서 완전히 동일하게 써야 하는 | 12 |
 | 5 | `shared-order-defs.js` | shared-order-defs.js — 발주 종류 '정의 한 곳' (두 앱 공용: dah-dashboard.html / dah-estimate.html) | 3 |
 | 6 | `shared-optimistic-lock.js` | DAH 공용 — 낙관적 잠금(동시저장충돌) 락값 갱신 | 5 |
@@ -242,6 +242,7 @@
 | `customerToDbRow` | `dash-api-data.js` |
 | `dahBlindFieldRules` | `est-doc-vendor-ui.js` |
 | `dahBlindFieldToSource` | `est-doc-vendor-ui.js` |
+| `dahBuildOrderSnapPatch` | `est-utils.js` |
 | `dahCheckClientErrors` | `apps-script-daily-backup.js` |
 | `dahCheckCustomerPaymentMismatch` | `apps-script-daily-backup.js` |
 | `dahCleanupTestData` | `apps-script-daily-backup.js` |
@@ -252,6 +253,7 @@
 | `dahDuplicateScanOnly` | `apps-script-daily-backup.js` |
 | `dahIsBackdropClick` | `shared-common-utils.js` |
 | `dahLocalYmd` | `shared-common-utils.js` |
+| `dahMergeOrderSnap` | `est-utils.js` |
 | `dahOrderField` | `shared-order-defs.js` |
 | `dahOrderKeys` | `shared-order-defs.js` |
 | `dahOrderMap` | `shared-order-defs.js` |
@@ -268,6 +270,7 @@
 | `dahScanScriptVersion` | `apps-script-daily-backup.js` |
 | `dahScanWeeklySaveFailures` | `apps-script-daily-backup.js` |
 | `dahShowVendorSavedToast` | `est-doc-vendor-ui.js` |
+| `dahSnapClean` | `est-utils.js` |
 | `dashCheckCodeStale` | `dash-stale-code.js` |
 | `dashCollectScriptVersions` | `dash-stale-code.js` |
 | `dashFindStaleScripts` | `dash-stale-code.js` |
