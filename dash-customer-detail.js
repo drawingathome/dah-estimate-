@@ -429,6 +429,22 @@ function renderDetailHeader(c) {
     reBadge.style.cssText = 'font-size:11px;font-weight:700;color:var(--terra)';
     summaryRow.appendChild(reBadge);
   }
+  // 2026-11-28 N-230 ③: 재구매를 새 고객 줄로 나눈 뒤(11-19 규칙 ②)에도 같은 이름+연락처의 다른 구매를 이어서 알려 줌(새 줄이 '0회 방문'처럼만 보이지 않게)
+  var _otherBuys = 0;
+  try {
+    var _d = function (v) { return String(v || '').replace(/\D/g, ''); };
+    if (c.clientName && _d(c.phone).length >= 10) {
+      _otherBuys = loadCustomers().filter(function (x) { return x !== c && x.id !== c.id && !x.is_archived && x.clientName === c.clientName && _d(x.phone) === _d(c.phone); }).length;
+    }
+  } catch (eOb) { _otherBuys = 0; }
+  if (_otherBuys > 0) {
+    var obBadge = document.createElement('span');
+    obBadge.textContent = '같은 연락처 다른 구매 ' + _otherBuys + '건';
+    obBadge.title = '같은 이름·연락처의 다른 고객 줄(이전/이후 구매)이 있어요. 재구매는 새 줄로 나뉘어 관리돼요.';
+    obBadge.style.cssText = 'font-size:11px;font-weight:700;color:var(--terra)';
+    summaryRow.appendChild(obBadge);
+    var obDot = document.createElement('span'); obDot.textContent = '·'; obDot.style.color = 'var(--border)'; summaryRow.appendChild(obDot);
+  }
   if (c.date) {
     var diff = daysDiff(c.date);
     if (c.visitCount > 1) { var dot = document.createElement('span'); dot.textContent = '·'; dot.style.color = 'var(--border)'; summaryRow.appendChild(dot); }

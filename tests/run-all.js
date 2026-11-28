@@ -639,6 +639,7 @@ if (/dah-estimate/.test(target)) {
   scripts.push(['request-doc-save-check.js', []]); // 2026-11-28 N-231: 실측·시공요청서 고친 내용·비고 저장/복원
   scripts.push(['vendor-doc-save-check.js', []]); // 2026-11-28 N-233: 발주서 고친 칸 닫기·인쇄·완료 때 저장/복원
   scripts.push(['dash-rebuy-link-check.js', []]); // 2026-11-28 N-227: 대시보드 두 곳이 시공완료 고객에 붙지 않고 새 줄 만듦
+  scripts.push(['rebuy-prev-purchase-check.js', []]); // 2026-11-28 N-230 ③: 고객 상세에 같은 연락처 다른 구매 표시
   scripts.push(['blind-opt-numeric-auto-check.js', [target]]);
   scripts.push(['est-addr-detail-select-check.js', []]);
   scripts.push(['pleat-width-rounding-check.js', [target]]);
