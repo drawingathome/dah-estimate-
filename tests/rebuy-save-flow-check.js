@@ -79,6 +79,9 @@ setTimeout(() => { console.log('❌ 시간 초과'); process.exit(1); }, 120000)
   // H4. 회귀: 캐시에 진행 중(가견적) 같은 고객이면 그 고객에 이어서 저장
   r = await scenario({ status: 200, body: [{ exists_flag: true, staff_name: '마스터', same_name: true }] }, true, null, [{ id: 55, client_name: '권재호', phone: '01011112222', stage: '가견적' }], [{ id: 55, clientName: '권재호', phone: '010-1111-2222', stage: '가견적', price: 0 }]);
   ok('H4. 진행 중 고객은 이어서 저장(PATCH, 새 고객 0)', r.cap.postCust === 0 && r.cap.patchCust >= 1, JSON.stringify(r.cap));
+  // H5. 이 기기 캐시가 낡아서 53번이 아직 '가견적'으로 적혀 있는데 서버는 '시공완료'라고 함(오래된 캐시) — 그래도 옛 고객에 붙으면 안 됨
+  r = await scenario(rpcHit, true, null, vis53, [{ id: 53, clientName: '권재호', phone: '010-1111-2222', stage: '가견적', price: 0 }]);
+  ok('H5. 낡은 캐시(가견적)여도 서버가 시공완료라 했으면 옛 고객 덮어쓰기 없음', r.cap.patchCust === 0 && r.cap.postCust === 1, JSON.stringify(r.cap));
 
   await browser.close(); server.close && server.close();
   console.log(fail ? '❌ 실패 ' + fail + '건' : '✅ 모두 통과'); process.exit(fail ? 1 : 0);

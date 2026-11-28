@@ -28,7 +28,7 @@ function _estAskPhoneDuplicate(name, phone, cb) {
   var digits = String(phone || '').replace(/\D/g, '');
   if (digits.length < 10 || typeof SUPABASE_URL === 'undefined') { cb('go'); return; }
   var finished = false;
-  function done(v, hit) { if (finished) return; finished = true; cb(v, hit); }
+  function done(v, hit, rebuy) { if (finished) return; finished = true; cb(v, hit, rebuy); }
   function fail() {
     logSaveStage('중복확인-서버확인실패', null);
     done(window.confirm('같은 연락처 고객이 이미 있는지 서버에서 확인하지 못했어요.\n그래도 새 고객으로 저장할까요? (이미 있는 고객이면 중복이 생길 수 있어요)') ? 'go' : 'cancel');
@@ -60,7 +60,9 @@ function _estAskPhoneDuplicate(name, phone, cb) {
       // (진행 중인 같은 고객이면 확인 뒤 저장 때 DB 잠금이 409로 막고 기존 안내가 나옴)
       _estFindVisibleActiveCustomer(name, digits, function (hit) {
         if (hit) { logSaveStage('중복확인-내고객에이어저장', { id: hit.id }); done('go', hit); return; }
-        done(window.confirm('"' + name + '"(' + phone + ') 고객은 이미 ' + owner + ' 담당으로 등록돼 있어요(이전에 시공한 고객일 수 있어요).\n\n같은 분의 재구매라면 [확인]을 눌러 새 건으로 저장하세요.\n지금 진행 중인 같은 고객이라면 [취소]하고 ' + owner + '에게 확인하세요.\n(취소해도 입력하신 내용은 화면에 그대로 남아 있어요)') ? 'go' : 'cancel');
+        var _rbOk = window.confirm('"' + name + '"(' + phone + ') 고객은 이미 ' + owner + ' 담당으로 등록돼 있어요(이전에 시공한 고객일 수 있어요).\n\n같은 분의 재구매라면 [확인]을 눌러 새 건으로 저장하세요.\n지금 진행 중인 같은 고객이라면 [취소]하고 ' + owner + '에게 확인하세요.\n(취소해도 입력하신 내용은 화면에 그대로 남아 있어요)');
+        // 2026-11-28(N-226 점검): 서버가 '같은 분이 이미 있고 진행 중이 아니다(재구매)'라고 알려 줬으므로, 이 기기 캐시(낡을 수 있음)로 옛 고객을 다시 고르지 않게 표시
+        done(_rbOk ? 'go' : 'cancel', null, _rbOk);
       });
     };
     x.onerror = fail; x.ontimeout = fail;
@@ -92,7 +94,8 @@ function _saveStage_customers(ctx) {
   // 2026-11-19(N-183): 새 고객을 만들기 전(아직 고객 번호를 모름)에 같은 연락처 고객이 이미 있는지 서버에 먼저 확인
   if (!window._estEditState.estSaveCustomerId && !ctx._dupAsked) {
     ctx._dupAsked = true;
-    _estAskPhoneDuplicate(ctx.name, ctx.phone, function (verdict, hit) {
+    _estAskPhoneDuplicate(ctx.name, ctx.phone, function (verdict, hit, rebuy) {
+      window._estEditState.estForceNewCustomer = (verdict === 'go' && !!rebuy); // 매 확인마다 새로 정함(이전 저장의 표시가 남지 않게)
       if (verdict === 'go' && hit) {
         // 내가 볼 수 있는 같은 고객에 이어서 저장 — 새 고객을 만들지 않음(409 복구와 같은 방식으로 이 기기 고객 목록에도 넣음)
         window._estEditState.estSaveCustomerId = hit.id;
@@ -784,9 +787,10 @@ function _saveStage_estimatesActual(ctx) {
 // 2026-11-28(N-226, 선혜님 '권재호 견적서를 만들었는데 정보가 안 뜬다 — 재구매 고객'): 이 기기 캐시(dah_customers)에서 이름+번호로 고객을 찾을 때
 // 이미 '시공완료'인 옛 고객은 고르지 않음 — 골라 버리면 재구매 새 견적이 옛 고객(53번)에 붙어 단계·금액이 그대로 시공완료로 보였음(11-19 규칙 ②: 재구매는 새 고객 줄).
 // 고객 번호를 이미 알면(열어서 수정) 그 고객을 그대로 씀.
-function dahPickCachedCustomerIndex(customers, knownId, name, phone) {
+function dahPickCachedCustomerIndex(customers, knownId, name, phone, forceNew) {
   var norm = function (p) { return String(p || '').replace(/\D/g, ''); };
   if (knownId) return customers.findIndex(function (c) { return String(c.id) === String(knownId); });
+  if (forceNew) return -1; // 서버가 재구매(같은 분이 있으나 진행 중 아님)라고 확인해 준 저장 — 캐시로 옛 고객을 고르지 않음
   return customers.findIndex(function (c) {
     return c.clientName === name && norm(c.phone) === norm(phone) && c.stage !== '시공완료';
   });
@@ -889,7 +893,7 @@ function _saveStage_localStorage(ctx) {
       // "수정"으로 처리되게 함 — 이름+전화번호 매칭은 그 id를 모를 때(진짜
       // 신규/다른 고객 가능성)만 보조적으로 사용.
       var knownId = window._estEditState.estSaveCustomerId || null;
-      var cidx = dahPickCachedCustomerIndex(customers, knownId, entry.clientName, entry.phone);
+      var cidx = dahPickCachedCustomerIndex(customers, knownId, entry.clientName, entry.phone, !!window._estEditState.estForceNewCustomer);
       var existingId = cidx >= 0 ? customers[cidx].id : null;
       entry.clientId = existingId; // dah_saved(견적이력)에도 고객 고유번호 반영
       localStorage.setItem('dah_saved', JSON.stringify(saved));

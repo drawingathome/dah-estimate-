@@ -5,6 +5,7 @@
    "currentEstIdempotencyKey": "00000000-0000-4000-8000-000000000001",
    "editingEstDbId": "srv-est-1",
    "editingEstUpdatedAt": null,
+   "estForceNewCustomer": false,
    "estSaveCustomerId": 901,
    "estimateConfirmedAt": null,
    "isRestoringEstimate": false,
